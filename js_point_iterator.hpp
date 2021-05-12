@@ -4,6 +4,8 @@
 #include "jsbindings.hpp"
 #include <ranges>
 
+extern "C" VISIBLE int js_point_iterator_init(JSContext*, JSModuleDef*);
+
 extern "C" {
 enum JSPointIteratorMagic { NEXT_POINT = 0, NEXT_LINE };
 

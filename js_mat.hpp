@@ -3,6 +3,8 @@
 
 #include "jsbindings.hpp"
 
+extern "C" VISIBLE int js_mat_init(JSContext*, JSModuleDef*);
+
 extern "C" {
 extern JSValue mat_proto, mat_class;
 extern JSClassID js_mat_class_id;

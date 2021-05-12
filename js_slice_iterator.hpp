@@ -5,6 +5,8 @@
 #include "js_typed_array.hpp"
 #include <ranges>
 
+extern "C" VISIBLE int js_slice_iterator_init(JSContext*, JSModuleDef*);
+
 extern "C" {
 
 extern JSValue slice_iterator_proto, slice_iterator_class;

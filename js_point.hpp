@@ -3,6 +3,8 @@
 
 #include "jsbindings.hpp"
 
+extern "C" VISIBLE int js_point_init(JSContext*, JSModuleDef*);
+
 extern "C" JSValue js_point_clone(JSContext* ctx, const JSPointData<double>& point);
 extern "C" {
 

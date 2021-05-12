@@ -11,6 +11,8 @@ extern JSClassID js_line_class_id;
 VISIBLE JSValue js_line_new(JSContext* ctx, double x1, double y1, double x2, double y2);
 }
 
+extern "C" VISIBLE int js_line_init(JSContext*, JSModuleDef*);
+
 template<class T>
 static inline int
 js_line_read(JSContext* ctx, JSValueConst line, std::array<T, 4>& out) {

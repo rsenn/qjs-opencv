@@ -8,6 +8,8 @@
 
 extern "C" JSClassID js_mat_class_id, js_umat_class_id, js_contour_class_id;
 
+extern "C" VISIBLE int js_cv_init(JSContext*, JSModuleDef*);
+
 static inline JSInputOutputArray
 js_cv_inputoutputarray(JSContext* ctx, JSValueConst value) {
   cv::Mat* mat;

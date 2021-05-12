@@ -573,6 +573,11 @@ js_rect_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
+extern "C" VISIBLE void
+js_rect_export(JSContext* ctx, JSModuleDef* m) {
+  JS_AddModuleExport(ctx, m, "Rect");
+}
+
 void
 js_rect_constructor(JSContext* ctx, JSValue parent, const char* name) {
   if(JS_IsUndefined(rect_class))
@@ -593,6 +598,6 @@ JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   m = JS_NewCModule(ctx, module_name, &js_rect_init);
   if(!m)
     return NULL;
-  JS_AddModuleExport(ctx, m, "Rect");
+  js_rect_export(ctx, m);
   return m;
 }

@@ -9,6 +9,8 @@ extern JSValue contour_class, contour_proto;
 extern JSClassDef js_contour_class;
 extern JSClassID js_contour_class_id;
 
+extern "C" VISIBLE int js_contour_init(JSContext*, JSModuleDef*);
+
 void js_contour_finalizer(JSRuntime* rt, JSValue val);
 
 JSValue js_contour_to_string(JSContext*, JSValueConst this_val, int argc, JSValueConst* argv);

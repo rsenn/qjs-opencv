@@ -7,6 +7,8 @@
 JSValue clahe_proto = JS_UNDEFINED, clahe_class = JS_UNDEFINED;
 JSClassID js_clahe_class_id;
 
+extern "C" VISIBLE int js_clahe_init(JSContext*, JSModuleDef*);
+
 extern "C" VISIBLE JSValue
 js_clahe_new(JSContext* ctx, double clipLimit = 40.0, cv::Size tileGridSize = cv::Size(8, 8)) {
   JSValue ret;
@@ -141,12 +143,17 @@ js_clahe_constructor(JSContext* ctx, JSValue parent, const char* name) {
 #define JS_INIT_MODULE /*VISIBLE*/ js_init_module_clahe
 #endif
 
+extern "C" VISIBLE void
+js_clahe_export(JSContext* ctx, JSModuleDef* m) {
+  JS_AddModuleExport(ctx, m, "CLAHE");
+}
+
 extern "C" JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   JSModuleDef* m;
   m = JS_NewCModule(ctx, module_name, &js_clahe_init);
   if(!m)
     return NULL;
-  JS_AddModuleExport(ctx, m, "CLAHE");
+  js_clahe_export(ctx, m);
   return m;
 }

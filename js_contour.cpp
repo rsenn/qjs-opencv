@@ -1155,6 +1155,11 @@ js_contour_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
+extern "C" VISIBLE void
+js_contour_export(JSContext* ctx, JSModuleDef* m) {
+  JS_AddModuleExport(ctx, m, "Contour");
+}
+
 #if defined(JS_CONTOUR_MODULE)
 #define JS_INIT_MODULE /*VISIBLE*/ js_init_module
 #else
@@ -1167,7 +1172,7 @@ JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   m = JS_NewCModule(ctx, module_name, &js_contour_init);
   if(!m)
     return NULL;
-  JS_AddModuleExport(ctx, m, "Contour");
+  js_contour_export(ctx, m);
   return m;
 }
 }

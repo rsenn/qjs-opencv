@@ -437,6 +437,11 @@ js_size_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
+extern "C" VISIBLE void
+js_size_export(JSContext* ctx, JSModuleDef* m) {
+  JS_AddModuleExport(ctx, m, "Size");
+}
+
 void
 js_size_constructor(JSContext* ctx, JSValue parent, const char* name) {
   if(JS_IsUndefined(size_class))
@@ -457,6 +462,6 @@ JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   m = JS_NewCModule(ctx, module_name, &js_size_init);
   if(!m)
     return NULL;
-  JS_AddModuleExport(ctx, m, "Size");
+  js_size_export(ctx, m);
   return m;
 }

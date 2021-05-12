@@ -1,6 +1,8 @@
 #include "jsbindings.hpp"
 #include "js_alloc.hpp"
 
+extern "C" VISIBLE int js_utility_init(JSContext*, JSModuleDef*);
+
 extern "C" {
 
 JSValue tick_meter_proto = JS_UNDEFINED, tick_meter_class = JS_UNDEFINED;
@@ -165,6 +167,11 @@ js_utility_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
+extern "C" VISIBLE void
+js_utility_export(JSContext* ctx, JSModuleDef* m) {
+  JS_AddModuleExport(ctx, m, "TickMeter");
+}
+
 void
 js_tick_meter_constructor(JSContext* ctx, JSValue parent, const char* name) {
   if(JS_IsUndefined(tick_meter_class))
@@ -185,7 +192,7 @@ JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   m = JS_NewCModule(ctx, module_name, &js_utility_init);
   if(!m)
     return NULL;
-  JS_AddModuleExport(ctx, m, "TickMeter");
+  js_utility_export(ctx, m);
   return m;
 }
 }

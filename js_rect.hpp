@@ -3,6 +3,8 @@
 
 #include "jsbindings.hpp"
 
+extern "C" VISIBLE int js_rect_init(JSContext*, JSModuleDef*);
+
 extern "C" {
 extern JSValue rect_proto, rect_class;
 extern JSClassID js_rect_class_id;

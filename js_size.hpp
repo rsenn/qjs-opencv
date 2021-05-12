@@ -2,6 +2,9 @@
 #define JS_SIZE_HPP
 
 #include "jsbindings.hpp"
+
+extern "C" VISIBLE int js_size_init(JSContext*, JSModuleDef*);
+
 extern "C" {
 extern JSValue size_proto, size_class;
 extern JSClassID js_size_class_id;

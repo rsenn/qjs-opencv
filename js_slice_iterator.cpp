@@ -172,6 +172,11 @@ js_slice_iterator_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
+extern "C" VISIBLE void
+js_slice_iterator_export(JSContext* ctx, JSModuleDef* m) {
+  JS_AddModuleExport(ctx, m, "SliceIterator");
+}
+
 #if defined(JS_SLICE_ITERATOR_MODULE)
 #define JS_INIT_MODULE /*VISIBLE*/ js_init_module
 #else
@@ -184,7 +189,7 @@ JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   m = JS_NewCModule(ctx, module_name, &js_slice_iterator_init);
   if(!m)
     return NULL;
-  JS_AddModuleExport(ctx, m, "SliceIterator");
+  js_slice_iterator_export(ctx, m);
   return m;
 }
 

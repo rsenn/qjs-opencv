@@ -5,6 +5,8 @@
 #include "js_alloc.hpp"
 #include "js_array.hpp"
 
+extern "C" VISIBLE int js_umat_init(JSContext*, JSModuleDef*);
+
 extern "C" {
 
 extern JSValue umat_proto, umat_class;

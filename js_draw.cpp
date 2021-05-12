@@ -7,13 +7,11 @@
 #include "js_cv.hpp"
 
 #include <opencv2/core/core.hpp>
-//#include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/freetype.hpp>
 #include <iostream>
-
-//#include "plot-cv.hpp"
-//#include "color.hpp"
 #include "geometry.hpp"
+
+extern "C" VISIBLE int js_draw_init(JSContext*, JSModuleDef*);
 
 cv::Ptr<cv::freetype::FreeType2> freetype2 = nullptr;
 std::string freetype2_face;
@@ -569,6 +567,12 @@ js_draw_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
+extern "C" VISIBLE void
+js_draw_export(JSContext* ctx, JSModuleDef* m) {
+  JS_AddModuleExport(ctx, m, "Draw");
+  JS_AddModuleExportList(ctx, m, js_draw_static_funcs, countof(js_draw_static_funcs));
+}
+
 #if defined(JS_DRAW_MODULE)
 #define JS_INIT_MODULE /*VISIBLE*/ js_init_module
 #else
@@ -581,11 +585,9 @@ JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   m = JS_NewCModule(ctx, module_name, &js_draw_init);
   if(!m)
     return NULL;
-  JS_AddModuleExport(ctx, m, "Draw");
-  JS_AddModuleExportList(ctx, m, js_draw_static_funcs, countof(js_draw_static_funcs));
+  js_draw_export(ctx, m);
   return m;
 }
-
 void
 js_draw_constructor(JSContext* ctx, JSValue parent, const char* name) {
   if(JS_IsUndefined(draw_class))

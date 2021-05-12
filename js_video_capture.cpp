@@ -2,6 +2,8 @@
 #include "js_mat.hpp"
 #include "js_alloc.hpp"
 
+extern "C" VISIBLE int js_video_capture_init(JSContext*, JSModuleDef*);
+
 extern "C" {
 JSValue video_capture_proto = JS_UNDEFINED, video_capture_class = JS_UNDEFINED;
 JSClassID js_video_capture_class_id = 0;
@@ -186,6 +188,11 @@ js_video_capture_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
+extern "C" VISIBLE void
+js_video_capture_export(JSContext* ctx, JSModuleDef* m) {
+  JS_AddModuleExport(ctx, m, "VideoCapture");
+}
+
 void
 js_video_capture_constructor(JSContext* ctx, JSValue parent, const char* name) {
   if(JS_IsUndefined(video_capture_class))
@@ -206,6 +213,6 @@ JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   m = JS_NewCModule(ctx, module_name, &js_video_capture_init);
   if(!m)
     return NULL;
-  JS_AddModuleExport(ctx, m, "VideoCapture");
+  js_video_capture_export(ctx, m);
   return m;
 }

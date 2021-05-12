@@ -443,6 +443,11 @@ js_point_constructor(JSContext* ctx, JSValue parent, const char* name) {
   JS_SetPropertyStr(ctx, parent, name ? name : "Point", point_class);
 }
 
+extern "C" VISIBLE void
+js_point_export(JSContext* ctx, JSModuleDef* m) {
+  JS_AddModuleExport(ctx, m, "Point");
+}
+
 #if defined(JS_POINT_MODULE)
 #define JS_INIT_MODULE /*VISIBLE*/ js_init_module
 #else
@@ -455,7 +460,7 @@ JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   m = JS_NewCModule(ctx, module_name, &js_point_init);
   if(!m)
     return NULL;
-  JS_AddModuleExport(ctx, m, "Point");
+  js_point_export(ctx, m);
   return m;
 }
 }
