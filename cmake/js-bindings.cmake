@@ -109,7 +109,7 @@ config_shared_module(quickjs-opencv)
 
 set_target_properties(quickjs-opencv PROPERTIES # COMPILE_FLAGS "-fvisibility=hidden"
                                                 RPATH "${OPENCV_LIBRARY_DIRS}:${CMAKE_INSTALL_PREFIX}/lib:${CMAKE_INSTALL_PREFIX}/lib/quickjs" OUTPUT_NAME "opencv" PREFIX "")
-target_compile_definitions(quickjs-opencv PRIVATE -DJS_BINDINGS_INIT_MODULE=1 -DCONFIG_PREFIX=\"${CMAKE_INSTALL_PREFIX}\" ${PLOTCV_DEFS})
+target_compile_definitions(quickjs-opencv PRIVATE -DCONFIG_PREFIX=\"${CMAKE_INSTALL_PREFIX}\")
 
 target_link_libraries(quickjs-opencv ${OpenCV_LIBS})
 # link
