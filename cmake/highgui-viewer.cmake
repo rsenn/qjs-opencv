@@ -1,4 +1,4 @@
-include(${CMAKE_SOURCE_DIR}/cmake/opencv.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/opencv.cmake)
 
 set(GLEW_USE_STATIC_LIBS TRUE)
 set(GLEW_VERBOSE TRUE)

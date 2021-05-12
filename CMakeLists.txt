@@ -33,7 +33,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/functions.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindQuickJS.cmake)
 
 if(ENABLE_CCACHE)
-  include(${CMAKE_SOURCE_DIR}/cmake/ccache.cmake)
+  include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/ccache.cmake)
   enable_ccache()
 endif(ENABLE_CCACHE)
 
@@ -73,7 +73,7 @@ endif(HAVE_LIBDL)
 
 set(CMAKE_INSTALL_RPATH
     "${CMAKE_INSTALL_RPATH};${CMAKE_INSTALL_PREFIX}/lib;${CMAKE_INSTALL_PREFIX}/lib/quickjs")
-set(CMAKE_BUILD_RPATH "${CMAKE_CURRENT_BINARY_DIR};${CMAKE_BINARY_DIR}")
+set(CMAKE_BUILD_RPATH "${CMAKE_CURRENT_BINARY_DIR};${CMAKE_CURRENT_BINARY_DIR}")
 
 check_library_exists(json-cpp ZN4YAML6detail9node_data9reset_mapEv /usr JSON_CPP)
 
@@ -82,7 +82,7 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE
     CACHE BOOL "Add dirs in runtime search path to the install rpath" FORCE)
 
-include(${CMAKE_SOURCE_DIR}/cmake/opencv.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/opencv.cmake)
 
 include_directories(
   ${OPENCV_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/opencv
@@ -226,7 +226,7 @@ link_directories(BEFORE ${quickjs_BINARY_DIR})
 # if(HAVE_EFENCE) if(USE_EFENCE) set(ELECTRICFENCE_LIBRARY efence) endif(USE_EFENCE)
 # endif(HAVE_EFENCE)
 
-link_directories("${CMAKE_BINARY_DIR}/quickjs")
+link_directories("${CMAKE_CURRENT_BINARY_DIR}/quickjs")
  
 macro(find_static_library VAR NAME)
   find_library(${VAR} NAMES lib${NAME}.a PATHS "${CMAKE_INSTALL_PREFIX}/lib" NO_DEFAULT_PATH)
@@ -239,7 +239,7 @@ link_directories(${CMAKE_CURRENT_BINARY_DIR}/quickjs)
 option(QUICKJS_MODULES "Build .so modules for quickjs" ON)
 
 if(QUICKJS_MODULES)
-  include(${CMAKE_SOURCE_DIR}/cmake/js-bindings.cmake)
+  include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/js-bindings.cmake)
 endif(QUICKJS_MODULES)
 #[[
 add_executable(test-dlfcn test-dlfcn.c)
@@ -251,6 +251,6 @@ option(BUILD_QUICKJS "Build QuickJS" ON)
 #[[
 
 if(BUILD_QUICKJS)
-  add_subdirectory(quickjs "${CMAKE_BINARY_DIR}/quickjs")
+  add_subdirectory(quickjs "${CMAKE_CURRENT_BINARY_DIR}/quickjs")
 endif(BUILD_QUICKJS)
  ]]

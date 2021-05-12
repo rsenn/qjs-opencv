@@ -3,9 +3,9 @@ project(imgui-viewer)
 set(CMAKE_CXX_STANDARD 14)
 ]]
 
-include(${CMAKE_SOURCE_DIR}/cmake/FindGLFW.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindGLFW.cmake)
 # include: OpenCV
-include(${CMAKE_SOURCE_DIR}/cmake/opencv.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/opencv.cmake)
 
 # glfw
 include(FindPkgConfig)
@@ -39,7 +39,7 @@ endif(APPLE)
 if(WIN32)
   # nothing now
 endif(WIN32)
-include(${CMAKE_SOURCE_DIR}/cmake/sdl2-config.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/sdl2-config.cmake)
 
 if(ANDROID)
   add_definitions(-DIMGUI_IMPL_OPENGL_ES2=1)
