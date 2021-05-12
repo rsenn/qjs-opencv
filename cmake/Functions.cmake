@@ -1,3 +1,6 @@
+include(CheckLibraryExists)
+include(CheckTypeSize)
+
 function(DUMP VAR)
   string(REGEX REPLACE "[;\n]" " " A "${ARGV}")
   foreach(VAR ${ARGV})
@@ -20,3 +23,12 @@ macro(unset_all)
     unset("${VAR}" CACHE)
   endforeach(VAR ${ARGN})
 endmacro(unset_all)
+
+macro(check_size TYPE VAR)
+  check_type_size("${TYPE}" CMAKE_${VAR})
+  message(STATUS "size of ${TYPE} ${CMAKE_${VAR}}")
+endmacro(check_size TYPE VAR)
+
+macro(find_static_library VAR NAME)
+  find_library(${VAR} NAMES lib${NAME}.a PATHS "${CMAKE_INSTALL_PREFIX}/lib" NO_DEFAULT_PATH)
+endmacro()
