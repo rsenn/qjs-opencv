@@ -19,12 +19,6 @@
 #include <iomanip>
 #include <ranges>
 
-#if defined(JS_CONTOUR_MODULE) || defined(quickjs_contour_EXPORTS)
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module
-#else
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module_contour
-#endif
-
 extern "C" {
 JSValue contour_proto = JS_UNDEFINED, contour_class = JS_UNDEFINED;
 VISIBLE JSClassID js_contour_class_id = 0;
@@ -1160,6 +1154,12 @@ js_contour_init(JSContext* ctx, JSModuleDef* m) {
       JS_SetPropertyStr(ctx, *static_cast<JSValue*>(m), "Contour", contour_class);*/
   return 0;
 }
+
+#if defined(JS_CONTOUR_MODULE)
+#define JS_INIT_MODULE /*VISIBLE*/ js_init_module
+#else
+#define JS_INIT_MODULE /*VISIBLE*/ js_init_module_contour
+#endif
 
 JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {

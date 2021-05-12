@@ -3,7 +3,7 @@
 #include "js_point.hpp"
 #include "js_mat.hpp"
 #include "js_alloc.hpp"
- 
+
 JSValue clahe_proto = JS_UNDEFINED, clahe_class = JS_UNDEFINED;
 JSClassID js_clahe_class_id;
 

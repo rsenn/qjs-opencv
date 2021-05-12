@@ -13,12 +13,6 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
-#if defined(JS_POINT_MODULE) || defined(quickjs_point_EXPORTS)
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module
-#else
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module_point
-#endif
-
 std::vector<JSPointData<double>*> points;
 
 extern "C" {
@@ -448,6 +442,12 @@ js_point_constructor(JSContext* ctx, JSValue parent, const char* name) {
 
   JS_SetPropertyStr(ctx, parent, name ? name : "Point", point_class);
 }
+
+#if defined(JS_POINT_MODULE)
+#define JS_INIT_MODULE /*VISIBLE*/ js_init_module
+#else
+#define JS_INIT_MODULE /*VISIBLE*/ js_init_module_point
+#endif
 
 JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {

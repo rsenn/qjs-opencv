@@ -15,12 +15,6 @@
 #include "color.hpp"
 #include "geometry.hpp"
 
-#if defined(JS_DRAW_MODULE) || defined(quickjs_draw_EXPORTS)
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module
-#else
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module_draw
-#endif
-
 cv::Ptr<cv::freetype::FreeType2> freetype2 = nullptr;
 std::string freetype2_face;
 
@@ -574,6 +568,12 @@ js_draw_init(JSContext* ctx, JSModuleDef* m) {
       JS_SetPropertyStr(ctx, *static_cast<JSValue*>(m), "Draw", draw_class);*/
   return 0;
 }
+
+#if defined(JS_DRAW_MODULE)
+#define JS_INIT_MODULE /*VISIBLE*/ js_init_module
+#else
+#define JS_INIT_MODULE /*VISIBLE*/ js_init_module_draw
+#endif
 
 JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {

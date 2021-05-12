@@ -6,7 +6,6 @@
 #include "js_typed_array.hpp"
 #include "util.hpp"
 #include "line.hpp"
- 
 
 enum { PROP_SLOPE = 0, PROP_PIVOT, PROP_TO, PROP_ANGLE, PROP_LENGTH };
 enum { METHOD_SWAP = 0, METHOD_AT, METHOD_INTERSECT, METHOD_ENDPOINT_DISTANCES, METHOD_DISTANCE };

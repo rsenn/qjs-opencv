@@ -6,12 +6,6 @@
 
 #include <opencv2/imgproc.hpp>
 
-#if defined(JS_SUBDIV2D_MODULE) || defined(quickjs_subdiv2d_EXPORTS)
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module
-#else
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module_subdiv2d
-#endif
-
 extern "C" {
 JSValue subdiv2d_proto = JS_UNDEFINED, subdiv2d_class = JS_UNDEFINED;
 JSClassID js_subdiv2d_class_id = 0;
@@ -285,6 +279,12 @@ js_subdiv2d_constructor(JSContext* ctx, JSValue parent, const char* name) {
 
   JS_SetPropertyStr(ctx, parent, name ? name : "Subdiv2D", subdiv2d_class);
 }
+
+#if defined(JS_SUBDIV2D_MODULE)
+#define JS_INIT_MODULE /*VISIBLE*/ js_init_module
+#else
+#define JS_INIT_MODULE /*VISIBLE*/ js_init_module_subdiv2d
+#endif
 
 extern "C" JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {

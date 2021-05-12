@@ -13,12 +13,6 @@
 #include <map>
 #include <fstream>
 
-#if defined(JS_UMAT_MODULE) || defined(quickjs_umat_EXPORTS)
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module
-#else
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module_umat
-#endif
-
 enum {
   PROP_COLS = 0,
   PROP_ROWS,
@@ -1095,6 +1089,12 @@ js_umat_init(JSContext* ctx, JSModuleDef* m) {
     JS_SetModuleExport(ctx, m, "UMat", umat_class);
   return 0;
 }
+
+#if defined(JS_UMAT_MODULE)
+#define JS_INIT_MODULE /*VISIBLE*/ js_init_module
+#else
+#define JS_INIT_MODULE /*VISIBLE*/ js_init_module_umat
+#endif
 
 extern "C" VISIBLE JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {

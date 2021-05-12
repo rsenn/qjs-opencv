@@ -15,11 +15,6 @@
 #include <map>
 #include <fstream>
 
-#if defined(JS_MAT_MODULE) || defined(quickjs_mat_EXPORTS)
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module
-#else
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module_mat
-#endif
 enum {
   PROP_COLS = 0,
   PROP_ROWS,
@@ -1596,6 +1591,12 @@ js_mat_init(JSContext* ctx, JSModuleDef* m) {
     JS_SetModuleExport(ctx, m, "Mat", mat_class);
   return 0;
 }
+
+#if defined(JS_MAT_MODULE)
+#define JS_INIT_MODULE /*VISIBLE*/ js_init_module
+#else
+#define JS_INIT_MODULE /*VISIBLE*/ js_init_module_mat
+#endif
 
 extern "C" VISIBLE JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {

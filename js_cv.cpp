@@ -24,12 +24,6 @@
 
 #define JS_CV_CONSTANT(name) JS_PROP_INT32_DEF(#name, cv::name, 0)
 
-#if defined(JS_CV_MODULE) || defined(quickjs_cv_EXPORTS)
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module
-#else
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module_cv
-#endif
-
 enum { DISPLAY_OVERLAY };
 
 static std::vector<cv::String> window_list;
@@ -2343,6 +2337,12 @@ js_cv_init(JSContext* ctx, JSModuleDef* m) {
   JS_FreeValue(ctx, g);
   return 0;
 }
+
+#if defined(JS_CV_MODULE)
+#define JS_INIT_MODULE /*VISIBLE*/ js_init_module
+#else
+#define JS_INIT_MODULE /*VISIBLE*/ js_init_module_cv
+#endif
 
 extern "C" JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {

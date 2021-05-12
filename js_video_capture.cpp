@@ -1,7 +1,6 @@
 #include "jsbindings.hpp"
 #include "js_mat.hpp"
 #include "js_alloc.hpp"
- 
 
 extern "C" {
 JSValue video_capture_proto = JS_UNDEFINED, video_capture_class = JS_UNDEFINED;
