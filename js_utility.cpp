@@ -141,8 +141,9 @@ const JSCFunctionListEntry js_tick_meter_proto_funcs[] = {
 
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "TickMeter", JS_PROP_CONFIGURABLE),
 };
-int
-js_tick_meter_init(JSContext* ctx, JSModuleDef* m) {
+
+extern "C" int
+js_utility_init(JSContext* ctx, JSModuleDef* m) {
 
   if(js_tick_meter_class_id == 0) {
     /* create the TickMeter class */
@@ -167,7 +168,7 @@ js_tick_meter_init(JSContext* ctx, JSModuleDef* m) {
 void
 js_tick_meter_constructor(JSContext* ctx, JSValue parent, const char* name) {
   if(JS_IsUndefined(tick_meter_class))
-    js_tick_meter_init(ctx, 0);
+    js_utility_init(ctx, 0);
 
   JS_SetPropertyStr(ctx, parent, name ? name : "TickMeter", tick_meter_class);
 }
@@ -181,7 +182,7 @@ js_tick_meter_constructor(JSContext* ctx, JSValue parent, const char* name) {
 JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   JSModuleDef* m;
-  m = JS_NewCModule(ctx, module_name, &js_tick_meter_init);
+  m = JS_NewCModule(ctx, module_name, &js_utility_init);
   if(!m)
     return NULL;
   JS_AddModuleExport(ctx, m, "TickMeter");

@@ -248,7 +248,7 @@ const JSCFunctionListEntry js_subdiv2d_static_funcs[] = {
     JS_PROP_INT32_DEF("NEXT_AROUND_RIGHT", cv::Subdiv2D::NEXT_AROUND_RIGHT, 0),
     JS_PROP_INT32_DEF("PREV_AROUND_LEFT", cv::Subdiv2D::PREV_AROUND_LEFT, 0)};
 
-int
+extern "C" int
 js_subdiv2d_init(JSContext* ctx, JSModuleDef* m) {
 
   if(js_subdiv2d_class_id == 0) {

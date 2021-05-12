@@ -2316,7 +2316,7 @@ operator<<(Stream& s, const std::vector<Item>& vector) {
   return s;
 }
 
-int
+extern "C" int
 js_cv_init(JSContext* ctx, JSModuleDef* m) {
 
   /* std::cerr << "js_cv_static_funcs:" << std::endl << js_cv_static_funcs;

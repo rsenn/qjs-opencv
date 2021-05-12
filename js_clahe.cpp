@@ -106,7 +106,7 @@ const JSCFunctionListEntry js_clahe_proto_funcs[] = {JS_CFUNC_MAGIC_DEF("apply",
                                                      JS_CFUNC_MAGIC_DEF("setTilesGridSize", 0, js_clahe_method, 5),
                                                      JS_PROP_STRING_DEF("[Symbol.toStringTag]", "CLAHE", JS_PROP_CONFIGURABLE)};
 
-int
+extern "C" int
 js_clahe_init(JSContext* ctx, JSModuleDef* m) {
 
   /* create the CLAHE class */
