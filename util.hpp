@@ -9,6 +9,14 @@
 
 #include <opencv2/core.hpp>
 
+#if defined(_WIN32) || defined(__MINGW32__)
+#define VISIBLE __declspec(dllexport)
+#define HIDDEN
+#else
+#define VISIBLE __attribute__((visibility("default")))
+#define HIDDEN __attribute__((visibility("hidden")))
+#endif
+
 #define COLOR_BLACK "\x1b[30m"
 #define COLOR_RED "\x1b[31m"
 #define COLOR_GREEN "\x1b[32m"

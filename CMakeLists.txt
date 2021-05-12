@@ -40,7 +40,7 @@ endif(ENABLE_CCACHE)
 macro(check_size TYPE VAR)
   check_type_size("${TYPE}" CMAKE_${VAR})
   if(${CMAKE_${VAR}})
-#    list(APPEND PLOTCV_DEFS ${VAR}=${CMAKE_${VAR}})
+    # list(APPEND PLOTCV_DEFS ${VAR}=${CMAKE_${VAR}})
   endif(${CMAKE_${VAR}})
   message(STATUS "size of ${TYPE} ${CMAKE_${VAR}}")
 endmacro(check_size TYPE VAR)
@@ -167,7 +167,7 @@ endif(F_OPT_PIC)
 # option(USE_EFENCE "Enable electric fence" OFF)
 set(DEBUG_OUTPUT TRUE CACHE BOOL "Debug output" FORCE)
 set(DEBUG_MAT FALSE CACHE BOOL "Debug cv::Mat" FORCE)
-#list(APPEND PLOTCV_DEFS DEBUG=1)
+# list(APPEND PLOTCV_DEFS DEBUG=1)
 
 # add_definitions(-DDEBUG=1)
 
@@ -202,10 +202,10 @@ endif(OPT_CXX_G_GDB)
 # endif("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
 
 if(DEBUG_OUTPUT)
-#  list(APPEND PLOTCV_DEFS DEBUG_OUTPUT=1)
+  # list(APPEND PLOTCV_DEFS DEBUG_OUTPUT=1)
 endif(DEBUG_OUTPUT)
 if(DEBUG_MAT)
-#  list(APPEND PLOTCV_DEFS DEBUG_MAT=1)
+  # list(APPEND PLOTCV_DEFS DEBUG_MAT=1)
 endif(DEBUG_MAT)
 
 check_c_compiler_flag("-flto" HAS_F_LTO_FLAG)
@@ -227,7 +227,7 @@ link_directories(BEFORE ${quickjs_BINARY_DIR})
 # endif(HAVE_EFENCE)
 
 link_directories("${CMAKE_CURRENT_BINARY_DIR}/quickjs")
- 
+
 macro(find_static_library VAR NAME)
   find_library(${VAR} NAMES lib${NAME}.a PATHS "${CMAKE_INSTALL_PREFIX}/lib" NO_DEFAULT_PATH)
 endmacro()
@@ -248,9 +248,9 @@ target_link_libraries(test-dlfcn dl)
 
 option(BUILD_QUICKJS "Build QuickJS" ON)
 
-#[[
 
-if(BUILD_QUICKJS)
-  add_subdirectory(quickjs "${CMAKE_CURRENT_BINARY_DIR}/quickjs")
-endif(BUILD_QUICKJS)
- ]]
+file(GLOB OPENCV_SOURCES *.hpp *.cpp)
+dump(OPENCV_SOURCES)
+
+make_shared_module(opencv ${OPENCV_SOURCES})
+# make_js_bindings()

@@ -6,6 +6,7 @@ if(WIN32 OR MINGW)
   set(QUICKJS_MODULE_DEPENDENCIES "quickjs")
   set(QUICKJS_MODULE_CFLAGS "-fvisibility=hidden")
 endif(WIN32 OR MINGW)
+
 function(config_shared_module TARGET_NAME)
   if(QUICKJS_LIBRARY_DIR)
     target_link_directories(${TARGET_NAME} PRIVATE "${QUICKJS_LIBRARY_DIR}")
@@ -27,7 +28,13 @@ function(make_shared_module FNAME)
 
   set(TARGET_NAME quickjs-${NAME})
 
-  add_library(${TARGET_NAME} SHARED js_${FNAME}.cpp ${js_${FNAME}_SOURCES} jsbindings.cpp util.cpp js.hpp js.cpp ${JS_BINDINGS_COMMON})
+  if(ARGN)
+    set(SOURCES ${ARGN})
+  else(ARGN)
+    set(SOURCES js_${FNAME}.cpp ${js_${FNAME}_SOURCES} jsbindings.cpp util.cpp js.hpp js.cpp ${JS_BINDINGS_COMMON})
+  endif(ARGN)
+
+  add_library(${TARGET_NAME} SHARED ${SOURCES})
 
   target_link_libraries(${TARGET_NAME} ${OpenCV_LIBS})
   set_target_properties(
@@ -47,69 +54,53 @@ function(make_shared_module FNAME)
   endif()
 endfunction()
 
-file(GLOB JS_BINDINGS_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/js_*.cpp)
+function(make_js_bindings)
+  file(GLOB JS_BINDINGS_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/js_*.cpp)
 
-foreach(MOD ${JS_BINDINGS_SOURCES})
-  string(REGEX REPLACE "\\.cpp" "" MOD "${MOD}")
-  string(REGEX REPLACE ".*/js_" "" MOD "${MOD}")
-  list(APPEND JS_BINDINGS_MODULES ${MOD})
+  foreach(MOD ${JS_BINDINGS_SOURCES})
+    string(REGEX REPLACE "\\.cpp" "" MOD "${MOD}")
+    string(REGEX REPLACE ".*/js_" "" MOD "${MOD}")
+    list(APPEND JS_BINDINGS_MODULES ${MOD})
+  endforeach(MOD ${JS_BINDINGS_SOURCES})
 
-endforeach(MOD ${JS_BINDINGS_SOURCES})
+  foreach(JS_MODULE ${JS_BINDINGS_MODULES})
+    make_shared_module(${JS_MODULE})
+  endforeach()
 
-foreach(JS_MODULE ${JS_BINDINGS_MODULES})
+  string(REPLACE ";" " " MODULE_NAMES "${JS_BINDINGS_MODULES}")
+  message(STATUS "Configured modules: ${MODULE_NAMES}")
 
-  make_shared_module(${JS_MODULE})
+  add_dependencies(quickjs-rect quickjs-point quickjs-size)
+  # add_dependencies(quickjs-contour quickjs-mat quickjs-rect quickjs-point)
 
-endforeach()
+  add_dependencies(quickjs-contour quickjs-mat)
 
-string(REPLACE ";" " " MODULE_NAMES "${JS_BINDINGS_MODULES}")
-message(STATUS "Configured modules: ${MODULE_NAMES}")
+  target_link_libraries(quickjs-mat quickjs-size)
+  target_link_libraries(quickjs-point-iterator quickjs-line quickjs-point)
+  target_link_libraries(quickjs-contour quickjs-point-iterator quickjs-mat)
+  target_link_libraries(quickjs-line quickjs-point)
+  target_link_libraries(quickjs-rect quickjs-size quickjs-point)
+  target_link_libraries(quickjs-video-capture quickjs-mat)
+  target_link_libraries(quickjs-cv quickjs-mat quickjs-contour quickjs-rect quickjs-line)
+  target_link_libraries(quickjs-draw quickjs-mat quickjs-contour quickjs-size)
+  target_link_libraries(quickjs-clahe quickjs-mat quickjs-size)
+  target_link_libraries(quickjs-umat quickjs-mat)
+  target_link_libraries(quickjs-subdiv2d quickjs-contour)
 
-add_dependencies(quickjs-rect quickjs-point quickjs-size)
-# add_dependencies(quickjs-contour quickjs-mat quickjs-rect quickjs-point)
+  target_link_libraries(quickjs-cv png)
 
-add_dependencies(quickjs-contour quickjs-mat)
+  # add_dependencies(quickjs-point-iterator quickjs-contour quickjs-mat)
 
-target_link_libraries(quickjs-mat quickjs-size)
-target_link_libraries(quickjs-point-iterator quickjs-line quickjs-point)
-target_link_libraries(quickjs-contour quickjs-point-iterator quickjs-mat)
-target_link_libraries(quickjs-line quickjs-point)
-target_link_libraries(quickjs-rect quickjs-size quickjs-point)
-target_link_libraries(quickjs-video-capture quickjs-mat)
-target_link_libraries(quickjs-cv quickjs-mat quickjs-contour quickjs-rect quickjs-line)
-target_link_libraries(quickjs-draw quickjs-mat quickjs-contour quickjs-size)
-target_link_libraries(quickjs-clahe quickjs-mat quickjs-size)
-target_link_libraries(quickjs-umat quickjs-mat)
-target_link_libraries(quickjs-subdiv2d quickjs-contour)
+  file(GLOB JS_BINDINGS_SOURCES color.cpp data.cpp geometry.cpp jsbindings.cpp js_*.cpp js.cpp line.cpp matrix.cpp polygon.cpp *.h *.hpp)
 
-target_link_libraries(quickjs-cv png)
+  # Main
+  add_library(quickjs-opencv MODULE ${JS_BINDINGS_SOURCES})
+  config_shared_module(quickjs-opencv)
 
-# add_dependencies(quickjs-point-iterator quickjs-contour quickjs-mat)
+  set_target_properties(quickjs-opencv PROPERTIES # COMPILE_FLAGS "-fvisibility=hidden"
+                                                  RPATH "${OPENCV_LIBRARY_DIRS}:${CMAKE_INSTALL_PREFIX}/lib:${CMAKE_INSTALL_PREFIX}/lib/quickjs" OUTPUT_NAME "opencv" PREFIX "")
+  target_compile_definitions(quickjs-opencv PRIVATE -DCONFIG_PREFIX=\"${CMAKE_INSTALL_PREFIX}\")
 
-file(
-  GLOB
-  JS_BINDINGS_SOURCES
-  color.cpp
-  data.cpp
-  geometry.cpp
-  # js.cpp
-  jsbindings.cpp
-  # plot-cv.cpp
-  js_*.cpp
-  js.cpp
-  line.cpp
-  matrix.cpp
-  polygon.cpp
-  *.h
-  *.hpp)
-
-# Main
-add_library(quickjs-opencv MODULE ${JS_BINDINGS_SOURCES})
-config_shared_module(quickjs-opencv)
-
-set_target_properties(quickjs-opencv PROPERTIES # COMPILE_FLAGS "-fvisibility=hidden"
-                                                RPATH "${OPENCV_LIBRARY_DIRS}:${CMAKE_INSTALL_PREFIX}/lib:${CMAKE_INSTALL_PREFIX}/lib/quickjs" OUTPUT_NAME "opencv" PREFIX "")
-target_compile_definitions(quickjs-opencv PRIVATE -DCONFIG_PREFIX=\"${CMAKE_INSTALL_PREFIX}\")
-
-target_link_libraries(quickjs-opencv ${OpenCV_LIBS})
-# link
+  target_link_libraries(quickjs-opencv ${OpenCV_LIBS})
+  # link
+endfunction(make_js_bindings)
