@@ -2338,6 +2338,12 @@ js_cv_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
+extern "C" void
+js_cv_export(JSContext* ctx, JSModuleDef* m) {
+  JS_AddModuleExportList(ctx, m, js_cv_static_funcs.data(), js_cv_static_funcs.size());
+  JS_AddModuleExport(ctx, m, "default");
+}
+
 #if defined(JS_CV_MODULE)
 #define JS_INIT_MODULE /*VISIBLE*/ js_init_module
 #else
@@ -2350,7 +2356,6 @@ JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   m = JS_NewCModule(ctx, module_name, &js_cv_init);
   if(!m)
     return NULL;
-  JS_AddModuleExportList(ctx, m, js_cv_static_funcs.data(), js_cv_static_funcs.size());
-  JS_AddModuleExport(ctx, m, "default");
+  js_cv_export(ctx, m);
   return m;
 }

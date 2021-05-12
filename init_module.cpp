@@ -17,6 +17,8 @@ extern "C" int js_umat_init(JSContext*, JSModuleDef*);
 extern "C" int js_utility_init(JSContext*, JSModuleDef*);
 extern "C" int js_video_capture_init(JSContext*, JSModuleDef*);
 
+extern "C" void js_cv_export(JSContext*, JSModuleDef*);
+
 int
 js_opencv_init(JSContext* ctx, JSModuleDef* m) {
   js_clahe_init(ctx, m);
@@ -44,7 +46,7 @@ js_init_module(JSContext* ctx, const char* module_name) {
   m = JS_NewCModule(ctx, module_name, &js_opencv_init);
   if(!m)
     return NULL;
-  
+
   JS_AddModuleExport(ctx, m, "CLAHE");
   JS_AddModuleExport(ctx, m, "Contour");
   JS_AddModuleExport(ctx, m, "Draw");
@@ -59,6 +61,8 @@ js_init_module(JSContext* ctx, const char* module_name) {
   JS_AddModuleExport(ctx, m, "UMat");
   JS_AddModuleExport(ctx, m, "TickMeter");
   JS_AddModuleExport(ctx, m, "VideoCapture");
+
+  js_cv_export(ctx, m);
 
   return m;
 }
