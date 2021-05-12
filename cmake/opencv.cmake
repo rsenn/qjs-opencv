@@ -99,7 +99,7 @@ function(find_opencv)
     endif(OpenCV_DIR)
   endif(NOT OPENCV_PREFIX)
 
-  dump(OPENCV_PREFIX)
+  #dump(OPENCV_PREFIX)
 
   if(NOT OPENCV_CHECKED)
     message(CHECK_START "Finding opencv library")
@@ -111,7 +111,7 @@ function(find_opencv)
       list(APPEND CMAKE_MODULE_PATH "${OPENCV_PREFIX}/lib/cmake/opencv4")
     endif(OPENCV_PREFIX)
 
-    dump(CMAKE_PREFIX_PATH CMAKE_MODULE_PATH)
+    #dump(CMAKE_PREFIX_PATH CMAKE_MODULE_PATH)
 
     if(NOT OPENCV_FOUND)
       find_package(OpenCV PATHS "${OPENCV_PREFIX}/lib/cmake/opencv4;${OPENCV_PREFIX}/lib/cmake;${OPENCV_PREFIX}")
@@ -164,6 +164,6 @@ function(find_opencv)
     endif(OPENCV_FOUND)
     set(OPENCV_CHECKED TRUE)
 
-    dump(OPENCV_FOUND OPENCV_INCLUDE_DIRS OPENCV_LIBDIR OPENCV_LINK_FLAGS OPENCV_LIBRARIES)
+    #dump(OPENCV_FOUND OPENCV_INCLUDE_DIRS OPENCV_LIBDIR OPENCV_LINK_FLAGS OPENCV_LIBRARIES)
   endif(NOT OPENCV_CHECKED)
 endfunction(find_opencv)

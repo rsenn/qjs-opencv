@@ -112,7 +112,7 @@ message("C++ standard: ${CXX_STANDARD_VALUE}")
 macro(NOWARN_FLAG FLAG)
   canonicalize(VARNAME "${FLAG}")
   check_c_compiler_flag("${FLAG}" "${VARNAME}")
-  dump(${VARNAME})
+  #dump(${VARNAME})
 
   if(${VARNAME})
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${FLAG}")
@@ -134,8 +134,8 @@ if("${CMAKE_CXX_COMPILER_ID}" MATCHES ".*Clang.*")
   nowarn_flag(-Wno-deprecated-enum-enum-conversion)
 endif("${CMAKE_CXX_COMPILER_ID}" MATCHES ".*Clang.*")
 
-dump(CMAKE_C_FLAGS CMAKE_CXX_FLAGS)
-dump(CMAKE_CXX_FLAGS_DEBUG)
+#dump(CMAKE_C_FLAGS CMAKE_CXX_FLAGS)
+#dump(CMAKE_CXX_FLAGS_DEBUG)
 
 check_cxx_compiler_flag("-fPIC" F_OPT_PIC)
 if(F_OPT_PIC)
@@ -206,7 +206,7 @@ endif(QUICKJS_MODULES)
 option(BUILD_QUICKJS "Build QuickJS" ON)
 
 file(GLOB OPENCV_SOURCES *.hpp *.cpp)
-dump(OPENCV_SOURCES)
+#dump(OPENCV_SOURCES)
 
 make_shared_module(opencv ${OPENCV_SOURCES})
 # make_js_bindings()
