@@ -101,8 +101,9 @@ foreach(CXX_STANDARD c++20 c++17 c++14 c++11)
     message("CXX_STANDARD_NAME = ${CXX_STANDARD_NAME}")
     message("CXX_STANDARD_VERSION = ${CXX_STANDARD_VERSION}")
 
-    add_definitions(-D"${CXX_STANDARD_NAME}")
-    add_definitions(-DCXX_STANDARD=${CXX_STANDARD_VERSION})
+    if(CXX_STANDARD_NAME)
+      add_definitions(-D"${CXX_STANDARD_NAME}")
+    endif(CXX_STANDARD_NAME)
 
     set(CXX_STANDARD_VALUE "${CXX_STANDARD}" CACHE STRING "C++ standard" FORCE)
     set(CXX_STANDARD_FLAG "-std=${CXX_STANDARD}" CACHE STRING "C++ standard argument" FORCE)
@@ -110,6 +111,9 @@ foreach(CXX_STANDARD c++20 c++17 c++14 c++11)
     break()
   endif(CXX_STANDARD_${CXX_STANDARD_NUM})
 endforeach()
+
+string(REGEX REPLACE "c\\+\\+" "" CXX_STANDARD_VERSION "${CXX_STANDARD_VALUE}")
+add_definitions(-DCXX_STANDARD=${CXX_STANDARD_VERSION})
 
 message("C++ standard: ${CXX_STANDARD_VALUE}")
 
@@ -247,7 +251,6 @@ target_link_libraries(test-dlfcn dl)
 ]]
 
 option(BUILD_QUICKJS "Build QuickJS" ON)
-
 
 file(GLOB OPENCV_SOURCES *.hpp *.cpp)
 dump(OPENCV_SOURCES)
