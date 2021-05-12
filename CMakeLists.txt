@@ -27,6 +27,7 @@ include(CheckTypeSize)
 include(FindPkgConfig)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/functions.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindQuickJS.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/opencv.cmake)
 
 if(ENABLE_CCACHE)
   include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/ccache.cmake)
@@ -70,8 +71,8 @@ endif(HAVE_LIBDL)
 check_library_exists(json-cpp ZN4YAML6detail9node_data9reset_mapEv /usr JSON_CPP)
 
 find_quickjs()
+find_opencv()
 
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/opencv.cmake)
 
 set(CMAKE_INSTALL_RPATH "${OPENCV_LIB_DIR}" CACHE PATH "Build with install rpath" FORCE)
 

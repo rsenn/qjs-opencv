@@ -13,3 +13,10 @@ function(CANONICALIZE OUTPUT_VAR STR)
 
   set("${OUTPUT_VAR}" "${TMP_STR}" PARENT_SCOPE)
 endfunction(CANONICALIZE OUTPUT_VAR STR)
+
+macro(unset_all)
+  foreach(VAR ${ARGN})
+    unset("${VAR}" PARENT_SCOPE)
+    unset("${VAR}" CACHE)
+  endforeach(VAR ${ARGN})
+endmacro(unset_all)
