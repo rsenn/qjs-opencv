@@ -70,18 +70,3 @@ macro(ADD_NOWARN_FLAGS)
   dump(CMAKE_C_FLAGS CMAKE_CXX_FLAGS)
   dump(CMAKE_CXX_FLAGS_DEBUG)
 endmacro(ADD_NOWARN_FLAGS)
-
-#[[
-check_c_compiler_flag("-Wno-unused-value" WARN_NO_UNUSED_VALUE)
-if(WARN_NO_UNUSED_VALUE)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-value" )
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-value" )
-endif(WARN_NO_UNUSED_VALUE)
-
-
-check_c_compiler_flag("-Wno-unused-variable" WARN_NO_UNUSED_VARIABLE)
-if(WARN_NO_UNUSED_VARIABLE)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-variable" )
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-variable" )
-endif(WARN_NO_UNUSED_VARIABLE)
-]]

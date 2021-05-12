@@ -7,11 +7,7 @@ set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "build type")
 
 set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release MinSizeRel RelWithDebInfo)
 
-set(CMAKE_BUILD_RPATH "${CMAKE_CURRENT_BINARY_DIR}" CACHE PATH "Build with local rpath" FORCE)
-set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib" CACHE PATH "Build with install rpath" FORCE)
-
 set(quickjs_sources_root ${CMAKE_CURRENT_SOURCE_DIR}/quickjs)
-# include(${quickjs_sources_root}/defs.cmake)
 
 if(NOT CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL "")
   set(CMAKE_BUILD_TYPE "Debug")
@@ -71,18 +67,13 @@ if(HAVE_LIBDL)
   # message("Found dlfcn library: ${LIBDL}")
 endif(HAVE_LIBDL)
 
-set(CMAKE_INSTALL_RPATH
-    "${CMAKE_INSTALL_RPATH};${CMAKE_INSTALL_PREFIX}/lib;${CMAKE_INSTALL_PREFIX}/lib/quickjs")
-set(CMAKE_BUILD_RPATH "${CMAKE_CURRENT_BINARY_DIR};${CMAKE_CURRENT_BINARY_DIR}")
-
 check_library_exists(json-cpp ZN4YAML6detail9node_data9reset_mapEv /usr JSON_CPP)
 
-set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE
-    CACHE BOOL "Build installable binaries with -Wl,-rpath=PREFIX" FORCE)
-set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE
-    CACHE BOOL "Add dirs in runtime search path to the install rpath" FORCE)
+find_quickjs()
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/opencv.cmake)
+
+set(CMAKE_INSTALL_RPATH "${OPENCV_LIB_DIR}" CACHE PATH "Build with install rpath" FORCE)
 
 include_directories(
   ${OPENCV_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/opencv
@@ -145,35 +136,14 @@ endif("${CMAKE_CXX_COMPILER_ID}" MATCHES ".*Clang.*")
 dump(CMAKE_C_FLAGS CMAKE_CXX_FLAGS)
 dump(CMAKE_CXX_FLAGS_DEBUG)
 
-#[[
-check_c_compiler_flag("-Wno-unused-value" WARN_NO_UNUSED_VALUE)
-if(WARN_NO_UNUSED_VALUE)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-value" )
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-value" )
-endif(WARN_NO_UNUSED_VALUE)
-
-
-check_c_compiler_flag("-Wno-unused-variable" WARN_NO_UNUSED_VARIABLE)
-if(WARN_NO_UNUSED_VARIABLE)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-variable" )
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-variable" )
-endif(WARN_NO_UNUSED_VARIABLE)
-]]
-
 check_cxx_compiler_flag("-fPIC" F_OPT_PIC)
 if(F_OPT_PIC)
   set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fPIC")
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fPIC")
 endif(F_OPT_PIC)
 
-# if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-
-# option(USE_EFENCE "Enable electric fence" OFF)
 set(DEBUG_OUTPUT TRUE CACHE BOOL "Debug output" FORCE)
 set(DEBUG_MAT FALSE CACHE BOOL "Debug cv::Mat" FORCE)
-# list(APPEND PLOTCV_DEFS DEBUG=1)
-
-# add_definitions(-DDEBUG=1)
 
 check_c_compiler_flag("-O0" OPT_C_OPT_NONE)
 check_cxx_compiler_flag("-O0" OPT_CXX_OPT_NONE)
@@ -203,15 +173,6 @@ if(OPT_CXX_G_GDB)
   endif(NOT "${CMAKE_CXX_FLAGS_DEBUG}" MATCHES "-ggdb")
 endif(OPT_CXX_G_GDB)
 
-# endif("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-
-if(DEBUG_OUTPUT)
-  # list(APPEND PLOTCV_DEFS DEBUG_OUTPUT=1)
-endif(DEBUG_OUTPUT)
-if(DEBUG_MAT)
-  # list(APPEND PLOTCV_DEFS DEBUG_MAT=1)
-endif(DEBUG_MAT)
-
 check_c_compiler_flag("-flto" HAS_F_LTO_FLAG)
 
 if(HAS_F_LTO_FLAG)
@@ -225,10 +186,6 @@ if(ENABLE_LTO)
 endif(ENABLE_LTO)
 
 link_directories(BEFORE ${quickjs_BINARY_DIR})
-# message("quickjs_BINARY_DIR: ${quickjs_BINARY_DIR}")
-
-# if(HAVE_EFENCE) if(USE_EFENCE) set(ELECTRICFENCE_LIBRARY efence) endif(USE_EFENCE)
-# endif(HAVE_EFENCE)
 
 link_directories("${CMAKE_CURRENT_BINARY_DIR}/quickjs")
 
@@ -239,16 +196,11 @@ endmacro()
 set(QUICKJS_LIBRARY quickjs)
 link_directories(${CMAKE_CURRENT_BINARY_DIR}/quickjs)
 
-# option(QUICKJS_MODULES "Build .so modules for quickjs" "${BUILD_SHARED_LIBS}")
 option(QUICKJS_MODULES "Build .so modules for quickjs" ON)
 
 if(QUICKJS_MODULES)
   include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/js-bindings.cmake)
 endif(QUICKJS_MODULES)
-#[[
-add_executable(test-dlfcn test-dlfcn.c)
-target_link_libraries(test-dlfcn dl)
-]]
 
 option(BUILD_QUICKJS "Build QuickJS" ON)
 
