@@ -1031,11 +1031,13 @@ js_mat_copy_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
   if(argc > 1)
     mask = js_umat_or_mat(ctx, argv[1]);
 
-  if(!js_is_noarray(mask))
-    m->copyTo(output, mask);
-  else
-    m->copyTo(output);
-
+  try {
+    if(!js_is_noarray(mask))
+      m->copyTo(output, mask);
+    else
+      m->copyTo(output);
+  } catch(const cv::Exception& e) { return JS_ThrowInternalError(ctx, "cv::Exception what='%s'", e.what()); }
+  
   return JS_UNDEFINED;
 }
 
@@ -1598,12 +1600,12 @@ js_mat_export(JSContext* ctx, JSModuleDef* m) {
 }
 
 #if defined(JS_MAT_MODULE)
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module
+#define JS_INIT_MODULE VISIBLE js_init_module
 #else
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module_mat
+#define JS_INIT_MODULE js_init_module_mat
 #endif
 
-extern "C" VISIBLE JSModuleDef*
+extern "C" JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   JSModuleDef* m;
   m = JS_NewCModule(ctx, module_name, &js_mat_init);

@@ -1160,9 +1160,9 @@ js_contour_export(JSContext* ctx, JSModuleDef* m) {
 }
 
 #if defined(JS_CONTOUR_MODULE)
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module
+#define JS_INIT_MODULE VISIBLE js_init_module
 #else
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module_contour
+#define JS_INIT_MODULE js_init_module_contour
 #endif
 
 JSModuleDef*

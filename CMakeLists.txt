@@ -132,6 +132,8 @@ set_target_properties(
                         COMPILE_FLAGS "${QUICKJS_MODULE_CFLAGS} ${F_PIC}")
 target_compile_definitions(qjs-opencv
                            PRIVATE CONFIG_PREFIX="${CMAKE_INSTALL_PREFIX}")
+
+
 install(TARGETS qjs-opencv DESTINATION lib/quickjs)
 set(jsbindings_LIBRARIES qjs-opencv)
 

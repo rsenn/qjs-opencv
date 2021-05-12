@@ -60,17 +60,16 @@ js_draw_circle(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
   }
 
   if(argc > i && JS_IsNumber(argv[i]))
-        js_value_to(ctx, argv[i++], thickness);
-
+    js_value_to(ctx, argv[i++], thickness);
 
   /**/
   if(argc > i) {
     if(JS_IsBool(argv[i])) {
-        js_value_to(ctx, argv[i++], antialias);
+      js_value_to(ctx, argv[i++], antialias);
       lineType = antialias ? cv::LINE_AA : cv::LINE_8;
 
     } else if(JS_IsNumber(argv[i])) {
-          js_value_to(ctx, argv[i++], lineType);
+      js_value_to(ctx, argv[i++], lineType);
     }
   }
 
@@ -248,7 +247,7 @@ js_draw_polygon(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
   if(argc > i && js_is_array_like(ctx, argv[i]))
     js_array_to(ctx, argv[i++], points);
 
-  if(argc > i )
+  if(argc > i)
     js_color_read(ctx, argv[i++], &color);
 
   if(argc > i && JS_IsNumber(argv[i]))
@@ -576,9 +575,9 @@ js_draw_export(JSContext* ctx, JSModuleDef* m) {
 }
 
 #if defined(JS_DRAW_MODULE)
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module
+#define JS_INIT_MODULE VISIBLE js_init_module
 #else
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module_draw
+#define JS_INIT_MODULE js_init_module_draw
 #endif
 
 JSModuleDef*

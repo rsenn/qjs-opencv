@@ -454,9 +454,9 @@ js_line_constructor(JSContext* ctx, JSValue parent, const char* name) {
 }
 
 #ifdef JS_LINE_MODULE
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module
+#define JS_INIT_MODULE VISIBLE js_init_module
 #else
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module_line
+#define JS_INIT_MODULE js_init_module_line
 #endif
 
 JSModuleDef*

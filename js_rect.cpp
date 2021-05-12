@@ -586,9 +586,9 @@ js_rect_constructor(JSContext* ctx, JSValue parent, const char* name) {
 }
 
 #ifdef JS_RECT_MODULE
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module
+#define JS_INIT_MODULE VISIBLE js_init_module
 #else
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module_rect
+#define JS_INIT_MODULE js_init_module_rect
 #endif
 
 extern "C" JSModuleDef*

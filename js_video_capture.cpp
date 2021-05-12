@@ -202,9 +202,9 @@ js_video_capture_constructor(JSContext* ctx, JSValue parent, const char* name) {
 }
 
 #ifdef JS_VIDEO_CAPTURE_MODULE
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module
+#define JS_INIT_MODULE VISIBLE js_init_module
 #else
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module_video_capture
+#define JS_INIT_MODULE js_init_module_video_capture
 #endif
 
 extern "C" JSModuleDef*

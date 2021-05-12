@@ -178,9 +178,9 @@ js_slice_iterator_export(JSContext* ctx, JSModuleDef* m) {
 }
 
 #if defined(JS_SLICE_ITERATOR_MODULE)
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module
+#define JS_INIT_MODULE VISIBLE js_init_module
 #else
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module_slice_iterator
+#define JS_INIT_MODULE js_init_module_slice_iterator
 #endif
 
 JSModuleDef*

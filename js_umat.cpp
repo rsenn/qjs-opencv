@@ -1096,12 +1096,12 @@ js_umat_export(JSContext* ctx, JSModuleDef* m) {
 }
 
 #if defined(JS_UMAT_MODULE)
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module
+#define JS_INIT_MODULE VISIBLE js_init_module
 #else
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module_umat
+#define JS_INIT_MODULE js_init_module_umat
 #endif
 
-extern "C" VISIBLE JSModuleDef*
+extern "C" JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   JSModuleDef* m;
   m = JS_NewCModule(ctx, module_name, &js_umat_init);

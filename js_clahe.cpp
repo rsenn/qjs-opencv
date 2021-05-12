@@ -138,9 +138,9 @@ js_clahe_constructor(JSContext* ctx, JSValue parent, const char* name) {
 }
 
 #ifdef JS_CLAHE_MODULE
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module
+#define JS_INIT_MODULE VISIBLE js_init_module
 #else
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module_clahe
+#define JS_INIT_MODULE js_init_module_clahe
 #endif
 
 extern "C" VISIBLE void

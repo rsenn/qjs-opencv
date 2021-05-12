@@ -288,9 +288,9 @@ js_subdiv2d_constructor(JSContext* ctx, JSValue parent, const char* name) {
 }
 
 #if defined(JS_SUBDIV2D_MODULE)
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module
+#define JS_INIT_MODULE VISIBLE js_init_module
 #else
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module_subdiv2d
+#define JS_INIT_MODULE js_init_module_subdiv2d
 #endif
 
 extern "C" JSModuleDef*

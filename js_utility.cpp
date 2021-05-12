@@ -181,9 +181,9 @@ js_tick_meter_constructor(JSContext* ctx, JSValue parent, const char* name) {
 }
 
 #ifdef JS_UTILITY_MODULE
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module
+#define JS_INIT_MODULE VISIBLE js_init_module
 #else
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module_utility
+#define JS_INIT_MODULE js_init_module_utility
 #endif
 
 JSModuleDef*

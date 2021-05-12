@@ -638,7 +638,7 @@ public:
 
     for(entry_type entry : in) {
       T prop = entry.second;
-      JS_SetPropertyStr(ctx, obj, entry.first.c_str(),  js_value_from(ctx,   prop)/*, JS_PROP_C_W_E*/);
+      JS_SetPropertyStr(ctx, obj, entry.first.c_str(), js_value_from(ctx, prop) /*, JS_PROP_C_W_E*/);
     }
 
     return obj;
