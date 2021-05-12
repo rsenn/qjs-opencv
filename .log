@@ -1,0 +1,33 @@
+Entering directory 'build/x86_64-linux-gnu'
+QuickJS install directory: /usr/local
+  HAVE_QUICKJS_CONFIG_H = 1
+-- QuickJS interpreter: /usr/local/bin/qjs
+-- QuickJS compiler: /usr/local/bin/qjsc
+-- size of long 8
+-- size of long long 8
+-- size of size_t 8
+Thread library: -lpthread
+  OPENCV_PREFIX = /usr
+-- Finding opencv library
+  CMAKE_PREFIX_PATH = /usr
+  CMAKE_MODULE_PATH = /usr/lib/cmake/opencv4
+-- Finding opencv library - found
+OpenCV found: /usr
+  OPENCV_FOUND = TRUE
+  OPENCV_INCLUDE_DIRS = /usr/include/opencv4
+  OPENCV_LIBDIR = /usr/lib
+  OPENCV_LINK_FLAGS = -Wl,-rpath,/usr/lib -L/usr/lib
+  OPENCV_LIBRARIES = opencv_calib3d;opencv_core;opencv_dnn;opencv_features2d;opencv_flann;opencv_highgui;opencv_imgcodecs;opencv_imgproc;opencv_ml;opencv_objdetect;opencv_photo;opencv_stitching;opencv_video;opencv_videoio;opencv_aruco;opencv_bgsegm;opencv_bioinspired;opencv_ccalib;opencv_datasets;opencv_dnn_objdetect;opencv_dnn_superres;opencv_dpm;opencv_face;opencv_freetype;opencv_fuzzy;opencv_hdf;opencv_hfs;opencv_img_hash;opencv_line_descriptor;opencv_optflow;opencv_phase_unwrapping;opencv_plot;opencv_quality;opencv_reg;opencv_rgbd;opencv_saliency;opencv_shape;opencv_stereo;opencv_structured_light;opencv_superres;opencv_surface_matching;opencv_text;opencv_tracking;opencv_videostab;opencv_viz;opencv_ximgproc;opencv_xobjdetect;opencv_xphoto
+CXX_STANDARD_NAME = CXX20
+CXX_STANDARD_VERSION = 20
+C++ standard: c++20
+  WARN_NO_UNUSED_VALUE = 1
+  WARN_NO_UNUSED_VARIABLE = 1
+  CMAKE_C_FLAGS =  -Wno-unused-value -Wno-unused-variable
+  CMAKE_CXX_FLAGS =  -std=c++20 -Wno-unused-value -Wno-unused-variable
+  CMAKE_CXX_FLAGS_DEBUG = -g -fPIC -O0 -ggdb
+  OPENCV_PREFIX = /usr
+-- Configured modules: clahe contour cv draw line mat point point_iterator rect size slice_iterator subdiv2d umat utility video_capture
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/roman/Projects/qjs-opencv/build/x86_64-linux-gnu
