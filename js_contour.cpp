@@ -329,7 +329,6 @@ js_contour_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValu
 
   if(argc > 0) {
     int i;
-    // jsrt js(ctx);
 
     for(i = 0; i < argc; i++) {
       JSPointData<double> p;

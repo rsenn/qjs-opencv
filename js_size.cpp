@@ -332,18 +332,17 @@ js_size_div(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv)
   return ret;
 }
 
-static JSValue iterator_symbol = JS_UNDEFINED;
+static JSAtom iterator_symbol;
 
 static JSValue
 js_size_symbol_iterator(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSValue arr, iter;
-  jsrt js(ctx);
   arr = js_size_funcs(ctx, this_val, argc, argv, 3);
 
-  if(JS_IsUndefined(iterator_symbol))
-    iterator_symbol = js.get_symbol("iterator");
+  if(iterator_symbol == 0)
+    iterator_symbol = js_symbol_atom(ctx, "iterator");
 
-  if(!JS_IsFunction(ctx, (iter = js.get_property(arr, iterator_symbol))))
+  if(!JS_IsFunction(ctx, (iter = JS_GetProperty(ctx, arr, iterator_symbol))))
     return JS_EXCEPTION;
   return JS_Call(ctx, iter, arr, 0, argv);
 }

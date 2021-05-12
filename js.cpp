@@ -13,7 +13,7 @@ extern "C" {
 #include "quickjs/quickjs-libc.h"
 #include "quickjs/cutils.h"
 
-jsrt js;
+// jsrt js;
 
 char* normalize_module(JSContext* ctx, const char* module_base_name, const char* module_name, void* opaque);
 
@@ -59,11 +59,6 @@ js_print(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
 
 struct JSProperty;
 struct JSShapeProperty;
-
-jsrt::value jsrt::_undefined = JS_UNDEFINED;
-jsrt::value jsrt::_true = JS_TRUE;
-jsrt::value jsrt::_false = JS_FALSE;
-jsrt::value jsrt::_null = JS_NULL;
 
 bool
 jsrt::init(int argc, char* argv[]) {

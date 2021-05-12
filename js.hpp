@@ -6,7 +6,6 @@
 extern "C" {
 #include "quickjs/quickjs-atom.h"
 }
-
 enum {
   JS_NULL,
 #define DEF(name, str) JS_ATOM_##name,
@@ -96,7 +95,7 @@ struct jsrt {
   typedef JSValueConst const_value;
   typedef JSAtom atom;
 
-  static value _true, _false, _null, _undefined;
+  static constexpr value _true = JS_TRUE, _false = JS_FALSE, _null = JS_NULL, _undefined = JS_UNDEFINED;
 
   bool init(int argc, char* argv[]);
   bool create(JSContext* ctx = 0);

@@ -1,5 +1,4 @@
 #include "jsbindings.hpp"
-#include "js.hpp"
 #include "js_point.hpp"
 #include "js_rect.hpp"
 #include "js_mat.hpp"
@@ -287,18 +286,17 @@ js_point_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* 
   return obj;
 }
 
-static JSValue iterator_symbol = JS_UNDEFINED;
+static JSAtom iterator_symbol;
 
 static JSValue
 js_point_symbol_iterator(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSValue arr, iter;
-  jsrt js(ctx);
   arr = js_point_to_array(ctx, this_val, argc, argv);
 
-  if(JS_IsUndefined(iterator_symbol))
-    iterator_symbol = js.get_symbol("iterator");
+  if(iterator_symbol == 0)
+    iterator_symbol = js_symbol_atom(ctx, "iterator");
 
-  if(!JS_IsFunction(ctx, (iter = js.get_property(arr, iterator_symbol))))
+  if(!JS_IsFunction(ctx, (iter = JS_GetProperty(ctx, arr, iterator_symbol))))
     return JS_EXCEPTION;
   return JS_Call(ctx, iter, arr, 0, argv);
 }

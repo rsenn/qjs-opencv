@@ -1,8 +1,8 @@
 #ifndef JSBINDINGS_HPP
 #define JSBINDINGS_HPP
 
-#include "js.hpp"
 #include "util.hpp"
+#include <quickjs/quickjs.h>
 #include <quickjs/cutils.h>
 
 #include <opencv2/core/core.hpp>

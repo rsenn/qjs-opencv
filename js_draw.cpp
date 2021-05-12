@@ -52,7 +52,7 @@ js_draw_circle(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
   }
 
   if(argc > i && JS_IsNumber(argv[i]))
-    js.get_number(argv[i++], radius);
+    js_value_to(ctx, argv[i++], radius);
 
   if(argc > i) {
     js_color_read(ctx, argv[i], &color);
@@ -60,15 +60,17 @@ js_draw_circle(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
   }
 
   if(argc > i && JS_IsNumber(argv[i]))
-    js.get_number(argv[i++], thickness);
+        js_value_to(ctx, argv[i++], thickness);
+
+
   /**/
   if(argc > i) {
-    if(js.is_bool(argv[i])) {
-      js.get_boolean(argv[i++], antialias);
+    if(JS_IsBool(argv[i])) {
+        js_value_to(ctx, argv[i++], antialias);
       lineType = antialias ? cv::LINE_AA : cv::LINE_8;
 
     } else if(JS_IsNumber(argv[i])) {
-      js.get_number(argv[i++], lineType);
+          js_value_to(ctx, argv[i++], lineType);
     }
   }
 
@@ -111,7 +113,7 @@ js_draw_contour(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
   }
 
   if(argc > i && JS_IsNumber(argv[i]))
-    js.get_number(argv[i++], thickness);
+    js_value_to(ctx, argv[i++], thickness);
 
   if(argc > i && JS_IsNumber(argv[++i])) {
     JS_ToInt32(ctx, &lineType, argv[i]);
@@ -219,10 +221,10 @@ js_draw_line(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv
     }
 
   if(argc > i && JS_IsNumber(argv[i]))
-    js.get_number(argv[i++], thickness);
+    js_value_to(ctx, argv[i++], thickness);
 
-  if(argc > i && js.is_bool(argv[i]))
-    js.get_boolean(argv[i++], antialias);
+  if(argc > i && JS_IsBool(argv[i]))
+    js_value_to(ctx, argv[i++], antialias);
 
   cv::line(dst, points[0], points[1], scalar, thickness, antialias ? cv::LINE_AA : cv::LINE_8);
   return JS_UNDEFINED;
@@ -243,16 +245,17 @@ js_draw_polygon(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
   } else
     dst = *dptr;
 
-  if(argc > i && js.is_array_like(argv[i]))
-    js.get_point_array(argv[i++], points);
-  if(argc > i && js.is_color(argv[i]))
-    js.get_color(argv[i++], color);
+  if(argc > i && js_is_array_like(ctx, argv[i]))
+    js_array_to(ctx, argv[i++], points);
+
+  if(argc > i )
+    js_color_read(ctx, argv[i++], &color);
 
   if(argc > i && JS_IsNumber(argv[i]))
-    js.get_number(argv[i++], thickness);
+    js_value_to(ctx, argv[i++], thickness);
 
-  if(argc > i && js.is_bool(argv[i]))
-    js.get_boolean(argv[i++], antialias);
+  if(argc > i && JS_IsBool(argv[i]))
+    js_value_to(ctx, argv[i++], antialias);
 
   if(dptr != nullptr) {
     const int size = points.size();
@@ -293,7 +296,6 @@ js_draw_rect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv
   if(argc > i) {
     if(js_rect_read(ctx, argv[i], &rect))
       i++;
-    //    js.get_rect(argv[i++], rect);
   }
 
   if(argc > i)
@@ -307,10 +309,10 @@ js_draw_rect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv
     }
 
   if(argc > i && JS_IsNumber(argv[i]))
-    js.get_number(argv[i++], thickness);
+    js_value_to(ctx, argv[i++], thickness);
 
-  if(argc > i && js.is_bool(argv[i]))
-    js.get_boolean(argv[i++], antialias);
+  if(argc > i && JS_IsBool(argv[i]))
+    js_value_to(ctx, argv[i++], antialias);
 
   points[0].x = rect.x;
   points[0].y = rect.y;

@@ -1,6 +1,5 @@
 //#include "plot-cv.hpp"
 #include "geometry.hpp"
-#include "js.hpp"
 #include "jsbindings.hpp"
 #include "js_point.hpp"
 #include "js_size.hpp"
@@ -9,13 +8,11 @@
 #include "js_mat.hpp"
 #include "js_point_iterator.hpp"
 #include "quickjs/cutils.h"
-#include "quickjs/quickjs.h"
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <iomanip>
 
-extern jsrt js;
 template<class T> class jsallocator {
 public:
   typedef T value_type;

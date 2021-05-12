@@ -1,5 +1,4 @@
 #include "jsbindings.hpp"
-#include "js.hpp"
 #include "js_alloc.hpp"
 #include "js_point.hpp"
 #include "js_point_iterator.hpp"

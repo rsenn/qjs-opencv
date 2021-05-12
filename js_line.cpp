@@ -345,20 +345,6 @@ js_line_iterator(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* 
 
   return ret;
 }
-/*
-static JSValue
-js_line_symbol_iterator(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  JSValue arr, iter;
-  jsrt js(ctx);
-  arr = js_line_to_array(ctx, this_val, argc, argv);
-
-  if(JS_IsUndefined(iterator_symbol))
-    iterator_symbol = js.get_symbol("iterator");
-
-  if(!JS_IsFunction(ctx, (iter = js.get_property(arr, iterator_symbol))))
-    return JS_EXCEPTION;
-  return JS_Call(ctx, iter, arr, 0, argv);
-}*/
 
 static JSValue
 js_line_from(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {

@@ -68,10 +68,7 @@ find_opencv()
 set(CMAKE_INSTALL_RPATH "${OPENCV_LIB_DIR}"
     CACHE PATH "Build with install rpath" FORCE)
 
-include_directories(
-  ${OPENCV_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}
-  ${CMAKE_CURRENT_SOURCE_DIR}/opencv ${CMAKE_CURRENT_SOURCE_DIR}/src
-  ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/quickjs)
+include_directories(${OPENCV_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
 
 check_cxx_standard_flag()
 
@@ -90,7 +87,7 @@ endif("${CMAKE_CXX_COMPILER_ID}" MATCHES ".*Clang.*")
 
 # dump(CMAKE_C_FLAGS CMAKE_CXX_FLAGS) dump(CMAKE_CXX_FLAGS_DEBUG)
 
-check_pic_flag()
+check_pic_flag(QUICKJS_MODULE_CFLAGS)
 
 set(DEBUG_OUTPUT TRUE CACHE BOOL "Debug output" FORCE)
 set(DEBUG_MAT FALSE CACHE BOOL "Debug cv::Mat" FORCE)
@@ -124,11 +121,15 @@ option(BUILD_QUICKJS "Build QuickJS" ON)
 file(GLOB OPENCV_SOURCES *.hpp *.cpp)
 # dump(OPENCV_SOURCES)
 
-list(FILTER OPENCV_SOURCES EXCLUDE REGEX "init_module.cpp")
+dump(QUICKJS_MODULE_CFLAGS F_PIC)
+
+list(FILTER OPENCV_SOURCES EXCLUDE REGEX "init_module\\.cpp")
+list(FILTER OPENCV_SOURCES EXCLUDE REGEX "js\\.[hc]pp")
+
 add_library(qjs-opencv STATIC ${OPENCV_SOURCES})
 set_target_properties(
-  qjs-opencv PROPERTIES PREFIX "" OUTPUT_NAME opencv COMPILE_FLAGS
-                                                     "${QUICKJS_MODULE_CFLAGS}")
+  qjs-opencv PROPERTIES PREFIX "" OUTPUT_NAME opencv
+                        COMPILE_FLAGS "${QUICKJS_MODULE_CFLAGS} ${F_PIC}")
 target_compile_definitions(qjs-opencv
                            PRIVATE CONFIG_PREFIX="${CMAKE_INSTALL_PREFIX}")
 install(TARGETS qjs-opencv DESTINATION lib/quickjs)
