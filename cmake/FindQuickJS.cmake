@@ -88,7 +88,12 @@ function(make_module FNAME)
   string(REGEX REPLACE "-" "_" UNAME "${UUNAME}")
 
   set(TARGET_NAME qjs-${NAME})
-  set(SOURCES quickjs-${NAME}.c ${${VNAME}_SOURCES})
+
+  if(ARGN)
+    set(SOURCES ${ARGN})
+  else(ARGN)
+    set(SOURCES quickjs-${NAME}.c ${${VNAME}_SOURCES})
+  endif(ARGN)
 
   # dump(VNAME ${VNAME}_SOURCES)
   add_library(${TARGET_NAME} SHARED ${SOURCES})

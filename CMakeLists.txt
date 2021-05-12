@@ -121,5 +121,6 @@ option(BUILD_QUICKJS "Build QuickJS" ON)
 file(GLOB OPENCV_SOURCES *.hpp *.cpp)
 # dump(OPENCV_SOURCES)
 
-make_shared_module(opencv ${OPENCV_SOURCES})
-# make_js_bindings()
+make_module(opencv ${OPENCV_SOURCES})
+#make_shared_module(opencv ${OPENCV_SOURCES})
+ 
