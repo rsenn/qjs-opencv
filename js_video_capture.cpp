@@ -1,12 +1,7 @@
 #include "jsbindings.hpp"
 #include "js_mat.hpp"
 #include "js_alloc.hpp"
-
-#if defined(JS_VIDEO_CAPTURE_MODULE) || defined(quickjs_video_capture_EXPORTS)
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module
-#else
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module_video_capture
-#endif
+ 
 
 extern "C" {
 JSValue video_capture_proto = JS_UNDEFINED, video_capture_class = JS_UNDEFINED;

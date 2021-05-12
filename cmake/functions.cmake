@@ -11,10 +11,5 @@ function(CANONICALIZE OUTPUT_VAR STR)
   string(REGEX REPLACE "-" "_" TMP_STR "${TMP_STR}")
   string(TOUPPER "${TMP_STR}" TMP_STR)
 
-  set("${OUTPUT_VAR}"
-      "${TMP_STR}"
-      PARENT_SCOPE)
-endfunction(
-  CANONICALIZE
-  OUTPUT_VAR
-  STR)
+  set("${OUTPUT_VAR}" "${TMP_STR}" PARENT_SCOPE)
+endfunction(CANONICALIZE OUTPUT_VAR STR)

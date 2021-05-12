@@ -6,12 +6,7 @@
 #include "js_typed_array.hpp"
 #include "util.hpp"
 #include "line.hpp"
-
-#if defined(JS_LINE_MODULE) || defined(quickjs_line_EXPORTS)
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module
-#else
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module_line
-#endif
+ 
 
 enum { PROP_SLOPE = 0, PROP_PIVOT, PROP_TO, PROP_ANGLE, PROP_LENGTH };
 enum { METHOD_SWAP = 0, METHOD_AT, METHOD_INTERSECT, METHOD_ENDPOINT_DISTANCES, METHOD_DISTANCE };

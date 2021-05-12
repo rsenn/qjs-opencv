@@ -7,12 +7,6 @@
 #include "js_typed_array.hpp"
 #include "util.hpp"
 
-#if defined(JS_RECT_MODULE) || defined(quickjs_rect_EXPORTS)
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module
-#else
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module_rect
-#endif
-
 extern "C" {
 JSValue rect_proto = JS_UNDEFINED, rect_class = JS_UNDEFINED;
 JSClassID js_rect_class_id = 0;

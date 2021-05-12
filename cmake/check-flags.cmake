@@ -13,9 +13,7 @@ macro(append_vars STR)
     endif(NOT LIST MATCHES ".*${STR}.*")
     string(REPLACE ";" " " LIST "${LIST}")
     # message("New value for ${L}: ${LIST}")
-    set("${L}"
-        "${LIST}"
-        PARENT_SCOPE)
+    set("${L}" "${LIST}" PARENT_SCOPE)
   endforeach(L ${ARGN})
 endmacro(append_vars STR)
 
@@ -34,10 +32,7 @@ function(check_flag FLAG VAR)
     message(STATUS "Compiler flag ${FLAG} ... supported")
     # message("append_vars(${FLAG} ${ARGN})")
   endif(RESULT)
-endfunction(
-  check_flag
-  FLAG
-  VAR)
+endfunction(check_flag FLAG VAR)
 
 macro(check_flags FLAGS)
   message("Checking flags ${FLAGS} ${ARGN}")

@@ -6,16 +6,8 @@ macro(unset_all)
 endmacro(unset_all)
 function(OPENCV_CHANGE_DIR VAR ACCESS VALUE LIST_FILE STACK)
   string(REGEX REPLACE "/lib/.*" "" OPENCV_ROOT "${VALUE}")
-  set(OPENCV_PREFIX
-      "${OPENCV_ROOT}"
-      PARENT_SCOPE)
-endfunction(
-  OPENCV_CHANGE_DIR
-  VAR
-  ACCESS
-  VALUE
-  LIST_FILE
-  STACK)
+  set(OPENCV_PREFIX "${OPENCV_ROOT}" PARENT_SCOPE)
+endfunction(OPENCV_CHANGE_DIR VAR ACCESS VALUE LIST_FILE STACK)
 
 function(OPENCV_CHANGE VAR ACCESS VALUE LIST_FILE STACK)
 
@@ -99,13 +91,7 @@ function(OPENCV_CHANGE VAR ACCESS VALUE LIST_FILE STACK)
     pkgcfg_lib_OPENCV_opencv_sfm
     pkgcfg_lib_OPENCV_opencv_xfeatures2d)
 
-endfunction(
-  OPENCV_CHANGE
-  VAR
-  ACCESS
-  VALUE
-  LIST_FILE
-  STACK)
+endfunction(OPENCV_CHANGE VAR ACCESS VALUE LIST_FILE STACK)
 
 variable_watch(OpenCV_DIR OPENCV_CHANGE_DIR)
 variable_watch(OpenCV_DIR OPENCV_CHANGE)
@@ -121,9 +107,7 @@ dump(OPENCV_PREFIX)
 if(NOT OPENCV_CHECKED)
   message(CHECK_START "Finding opencv library")
 
-  set(OPENCV_PREFIX
-      "${OPENCV_PREFIX}"
-      CACHE PATH "OpenCV root dir")
+  set(OPENCV_PREFIX "${OPENCV_PREFIX}" CACHE PATH "OpenCV root dir")
 
   if(OPENCV_PREFIX)
     list(APPEND CMAKE_PREFIX_PATH "${OPENCV_PREFIX}")
@@ -133,36 +117,18 @@ if(NOT OPENCV_CHECKED)
   dump(CMAKE_PREFIX_PATH CMAKE_MODULE_PATH)
 
   if(NOT OPENCV_FOUND)
-    find_package(
-      OpenCV
-      PATHS
-      "${OPENCV_PREFIX}/lib/cmake/opencv4;${OPENCV_PREFIX}/lib/cmake;${OPENCV_PREFIX}"
-    )
+    find_package(OpenCV PATHS "${OPENCV_PREFIX}/lib/cmake/opencv4;${OPENCV_PREFIX}/lib/cmake;${OPENCV_PREFIX}")
     # message(STATUS "OpenCV_VERSION = ${OpenCV_VERSION}")
     if(OpenCV_VERSION)
 
-      set(OPENCV_VERSION
-          "${OpenCV_VERSION}"
-          CACHE PATH "OpenCV version")
-      set(OPENCV_LIBDIR
-          "${OpenCV_INSTALL_PATH}/lib"
-          CACHE PATH "OpenCV library directory")
-      set(OPENCV_LINK_FLAGS
-          "-Wl,-rpath,${OPENCV_LIBDIR} -L${OPENCV_LIBDIR}"
-          CACHE STRING "OpenCV link flags")
-      set(OPENCV_PREFIX
-          "${OpenCV_INSTALL_PATH}"
-          CACHE PATH "OpenCV install directory")
-      set(OPENCV_INCLUDE_DIRS
-          "${OpenCV_INCLUDE_DIRS}"
-          CACHE PATH "OpenCV include directories")
-      set(OPENCV_LIBRARIES
-          "${OpenCV_LIBS}"
-          CACHE PATH "OpenCV libraries")
+      set(OPENCV_VERSION "${OpenCV_VERSION}" CACHE PATH "OpenCV version")
+      set(OPENCV_LIBDIR "${OpenCV_INSTALL_PATH}/lib" CACHE PATH "OpenCV library directory")
+      set(OPENCV_LINK_FLAGS "-Wl,-rpath,${OPENCV_LIBDIR} -L${OPENCV_LIBDIR}" CACHE STRING "OpenCV link flags")
+      set(OPENCV_PREFIX "${OpenCV_INSTALL_PATH}" CACHE PATH "OpenCV install directory")
+      set(OPENCV_INCLUDE_DIRS "${OpenCV_INCLUDE_DIRS}" CACHE PATH "OpenCV include directories")
+      set(OPENCV_LIBRARIES "${OpenCV_LIBS}" CACHE PATH "OpenCV libraries")
 
-      # dump(OpenCV_LIBS OpenCV_INCLUDE_DIRS OpenCV_VERSION OpenCV_SHARED
-      # OpenCV_INSTALL_PATH OpenCV_LIB_COMPONENTS) dump(OPENCV_PREFIX
-      # OPENCV_LIBDIR OPENCV_LINK_FLAGS OPENCV_INCLUDE_DIRS OPENCV_LIBRARIES)
+      # dump(OpenCV_LIBS OpenCV_INCLUDE_DIRS OpenCV_VERSION OpenCV_SHARED OpenCV_INSTALL_PATH OpenCV_LIB_COMPONENTS) dump(OPENCV_PREFIX OPENCV_LIBDIR OPENCV_LINK_FLAGS OPENCV_INCLUDE_DIRS OPENCV_LIBRARIES)
       set(OPENCV_FOUND TRUE)
     endif(OpenCV_VERSION)
   endif(NOT OPENCV_FOUND)
@@ -182,10 +148,8 @@ if(NOT OPENCV_CHECKED)
     include_directories(${OPENCV_INCLUDE_DIRS})
 
     if(OPENCV_LINK_FLAGS)
-      set(CMAKE_EXE_LINKER_FLAGS
-          "${CMAKE_EXE_LINKER_FLAGS} ${OPENCV_LINK_FLAGS}")
-      set(CMAKE_SHARED_LINKER_FLAGS
-          "${CMAKE_SHARED_LINKER_FLAGS} ${OPENCV_LINK_FLAGS}")
+      set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OPENCV_LINK_FLAGS}")
+      set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${OPENCV_LINK_FLAGS}")
     endif(OPENCV_LINK_FLAGS)
 
     set(CMAKE_INSTALL_RPATH "${OPENCV_LIB_DIR}:${CMAKE_INSTALL_RPATH}")
@@ -203,6 +167,5 @@ if(NOT OPENCV_CHECKED)
   endif(OPENCV_FOUND)
   set(OPENCV_CHECKED TRUE)
 
-  dump(OPENCV_FOUND OPENCV_INCLUDE_DIRS OPENCV_LIBDIR OPENCV_LINK_FLAGS
-       OPENCV_LIBRARIES)
+  dump(OPENCV_FOUND OPENCV_INCLUDE_DIRS OPENCV_LIBDIR OPENCV_LINK_FLAGS OPENCV_LIBRARIES)
 endif(NOT OPENCV_CHECKED)

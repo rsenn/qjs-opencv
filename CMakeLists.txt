@@ -1,22 +1,14 @@
 cmake_minimum_required(VERSION 3.0)
 project(qjs-opencv)
 
-set(DISABLE_WERROR
-    TRUE
-    CACHE BOOL "Disable -Werror flag" FORCE)
+set(DISABLE_WERROR TRUE CACHE BOOL "Disable -Werror flag" FORCE)
 
-set(CMAKE_BUILD_TYPE
-    "Debug"
-    CACHE STRING "build type")
+set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "build type")
 
 set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release MinSizeRel RelWithDebInfo)
 
-set(CMAKE_BUILD_RPATH
-    "${CMAKE_CURRENT_BINARY_DIR}"
-    CACHE PATH "Build with local rpath" FORCE)
-set(CMAKE_INSTALL_RPATH
-    "${CMAKE_INSTALL_PREFIX}/lib"
-    CACHE PATH "Build with install rpath" FORCE)
+set(CMAKE_BUILD_RPATH "${CMAKE_CURRENT_BINARY_DIR}" CACHE PATH "Build with local rpath" FORCE)
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib" CACHE PATH "Build with install rpath" FORCE)
 
 set(quickjs_sources_root ${CMAKE_CURRENT_SOURCE_DIR}/quickjs)
 # include(${quickjs_sources_root}/defs.cmake)
@@ -51,10 +43,7 @@ macro(check_size TYPE VAR)
     list(APPEND PLOTCV_DEFS ${VAR}=${CMAKE_${VAR}})
   endif(${CMAKE_${VAR}})
   message(STATUS "size of ${TYPE} ${CMAKE_${VAR}}")
-endmacro(
-  check_size
-  TYPE
-  VAR)
+endmacro(check_size TYPE VAR)
 
 check_size("long" SIZEOF_LONG)
 check_size("long long" SIZEOF_LONG_LONG)
@@ -88,11 +77,9 @@ set(CMAKE_BUILD_RPATH "${CMAKE_CURRENT_BINARY_DIR};${CMAKE_BINARY_DIR}")
 
 check_library_exists(json-cpp ZN4YAML6detail9node_data9reset_mapEv /usr JSON_CPP)
 
-set(CMAKE_BUILD_WITH_INSTALL_RPATH
-    TRUE
+set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE
     CACHE BOOL "Build installable binaries with -Wl,-rpath=PREFIX" FORCE)
-set(CMAKE_INSTALL_RPATH_USE_LINK_PATH
-    FALSE
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE
     CACHE BOOL "Add dirs in runtime search path to the install rpath" FORCE)
 
 include(${CMAKE_SOURCE_DIR}/cmake/opencv.cmake)
@@ -117,12 +104,8 @@ foreach(CXX_STANDARD c++20 c++17 c++14 c++11)
     add_definitions(-D"${CXX_STANDARD_NAME}")
     add_definitions(-DCXX_STANDARD=${CXX_STANDARD_VERSION})
 
-    set(CXX_STANDARD_VALUE
-        "${CXX_STANDARD}"
-        CACHE STRING "C++ standard" FORCE)
-    set(CXX_STANDARD_FLAG
-        "-std=${CXX_STANDARD}"
-        CACHE STRING "C++ standard argument" FORCE)
+    set(CXX_STANDARD_VALUE "${CXX_STANDARD}" CACHE STRING "C++ standard" FORCE)
+    set(CXX_STANDARD_FLAG "-std=${CXX_STANDARD}" CACHE STRING "C++ standard argument" FORCE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX_STANDARD_FLAG}")
     break()
   endif(CXX_STANDARD_${CXX_STANDARD_NUM})
@@ -182,12 +165,8 @@ endif(F_OPT_PIC)
 # if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
 
 # option(USE_EFENCE "Enable electric fence" OFF)
-set(DEBUG_OUTPUT
-    TRUE
-    CACHE BOOL "Debug output" FORCE)
-set(DEBUG_MAT
-    FALSE
-    CACHE BOOL "Debug cv::Mat" FORCE)
+set(DEBUG_OUTPUT TRUE CACHE BOOL "Debug output" FORCE)
+set(DEBUG_MAT FALSE CACHE BOOL "Debug cv::Mat" FORCE)
 list(APPEND PLOTCV_DEFS DEBUG=1)
 
 # add_definitions(-DDEBUG=1)
@@ -196,16 +175,13 @@ check_c_compiler_flag("-O0" OPT_C_OPT_NONE)
 check_cxx_compiler_flag("-O0" OPT_CXX_OPT_NONE)
 if(OPT_C_OPT_NONE)
   if(NOT "${CMAKE_C_FLAGS_DEBUG}" MATCHES "-O0")
-    set(CMAKE_C_FLAGS_DEBUG
-        "${CMAKE_C_FLAGS_DEBUG} -O0"
-        CACHE STRING "C compiler options" FORCE)
+    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0" CACHE STRING "C compiler options" FORCE)
   endif(NOT "${CMAKE_C_FLAGS_DEBUG}" MATCHES "-O0")
 endif(OPT_C_OPT_NONE)
 if(OPT_CXX_OPT_NONE)
   if(NOT "${CMAKE_CXX_FLAGS_DEBUG}" MATCHES "-O0")
-    set(CMAKE_CXX_FLAGS_DEBUG
-        "${CMAKE_CXX_FLAGS_DEBUG} -O0"
-        CACHE STRING "C++ compiler options" FORCE)
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0" CACHE STRING "C++ compiler options"
+                                                                   FORCE)
   endif(NOT "${CMAKE_CXX_FLAGS_DEBUG}" MATCHES "-O0")
 endif(OPT_CXX_OPT_NONE)
 
@@ -213,16 +189,13 @@ check_c_compiler_flag("-ggdb" OPT_C_G_GDB)
 check_cxx_compiler_flag("-ggdb" OPT_CXX_G_GDB)
 if(OPT_C_G_GDB)
   if(NOT "${CMAKE_C_FLAGS_DEBUG}" MATCHES "-ggdb")
-    set(CMAKE_C_FLAGS_DEBUG
-        "${CMAKE_C_FLAGS_DEBUG} -ggdb"
-        CACHE STRING "C compiler options" FORCE)
+    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -ggdb" CACHE STRING "C compiler options" FORCE)
   endif(NOT "${CMAKE_C_FLAGS_DEBUG}" MATCHES "-ggdb")
 endif(OPT_C_G_GDB)
 if(OPT_CXX_G_GDB)
   if(NOT "${CMAKE_CXX_FLAGS_DEBUG}" MATCHES "-ggdb")
-    set(CMAKE_CXX_FLAGS_DEBUG
-        "${CMAKE_CXX_FLAGS_DEBUG} -ggdb"
-        CACHE STRING "C++ compiler options" FORCE)
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -ggdb" CACHE STRING "C++ compiler options"
+                                                                     FORCE)
   endif(NOT "${CMAKE_CXX_FLAGS_DEBUG}" MATCHES "-ggdb")
 endif(OPT_CXX_G_GDB)
 
@@ -254,29 +227,9 @@ link_directories(BEFORE ${quickjs_BINARY_DIR})
 # endif(HAVE_EFENCE)
 
 link_directories("${CMAKE_BINARY_DIR}/quickjs")
-
-function(src_program NAME SOURCES)
-  foreach(SRC ${SOURCES})
-    file(GLOB "${NAME}_SOURCES" ${SRC})
-    list(APPEND SRCS ${${NAME}_SOURCES})
-  endforeach()
-  string(REGEX REPLACE ";" " " "SOURCES" "${SRCS}")
-  string(REGEX REPLACE "/[^ ]*/" "\n  src/" "SOURCES" "${SOURCES}")
-  set("${NAME}_SOURCES" ${SRCS})
-
-  # message("${NAME}_SOURCES: ${SOURCES}")
-  add_executable(${NAME} src/${NAME}.cpp ${${NAME}_SOURCES})
-  target_link_libraries(${NAME} ${ARGN})
-  target_compile_definitions(${NAME} PRIVATE ${PLOTCV_DEFS})
-  install(TARGETS ${NAME} DESTINATION bin)
-endfunction()
-
+ 
 macro(find_static_library VAR NAME)
-  find_library(
-    ${VAR}
-    NAMES lib${NAME}.a
-    PATHS "${CMAKE_INSTALL_PREFIX}/lib"
-    NO_DEFAULT_PATH)
+  find_library(${VAR} NAMES lib${NAME}.a PATHS "${CMAKE_INSTALL_PREFIX}/lib" NO_DEFAULT_PATH)
 endmacro()
 
 set(QUICKJS_LIBRARY quickjs)

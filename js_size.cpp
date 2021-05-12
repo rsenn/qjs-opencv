@@ -4,12 +4,6 @@
 #include "js_alloc.hpp"
 #include "util.hpp"
 
-#if defined(JS_SIZE_MODULE) || defined(quickjs_size_EXPORTS)
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module
-#else
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module_size
-#endif
-
 enum js_size_fit_t { JS_SIZE_FIT_WIDTH = 1, JS_SIZE_FIT_HEIGHT = 2, JS_SIZE_FIT_INSIDE, JS_SIZE_FIT_OUTSIDE };
 
 extern "C" {

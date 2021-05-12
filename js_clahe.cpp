@@ -3,13 +3,7 @@
 #include "js_point.hpp"
 #include "js_mat.hpp"
 #include "js_alloc.hpp"
-
-#if defined(JS_CLAHE_MODULE) || defined(quickjs_clahe_EXPORTS)
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module
-#else
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module_clahe
-#endif
-
+ 
 JSValue clahe_proto = JS_UNDEFINED, clahe_class = JS_UNDEFINED;
 JSClassID js_clahe_class_id;
 

@@ -1,12 +1,6 @@
 #include "jsbindings.hpp"
 #include "js_alloc.hpp"
 
-#if defined(JS_UTILITY_MODULE) || defined(quickjs_utility_EXPORTS)
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module
-#else
-#define JS_INIT_MODULE /*VISIBLE*/ js_init_module_utility
-#endif
-
 extern "C" {
 
 JSValue tick_meter_proto = JS_UNDEFINED, tick_meter_class = JS_UNDEFINED;
