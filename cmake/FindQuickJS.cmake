@@ -1,4 +1,4 @@
-function(find_quickjs)
+macro(find_quickjs)
   include(CheckIncludeFile)
 
   if(NOT QUICKJS_PREFIX)
@@ -67,7 +67,7 @@ function(find_quickjs)
 
   set(CUTILS_H ${CMAKE_CURRENT_SOURCE_DIR}/../cutils.h)
   set(QUICKJS_H ${CMAKE_CURRENT_SOURCE_DIR}/../quickjs.h)
-endfunction(find_quickjs)
+endmacro(find_quickjs)
 
 function(config_module TARGET_NAME)
   if(QUICKJS_LIBRARY_DIR)

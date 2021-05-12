@@ -1,6 +1,6 @@
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Functions.cmake)
 
-function(find_opencv)
+macro(find_opencv)
   function(OPENCV_CHANGE_DIR VAR ACCESS VALUE LIST_FILE STACK)
     string(REGEX REPLACE "/lib/.*" "" OPENCV_ROOT "${VALUE}")
     set(OPENCV_PREFIX "${OPENCV_ROOT}" PARENT_SCOPE)
@@ -166,4 +166,4 @@ function(find_opencv)
 
     # dump(OPENCV_FOUND OPENCV_INCLUDE_DIRS OPENCV_LIBDIR OPENCV_LINK_FLAGS OPENCV_LIBRARIES)
   endif(NOT OPENCV_CHECKED)
-endfunction(find_opencv)
+endmacro(find_opencv)
