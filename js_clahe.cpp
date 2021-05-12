@@ -31,7 +31,7 @@ js_clahe_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* a
   return js_clahe_new(ctx, clipLimit, tileGridSize);
 }
 
-VISIBLE JSCLAHEData*
+JSCLAHEData*
 js_clahe_data(JSContext* ctx, JSValueConst val) {
   return static_cast<JSCLAHEData*>(JS_GetOpaque2(ctx, val, js_clahe_class_id));
 }

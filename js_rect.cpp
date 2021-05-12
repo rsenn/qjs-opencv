@@ -12,7 +12,7 @@ JSValue rect_proto = JS_UNDEFINED, rect_class = JS_UNDEFINED;
 JSClassID js_rect_class_id = 0;
 }
 
-VISIBLE JSValue
+extern "C" VISIBLE JSValue
 js_rect_new(JSContext* ctx, double x, double y, double w, double h) {
   JSValue ret;
   JSRectData<double>* s;

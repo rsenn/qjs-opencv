@@ -11,7 +11,7 @@ JSValue subdiv2d_proto = JS_UNDEFINED, subdiv2d_class = JS_UNDEFINED;
 JSClassID js_subdiv2d_class_id = 0;
 }
 
-VISIBLE JSValue
+JSValue
 js_subdiv2d_new(JSContext* ctx, JSRectData<int>* rect = nullptr) {
   JSValue ret;
   cv::Subdiv2D* s;
@@ -39,7 +39,7 @@ js_subdiv2d_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst
   return js_subdiv2d_new(ctx, argc > 0 ? &rect : nullptr);
 }
 
-VISIBLE cv::Subdiv2D*
+cv::Subdiv2D*
 js_subdiv2d_data(JSContext* ctx, JSValueConst val) {
   return static_cast<cv::Subdiv2D*>(JS_GetOpaque2(ctx, val, js_subdiv2d_class_id));
 }
