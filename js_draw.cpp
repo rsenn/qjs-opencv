@@ -12,7 +12,7 @@
 #include <iostream>
 
 //#include "plot-cv.hpp"
-#include "color.hpp"
+//#include "color.hpp"
 #include "geometry.hpp"
 
 cv::Ptr<cv::freetype::FreeType2> freetype2 = nullptr;

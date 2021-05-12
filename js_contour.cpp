@@ -12,7 +12,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 
 //#include "plot-cv.hpp"
-#include "color.hpp"
+//#include "color.hpp"
 #include "geometry.hpp"
 #include "psimpl.hpp"
 
