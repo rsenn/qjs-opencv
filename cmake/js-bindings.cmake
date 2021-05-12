@@ -4,8 +4,9 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/opencv.cmake)
 if(WIN32 OR MINGW)
   set(QUICKJS_LIBRARY_DIR "${quickjs_BINARY_DIR}")
   set(QUICKJS_MODULE_DEPENDENCIES "quickjs")
-  set(QUICKJS_MODULE_CFLAGS "-fvisibility=hidden")
 endif(WIN32 OR MINGW)
+
+set(QUICKJS_MODULE_CFLAGS "-fvisibility=hidden")
 
 function(config_shared_module TARGET_NAME)
   if(QUICKJS_LIBRARY_DIR)
@@ -40,7 +41,8 @@ function(make_shared_module FNAME)
   set_target_properties(
     ${TARGET_NAME}
     PROPERTIES PREFIX "" # BUILD_RPATH "${OPENCV_LIBRARY_DIRS}:${CMAKE_CURRENT_BINARY_DIR}"
-               RPATH "${OPENCV_LIBRARY_DIRS}:${CMAKE_INSTALL_PREFIX}/lib:${CMAKE_INSTALL_PREFIX}/lib/quickjs" OUTPUT_NAME "${NAME}" # COMPILE_FLAGS "-fvisibility=hidden"
+               RPATH "${OPENCV_LIBRARY_DIRS}:${CMAKE_INSTALL_PREFIX}/lib:${CMAKE_INSTALL_PREFIX}/lib/quickjs" OUTPUT_NAME "${NAME}" 
+               COMPILE_FLAGS "${QUICKJS_MODULE_CFLAGS}"
                BUILD_RPATH "${CMAKE_CURRENT_BINARY_DIR}:${CMAKE_CURRENT_BINARY_DIR}:${CMAKE_CURRENT_BINARY_DIR}/quickjs:${CMAKE_CURRENT_BINARY_DIR}/quickjs")
   target_compile_definitions(${TARGET_NAME} PRIVATE # JS_${UNAME}_MODULE=1
                                                     CONFIG_PREFIX="${CMAKE_INSTALL_PREFIX}")
