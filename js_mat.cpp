@@ -1218,11 +1218,7 @@ js_mat_create_vec(JSContext* ctx, int len, JSValue* vec) {
 static JSValue
 js_mat_buffer(JSContext* ctx, JSValueConst this_val) {
   JSMatData* m;
-  JSValue buf;
-  /*  buf = JS_GetPropertyStr(ctx, this_val, "arrayBuffer");
-
-    if(JS_IsObject(buf))
-      return buf;*/
+  JSValue buf = JS_NULL;
 
   if((m = js_mat_data(ctx, this_val))) {
     JSValue buf;
@@ -1235,14 +1231,12 @@ js_mat_buffer(JSContext* ctx, JSValueConst this_val) {
       byte_size = end(*m) - begin(*m);
     if(byte_size == 0)
       byte_size = m->elemSize() * m->total();
-    assert(byte_size);
+    if(byte_size)
+      ;
     buf = js_arraybuffer_from(
         ctx, mat_ptr(*m), mat_ptr(*m) + byte_size, *(JSFreeArrayBufferDataFunc*)&js_mat_free_func, (void*)m);
-
-    //   JS_SetPropertyStr(ctx, this_val, "arrayBuffer", JS_DupValue(ctx, buf));
-    return buf;
   }
-  return JS_EXCEPTION;
+  return buf;
 }
 
 static JSValue

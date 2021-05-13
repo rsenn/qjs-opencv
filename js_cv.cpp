@@ -411,10 +411,10 @@ js_cv_imshow(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv
     return JS_ThrowInternalError(ctx, "Empty image");
   cv::_InputArray input_array(image);
 
-/*  if(input_array.isUMat())
-    input_array.getUMat().addref();
-  else if(input_array.isMat())
-    input_array.getMat().addref();*/
+  /*  if(input_array.isUMat())
+      input_array.getUMat().addref();
+    else if(input_array.isMat())
+      input_array.getMat().addref();*/
 
   cv::imshow(winname, image);
 
