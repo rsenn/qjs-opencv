@@ -1037,7 +1037,7 @@ js_mat_copy_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
     else
       m->copyTo(output);
   } catch(const cv::Exception& e) { return JS_ThrowInternalError(ctx, "cv::Exception what='%s'", e.what()); }
-  
+
   return JS_UNDEFINED;
 }
 
