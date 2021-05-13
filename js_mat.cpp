@@ -65,7 +65,10 @@ typedef struct JSMatIteratorData {
 
 static void
 js_mat_free_func(JSRuntime* rt, void* opaque, void* ptr) {
-  static_cast<JSMatData*>(opaque)->release();
+  JSMatData* mat = static_cast<JSMatData*>(opaque);
+
+  mat->release();
+  js_free_rt(rt, mat);
 }
 }
 
@@ -954,7 +957,7 @@ js_mat_tostring(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
 static JSValue
 js_mat_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSMatData* mat = js_mat_data(ctx, this_val);
-  JSValue obj = JS_NewObjectProto(ctx, mat_proto);
+  JSValue obj = JS_NewObjectClass(ctx, js_mat_class_id);
 
   JS_DefinePropertyValueStr(ctx, obj, "cols", JS_NewUint32(ctx, mat->cols), JS_PROP_ENUMERABLE);
   JS_DefinePropertyValueStr(ctx, obj, "rows", JS_NewUint32(ctx, mat->rows), JS_PROP_ENUMERABLE);
@@ -1219,22 +1222,26 @@ static JSValue
 js_mat_buffer(JSContext* ctx, JSValueConst this_val) {
   JSMatData* m;
   JSValue buf = JS_NULL;
+  size_t byte_size;
 
-  if((m = js_mat_data(ctx, this_val))) {
-    JSValue buf;
-    size_t byte_size;
-    m->addref();
-    // m->addref();
-    byte_size = mat_bytesize(*m);
+  if(!(m = js_mat_data(ctx, this_val)))
+    return JS_EXCEPTION;
 
-    if(byte_size == 0)
-      byte_size = end(*m) - begin(*m);
-    if(byte_size == 0)
-      byte_size = m->elemSize() * m->total();
-    if(byte_size)
-      ;
+  byte_size = mat_bytesize(*m);
+
+  if(byte_size == 0)
+    byte_size = end(*m) - begin(*m);
+
+  if(byte_size == 0)
+    byte_size = m->elemSize() * m->total();
+
+  if(byte_size) {
+    JSMatData* mat = static_cast<JSMatData*>(js_mallocz(ctx, sizeof(JSMatData)));
+
+    new(mat) cv::Mat(*m);
+
     buf = js_arraybuffer_from(
-        ctx, mat_ptr(*m), mat_ptr(*m) + byte_size, *(JSFreeArrayBufferDataFunc*)&js_mat_free_func, (void*)m);
+        ctx, mat_ptr(*mat), mat_ptr(*mat) + byte_size, *(JSFreeArrayBufferDataFunc*)&js_mat_free_func, (void*)mat);
   }
   return buf;
 }

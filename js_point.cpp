@@ -278,7 +278,7 @@ js_point_to_array(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
 static JSValue
 js_point_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSPointData<double>* s = js_point_data(ctx, this_val);
-  JSValue obj = JS_NewObjectProto(ctx, point_proto);
+  JSValue obj = JS_NewObjectClass(ctx, js_point_class_id);
 
   JS_DefinePropertyValueStr(ctx, obj, "x", JS_NewFloat64(ctx, s->x), JS_PROP_ENUMERABLE);
   JS_DefinePropertyValueStr(ctx, obj, "y", JS_NewFloat64(ctx, s->y), JS_PROP_ENUMERABLE);

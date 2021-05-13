@@ -211,7 +211,7 @@ js_size_to_source(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
 static JSValue
 js_size_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSSizeData<double>* s = js_size_data(ctx, this_val);
-  JSValue obj = JS_NewObjectProto(ctx, size_proto);
+  JSValue obj = JS_NewObjectClass(ctx, js_size_class_id);
 
   JS_DefinePropertyValueStr(ctx, obj, "width", JS_NewFloat64(ctx, s->width), JS_PROP_ENUMERABLE);
   JS_DefinePropertyValueStr(ctx, obj, "height", JS_NewFloat64(ctx, s->height), JS_PROP_ENUMERABLE);

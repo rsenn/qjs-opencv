@@ -282,7 +282,7 @@ js_rect_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* arg
 static JSValue
 js_rect_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSRectData<double>* r = js_rect_data(ctx, this_val);
-  JSValue obj = JS_NewObjectProto(ctx, rect_proto);
+  JSValue obj = JS_NewObjectClass(ctx, js_rect_class_id);
 
   JS_DefinePropertyValueStr(ctx, obj, "x", JS_NewFloat64(ctx, r->x), JS_PROP_ENUMERABLE);
   JS_DefinePropertyValueStr(ctx, obj, "y", JS_NewFloat64(ctx, r->y), JS_PROP_ENUMERABLE);

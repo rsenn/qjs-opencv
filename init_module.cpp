@@ -17,7 +17,21 @@ extern "C" int js_umat_init(JSContext*, JSModuleDef*);
 extern "C" int js_utility_init(JSContext*, JSModuleDef*);
 extern "C" int js_video_capture_init(JSContext*, JSModuleDef*);
 
+extern "C" void js_clahe_export(JSContext*, JSModuleDef*);
+extern "C" void js_contour_export(JSContext*, JSModuleDef*);
 extern "C" void js_cv_export(JSContext*, JSModuleDef*);
+extern "C" void js_draw_export(JSContext*, JSModuleDef*);
+extern "C" void js_line_export(JSContext*, JSModuleDef*);
+extern "C" void js_mat_export(JSContext*, JSModuleDef*);
+extern "C" void js_point_export(JSContext*, JSModuleDef*);
+extern "C" void js_point_iterator_export(JSContext*, JSModuleDef*);
+extern "C" void js_rect_export(JSContext*, JSModuleDef*);
+extern "C" void js_size_export(JSContext*, JSModuleDef*);
+extern "C" void js_slice_iterator_export(JSContext*, JSModuleDef*);
+extern "C" void js_subdiv2d_export(JSContext*, JSModuleDef*);
+extern "C" void js_umat_export(JSContext*, JSModuleDef*);
+extern "C" void js_utility_export(JSContext*, JSModuleDef*);
+extern "C" void js_video_capture_export(JSContext*, JSModuleDef*);
 
 int
 js_opencv_init(JSContext* ctx, JSModuleDef* m) {
@@ -53,22 +67,21 @@ JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   if(!m)
     return NULL;
 
-  JS_AddModuleExport(ctx, m, "CLAHE");
-  JS_AddModuleExport(ctx, m, "Contour");
-  JS_AddModuleExport(ctx, m, "Draw");
-  JS_AddModuleExport(ctx, m, "Line");
-  JS_AddModuleExport(ctx, m, "Mat");
-  JS_AddModuleExport(ctx, m, "Point");
-  JS_AddModuleExport(ctx, m, "PointIterator");
-  JS_AddModuleExport(ctx, m, "Rect");
-  JS_AddModuleExport(ctx, m, "Size");
-  JS_AddModuleExport(ctx, m, "SliceIterator");
-  JS_AddModuleExport(ctx, m, "Subdiv2D");
-  JS_AddModuleExport(ctx, m, "UMat");
-  JS_AddModuleExport(ctx, m, "TickMeter");
-  JS_AddModuleExport(ctx, m, "VideoCapture");
-
+  js_clahe_export(ctx, m);
+  js_contour_export(ctx, m);
   js_cv_export(ctx, m);
+  js_draw_export(ctx, m);
+  js_line_export(ctx, m);
+  js_mat_export(ctx, m);
+  js_point_export(ctx, m);
+  js_point_iterator_export(ctx, m);
+  js_rect_export(ctx, m);
+  js_size_export(ctx, m);
+  js_slice_iterator_export(ctx, m);
+  js_subdiv2d_export(ctx, m);
+  js_umat_export(ctx, m);
+  js_utility_export(ctx, m);
+  js_video_capture_export(ctx, m);
 
   return m;
 }

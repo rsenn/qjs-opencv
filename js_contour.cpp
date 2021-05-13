@@ -1037,7 +1037,7 @@ js_contour_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
   if(!(contour = js_contour_data(ctx, this_val)))
     return JS_EXCEPTION;
 
-  JSValue obj = JS_NewObjectProto(ctx, contour_proto);
+  JSValue obj = JS_NewObjectClass(ctx, js_contour_class_id);
 
   JS_DefinePropertyValueStr(ctx, obj, "length", JS_NewUint32(ctx, contour->size()), JS_PROP_ENUMERABLE);
   return obj;

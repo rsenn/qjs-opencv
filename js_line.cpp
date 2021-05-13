@@ -226,7 +226,7 @@ js_line_points(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
 static JSValue
 js_line_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSLineData<double>* ln = js_line_data(ctx, this_val);
-  JSValue obj = JS_NewObjectProto(ctx, line_proto);
+  JSValue obj = JS_NewObjectClass(ctx, js_line_class_id);
 
   JS_DefinePropertyValueStr(ctx, obj, "x1", JS_NewFloat64(ctx, ln->x1), JS_PROP_ENUMERABLE);
   JS_DefinePropertyValueStr(ctx, obj, "y1", JS_NewFloat64(ctx, ln->y1), JS_PROP_ENUMERABLE);

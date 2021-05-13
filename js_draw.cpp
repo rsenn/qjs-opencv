@@ -273,7 +273,7 @@ js_draw_polygon(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
 }
 
 static JSValue
-js_draw_rect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_draw_rectangle(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSInputOutputArray dst;
   int i = 0, ret = -1;
   JSRectData<double> rect;
@@ -501,7 +501,7 @@ const JSCFunctionListEntry js_draw_static_funcs[] = {
     JS_CFUNC_DEF("contours", 4, &js_draw_contours),
     JS_CFUNC_DEF("line", 1, &js_draw_line),
     JS_CFUNC_DEF("polygon", 1, &js_draw_polygon),
-    JS_CFUNC_DEF("rect", 1, &js_draw_rect),
+    JS_CFUNC_DEF("rectangle", 1, &js_draw_rectangle),
     JS_CFUNC_DEF("text", 2, &js_put_text),
     JS_CFUNC_DEF("textSize", 5, &js_get_text_size),
     JS_CFUNC_DEF("fontScaleFromHeight", 2, &js_get_font_scale_from_height),
@@ -513,7 +513,7 @@ const JSCFunctionListEntry js_draw_global_funcs[] = {
     JS_CFUNC_DEF("drawContour", 1, &js_draw_contour),
     JS_CFUNC_DEF("drawLine", 1, &js_draw_line),
     JS_CFUNC_DEF("drawPolygon", 1, &js_draw_polygon),
-    JS_CFUNC_DEF("drawRect", 1, &js_draw_rect),
+    JS_CFUNC_DEF("drawRect", 1, &js_draw_rectangle),
     JS_CFUNC_DEF("putText", 2, &js_put_text),
     JS_CFUNC_DEF("getTextSize", 5, &js_get_text_size),
     JS_CFUNC_DEF("getFontScaleFromHeight", 2, &js_get_font_scale_from_height),

@@ -708,25 +708,28 @@ js_umat_tostring(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* 
 
 static JSValue
 js_umat_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+  JSUMatData* umat = js_umat_data(ctx, this_val);
+  JSValue obj = JS_NewObjectClass(ctx, js_umat_class_id);
+
+  JS_DefinePropertyValueStr(ctx, obj, "cols", JS_NewUint32(ctx, umat->cols), JS_PROP_ENUMERABLE);
+  JS_DefinePropertyValueStr(ctx, obj, "rows", JS_NewUint32(ctx, umat->rows), JS_PROP_ENUMERABLE);
+  JS_DefinePropertyValueStr(ctx, obj, "depth", JS_NewUint32(ctx, umat->depth()), JS_PROP_ENUMERABLE);
+  JS_DefinePropertyValueStr(ctx, obj, "channels", JS_NewUint32(ctx, umat->channels()), JS_PROP_ENUMERABLE);
+  return obj;
+}
+/*static JSValue
+js_umat_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   cv::UMat* um = js_umat_data(ctx, this_val);
   int x, y;
-
   std::ostringstream os;
   std::string str;
   int i = 0;
   if(!um)
     return JS_EXCEPTION;
-
   int bytes = 1 << ((um->type() & 0x7) >> 1);
   char sign = (um->type() & 0x7) >= 5 ? 'F' : (um->type() & 1) ? 'S' : 'U';
-
   std::vector<std::string> sizeStrs = js_umat_dimensions(*um);
-  ;
-
-  os << "UMat "
-     /*     << "@ "
-          << reinterpret_cast<void*>(reinterpret_cast<char*>(um)  )*/
-     << " [ ";
+  os << "UMat " << " [ ";
   if(sizeStrs.size() || um->type()) {
     os << "size: " COLOR_YELLOW "" << join(sizeStrs.cbegin(), sizeStrs.cend(), "" COLOR_NONE "*" COLOR_YELLOW "")
        << "" COLOR_NONE ", ";
@@ -744,7 +747,7 @@ js_umat_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
   str = os.str();
   return JS_NewStringLen(ctx, str.data(), str.size());
 }
-
+*/
 static JSValue
 js_umat_convert_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSUMatData *um, *output;
