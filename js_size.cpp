@@ -149,8 +149,8 @@ js_size_new(JSContext* ctx, double w, double h) {
   ret = JS_NewObjectProtoClass(ctx, size_proto, js_size_class_id);
 
   s = js_allocate<JSSizeData<double>>(ctx);
-  s->width = w <= DBL_EPSILON ? 0 : w;
-  s->height = h <= DBL_EPSILON ? 0 : h;
+  s->width = /*w <= DBL_EPSILON ? 0 :*/ w;
+  s->height = /*h <= DBL_EPSILON ? 0 :*/ h;
 
   JS_SetOpaque(ret, s);
   return ret;
