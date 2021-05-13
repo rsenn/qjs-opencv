@@ -8,7 +8,7 @@
 #include "js_alloc.hpp"
 #include "geometry.hpp"
 #include "util.hpp"
-#include "../quickjs/cutils.h"
+#include "cutils.h"
 #include <list>
 #include <map>
 #include <fstream>

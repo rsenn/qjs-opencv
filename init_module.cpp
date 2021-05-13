@@ -1,4 +1,4 @@
-#include "quickjs/quickjs.h"
+#include "quickjs.h"
 #include "util.hpp"
 
 extern "C" int js_clahe_init(JSContext*, JSModuleDef*);

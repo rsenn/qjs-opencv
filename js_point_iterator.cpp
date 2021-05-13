@@ -2,8 +2,8 @@
 #include "js_alloc.hpp"
 #include "js_point.hpp"
 #include "js_point_iterator.hpp"
-#include "quickjs/cutils.h"
-#include "quickjs/quickjs.h"
+#include "cutils.h"
+#include "quickjs.h"
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>

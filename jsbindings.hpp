@@ -2,8 +2,8 @@
 #define JSBINDINGS_HPP
 
 #include "util.hpp"
-#include <quickjs/quickjs.h>
-#include <quickjs/cutils.h>
+#include <quickjs.h>
+#include <cutils.h>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>

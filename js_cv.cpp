@@ -14,7 +14,7 @@
 #include "png_write.hpp"
 #include "palette.hpp"
 #include "util.hpp"
-#include "../quickjs/cutils.h"
+#include "cutils.h"
 
 #include <array>
 #include <cassert>

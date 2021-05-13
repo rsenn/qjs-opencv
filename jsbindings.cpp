@@ -7,7 +7,7 @@
 #include "js_contour.hpp"
 #include "js_mat.hpp"
 #include "js_point_iterator.hpp"
-#include "quickjs/cutils.h"
+#include "cutils.h"
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>

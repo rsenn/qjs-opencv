@@ -5,8 +5,8 @@
 #include "js_array.hpp"
 #include "js_alloc.hpp"
 #include "js_typed_array.hpp"
-#include "quickjs/cutils.h"
-#include "quickjs/quickjs.h"
+#include "cutils.h"
+#include "quickjs.h"
 
 #include <list>
 #include <opencv2/core/core.hpp>
