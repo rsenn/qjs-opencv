@@ -5,7 +5,17 @@
 #include "util.hpp"
 
 enum js_size_fit_t { JS_SIZE_FIT_WIDTH = 1, JS_SIZE_FIT_HEIGHT = 2, JS_SIZE_FIT_INSIDE, JS_SIZE_FIT_OUTSIDE };
-
+enum { SIZE_PROP_WIDTH, SIZE_PROP_HEIGHT, SIZE_PROP_ASPECT, SIZE_PROP_EMPTY, SIZE_PROP_AREA };
+enum {
+  SIZE_METHOD_EQUALS,
+  SIZE_METHOD_ROUND,
+  SIZE_METHOD_TOOBJECT,
+  SIZE_METHOD_TOARRAY,
+  SIZE_METHOD_FITWIDTH,
+  SIZE_METHOD_FITHEIGHT,
+  SIZE_METHOD_FITINSIDE,
+  SIZE_METHOD_FITOUTSIDE
+};
 extern "C" {
 JSValue size_proto = JS_UNDEFINED, size_class = JS_UNDEFINED;
 JSClassID js_size_class_id = 0;
@@ -96,20 +106,36 @@ js_size_data(JSContext* ctx, JSValueConst val) {
 
 static JSValue
 js_size_get(JSContext* ctx, JSValueConst this_val, int magic) {
-  JSSizeData<double>* s = js_size_data(ctx, this_val);
-  if(!s)
+  JSSizeData<double>* s;
+  JSValue ret = JS_UNDEFINED;
+
+  if(!(s = js_size_data(ctx, this_val)))
     return JS_EXCEPTION;
-  if(magic == 0)
-    return JS_NewFloat64(ctx, s->width);
-  else if(magic == 1)
-    return JS_NewFloat64(ctx, s->height);
-  else if(magic == 2)
-    return JS_NewFloat64(ctx, s->aspectRatio());
-  else if(magic == 3)
-    return JS_NewBool(ctx, s->empty());
-  else if(magic == 4)
-    return JS_NewFloat64(ctx, s->area());
-  return JS_UNDEFINED;
+
+  switch(magic) {
+    case SIZE_PROP_WIDTH: {
+      ret = JS_NewFloat64(ctx, s->width);
+      break;
+    }
+    case SIZE_PROP_HEIGHT: {
+      ret = JS_NewFloat64(ctx, s->height);
+      break;
+    }
+    case SIZE_PROP_ASPECT: {
+      ret = JS_NewFloat64(ctx, s->aspectRatio());
+      break;
+    }
+    case SIZE_PROP_EMPTY: {
+      ret = JS_NewBool(ctx, s->empty());
+      break;
+    }
+    case SIZE_PROP_AREA: {
+      ret = JS_NewFloat64(ctx, s->area());
+      break;
+    }
+  }
+
+  return ret;
 }
 
 VISIBLE JSValue
@@ -201,47 +227,62 @@ js_size_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* arg
 
   size = *s;
 
-  if(magic == 0) {
-    a = js_size_data(ctx, argv[0]);
-    bool equals = s->width == a->width && s->height == a->height;
-    ret = JS_NewBool(ctx, equals);
-  } else if(magic == 1) {
-    double width, height, f;
-    int32_t precision = 0;
-    if(argc > 0)
-      JS_ToInt32(ctx, &precision, argv[0]);
-    f = std::pow(10, precision);
-    width = std::round(size.width * f) / f;
-    height = std::round(size.height * f) / f;
-    ret = js_size_new(ctx, width, height);
-  } else if(magic == 2) {
-    ret = JS_NewObject(ctx);
-
-    JS_SetPropertyStr(ctx, ret, "width", JS_NewFloat64(ctx, size.width));
-    JS_SetPropertyStr(ctx, ret, "height", JS_NewFloat64(ctx, size.height));
-  } else if(magic == 3) {
-    ret = JS_NewArray(ctx);
-
-    JS_SetPropertyUint32(ctx, ret, 0, JS_NewFloat64(ctx, size.width));
-    JS_SetPropertyUint32(ctx, ret, 1, JS_NewFloat64(ctx, size.height));
-  } else if(magic == 4 || magic == 5 || magic == 6 || magic == 7) {
-    JSSizeData<double> other, result;
-    double arg;
-
-    js_size_fit_t fit_type = js_size_fit_t(magic - 3);
-    if(magic >= 6) {}
-
-    if(js_size_read(ctx, argv[0], &other)) {
-      result = js_size_fit(size, other, fit_type);
-
-    } else if(fit_type == JS_SIZE_FIT_WIDTH || fit_type == JS_SIZE_FIT_HEIGHT) {
-      JS_ToFloat64(ctx, &arg, argv[0]);
-      result = js_size_fit(size, arg, fit_type);
+  switch(magic) {
+    case SIZE_METHOD_EQUALS: {
+      a = js_size_data(ctx, argv[0]);
+      bool equals = s->width == a->width && s->height == a->height;
+      ret = JS_NewBool(ctx, equals);
+      break;
     }
+    case SIZE_METHOD_ROUND: {
+      double width, height, f;
+      int32_t precision = 0;
+      if(argc > 0)
+        JS_ToInt32(ctx, &precision, argv[0]);
+      f = std::pow(10, precision);
+      width = std::round(size.width * f) / f;
+      height = std::round(size.height * f) / f;
+      ret = js_size_new(ctx, width, height);
+      break;
+    }
+    case SIZE_METHOD_TOOBJECT: {
+      ret = JS_NewObject(ctx);
 
-    if(!result.empty())
-      ret = js_size_new(ctx, result.width, result.height);
+      JS_SetPropertyStr(ctx, ret, "width", JS_NewFloat64(ctx, size.width));
+      JS_SetPropertyStr(ctx, ret, "height", JS_NewFloat64(ctx, size.height));
+      break;
+    }
+    case SIZE_METHOD_TOARRAY: {
+      ret = JS_NewArray(ctx);
+
+      JS_SetPropertyUint32(ctx, ret, 0, JS_NewFloat64(ctx, size.width));
+      JS_SetPropertyUint32(ctx, ret, 1, JS_NewFloat64(ctx, size.height));
+      break;
+    }
+    case SIZE_METHOD_FITWIDTH:
+    case SIZE_METHOD_FITHEIGHT:
+    case SIZE_METHOD_FITINSIDE:
+    case SIZE_METHOD_FITOUTSIDE: {
+      JSSizeData<double> other, result;
+      double arg;
+
+      js_size_fit_t fit_type = js_size_fit_t(magic - 3);
+      if(magic >= 6) {}
+
+      if(js_size_read(ctx, argv[0], &other)) {
+        result = js_size_fit(size, other, fit_type);
+
+      } else if(fit_type == JS_SIZE_FIT_WIDTH || fit_type == JS_SIZE_FIT_HEIGHT) {
+        JS_ToFloat64(ctx, &arg, argv[0]);
+        result = js_size_fit(size, arg, fit_type);
+      }
+
+      if(!result.empty())
+        ret = js_size_new(ctx, result.width, result.height);
+      break;
+    }
   }
+
   return ret;
 }
 
@@ -383,28 +424,30 @@ JSClassDef js_size_class = {
     .finalizer = js_size_finalizer,
 };
 
-const JSCFunctionListEntry js_size_proto_funcs[] = {JS_CGETSET_ENUMERABLE_DEF("width", js_size_get, js_size_set, 0),
-                                                    JS_CGETSET_ENUMERABLE_DEF("height", js_size_get, js_size_set, 1),
-                                                    JS_CGETSET_ENUMERABLE_DEF("aspect", js_size_get, 0, 2),
-                                                    JS_CGETSET_ENUMERABLE_DEF("empty", js_size_get, 0, 3),
-                                                    JS_CGETSET_ENUMERABLE_DEF("area", js_size_get, 0, 4),
-                                                    JS_CFUNC_MAGIC_DEF("equals", 1, js_size_funcs, 0),
-                                                    JS_CFUNC_MAGIC_DEF("round", 0, js_size_funcs, 1),
-                                                    JS_CFUNC_MAGIC_DEF("toObject", 0, js_size_funcs, 2),
-                                                    JS_CFUNC_MAGIC_DEF("toArray", 0, js_size_funcs, 3),
-                                                    JS_CFUNC_MAGIC_DEF("fitWidth", 0, js_size_funcs, 4),
-                                                    JS_CFUNC_MAGIC_DEF("fitHeight", 0, js_size_funcs, 5),
-                                                    JS_CFUNC_MAGIC_DEF("fitInside", 0, js_size_funcs, 6),
-                                                    JS_CFUNC_MAGIC_DEF("fitOutside", 0, js_size_funcs, 7),
-                                                    JS_CFUNC_DEF("toString", 0, js_size_to_string),
-                                                    JS_CFUNC_DEF("toSource", 0, js_size_to_source),
-                                                    JS_CFUNC_DEF("add", 1, js_size_add),
-                                                    JS_CFUNC_DEF("sub", 1, js_size_sub),
-                                                    JS_CFUNC_DEF("mul", 1, js_size_mul),
-                                                    JS_CFUNC_DEF("div", 1, js_size_div),
-                                                    JS_ALIAS_DEF("values", "toArray"),
-                                                    JS_CFUNC_DEF("[Symbol.iterator]", 0, js_size_symbol_iterator),
-                                                    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Size", JS_PROP_CONFIGURABLE)};
+const JSCFunctionListEntry js_size_proto_funcs[] = {
+    JS_CGETSET_ENUMERABLE_DEF("width", js_size_get, js_size_set, SIZE_PROP_WIDTH),
+    JS_CGETSET_ENUMERABLE_DEF("height", js_size_get, js_size_set, SIZE_PROP_HEIGHT),
+    JS_CGETSET_ENUMERABLE_DEF("aspect", js_size_get, 0, SIZE_PROP_ASPECT),
+    JS_CGETSET_ENUMERABLE_DEF("empty", js_size_get, 0, SIZE_PROP_EMPTY),
+    JS_CGETSET_ENUMERABLE_DEF("area", js_size_get, 0, SIZE_PROP_AREA),
+    JS_CFUNC_MAGIC_DEF("equals", 1, js_size_funcs, SIZE_METHOD_EQUALS),
+    JS_CFUNC_MAGIC_DEF("round", 0, js_size_funcs, SIZE_METHOD_ROUND),
+    JS_CFUNC_MAGIC_DEF("toObject", 0, js_size_funcs, SIZE_METHOD_TOOBJECT),
+    JS_CFUNC_MAGIC_DEF("toArray", 0, js_size_funcs, SIZE_METHOD_TOARRAY),
+    JS_CFUNC_MAGIC_DEF("fitWidth", 0, js_size_funcs, SIZE_METHOD_FITWIDTH),
+    JS_CFUNC_MAGIC_DEF("fitHeight", 0, js_size_funcs, SIZE_METHOD_FITHEIGHT),
+    JS_CFUNC_MAGIC_DEF("fitInside", 0, js_size_funcs, SIZE_METHOD_FITINSIDE),
+    JS_CFUNC_MAGIC_DEF("fitOutside", 0, js_size_funcs, SIZE_METHOD_FITOUTSIDE),
+    JS_CFUNC_DEF("toString", 0, js_size_to_string),
+    JS_CFUNC_DEF("toSource", 0, js_size_to_source),
+    JS_CFUNC_DEF("add", 1, js_size_add),
+    JS_CFUNC_DEF("sub", 1, js_size_sub),
+    JS_CFUNC_DEF("mul", 1, js_size_mul),
+    JS_CFUNC_DEF("div", 1, js_size_div),
+    JS_ALIAS_DEF("values", "toArray"),
+    JS_CFUNC_DEF("[Symbol.iterator]", 0, js_size_symbol_iterator),
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Size", JS_PROP_CONFIGURABLE),
+};
 
 const JSCFunctionListEntry js_size_static_funcs[] = {JS_CFUNC_DEF("from", 1, js_size_from)};
 
