@@ -101,7 +101,7 @@ fail:
 
 VISIBLE JSSizeData<double>*
 js_size_data(JSContext* ctx, JSValueConst val) {
-  return static_cast<JSSizeData<double>*>(JS_GetOpaque2(ctx, val, js_size_class_id));
+  return static_cast<JSSizeData<double>*>(JS_GetOpaque(val, js_size_class_id));
 }
 
 static JSValue
@@ -220,18 +220,26 @@ js_size_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
 
 static JSValue
 js_size_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
-  JSSizeData<double> size, *s, *a;
+  JSSizeData<double> size, *s;
   JSValue ret = JS_UNDEFINED;
+
   if((s = js_size_data(ctx, this_val)) == nullptr)
-    return JS_EXCEPTION;
+    return ret;
 
   size = *s;
 
   switch(magic) {
     case SIZE_METHOD_EQUALS: {
-      a = js_size_data(ctx, argv[0]);
-      bool equals = s->width == a->width && s->height == a->height;
-      ret = JS_NewBool(ctx, equals);
+      JSSizeData<double> other, *arg;
+      bool equals = false;
+      if(argc > 0) {
+        if((arg = js_size_data(ctx, argv[0]))) {
+          equals = s->width == arg->width && s->height == arg->height;
+        } else if(js_size_read(ctx, argv[0], &other)) {
+          equals = s->width == other.width && s->height == other.height;
+        }
+        ret = JS_NewBool(ctx, equals);
+      }
       break;
     }
     case SIZE_METHOD_ROUND: {

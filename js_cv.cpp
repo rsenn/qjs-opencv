@@ -404,12 +404,17 @@ js_cv_imwrite(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* arg
 
 static JSValue
 js_cv_imshow(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-
   const char* winname = JS_ToCString(ctx, argv[0]);
-  JSInputOutputArray image = js_cv_inputoutputarray(ctx, argv[1]);
+  JSInputOutputArray image = js_umat_or_mat(ctx, argv[1]);
 
   if(image.empty())
     return JS_ThrowInternalError(ctx, "Empty image");
+  cv::_InputArray input_array(image);
+
+/*  if(input_array.isUMat())
+    input_array.getUMat().addref();
+  else if(input_array.isMat())
+    input_array.getMat().addref();*/
 
   cv::imshow(winname, image);
 
