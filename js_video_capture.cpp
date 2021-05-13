@@ -70,7 +70,7 @@ fail:
   return JS_EXCEPTION;
 }
 
-VISIBLE JSVideoCaptureData*
+extern "C" VISIBLE JSVideoCaptureData*
 js_video_capture_data(JSContext* ctx, JSValueConst val) {
   return static_cast<JSVideoCaptureData*>(JS_GetOpaque2(ctx, val, js_video_capture_class_id));
 }
