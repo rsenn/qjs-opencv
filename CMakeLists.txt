@@ -123,12 +123,12 @@ dump(QUICKJS_MODULE_CFLAGS F_PIC)
 list(FILTER OPENCV_SOURCES EXCLUDE REGEX "init_module\\.cpp")
 list(FILTER OPENCV_SOURCES EXCLUDE REGEX "js\\.[hc]pp")
 
-add_library(qjs-opencv-a STATIC ${OPENCV_SOURCES})
-set_target_properties(qjs-opencv-a PROPERTIES PREFIX "" OUTPUT_NAME opencv COMPILE_FLAGS "${QUICKJS_MODULE_CFLAGS} ${F_PIC}")
-target_compile_definitions(qjs-opencv-a PRIVATE CONFIG_PREFIX="${CMAKE_INSTALL_PREFIX}")
+add_library(qjs-opencv STATIC ${OPENCV_SOURCES})
+set_target_properties(qjs-opencv PROPERTIES PREFIX "" OUTPUT_NAME opencv COMPILE_FLAGS "${QUICKJS_MODULE_CFLAGS} ${F_PIC}")
+target_compile_definitions(qjs-opencv PRIVATE CONFIG_PREFIX="${CMAKE_INSTALL_PREFIX}")
 
-install(TARGETS qjs-opencv-a DESTINATION lib/quickjs)
-set(jsbindings_LIBRARIES qjs-opencv-a)
+install(TARGETS qjs-opencv DESTINATION lib/quickjs)
+set(jsbindings_LIBRARIES qjs-opencv)
 
 # make_static_module(opencv init_module.cpp)
 make_shared_module(opencv init_module.cpp)
