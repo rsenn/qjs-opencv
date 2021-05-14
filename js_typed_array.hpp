@@ -202,6 +202,9 @@ struct TypedArrayType {
 };
 
 struct TypedArrayProps {
+  explicit TypedArrayProps(size_t offset, size_t length, size_t elem_size, ArrayBufferProps const& props)
+      : byte_offset(offset), byte_length(length), bytes_per_element(elem_size), buffer(props) {}
+
   size_t byte_offset, byte_length, bytes_per_element;
   ArrayBufferProps buffer;
 
