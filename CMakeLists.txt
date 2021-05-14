@@ -5,8 +5,7 @@ set(DISABLE_WERROR TRUE CACHE BOOL "Disable -Werror flag" FORCE)
 
 set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "build type")
 
-set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release MinSizeRel
-                                             RelWithDebInfo)
+set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release MinSizeRel RelWithDebInfo)
 
 set(quickjs_sources_root ${CMAKE_CURRENT_SOURCE_DIR}/quickjs)
 
@@ -59,14 +58,12 @@ if(HAVE_LIBDL)
   # message("Found dlfcn library: ${LIBDL}")
 endif(HAVE_LIBDL)
 
-check_library_exists(json-cpp ZN4YAML6detail9node_data9reset_mapEv /usr
-                     JSON_CPP)
+check_library_exists(json-cpp ZN4YAML6detail9node_data9reset_mapEv /usr JSON_CPP)
 
 find_quickjs()
 find_opencv()
 
-set(CMAKE_INSTALL_RPATH "${OPENCV_LIB_DIR}"
-    CACHE PATH "Build with install rpath" FORCE)
+set(CMAKE_INSTALL_RPATH "${OPENCV_LIB_DIR}" CACHE PATH "Build with install rpath" FORCE)
 
 include_directories(${OPENCV_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -127,12 +124,8 @@ list(FILTER OPENCV_SOURCES EXCLUDE REGEX "init_module\\.cpp")
 list(FILTER OPENCV_SOURCES EXCLUDE REGEX "js\\.[hc]pp")
 
 add_library(quickjs-opencv STATIC ${OPENCV_SOURCES})
-set_target_properties(
-  quickjs-opencv PROPERTIES PREFIX "" OUTPUT_NAME opencv
-                        COMPILE_FLAGS "${QUICKJS_MODULE_CFLAGS} ${F_PIC}")
-target_compile_definitions(quickjs-opencv
-                           PRIVATE CONFIG_PREFIX="${CMAKE_INSTALL_PREFIX}")
-
+set_target_properties(quickjs-opencv PROPERTIES PREFIX "" OUTPUT_NAME opencv COMPILE_FLAGS "${QUICKJS_MODULE_CFLAGS} ${F_PIC}")
+target_compile_definitions(quickjs-opencv PRIVATE CONFIG_PREFIX="${CMAKE_INSTALL_PREFIX}")
 
 install(TARGETS quickjs-opencv DESTINATION lib/quickjs)
 set(jsbindings_LIBRARIES quickjs-opencv)

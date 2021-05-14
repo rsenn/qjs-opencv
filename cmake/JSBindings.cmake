@@ -21,6 +21,7 @@ set(JS_BINDINGS_COMMON color.hpp geometry.hpp js.hpp js_alloc.hpp js_array.hpp j
 set(js_line_SOURCES line.cpp line.hpp)
 
 function(make_shared_module FNAME)
+  message("make_shared_module(${FNAME})")
   string(REGEX REPLACE "_" "-" NAME "${FNAME}")
   string(TOUPPER "${FNAME}" UNAME)
 
@@ -36,8 +37,7 @@ function(make_shared_module FNAME)
 
   target_link_libraries(${TARGET_NAME} ${jsbindings_LIBRARIES} ${OpenCV_LIBS})
   set_target_properties(${TARGET_NAME} PROPERTIES PREFIX "" # BUILD_RPATH "${OPENCV_LIBRARY_DIRS}:${CMAKE_CURRENT_BINARY_DIR}"
-                                                  RPATH "${OPENCV_LIBRARY_DIRS}:${CMAKE_INSTALL_PREFIX}/lib:${CMAKE_INSTALL_PREFIX}/lib/quickjs" OUTPUT_NAME "${NAME}"
-                                                   COMPILE_FLAGS "${QUICKJS_MODULE_CFLAGS}" BUILD_RPATH "${CMAKE_CURRENT_BINARY_DIR}:${CMAKE_CURRENT_BINARY_DIR}:${CMAKE_CURRENT_BINARY_DIR}/quickjs:${CMAKE_CURRENT_BINARY_DIR}/quickjs")
+                                                  RPATH "${OPENCV_LIBRARY_DIRS}:${CMAKE_INSTALL_PREFIX}/lib:${CMAKE_INSTALL_PREFIX}/lib/quickjs" OUTPUT_NAME "${NAME}" COMPILE_FLAGS "${QUICKJS_MODULE_CFLAGS}" BUILD_RPATH "${CMAKE_CURRENT_BINARY_DIR}:${CMAKE_CURRENT_BINARY_DIR}:${CMAKE_CURRENT_BINARY_DIR}/quickjs:${CMAKE_CURRENT_BINARY_DIR}/quickjs")
   target_compile_definitions(${TARGET_NAME} PRIVATE JS_${UNAME}_MODULE CONFIG_PREFIX="${CMAKE_INSTALL_PREFIX}")
   install(TARGETS ${TARGET_NAME} DESTINATION lib/quickjs PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
@@ -50,6 +50,7 @@ function(make_shared_module FNAME)
 endfunction()
 
 function(make_static_module FNAME)
+  message("make_static_module(${FNAME})")
   string(REGEX REPLACE "_" "-" NAME "${FNAME}")
   string(TOUPPER "${FNAME}" UNAME)
 
@@ -77,6 +78,7 @@ function(make_static_module FNAME)
 endfunction()
 
 function(make_js_bindings)
+  message("make_js_bindings")
   file(GLOB JS_BINDINGS_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/js_*.cpp)
 
   foreach(MOD ${JS_BINDINGS_SOURCES})

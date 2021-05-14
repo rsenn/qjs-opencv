@@ -139,12 +139,11 @@ macro(check_cxx_standard_flag)
   endforeach()
 
   string(REGEX REPLACE "c\\+\\+" "" CXX_STANDARD_VERSION "${CXX_STANDARD_VALUE}")
- # add_definitions(-DCXX_STANDARD=${CXX_STANDARD_VERSION})
+  # add_definitions(-DCXX_STANDARD=${CXX_STANDARD_VERSION})
 
   if(NOT "${CMAKE_CXX_FLAGS}" MATCHES ".*CXX_STAND.*")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCXX_STANDARD=${CXX_STANDARD_VERSION}")
   endif(NOT "${CMAKE_CXX_FLAGS}" MATCHES ".*CXX_STAND.*")
-
 
   message("C++ standard: ${CXX_STANDARD_VALUE}")
   message("C++ flags: ${CMAKE_CXX_FLAGS}")
