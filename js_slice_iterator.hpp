@@ -3,7 +3,6 @@
 
 #include "jsbindings.hpp"
 #include "js_typed_array.hpp"
-#include <ranges>
 
 extern "C" VISIBLE int js_slice_iterator_init(JSContext*, JSModuleDef*);
 
@@ -21,7 +20,7 @@ JSModuleDef* js_init_module_slice_iterator(JSContext*, const char* module_name);
 
 struct JSSliceIteratorData {
   uint8_t* ptr;
-  std::ranges::subrange<uint8_t*> range;
+  range_view<uint8_t> range;
   int num_elems;
   size_t increment;
   TypedArrayType type;

@@ -17,7 +17,6 @@
 #include "psimpl.hpp"
 
 #include <iomanip>
-#include <ranges>
 
 extern "C" {
 JSValue contour_proto = JS_UNDEFINED, contour_class = JS_UNDEFINED;
@@ -65,7 +64,6 @@ js_contour_move(JSContext* ctx, const JSContourData<double>&& points) {
 static JSValue
 js_contour_buffer(JSContext* ctx, JSValueConst this_val) {
   JSContourData<double>* contour;
-  std::ranges::subrange<uint8_t*> r;
   JSValue ret = JS_UNDEFINED;
 
   if((contour = js_contour_data(ctx, this_val)) == nullptr)
@@ -74,12 +72,10 @@ js_contour_buffer(JSContext* ctx, JSValueConst this_val) {
   JSValue* valptr = static_cast<JSValue*>(js_malloc(ctx, sizeof(JSValue)));
   *valptr = JS_DupValue(ctx, this_val);
 
-  r = range<uint8_t*>(*contour);
-
   ret = JS_NewArrayBuffer(
       ctx,
-      r.begin(),
-      r.size(),
+      reinterpret_cast<uint8_t*>(contour->data()),
+      contour->size() * sizeof(JSPointData<double>),
       [](JSRuntime* rt, void* opaque, void* ptr) {
         JS_FreeValueRT(rt, *(JSValue*)opaque);
         js_free_rt(rt, opaque);
@@ -1057,7 +1053,7 @@ js_contour_iterator(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   if(!(s = js_contour_data(ctx, this_val)))
     return JS_EXCEPTION;
 
-  return js_point_iterator_new(ctx, range(*s), magic);
+  return js_point_iterator_new(ctx, s->data(), s->data() + s->size(), magic);
 }
 
 const JSCFunctionListEntry js_contour_proto_funcs[] = {

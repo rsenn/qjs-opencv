@@ -14,7 +14,7 @@ JSValue point_iterator_proto = JS_UNDEFINED, point_iterator_class = JS_UNDEFINED
 VISIBLE JSClassID js_point_iterator_class_id = 0;
 
 VISIBLE JSValue
-js_point_iterator_new(JSContext* ctx, const std::ranges::subrange<JSPointData<double>*>& range, int magic) {
+js_point_iterator_new(JSContext* ctx, JSPointData<double>* first, JSPointData<double>* last, int magic) {
   JSPointIteratorData* it;
   JSValue iterator;
 
@@ -32,8 +32,8 @@ js_point_iterator_new(JSContext* ctx, const std::ranges::subrange<JSPointData<do
   new(it) JSPointIteratorData();
 
   it->magic = JSPointIteratorMagic(magic);
-  it->first = range.begin();
-  it->second = range.end();
+  it->first = first;
+  it->second = last;
 
   JS_SetOpaque(iterator, it);
   return iterator;

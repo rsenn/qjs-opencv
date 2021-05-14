@@ -41,13 +41,12 @@ js_line_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* ar
   JSLineData<double>* ln;
   JSValue obj = JS_UNDEFINED;
   JSValue proto;
-  auto args = argument_range(std::min(4, argc), argv);
 
   ln = js_allocate<JSLineData<double>>(ctx);
   if(!ln)
     return JS_EXCEPTION;
 
-  if(argc >= 4 && std::ranges::all_of(args, JS_IsNumber)) {
+  if(argc >= 4 && std::all_of(argv, argv + std::min(4, argc), JS_IsNumber)) {
     if(JS_ToFloat64(ctx, &ln->array[0], argv[0]))
       goto fail;
     if(JS_ToFloat64(ctx, &ln->array[1], argv[1]))

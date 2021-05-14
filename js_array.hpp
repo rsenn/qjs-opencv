@@ -620,7 +620,7 @@ public:
 
     JS_GetOwnPropertyNames(ctx, &names, &plen, obj, JS_GPN_ENUM_ONLY);
 
-    for(auto name : std::ranges::subrange<JSPropertyEnum>(names, names + plen)) {
+    for(auto name : range_view<JSPropertyEnum>(names, plen)) {
       JSValue value = JS_GetProperty(ctx, obj, name.atom);
       T prop;
       js_value_to(ctx, value, prop);

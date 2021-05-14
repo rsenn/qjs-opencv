@@ -287,38 +287,57 @@ end(cv::Mat const& mat) {
   return mat.ptr<uint8_t const>() + (mat.total() * mat.elemSize());
 }
 
-#if CXX_STANDARD >= 20
-#include <ranges>
+template<class T> class range_view {
+public:
+  // range_view(range_view<T> const& range) : p(range.begin()), n(range.size()) {}
+  range_view(T* const base, size_t size) : p(base), n(size) {}
+
+  range_view<T>&
+  operator=(range_view<T> const& range) {
+    p = range.begin();
+    n = range.size();
+    return *this;
+  }
+
+  // clang-format off
+  T* const begin() const {return p; }
+  T* const end() const {return p + n; }
+  size_t size() const {return n; }
+  // clang-format on
+
+private:
+  T* p;
+  size_t n;
+};
 
 template<class T>
-static inline std::ranges::subrange<T>
+static inline range_view<T>
+argument_range(int argc, T argv[]) {
+  return range_view<T>(argv, argc);
+}
+
+template<class T>
+static inline range_view<T>
 sized_range(T ptr, size_t len) {
-  return std::ranges::subrange<T>(ptr, ptr + len);
+  return range_view<T>(ptr, ptr + len);
 }
 
 template<class T>
-static inline std::ranges::subrange<T*>
-argument_range(int argc, T* argv) {
-  return std::ranges::subrange<T*>(argv, argv + argc);
-}
-
-template<class T>
-static inline std::ranges::subrange<T*>
+static inline range_view<T>
 range(T* begin, T* end) {
-  return std::ranges::subrange<T*>(begin, end);
+  return range_view<T>(begin, end - begin);
 }
 
 template<class Container>
-static inline std::ranges::subrange<typename Container::value_type*>
+static inline range_view<typename Container::value_type>
 range(Container& c) {
-  return std::ranges::subrange<typename Container::value_type*>(begin(c), end(c));
+  return range_view<typename Container::value_type>(begin(c), end(c) - begin(c));
 }
 
 template<class T, class Container>
-static inline std::ranges::subrange<T>
+static inline range_view<T>
 range(Container& c) {
-  return std::ranges::subrange<T>(reinterpret_cast<T>(begin(c)), reinterpret_cast<T>(end(c)));
+  return range_view<T>(reinterpret_cast<T>(begin(c)), reinterpret_cast<T>(end(c)));
 }
-#endif
 
 #endif // defined(UTIL_HPP)

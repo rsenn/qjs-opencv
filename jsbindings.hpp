@@ -11,7 +11,6 @@
 #include <iomanip>
 #include <map>
 #include <iterator>
-#include <ranges>
 #include <array>
 #include <algorithm>
 #include <string>
@@ -265,26 +264,24 @@ round_to(size_t num, size_t x) {
   return num;
 }
 
-#if CXX_STANDARD >= 20
-static inline std::ranges::subrange<uint8_t*>
+static inline range_view<uint8_t>
 js_arraybuffer_range(JSContext* ctx, JSValueConst buffer) {
   size_t size;
   uint8_t* ptr;
   ptr = JS_GetArrayBuffer(ctx, &size, buffer);
-  return std::ranges::subrange<uint8_t*>(ptr, ptr + size);
+  return range_view<uint8_t>(ptr, size);
 }
 
 template<class T>
-static inline std::ranges::subrange<T>
+static inline range_view<T>
 js_arraybuffer_range(JSContext* ctx, JSValueConst buffer) {
   typedef typename std::remove_pointer<T>::type value_type;
   size_t size;
   uint8_t* byte_ptr;
   byte_ptr = JS_GetArrayBuffer(ctx, &size, buffer);
   size = round_to(size, sizeof(value_type));
-  return std::ranges::subrange<T>(reinterpret_cast<T>(byte_ptr), reinterpret_cast<T>(byte_ptr + size));
+  return range_view<T>(reinterpret_cast<T>(byte_ptr), size);
 }
-#endif
 
 template<class Ptr>
 static inline JSValue

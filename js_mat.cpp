@@ -1256,14 +1256,12 @@ js_mat_array(JSContext* ctx, JSValueConst this_val) {
     TypedArrayType type(*m);
     buffer = js_mat_buffer(ctx, this_val);
 
-    std::ranges::subrange<uint8_t*> range(begin(*m), end(*m));
-
     /*printf("m->rows=%i m->cols=%i m->step=%zu m->total()=%zu range.size()=%zu type.byte_size=%u
        size=%zu\n", m->rows, m->cols, size_t(m->step), range.size() / type.byte_size, range.size(),
            type.byte_size,
            range.size() / type.byte_size);*/
 
-    return js_typedarray_new(ctx, buffer, 0, range.size() / type.byte_size, type);
+    return js_typedarray_new(ctx, buffer, 0, mat_bytesize(*m) / type.byte_size, type);
   }
   return JS_EXCEPTION;
 }
