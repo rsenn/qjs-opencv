@@ -17,6 +17,7 @@ extern "C" int js_umat_init(JSContext*, JSModuleDef*);
 extern "C" int js_utility_init(JSContext*, JSModuleDef*);
 extern "C" int js_video_capture_init(JSContext*, JSModuleDef*);
 extern "C" int js_line_segment_detector_init(JSContext*, JSModuleDef*);
+extern "C" int js_fast_line_detector_init(JSContext*, JSModuleDef*);
 
 extern "C" void js_clahe_export(JSContext*, JSModuleDef*);
 extern "C" void js_contour_export(JSContext*, JSModuleDef*);
@@ -34,6 +35,7 @@ extern "C" void js_umat_export(JSContext*, JSModuleDef*);
 extern "C" void js_utility_export(JSContext*, JSModuleDef*);
 extern "C" void js_video_capture_export(JSContext*, JSModuleDef*);
 extern "C" void js_line_segment_detector_export(JSContext*, JSModuleDef*);
+extern "C" void js_fast_line_detector_export(JSContext*, JSModuleDef*);
 
 int
 js_opencv_init(JSContext* ctx, JSModuleDef* m) {
@@ -53,6 +55,7 @@ js_opencv_init(JSContext* ctx, JSModuleDef* m) {
   js_utility_init(ctx, m);
   js_video_capture_init(ctx, m);
   js_line_segment_detector_init(ctx, m);
+  js_fast_line_detector_init(ctx, m);
 
   return 0;
 }
@@ -86,6 +89,7 @@ JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   js_utility_export(ctx, m);
   js_video_capture_export(ctx, m);
   js_line_segment_detector_export(ctx, m);
+  js_fast_line_detector_export(ctx, m);
 
   return m;
 }

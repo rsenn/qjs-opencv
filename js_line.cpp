@@ -115,8 +115,9 @@ static JSValue
 js_line_get(JSContext* ctx, JSValueConst this_val, int magic) {
   JSLineData<double>* ln;
 
-  if(!(ln = static_cast<JSLineData<double>*>(JS_GetOpaque2(ctx, this_val, js_line_class_id))))
-    return JS_EXCEPTION;
+  if(!(ln = static_cast<JSLineData<double>*>(JS_GetOpaque /*2*/ (/*ctx,*/ this_val, js_line_class_id))))
+    return JS_UNDEFINED;
+
   switch(magic) {
     case PROP_SLOPE: {
       Line<double> line(ln->array);

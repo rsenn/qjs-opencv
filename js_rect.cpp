@@ -106,8 +106,8 @@ js_rect_get(JSContext* ctx, JSValueConst this_val, int magic) {
   JSValue ret = JS_UNDEFINED;
   JSRectData<double>* s;
 
-  if((s = static_cast<JSRectData<double>*>(JS_GetOpaque2(ctx, this_val, js_rect_class_id))) == nullptr)
-    return JS_EXCEPTION;
+  if((s = static_cast<JSRectData<double>*>(JS_GetOpaque /*2*/ (/*ctx, */ this_val, js_rect_class_id))) == nullptr)
+    return JS_UNDEFINED;
 
   switch(magic) {
     case PROP_X: {
@@ -526,32 +526,33 @@ JSClassDef js_rect_class = {
     .finalizer = js_rect_finalizer,
 };
 
-const JSCFunctionListEntry js_rect_proto_funcs[] = {JS_CGETSET_ENUMERABLE_DEF("x", js_rect_get, js_rect_set, PROP_X),
-                                                    JS_CGETSET_ENUMERABLE_DEF("y", js_rect_get, js_rect_set, PROP_Y),
-                                                    JS_CGETSET_ENUMERABLE_DEF("width", js_rect_get, js_rect_set, PROP_WIDTH),
-                                                    JS_CGETSET_ENUMERABLE_DEF("height", js_rect_get, js_rect_set, PROP_HEIGHT),
-                                                    JS_CGETSET_MAGIC_DEF("x2", js_rect_get, js_rect_set, PROP_X2),
-                                                    JS_CGETSET_MAGIC_DEF("y2", js_rect_get, js_rect_set, PROP_Y2),
-                                                    JS_CGETSET_MAGIC_DEF("point", js_rect_get, js_rect_set, PROP_POS),
-                                                    JS_CGETSET_MAGIC_DEF("size", js_rect_get, js_rect_set, PROP_SIZE),
-                                                    JS_ALIAS_DEF("x1", "x"),
-                                                    JS_ALIAS_DEF("y1", "y"),
-                                                    JS_CFUNC_MAGIC_DEF("contains", 0, js_rect_method, METHOD_CONTAINS),
-                                                    JS_CFUNC_MAGIC_DEF("empty", 0, js_rect_method, METHOD_EMPTY),
-                                                    JS_CFUNC_MAGIC_DEF("area", 0, js_rect_method, METHOD_AREA),
-                                                    JS_CFUNC_MAGIC_DEF("br", 0, js_rect_method, METHOD_BR),
-                                                    JS_CFUNC_MAGIC_DEF("tl", 0, js_rect_method, METHOD_TL),
-                                                    JS_CFUNC_MAGIC_DEF("inset", 1, js_rect_method, METHOD_INSET),
-                                                    JS_CFUNC_MAGIC_DEF("outset", 1, js_rect_method, METHOD_OUTSET),
-                                                    JS_CFUNC_MAGIC_DEF("hsplit", 1, js_rect_method, METHOD_HSPLIT),
-                                                    JS_CFUNC_MAGIC_DEF("vsplit", 1, js_rect_method, METHOD_VSPLIT),
-                                                    JS_CFUNC_DEF("toString", 0, js_rect_to_string),
-                                                    JS_CFUNC_DEF("toSource", 0, js_rect_to_source),
-                                                    JS_CFUNC_MAGIC_DEF("equals", 1, js_rect_funcs, FUNC_EQUALS),
-                                                    JS_CFUNC_MAGIC_DEF("round", 0, js_rect_funcs, FUNC_ROUND),
-                                                    JS_CFUNC_MAGIC_DEF("toObject", 0, js_rect_funcs, FUNC_TOOBJECT),
-                                                    JS_CFUNC_MAGIC_DEF("toArray", 0, js_rect_funcs, FUNC_TOARRAY),
-                                                    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Rect", JS_PROP_CONFIGURABLE)
+const JSCFunctionListEntry js_rect_proto_funcs[] = {
+    JS_CGETSET_ENUMERABLE_DEF("x", js_rect_get, js_rect_set, PROP_X),
+    JS_CGETSET_ENUMERABLE_DEF("y", js_rect_get, js_rect_set, PROP_Y),
+    JS_CGETSET_ENUMERABLE_DEF("width", js_rect_get, js_rect_set, PROP_WIDTH),
+    JS_CGETSET_ENUMERABLE_DEF("height", js_rect_get, js_rect_set, PROP_HEIGHT),
+    JS_CGETSET_MAGIC_DEF("x2", js_rect_get, js_rect_set, PROP_X2),
+    JS_CGETSET_MAGIC_DEF("y2", js_rect_get, js_rect_set, PROP_Y2),
+    JS_CGETSET_MAGIC_DEF("point", js_rect_get, js_rect_set, PROP_POS),
+    JS_CGETSET_MAGIC_DEF("size", js_rect_get, js_rect_set, PROP_SIZE),
+    JS_ALIAS_DEF("x1", "x"),
+    JS_ALIAS_DEF("y1", "y"),
+    JS_CFUNC_MAGIC_DEF("contains", 0, js_rect_method, METHOD_CONTAINS),
+    JS_CFUNC_MAGIC_DEF("empty", 0, js_rect_method, METHOD_EMPTY),
+    JS_CFUNC_MAGIC_DEF("area", 0, js_rect_method, METHOD_AREA),
+    JS_CFUNC_MAGIC_DEF("br", 0, js_rect_method, METHOD_BR),
+    JS_CFUNC_MAGIC_DEF("tl", 0, js_rect_method, METHOD_TL),
+    JS_CFUNC_MAGIC_DEF("inset", 1, js_rect_method, METHOD_INSET),
+    JS_CFUNC_MAGIC_DEF("outset", 1, js_rect_method, METHOD_OUTSET),
+    JS_CFUNC_MAGIC_DEF("hsplit", 1, js_rect_method, METHOD_HSPLIT),
+    JS_CFUNC_MAGIC_DEF("vsplit", 1, js_rect_method, METHOD_VSPLIT),
+    JS_CFUNC_DEF("toString", 0, js_rect_to_string),
+    JS_CFUNC_DEF("toSource", 0, js_rect_to_source),
+    JS_CFUNC_MAGIC_DEF("equals", 1, js_rect_funcs, FUNC_EQUALS),
+    JS_CFUNC_MAGIC_DEF("round", 0, js_rect_funcs, FUNC_ROUND),
+    JS_CFUNC_MAGIC_DEF("toObject", 0, js_rect_funcs, FUNC_TOOBJECT),
+    JS_CFUNC_MAGIC_DEF("toArray", 0, js_rect_funcs, FUNC_TOARRAY),
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Rect", JS_PROP_CONFIGURABLE),
 
 };
 const JSCFunctionListEntry js_rect_static_funcs[] = {JS_CFUNC_DEF("from", 1, js_rect_from)};

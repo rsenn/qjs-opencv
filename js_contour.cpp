@@ -530,8 +530,9 @@ static JSValue
 js_contour_length(JSContext* ctx, JSValueConst this_val) {
   JSContourData<double>* v;
   JSValue ret;
-  if(!(v = js_contour_data(ctx, this_val)))
-    return JS_EXCEPTION;
+  if(!(v = static_cast<JSContourData<double>*>(JS_GetOpaque(this_val, js_contour_class_id))))
+    return JS_UNDEFINED;
+
   ret = JS_NewInt64(ctx, v->size());
   return ret;
 }
@@ -972,16 +973,18 @@ js_contour_rect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
   return ret;
 }
 
+enum { PROP_ASPECT_RATIO = 0, PROP_EXTENT, PROP_SOLIDITY, PROP_EQUIVALENT_DIAMETER, PROP_ORIENTATION };
+
 static JSValue
 js_contour_get(JSContext* ctx, JSValueConst this_val, int magic) {
   JSContourData<double>* contour;
   JSValue ret = JS_UNDEFINED;
 
-  if(!(contour = js_contour_data(ctx, this_val)))
-    return JS_EXCEPTION;
+  if(!(contour = static_cast<JSContourData<double>*>(JS_GetOpaque(this_val, js_contour_class_id))))
+    return JS_UNDEFINED;
 
   switch(magic) {
-    case 0: {
+    case PROP_ASPECT_RATIO: {
       JSContourData<float> points;
       JSRectData<float> rect;
 
@@ -994,14 +997,14 @@ js_contour_get(JSContext* ctx, JSValueConst this_val, int magic) {
       ret = JS_NewFloat64(ctx, (double)rect.width / rect.height);
       break;
     }
-    case 1: {
+    case PROP_EXTENT: {
       double area = cv::contourArea(*contour);
       JSRectData<double> rect = cv::boundingRect(*contour);
 
       ret = JS_NewFloat64(ctx, area / (rect.width * rect.height));
       break;
     }
-    case 2: {
+    case PROP_SOLIDITY: {
       double area = cv::contourArea(*contour);
       JSContourData<double> hull;
       cv::convexHull(*contour, hull);
@@ -1010,13 +1013,13 @@ js_contour_get(JSContext* ctx, JSValueConst this_val, int magic) {
       ret = JS_NewFloat64(ctx, area / cv::contourArea(hull));
       break;
     }
-    case 3: {
+    case PROP_EQUIVALENT_DIAMETER: {
       double area = cv::contourArea(*contour);
 
       ret = JS_NewFloat64(ctx, std::sqrt(4 * area / 3.14159265358979323846));
       break;
     }
-    case 4: {
+    case PROP_ORIENTATION: {
       cv::RotatedRect rect = cv::fitEllipse(*contour);
 
       ret = JS_NewFloat64(ctx, rect.angle);
@@ -1068,11 +1071,11 @@ const JSCFunctionListEntry js_contour_proto_funcs[] = {
     JS_CGETSET_DEF("area", js_contour_area, NULL),
     JS_CGETSET_DEF("buffer", js_contour_buffer, NULL),
     JS_CGETSET_DEF("array", js_contour_array, NULL),
-    JS_CGETSET_MAGIC_DEF("aspectRatio", js_contour_get, NULL, 0),
-    JS_CGETSET_MAGIC_DEF("extent", js_contour_get, NULL, 1),
-    JS_CGETSET_MAGIC_DEF("solidity", js_contour_get, NULL, 2),
-    JS_CGETSET_MAGIC_DEF("equivalentDiameter", js_contour_get, NULL, 3),
-    JS_CGETSET_MAGIC_DEF("orientation", js_contour_get, NULL, 4),
+    JS_CGETSET_MAGIC_DEF("aspectRatio", js_contour_get, NULL, PROP_ASPECT_RATIO),
+    JS_CGETSET_MAGIC_DEF("extent", js_contour_get, NULL, PROP_EXTENT),
+    JS_CGETSET_MAGIC_DEF("solidity", js_contour_get, NULL, PROP_SOLIDITY),
+    JS_CGETSET_MAGIC_DEF("equivalentDiameter", js_contour_get, NULL, PROP_EQUIVALENT_DIAMETER),
+    JS_CGETSET_MAGIC_DEF("orientation", js_contour_get, NULL, PROP_ORIENTATION),
 
     JS_CFUNC_DEF("approxPolyDP", 1, js_contour_approxpolydp),
     JS_CFUNC_DEF("convexHull", 1, js_contour_convexhull),
