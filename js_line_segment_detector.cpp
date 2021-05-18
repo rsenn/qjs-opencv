@@ -1,7 +1,13 @@
 #include "jsbindings.hpp"
 #include "js_alloc.hpp"
+#include "js_array.hpp"
+#include "js_size.hpp"
+#include "js_umat.hpp"
+#include "js_line.hpp"
 
 #include <opencv2/imgproc.hpp>
+
+typedef cv::Ptr<cv::LineSegmentDetector> JSLineSegmentDetector;
 
 extern "C" VISIBLE int js_line_segment_detector_init(JSContext*, JSModuleDef*);
 
@@ -11,16 +17,25 @@ JSClassID js_line_segment_detector_class_id = 0;
 }
 
 JSValue
-js_line_segment_detector_new(JSContext* ctx) {
+js_line_segment_detector_new(JSContext* ctx,
+                             JSValueConst proto,
+                             int refine = cv::LSD_REFINE_STD,
+                             double scale = 0.8,
+                             double sigma_scale = 0.6,
+                             double quant = 2.0,
+                             double ang_th = 22.5,
+                             double log_eps = 0,
+                             double density_th = 0.7,
+                             int n_bins = 1024) {
   JSValue ret;
+  JSLineSegmentDetector* s;
+  cv::Ptr<cv::LineSegmentDetector> ptr;
 
-  cv::Ptr<cv::LineSegmentDetector>* s;
+  ret = JS_NewObjectProtoClass(ctx, proto, js_line_segment_detector_class_id);
+  s = js_allocate<JSLineSegmentDetector>(ctx);
 
-  ret = JS_NewObjectProtoClass(ctx, line_segment_detector_proto, js_line_segment_detector_class_id);
-  s = js_allocate<cv::Ptr<cv::LineSegmentDetector>>(ctx);
-
-  *s = cv::createLineSegmentDetector();
-
+  ptr = cv::createLineSegmentDetector(refine, scale, sigma_scale, quant, ang_th, log_eps, density_th, n_bins);
+  *s = ptr;
   JS_SetOpaque(ret, s);
 
   return ret;
@@ -28,32 +43,132 @@ js_line_segment_detector_new(JSContext* ctx) {
 
 static JSValue
 js_line_segment_detector_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
-  return js_line_segment_detector_new(ctx);
+
+  JSValue proto;
+  int32_t refine = cv::LSD_REFINE_STD, n_bins = 1024;
+  double scale = 0.8, sigma_scale = 0.6, quant = 2.0, ang_th = 22.5, log_eps = 0, density_th = 0.7;
+
+  proto = JS_GetPropertyStr(ctx, new_target, "prototype");
+  if(JS_IsException(proto))
+    return JS_EXCEPTION;
+
+  if(argc >= 1)
+    JS_ToInt32(ctx, &refine, argv[0]);
+  if(argc >= 2)
+    JS_ToFloat64(ctx, &scale, argv[1]);
+  if(argc >= 3)
+    JS_ToFloat64(ctx, &sigma_scale, argv[2]);
+  if(argc >= 4)
+    JS_ToFloat64(ctx, &quant, argv[3]);
+  if(argc >= 5)
+    JS_ToFloat64(ctx, &ang_th, argv[4]);
+  if(argc >= 6)
+    JS_ToFloat64(ctx, &log_eps, argv[5]);
+  if(argc >= 7)
+    JS_ToFloat64(ctx, &density_th, argv[6]);
+  if(argc >= 8)
+    JS_ToInt32(ctx, &n_bins, argv[7]);
+
+  return js_line_segment_detector_new(ctx, proto, refine, scale, sigma_scale, quant, ang_th, log_eps, density_th, n_bins);
 }
 
-cv::LineSegmentDetector*
+JSLineSegmentDetector*
 js_line_segment_detector_data(JSContext* ctx, JSValueConst val) {
-  return static_cast<cv::LineSegmentDetector*>(JS_GetOpaque2(ctx, val, js_line_segment_detector_class_id));
+  return static_cast<JSLineSegmentDetector*>(JS_GetOpaque2(ctx, val, js_line_segment_detector_class_id));
 }
 
 void
 js_line_segment_detector_finalizer(JSRuntime* rt, JSValue val) {
-  cv::LineSegmentDetector* s = static_cast<cv::LineSegmentDetector*>(JS_GetOpaque(val, js_line_segment_detector_class_id));
+  JSLineSegmentDetector* s = static_cast<JSLineSegmentDetector*>(JS_GetOpaque(val, js_line_segment_detector_class_id));
+  cv::LineSegmentDetector* lsd = s->get();
 
-  s->~LineSegmentDetector();
+  lsd->~LineSegmentDetector();
+
   js_deallocate(rt, s);
 }
 
 static JSValue
-js_line_segment_detector_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
-  cv::LineSegmentDetector* s;
-  JSValue ret = JS_UNDEFINED;
+js_line_segment_detector_compare_segments(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+  JSLineSegmentDetector* s;
+  JSSizeData<int> size;
+  std::vector<cv::Vec4i> lines1, lines2;
+  JSInputOutputArray image;
+  int32_t ret;
 
   if((s = js_line_segment_detector_data(ctx, this_val)) == nullptr)
     return JS_EXCEPTION;
 
-  switch(magic) {}
-  return ret;
+  js_size_read(ctx, argv[0], &size);
+
+  js_array_to(ctx, argv[1], lines1);
+  js_array_to(ctx, argv[2], lines2);
+
+  image = argc >= 4 ? js_umat_or_mat(ctx, argv[3]) : cv::noArray();
+
+  ret = (*s)->compareSegments(size, lines1, lines2, image);
+
+  return JS_NewInt32(ctx, ret);
+}
+
+static JSValue
+js_line_segment_detector_detect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+  JSLineSegmentDetector* s;
+  JSInputArray image;
+  std::vector<cv::Vec4f> lines;
+  std::vector<float> width, prec;
+  std::vector<int32_t> nfa;
+
+  if((s = js_line_segment_detector_data(ctx, this_val)) == nullptr)
+    return JS_EXCEPTION;
+
+  image = js_umat_or_mat(ctx, argv[0]);
+
+  (*s)->detect(image, lines, width, prec, nfa);
+
+  if(argc >= 2 && js_is_array(ctx, argv[1])) {
+    size_t i, length = lines.size();
+
+    for(i = 0; i < length; i++) {
+      JSLineData<float> line(js_line_from(lines[i]));
+
+      JS_SetPropertyUint32(ctx, argv[1], i, js_line_new(ctx, line));
+    }
+  }
+  if(argc >= 3 && js_is_array(ctx, argv[2])) {
+    size_t i, length = width.size();
+
+    for(i = 0; i < length; i++) JS_SetPropertyUint32(ctx, argv[1], i, JS_NewFloat64(ctx, width[i]));
+  }
+  if(argc >= 4 && js_is_array(ctx, argv[3])) {
+    size_t i, length = prec.size();
+
+    for(i = 0; i < length; i++) JS_SetPropertyUint32(ctx, argv[1], i, JS_NewFloat64(ctx, prec[i]));
+  }
+  if(argc >= 5 && js_is_array(ctx, argv[4])) {
+    size_t i, length = nfa.size();
+
+    for(i = 0; i < length; i++) JS_SetPropertyUint32(ctx, argv[1], i, JS_NewInt32(ctx, nfa[i]));
+  }
+
+  return JS_UNDEFINED;
+}
+
+static JSValue
+js_line_segment_detector_draw_segments(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+  JSLineSegmentDetector* s;
+  JSInputOutputArray image;
+  std::vector<cv::Vec4f> lines;
+
+  if((s = js_line_segment_detector_data(ctx, this_val)) == nullptr)
+    return JS_EXCEPTION;
+
+  image = js_umat_or_mat(ctx, argv[0]);
+
+  js_array_to(ctx, argv[1], lines);
+
+  (*s)->drawSegments(image, lines);
+
+  return JS_UNDEFINED;
 }
 
 JSClassDef js_line_segment_detector_class = {
@@ -62,6 +177,9 @@ JSClassDef js_line_segment_detector_class = {
 };
 
 const JSCFunctionListEntry js_line_segment_detector_proto_funcs[] = {
+    JS_CFUNC_DEF("compareSegments", 3, js_line_segment_detector_compare_segments),
+    JS_CFUNC_DEF("detect", 2, js_line_segment_detector_detect),
+    JS_CFUNC_DEF("drawSegments", 2, js_line_segment_detector_draw_segments),
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "LineSegmentDetector", JS_PROP_CONFIGURABLE),
 };
 

@@ -18,16 +18,17 @@ extern "C" {
 
 JSValue point_proto = JS_UNDEFINED;
 JSClassID js_point_class_id = 0;
+}
 
 VISIBLE JSValue
-js_point_new(JSContext* ctx, double x, double y) {
+js_point_new(JSContext* ctx, JSValueConst proto, double x, double y) {
   JSValue ret;
   JSPointData<double>* s;
 
   if(JS_IsUndefined(point_proto))
     js_point_init(ctx, NULL);
 
-  ret = JS_NewObjectProtoClass(ctx, point_proto, js_point_class_id);
+  ret = JS_NewObjectProtoClass(ctx, proto, js_point_class_id);
 
   s = js_allocate<JSPointData<double>>(ctx);
 
@@ -40,6 +41,8 @@ js_point_new(JSContext* ctx, double x, double y) {
   JS_SetOpaque(ret, s);
   return ret;
 }
+
+extern "C" {
 
 VISIBLE JSValue
 js_point_wrap(JSContext* ctx, const JSPointData<double>& point) {
@@ -66,6 +69,11 @@ static JSValue
 js_point_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
   double x, y;
   JSPointData<double> point;
+  JSValue proto;
+
+  proto = JS_GetPropertyStr(ctx, new_target, "prototype");
+  if(JS_IsException(proto))
+    return JS_EXCEPTION;
 
   if(argc > 0) {
     if(js_point_read(ctx, argv[0], &point)) {
@@ -79,7 +87,7 @@ js_point_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* a
     }
   }
 
-  return js_point_new(ctx, x, y);
+  return js_point_new(ctx, proto, x, y);
 }
 
 VISIBLE JSPointData<double>*
@@ -374,6 +382,13 @@ js_point_finalizer(JSRuntime* rt, JSValue val) {
   /*  if(points.size() == 0)
       JS_FreeValueRT(rt, point_proto);*/
 }
+}
+
+VISIBLE JSValue
+js_point_new(JSContext* ctx, double x, double y) {
+  return js_point_new(ctx, point_proto, x, y);
+}
+extern "C" {
 
 JSValue point_class = JS_UNDEFINED;
 

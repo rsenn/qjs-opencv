@@ -14,6 +14,12 @@ VISIBLE JSValue js_line_new(JSContext* ctx, double x1, double y1, double x2, dou
 extern "C" VISIBLE int js_line_init(JSContext*, JSModuleDef*);
 
 template<class T>
+static inline JSValue
+js_line_new(JSContext* ctx, const JSLineData<T>& line) {
+  return js_line_new(ctx, line.x1, line.y1, line.x2, line.y2);
+}
+
+template<class T>
 static inline int
 js_line_read(JSContext* ctx, JSValueConst line, std::array<T, 4>& out) {
   int ret = 1;
@@ -68,6 +74,13 @@ template<class T>
 static inline JSLineData<T>
 js_line_from(T x1, T y1, T x2, T y2) {
   std::array<T, 4> arr{x1, y1, x2, y2};
+  return *reinterpret_cast<JSLineData<T>*>(&arr);
+}
+template<class T>
+static inline JSLineData<T>
+js_line_from(const cv::Vec<T, 4>& v) {
+  std::array<T, 4> arr{v[0], v[1], v[2], v[3]};
+
   return *reinterpret_cast<JSLineData<T>*>(&arr);
 }
 

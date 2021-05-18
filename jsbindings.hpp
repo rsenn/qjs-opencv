@@ -53,6 +53,13 @@ template<class T> union JSLineData {
   struct {
     T x1, y1, x2, y2;
   };
+  JSLineData(const JSLineData<T>& other) {
+    x1 = other.x1;
+    y1 = other.y1;
+    x2 = other.x2;
+    y2 = other.y2;
+  }
+  JSLineData(T _x1, T _y1, T _x2, T _y2) : x1(_x1), y1(_y1), x2(_x2), y2(_y2) {}
 };
 
 template<class T> struct JSLineTraits {

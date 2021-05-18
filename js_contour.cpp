@@ -226,7 +226,7 @@ js_contour_center(JSContext* ctx, JSValueConst this_val) {
     cv::Moments mu = cv::moments(points);
     cv::Point centroid = cv::Point(mu.m10 / mu.m00, mu.m01 / mu.m00);
 
-    ret = js_point_new(ctx, centroid.x, centroid.y);
+    ret = js_point_new(ctx, point_proto, centroid.x, centroid.y);
   }
 
   return ret;
@@ -450,7 +450,7 @@ js_contour_at(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* arg
   if(i >= v->size() || i < 0)
     return JS_UNDEFINED;
 
-  ret = js_point_new(ctx, (*v)[i].x, (*v)[i].y);
+  ret = js_point_new(ctx, point_proto, (*v)[i].x, (*v)[i].y);
   return ret;
 }
 
@@ -578,7 +578,7 @@ js_contour_minenclosingcircle(JSContext* ctx, JSValueConst this_val, int argc, J
 
   ret = JS_NewObject(ctx);
 
-  JS_SetPropertyStr(ctx, ret, "center", js_point_new(ctx, center.x, center.y));
+  JS_SetPropertyStr(ctx, ret, "center", js_point_new(ctx, point_proto, center.x, center.y));
   JS_SetPropertyStr(ctx, ret, "radius", JS_NewFloat64(ctx, radius));
 
   return ret;
@@ -758,7 +758,7 @@ js_contour_pop(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
     return JS_EXCEPTION;
   }
 
-  ret = js_point_new(ctx, point.x, point.y);
+  ret = js_point_new(ctx, point_proto, point.x, point.y);
 
   return ret;
 }
@@ -812,7 +812,7 @@ js_contour_shift(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* 
     return JS_EXCEPTION;
   }
 
-  ret = js_point_new(ctx, point.x, point.y);
+  ret = js_point_new(ctx, point_proto, point.x, point.y);
 
   return ret;
 }

@@ -13,14 +13,14 @@ JSClassID js_rect_class_id = 0;
 }
 
 extern "C" VISIBLE JSValue
-js_rect_new(JSContext* ctx, double x, double y, double w, double h) {
+js_rect_new(JSContext* ctx, JSValueConst proto, double x, double y, double w, double h) {
   JSValue ret;
   JSRectData<double>* s;
 
   if(JS_IsUndefined(rect_proto))
     js_rect_init(ctx, NULL);
 
-  ret = JS_NewObjectProtoClass(ctx, rect_proto, js_rect_class_id);
+  ret = JS_NewObjectProtoClass(ctx, proto, js_rect_class_id);
 
   s = js_allocate<JSRectData<double>>(ctx);
 
@@ -35,6 +35,11 @@ js_rect_new(JSContext* ctx, double x, double y, double w, double h) {
 }
 
 VISIBLE JSValue
+js_rect_new(JSContext* ctx, double x, double y, double w, double h) {
+  return js_rect_new(ctx, rect_proto, x, y, w, h);
+}
+
+VISIBLE JSValue
 js_rect_wrap(JSContext* ctx, const JSRectData<double>& rect) {
   return js_rect_new(ctx, rect.x, rect.y, rect.width, rect.height);
 }
@@ -44,6 +49,11 @@ js_rect_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* ar
   double x = 0, y = 0, w = 0, h = 0;
   JSRectData<double> rect = {0, 0, 0, 0};
   int optind = 0;
+  JSValue proto;
+
+  proto = JS_GetPropertyStr(ctx, new_target, "prototype");
+  if(JS_IsException(proto))
+    return JS_EXCEPTION;
 
   if(argc > 0) {
     if(!js_rect_read(ctx, argv[0], &rect)) {
@@ -81,7 +91,7 @@ js_rect_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* ar
     }
   }
 
-  return js_rect_new(ctx, x, y, w, h);
+  return js_rect_new(ctx, proto, x, y, w, h);
 }
 
 VISIBLE JSRectData<double>*
