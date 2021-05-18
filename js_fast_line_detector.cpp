@@ -1,7 +1,6 @@
 #include "jsbindings.hpp"
 #include "js_alloc.hpp"
 #include "js_array.hpp"
-#include "js_size.hpp"
 #include "js_umat.hpp"
 #include "js_line.hpp"
 

@@ -2330,6 +2330,7 @@ js_cv_init(JSContext* ctx, JSModuleDef* m) {
   JSValue g = JS_GetGlobalObject(ctx);
   cv_class = JS_NewObject(ctx);
   JS_SetPropertyFunctionList(ctx, cv_class, js_cv_static_funcs.data(), js_cv_static_funcs.size());
+JS_SetPropertyFunctionList(ctx, cv_class, js_cv_constants.data(), js_cv_constants.size());
 
   if(JS_IsObject(g)) {
     JSAtom atom;
