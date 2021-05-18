@@ -1,6 +1,7 @@
 #ifndef JS_CONTOUR_HPP
 #define JS_CONTOUR_HPP
 
+#include "jsbindings.hpp"
 #include "js_alloc.hpp"
 #include "geometry.hpp"
 
@@ -8,8 +9,6 @@ extern "C" {
 extern JSValue contour_class, contour_proto;
 extern JSClassDef js_contour_class;
 extern JSClassID js_contour_class_id;
-
-extern "C" VISIBLE int js_contour_init(JSContext*, JSModuleDef*);
 
 void js_contour_finalizer(JSRuntime* rt, JSValue val);
 

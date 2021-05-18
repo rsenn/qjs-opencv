@@ -1,6 +1,7 @@
 #ifndef PALETTE_HPP
 #define PALETTE_HPP
 
+#include "jsbindings.hpp"
 #include <opencv2/core.hpp>
 
 template<class Pixel>
