@@ -11,10 +11,20 @@ enum { PROP_SLOPE = 0, PROP_PIVOT, PROP_TO, PROP_ANGLE, PROP_LENGTH };
 enum { METHOD_SWAP = 0, METHOD_AT, METHOD_INTERSECT, METHOD_ENDPOINT_DISTANCES, METHOD_DISTANCE };
 
 extern "C" {
-
 JSValue line_proto = JS_UNDEFINED, line_class = JS_UNDEFINED;
 JSClassID js_line_class_id = 0;
+}
 
+VISIBLE JSLineData<double>*
+js_line_data(JSContext* ctx, JSValueConst val) {
+  return static_cast<JSLineData<double>*>(JS_GetOpaque2(ctx, val, js_line_class_id));
+}
+VISIBLE JSLineData<double>*
+js_line_data(JSValueConst val) {
+  return static_cast<JSLineData<double>*>(JS_GetOpaque(val, js_line_class_id));
+}
+
+extern "C" {
 VISIBLE JSValue
 js_line_new(JSContext* ctx, double x1, double y1, double x2, double y2) {
   JSValue ret;
@@ -73,11 +83,6 @@ fail:
   js_deallocate(ctx, ln);
   JS_FreeValue(ctx, obj);
   return JS_EXCEPTION;
-}
-
-JSLineData<double>*
-js_line_data(JSContext* ctx, JSValueConst val) {
-  return static_cast<JSLineData<double>*>(JS_GetOpaque2(ctx, val, js_line_class_id));
 }
 
 static JSValue

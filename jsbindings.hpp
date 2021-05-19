@@ -28,6 +28,7 @@ typedef cv::Rect2d JSRectDataD;
 typedef cv::Mat JSMatData;
 typedef cv::UMat JSUMatData;
 typedef cv::Size2d JSSizeDataD;
+typedef cv::RotatedRect JSRotatedRectData;
 
 template<class T> using JSPointData = cv::Point_<T>;
 template<class T> using JSSizeData = cv::Size_<T>;
@@ -55,6 +56,9 @@ template<class T> union JSLineData {
   std::pair<JSPointData<T>, JSPointData<T>> pt;
   struct {
     T x1, y1, x2, y2;
+  };
+  struct {
+    JSPointData<T> a, b;
   };
   JSLineData(const JSLineData<T>& other) {
     x1 = other.x1;

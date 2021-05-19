@@ -5,6 +5,7 @@
 #include "js_array.hpp"
 #include "js_rect.hpp"
 #include "js_size.hpp"
+#include "js_line.hpp"
 #include "js_cv.hpp"
 
 #include <opencv2/core/core.hpp>
@@ -539,24 +540,34 @@ static JSValue
 js_clip_line(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSSizeData<int> imgSize;
   JSRectData<int> imgRect;
+  JSLineData<double>* l;
   JSPointData<double>*a, *b;
-  JSPointData<int> p1, p2;
+  JSLineData<int> line = {0, 0, 0, 0};
   BOOL result = FALSE;
 
-  a = js_point_data(ctx, argv[1]);
-  b = js_point_data(ctx, argv[2]);
-
-  p1 = *a;
-  p2 = *b;
-
-  if(js_rect_read(ctx, argv[0], &imgRect)) {
-    result = cv::clipLine(imgRect, p1, p2);
-  } else if(js_size_read(ctx, argv[0], &imgSize)) {
-    result = cv::clipLine(imgSize, p1, p2);
+  if((a = js_point_data(argv[1])) && (b = js_point_data(argv[2]))) {
+    line.a = *a;
+    line.b = *b;
+  } else if((l = js_line_data(argv[1]))) {
+    line.a = l->a;
+    line.b = l->b;
+  } else {
+    return JS_ThrowTypeError(ctx, "argument 2,3: expecting Point,Point or Line");
   }
 
-  *a = p1;
-  *b = p2;
+  if(js_rect_read(ctx, argv[0], &imgRect)) {
+    result = cv::clipLine(imgRect, line.a, line.b);
+  } else if(js_size_read(ctx, argv[0], &imgSize)) {
+    result = cv::clipLine(imgSize, line.a, line.b);
+  }
+
+  if(a && b) {
+    *a = line.a;
+    *b = line.b;
+  } else if(l) {
+    l->a = line.a;
+    l->b = line.b;
+  }
 
   return JS_NewBool(ctx, result);
 }

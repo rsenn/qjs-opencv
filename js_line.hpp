@@ -12,6 +12,8 @@ VISIBLE JSValue js_line_new(JSContext* ctx, double x1, double y1, double x2, dou
 }
 
 extern "C" VISIBLE int js_line_init(JSContext*, JSModuleDef*);
+VISIBLE JSLineData<double>* js_line_data(JSContext*, JSValueConst val);
+VISIBLE JSLineData<double>* js_line_data(JSValueConst val);
 
 template<class T>
 static inline JSValue

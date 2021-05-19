@@ -9,13 +9,19 @@ extern "C" {
 extern JSValue size_proto, size_class;
 extern JSClassID js_size_class_id;
 
-VISIBLE JSValue js_size_new(JSContext* ctx, double w, double h);
 VISIBLE JSValue js_size_wrap(JSContext* ctx, const JSSizeData<double>& size);
 VISIBLE JSSizeData<double>* js_size_data(JSContext*, JSValueConst val);
 
 int js_size_init(JSContext*, JSModuleDef* m);
 JSModuleDef* js_init_size_module(JSContext*, const char* module_name);
 void js_size_constructor(JSContext* ctx, JSValue parent, const char* name);
+}
+VISIBLE JSValue js_size_new(JSContext* ctx, double w, double h);
+
+template<class T>
+static inline JSValue
+js_size_new(JSContext* ctx, const JSSizeData<T>& size) {
+  return js_size_new(ctx, size.width, size.height);
 }
 
 template<class T>

@@ -42,6 +42,15 @@ js_point_new(JSContext* ctx, JSValueConst proto, double x, double y) {
   return ret;
 }
 
+VISIBLE JSPointData<double>*
+js_point_data(JSContext* ctx, JSValueConst val) {
+  return static_cast<JSPointData<double>*>(JS_GetOpaque2(ctx, val, js_point_class_id));
+}
+VISIBLE JSPointData<double>*
+js_point_data(JSValueConst val) {
+  return static_cast<JSPointData<double>*>(JS_GetOpaque(val, js_point_class_id));
+}
+
 extern "C" {
 
 VISIBLE JSValue
@@ -88,11 +97,6 @@ js_point_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* a
   }
 
   return js_point_new(ctx, proto, x, y);
-}
-
-VISIBLE JSPointData<double>*
-js_point_data(JSContext* ctx, JSValueConst val) {
-  return static_cast<JSPointData<double>*>(JS_GetOpaque2(ctx, val, js_point_class_id));
 }
 
 static JSValue
