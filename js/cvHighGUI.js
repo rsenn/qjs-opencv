@@ -140,8 +140,11 @@ const palette16 = [
 ];
 
 export function DrawText(dst, text, color, fontFace, fontSize = 13) {
-   let c = color;
-  let font = typeof fontFace == 'object' && fontFace != null && fontFace instanceof TextStyle ? fontFace : new TextStyle(fontFace, fontSize, -1);
+  let c = color;
+  let font =
+    typeof fontFace == 'object' && fontFace != null && fontFace instanceof TextStyle
+      ? fontFace
+      : new TextStyle(fontFace, fontSize, -1);
   let lines = [...text.matchAll(/(\x1b[^a-z]*[a-z]|\n|[^\x1b\n]*)/g)].map(m => m[0]);
   let baseY;
   let size = font.size('yP', y => (baseY = y));
@@ -150,13 +153,13 @@ export function DrawText(dst, text, color, fontFace, fontSize = 13) {
   let incY = (baseY || 2) + size.height + 3;
 
   for(let line of lines) {
-     if(line == '\n') {
+    if(line == '\n') {
       pos.y += incY;
       pos.x = start.x;
       continue;
     } else if(line.startsWith('\x1b')) {
       let ansi = [...line.matchAll(/([0-9]+|[a-z])/g)].map(m => (isNaN(+m[0]) ? m[0] : +m[0]));
-       if(ansi[ansi.length - 1] == 'm') {
+      if(ansi[ansi.length - 1] == 'm') {
         let n;
         for(let code of ansi.slice(0, -1)) {
           if(code == 0) continue;
@@ -164,7 +167,7 @@ export function DrawText(dst, text, color, fontFace, fontSize = 13) {
           else if(code >= 30) n = n | 0 | (code - 30);
         }
         if(n === undefined) c = color;
-         else c = palette16[n];
+        else c = palette16[n];
       }
       continue;
     }
