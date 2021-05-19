@@ -658,7 +658,7 @@ public:
   static int64_t
   to_vector(JSContext* ctx, JSValueConst arg, std::vector<T>& out) {
     IteratorValue item;
-    JSValueConst iter = js_iterator_new(ctx, arg);
+    JSValue iter = js_iterator_new(ctx, arg);
     out.clear();
     for(;;) {
       T value;
