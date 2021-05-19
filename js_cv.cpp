@@ -19,6 +19,7 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
+#include <opencv2/videoio.hpp>
 
 enum { HIER_NEXT = 0, HIER_PREV, HIER_CHILD, HIER_PARENT };
 
@@ -823,7 +824,8 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv,
       JSInputArray mask = cv::noArray();
       double minVal, maxVal;
       int32_t minIdx, maxIdx;
-      std::array<JSValue, 4> results;
+      JSValueConst results[4];
+      //std::array<JSValue, 4> results;
       if(argc >= 6)
         mask = js_umat_or_mat(ctx, argv[5]);
       cv::minMaxIdx(src, &minVal, &maxVal, &minIdx, &maxIdx, mask);
@@ -833,15 +835,15 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv,
       results[3] = JS_NewInt32(ctx, maxIdx);
       for(size_t i = 0; i < 4; i++)
         if(JS_IsFunction(ctx, argv[i + 1]))
-          JS_Call(ctx, argv[i + 1], JS_NULL, 1, &results[i]);
-      ret = js_array<JSValue>::from_sequence(ctx, results.begin(), results.end());
+          JS_Call(ctx, argv[i + 1], JS_NULL, 1, results+i);
+      ret = js_array<JSValue>::from_sequence(ctx, (JSValue*)results, (JSValue*)results+4);
       break;
     }
     case OTHER_MIN_MAX_LOC: {
       JSInputArray mask = cv::noArray();
       double minVal, maxVal;
       JSPointData<int> minLoc, maxLoc;
-      std::array<JSValue, 4> results;
+      std::array<JSValueConst, 4> results;
       if(argc >= 6)
         mask = js_umat_or_mat(ctx, argv[5]);
       cv::minMaxLoc(src, &minVal, &maxVal, &minLoc, &maxLoc, mask);
@@ -852,7 +854,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv,
       for(size_t i = 0; i < 4; i++)
         if(JS_IsFunction(ctx, argv[i + 1]))
           JS_Call(ctx, argv[i + 1], JS_NULL, 1, &results[i]);
-      ret = js_array<JSValue>::from_sequence(ctx, results.begin(), results.end());
+      ret = js_array<JSValue>::from_sequence(ctx, (JSValue*)&results[0], (JSValue*)&results[4]);
       break;
     }
     case OTHER_MUL_SPECTRUMS: {
@@ -1498,7 +1500,7 @@ js_function_list_t js_cv_constants{
     JS_CV_CONSTANT(VIDEOWRITER_PROP_QUALITY),
     JS_CV_CONSTANT(VIDEOWRITER_PROP_FRAMEBYTES),
     JS_CV_CONSTANT(VIDEOWRITER_PROP_NSTRIPES),
-    JS_CV_CONSTANT(VIDEOWRITER_PROP_IS_COLOR),
+   // JS_CV_CONSTANT(VIDEOWRITER_PROP_IS_COLOR),
 
     JS_CV_CONSTANT(FONT_HERSHEY_SIMPLEX),
     JS_CV_CONSTANT(FONT_HERSHEY_PLAIN),
@@ -1609,7 +1611,7 @@ js_function_list_t js_cv_constants{
     JS_CV_CONSTANT(COLORMAP_TWILIGHT),
     JS_CV_CONSTANT(COLORMAP_TWILIGHT_SHIFTED),
     JS_CV_CONSTANT(COLORMAP_TURBO),
-    JS_CV_CONSTANT(COLORMAP_DEEPGREEN),
+    //JS_CV_CONSTANT(COLORMAP_DEEPGREEN),
 };
 
 extern "C" int
