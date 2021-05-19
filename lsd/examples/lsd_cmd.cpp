@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------------------
 
-  LSD - Line Segment Detector on digital images
+  cv::LSD - Line Segment Detector on digital images
 
   Copyright (c) 2007-2011 rafael grompone von gioi <grompone@gmail.com>
 
@@ -21,7 +21,7 @@
 
 /*----------------------------------------------------------------------------*/
 /** @file lsd_cmd.c
-    Command line interface for LSD module (Line Segment Detector).
+    Command line interface for cv::LSD module (Line Segment Detector).
     @author rafael grompone von gioi <grompone@gmail.com>
  */
 /*----------------------------------------------------------------------------*/
@@ -955,7 +955,7 @@ write_eps(double* segs, int n, int dim, char* filename, int xsize, int ysize, do
   /* write EPS header */
   fprintf(eps, "%%!PS-Adobe-3.0 EPSF-3.0\n");
   fprintf(eps, "%%%%BoundingBox: 0 0 %d %d\n", xsize, ysize);
-  fprintf(eps, "%%%%Creator: LSD, Line Segment Detector\n");
+  fprintf(eps, "%%%%Creator: cv::LSD, Line Segment Detector\n");
   fprintf(eps, "%%%%Title: (%s)\n", filename);
   fprintf(eps, "%%%%EndComments\n");
 
@@ -1048,7 +1048,7 @@ main(int argc, char** argv) {
   /* read input file */
   image = read_pgm_image_double(&X, &Y, get_str(arg, "in"));
 
-  /* execute LSD */
+  /* execute cv::LSD */
   segs = LineSegmentDetection(&n,
                               image,
                               X,

@@ -7,7 +7,6 @@
 #include "opencv2/core/core.hpp"
 
 using namespace std;
-using namespace cv;
 using namespace lsdwrap;
 
 int
@@ -19,39 +18,39 @@ main(int argc, char** argv) {
 
   std::string in = argv[1];
 
-  Mat image = imread(in, IMREAD_GRAYSCALE);
+  cv::Mat image = cv::imread(in, cv::IMREAD_GRAYSCALE);
   // imshow("Input image", image);
 
   //
-  // LSD 1.6 test
+  // cv::LSD 1.6 test
   //
   LsdWrap lsd_old;
   vector<seg> seg_old;
-  double start = double(getTickCount());
+  double start = double(cv::getTickCount());
   lsd_old.lsdw(image, seg_old);
   // lsd_old.lsd_subdivided(image, seg_old, 3);
-  double duration_ms = (double(getTickCount()) - start) * 1000 / getTickFrequency();
+  double duration_ms = (double(cv::getTickCount()) - start) * 1000 / cv::getTickFrequency();
   std::cout << "lsd 1.6 - blue\n\t" << seg_old.size() << " line segments found. For " << duration_ms << " ms." << std::endl;
 
   //
   // OpenCV LSD
   //
-  // LSD lsd_cv(LSD_NO_REFINE); // Do not refine lines
-  Ptr<LSD> lsd_cv = createLSDPtr();
-  vector<Vec4i> lines;
+  // cv::LSD lsd_cv(LSD_NO_REFINE); // Do not refine lines
+  cv::Ptr<cv::LSD> lsd_cv = cv::createLSDPtr();
+  vector<cv::Vec4i> lines;
 
   std::vector<double> width, prec, nfa;
-  start = double(getTickCount());
+  start = double(cv::getTickCount());
 
   std::cout << "Before" << std::endl;
   lsd_cv->detect(image, lines);
   std::cout << "After" << std::endl;
 
-  duration_ms = (double(getTickCount()) - start) * 1000 / getTickFrequency();
+  duration_ms = (double(cv::getTickCount()) - start) * 1000 / cv::getTickFrequency();
   std::cout << "OpenCV lsd - red\n\t" << lines.size() << " line segments found. For " << duration_ms << " ms." << std::endl;
 
   // Copy the old structure to the new
-  vector<Vec4i> seg_cvo(seg_old.size());
+  vector<cv::Vec4i> seg_cvo(seg_old.size());
   for(unsigned int i = 0; i < seg_old.size(); ++i) {
     seg_cvo[i][0] = seg_old[i].x1;
     seg_cvo[i][1] = seg_old[i].y1;
@@ -62,15 +61,15 @@ main(int argc, char** argv) {
   //
   // Show difference
   //
-  Mat drawnLines(image);
+  cv::Mat drawnLines(image);
   lsd_cv->drawSegments(drawnLines, lines);
   imshow("Drawing segments", drawnLines);
 
-  Mat difference = Mat::zeros(image.size(), CV_8UC3);
+  cv::Mat difference = cv::Mat::zeros(image.size(), CV_8UC3);
   int d = lsd_cv->compareSegments(image.size(), seg_cvo, lines, difference);
   imshow("Segments difference", difference);
   std::cout << "There are " << d << " not overlapping pixels." << std::endl;
-  waitKey(0); // wait for human action
+  cv::waitKey(0); // wait for human action
 
   return 0;
 }

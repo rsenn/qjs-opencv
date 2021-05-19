@@ -7,7 +7,6 @@
 #include "opencv2/core/core.hpp"
 
 using namespace std;
-using namespace cv;
 using namespace lsdwrap;
 
 const int REPEAT_CYCLE = 10;
@@ -21,56 +20,56 @@ main(int argc, char** argv) {
 
   std::string in = argv[1];
 
-  Mat image = imread(in, IMREAD_GRAYSCALE);
+  cv::Mat image = cv::imread(in, cv::IMREAD_GRAYSCALE);
   std::cout << "Input image size: " << image.size() << std::endl;
   std::cout << "Time averaged over " << REPEAT_CYCLE << " iterations." << std::endl;
 
   //
-  // LSD 1.6 test
+  // cv::LSD 1.6 test
   //
   LsdWrap lsd_old;
-  double start = double(getTickCount());
+  double start = double(cv::getTickCount());
   for(unsigned int i = 0; i < REPEAT_CYCLE; ++i) {
     vector<seg> seg_old;
     lsd_old.lsdw(image, seg_old);
   }
-  double duration_ms = (double(getTickCount()) - start) * 1000 / getTickFrequency();
+  double duration_ms = (double(cv::getTickCount()) - start) * 1000 / cv::getTickFrequency();
   std::cout << "lsd 1.6    - " << double(duration_ms) / REPEAT_CYCLE << " ms." << std::endl;
 
   //
-  // OpenCV LSD ADV settings test
+  // OpenCV cv::LSD ADV settings test
   //
-  Ptr<LSD> lsd_adv = createLSDPtr(::LSD_REFINE_ADV);
-  start = double(getTickCount());
+  cv::Ptr<cv::LSD> lsd_adv = cv::createLSDPtr(::LSD_REFINE_ADV);
+  start = double(cv::getTickCount());
   for(unsigned int i = 0; i < REPEAT_CYCLE; ++i) {
-    vector<Vec4i> lines;
+    vector<cv::Vec4i> lines;
     lsd_adv->detect(image, lines);
   }
-  duration_ms = (double(getTickCount()) - start) * 1000 / getTickFrequency();
+  duration_ms = (double(cv::getTickCount()) - start) * 1000 / cv::getTickFrequency();
   std::cout << "OpenCV ADV - " << double(duration_ms) / REPEAT_CYCLE << " ms." << std::endl;
 
   //
-  // OpenCV LSD STD settings test
+  // OpenCV cv::LSD STD settings test
   //
-  Ptr<LSD> lsd_std = createLSDPtr(::LSD_REFINE_STD);
-  start = double(getTickCount());
+  cv::Ptr<cv::LSD> lsd_std = cv::createLSDPtr(::LSD_REFINE_STD);
+  start = double(cv::getTickCount());
   for(unsigned int i = 0; i < REPEAT_CYCLE; ++i) {
-    vector<Vec4i> lines;
+    vector<cv::Vec4i> lines;
     lsd_std->detect(image, lines);
   }
-  duration_ms = (double(getTickCount()) - start) * 1000 / getTickFrequency();
+  duration_ms = (double(cv::getTickCount()) - start) * 1000 / cv::getTickFrequency();
   std::cout << "OpenCV STD - " << double(duration_ms) / REPEAT_CYCLE << " ms." << std::endl;
 
   //
-  // OpenCV LSD NO refinement settings test
+  // OpenCV cv::LSD NO refinement settings test
   //
-  Ptr<LSD> lsd_no = createLSDPtr(::LSD_REFINE_NONE); // Do not refine lines
-  start = double(getTickCount());
+  cv::Ptr<cv::LSD> lsd_no = cv::createLSDPtr(::LSD_REFINE_NONE); // Do not refine lines
+  start = double(cv::getTickCount());
   for(unsigned int i = 0; i < REPEAT_CYCLE; ++i) {
-    vector<Vec4i> lines;
+    vector<cv::Vec4i> lines;
     lsd_no->detect(image, lines);
   }
-  duration_ms = (double(getTickCount()) - start) * 1000 / getTickFrequency();
+  duration_ms = (double(cv::getTickCount()) - start) * 1000 / cv::getTickFrequency();
   std::cout << "OpenCV NO  - " << double(duration_ms) / REPEAT_CYCLE << " ms." << std::endl;
 
   return 0;

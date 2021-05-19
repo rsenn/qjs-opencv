@@ -171,10 +171,10 @@ log_gamma_lanczos(const double& x) {
 
 namespace cv {
 
-class LineSegmentDetectorImpl : public LSD {
+class LSDImpl : public LSD {
 public:
   /**
-   * Create a LineSegmentDetectorImpl object. Specifying scale, number of subdivisions for the image, should the lines be
+   * Create a LSDImpl object. Specifying scale, number of subdivisions for the image, should the lines be
    * refined and other constants as follows:
    *
    * @param _refine       How should the lines found be refined?
@@ -182,7 +182,7 @@ public:
    *                      LSD_REFINE_STD  - Standard refinement is applied. E.g. breaking arches into smaller line
    * approximations. LSD_REFINE_ADV  - Advanced refinement. Number of false alarms is calculated, lines are refined through
    * increase of precision, decrement in size, etc.
-   * @param _scale        The scale of the image that will be used to find the lines. Range (0..1].
+   * @param _scale        The scale of the image that will be used to find the lines. cv::Range (0..1].
    * @param _sigma_scale  Sigma for Gaussian filter is computed as sigma = _sigma_scale/_scale.
    * @param _quant        Bound to the quantization error on the gradient norm.
    * @param _ang_th       Gradient angle tolerance in degrees.
@@ -190,7 +190,7 @@ public:
    * @param _density_th   Minimal density of aligned region points in rectangle.
    * @param _n_bins       Number of bins in pseudo-ordering of gradient modulus.
    */
-  LineSegmentDetectorImpl(int _refine = LSD_REFINE_STD,
+  LSDImpl(int _refine = LSD_REFINE_STD,
                           double _scale = 0.8,
                           double _sigma_scale = 0.6,
                           double _quant = 2.0,
@@ -205,9 +205,9 @@ public:
    * @param _image    A grayscale(CV_8UC1) input image.
    *                  If only a roi needs to be selected, use
    *                  lsd_ptr->detect(image(roi), ..., lines);
-   *                  lines += Scalar(roi.x, roi.y, roi.x, roi.y);
-   * @param _lines    Return: A vector of Vec4i elements specifying the beginning and ending point of a line.
-   *                          Where Vec4i is (x1, y1, x2, y2), point 1 is the start, point 2 - end.
+   *                  lines += cv::Scalar(roi.x, roi.y, roi.x, roi.y);
+   * @param _lines    Return: A vector of cv::Vec4i elements specifying the beginning and ending point of a line.
+   *                          Where cv::Vec4i is (x1, y1, x2, y2), point 1 is the start, point 2 - end.
    *                          Returned lines are strictly oriented depending on the gradient.
    * @param _roi      Return: ROI of the image, where lines are to be found. If specified, the returning
    *                          lines coordinates are image wise.
@@ -220,11 +220,11 @@ public:
    *                              * 1 corresponds to 0.1 mean false alarms
    *                          This vector will be calculated _only_ when the objects type is REFINE_ADV
    */
-  void detect(InputArray _image,
-              OutputArray _lines,
-              OutputArray width = noArray(),
-              OutputArray prec = noArray(),
-              OutputArray nfa = noArray());
+  void detect(cv::InputArray _image,
+              cv::OutputArray _lines,
+              cv::OutputArray width = cv::noArray(),
+              cv::OutputArray prec = cv::noArray(),
+              cv::OutputArray nfa = cv::noArray());
 
   /**
    * Draw lines on the given canvas.
@@ -233,7 +233,7 @@ public:
    *                  Should have the size of the image, where the lines were found
    * @param lines     The lines that need to be drawn
    */
-  void drawSegments(InputOutputArray _image, InputArray lines);
+  void drawSegments(cv::InputOutputArray _image, cv::InputArray lines);
 
   /**
    * Draw both vectors on the image canvas. Uses blue for lines 1 and red for lines 2.
@@ -245,7 +245,7 @@ public:
    *                  Should have the size of the image, where the lines were found
    * @return          The number of mismatching pixels between lines1 and lines2.
    */
-  int compareSegments(const Size& size, InputArray lines1, InputArray lines2, InputOutputArray _image = noArray());
+  int compareSegments(const cv::Size& size, cv::InputArray lines1, cv::InputArray lines2, cv::InputOutputArray _image = cv::noArray());
 
   /*
    * Shows the lines in a window.
@@ -254,7 +254,7 @@ public:
    * @param image     The image that will be used as a background.
    * @param lines     The lines that need to be drawn.
    */
-  void showSegments(const std::string& name, const Mat& image, const std::vector<Vec4i>& lines);
+  void showSegments(const std::string& name, const cv::Mat& image, const std::vector<cv::Vec4i>& lines);
 
   /*
    * Shows the 2 vector of lines drawn on a window.
@@ -267,7 +267,7 @@ public:
    * @return          The number of non overlapping pixels.
    */
   int showSegments(
-      const std::string& name, Size size, const std::vector<Vec4i>& lines1, const std::vector<Vec4i> lines2, Mat* image = 0);
+      const std::string& name, cv::Size size, const std::vector<cv::Vec4i>& lines1, const std::vector<cv::Vec4i> lines2, cv::Mat* image = 0);
 
   /**
    * Find all line elements that are *not* fullfilling the angle and range requirenmnets.
@@ -279,7 +279,7 @@ public:
    * @param max_angle     The max angle to be considered in degrees. Should be >= min_angle and widthin range [0..180].
    * @return              Returns the number of line segments not included in the output vector.
    */
-  int filterOutAngle(InputArray lines, OutputArray filtered, float min_angle, float max_angle);
+  int filterOutAngle(cv::InputArray lines, cv::OutputArray filtered, float min_angle, float max_angle);
 
   /**
    * Find all line elements that are fullfilling the angle and range requirenmnets.
@@ -292,7 +292,7 @@ public:
    * @param max_angle     The max angle to be considered in degrees. Should be >= min_angle and widthin range [0..180].
    * @return              Returns the number of line segments not included in the output vector.
    */
-  int retainAngle(InputArray lines, OutputArray filtered, float min_angle, float max_angle);
+  int retainAngle(cv::InputArray lines, cv::OutputArray filtered, float min_angle, float max_angle);
 
   /**
    * Find all line elements that *are* fullfilling the size requirenmnets.
@@ -304,21 +304,21 @@ public:
    * @param min_length    Minimum length of the line segment.
    * @return              Returns the number of line segments not included in the output vector.
    */
-  int filterSize(InputArray lines, OutputArray filtered, float min_length, float max_length = LSD_NO_SIZE_LIMIT);
+  int filterSize(cv::InputArray lines, cv::OutputArray filtered, float min_length, float max_length = LSD_NO_SIZE_LIMIT);
 
   /*
    * Find itnersection point of 2 lines.
    *
-   * @param line1         First line in format Vec4i(x1, y1, x2, y2).
+   * @param line1         First line in format cv::Vec4i(x1, y1, x2, y2).
    * @param line2         Second line in the same format as line1.
    * @param P             The point where line1 and line2 intersect.
    * @return              The value in variable P is only valid when the return value is true.
    *                      Otherwise, the lines are parallel and the value can be ignored.
    */
-  bool intersection(InputArray line1, InputArray line2, Point& P);
+  bool intersection(cv::InputArray line1, cv::InputArray line2, cv::Point& P);
 
 private:
-  Mat image;
+  cv::Mat image;
   Mat_<double> scaled_image;
   double* scaled_image_data;
   Mat_<double> angles; // in rads
@@ -367,15 +367,15 @@ private:
     double p;              // probability of a point with angle within 'prec'
   };
 
-  LineSegmentDetectorImpl& operator=(const LineSegmentDetectorImpl&); // to quiet MSVC
+  LSDImpl& operator=(const LSDImpl&); // to quiet MSVC
 
   // Used in the angle_filtering routine.
   enum { RETAIN_IN = 0, RETAIN_OUT = 1 };
   /**
    * Detect lines in the whole input image.
    *
-   * @param lines         Return: A vector of Vec4i elements specifying the beginning and ending point of a line.
-   *                              Where Vec4i is (x1, y1, x2, y2), point 1 is the start, point 2 - end.
+   * @param lines         Return: A vector of cv::Vec4i elements specifying the beginning and ending point of a line.
+   *                              Where cv::Vec4i is (x1, y1, x2, y2), point 1 is the start, point 2 - end.
    *                              Returned lines are strictly oriented depending on the gradient.
    * @param widths        Return: Vector of widths of the regions, where the lines are found. E.g. Width of line.
    * @param precisions    Return: Vector of precisions with which the lines are found.
@@ -385,7 +385,7 @@ private:
    *                                  * 0 corresponds to 1 mean false alarm
    *                                  * 1 corresponds to 0.1 mean false alarms
    */
-  void flsd(std::vector<Vec4i>& lines, std::vector<double>& widths, std::vector<double>& precisions, std::vector<double>& nfas);
+  void flsd(std::vector<cv::Vec4i>& lines, std::vector<double>& widths, std::vector<double>& precisions, std::vector<double>& nfas);
 
   /**
    * Finds the angles and the gradients of the image. Generates a list of pseudo ordered points.
@@ -492,12 +492,12 @@ private:
   /**
    * A helper funciton for filterOutAngle and retainAngle.
    */
-  int angle_filtering(InputArray lines, OutputArray filtered, float min_angle, float max_angle, int retain_type) const;
+  int angle_filtering(cv::InputArray lines, cv::OutputArray filtered, float min_angle, float max_angle, int retain_type) const;
 
   /*
    * Finds the equation parameters of a line in the form of Ax + By = C.
    */
-  void find_eq_params(const Vec4i& line, float& a, float& b, float& c) const;
+  void find_eq_params(const cv::Vec4i& line, float& a, float& b, float& c) const;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -511,12 +511,12 @@ createLSDPtr(int _refine,
              double _log_eps,
              double _density_th,
              int _n_bins) {
-  return Ptr<LSD>(new LineSegmentDetectorImpl(_refine, _scale, _sigma_scale, _quant, _ang_th, _log_eps, _density_th, _n_bins));
+  return Ptr<LSD>(new LSDImpl(_refine, _scale, _sigma_scale, _quant, _ang_th, _log_eps, _density_th, _n_bins));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-LineSegmentDetectorImpl::LineSegmentDetectorImpl(int _refine,
+LSDImpl::LSDImpl(int _refine,
                                                  double _scale,
                                                  double _sigma_scale,
                                                  double _quant,
@@ -531,36 +531,36 @@ LineSegmentDetectorImpl::LineSegmentDetectorImpl(int _refine,
 }
 
 void
-LineSegmentDetectorImpl::detect(
-    const InputArray _image, OutputArray _lines, OutputArray _width, OutputArray _prec, OutputArray _nfa) {
+cv::LSDImpl::detect(
+    const cv::InputArray _image, cv::OutputArray _lines, cv::OutputArray _width, cv::OutputArray _prec, cv::OutputArray _nfa) {
   Mat_<double> img = _image.getMat();
   CV_Assert(!img.empty() && img.channels() == 1);
 
   // Convert image to double
   img.convertTo(image, CV_64FC1);
 
-  std::vector<Vec4i> lines;
+  std::vector<cv::Vec4i> lines;
   std::vector<double> w, p, n;
   w_needed = _width.needed();
   p_needed = _prec.needed();
   n_needed = _nfa.needed();
 
-  CV_Assert((!_nfa.needed()) ||                             // NFA InputArray will be filled _only_ when
-            (_nfa.needed() && doRefine >= LSD_REFINE_ADV)); // REFINE_ADV type LineSegmentDetectorImpl object is created.
+  CV_Assert((!_nfa.needed()) ||                             // NFA cv::InputArray will be filled _only_ when
+            (_nfa.needed() && doRefine >= LSD_REFINE_ADV)); // REFINE_ADV type cv::LSDImpl object is created.
 
   flsd(lines, w, p, n);
 
-  Mat(lines).copyTo(_lines);
+  cv::Mat(lines).copyTo(_lines);
   if(w_needed)
-    Mat(w).copyTo(_width);
+    cv::Mat(w).copyTo(_width);
   if(p_needed)
-    Mat(p).copyTo(_prec);
+    cv::Mat(p).copyTo(_prec);
   if(n_needed)
-    Mat(n).copyTo(_nfa);
+    cv::Mat(n).copyTo(_nfa);
 }
 
 void
-LineSegmentDetectorImpl::flsd(std::vector<Vec4i>& lines,
+cv::LSDImpl::flsd(std::vector<cv::Vec4i>& lines,
                               std::vector<double>& widths,
                               std::vector<double>& precisions,
                               std::vector<double>& nfas) {
@@ -571,14 +571,14 @@ LineSegmentDetectorImpl::flsd(std::vector<Vec4i>& lines,
 
   std::vector<coorlist> list;
   if(SCALE != 1) {
-    Mat gaussian_img;
+    cv::Mat gaussian_img;
     const double sigma = (SCALE < 1) ? (SIGMA_SCALE / SCALE) : (SIGMA_SCALE);
     const double sprec = 3;
     const unsigned int h = (unsigned int)(ceil(sigma * sqrt(2 * sprec * log(10.0))));
-    Size ksize(1 + 2 * h, 1 + 2 * h); // kernel size
+    cv::Size ksize(1 + 2 * h, 1 + 2 * h); // kernel size
     GaussianBlur(image, gaussian_img, ksize, sigma);
     // Scale image to needed size
-    resize(gaussian_img, scaled_image, Size(), SCALE, SCALE);
+    resize(gaussian_img, scaled_image, cv::Size(), SCALE, SCALE);
     ll_angle(rho, N_BINS, list);
   } else {
     scaled_image = image;
@@ -589,7 +589,7 @@ LineSegmentDetectorImpl::flsd(std::vector<Vec4i>& lines,
   const int min_reg_size = int(-LOG_NT / log10(p)); // minimal number of points in region that can give a meaningful event
 
   // // Initialize region only when needed
-  // Mat region = Mat::zeros(scaled_image.size(), CV_8UC1);
+  // cv::Mat region = cv::Mat::zeros(scaled_image.size(), CV_8UC1);
   used = Mat_<uchar>::zeros(scaled_image.size()); // zeros = NOTUSED
   std::vector<RegionPoint> reg(img_width * img_height);
 
@@ -646,7 +646,7 @@ LineSegmentDetectorImpl::flsd(std::vector<Vec4i>& lines,
       }
 
       // Store the relevant data
-      lines.push_back(Vec4i(int(rec.x1), int(rec.y1), int(rec.x2), int(rec.y2)));
+      lines.push_back(cv::Vec4i(int(rec.x1), int(rec.y1), int(rec.x2), int(rec.y2)));
       if(w_needed)
         widths.push_back(rec.width);
       if(p_needed)
@@ -664,7 +664,7 @@ LineSegmentDetectorImpl::flsd(std::vector<Vec4i>& lines,
 }
 
 void
-LineSegmentDetectorImpl::ll_angle(const double& threshold, const unsigned int& n_bins, std::vector<coorlist>& list) {
+cv::LSDImpl::ll_angle(const double& threshold, const unsigned int& n_bins, std::vector<coorlist>& list) {
   // Initialize data
   angles = Mat_<double>(scaled_image.size());
   modgrad = Mat_<double>(scaled_image.size());
@@ -698,7 +698,7 @@ LineSegmentDetectorImpl::ll_angle(const double& threshold, const unsigned int& n
       {
         angles_data[addr] = NOTDEF;
       } else {
-        angles_data[addr] = fastAtan2(float(gx), float(-gy)) * DEG_TO_RADS; // gradient angle computation
+        angles_data[addr] = cv::fastAtan2(float(gx), float(-gy)) * DEG_TO_RADS; // gradient angle computation
         if(norm > max_grad) {
           max_grad = norm;
         }
@@ -726,7 +726,7 @@ LineSegmentDetectorImpl::ll_angle(const double& threshold, const unsigned int& n
         range_e[i] = &list[count];
         ++count;
       }
-      range_e[i]->p = Point(x, y);
+      range_e[i]->p = cv::Point(x, y);
       range_e[i]->next = 0;
     }
   }
@@ -749,9 +749,9 @@ LineSegmentDetectorImpl::ll_angle(const double& threshold, const unsigned int& n
 }
 
 void
-LineSegmentDetectorImpl::region_grow(
+cv::LSDImpl::region_grow(
     const Point2i& s, std::vector<RegionPoint>& reg, int& reg_size, double& reg_angle, const double& prec) {
-  // Point to this region
+  // cv::Point to this region
   reg_size = 1;
   reg[0].x = s.x;
   reg[0].y = s.y;
@@ -789,7 +789,7 @@ LineSegmentDetectorImpl::region_grow(
           sumdx += cos(float(angle));
           sumdy += sin(float(angle));
           // reg_angle is used in the isAligned, so it needs to be updates?
-          reg_angle = fastAtan2(sumdy, sumdx) * DEG_TO_RADS;
+          reg_angle = cv::fastAtan2(sumdy, sumdx) * DEG_TO_RADS;
         }
       }
     }
@@ -797,7 +797,7 @@ LineSegmentDetectorImpl::region_grow(
 }
 
 void
-LineSegmentDetectorImpl::region2rect(const std::vector<RegionPoint>& reg,
+cv::LSDImpl::region2rect(const std::vector<RegionPoint>& reg,
                                      const int reg_size,
                                      const double reg_angle,
                                      const double prec,
@@ -862,7 +862,7 @@ LineSegmentDetectorImpl::region2rect(const std::vector<RegionPoint>& reg,
 }
 
 double
-LineSegmentDetectorImpl::get_theta(const std::vector<RegionPoint>& reg,
+cv::LSDImpl::get_theta(const std::vector<RegionPoint>& reg,
                                    const int& reg_size,
                                    const double& x,
                                    const double& y,
@@ -891,8 +891,8 @@ LineSegmentDetectorImpl::get_theta(const std::vector<RegionPoint>& reg,
   double lambda = 0.5 * (Ixx + Iyy - sqrt((Ixx - Iyy) * (Ixx - Iyy) + 4.0 * Ixy * Ixy));
 
   // Compute angle
-  double theta = (fabs(Ixx) > fabs(Iyy)) ? double(fastAtan2(float(lambda - Ixx), float(Ixy)))
-                                         : double(fastAtan2(float(Ixy), float(lambda - Iyy))); // in degs
+  double theta = (fabs(Ixx) > fabs(Iyy)) ? double(cv::fastAtan2(float(lambda - Ixx), float(Ixy)))
+                                         : double(cv::fastAtan2(float(Ixy), float(lambda - Iyy))); // in degs
   theta *= DEG_TO_RADS;
 
   // Correct angle by 180 deg if necessary
@@ -904,7 +904,7 @@ LineSegmentDetectorImpl::get_theta(const std::vector<RegionPoint>& reg,
 }
 
 bool
-LineSegmentDetectorImpl::refine(std::vector<RegionPoint>& reg,
+cv::LSDImpl::refine(std::vector<RegionPoint>& reg,
                                 int& reg_size,
                                 double reg_angle,
                                 const double prec,
@@ -939,7 +939,7 @@ LineSegmentDetectorImpl::refine(std::vector<RegionPoint>& reg,
   double tau = 2.0 * sqrt((s_sum - 2.0 * mean_angle * sum) / double(n) + mean_angle * mean_angle);
 
   // Try new region
-  region_grow(Point(reg[0].x, reg[0].y), reg, reg_size, reg_angle, tau);
+  region_grow(cv::Point(reg[0].x, reg[0].y), reg, reg_size, reg_angle, tau);
 
   if(reg_size < 2) {
     return false;
@@ -956,7 +956,7 @@ LineSegmentDetectorImpl::refine(std::vector<RegionPoint>& reg,
 }
 
 bool
-LineSegmentDetectorImpl::reduce_region_radius(std::vector<RegionPoint>& reg,
+cv::LSDImpl::reduce_region_radius(std::vector<RegionPoint>& reg,
                                               int& reg_size,
                                               double reg_angle,
                                               const double prec,
@@ -999,7 +999,7 @@ LineSegmentDetectorImpl::reduce_region_radius(std::vector<RegionPoint>& reg,
 }
 
 double
-LineSegmentDetectorImpl::rect_improve(rect& rec) const {
+cv::LSDImpl::rect_improve(rect& rec) const {
   double delta = 0.5;
   double delta_2 = delta / 2.0;
 
@@ -1094,7 +1094,7 @@ LineSegmentDetectorImpl::rect_improve(rect& rec) const {
 }
 
 double
-LineSegmentDetectorImpl::rect_nfa(const rect& rec) const {
+cv::LSDImpl::rect_nfa(const rect& rec) const {
   int total_pts = 0, alg_pts = 0;
   double half_width = rec.width / 2.0;
   double dyhw = rec.dy * half_width;
@@ -1219,7 +1219,7 @@ LineSegmentDetectorImpl::rect_nfa(const rect& rec) const {
 }
 
 double
-LineSegmentDetectorImpl::nfa(const int& n, const int& k, const double& p) const {
+cv::LSDImpl::nfa(const int& n, const int& k, const double& p) const {
   // Trivial cases
   if(n == 0 || k == 0) {
     return -LOG_NT;
@@ -1259,7 +1259,7 @@ LineSegmentDetectorImpl::nfa(const int& n, const int& k, const double& p) const 
 }
 
 inline bool
-LineSegmentDetectorImpl::isAligned(const int& address, const double& theta, const double& prec) const {
+cv::LSDImpl::isAligned(const int& address, const double& theta, const double& prec) const {
   if(address < 0) {
     return false;
   }
@@ -1283,10 +1283,10 @@ LineSegmentDetectorImpl::isAligned(const int& address, const double& theta, cons
 }
 
 void
-LineSegmentDetectorImpl::drawSegments(InputOutputArray _image, const InputArray lines) {
+cv::LSDImpl::drawSegments(cv::InputOutputArray _image, const cv::InputArray lines) {
   CV_Assert(!_image.empty() && (_image.channels() == 1 || _image.channels() == 3));
 
-  Mat gray;
+  cv::Mat gray;
   if(_image.channels() == 1) {
     gray = _image.getMatRef();
   } else if(_image.channels() == 3) {
@@ -1294,31 +1294,31 @@ LineSegmentDetectorImpl::drawSegments(InputOutputArray _image, const InputArray 
   }
 
   // Create a 3 channel image in order to draw colored lines
-  std::vector<Mat> planes;
+  std::vector<cv::Mat> planes;
   planes.push_back(gray);
   planes.push_back(gray);
   planes.push_back(gray);
 
   merge(planes, _image);
 
-  Mat _lines;
+  cv::Mat _lines;
   _lines = lines.getMat();
 
   // Draw segments
   for(int i = 0; i < _lines.size().width; ++i) {
-    const Vec4i& v = _lines.at<Vec4i>(i);
-    Point b(v[0], v[1]);
-    Point e(v[2], v[3]);
-    line(_image.getMatRef(), b, e, Scalar(0, 0, 255), 1);
+    const cv::Vec4i& v = _lines.at<cv::Vec4i>(i);
+    cv::Point b(v[0], v[1]);
+    cv::Point e(v[2], v[3]);
+    line(_image.getMatRef(), b, e, cv::Scalar(0, 0, 255), 1);
   }
 }
 
 int
-LineSegmentDetectorImpl::compareSegments(const Size& size,
-                                         const InputArray lines1,
-                                         const InputArray lines2,
-                                         InputOutputArray _image) {
-  Size sz = size;
+cv::LSDImpl::compareSegments(const cv::Size& size,
+                                         const cv::InputArray lines1,
+                                         const cv::InputArray lines2,
+                                         cv::InputOutputArray _image) {
+  cv::Size sz = size;
   if(_image.needed() && _image.size() != size)
     sz = _image.size();
   CV_Assert(sz.area());
@@ -1326,31 +1326,31 @@ LineSegmentDetectorImpl::compareSegments(const Size& size,
   Mat_<uchar> I1 = Mat_<uchar>::zeros(sz);
   Mat_<uchar> I2 = Mat_<uchar>::zeros(sz);
 
-  Mat _lines1;
-  Mat _lines2;
+  cv::Mat _lines1;
+  cv::Mat _lines2;
   _lines1 = lines1.getMat();
   _lines2 = lines2.getMat();
   // Draw segments
-  std::vector<Mat> _lines;
+  std::vector<cv::Mat> _lines;
   for(int i = 0; i < _lines1.size().width; ++i) {
-    Point b(_lines1.at<Vec4i>(i)[0], _lines1.at<Vec4i>(i)[1]);
-    Point e(_lines1.at<Vec4i>(i)[2], _lines1.at<Vec4i>(i)[3]);
-    line(I1, b, e, Scalar::all(255), 1);
+    cv::Point b(_lines1.at<cv::Vec4i>(i)[0], _lines1.at<cv::Vec4i>(i)[1]);
+    cv::Point e(_lines1.at<cv::Vec4i>(i)[2], _lines1.at<cv::Vec4i>(i)[3]);
+    line(I1, b, e, cv::Scalar::all(255), 1);
   }
   for(int i = 0; i < _lines2.size().width; ++i) {
-    Point b(_lines2.at<Vec4i>(i)[0], _lines2.at<Vec4i>(i)[1]);
-    Point e(_lines2.at<Vec4i>(i)[2], _lines2.at<Vec4i>(i)[3]);
-    line(I2, b, e, Scalar::all(255), 1);
+    cv::Point b(_lines2.at<cv::Vec4i>(i)[0], _lines2.at<cv::Vec4i>(i)[1]);
+    cv::Point e(_lines2.at<cv::Vec4i>(i)[2], _lines2.at<cv::Vec4i>(i)[3]);
+    line(I2, b, e, cv::Scalar::all(255), 1);
   }
 
   // Count the pixels that don't agree
-  Mat Ixor;
+  cv::Mat Ixor;
   bitwise_xor(I1, I2, Ixor);
-  int N = countNonZero(Ixor);
+  int N = cv::countNonZero(Ixor);
 
   if(_image.needed()) {
     CV_Assert(_image.channels() == 3);
-    Mat img = _image.getMatRef();
+    cv::Mat img = _image.getMatRef();
     CV_Assert(img.isContinuous() && I1.isContinuous() && I2.isContinuous());
 
     for(unsigned int i = 0; i < I1.total(); ++i) {
@@ -1375,16 +1375,16 @@ LineSegmentDetectorImpl::compareSegments(const Size& size,
 }
 
 void
-LineSegmentDetectorImpl::showSegments(const std::string& name, const Mat& image, const std::vector<Vec4i>& lines) {
-  Mat img = image.clone();
+cv::LSDImpl::showSegments(const std::string& name, const cv::Mat& image, const std::vector<cv::Vec4i>& lines) {
+  cv::Mat img = image.clone();
   drawSegments(img, lines);
   imshow(name.c_str(), img);
 }
 
 int
-LineSegmentDetectorImpl::showSegments(
-    const std::string& name, Size size, const std::vector<Vec4i>& lines1, const std::vector<Vec4i> lines2, Mat* image) {
-  Mat img;
+cv::LSDImpl::showSegments(
+    const std::string& name, cv::Size size, const std::vector<cv::Vec4i>& lines1, const std::vector<cv::Vec4i> lines2, cv::Mat* image) {
+  cv::Mat img;
   if(!image)
     img = Mat_<uchar>::zeros(size);
   else
@@ -1395,19 +1395,19 @@ LineSegmentDetectorImpl::showSegments(
 }
 
 int
-LineSegmentDetectorImpl::angle_filtering(
-    InputArray lines, OutputArray filtered, float min_angle, float max_angle, int retain_type) const {
+cv::LSDImpl::angle_filtering(
+    cv::InputArray lines, cv::OutputArray filtered, float min_angle, float max_angle, int retain_type) const {
   int num_filtered = 0;
-  std::vector<Vec4i> f;
-  Mat _lines = lines.getMat();
+  std::vector<cv::Vec4i> f;
+  cv::Mat _lines = lines.getMat();
 
   for(int i = 0; i < _lines.size().width; ++i) {
-    const Vec4i& v = _lines.at<Vec4i>(i);
-    Point b(v[0], v[1]);
-    Point e(v[2], v[3]);
+    const cv::Vec4i& v = _lines.at<cv::Vec4i>(i);
+    cv::Point b(v[0], v[1]);
+    cv::Point e(v[2], v[3]);
 
     Point2f dv = e - b;
-    float angle = fastAtan2(dv.y, dv.x); // returns in range [0..360]
+    float angle = cv::fastAtan2(dv.y, dv.x); // returns in range [0..360]
     if(angle >= 180)
       angle -= 180.f;
 
@@ -1417,30 +1417,30 @@ LineSegmentDetectorImpl::angle_filtering(
     else
       ++num_filtered;
   }
-  Mat(f).copyTo(filtered);
+  cv::Mat(f).copyTo(filtered);
   return num_filtered;
 }
 
 int
-LineSegmentDetectorImpl::filterOutAngle(InputArray lines, OutputArray filtered, float min_angle, float max_angle) {
+cv::LSDImpl::filterOutAngle(cv::InputArray lines, cv::OutputArray filtered, float min_angle, float max_angle) {
   return angle_filtering(lines, filtered, min_angle, max_angle, RETAIN_OUT);
 }
 
 int
-LineSegmentDetectorImpl::retainAngle(InputArray lines, OutputArray filtered, float min_angle, float max_angle) {
+cv::LSDImpl::retainAngle(cv::InputArray lines, cv::OutputArray filtered, float min_angle, float max_angle) {
   return angle_filtering(lines, filtered, min_angle, max_angle, RETAIN_IN);
 }
 
 int
-LineSegmentDetectorImpl::filterSize(InputArray lines, OutputArray filtered, float min_length, float max_length) {
+cv::LSDImpl::filterSize(cv::InputArray lines, cv::OutputArray filtered, float min_length, float max_length) {
   int num_filtered = 0;
-  std::vector<Vec4i> f;
-  Mat _lines = lines.getMat();
+  std::vector<cv::Vec4i> f;
+  cv::Mat _lines = lines.getMat();
 
   for(int i = 0; i < _lines.size().width; ++i) {
-    const Vec4i& v = _lines.at<Vec4i>(i);
-    Point b(v[0], v[1]);
-    Point e(v[2], v[3]);
+    const cv::Vec4i& v = _lines.at<cv::Vec4i>(i);
+    cv::Point b(v[0], v[1]);
+    cv::Point e(v[2], v[3]);
 
     float len = norm(b - e);
     if(((min_length == LSD_NO_SIZE_LIMIT) || (len >= min_length)) && ((max_length == LSD_NO_SIZE_LIMIT) || (len < max_length)))
@@ -1448,23 +1448,23 @@ LineSegmentDetectorImpl::filterSize(InputArray lines, OutputArray filtered, floa
     else
       ++num_filtered;
   }
-  Mat(f).copyTo(filtered);
+  cv::Mat(f).copyTo(filtered);
   return num_filtered;
 }
 
 void
-LineSegmentDetectorImpl::find_eq_params(const Vec4i& line, float& a, float& b, float& c) const {
+cv::LSDImpl::find_eq_params(const cv::Vec4i& line, float& a, float& b, float& c) const {
   a = line[3] - line[1];
   b = line[0] - line[2];
   c = a * line[0] + b * line[1];
 }
 
 bool
-LineSegmentDetectorImpl::intersection(InputArray line1, InputArray line2, Point& P) {
+cv::LSDImpl::intersection(cv::InputArray line1, cv::InputArray line2, cv::Point& P) {
   CV_Assert(!line1.empty() && !line2.empty());
 
-  Vec4i l1 = line1.getMat().at<Vec4i>(0);
-  Vec4i l2 = line2.getMat().at<Vec4i>(0);
+  cv::Vec4i l1 = line1.getMat().at<cv::Vec4i>(0);
+  cv::Vec4i l2 = line2.getMat().at<cv::Vec4i>(0);
 
   float x, y, a1, b1, a2, b2, c1, c2;
 
@@ -1478,7 +1478,7 @@ LineSegmentDetectorImpl::intersection(InputArray line1, InputArray line2, Point&
     x = (b2 * c1 - b1 * c2) / det;
     y = (a1 * c2 - a2 * c1) / det;
   }
-  P = Point(x, y);
+  P = cv::Point(x, y);
   return true;
 }
 

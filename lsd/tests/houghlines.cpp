@@ -3,7 +3,6 @@
 
 #include <iostream>
 
-using namespace cv;
 using namespace std;
 
 static void
@@ -18,16 +17,16 @@ int
 main(int argc, char** argv) {
   const char* filename = argc >= 2 ? argv[1] : "./../images/chairs.pgm";
 
-  Mat src = imread(filename, 0);
+  cv::Mat src = cv::imread(filename, 0);
   if(src.empty()) {
     help();
     cout << "can not open " << filename << endl;
     return -1;
   }
 
-  Mat dst, cdst;
+  cv::Mat dst, cdst;
   Canny(src, dst, 50, 200, 3);
-  cvtColor(dst, cdst, COLOR_GRAY2BGR);
+  cvtColor(dst, cdst, cv::COLOR_GRAY2BGR);
 
 #if 0
     vector<Vec2f> lines;
@@ -36,32 +35,32 @@ main(int argc, char** argv) {
     for( size_t i = 0; i < lines.size(); i++ )
     {
         float rho = lines[i][0], theta = lines[i][1];
-        Point pt1, pt2;
+        cv::Point pt1, pt2;
         double a = cos(theta), b = sin(theta);
         double x0 = a*rho, y0 = b*rho;
         pt1.x = cvRound(x0 + 1000*(-b));
         pt1.y = cvRound(y0 + 1000*(a));
         pt2.x = cvRound(x0 - 1000*(-b));
         pt2.y = cvRound(y0 - 1000*(a));
-        line( cdst, pt1, pt2, Scalar(0,0,255), 1, CV_AA);
+        line( cdst, pt1, pt2, cv::Scalar(0,0,255), 1, CV_AA);
     }
 #else
-  vector<Vec4i> lines;
-  double start = double(getTickCount());
+  vector<cv::Vec4i> lines;
+  double start = double(cv::getTickCount());
   HoughLinesP(dst, lines, 1, CV_PI / 180, 50, 50, 10);
-  double duration_ms = (double(getTickCount()) - start) * 1000 / getTickFrequency();
+  double duration_ms = (double(cv::getTickCount()) - start) * 1000 / cv::getTickFrequency();
   std::cout << "Hough Lines: " << lines.size() << " segments found. For " << duration_ms << " ms." << std::endl;
 
   for(size_t i = 0; i < lines.size(); i++) {
-    Vec4i l = lines[i];
-    line(cdst, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0, 0, 255), 1, cv::LINE_AA);
+    cv::Vec4i l = lines[i];
+    line(cdst, cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), cv::Scalar(0, 0, 255), 1, cv::LINE_AA);
   }
 #endif
 
   imshow("source", src);
   imshow("detected lines", cdst);
 
-  waitKey();
+  cv::waitKey();
 
   return 0;
 }

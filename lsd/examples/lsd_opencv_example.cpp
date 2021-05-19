@@ -5,31 +5,30 @@
 #include "lsd_opencv.hpp"
 
 using namespace std;
-using namespace cv;
 
 #define IMAGE_WIDTH 1280
 #define IMAGE_HEIGHT 720
 
 int
 main(void) {
-  Mat img1(Size(IMAGE_WIDTH / 2, IMAGE_HEIGHT), CV_8UC1, Scalar(255));
-  Mat img2(Size(IMAGE_WIDTH / 2, IMAGE_HEIGHT), CV_8UC1, Scalar(0));
+  cv::Mat img1(cv::Size(IMAGE_WIDTH / 2, IMAGE_HEIGHT), CV_8UC1, cv::Scalar(255));
+  cv::Mat img2(cv::Size(IMAGE_WIDTH / 2, IMAGE_HEIGHT), CV_8UC1, cv::Scalar(0));
 
-  Mat img3(img1.size().height, img1.size().width + img2.size().width, CV_8UC1);
-  Mat left(img3, Rect(0, 0, img1.size().width, img1.size().height));
+  cv::Mat img3(img1.size().height, img1.size().width + img2.size().width, CV_8UC1);
+  cv::Mat left(img3, cv::Rect(0, 0, img1.size().width, img1.size().height));
   img1.copyTo(left);
-  Mat right(img3, Rect(img1.size().width, 0, img2.size().width, img2.size().height));
+  cv::Mat right(img3, cv::Rect(img1.size().width, 0, img2.size().width, img2.size().height));
   img2.copyTo(right);
   imshow("Image", img3);
 
-  // LSD call
-  std::vector<Vec4i> lines;
+  // cv::LSD call
+  std::vector<cv::Vec4i> lines;
   std::vector<double> width, prec, nfa;
-  Ptr<LSD> ls = createLSDPtr(::LSD_REFINE_ADV);
+  cv::Ptr<cv::LSD> ls = cv::createLSDPtr(::LSD_REFINE_ADV);
 
-  double start = double(getTickCount());
+  double start = double(cv::getTickCount());
   ls->detect(img3, lines, width, prec, nfa);
-  double duration_ms = (double(getTickCount()) - start) * 1000 / getTickFrequency();
+  double duration_ms = (double(cv::getTickCount()) - start) * 1000 / cv::getTickFrequency();
 
   std::cout << lines.size() << " line segments found. For " << duration_ms << " ms." << std::endl;
   for(unsigned int i = 0; i < lines.size(); ++i) {
@@ -37,6 +36,6 @@ main(void) {
          << " W: " << width[i] << " P:" << prec[i] << " NFA:" << nfa[i] << std::endl;
   }
 
-  waitKey();
+  cv::waitKey();
   return 0;
 }

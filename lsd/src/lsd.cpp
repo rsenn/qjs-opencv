@@ -1027,7 +1027,7 @@ log_gamma_windschitl(double x) {
 #define log_gamma(x) ((x) > 15.0 ? log_gamma_windschitl(x) : log_gamma_lanczos(x))
 
 /*----------------------------------------------------------------------------*/
-/** Size of the table to store already computed inverse values.
+/** cv::Size of the table to store already computed inverse values.
  */
 #define TABSIZE 100000
 

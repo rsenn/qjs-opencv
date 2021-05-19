@@ -19,7 +19,7 @@ using namespace lsdwrap;
  * @return			Return number of segments found (-1 => error)
  */
 int
-LsdWrap::lsdw(Mat& I, std::vector<seg>& segments, cv::Rect* Roi) {
+LsdWrap::lsdw(cv::Mat& I, std::vector<seg>& segments, cv::Rect* Roi) {
   // CHECKS AND CONVERSTIONS
   if(I.empty())
     return -1;
@@ -30,7 +30,7 @@ LsdWrap::lsdw(Mat& I, std::vector<seg>& segments, cv::Rect* Roi) {
   } else
     return -2;
   if(Roi) {
-    Mat Itmp = Igray(*Roi).clone();
+    cv::Mat Itmp = Igray(*Roi).clone();
     Igray = Itmp;
   }
   Igray.convertTo(I64F, CV_64FC1);
@@ -90,7 +90,7 @@ LsdWrap::lsdw(Mat& I, std::vector<seg>& segments, cv::Rect* Roi) {
  * @return				Return number of segments found
  */
 int
-LsdWrap::lsd_subdivided(Mat& I, std::vector<seg>& segments, int div_factor) {
+LsdWrap::lsd_subdivided(cv::Mat& I, std::vector<seg>& segments, int div_factor) {
   int width = I.cols;
   int height = I.rows;
   segments.clear();
@@ -132,8 +132,8 @@ LsdWrap::lsd_subdivided(Mat& I, std::vector<seg>& segments, int div_factor) {
  * @param segments  Segments found from a call to lsd(...)
  */
 void
-LsdWrap::imshow_segs(const std::string& name, Mat& gray, std::vector<seg>& segments) {
-  Mat Ig;
+LsdWrap::imshow_segs(const std::string& name, cv::Mat& gray, std::vector<seg>& segments) {
+  cv::Mat Ig;
   if(gray.empty())
     return;
   if(gray.channels() == 3) {
@@ -143,19 +143,19 @@ LsdWrap::imshow_segs(const std::string& name, Mat& gray, std::vector<seg>& segme
   } else
     return;
   // Create 3 channel image so we can draw colored line segments on the gray scale image
-  vector<Mat> planes;
+  vector<cv::Mat> planes;
   planes.push_back(Ig);
   planes.push_back(Ig);
   planes.push_back(Ig);
   // Merge them into a color image
-  Mat combine;
+  cv::Mat combine;
   merge(planes, combine);
   // draw segments ...
   vector<seg>::iterator it = segments.begin(), eit = segments.end();
   for(; it != eit; ++it) {
-    Point p1((int)((*it).x1 + 0.5), (int)((*it).y1 + 0.5));
-    Point p2((int)((*it).x2 + 0.5), (int)((*it).y2 + 0.5));
-    line(combine, p1, p2, Scalar(0, 0, 255), 2);
+    cv::Point p1((int)((*it).x1 + 0.5), (int)((*it).y1 + 0.5));
+    cv::Point p2((int)((*it).x2 + 0.5), (int)((*it).y2 + 0.5));
+    line(combine, p1, p2, cv::Scalar(0, 0, 255), 2);
   }
   // and display ...
   imshow(name.c_str(), combine);
@@ -165,7 +165,7 @@ LsdWrap::imshow_segs(const std::string& name, Mat& gray, std::vector<seg>& segme
  * To help in unit tests, compare 2 different segment finds
  * @param seg1		Vector1 of segments (in Blue)
  * @param seg2		Vector2 of segments (in Red)
- * @param size		Size of images that were used to find the segment
+ * @param size		cv::Size of images that were used to find the segment
  * @param name		Optional name of window to display results in
  * @param I			Optional pointer. If not null, then draw image in namedWindow(name).
  * @return			How many points do not overlap between segments in seg1 and seg2
@@ -173,37 +173,37 @@ LsdWrap::imshow_segs(const std::string& name, Mat& gray, std::vector<seg>& segme
 int
 LsdWrap::CompareSegs(std::vector<seg>& seg1, std::vector<seg>& seg2, cv::Size size, const std::string& name, cv::Mat* I) {
   // SET UP AND SIZE
-  Mat I1, I2;
+  cv::Mat I1, I2;
   if(I && size != I->size())
     size = I->size();
-  I1 = Mat(size, CV_8UC1, Scalar::all(0));
-  I2 = Mat(size, CV_8UC1, Scalar::all(0));
+  I1 = cv::Mat(size, CV_8UC1, cv::Scalar::all(0));
+  I2 = cv::Mat(size, CV_8UC1, cv::Scalar::all(0));
 
   // DRAW SEGMENTS
   vector<seg>::iterator it = seg1.begin(), eit = seg1.end();
   for(; it != eit; ++it) {
-    Point p1((int)((*it).x1 + 0.5), (int)((*it).y1 + 0.5));
-    Point p2((int)((*it).x2 + 0.5), (int)((*it).y2 + 0.5));
-    line(I1, p1, p2, Scalar::all(255), 1);
+    cv::Point p1((int)((*it).x1 + 0.5), (int)((*it).y1 + 0.5));
+    cv::Point p2((int)((*it).x2 + 0.5), (int)((*it).y2 + 0.5));
+    line(I1, p1, p2, cv::Scalar::all(255), 1);
   }
   it = seg2.begin();
   eit = seg2.end();
   for(; it != eit; ++it) {
-    Point p1((int)((*it).x1 + 0.5), (int)((*it).y1 + 0.5));
-    Point p2((int)((*it).x2 + 0.5), (int)((*it).y2 + 0.5));
-    line(I2, p1, p2, Scalar::all(255), 1);
+    cv::Point p1((int)((*it).x1 + 0.5), (int)((*it).y1 + 0.5));
+    cv::Point p2((int)((*it).x2 + 0.5), (int)((*it).y2 + 0.5));
+    line(I2, p1, p2, cv::Scalar::all(255), 1);
   }
 
   // MARKPLACES WHERE THEY DO NOT AGREE
-  Mat Ixor;
+  cv::Mat Ixor;
   bitwise_xor(I1, I2, Ixor);
-  int N = countNonZero(Ixor); // This is the missmatch number
+  int N = cv::countNonZero(Ixor); // This is the missmatch number
 
   // DRAW IT IF ASKED
   if(I) {
-    Mat Ig;
+    cv::Mat Ig;
     if(size != I->size()) {
-      *I = Mat(size, CV_8UC1, Scalar::all(0));
+      *I = cv::Mat(size, CV_8UC1, cv::Scalar::all(0));
     }
     if(I->channels() == 3) {
       cv::cvtColor(*I, Ig, cv::COLOR_BGR2GRAY);
@@ -212,12 +212,12 @@ LsdWrap::CompareSegs(std::vector<seg>& seg1, std::vector<seg>& seg2, cv::Size si
     } else
       return -2;
     // Create 3 channel image so we can draw colored line segments on the gray scale image
-    vector<Mat> planes;
+    vector<cv::Mat> planes;
     planes.push_back(I1);
     planes.push_back(Ig);
     planes.push_back(I2);
     // Merge them into a color image
-    Mat combine;
+    cv::Mat combine;
     merge(planes, combine);
     imshow(name.c_str(), combine); // Show it
   }
@@ -231,7 +231,7 @@ LsdWrap::CompareSegs(std::vector<seg>& seg1, std::vector<seg>& seg2, cv::Size si
  * list & give number of differing pixels
  * @param Ig		CV_8UC1 image of drawn segments (Blue)
  * @param seg2		Vector2 of segments (Red)
- * @param size		Size of images that were used to find the segment
+ * @param size		cv::Size of images that were used to find the segment
  * @param name		Optional name of window to display results in
  * @param I			Optional pointer. If not null, then draw image in namedWindow(name).
  * @return			How many points do not overlap between segments in seg1 and seg2
@@ -239,7 +239,7 @@ LsdWrap::CompareSegs(std::vector<seg>& seg1, std::vector<seg>& seg2, cv::Size si
 int
 LsdWrap::CompareSegs(cv::Mat& Ig, std::vector<seg>& seg2, const std::string& name, cv::Mat* I) {
   // SET UP AND SIZE
-  Mat I1, I2;
+  cv::Mat I1, I2;
 
   // GET SEGMETNS 1
   if(Ig.empty())
@@ -250,28 +250,28 @@ LsdWrap::CompareSegs(cv::Mat& Ig, std::vector<seg>& seg2, const std::string& nam
     I1 = Ig; // Just point to it
   } else
     return -2;
-  I2 = Mat(Ig.size(), CV_8UC1, Scalar::all(0));
+  I2 = cv::Mat(Ig.size(), CV_8UC1, cv::Scalar::all(0));
 
   // DRAW SEGMENTS 2
   vector<seg>::iterator it = seg2.begin(), eit = seg2.end();
   for(; it != eit; ++it) {
-    Point p1((int)((*it).x1 + 0.5), (int)((*it).y1 + 0.5));
-    Point p2((int)((*it).x2 + 0.5), (int)((*it).y2 + 0.5));
-    line(I2, p1, p2, Scalar::all(255), 1);
+    cv::Point p1((int)((*it).x1 + 0.5), (int)((*it).y1 + 0.5));
+    cv::Point p2((int)((*it).x2 + 0.5), (int)((*it).y2 + 0.5));
+    line(I2, p1, p2, cv::Scalar::all(255), 1);
   }
 
   // MARKPLACES WHERE THEY DO NOT AGREE
-  Mat Ixor;
+  cv::Mat Ixor;
   bitwise_xor(I1, I2, Ixor);
-  int N = countNonZero(Ixor); // This is the missmatch number
+  int N = cv::countNonZero(Ixor); // This is the missmatch number
 
   // DRAW IT IF ASKED
   if(I) {
     if(Ig.size() != I->size()) {
       *I = Ig.clone();
-      I->setTo(Scalar::all(0));
+      I->setTo(cv::Scalar::all(0));
     }
-    Mat Igreen;
+    cv::Mat Igreen;
     if(I->channels() == 3) {
       cv::cvtColor(*I, Igreen, cv::COLOR_BGR2GRAY);
     } else if(I->channels() == 1) {
@@ -279,12 +279,12 @@ LsdWrap::CompareSegs(cv::Mat& Ig, std::vector<seg>& seg2, const std::string& nam
     } else
       return -2;
     // Create 3 channel image so we can draw colored line segments on the gray scale image
-    vector<Mat> planes;
+    vector<cv::Mat> planes;
     planes.push_back(I1);
     planes.push_back(Igreen);
     planes.push_back(I2);
     // Merge them into a color image
-    Mat combine;
+    cv::Mat combine;
     merge(planes, combine);
     imshow(name.c_str(), combine); // Show it
   }
@@ -301,14 +301,14 @@ LsdWrap::CompareSegs(cv::Mat& Ig, std::vector<seg>& seg2, const std::string& nam
  */
 cv::Mat
 LsdWrap::segments_to_image8UC1(std::vector<seg>& seg1, cv::Size size) {
-  Mat I1(size, CV_8UC1, Scalar::all(0)); // allocate an image, set it to zero
+  cv::Mat I1(size, CV_8UC1, cv::Scalar::all(0)); // allocate an image, set it to zero
 
   // DRAW SEGMENTS
   vector<seg>::iterator it = seg1.begin(), eit = seg1.end();
   for(; it != eit; ++it) {
-    Point p1((int)((*it).x1 + 0.5), (int)((*it).y1 + 0.5));
-    Point p2((int)((*it).x2 + 0.5), (int)((*it).y2 + 0.5));
-    line(I1, p1, p2, Scalar::all(255), 1);
+    cv::Point p1((int)((*it).x1 + 0.5), (int)((*it).y1 + 0.5));
+    cv::Point p2((int)((*it).x2 + 0.5), (int)((*it).y2 + 0.5));
+    line(I1, p1, p2, cv::Scalar::all(255), 1);
   }
   return I1;
 }

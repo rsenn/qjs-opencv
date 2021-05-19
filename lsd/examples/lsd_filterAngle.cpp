@@ -5,7 +5,6 @@
 #include "lsd_opencv.hpp"
 
 using namespace std;
-using namespace cv;
 
 const float ANGLE = 15;
 const float RANGE = 10;
@@ -21,39 +20,39 @@ main(int argc, char* argv[]) {
 
   std::string in = argv[1];
 
-  Mat image = imread(in, 0);
+  cv::Mat image = cv::imread(in, 0);
 
   //
-  // LSD call
+  // cv::LSD call
   //
-  std::vector<Vec4i> lines, filtered_lines, retained_lines, long_lines;
+  std::vector<cv::Vec4i> lines, filtered_lines, retained_lines, long_lines;
   std::vector<double> width, prec, nfa;
-  Ptr<LSD> ls = createLSDPtr(::LSD_REFINE_STD);
+  cv::Ptr<cv::LSD> ls = cv::createLSDPtr(::LSD_REFINE_STD);
 
-  double start = double(getTickCount());
+  double start = double(cv::getTickCount());
   ls->detect(image, lines);
   ls->filterSize(lines, lines, MIN_LEN, LSD_NO_SIZE_LIMIT); // Remove all lines smaller than MIN_LEN pixels
   ls->filterOutAngle(lines, filtered_lines, ANGLE, RANGE);  // remove all vertical lines
   ls->retainAngle(lines, retained_lines, ANGLE, RANGE);     // take all vertical lines
-  double duration_ms = (double(getTickCount()) - start) * 1000 / getTickFrequency();
+  double duration_ms = (double(cv::getTickCount()) - start) * 1000 / cv::getTickFrequency();
 
   cout << "It took " << duration_ms << " ms." << endl;
 
   //
   // Show difference
   //
-  Mat drawnLines(image);
+  cv::Mat drawnLines(image);
   ls->drawSegments(drawnLines, lines);
   imshow("Drawing segments", drawnLines);
 
-  Mat vertical(image);
+  cv::Mat vertical(image);
   ls->drawSegments(vertical, retained_lines);
   imshow("Retained lines", vertical);
 
-  Mat difference = Mat::zeros(image.size(), CV_8UC3);
+  cv::Mat difference = cv::Mat::zeros(image.size(), CV_8UC3);
   int d = ls->compareSegments(image.size(), lines, filtered_lines, difference);
   imshow("Segments difference", difference);
 
-  waitKey();
+  cv::waitKey();
   return 0;
 }

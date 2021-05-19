@@ -6,7 +6,6 @@
 #include "lsd_opencv.hpp"
 
 using namespace std;
-using namespace cv;
 
 int
 main(int argc, char** argv) {
@@ -20,16 +19,16 @@ main(int argc, char** argv) {
   std::string in = argv[1];
   std::string out = argv[2];
 
-  Mat image = imread(in, IMREAD_GRAYSCALE);
+  cv::Mat image = cv::imread(in, cv::IMREAD_GRAYSCALE);
 
-  // LSD call
-  std::vector<Vec4i> lines;
+  // cv::LSD call
+  std::vector<cv::Vec4i> lines;
   std::vector<double> width, prec;
-  Ptr<LSD> lsd = createLSDPtr();
+  cv::Ptr<cv::LSD> lsd = cv::createLSDPtr();
 
-  double start = double(getTickCount());
+  double start = double(cv::getTickCount());
   lsd->detect(image, lines, width, prec);
-  double duration_ms = (double(getTickCount()) - start) * 1000 / getTickFrequency();
+  double duration_ms = (double(cv::getTickCount()) - start) * 1000 / cv::getTickFrequency();
 
   std::cout << lines.size() << " line segments found. For " << duration_ms << " ms." << std::endl;
 

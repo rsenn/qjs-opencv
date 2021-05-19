@@ -5,7 +5,6 @@
 #include "lsd_wrap.hpp"
 
 using namespace std;
-using namespace cv;
 using namespace lsdwrap;
 
 int
@@ -20,15 +19,15 @@ main(int argc, char** argv) {
   std::string in = argv[1];
   std::string out = argv[2];
 
-  Mat image = imread(in, IMREAD_GRAYSCALE);
+  cv::Mat image = cv::imread(in, cv::IMREAD_GRAYSCALE);
 
   LsdWrap lsd;
   vector<seg> segments;
-  double start = double(getTickCount());
+  double start = double(cv::getTickCount());
 
   lsd.lsdw(image, segments);
 
-  double duration_ms = (double(getTickCount()) - start) * 1000 / getTickFrequency();
+  double duration_ms = (double(cv::getTickCount()) - start) * 1000 / cv::getTickFrequency();
   std::cout << segments.size() << " line segments found. For " << duration_ms << " ms." << std::endl;
 
   lsd.imshow_segs(string("Image"), image, segments);
@@ -42,7 +41,7 @@ main(int argc, char** argv) {
             << std::endl;
   }
   segfile.close();
-  waitKey(0);
+  cv::waitKey(0);
 
   return 0;
 }
