@@ -1087,7 +1087,7 @@ js_imgproc_misc(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
       moments_map["nu12"] = moments.nu12;
       moments_map["nu03"] = moments.nu03;
 
-      ret = js_object::from_map(ctx, moments_map);
+      ret = js_object_from(ctx, moments_map);
       break;
     }
   }

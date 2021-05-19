@@ -41,4 +41,10 @@ public:
   }
 };
 
+template<class Container>
+static inline JSValue
+js_object_from(JSContext* ctx, const Container& v) {
+  return js_object ::from_map(ctx, v);
+}
+
 #endif // defined(JS_OBJECT_HPP)
