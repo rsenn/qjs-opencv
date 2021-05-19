@@ -10,12 +10,9 @@
 #include "js_cv.hpp"
 //#include "js_consts.hpp"
 #include "geometry.hpp"
-#include "skeletonization.hpp"
-#include "pixel_neighborhood.hpp"
-#include "png_write.hpp"
-#include "palette.hpp"
 #include "util.hpp"
 #include "cutils.h"
+#include "png_write.hpp"
 
 #include <array>
 #include <cassert>
@@ -29,6 +26,11 @@ enum { HIER_NEXT = 0, HIER_PREV, HIER_CHILD, HIER_PARENT };
 #define JS_CV_CONSTANT(name) JS_PROP_INT32_DEF(#name, cv::name, 0)
 
 enum { DISPLAY_OVERLAY };
+
+extern "C" {
+JSValue cv_proto = JS_UNDEFINED, cv_class = JS_UNDEFINED;
+JSClassID js_cv_class_id = 0;
+}
 
 static JSValue
 js_cv_imread(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
@@ -171,126 +173,6 @@ js_cv_add_weighted(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
   return JS_UNDEFINED;
 }
 
-static JSValue
-js_cv_skeletonization(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  JSInputOutputArray src, dst;
-  cv::Mat output;
-  src = js_umat_or_mat(ctx, argv[0]);
-  dst = js_umat_or_mat(ctx, argv[1]);
-
-  if(js_is_noarray(src) || js_is_noarray(dst))
-    return JS_ThrowInternalError(ctx, "src or dst not an array!");
-
-  output = skeletonization(src);
-  output.copyTo(dst);
-
-  return JS_UNDEFINED;
-}
-
-static JSValue
-js_cv_pixel_neighborhood(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
-  JSMatData* src;
-  JSOutputArray dst;
-  cv::Mat output;
-  int count;
-
-  src = js_mat_data(ctx, argv[0]);
-  dst = js_umat_or_mat(ctx, argv[1]);
-
-  if(src == nullptr || js_is_noarray(dst))
-    return JS_ThrowInternalError(ctx, "src or dst not an array!");
-
-  if(argc > 2) {
-    int32_t count;
-
-    JS_ToInt32(ctx, &count, argv[2]);
-    output = magic ? pixel_neighborhood_cross_if(*src, count) : pixel_neighborhood_if(*src, count);
-  } else {
-    output = magic ? pixel_neighborhood_cross(*src) : pixel_neighborhood(*src);
-  }
-
-  dst.getMatRef() = output;
-  //  output.copyTo();
-
-  return JS_UNDEFINED;
-}
-
-static JSValue
-js_cv_pixel_find_value(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  JSMatData* src;
-  std::vector<JSPointData<int>> output;
-  uint32_t value;
-
-  src = js_mat_data(ctx, argv[0]);
-
-  if(src == nullptr)
-    return JS_ThrowInternalError(ctx, "src not an array!");
-
-  JS_ToUint32(ctx, &value, argv[1]);
-  output = pixel_find_value(*src, value);
-
-  return js_array_from(ctx, output);
-}
-
-static JSValue
-js_cv_palette_apply(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  JSMatData* src;
-  JSOutputArray dst;
-  std::array<uint32_t, 256> palette32;
-  std::vector<cv::Vec3b> palette;
-
-  src = js_mat_data(ctx, argv[0]);
-  dst = js_umat_or_mat(ctx, argv[1]);
-
-  if(src == nullptr || js_is_noarray(dst))
-    return JS_ThrowInternalError(ctx, "src or dst not an array!");
-
-  {
-    cv::Mat& output = dst.getMatRef();
-    int channels = output.channels();
-
-    std::cout << "output.channels() = " << channels << std::endl;
-    /*if(js_is_typedarray(ctx, argv[2])) {
-      return JS_ThrowInternalError(ctx, "typed array not handled");
-    } else*/
-
-    if(channels == 1)
-      channels = 3;
-
-    if(channels == 4) {
-      std::vector<JSColorData<uint8_t>> palette;
-      std::vector<cv::Vec4b> palette4b;
-      std::vector<cv::Scalar> palettesc;
-
-      js_array_to(ctx, argv[2], palette);
-
-      for(auto& color : palette) {
-        palette4b.push_back(cv::Vec4b(color.arr[0], color.arr[1], color.arr[2], color.arr[3]));
-        palettesc.push_back(cv::Scalar(color.arr[0], color.arr[1], color.arr[2], color.arr[3]));
-      }
-
-      palette_apply<cv::Vec4b>(*src, dst, &palette4b[0]);
-
-    } else if(channels == 3) {
-      std::vector<JSColorData<uint8_t>> palette;
-      std::vector<cv::Vec3b> palette3b;
-      std::vector<cv::Scalar> palettesc;
-
-      js_array_to(ctx, argv[2], palette);
-
-      for(auto& color : palette) {
-        palette3b.push_back(cv::Vec3b(color.arr[2], color.arr[1], color.arr[0]));
-        palettesc.push_back(cv::Scalar(color.arr[2], color.arr[1], color.arr[0]));
-      }
-
-      palette_apply<cv::Vec3b>(*src, dst, &palette3b[0]);
-    } else {
-      return JS_ThrowInternalError(ctx, "output mat channels = %u", output.channels());
-    }
-  }
-  return JS_UNDEFINED;
-}
-
 enum { MAT_COUNTNONZERO = 0, MAT_FINDNONZERO, MAT_HCONCAT, MAT_VCONCAT };
 
 static JSValue
@@ -355,47 +237,6 @@ js_cv_convert_scale_abs(JSContext* ctx, JSValueConst this_val, int argc, JSValue
     JS_ToFloat64(ctx, &beta, argv[3]);
 
   cv::convertScaleAbs(src, dst, alpha, beta);
-  return JS_UNDEFINED;
-}
-
-static JSValue
-js_cv_morphology(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
-  JSInputOutputArray src, dst, kernel;
-  JSPointData<double> anchor = cv::Point(-1, -1);
-  int32_t iterations = 1, borderType = cv::BORDER_CONSTANT;
-  cv::Scalar borderValue = cv::morphologyDefaultBorderValue();
-
-  src = js_umat_or_mat(ctx, argv[0]);
-  dst = js_umat_or_mat(ctx, argv[1]);
-  kernel = js_cv_inputoutputarray(ctx, argv[2]);
-
-  if(js_is_noarray(src) || js_is_noarray(dst) || js_is_noarray(kernel) || argc < 3)
-    return JS_ThrowInternalError(ctx, "src or dst or kernel not an array!");
-
-  if(argc >= 4)
-    if(!js_point_read(ctx, argv[3], &anchor))
-      return JS_EXCEPTION;
-
-  if(argc >= 5)
-    JS_ToInt32(ctx, &iterations, argv[4]);
-
-  if(argc >= 6)
-    JS_ToInt32(ctx, &borderType, argv[5]);
-
-  if(argc >= 7) {
-    std::vector<double> value;
-    if(!js_is_array(ctx, argv[6]))
-      return JS_EXCEPTION;
-
-    js_array_to(ctx, argv[6], value);
-    borderValue = cv::Scalar(value[0], value[1], value[2], value[3]);
-  }
-
-  switch(magic) {
-    case 0: cv::dilate(src, dst, kernel, anchor, iterations, borderType, borderValue); break;
-    case 1: cv::erode(src, dst, kernel, anchor, iterations, borderType, borderValue); break;
-  }
-
   return JS_UNDEFINED;
 }
 
@@ -513,8 +354,727 @@ js_cv_bitwise(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* arg
   return JS_UNDEFINED;
 }
 
-JSValue cv_proto = JS_UNDEFINED, cv_class = JS_UNDEFINED;
-JSClassID js_cv_class_id = 0;
+enum {
+  MATH_ABSDIFF = 0,
+  MATH_ADD,
+  MATH_COMPARE,
+  MATH_DIVIDE,
+  MATH_GEMM,
+  MATH_MAX,
+  MATH_MIN,
+  MATH_MULTIPLY,
+  MATH_SOLVE,
+  MATH_SUBTRACT
+};
+
+static JSValue
+js_cv_math(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+
+  JSOutputArray dst;
+  JSInputArray src1, src2;
+  JSValue ret = JS_UNDEFINED;
+
+  src1 = argc >= 1 ? js_umat_or_mat(ctx, argv[0]) : cv::noArray();
+  src2 = argc >= 2 ? js_umat_or_mat(ctx, argv[1]) : cv::noArray();
+  dst = argc >= 3 ? js_umat_or_mat(ctx, argv[2]) : cv::noArray();
+
+  switch(magic) {
+    case MATH_ABSDIFF: {
+      cv::absdiff(src1, src2, dst);
+      break;
+    }
+
+    case MATH_ADD: {
+      JSInputArray mask;
+      int32_t dtype = -1;
+      if(argc >= 4)
+        mask = js_umat_or_mat(ctx, argv[3]);
+      if(argc >= 5)
+        mask = JS_ToInt32(ctx, &dtype, argv[4]);
+      cv::add(src1, src2, dst, mask, dtype);
+      break;
+    }
+
+    case MATH_COMPARE: {
+      int32_t cmpop = 0;
+      JS_ToInt32(ctx, &cmpop, argv[3]);
+      cv::compare(src1, src2, dst, cmpop);
+      break;
+    }
+
+    case MATH_DIVIDE: {
+      double scale = 1;
+      int dtype = -1;
+      if(argc >= 4)
+        JS_ToFloat64(ctx, &scale, argv[3]);
+      if(argc >= 5)
+        JS_ToInt32(ctx, &dtype, argv[4]);
+
+      cv::divide(src1, src2, dst, scale, dtype);
+      break;
+    }
+
+    case MATH_MAX: {
+      cv::max(src1, src2, dst);
+      break;
+    }
+
+    case MATH_MIN: {
+      cv::min(src1, src2, dst);
+      break;
+    }
+
+    case MATH_MULTIPLY: {
+      double scale = 1;
+      int dtype = -1;
+      if(argc >= 4)
+        JS_ToFloat64(ctx, &scale, argv[3]);
+      if(argc >= 5)
+        JS_ToInt32(ctx, &dtype, argv[4]);
+      cv::multiply(src1, src2, dst, scale, dtype);
+      break;
+    }
+
+    case MATH_SOLVE: {
+      int flags = cv::DECOMP_LU;
+      if(argc >= 4)
+        JS_ToInt32(ctx, &flags, argv[3]);
+      cv::solve(src1, src2, dst, flags);
+      break;
+    }
+
+    case MATH_SUBTRACT: {
+      JSInputArray mask;
+      int32_t dtype = -1;
+      if(argc >= 4)
+        mask = js_umat_or_mat(ctx, argv[3]);
+      if(argc >= 5)
+        mask = JS_ToInt32(ctx, &dtype, argv[4]);
+      cv::subtract(src1, src2, dst, mask, dtype);
+      break;
+    }
+  }
+  return ret;
+}
+
+enum {
+  CORE_CONVERTFP16 = 0,
+  CORE_CONVERTSCALEABS,
+  CORE_COPYMAKEBORDER,
+  CORE_COPYTO,
+  CORE_DCT,
+  CORE_DFT,
+  CORE_EXP,
+  CORE_EXTRACTCHANNEL,
+  CORE_FLIP,
+  CORE_IDCT,
+  CORE_IDFT,
+  CORE_INVERT,
+  CORE_LOG,
+  CORE_MULTRANSPOSED,
+  CORE_PERSPECTIVETRANSFORM,
+  CORE_REDUCE,
+  CORE_ROTATE,
+  CORE_SORT,
+  CORE_SORTIDX,
+  CORE_SQRT,
+  CORE_TRANSFORM,
+  CORE_TRANSPOSE
+};
+
+static JSValue
+js_cv_core(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+
+  JSOutputArray dst;
+  JSInputArray src;
+  JSValue ret = JS_UNDEFINED;
+
+  src = argc >= 1 ? js_umat_or_mat(ctx, argv[0]) : cv::noArray();
+  dst = argc >= 2 ? js_umat_or_mat(ctx, argv[1]) : cv::noArray();
+
+  switch(magic) {
+    case CORE_CONVERTFP16: {
+      cv::convertFp16(src, dst);
+      break;
+    }
+    case CORE_CONVERTSCALEABS: {
+      double alpha = 1, beta = 0;
+      if(argc >= 3)
+        JS_ToFloat64(ctx, &alpha, argv[2]);
+      if(argc >= 4)
+        JS_ToFloat64(ctx, &beta, argv[3]);
+      cv::convertScaleAbs(src, dst, alpha, beta);
+      break;
+    }
+    case CORE_COPYMAKEBORDER: {
+      int32_t top, bottom, left, right, borderType;
+      cv::Scalar value = cv::Scalar();
+      if(argc >= 3)
+        JS_ToInt32(ctx, &top, argv[2]);
+      if(argc >= 4)
+        JS_ToInt32(ctx, &bottom, argv[3]);
+      if(argc >= 5)
+        JS_ToInt32(ctx, &left, argv[4]);
+      if(argc >= 6)
+        JS_ToInt32(ctx, &right, argv[5]);
+      if(argc >= 7)
+        JS_ToInt32(ctx, &borderType, argv[6]);
+      if(argc >= 8)
+        js_color_read(ctx, argv[7], &value);
+
+      cv::copyMakeBorder(src, dst, top, bottom, left, right, borderType, value);
+
+      break;
+    }
+    case CORE_COPYTO: {
+      JSInputArray mask = cv::noArray();
+      if(argc >= 3)
+        mask = js_umat_or_mat(ctx, argv[2]);
+      cv::copyTo(src, dst, mask);
+      break;
+    }
+    case CORE_DCT: {
+      int32_t flags = 0;
+      if(argc >= 3)
+        JS_ToInt32(ctx, &flags, argv[2]);
+      cv::dct(src, dst, flags);
+      break;
+    }
+    case CORE_DFT: {
+      int32_t flags = 0, nonZeroRows = 0;
+      if(argc >= 3)
+        JS_ToInt32(ctx, &flags, argv[2]);
+      if(argc >= 4)
+        JS_ToInt32(ctx, &nonZeroRows, argv[3]);
+      cv::dft(src, dst, flags, nonZeroRows);
+      break;
+    }
+    case CORE_EXP: {
+      cv::exp(src, dst);
+      break;
+    }
+    case CORE_EXTRACTCHANNEL: {
+      int32_t coi = 0;
+      if(argc >= 3)
+        JS_ToInt32(ctx, &coi, argv[2]);
+      cv::extractChannel(src, dst, coi);
+      break;
+    }
+    case CORE_FLIP: {
+      int32_t flipCode = 0;
+      if(argc >= 3)
+        JS_ToInt32(ctx, &flipCode, argv[2]);
+      cv::flip(src, dst, flipCode);
+      break;
+    }
+    case CORE_IDCT: {
+      int32_t flags = 0;
+      if(argc >= 3)
+        JS_ToInt32(ctx, &flags, argv[2]);
+      cv::idct(src, dst, flags);
+      break;
+    }
+    case CORE_IDFT: {
+      int32_t flags = 0, nonZeroRows = 0;
+      if(argc >= 3)
+        JS_ToInt32(ctx, &flags, argv[2]);
+      if(argc >= 4)
+        JS_ToInt32(ctx, &nonZeroRows, argv[3]);
+      cv::idft(src, dst, flags, nonZeroRows);
+      break;
+    }
+    case CORE_INVERT: {
+      int flags = cv::DECOMP_LU;
+      if(argc >= 3)
+        JS_ToInt32(ctx, &flags, argv[2]);
+      cv::invert(src, dst, flags);
+      break;
+    }
+    case CORE_LOG: {
+      cv::log(src, dst);
+      break;
+    }
+    case CORE_MULTRANSPOSED: {
+      BOOL aTa;
+      JSInputArray delta = cv::noArray();
+      double scale = 1;
+      int32_t dtype = -1;
+
+      if(argc >= 3)
+        aTa = JS_ToBool(ctx, argv[2]);
+      if(argc >= 4)
+        delta = js_umat_or_mat(ctx, argv[3]);
+      if(argc >= 5)
+        JS_ToFloat64(ctx, &scale, argv[4]);
+      if(argc >= 6)
+        JS_ToInt32(ctx, &dtype, argv[5]);
+      cv::mulTransposed(src, dst, aTa, delta, scale, dtype);
+
+      break;
+    }
+    case CORE_PERSPECTIVETRANSFORM: {
+      JSInputArray m = cv::noArray();
+      if(argc >= 3)
+        m = js_umat_or_mat(ctx, argv[2]);
+
+      cv::perspectiveTransform(src, dst, m);
+      break;
+    }
+    case CORE_REDUCE: {
+      int32_t dim, rtype, dtype = -1;
+      if(argc >= 3)
+        JS_ToInt32(ctx, &dim, argv[2]);
+      if(argc >= 4)
+        JS_ToInt32(ctx, &rtype, argv[3]);
+      if(argc >= 5)
+        JS_ToInt32(ctx, &dtype, argv[4]);
+      cv::reduce(src, dst, dim, rtype, dtype);
+      break;
+    }
+    case CORE_ROTATE: {
+      int32_t rotateCode = 0;
+      if(argc >= 3)
+        JS_ToInt32(ctx, &rotateCode, argv[2]);
+      cv::rotate(src, dst, rotateCode);
+      break;
+    }
+    case CORE_SORT: {
+      int32_t flags;
+      if(argc >= 3)
+        JS_ToInt32(ctx, &flags, argv[2]);
+      cv::sort(src, dst, flags);
+      break;
+    }
+    case CORE_SORTIDX: {
+      int32_t flags;
+      if(argc >= 3)
+        JS_ToInt32(ctx, &flags, argv[2]);
+      cv::sortIdx(src, dst, flags);
+      break;
+      break;
+    }
+    case CORE_SQRT: {
+      cv::sqrt(src, dst);
+      break;
+    }
+    case CORE_TRANSFORM: {
+      JSInputArray m = cv::noArray();
+      if(argc >= 3)
+        m = js_umat_or_mat(ctx, argv[2]);
+
+      cv::transform(src, dst, m);
+      break;
+    }
+    case CORE_TRANSPOSE: {
+      cv::transpose(src, dst);
+      break;
+    }
+  }
+
+  return ret;
+}
+
+enum {
+  OTHER_CALC_COVAR_MATRIX = 0,
+  OTHER_CART_TO_POLAR,
+  OTHER_DETERMINANT,
+  OTHER_EIGEN,
+  OTHER_EIGEN_NON_SYMMETRIC,
+  OTHER_CHECK_RANGE,
+  OTHER_IN_RANGE,
+  OTHER_INSERT_CHANNEL,
+  OTHER_LUT,
+  OTHER_MAGNITUDE,
+  OTHER_MAHALANOBIS,
+  OTHER_MEAN,
+  OTHER_MEAN_STD_DEV,
+  OTHER_MIN_MAX_IDX,
+  OTHER_MIN_MAX_LOC,
+  OTHER_MUL_SPECTRUMS,
+  OTHER_NORM,
+  OTHER_PATCH_NANS,
+  OTHER_PHASE,
+  OTHER_POLAR_TO_CART,
+  OTHER_POW,
+  OTHER_RANDN,
+  OTHER_RAND_SHUFFLE,
+  OTHER_RANDU,
+  OTHER_REPEAT,
+  OTHER_SCALE_ADD,
+  OTHER_SET_IDENTITY,
+  OTHER_SOLVE_CUBIC,
+  OTHER_SOLVE_POLY,
+  OTHER_SUM,
+  OTHER_TRACE
+};
+
+static JSValue
+js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+
+  JSInputOutputArray src;
+  JSValue ret = JS_UNDEFINED;
+
+  src = argc >= 1 ? js_umat_or_mat(ctx, argv[0]) : cv::noArray();
+
+  switch(magic) {
+
+    case OTHER_MEAN: {
+      cv::Scalar mean;
+      JSInputArray mask = cv::noArray();
+      if(argc >= 2)
+        mask = js_umat_or_mat(ctx, argv[1]);
+      mean = cv::mean(src, mask);
+      ret = js_color_new(ctx, mean);
+      break;
+    }
+    case OTHER_CALC_COVAR_MATRIX: {
+      JSOutputArray covar = cv::noArray();
+      JSInputOutputArray mean = cv::noArray();
+      int32_t flags, ctype = CV_64F;
+
+      if(argc >= 2)
+        covar = js_umat_or_mat(ctx, argv[1]);
+      if(argc >= 3)
+        mean = js_umat_or_mat(ctx, argv[2]);
+      if(argc >= 4)
+        JS_ToInt32(ctx, &flags, argv[3]);
+      if(argc >= 5)
+        JS_ToInt32(ctx, &ctype, argv[4]);
+      cv::calcCovarMatrix(src, covar, mean, flags, ctype);
+      break;
+    }
+    case OTHER_CART_TO_POLAR: {
+      JSInputArray y = cv::noArray();
+      JSOutputArray magnitude = cv::noArray(), angle = cv::noArray();
+      BOOL angleInDegrees = FALSE;
+
+      if(argc >= 2)
+        y = js_umat_or_mat(ctx, argv[1]);
+      if(argc >= 3)
+        magnitude = js_umat_or_mat(ctx, argv[2]);
+      if(argc >= 4)
+        angle = js_umat_or_mat(ctx, argv[3]);
+      if(argc >= 5)
+        angleInDegrees = JS_ToBool(ctx, argv[4]);
+      cv::cartToPolar(src, y, magnitude, angle, angleInDegrees);
+      break;
+    }
+    case OTHER_DETERMINANT: {
+      double d;
+      d = cv::determinant(src);
+      ret = JS_NewFloat64(ctx, d);
+      break;
+    }
+    case OTHER_EIGEN: {
+      JSOutputArray eigenvalues = cv::noArray(), eigenvectors = cv::noArray();
+      if(argc >= 2)
+        eigenvalues = js_umat_or_mat(ctx, argv[1]);
+      if(argc >= 3)
+        eigenvectors = js_umat_or_mat(ctx, argv[2]);
+      ret = JS_NewBool(ctx, cv::eigen(src, eigenvalues, eigenvectors));
+      break;
+    }
+    case OTHER_EIGEN_NON_SYMMETRIC: {
+      JSOutputArray eigenvalues = cv::noArray(), eigenvectors = cv::noArray();
+      if(argc >= 2)
+        eigenvalues = js_umat_or_mat(ctx, argv[1]);
+      if(argc >= 3)
+        eigenvectors = js_umat_or_mat(ctx, argv[2]);
+      cv::eigenNonSymmetric(src, eigenvalues, eigenvectors);
+
+      break;
+    }
+    case OTHER_CHECK_RANGE: {
+      BOOL result, quiet = TRUE;
+      JSPointData<int> position, *pos = 0;
+      double minVal = -DBL_MAX, maxVal = DBL_MAX;
+      if(argc >= 2)
+        quiet = JS_ToBool(ctx, argv[1]);
+      if(argc >= 3) {
+        js_point_read(ctx, argv[2], &position);
+        pos = &position;
+      }
+      if(argc >= 4)
+        JS_ToFloat64(ctx, &minVal, argv[3]);
+      if(argc >= 5)
+        JS_ToFloat64(ctx, &maxVal, argv[4]);
+      result = cv::checkRange(src, quiet, pos, minVal, maxVal);
+      ret = JS_NewBool(ctx, result);
+      break;
+    }
+    case OTHER_IN_RANGE: {
+      JSInputArray lowerb = cv::noArray(), upperb = cv::noArray();
+      JSOutputArray dst = cv::noArray();
+
+      if(argc >= 2)
+        lowerb = js_umat_or_mat(ctx, argv[1]);
+      if(argc >= 3)
+        upperb = js_umat_or_mat(ctx, argv[2]);
+      if(argc >= 4)
+        dst = js_umat_or_mat(ctx, argv[3]);
+      cv::inRange(src, lowerb, upperb, dst);
+      break;
+    }
+    case OTHER_INSERT_CHANNEL: {
+      JSInputOutputArray dst = cv::noArray();
+      int32_t coi;
+      if(argc >= 2)
+        dst = js_umat_or_mat(ctx, argv[1]);
+      if(argc >= 3)
+        JS_ToInt32(ctx, &coi, argv[2]);
+      cv::insertChannel(src, dst, coi);
+      break;
+    }
+    case OTHER_LUT: {
+      JSInputArray lut = cv::noArray();
+      JSOutputArray dst = cv::noArray();
+      if(argc >= 2)
+        lut = js_umat_or_mat(ctx, argv[1]);
+      if(argc >= 3)
+        dst = js_umat_or_mat(ctx, argv[2]);
+      cv::LUT(src, lut, dst);
+      break;
+    }
+    case OTHER_MAGNITUDE: {
+      JSInputArray y = cv::noArray();
+      JSOutputArray magnitude = cv::noArray();
+      if(argc >= 2)
+        y = js_umat_or_mat(ctx, argv[1]);
+      if(argc >= 3)
+        magnitude = js_umat_or_mat(ctx, argv[2]);
+      cv::magnitude(src, y, magnitude);
+      break;
+    }
+    case OTHER_MAHALANOBIS: {
+      JSInputArray v2 = cv::noArray(), icovar = cv::noArray();
+      if(argc >= 2)
+        v2 = js_umat_or_mat(ctx, argv[1]);
+      if(argc >= 3)
+        icovar = js_umat_or_mat(ctx, argv[2]);
+      ret = JS_NewFloat64(ctx, cv::Mahalanobis(src, v2, icovar));
+      break;
+    }
+    case OTHER_MEAN_STD_DEV: {
+      JSOutputArray mean = cv::noArray(), stdDev = cv::noArray();
+      JSInputArray mask = cv::noArray();
+      if(argc >= 2)
+        mean = js_umat_or_mat(ctx, argv[1]);
+      if(argc >= 3)
+        stdDev = js_umat_or_mat(ctx, argv[2]);
+      if(argc >= 4)
+        mask = js_umat_or_mat(ctx, argv[3]);
+      cv::meanStdDev(src, mean, stdDev, mask);
+
+      break;
+    }
+    case OTHER_MIN_MAX_IDX: {
+      JSInputArray mask = cv::noArray();
+      double minVal, maxVal;
+      int32_t minIdx, maxIdx;
+      std::array<JSValue, 4> results;
+      if(argc >= 6)
+        mask = js_umat_or_mat(ctx, argv[5]);
+      cv::minMaxIdx(src, &minVal, &maxVal, &minIdx, &maxIdx, mask);
+      results[0] = JS_NewFloat64(ctx, minVal);
+      results[1] = JS_NewFloat64(ctx, maxVal);
+      results[2] = JS_NewInt32(ctx, minIdx);
+      results[3] = JS_NewInt32(ctx, maxIdx);
+      for(size_t i = 0; i < 4; i++)
+        if(JS_IsFunction(ctx, argv[i + 1]))
+          JS_Call(ctx, argv[i + 1], JS_NULL, 1, &results[i]);
+      ret = js_array<JSValue>::from_sequence(ctx, results.begin(), results.end());
+      break;
+    }
+    case OTHER_MIN_MAX_LOC: {
+      JSInputArray mask = cv::noArray();
+      double minVal, maxVal;
+      JSPointData<int> minLoc, maxLoc;
+      std::array<JSValue, 4> results;
+      if(argc >= 6)
+        mask = js_umat_or_mat(ctx, argv[5]);
+      cv::minMaxLoc(src, &minVal, &maxVal, &minLoc, &maxLoc, mask);
+      results[0] = JS_NewFloat64(ctx, minVal);
+      results[1] = JS_NewFloat64(ctx, maxVal);
+      results[2] = js_point_new(ctx, minLoc);
+      results[3] = js_point_new(ctx, maxLoc);
+      for(size_t i = 0; i < 4; i++)
+        if(JS_IsFunction(ctx, argv[i + 1]))
+          JS_Call(ctx, argv[i + 1], JS_NULL, 1, &results[i]);
+      ret = js_array<JSValue>::from_sequence(ctx, results.begin(), results.end());
+      break;
+    }
+    case OTHER_MUL_SPECTRUMS: {
+      JSInputArray b = cv::noArray();
+      JSOutputArray c = cv::noArray();
+      int32_t flags = 0;
+      BOOL conjB = FALSE;
+
+      if(argc >= 2)
+        b = js_umat_or_mat(ctx, argv[1]);
+      if(argc >= 3)
+        c = js_umat_or_mat(ctx, argv[2]);
+      if(argc >= 4)
+        JS_ToInt32(ctx, &flags, argv[3]);
+      if(argc >= 5)
+        conjB = JS_ToBool(ctx, argv[4]);
+      cv::mulSpectrums(src, b, c, flags, conjB);
+      break;
+    }
+    case OTHER_NORM: {
+      int32_t normType = cv::NORM_L2;
+      JSInputArray mask = cv::noArray();
+
+      if(argc >= 2)
+        JS_ToInt32(ctx, &normType, argv[1]);
+      if(argc >= 3)
+        mask = js_umat_or_mat(ctx, argv[2]);
+      ret = JS_NewFloat64(ctx, cv::norm(src, normType, mask));
+      break;
+    }
+    case OTHER_PATCH_NANS: {
+      double val = 0;
+
+      if(argc >= 2)
+        JS_ToFloat64(ctx, &val, argv[1]);
+      cv::patchNaNs(src, val);
+      break;
+    }
+    case OTHER_PHASE: {
+      JSInputArray y = cv::noArray();
+      JSOutputArray angle = cv::noArray();
+      BOOL angleInDegrees = FALSE;
+
+      if(argc >= 2)
+        y = js_umat_or_mat(ctx, argv[1]);
+      if(argc >= 3)
+        angle = js_umat_or_mat(ctx, argv[2]);
+      if(argc >= 4)
+        angleInDegrees = JS_ToBool(ctx, argv[3]);
+      cv::phase(src, y, angle, angleInDegrees);
+      break;
+    }
+    case OTHER_POLAR_TO_CART: {
+      JSInputArray angle = cv::noArray();
+      JSOutputArray x = cv::noArray(), y = cv::noArray();
+      BOOL angleInDegrees = FALSE;
+
+      if(argc >= 2)
+        angle = js_umat_or_mat(ctx, argv[1]);
+      if(argc >= 3)
+        x = js_umat_or_mat(ctx, argv[2]);
+      if(argc >= 4)
+        y = js_umat_or_mat(ctx, argv[3]);
+      if(argc >= 5)
+        angleInDegrees = JS_ToBool(ctx, argv[4]);
+      cv::polarToCart(src, angle, x, y, angleInDegrees);
+      break;
+    }
+    case OTHER_POW: {
+      double power;
+      JSOutputArray dst = cv::noArray();
+
+      if(argc >= 2)
+        JS_ToFloat64(ctx, &power, argv[1]);
+      if(argc >= 3)
+        dst = js_umat_or_mat(ctx, argv[2]);
+      cv::pow(src, power, dst);
+      break;
+    }
+    case OTHER_RANDN: {
+      JSInputArray mean = cv::noArray(), stddev = cv::noArray();
+      if(argc >= 2)
+        mean = js_umat_or_mat(ctx, argv[1]);
+      if(argc >= 3)
+        stddev = js_umat_or_mat(ctx, argv[2]);
+      cv::randn(src, mean, stddev);
+      break;
+    }
+    case OTHER_RAND_SHUFFLE: {
+      double iterFactor = 1;
+      if(argc >= 2)
+        JS_ToFloat64(ctx, &iterFactor, argv[1]);
+
+      cv::randShuffle(src, iterFactor);
+      break;
+    }
+    case OTHER_RANDU: {
+      JSInputArray low = cv::noArray(), high = cv::noArray();
+      if(argc >= 2)
+        low = js_umat_or_mat(ctx, argv[1]);
+      if(argc >= 3)
+        high = js_umat_or_mat(ctx, argv[2]);
+      cv::randu(src, low, high);
+      break;
+    }
+    case OTHER_REPEAT: {
+      int32_t nx, ny;
+      JSOutputArray dst = cv::noArray();
+
+      if(argc >= 2)
+        JS_ToInt32(ctx, &nx, argv[1]);
+      if(argc >= 3)
+        JS_ToInt32(ctx, &ny, argv[2]);
+      if(argc >= 4)
+        dst = js_umat_or_mat(ctx, argv[3]);
+      cv::repeat(src, nx, ny, dst);
+      break;
+    }
+    case OTHER_SCALE_ADD: {
+      double alpha;
+      JSInputArray src2 = cv::noArray();
+      JSOutputArray dst = cv::noArray();
+
+      if(argc >= 2)
+        JS_ToFloat64(ctx, &alpha, argv[1]);
+      if(argc >= 3)
+        src2 = js_umat_or_mat(ctx, argv[2]);
+
+      if(argc >= 4)
+        dst = js_umat_or_mat(ctx, argv[3]);
+
+      cv::scaleAdd(src, alpha, src2, dst);
+      break;
+    }
+    case OTHER_SET_IDENTITY: {
+      cv::Scalar s = cv::Scalar(1);
+
+      if(argc >= 2)
+        js_color_read(ctx, argv[1], &s);
+
+      cv::setIdentity(src, s);
+      break;
+    }
+    case OTHER_SOLVE_CUBIC: {
+      JSOutputArray dst = cv::noArray();
+      if(argc >= 2)
+        dst = js_umat_or_mat(ctx, argv[1]);
+      ret = JS_NewInt32(ctx, cv::solveCubic(src, dst));
+      break;
+    }
+    case OTHER_SOLVE_POLY: {
+      JSOutputArray dst = cv::noArray();
+      int32_t maxIters = 300;
+
+      if(argc >= 2)
+        dst = js_umat_or_mat(ctx, argv[1]);
+      if(argc >= 3)
+        JS_ToInt32(ctx, &maxIters, argv[2]);
+      ret = JS_NewFloat64(ctx, cv::solvePoly(src, dst, maxIters));
+      break;
+    }
+    case OTHER_SUM: {
+      cv::Scalar r = cv::sum(src);
+      ret = js_color_new(ctx, r);
+      break;
+    }
+    case OTHER_TRACE: {
+      cv::Scalar r = cv::trace(src);
+      ret = js_color_new(ctx, r);
+      break;
+    }
+  }
+  return ret;
+}
 
 void
 js_cv_finalizer(JSRuntime* rt, JSValue val) {
@@ -533,17 +1093,10 @@ js_function_list_t js_cv_static_funcs{
     JS_CFUNC_DEF("split", 2, js_cv_split),
     JS_CFUNC_DEF("normalize", 2, js_cv_normalize),
     JS_CFUNC_DEF("convertScaleAbs", 2, js_cv_convert_scale_abs),
-    JS_CFUNC_MAGIC_DEF("dilate", 3, js_cv_morphology, 0),
-    JS_CFUNC_MAGIC_DEF("erode", 3, js_cv_morphology, 1),
     JS_CFUNC_DEF("merge", 2, js_cv_merge),
     JS_CFUNC_DEF("mixChannels", 3, js_cv_mix_channels),
     JS_CFUNC_DEF("minMaxLoc", 2, js_cv_min_max_loc),
     JS_CFUNC_DEF("addWeighted", 6, js_cv_add_weighted),
-    JS_CFUNC_DEF("skeletonization", 1, js_cv_skeletonization),
-    JS_CFUNC_MAGIC_DEF("pixelNeighborhood", 2, js_cv_pixel_neighborhood, 0),
-    JS_CFUNC_MAGIC_DEF("pixelNeighborhoodCross", 2, js_cv_pixel_neighborhood, 1),
-    JS_CFUNC_DEF("pixelFindValue", 2, js_cv_pixel_find_value),
-    JS_CFUNC_DEF("paletteApply", 2, js_cv_palette_apply),
     JS_CFUNC_MAGIC_DEF("getTickCount", 0, js_cv_getticks, 0),
     JS_CFUNC_MAGIC_DEF("getTickFrequency", 0, js_cv_getticks, 1),
     JS_CFUNC_MAGIC_DEF("getCPUTickCount", 0, js_cv_getticks, 2),
@@ -562,13 +1115,70 @@ js_function_list_t js_cv_static_funcs{
     JS_PROP_DOUBLE_DEF("CV_2PI", CV_2PI, 0),
     JS_PROP_DOUBLE_DEF("CV_LOG2", CV_LOG2, 0),
 
-    /*};
-    const js_function_list_t js_cv_videocapture_flags{*/
-    // JS_PROP_INT32_DEF("CAP_REALSENSE", cv::CAP_REALSENSE, 0),
-    /*};
-    const js_function_list_t js_cv_highgui_flags{*/
+    JS_CFUNC_MAGIC_DEF("absdiff", 3, js_cv_math, MATH_ABSDIFF),
+    JS_CFUNC_MAGIC_DEF("add", 3, js_cv_math, MATH_ADD),
+    JS_CFUNC_MAGIC_DEF("compare", 3, js_cv_math, MATH_COMPARE),
+    JS_CFUNC_MAGIC_DEF("divide", 3, js_cv_math, MATH_DIVIDE),
+    JS_CFUNC_MAGIC_DEF("max", 3, js_cv_math, MATH_MAX),
+    JS_CFUNC_MAGIC_DEF("min", 3, js_cv_math, MATH_MIN),
+    JS_CFUNC_MAGIC_DEF("multiply", 3, js_cv_math, MATH_MULTIPLY),
+    JS_CFUNC_MAGIC_DEF("solve", 3, js_cv_math, MATH_SOLVE),
+    JS_CFUNC_MAGIC_DEF("subtract", 3, js_cv_math, MATH_SUBTRACT),
 
-    // JS_PROP_INT32_DEF("HOUGH_GRADIENT_ALT", cv::HOUGH_GRADIENT_ALT, 0),
+    JS_CFUNC_MAGIC_DEF("convertFp16", 2, js_cv_core, CORE_CONVERTFP16),
+    JS_CFUNC_MAGIC_DEF("convertScaleAbs", 2, js_cv_core, CORE_CONVERTSCALEABS),
+    JS_CFUNC_MAGIC_DEF("copyMakeBorder", 7, js_cv_core, CORE_COPYMAKEBORDER),
+    JS_CFUNC_MAGIC_DEF("copyTo", 2, js_cv_core, CORE_COPYTO),
+    JS_CFUNC_MAGIC_DEF("dct", 2, js_cv_core, CORE_DCT),
+    JS_CFUNC_MAGIC_DEF("dft", 2, js_cv_core, CORE_DFT),
+    JS_CFUNC_MAGIC_DEF("exp", 2, js_cv_core, CORE_EXP),
+    JS_CFUNC_MAGIC_DEF("extractChannel", 3, js_cv_core, CORE_EXTRACTCHANNEL),
+    JS_CFUNC_MAGIC_DEF("flip", 3, js_cv_core, CORE_FLIP),
+    JS_CFUNC_MAGIC_DEF("idct", 2, js_cv_core, CORE_IDCT),
+    JS_CFUNC_MAGIC_DEF("idft", 2, js_cv_core, CORE_IDFT),
+    JS_CFUNC_MAGIC_DEF("invert", 2, js_cv_core, CORE_INVERT),
+    JS_CFUNC_MAGIC_DEF("log", 2, js_cv_core, CORE_LOG),
+    JS_CFUNC_MAGIC_DEF("mulTransposed", 3, js_cv_core, CORE_MULTRANSPOSED),
+    JS_CFUNC_MAGIC_DEF("perspectiveTransform", 2, js_cv_core, CORE_PERSPECTIVETRANSFORM),
+    JS_CFUNC_MAGIC_DEF("reduce", 4, js_cv_core, CORE_REDUCE),
+    JS_CFUNC_MAGIC_DEF("rotate", 3, js_cv_core, CORE_ROTATE),
+    JS_CFUNC_MAGIC_DEF("sort", 3, js_cv_core, CORE_SORT),
+    JS_CFUNC_MAGIC_DEF("sortIdx", 3, js_cv_core, CORE_SORTIDX),
+    JS_CFUNC_MAGIC_DEF("sqrt", 2, js_cv_core, CORE_SQRT),
+    JS_CFUNC_MAGIC_DEF("transform", 3, js_cv_core, CORE_TRANSFORM),
+    JS_CFUNC_MAGIC_DEF("transpose", 2, js_cv_core, CORE_TRANSPOSE),
+
+    JS_CFUNC_MAGIC_DEF("calcCovarMatrix", 4, js_cv_other, OTHER_CALC_COVAR_MATRIX),
+    JS_CFUNC_MAGIC_DEF("cartToPolar", 4, js_cv_other, OTHER_CART_TO_POLAR),
+    JS_CFUNC_MAGIC_DEF("checkRange", 1, js_cv_other, OTHER_CHECK_RANGE),
+    JS_CFUNC_MAGIC_DEF("determinant", 1, js_cv_other, OTHER_DETERMINANT),
+    JS_CFUNC_MAGIC_DEF("eigen", 2, js_cv_other, OTHER_EIGEN),
+    JS_CFUNC_MAGIC_DEF("eigenNonSymmetric", 3, js_cv_other, OTHER_EIGEN_NON_SYMMETRIC),
+    JS_CFUNC_MAGIC_DEF("inRange", 4, js_cv_other, OTHER_IN_RANGE),
+    JS_CFUNC_MAGIC_DEF("insertChannel", 3, js_cv_other, OTHER_INSERT_CHANNEL),
+    JS_CFUNC_MAGIC_DEF("LUT", 3, js_cv_other, OTHER_LUT),
+    JS_CFUNC_MAGIC_DEF("magnitude", 3, js_cv_other, OTHER_MAGNITUDE),
+    JS_CFUNC_MAGIC_DEF("Mahalanobis", 3, js_cv_other, OTHER_MAHALANOBIS),
+    JS_CFUNC_MAGIC_DEF("mean", 1, js_cv_other, OTHER_MEAN),
+    JS_CFUNC_MAGIC_DEF("meanStdDev", 3, js_cv_other, OTHER_MEAN_STD_DEV),
+    JS_CFUNC_MAGIC_DEF("minMaxIdx", 2, js_cv_other, OTHER_MIN_MAX_IDX),
+    JS_CFUNC_MAGIC_DEF("minMaxLoc", 2, js_cv_other, OTHER_MIN_MAX_LOC),
+    JS_CFUNC_MAGIC_DEF("mulSpectrums", 4, js_cv_other, OTHER_MUL_SPECTRUMS),
+    JS_CFUNC_MAGIC_DEF("norm", 2, js_cv_other, OTHER_NORM),
+    JS_CFUNC_MAGIC_DEF("patchNaNs", 1, js_cv_other, OTHER_PATCH_NANS),
+    JS_CFUNC_MAGIC_DEF("phase", 3, js_cv_other, OTHER_PHASE),
+    JS_CFUNC_MAGIC_DEF("polarToCart", 4, js_cv_other, OTHER_POLAR_TO_CART),
+    JS_CFUNC_MAGIC_DEF("pow", 3, js_cv_other, OTHER_POW),
+    JS_CFUNC_MAGIC_DEF("randn", 3, js_cv_other, OTHER_RANDN),
+    JS_CFUNC_MAGIC_DEF("randShuffle", 1, js_cv_other, OTHER_RAND_SHUFFLE),
+    JS_CFUNC_MAGIC_DEF("randu", 3, js_cv_other, OTHER_RANDU),
+    JS_CFUNC_MAGIC_DEF("repeat", 4, js_cv_other, OTHER_REPEAT),
+    JS_CFUNC_MAGIC_DEF("scaleAdd", 4, js_cv_other, OTHER_SCALE_ADD),
+    JS_CFUNC_MAGIC_DEF("setIdentity", 1, js_cv_other, OTHER_SET_IDENTITY),
+    JS_CFUNC_MAGIC_DEF("solveCubic", 2, js_cv_other, OTHER_SOLVE_CUBIC),
+    JS_CFUNC_MAGIC_DEF("solvePoly", 2, js_cv_other, OTHER_SOLVE_POLY),
+    JS_CFUNC_MAGIC_DEF("sum", 1, js_cv_other, OTHER_SUM),
+    JS_CFUNC_MAGIC_DEF("trace", 1, js_cv_other, OTHER_TRACE),
 
 };
 js_function_list_t js_cv_constants{
@@ -1010,6 +1620,30 @@ js_function_list_t js_cv_constants{
     JS_CV_CONSTANT(LSD_REFINE_NONE),
     JS_CV_CONSTANT(LSD_REFINE_STD),
     JS_CV_CONSTANT(LSD_REFINE_ADV),
+
+    JS_CV_CONSTANT(COLORMAP_AUTUMN),
+    JS_CV_CONSTANT(COLORMAP_BONE),
+    JS_CV_CONSTANT(COLORMAP_JET),
+    JS_CV_CONSTANT(COLORMAP_WINTER),
+    JS_CV_CONSTANT(COLORMAP_RAINBOW),
+    JS_CV_CONSTANT(COLORMAP_OCEAN),
+    JS_CV_CONSTANT(COLORMAP_SUMMER),
+    JS_CV_CONSTANT(COLORMAP_SPRING),
+    JS_CV_CONSTANT(COLORMAP_COOL),
+    JS_CV_CONSTANT(COLORMAP_HSV),
+    JS_CV_CONSTANT(COLORMAP_PINK),
+    JS_CV_CONSTANT(COLORMAP_HOT),
+    JS_CV_CONSTANT(COLORMAP_PARULA),
+    JS_CV_CONSTANT(COLORMAP_MAGMA),
+    JS_CV_CONSTANT(COLORMAP_INFERNO),
+    JS_CV_CONSTANT(COLORMAP_PLASMA),
+    JS_CV_CONSTANT(COLORMAP_VIRIDIS),
+    JS_CV_CONSTANT(COLORMAP_CIVIDIS),
+    JS_CV_CONSTANT(COLORMAP_TWILIGHT),
+    JS_CV_CONSTANT(COLORMAP_TWILIGHT_SHIFTED),
+    JS_CV_CONSTANT(COLORMAP_TURBO),
+    JS_CV_CONSTANT(COLORMAP_DEEPGREEN),
+
 };
 std::string
 js_prop_flags(int flags) {

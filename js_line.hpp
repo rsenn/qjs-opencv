@@ -63,6 +63,24 @@ js_line_read(JSContext* ctx, JSValueConst line, JSLineData<T>* out) {
 }
 
 template<class T>
+static inline int
+js_line_read(JSContext* ctx, JSValueConst value, JSPointData<T>* a, JSPointData<T>* b) {
+  JSLineData<T> line;
+  if(js_line_read(ctx, value, &line)) {
+    if(a) {
+      a->x = line.a.x;
+      a->y = line.a.y;
+    }
+    if(b) {
+      b->x = line.b.x;
+      b->y = line.b.y;
+    }
+    return 1;
+  }
+  return 0;
+}
+
+template<class T>
 static std::array<T, 4>
 js_line_get(JSContext* ctx, JSValueConst line) {
   std::array<T, 4> r{0, 0, 0, 0};

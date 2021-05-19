@@ -24,6 +24,12 @@ JSModuleDef* js_init_point_module(JSContext*, const char* module_name);
 VISIBLE JSValue js_point_new(JSContext*, JSValueConst, double x, double y);
 
 template<class T>
+static inline JSValue
+js_point_new(JSContext* ctx, const JSPointData<T>& point) {
+  return js_point_new(ctx, point.x, point.y);
+}
+
+template<class T>
 static inline int
 js_point_read(JSContext* ctx, JSValueConst point, JSPointData<T>* out) {
   int ret = 1;

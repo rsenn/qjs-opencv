@@ -445,7 +445,7 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv,
           }
         }
       } else {
-        cv::Scalar& scalar = *reinterpret_cast<cv::Scalar*>(&color);
+        cv::Scalar& scalar = js_to_scalar(color);
 
         // std::cerr << "js_mat_expr input=" << (void*)input << " output=" << (void*)output << " scalar=" <<
         // scalar << std::endl;

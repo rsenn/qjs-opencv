@@ -257,6 +257,27 @@ js_color_new(JSContext* ctx, const JSColorData<T>& color) {
   return ret;
 }
 
+static inline JSValue
+js_color_new(JSContext* ctx, const cv::Scalar& scalar) {
+  JSColorData<double> color;
+
+  color.arr[0] = scalar[0];
+  color.arr[1] = scalar[1];
+  color.arr[2] = scalar[2];
+  color.arr[3] = scalar[3];
+  return js_color_new(ctx, color);
+}
+
+static inline const cv::Scalar&
+js_to_scalar(const JSColorData<double>& color) {
+  return *reinterpret_cast<const cv::Scalar*>(&color);
+}
+
+static inline cv::Scalar&
+js_to_scalar(JSColorData<double>& color) {
+  return *reinterpret_cast<cv::Scalar*>(&color);
+}
+
 template<class T>
 std::ostream&
 operator<<(std::ostream& stream, const JSColorData<T>& color) {

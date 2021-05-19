@@ -11,7 +11,7 @@ enum { DISPLAY_OVERLAY };
 static std::vector<cv::String> window_list;
 
 static JSValue
-js_highgui_gui_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_cv_gui_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
   JSValue ret = JS_UNDEFINED;
   switch(magic) {
     case DISPLAY_OVERLAY: {
@@ -30,7 +30,7 @@ js_highgui_gui_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
 }
 
 static JSValue
-js_highgui_named_window(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_named_window(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   const char* name;
   int32_t flags = cv::WINDOW_NORMAL;
   name = JS_ToCString(ctx, argv[0]);
@@ -47,7 +47,7 @@ js_highgui_named_window(JSContext* ctx, JSValueConst this_val, int argc, JSValue
 }
 
 static JSValue
-js_highgui_move_window(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_move_window(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   const char* name;
   int32_t x, y;
   JSPointData<double> point;
@@ -65,7 +65,7 @@ js_highgui_move_window(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
 }
 
 static JSValue
-js_highgui_resize_window(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_resize_window(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   const char* name;
   uint32_t w, h;
   JSSizeData<int> size;
@@ -84,7 +84,7 @@ js_highgui_resize_window(JSContext* ctx, JSValueConst this_val, int argc, JSValu
 }
 
 static JSValue
-js_highgui_get_window_image_rect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_get_window_image_rect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   const char* name;
   JSRectData<int> rect;
   name = JS_ToCString(ctx, argv[0]);
@@ -94,7 +94,7 @@ js_highgui_get_window_image_rect(JSContext* ctx, JSValueConst this_val, int argc
 }
 
 static JSValue
-js_highgui_get_window_property(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_get_window_property(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   const char* name;
   int32_t propId;
   name = JS_ToCString(ctx, argv[0]);
@@ -104,7 +104,7 @@ js_highgui_get_window_property(JSContext* ctx, JSValueConst this_val, int argc, 
 }
 
 static JSValue
-js_highgui_set_window_property(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_set_window_property(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   const char* name;
   int32_t propId;
   double value;
@@ -116,7 +116,7 @@ js_highgui_set_window_property(JSContext* ctx, JSValueConst this_val, int argc, 
 }
 
 static JSValue
-js_highgui_set_window_title(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_set_window_title(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   const char *name, *title;
   name = JS_ToCString(ctx, argv[0]);
   title = JS_ToCString(ctx, argv[1]);
@@ -126,7 +126,7 @@ js_highgui_set_window_title(JSContext* ctx, JSValueConst this_val, int argc, JSV
 }
 
 static JSValue
-js_highgui_destroy_window(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_destroy_window(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   const char* name;
   int32_t propId;
   name = JS_ToCString(ctx, argv[0]);
@@ -141,7 +141,7 @@ js_highgui_destroy_window(JSContext* ctx, JSValueConst this_val, int argc, JSVal
 }
 
 static JSValue
-js_highgui_create_trackbar(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_create_trackbar(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   const char *name, *window;
   int32_t ret, count;
   struct Trackbar {
@@ -192,7 +192,7 @@ js_highgui_create_trackbar(JSContext* ctx, JSValueConst this_val, int argc, JSVa
 }
 
 static JSValue
-js_highgui_create_button(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_create_button(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   const char* bar_name;
   int32_t ret, type;
   bool initial_button_state = false;
@@ -243,7 +243,7 @@ js_highgui_create_button(JSContext* ctx, JSValueConst this_val, int argc, JSValu
 }
 
 static JSValue
-js_highgui_get_trackbar_pos(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_get_trackbar_pos(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   const char *name, *window;
 
   name = JS_ToCString(ctx, argv[0]);
@@ -256,7 +256,7 @@ js_highgui_get_trackbar_pos(JSContext* ctx, JSValueConst this_val, int argc, JSV
 }
 
 static JSValue
-js_highgui_set_trackbar(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_cv_set_trackbar(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
   const char *name, *window;
   int32_t val;
 
@@ -278,7 +278,7 @@ js_highgui_set_trackbar(JSContext* ctx, JSValueConst this_val, int argc, JSValue
 }
 
 static JSValue
-js_highgui_get_mouse_wheel_delta(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_get_mouse_wheel_delta(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   int32_t flags;
 
   JS_ToInt32(ctx, &flags, argv[0]);
@@ -287,7 +287,7 @@ js_highgui_get_mouse_wheel_delta(JSContext* ctx, JSValueConst this_val, int argc
 }
 
 static JSValue
-js_highgui_set_mouse_callback(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_set_mouse_callback(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   const char* name;
   struct MouseHandler {
     JSValue window;
@@ -324,7 +324,7 @@ js_highgui_set_mouse_callback(JSContext* ctx, JSValueConst this_val, int argc, J
 }
 
 static JSValue
-js_highgui_wait_key(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_wait_key(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   int32_t delay = 0;
   union {
     int32_t i;
@@ -348,7 +348,7 @@ js_highgui_wait_key(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 }
 
 static JSValue
-js_highgui_wait_key_ex(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_wait_key_ex(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   int32_t delay = 0;
   int keyCode;
   JSValue ret;
@@ -362,7 +362,7 @@ js_highgui_wait_key_ex(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
 }
 
 static JSValue
-js_highgui_imshow(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_imshow(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   const char* winname = JS_ToCString(ctx, argv[0]);
   JSInputOutputArray image = js_umat_or_mat(ctx, argv[1]);
 
@@ -381,7 +381,7 @@ js_highgui_imshow(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
 }
 
 void
-js_highgui_finalizer(JSRuntime* rt, JSValue val) {
+js_cv_finalizer(JSRuntime* rt, JSValue val) {
 
   for(const auto& name : window_list) {
     std::cerr << "Destroy window '" << name << "'" << std::endl;
@@ -392,34 +392,34 @@ js_highgui_finalizer(JSRuntime* rt, JSValue val) {
   // JS_FreeValueRT(rt, cv_class);
 }
 
-JSClassDef js_highgui_class = {.class_name = "cv", .finalizer = js_highgui_finalizer};
+JSClassDef js_cv_class = {.class_name = "cv", .finalizer = js_cv_finalizer};
 
 typedef std::vector<JSCFunctionListEntry> js_function_list_t;
 
-js_function_list_t js_highgui_static_funcs{
-    JS_CFUNC_DEF("imshow", 2, js_highgui_imshow),
-    JS_CFUNC_DEF("namedWindow", 1, js_highgui_named_window),
-    JS_CFUNC_DEF("moveWindow", 2, js_highgui_move_window),
-    JS_CFUNC_DEF("resizeWindow", 2, js_highgui_resize_window),
-    JS_CFUNC_DEF("destroyWindow", 1, js_highgui_destroy_window),
-    JS_CFUNC_DEF("getWindowImageRect", 1, js_highgui_get_window_image_rect),
-    JS_CFUNC_DEF("getWindowProperty", 2, js_highgui_get_window_property),
-    JS_CFUNC_DEF("setWindowProperty", 3, js_highgui_set_window_property),
-    JS_CFUNC_DEF("setWindowTitle", 2, js_highgui_set_window_title),
-    JS_CFUNC_DEF("createTrackbar", 5, js_highgui_create_trackbar),
-    JS_CFUNC_DEF("createButton", 2, js_highgui_create_button),
-    JS_CFUNC_DEF("getTrackbarPos", 2, js_highgui_get_trackbar_pos),
-    JS_CFUNC_MAGIC_DEF("setTrackbarPos", 3, js_highgui_set_trackbar, 0),
-    JS_CFUNC_MAGIC_DEF("setTrackbarMin", 3, js_highgui_set_trackbar, 1),
-    JS_CFUNC_MAGIC_DEF("setTrackbarMax", 3, js_highgui_set_trackbar, 2),
-    JS_CFUNC_DEF("getMouseWheelDelta", 1, js_highgui_get_mouse_wheel_delta),
-    JS_CFUNC_DEF("setMouseCallback", 2, js_highgui_set_mouse_callback),
-    JS_CFUNC_DEF("waitKey", 0, js_highgui_wait_key),
-    JS_CFUNC_DEF("waitKeyEx", 0, js_highgui_wait_key_ex),
-    JS_CFUNC_MAGIC_DEF("displayOverlay", 2, js_highgui_gui_methods, DISPLAY_OVERLAY),
+js_function_list_t js_cv_static_funcs{
+    JS_CFUNC_DEF("imshow", 2, js_cv_imshow),
+    JS_CFUNC_DEF("namedWindow", 1, js_cv_named_window),
+    JS_CFUNC_DEF("moveWindow", 2, js_cv_move_window),
+    JS_CFUNC_DEF("resizeWindow", 2, js_cv_resize_window),
+    JS_CFUNC_DEF("destroyWindow", 1, js_cv_destroy_window),
+    JS_CFUNC_DEF("getWindowImageRect", 1, js_cv_get_window_image_rect),
+    JS_CFUNC_DEF("getWindowProperty", 2, js_cv_get_window_property),
+    JS_CFUNC_DEF("setWindowProperty", 3, js_cv_set_window_property),
+    JS_CFUNC_DEF("setWindowTitle", 2, js_cv_set_window_title),
+    JS_CFUNC_DEF("createTrackbar", 5, js_cv_create_trackbar),
+    JS_CFUNC_DEF("createButton", 2, js_cv_create_button),
+    JS_CFUNC_DEF("getTrackbarPos", 2, js_cv_get_trackbar_pos),
+    JS_CFUNC_MAGIC_DEF("setTrackbarPos", 3, js_cv_set_trackbar, 0),
+    JS_CFUNC_MAGIC_DEF("setTrackbarMin", 3, js_cv_set_trackbar, 1),
+    JS_CFUNC_MAGIC_DEF("setTrackbarMax", 3, js_cv_set_trackbar, 2),
+    JS_CFUNC_DEF("getMouseWheelDelta", 1, js_cv_get_mouse_wheel_delta),
+    JS_CFUNC_DEF("setMouseCallback", 2, js_cv_set_mouse_callback),
+    JS_CFUNC_DEF("waitKey", 0, js_cv_wait_key),
+    JS_CFUNC_DEF("waitKeyEx", 0, js_cv_wait_key_ex),
+    JS_CFUNC_MAGIC_DEF("displayOverlay", 2, js_cv_gui_methods, DISPLAY_OVERLAY),
 
 };
-js_function_list_t js_highgui_constants{
+js_function_list_t js_cv_constants{
 
     JS_CV_CONSTANT(WINDOW_NORMAL),       JS_CV_CONSTANT(WINDOW_AUTOSIZE),       JS_CV_CONSTANT(WINDOW_OPENGL),
     JS_CV_CONSTANT(WINDOW_FULLSCREEN),   JS_CV_CONSTANT(WINDOW_FREERATIO),      JS_CV_CONSTANT(WINDOW_KEEPRATIO),
@@ -436,12 +436,12 @@ js_function_list_t js_highgui_constants{
 };
 
 extern "C" int
-js_highgui_init(JSContext* ctx, JSModuleDef* m) {
+js_cv_init(JSContext* ctx, JSModuleDef* m) {
   JSAtom atom;
   JSValue cv_class, g = JS_GetGlobalObject(ctx);
   if(m) {
-    JS_SetModuleExportList(ctx, m, js_highgui_static_funcs.data(), js_highgui_static_funcs.size());
-    JS_SetModuleExportList(ctx, m, js_highgui_constants.data(), js_highgui_constants.size());
+    JS_SetModuleExportList(ctx, m, js_cv_static_funcs.data(), js_cv_static_funcs.size());
+    JS_SetModuleExportList(ctx, m, js_cv_constants.data(), js_cv_constants.size());
   }
   atom = JS_NewAtom(ctx, "cv");
 
@@ -450,8 +450,8 @@ js_highgui_init(JSContext* ctx, JSModuleDef* m) {
   } else {
     cv_class = JS_NewObject(ctx);
   }
-  JS_SetPropertyFunctionList(ctx, cv_class, js_highgui_static_funcs.data(), js_highgui_static_funcs.size());
-  JS_SetPropertyFunctionList(ctx, cv_class, js_highgui_constants.data(), js_highgui_constants.size());
+  JS_SetPropertyFunctionList(ctx, cv_class, js_cv_static_funcs.data(), js_cv_static_funcs.size());
+  JS_SetPropertyFunctionList(ctx, cv_class, js_cv_constants.data(), js_cv_constants.size());
 
   if(!JS_HasProperty(ctx, g, atom)) {
     JS_SetPropertyInternal(ctx, g, atom, cv_class, 0);
@@ -465,9 +465,9 @@ js_highgui_init(JSContext* ctx, JSModuleDef* m) {
 }
 
 extern "C" VISIBLE void
-js_highgui_export(JSContext* ctx, JSModuleDef* m) {
-  JS_AddModuleExportList(ctx, m, js_highgui_static_funcs.data(), js_highgui_static_funcs.size());
-  JS_AddModuleExportList(ctx, m, js_highgui_constants.data(), js_highgui_constants.size());
+js_cv_export(JSContext* ctx, JSModuleDef* m) {
+  JS_AddModuleExportList(ctx, m, js_cv_static_funcs.data(), js_cv_static_funcs.size());
+  JS_AddModuleExportList(ctx, m, js_cv_constants.data(), js_cv_constants.size());
   JS_AddModuleExport(ctx, m, "default");
 }
 
@@ -480,9 +480,9 @@ js_highgui_export(JSContext* ctx, JSModuleDef* m) {
 extern "C" JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   JSModuleDef* m;
-  m = JS_NewCModule(ctx, module_name, &js_highgui_init);
+  m = JS_NewCModule(ctx, module_name, &js_cv_init);
   if(!m)
     return NULL;
-  js_highgui_export(ctx, m);
+  js_cv_export(ctx, m);
   return m;
 }

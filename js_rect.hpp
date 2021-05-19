@@ -53,6 +53,26 @@ js_rect_read(JSContext* ctx, JSValueConst rect, JSRectData<T>* out) {
   return ret;
 }
 
+template<class T>
+static inline int
+js_rect_read(JSContext* ctx, JSValueConst value, JSPointData<T>* pos, JSSizeData<T>* dim) {
+
+  JSRectData<T> rect;
+
+  if(js_rect_read(ctx, value, &rect)) {
+    if(pos) {
+      pos->x = rect.x;
+      pos->y = rect.y;
+    }
+    if(dim) {
+      dim->width = rect.width;
+      dim->height = rect.height;
+    }
+    return 1;
+  }
+  return 0;
+}
+
 static JSRectData<double>
 js_rect_get(JSContext* ctx, JSValueConst rect) {
   JSRectData<double> r = {0, 0, 0, 0};
