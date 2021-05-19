@@ -6,13 +6,20 @@ function repeat(n, fn, ...args) {
 }
 
 function main() {
-  const frameSize = new Size(1024,768);
+  const frameSize = new Size(1024, 768);
   const mat = new Mat(frameSize, cv.CV_8UC3);
-  const fourcc = VideoWriter.fourcc("M", "P", "4", "2");
+  const fourcc = //VideoWriter.fourcc("M", "P", "4", "2");
+VideoWriter.fourcc("avc1");
 
-  const vw = new VideoWriter("test.avi",/* cv.CAP_GSTREAMER,*/ fourcc, 29.7, frameSize);
+  const vw = new VideoWriter("test.mp4", /* cv.CAP_GSTREAMER,*/ fourcc, 29.7, frameSize);
 
-  cv.line(mat, new cv.Point(0, frameSize.height), new cv.Point(frameSize.width, 0), [0xdd, 0xdd, 0xdd], 2, cv.LINE_AA);
+  cv.line(mat,
+    new cv.Point(0, frameSize.height),
+    new cv.Point(frameSize.width, 0),
+    [0xdd, 0xdd, 0xdd],
+    2,
+    cv.LINE_AA
+  );
 
   repeat(30, () => vw.write(mat));
 
@@ -26,10 +33,10 @@ function main() {
     cv.line(mat, new cv.Point(0, 0), new cv.Point(640, 480), [0xdd, 0xdd, 0xdd], 2, cv.LINE_AA);
     repeat(30, () => vw.write(mat));
 
-    console.log(vw.get(  cv.VIDEOWRITER_PROP_FRAMEBYTES ));
+    console.log(vw.get(cv.VIDEOWRITER_PROP_FRAMEBYTES));
   }
-    console.log( cv.VIDEOWRITER_PROP_FRAMEBYTES ) ;
-    console.log( vw.getBackendName() ) ;
+  console.log(cv.VIDEOWRITER_PROP_FRAMEBYTES);
+  console.log(vw.getBackendName());
   return {};
 }
 
