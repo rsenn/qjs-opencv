@@ -41,6 +41,7 @@ typedef JSPointData<float> JSPointDataF;
 typedef JSPointData<double> JSPointDataD;*/
 
 typedef cv::VideoCapture JSVideoCaptureData;
+typedef cv::VideoWriter JSVideoWriterData;
 typedef cv::TickMeter JSTickMeterData;
 typedef cv::Ptr<cv::CLAHE> JSCLAHEData;
 

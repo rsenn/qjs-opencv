@@ -85,6 +85,16 @@ js_video_capture_finalizer(JSRuntime* rt, JSValue val) {
 
   JS_FreeValueRT(rt, val);
 }
+enum {
+  VIDEO_CAPTURE_METHOD_GET = 0,
+  VIDEO_CAPTURE_METHOD_SET,
+  VIDEO_CAPTURE_METHOD_GET_BACKEND_NAME,
+  VIDEO_CAPTURE_METHOD_GRAB,
+  VIDEO_CAPTURE_METHOD_IS_OPENED,
+  VIDEO_CAPTURE_METHOD_OPEN,
+  VIDEO_CAPTURE_METHOD_READ,
+  VIDEO_CAPTURE_METHOD_RETRIEVE
+};
 
 static JSValue
 js_video_capture_method(JSContext* ctx, JSValueConst video_capture, int argc, JSValueConst* argv, int magic) {
@@ -92,42 +102,63 @@ js_video_capture_method(JSContext* ctx, JSValueConst video_capture, int argc, JS
   JSValue ret = JS_UNDEFINED;
   int32_t propID;
   double value = 0;
-
-  if(magic == 0) {
-    if(!JS_ToInt32(ctx, &propID, argv[0])) {
-      value = s->get(propID);
-      ret = JS_NewFloat64(ctx, value);
-    } else {
-      ret = JS_EXCEPTION;
+  switch(magic) {
+    case VIDEO_CAPTURE_METHOD_GET: {
+      if(!JS_ToInt32(ctx, &propID, argv[0])) {
+        value = s->get(propID);
+        ret = JS_NewFloat64(ctx, value);
+      } else {
+        ret = JS_EXCEPTION;
+      }
+      break;
     }
-  } else if(magic == 1) {
-    if(!JS_ToInt32(ctx, &propID, argv[0])) {
-      JS_ToFloat64(ctx, &value, argv[1]);
+    case VIDEO_CAPTURE_METHOD_SET: {
+      if(!JS_ToInt32(ctx, &propID, argv[0])) {
+        JS_ToFloat64(ctx, &value, argv[1]);
 
-      s->set(propID, value);
-    } else
-      ret = JS_EXCEPTION;
-  } else if(magic == 2) {
-    std::string backend;
-    try {
-      backend = s->getBackendName();
-    } catch(const cv::Exception& e) { backend = e.msg; }
-    ret = JS_NewString(ctx, backend.c_str());
-  } else if(magic == 3) {
-    ret = JS_NewBool(ctx, s->grab());
-  } else if(magic == 4) {
-    ret = JS_NewBool(ctx, s->isOpened());
-  } else if(magic == 5) {
-    ret = JS_NewBool(ctx, js_video_capture_open(ctx, s, argc, argv));
-  }
+        s->set(propID, value);
+      } else
+        ret = JS_EXCEPTION;
+      break;
+    }
+    case VIDEO_CAPTURE_METHOD_GET_BACKEND_NAME: {
+      std::string backend;
+      try {
+        backend = s->getBackendName();
+      } catch(const cv::Exception& e) { backend = e.msg; }
+      ret = JS_NewString(ctx, backend.c_str());
+      break;
+    }
+    case VIDEO_CAPTURE_METHOD_GRAB: {
+      ret = JS_NewBool(ctx, s->grab());
+      break;
+    }
+    case VIDEO_CAPTURE_METHOD_IS_OPENED: {
+      ret = JS_NewBool(ctx, s->isOpened());
+      break;
+    }
+    case VIDEO_CAPTURE_METHOD_OPEN: {
+      ret = JS_NewBool(ctx, js_video_capture_open(ctx, s, argc, argv));
+      break;
+    }
+    case VIDEO_CAPTURE_METHOD_READ: {
+      JSMatData* m = js_mat_data(ctx, argv[0]);
 
-  else if(magic == 6 || magic == 7) {
-    JSMatData* m = js_mat_data(ctx, argv[0]);
+      if(m == nullptr)
+        return JS_EXCEPTION;
 
-    if(m == nullptr)
-      return JS_EXCEPTION;
+      ret = JS_NewBool(ctx, s->read(*m));
+      break;
+    }
+    case VIDEO_CAPTURE_METHOD_RETRIEVE: {
+      JSMatData* m = js_mat_data(ctx, argv[0]);
 
-    ret = JS_NewBool(ctx, magic == 6 ? s->read(*m) : s->retrieve(*m));
+      if(m == nullptr)
+        return JS_EXCEPTION;
+
+      ret = JS_NewBool(ctx, s->retrieve(*m));
+      break;
+    }
   }
 
   return ret;
@@ -152,14 +183,14 @@ JSClassDef js_video_capture_class = {
 };
 
 const JSCFunctionListEntry js_video_capture_proto_funcs[] = {
-    JS_CFUNC_MAGIC_DEF("get", 1, js_video_capture_method, 0),
-    JS_CFUNC_MAGIC_DEF("set", 2, js_video_capture_method, 1),
-    JS_CFUNC_MAGIC_DEF("getBackendName", 0, js_video_capture_method, 2),
-    JS_CFUNC_MAGIC_DEF("grab", 0, js_video_capture_method, 3),
-    JS_CFUNC_MAGIC_DEF("isOpened", 0, js_video_capture_method, 4),
-    JS_CFUNC_MAGIC_DEF("open", 1, js_video_capture_method, 5),
-    JS_CFUNC_MAGIC_DEF("read", 1, js_video_capture_method, 6),
-    JS_CFUNC_MAGIC_DEF("retrieve", 1, js_video_capture_method, 7),
+    JS_CFUNC_MAGIC_DEF("get", 1, js_video_capture_method, VIDEO_CAPTURE_METHOD_GET),
+    JS_CFUNC_MAGIC_DEF("set", 2, js_video_capture_method, VIDEO_CAPTURE_METHOD_SET),
+    JS_CFUNC_MAGIC_DEF("getBackendName", 0, js_video_capture_method, VIDEO_CAPTURE_METHOD_GET_BACKEND_NAME),
+    JS_CFUNC_MAGIC_DEF("grab", 0, js_video_capture_method, VIDEO_CAPTURE_METHOD_GRAB),
+    JS_CFUNC_MAGIC_DEF("isOpened", 0, js_video_capture_method, VIDEO_CAPTURE_METHOD_IS_OPENED),
+    JS_CFUNC_MAGIC_DEF("open", 1, js_video_capture_method, VIDEO_CAPTURE_METHOD_OPEN),
+    JS_CFUNC_MAGIC_DEF("read", 1, js_video_capture_method, VIDEO_CAPTURE_METHOD_READ),
+    JS_CFUNC_MAGIC_DEF("retrieve", 1, js_video_capture_method, VIDEO_CAPTURE_METHOD_RETRIEVE),
 
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "VideoCapture", JS_PROP_CONFIGURABLE),
 
