@@ -119,16 +119,22 @@ public:
   }
 
   template<class Iterator>
- static  JSValue
-  from_sequence(JSContext* ctx, const Iterator& start, const Iterator& end /*,
-    typename  std::enable_if<pointer_type<Iterator>::typed_array >::type* dummy = 0*/) {
-    JSValue arr = JS_NewArray(ctx);
+  static size_t
+  copy_sequence(JSContext* ctx, JSValueConst arr, const Iterator& start, const Iterator& end) {
     size_t i = 0;
     for(Iterator it = start; it != end; ++it) {
       JSValue item = js_value_from(ctx, *it);
       JS_SetPropertyUint32(ctx, arr, i, item);
       ++i;
     }
+    return i;
+  }
+
+  template<class Iterator>
+  static JSValue
+  from_sequence(JSContext* ctx, const Iterator& start, const Iterator& end) {
+    JSValue arr = JS_NewArray(ctx);
+    copy_sequence(ctx, arr, start, end);
     return arr;
   }
 
@@ -181,15 +187,22 @@ public:
   }
 
   template<class Iterator>
-  static JSValue
-  from_sequence(JSContext* ctx, const Iterator& start, const Iterator& end) {
-    JSValue arr = JS_NewArray(ctx);
+  static size_t
+  copy_sequence(JSContext* ctx, JSValueConst arr, const Iterator& start, const Iterator& end) {
     size_t i = 0;
     for(Iterator it = start; it != end; ++it) {
       uint32_t u = *it;
       JS_SetPropertyUint32(ctx, arr, i, JS_NewUint32(ctx, u));
       ++i;
     }
+    return i;
+  }
+
+  template<class Iterator>
+  static JSValue
+  from_sequence(JSContext* ctx, const Iterator& start, const Iterator& end) {
+    JSValue arr = JS_NewArray(ctx);
+    copy_sequence(ctx, arr, start, end);
     return arr;
   }
 
@@ -230,14 +243,21 @@ public:
   }
 
   template<class Iterator>
-  static JSValue
-  from_sequence(JSContext* ctx, const Iterator& start, const Iterator& end) {
-    JSValue arr = JS_NewArray(ctx);
+  static size_t
+  copy_sequence(JSContext* ctx, JSValueConst arr, const Iterator& start, const Iterator& end) {
     size_t i = 0;
     for(Iterator it = start; it != end; ++it) {
       JS_SetPropertyUint32(ctx, arr, i, *it);
       ++i;
     }
+    return i;
+  }
+
+  template<class Iterator>
+  static JSValue
+  from_sequence(JSContext* ctx, const Iterator& start, const Iterator& end) {
+    JSValue arr = JS_NewArray(ctx);
+    copy_sequence(ctx, arr, start, end);
     return arr;
   }
 
@@ -283,14 +303,20 @@ public:
   }
 
   template<class Iterator>
-  static JSValue
-  from_sequence(JSContext* ctx, const Iterator& start, const Iterator& end) {
-    JSValue arr = JS_NewArray(ctx);
+  static size_t
+  copy_sequence(JSContext* ctx, JSValueConst arr, const Iterator& start, const Iterator& end) {
     size_t i = 0;
     for(Iterator it = start; it != end; ++it) {
       JS_SetPropertyUint32(ctx, arr, i, js_color_new(ctx, *it));
       ++i;
     }
+    return i;
+  }
+  template<class Iterator>
+  static JSValue
+  from_sequence(JSContext* ctx, const Iterator& start, const Iterator& end) {
+    JSValue arr = JS_NewArray(ctx);
+    copy_sequence(ctx, arr, start, end);
     return arr;
   }
 
@@ -339,14 +365,20 @@ public:
   }
 
   template<class Iterator>
-  static JSValue
-  from_sequence(JSContext* ctx, const Iterator& start, const Iterator& end) {
-    JSValue arr = JS_NewArray(ctx);
+  static size_t
+  copy_sequence(JSContext* ctx, JSValueConst arr, const Iterator& start, const Iterator& end) {
     size_t i = 0;
     for(Iterator it = start; it != end; ++it) {
       JS_SetPropertyUint32(ctx, arr, i, js_point_wrap(ctx, *it));
       ++i;
     }
+    return i;
+  }
+  template<class Iterator>
+  static JSValue
+  from_sequence(JSContext* ctx, const Iterator& start, const Iterator& end) {
+    JSValue arr = JS_NewArray(ctx);
+    copy_sequence(ctx, arr, start, end);
     return arr;
   }
 
@@ -379,14 +411,21 @@ public:
   }
 
   template<class Iterator>
-  static JSValue
-  from_sequence(JSContext* ctx, const Iterator& start, const Iterator& end) {
-    JSValue arr = JS_NewArray(ctx);
+  static size_t
+  copy_sequence(JSContext* ctx, JSValueConst arr, const Iterator& start, const Iterator& end) {
     size_t i = 0;
     for(Iterator it = start; it != end; ++it) {
       JS_SetPropertyUint32(ctx, arr, i, js_rect_wrap(ctx, *it));
       ++i;
     }
+    return i;
+  }
+
+  template<class Iterator>
+  static JSValue
+  from_sequence(JSContext* ctx, const Iterator& start, const Iterator& end) {
+    JSValue arr = JS_NewArray(ctx);
+    copy_sequence(ctx, arr, start, end);
     return arr;
   }
 
@@ -419,15 +458,22 @@ public:
   }
 
   template<class Iterator>
-  static JSValue
-  from_sequence(JSContext* ctx, const Iterator& start, const Iterator& end) {
-    JSValue arr = JS_NewArray(ctx);
+  static size_t
+  copy_sequence(JSContext* ctx, JSValueConst arr, const Iterator& start, const Iterator& end) {
     size_t i = 0;
     for(Iterator it = start; it != end; ++it) {
       JSValue item = JS_NewFloat64(ctx, *it);
       JS_SetPropertyUint32(ctx, arr, i, item);
       ++i;
     }
+    return i;
+  }
+
+  template<class Iterator>
+  static JSValue
+  from_sequence(JSContext* ctx, const Iterator& start, const Iterator& end) {
+    JSValue arr = JS_NewArray(ctx);
+    copy_sequence(ctx, arr, start, end);
     return arr;
   }
 
@@ -512,15 +558,21 @@ public:
   }
 
   template<class Iterator>
-  static JSValue
-  from_sequence(JSContext* ctx, const Iterator& start, const Iterator& end) {
-    JSValue arr = JS_NewArray(ctx);
+  static size_t
+  copy_sequence(JSContext* ctx, JSValueConst arr, const Iterator& start, const Iterator& end) {
     size_t i = 0;
     for(Iterator it = start; it != end; ++it) {
       JSValue item = js_contour_new(ctx, *it);
       JS_SetPropertyUint32(ctx, arr, i, item);
       ++i;
     }
+    return i;
+  }
+  template<class Iterator>
+  static JSValue
+  from_sequence(JSContext* ctx, const Iterator& start, const Iterator& end) {
+    JSValue arr = JS_NewArray(ctx);
+    copy_sequence(ctx, arr, start, end);
     return arr;
   }
 
@@ -557,15 +609,22 @@ public:
   }
 
   template<class Iterator>
-  static JSValue
-  from_sequence(JSContext* ctx, const Iterator& start, const Iterator& end) {
-    JSValue arr = JS_NewArray(ctx);
+  static size_t
+  copy_sequence(JSContext* ctx, JSValueConst arr, const Iterator& start, const Iterator& end) {
     size_t i = 0;
     for(Iterator it = start; it != end; ++it) {
       JSValue item = js_array_from(ctx, *it);
       JS_SetPropertyUint32(ctx, arr, i, item);
       ++i;
     }
+    return i;
+  }
+
+  template<class Iterator>
+  static JSValue
+  from_sequence(JSContext* ctx, const Iterator& start, const Iterator& end) {
+    JSValue arr = JS_NewArray(ctx);
+    copy_sequence(ctx, arr, start, end);
     return arr;
   }
 
@@ -607,6 +666,24 @@ template<class Container>
 static inline JSValue
 js_array_from(JSContext* ctx, const Container& v) {
   return js_array<typename Container::value_type>::from_sequence(ctx, v.begin(), v.end());
+}
+
+template<class Iterator>
+static inline typename std::enable_if<std::is_pointer<Iterator>::value, BOOL>::type
+js_array_copy(JSContext* ctx, JSValueConst array, const Iterator& start, const Iterator& end) {
+  return js_array<typename std::remove_pointer<Iterator>::type>::copy_sequence(ctx, array, start, end);
+}
+
+template<class Iterator>
+static inline typename std::enable_if<Iterator::value_type, BOOL>::type
+js_array_copy(JSContext* ctx, JSValueConst array, const Iterator& start, const Iterator& end) {
+  return js_array<typename Iterator::value_type>::copy_sequence(ctx, array, start, end);
+}
+
+template<class Container>
+static inline JSValue
+js_array_copy(JSContext* ctx, JSValueConst array, const Container& v) {
+  return js_array<typename Container::value_type>::copy_sequence(ctx, array, v.begin(), v.end());
 }
 
 #endif /* defined(JS_ARRAY_HPP) */

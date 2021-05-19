@@ -1561,7 +1561,7 @@ static JSValue
 js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
   JSInputOutputArray src;
   JSValue ret = JS_UNDEFINED;
-  if(magic != SHAPE_BOX_POINTS)
+  if(magic != SHAPE_BOX_POINTS && magic != SHAPE_HU_MOMENTS)
     src = argc >= 1 ? js_umat_or_mat(ctx, argv[0]) : cv::noArray();
 
   switch(magic) {
@@ -1650,24 +1650,70 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* 
       break;
     }
     case SHAPE_FIT_LINE: {
+      JSOutputArray line = js_umat_or_mat(ctx, argv[1]);
+      int32_t dist_type;
+      double param, reps, aeps;
+      JS_ToInt32(ctx, &dist_type, argv[2]);
+      JS_ToFloat64(ctx, &param, argv[3]);
+      JS_ToFloat64(ctx, &reps, argv[4]);
+      JS_ToFloat64(ctx, &aeps, argv[5]);
+      cv::fitLine(src, line, dist_type, param, reps, aeps);
       break;
     }
     case SHAPE_HU_MOMENTS: {
+      std::map<std::string, double> moments_map;
+      std::array<double, 7> hu;
+      js_object::to_map(ctx, argv[0], moments_map);
+
+      cv::Moments moments(moments_map["m00"],
+                          moments_map["m10"],
+                          moments_map["m01"],
+                          moments_map["m20"],
+                          moments_map["m11"],
+                          moments_map["m02"],
+                          moments_map["m30"],
+                          moments_map["m21"],
+                          moments_map["m12"],
+                          moments_map["m03"]);
+
+      cv::HuMoments(moments, &hu[0]);
+
+      if(JS_IsArray(ctx, argv[1])) {
+        js_array_copy(ctx, argv[1], hu.begin(), hu.end());
+      }
+
       break;
     }
     case SHAPE_INTERSECT_CONVEX_CONVEX: {
       break;
     }
     case SHAPE_IS_CONTOUR_CONVEX: {
+      ret = JS_NewBool(ctx, cv::isContourConvex(src));
       break;
     }
     case SHAPE_MATCH_SHAPES: {
       break;
     }
     case SHAPE_MIN_AREA_RECT: {
+      ret = js_rotated_rect_new(ctx, cv::minAreaRect(src));
       break;
     }
     case SHAPE_MIN_ENCLOSING_CIRCLE: {
+      JSPointData<float> center;
+      float radius;
+      cv::minEnclosingCircle(src, center, radius);
+
+      if(JS_IsFunction(ctx, argv[1])) {
+        JSValue point = js_point_new(ctx, center);
+        JS_Call(ctx, argv[1], JS_NULL, 1, &point);
+        JS_FreeValue(ctx, point);
+      }
+      if(JS_IsFunction(ctx, argv[2])) {
+        JSValue r = JS_NewFloat64(ctx, radius);
+        JS_Call(ctx, argv[2], JS_NULL, 1, &r);
+        JS_FreeValue(ctx, r);
+      }
+
       break;
     }
     case SHAPE_MIN_ENCLOSING_TRIANGLE: {

@@ -13,14 +13,14 @@ public:
     int64_t i = 0;
     JSPropertyEnum* names;
     uint32_t plen;
-
     JS_GetOwnPropertyNames(ctx, &names, &plen, obj, JS_GPN_ENUM_ONLY);
-
-    for(auto name : range_view<JSPropertyEnum>(names, plen)) {
-      JSValue value = JS_GetProperty(ctx, obj, name.atom);
+    for(auto penum : range_view<JSPropertyEnum>(names, plen)) {
+      JSValue value = JS_GetProperty(ctx, obj, penum.atom);
+      const char* name = JS_AtomToCString(ctx, penum.atom);
       T prop;
       js_value_to(ctx, value, prop);
       out[name] = prop;
+      JS_FreeCString(ctx, name);
       ++i;
     }
     return i;
