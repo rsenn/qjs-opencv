@@ -5,6 +5,7 @@
 #include "js_rect.hpp"
 #include "js_array.hpp"
 #include "js_umat.hpp"
+#include "js_cv.hpp"
 
 #include <opencv2/imgproc.hpp>
 
@@ -382,40 +383,6 @@ js_cv_cvt_color(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
 }
 
 static JSValue
-js_cv_resize(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  JSInputOutputArray src, dst;
-  double fx, fy;
-  JSSizeData<double> dsize;
-  int32_t interpolation;
-
-  src = js_umat_or_mat(ctx, argv[0]);
-  dst = js_umat_or_mat(ctx, argv[1]);
-
-  if(js_is_noarray(src) || js_is_noarray(dst))
-    return JS_ThrowInternalError(ctx, "src or dst not an array!");
-
-  if(!js_size_read(ctx, argv[2], &dsize) || dsize.width == 0 || dsize.height == 0) {
-    uint32_t w, h;
-
-    w = dst.cols() > 0 ? dst.cols() : src.cols();
-    h = dst.rows() > 0 ? dst.rows() : src.rows();
-
-    dsize = JSSizeData<double>(w, h);
-  }
-
-  if(argc > 3)
-    JS_ToFloat64(ctx, &fx, argv[3]);
-  if(argc > 4)
-    JS_ToFloat64(ctx, &fy, argv[4]);
-  if(argc > 5)
-    JS_ToInt32(ctx, &interpolation, argv[5]);
-
-  cv::resize(src, dst, dsize, fx, fy, interpolation);
-
-  return JS_UNDEFINED;
-}
-
-static JSValue
 js_cv_equalize_hist(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSInputOutputArray src, dst;
   src = js_umat_or_mat(ctx, argv[0]);
@@ -611,27 +578,6 @@ js_cv_morphology_ex(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 }
 
 static JSValue
-js_cv_get_structuring_element(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  int32_t shape;
-  JSSizeData<double> ksize;
-  JSPointData<double> anchor = cv::Point(-1, -1);
-
-  if(argc < 2)
-    return JS_EXCEPTION;
-
-  if(JS_ToInt32(ctx, &shape, argv[0]) == -1)
-    return JS_EXCEPTION;
-
-  if(!js_size_read(ctx, argv[1], &ksize))
-    return JS_EXCEPTION;
-  if(argc >= 3)
-    if(!js_point_read(ctx, argv[2], &anchor))
-      return JS_EXCEPTION;
-
-  return js_mat_wrap(ctx, cv::getStructuringElement(shape, ksize, anchor));
-}
-
-static JSValue
 js_cv_median_blur(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSInputOutputArray src, dst;
   int32_t ksize;
@@ -649,65 +595,6 @@ js_cv_median_blur(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
 
   cv::medianBlur(src, dst, ksize);
   return JS_UNDEFINED;
-}
-
-static JSValue
-js_cv_getperspectivetransform(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  JSContourData<double>*v, *other = nullptr, *ptr;
-  JSValue ret = JS_UNDEFINED;
-  bool handleNested = true;
-  JSContourData<float> a, b;
-  cv::Mat matrix;
-  int32_t solveMethod = cv::DECOMP_LU;
-
-  v = js_contour_data(ctx, argv[0]);
-  if(!v)
-    return JS_EXCEPTION;
-
-  if(argc > 1) {
-    other = static_cast<JSContourData<double>*>(JS_GetOpaque2(ctx, argv[1], js_contour_class_id));
-
-    if(argc > 2)
-      JS_ToInt32(ctx, &solveMethod, argv[2]);
-  }
-
-  std::transform(v->begin(), v->end(), std::back_inserter(a), [](const JSPointData<double>& pt) -> JSPointData<float> {
-    return JSPointData<float>(pt.x, pt.y);
-  });
-  std::transform(other->begin(), other->end(), std::back_inserter(b), [](const JSPointData<double>& pt) -> JSPointData<float> {
-    return JSPointData<float>(pt.x, pt.y);
-  });
-  matrix = cv::getPerspectiveTransform(a, b /*, solveMethod*/);
-
-  ret = js_mat_wrap(ctx, matrix);
-  return ret;
-}
-
-static JSValue
-js_cv_getaffinetransform(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  JSContourData<double>*v, *other = nullptr, *ptr;
-  JSValue ret = JS_UNDEFINED;
-  bool handleNested = true;
-  JSContourData<float> a, b;
-  cv::Mat matrix;
-
-  v = js_contour_data(ctx, argv[0]);
-  if(!v)
-    return JS_EXCEPTION;
-
-  if(argc > 1)
-    other = static_cast<JSContourData<double>*>(JS_GetOpaque2(ctx, argv[1], js_contour_class_id));
-
-  std::transform(v->begin(), v->end(), std::back_inserter(a), [](const JSPointData<double>& pt) -> JSPointData<float> {
-    return JSPointData<float>(pt.x, pt.y);
-  });
-  std::transform(other->begin(), other->end(), std::back_inserter(b), [](const JSPointData<double>& pt) -> JSPointData<float> {
-    return JSPointData<float>(pt.x, pt.y);
-  });
-  matrix = cv::getAffineTransform(a, b);
-
-  ret = js_mat_wrap(ctx, matrix);
-  return ret;
 }
 
 static JSValue
@@ -1625,8 +1512,6 @@ js_function_list_t js_imgproc_static_funcs{
     JS_CFUNC_DEF("equalizeHist", 2, js_cv_equalize_hist),
     JS_CFUNC_DEF("threshold", 5, js_cv_threshold),
     JS_CFUNC_DEF("bilateralFilter", 5, js_cv_bilateral_filter),
-    JS_CFUNC_DEF("getPerspectiveTransform", 2, js_cv_getperspectivetransform),
-    JS_CFUNC_DEF("getAffineTransform", 2, js_cv_getaffinetransform),
     JS_CFUNC_DEF("findContours", 1, js_cv_find_contours),
     JS_CFUNC_DEF("drawContours", 4, js_cv_draw_contours),
     JS_CFUNC_DEF("pointPolygonTest", 2, js_cv_point_polygon_test),
@@ -1635,9 +1520,7 @@ js_function_list_t js_imgproc_static_funcs{
     JS_CFUNC_MAGIC_DEF("dilate", 3, js_cv_morphology, 0),
     JS_CFUNC_MAGIC_DEF("erode", 3, js_cv_morphology, 1),
     JS_CFUNC_DEF("morphologyEx", 4, js_cv_morphology_ex),
-    JS_CFUNC_DEF("getStructuringElement", 2, js_cv_get_structuring_element),
     JS_CFUNC_DEF("medianBlur", 3, js_cv_median_blur),
-    JS_CFUNC_DEF("resize", 3, js_cv_resize),
     JS_CFUNC_DEF("skeletonization", 1, js_cv_skeletonization),
     JS_CFUNC_MAGIC_DEF("pixelNeighborhood", 2, js_cv_pixel_neighborhood, 0),
     JS_CFUNC_MAGIC_DEF("pixelNeighborhoodCross", 2, js_cv_pixel_neighborhood, 1),
@@ -1703,37 +1586,22 @@ js_function_list_t js_imgproc_static_funcs{
 
 extern "C" int
 js_imgproc_init(JSContext* ctx, JSModuleDef* m) {
-  JSAtom atom;
-  JSValue cv_class, g = JS_GetGlobalObject(ctx);
 
   /* std::cerr << "js_imgproc_static_funcs:" << std::endl << js_imgproc_static_funcs;
    std::cerr << "js_imgproc_static_funcs.size() = " << js_imgproc_static_funcs.size() << std::endl;*/
   if(m) {
     JS_SetModuleExportList(ctx, m, js_imgproc_static_funcs.data(), js_imgproc_static_funcs.size());
   }
-  atom = JS_NewAtom(ctx, "cv");
 
-  if(JS_HasProperty(ctx, g, atom)) {
-    cv_class = JS_GetProperty(ctx, g, atom);
-  } else {
-    cv_class = JS_NewObject(ctx);
-  }
-  JS_SetPropertyFunctionList(ctx, cv_class, js_imgproc_static_funcs.data(), js_imgproc_static_funcs.size());
-
-  if(!JS_HasProperty(ctx, g, atom)) {
-    JS_SetPropertyInternal(ctx, g, atom, cv_class, 0);
-  }
-
-  JS_SetModuleExport(ctx, m, "default", cv_class);
-
-  JS_FreeValue(ctx, g);
+  /* if(JS_IsObject(cv_class))
+     JS_SetPropertyFunctionList(ctx, cv_class, js_imgproc_static_funcs.data(), js_imgproc_static_funcs.size());
+ */
   return 0;
 }
 
 extern "C" VISIBLE void
 js_imgproc_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExportList(ctx, m, js_imgproc_static_funcs.data(), js_imgproc_static_funcs.size());
-  JS_AddModuleExport(ctx, m, "default");
 }
 
 #if defined(JS_CV_MODULE)

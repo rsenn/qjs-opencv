@@ -1,10 +1,11 @@
 #include "jsbindings.hpp"
 #include "js_point.hpp"
 #include "js_size.hpp"
+#include "js_rect.hpp"
 #include "js_alloc.hpp"
 
 enum { ROTATED_RECT_PROP_CENTER = 0, ROTATED_RECT_PROP_SIZE, ROTATED_RECT_PROP_ANGLE };
-
+enum { ROTATED_RECT_METHOD_BOUNDING_RECT = 0, ROTATED_RECT_METHOD_BOUNDING_RECT2F, ROTATED_RECT_METHOD_POINTS };
 extern "C" {
 JSValue rotated_rect_proto = JS_UNDEFINED, rotated_rect_class = JS_UNDEFINED;
 JSClassID js_rotated_rect_class_id = 0;
@@ -149,6 +150,55 @@ js_rotated_rect_set(JSContext* ctx, JSValueConst this_val, JSValueConst value, i
 }
 
 static JSValue
+js_rotated_rect_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+  JSRotatedRectData* rr;
+  JSValue ret = JS_UNDEFINED;
+
+  if(!(rr = js_rotated_rect_data(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  switch(magic) {
+    case ROTATED_RECT_METHOD_BOUNDING_RECT: {
+      JSRectData<int> rect = rr->boundingRect();
+      ret = js_rect_new(ctx, rect);
+      break;
+    }
+    case ROTATED_RECT_METHOD_BOUNDING_RECT2F: {
+      JSRectData<float> rect = rr->boundingRect2f();
+      ret = js_rect_new(ctx, rect);
+      break;
+    }
+    case ROTATED_RECT_METHOD_POINTS: {
+      JSValue result;
+      JSPointData<float> pts[4];
+      rr->points(pts);
+      if(js_is_array(ctx, argv[0])) {
+        result = JS_DupValue(ctx, argv[0]);
+      } else {
+        ret = JS_NewArray(ctx);
+        result = JS_DupValue(ctx, ret);
+      }
+      for(size_t i = 0; i < 4; i++) JS_SetPropertyUint32(ctx, result, i, js_point_new(ctx, pts[i]));
+      JS_FreeValue(ctx, result);
+      break;
+    }
+  }
+
+  return ret;
+}
+
+static JSValue
+js_rotated_rect_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+  JSRotatedRectData* rr = js_rotated_rect_data(ctx, this_val);
+  JSValue obj = JS_NewObjectClass(ctx, js_rotated_rect_class_id);
+
+  JS_DefinePropertyValueStr(ctx, obj, "center", js_point_new(ctx, rr->center), JS_PROP_ENUMERABLE);
+  JS_DefinePropertyValueStr(ctx, obj, "size", js_size_new(ctx, rr->size), JS_PROP_ENUMERABLE);
+  JS_DefinePropertyValueStr(ctx, obj, "angle", JS_NewFloat64(ctx, rr->angle), JS_PROP_ENUMERABLE);
+  return obj;
+}
+
+static JSValue
 js_rotated_rect_from(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSRotatedRectData rr;
   JSValue ret = JS_EXCEPTION;
@@ -175,6 +225,9 @@ const JSCFunctionListEntry js_rotated_rect_proto_funcs[] = {
     JS_CGETSET_MAGIC_DEF("center", js_rotated_rect_get, js_rotated_rect_set, ROTATED_RECT_PROP_CENTER),
     JS_CGETSET_MAGIC_DEF("size", js_rotated_rect_get, js_rotated_rect_set, ROTATED_RECT_PROP_SIZE),
     JS_CGETSET_MAGIC_DEF("angle", js_rotated_rect_get, js_rotated_rect_set, ROTATED_RECT_PROP_ANGLE),
+    JS_CFUNC_MAGIC_DEF("boundingRect", 0, js_rotated_rect_method, ROTATED_RECT_METHOD_BOUNDING_RECT),
+    JS_CFUNC_MAGIC_DEF("boundingRect2f", 0, js_rotated_rect_method, ROTATED_RECT_METHOD_BOUNDING_RECT2F),
+    JS_CFUNC_MAGIC_DEF("points", 1, js_rotated_rect_method, ROTATED_RECT_METHOD_POINTS),
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "RotatedRect", JS_PROP_CONFIGURABLE),
 };
 
@@ -185,7 +238,7 @@ const JSCFunctionListEntry js_rotated_rect_static_funcs[] = {
 int
 js_rotated_rect_init(JSContext* ctx, JSModuleDef* m) {
 
-  if(js_rotated_rect_class_id == 0) {
+  /*if(js_rotated_rect_class_id == 0)*/ {
     /* create the RotatedRect class */
     JS_NewClassID(&js_rotated_rect_class_id);
     JS_NewClass(JS_GetRuntime(ctx), js_rotated_rect_class_id, &js_rotated_rect_class);
@@ -199,7 +252,7 @@ js_rotated_rect_init(JSContext* ctx, JSModuleDef* m) {
     JS_SetConstructor(ctx, rotated_rect_class, rotated_rect_proto);
     JS_SetPropertyFunctionList(ctx, rotated_rect_class, js_rotated_rect_static_funcs, countof(js_rotated_rect_static_funcs));
 
-    //    js_set_inspect_method(ctx, rotated_rect_proto, js_rotated_rect_inspect);
+    js_set_inspect_method(ctx, rotated_rect_proto, js_rotated_rect_inspect);
   }
 
   if(m)

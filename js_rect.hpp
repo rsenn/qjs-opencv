@@ -17,6 +17,14 @@ JSModuleDef* js_init_rect_module(JSContext*, const char* module_name);
 void js_rect_constructor(JSContext* ctx, JSValue parent, const char* name);
 }
 
+VISIBLE JSValue js_rect_new(JSContext* ctx, double x, double y, double w, double h);
+
+template<class T>
+static inline JSValue
+js_rect_new(JSContext* ctx, const JSRectData<T>& rect) {
+  return js_rect_new(ctx, rect.x, rect.y, rect.width, rect.height);
+}
+
 template<class T>
 static inline int
 js_rect_read(JSContext* ctx, JSValueConst rect, JSRectData<T>* out) {

@@ -4,6 +4,7 @@
 #include "js_size.hpp"
 #include "js_rect.hpp"
 #include "js_umat.hpp"
+#include "js_cv.hpp"
 #include <opencv2/highgui.hpp>
 
 enum { DISPLAY_OVERLAY };
@@ -380,23 +381,19 @@ js_cv_imshow(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv
   return JS_UNDEFINED;
 }
 
-void
-js_cv_finalizer(JSRuntime* rt, JSValue val) {
-
+/*void
+js_highgui_finalizer(JSRuntime* rt, JSValue val) {
   for(const auto& name : window_list) {
     std::cerr << "Destroy window '" << name << "'" << std::endl;
     cv::destroyWindow(name);
   }
-
-  // JS_FreeValueRT(rt, val);
-  // JS_FreeValueRT(rt, cv_class);
 }
-
-JSClassDef js_cv_class = {.class_name = "cv", .finalizer = js_cv_finalizer};
+*/
+// JSClassDef js_highgui_class = {.class_name = "cv", .finalizer = js_highgui_finalizer};
 
 typedef std::vector<JSCFunctionListEntry> js_function_list_t;
 
-js_function_list_t js_cv_static_funcs{
+js_function_list_t js_highgui_static_funcs{
     JS_CFUNC_DEF("imshow", 2, js_cv_imshow),
     JS_CFUNC_DEF("namedWindow", 1, js_cv_named_window),
     JS_CFUNC_DEF("moveWindow", 2, js_cv_move_window),
@@ -419,7 +416,7 @@ js_function_list_t js_cv_static_funcs{
     JS_CFUNC_MAGIC_DEF("displayOverlay", 2, js_cv_gui_methods, DISPLAY_OVERLAY),
 
 };
-js_function_list_t js_cv_constants{
+js_function_list_t js_highgui_constants{
 
     JS_CV_CONSTANT(WINDOW_NORMAL),       JS_CV_CONSTANT(WINDOW_AUTOSIZE),       JS_CV_CONSTANT(WINDOW_OPENGL),
     JS_CV_CONSTANT(WINDOW_FULLSCREEN),   JS_CV_CONSTANT(WINDOW_FREERATIO),      JS_CV_CONSTANT(WINDOW_KEEPRATIO),
@@ -436,39 +433,25 @@ js_function_list_t js_cv_constants{
 };
 
 extern "C" int
-js_cv_init(JSContext* ctx, JSModuleDef* m) {
-  JSAtom atom;
-  JSValue cv_class, g = JS_GetGlobalObject(ctx);
+js_highgui_init(JSContext* ctx, JSModuleDef* m) {
+
   if(m) {
-    JS_SetModuleExportList(ctx, m, js_cv_static_funcs.data(), js_cv_static_funcs.size());
-    JS_SetModuleExportList(ctx, m, js_cv_constants.data(), js_cv_constants.size());
-  }
-  atom = JS_NewAtom(ctx, "cv");
-
-  if(JS_HasProperty(ctx, g, atom)) {
-    cv_class = JS_GetProperty(ctx, g, atom);
-  } else {
-    cv_class = JS_NewObject(ctx);
-  }
-  JS_SetPropertyFunctionList(ctx, cv_class, js_cv_static_funcs.data(), js_cv_static_funcs.size());
-  JS_SetPropertyFunctionList(ctx, cv_class, js_cv_constants.data(), js_cv_constants.size());
-
-  if(!JS_HasProperty(ctx, g, atom)) {
-    JS_SetPropertyInternal(ctx, g, atom, cv_class, 0);
+    JS_SetModuleExportList(ctx, m, js_highgui_static_funcs.data(), js_highgui_static_funcs.size());
+    JS_SetModuleExportList(ctx, m, js_highgui_constants.data(), js_highgui_constants.size());
   }
 
-  JS_SetModuleExport(ctx, m, "default", cv_class);
+  if(JS_IsObject(cv_class)) {
+    JS_SetPropertyFunctionList(ctx, cv_class, js_highgui_static_funcs.data(), js_highgui_static_funcs.size());
+    JS_SetPropertyFunctionList(ctx, cv_class, js_highgui_constants.data(), js_highgui_constants.size());
+  }
 
-  JS_FreeValue(ctx, g);
-  JS_FreeAtom(ctx, atom);
   return 0;
 }
 
 extern "C" VISIBLE void
-js_cv_export(JSContext* ctx, JSModuleDef* m) {
-  JS_AddModuleExportList(ctx, m, js_cv_static_funcs.data(), js_cv_static_funcs.size());
-  JS_AddModuleExportList(ctx, m, js_cv_constants.data(), js_cv_constants.size());
-  JS_AddModuleExport(ctx, m, "default");
+js_highgui_export(JSContext* ctx, JSModuleDef* m) {
+  JS_AddModuleExportList(ctx, m, js_highgui_static_funcs.data(), js_highgui_static_funcs.size());
+  JS_AddModuleExportList(ctx, m, js_highgui_constants.data(), js_highgui_constants.size());
 }
 
 #if defined(JS_CV_MODULE)
@@ -480,9 +463,9 @@ js_cv_export(JSContext* ctx, JSModuleDef* m) {
 extern "C" JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   JSModuleDef* m;
-  m = JS_NewCModule(ctx, module_name, &js_cv_init);
+  m = JS_NewCModule(ctx, module_name, &js_highgui_init);
   if(!m)
     return NULL;
-  js_cv_export(ctx, m);
+  js_highgui_export(ctx, m);
   return m;
 }

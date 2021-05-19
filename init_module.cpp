@@ -45,9 +45,11 @@ extern "C" void js_imgproc_export(JSContext*, JSModuleDef*);
 
 int
 js_opencv_init(JSContext* ctx, JSModuleDef* m) {
+  js_cv_init(ctx, m);
+  js_highgui_init(ctx, m);
+  js_imgproc_init(ctx, m);
   js_clahe_init(ctx, m);
   js_contour_init(ctx, m);
-  js_cv_init(ctx, m);
   js_draw_init(ctx, m);
   js_line_init(ctx, m);
   js_mat_init(ctx, m);
@@ -63,8 +65,6 @@ js_opencv_init(JSContext* ctx, JSModuleDef* m) {
   js_video_capture_init(ctx, m);
   js_line_segment_detector_init(ctx, m);
   js_fast_line_detector_init(ctx, m);
-  js_highgui_init(ctx, m);
-  js_imgproc_init(ctx, m);
 
   return 0;
 }
@@ -82,9 +82,11 @@ JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   if(!m)
     return NULL;
 
+  js_cv_export(ctx, m);
+  js_highgui_export(ctx, m);
+  js_imgproc_export(ctx, m);
   js_clahe_export(ctx, m);
   js_contour_export(ctx, m);
-  js_cv_export(ctx, m);
   js_draw_export(ctx, m);
   js_line_export(ctx, m);
   js_mat_export(ctx, m);
@@ -100,8 +102,6 @@ JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   js_video_capture_export(ctx, m);
   js_line_segment_detector_export(ctx, m);
   js_fast_line_detector_export(ctx, m);
-  js_highgui_export(ctx, m);
-  js_imgproc_export(ctx, m);
 
   return m;
 }

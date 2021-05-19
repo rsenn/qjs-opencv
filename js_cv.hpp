@@ -7,6 +7,7 @@
 #include "js_typed_array.hpp"
 
 extern "C" JSClassID js_mat_class_id, js_umat_class_id, js_contour_class_id;
+extern "C" JSValue cv_class;
 
 extern "C" VISIBLE int js_cv_init(JSContext*, JSModuleDef*);
 

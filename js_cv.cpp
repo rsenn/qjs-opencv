@@ -220,27 +220,6 @@ js_cv_mat_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 }
 
 static JSValue
-js_cv_convert_scale_abs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-
-  JSInputOutputArray src, dst;
-  double alpha = 1, beta = 0;
-
-  src = js_umat_or_mat(ctx, argv[0]);
-  dst = js_umat_or_mat(ctx, argv[1]);
-
-  if(js_is_noarray(src) || js_is_noarray(dst))
-    return JS_ThrowInternalError(ctx, "src or dst not an array!");
-
-  if(argc >= 3)
-    JS_ToFloat64(ctx, &alpha, argv[2]);
-  if(argc >= 4)
-    JS_ToFloat64(ctx, &beta, argv[3]);
-
-  cv::convertScaleAbs(src, dst, alpha, beta);
-  return JS_UNDEFINED;
-}
-
-static JSValue
 js_cv_merge(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   std::vector<cv::Mat> mv;
   cv::Mat* dst;
@@ -279,7 +258,7 @@ js_cv_mix_channels(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
   return JS_UNDEFINED;
 }
 
-static JSValue
+/*static JSValue
 js_cv_min_max_loc(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   cv::Mat *src, *mask = nullptr;
   double minVal, maxVal;
@@ -313,7 +292,7 @@ js_cv_min_max_loc(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
                                             std::pair<std::string, int>{"y", maxLoc.y}})); // js_point_wrap(ctx, maxLoc));
 
   return ret;
-}
+}*/
 
 static JSValue
 js_cv_getticks(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
@@ -1092,10 +1071,8 @@ js_function_list_t js_cv_static_funcs{
     JS_CFUNC_DEF("imwrite", 2, js_cv_imwrite),
     JS_CFUNC_DEF("split", 2, js_cv_split),
     JS_CFUNC_DEF("normalize", 2, js_cv_normalize),
-    JS_CFUNC_DEF("convertScaleAbs", 2, js_cv_convert_scale_abs),
     JS_CFUNC_DEF("merge", 2, js_cv_merge),
     JS_CFUNC_DEF("mixChannels", 3, js_cv_mix_channels),
-    JS_CFUNC_DEF("minMaxLoc", 2, js_cv_min_max_loc),
     JS_CFUNC_DEF("addWeighted", 6, js_cv_add_weighted),
     JS_CFUNC_MAGIC_DEF("getTickCount", 0, js_cv_getticks, 0),
     JS_CFUNC_MAGIC_DEF("getTickFrequency", 0, js_cv_getticks, 1),
@@ -1713,31 +1690,35 @@ operator<<(Stream& s, const std::vector<Item>& vector) {
 extern "C" int
 js_cv_init(JSContext* ctx, JSModuleDef* m) {
   JSAtom atom;
-  JSValue g = JS_GetGlobalObject(ctx);
-
-  /* std::cerr << "js_cv_static_funcs:" << std::endl << js_cv_static_funcs;
-   std::cerr << "js_cv_static_funcs.size() = " << js_cv_static_funcs.size() << std::endl;*/
+  JSValue cvObj, g = JS_GetGlobalObject(ctx);
   if(m) {
     JS_SetModuleExportList(ctx, m, js_cv_static_funcs.data(), js_cv_static_funcs.size());
     JS_SetModuleExportList(ctx, m, js_cv_constants.data(), js_cv_constants.size());
   }
+
+  cv_class = JS_NewObject(ctx);
+  /* JS_SetPropertyFunctionList(ctx, cv_class, js_cv_static_funcs.data(), js_cv_static_funcs.size());
+  JS_SetPropertyFunctionList(ctx, cv_class, js_cv_constants.data(), js_cv_constants.size());
+  JS_SetModuleExport(ctx, m, "default", cv_class);*/
+
   atom = JS_NewAtom(ctx, "cv");
 
-  if(JS_HasProperty(ctx, g, atom)) {
-    cv_class = JS_GetProperty(ctx, g, atom);
-  } else {
-    cv_class = JS_NewObject(ctx);
-  }
-  JS_SetPropertyFunctionList(ctx, cv_class, js_cv_static_funcs.data(), js_cv_static_funcs.size());
-  JS_SetPropertyFunctionList(ctx, cv_class, js_cv_constants.data(), js_cv_constants.size());
+  /* if(JS_HasProperty(ctx, g, atom)) {
+     cvObj = JS_GetProperty(ctx, g, atom);
+   } else {
+     cvObj = JS_NewObject(ctx);
+ }
+   JS_SetPropertyFunctionList(ctx, cvObj, js_cv_static_funcs.data(), js_cv_static_funcs.size());
+   JS_SetPropertyFunctionList(ctx, cvObj, js_cv_constants.data(), js_cv_constants.size());
 
-  if(!JS_HasProperty(ctx, g, atom)) {
-    JS_SetPropertyInternal(ctx, g, atom, cv_class, 0);
-  }
+     if(!JS_HasProperty(ctx, g, atom)) {
+       JS_SetProperty(ctx, g, atom, cvObj);
+     }
 
-  JS_SetModuleExport(ctx, m, "default", cv_class);
-
+   JS_SetModuleExport(ctx, m, "default", cvObj);
+ */
   JS_FreeValue(ctx, g);
+  //  JS_FreeValue(ctx, cvObj);
   return 0;
 }
 
