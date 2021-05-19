@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 2.6)
 
 project(LSD)
 
-include(${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/Functions.cmake)
-include(${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/OpenCV.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/Functions.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/OpenCV.cmake)
 
 find_opencv()
 
@@ -25,9 +25,9 @@ SET(CMAKE_CXX_FLAGS	"${CMAKE_CXX_FLAGS} ${CXX_COVERAGE_FLAGS}")
 SET(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_FLAGS} ${CXX_COVERAGE_LINK_FLAGS}")
 
 #set the default path for built executables to the "bin" directory
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR})
 #set the default path for built libraries to the "lib" directory
-set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR})
 
 subdirs(src)
 subdirs(examples)
