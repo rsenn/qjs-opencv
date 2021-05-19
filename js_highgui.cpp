@@ -3,12 +3,13 @@
 #include "js_point.hpp"
 #include "js_size.hpp"
 #include "js_rect.hpp"
+#include "js_umat.hpp"
 #include <opencv2/highgui.hpp>
 
 enum { DISPLAY_OVERLAY };
 
 static std::vector<cv::String> window_list;
- 
+
 static JSValue
 js_highgui_gui_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
   JSValue ret = JS_UNDEFINED;
@@ -359,7 +360,26 @@ js_highgui_wait_key_ex(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
 
   return JS_NewInt32(ctx, keyCode);
 }
- 
+
+static JSValue
+js_highgui_imshow(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+  const char* winname = JS_ToCString(ctx, argv[0]);
+  JSInputOutputArray image = js_umat_or_mat(ctx, argv[1]);
+
+  if(image.empty())
+    return JS_ThrowInternalError(ctx, "Empty image");
+  cv::_InputArray input_array(image);
+
+  /*  if(input_array.isUMat())
+      input_array.getUMat().addref();
+    else if(input_array.isMat())
+      input_array.getMat().addref();*/
+
+  cv::imshow(winname, image);
+
+  return JS_UNDEFINED;
+}
+
 void
 js_highgui_finalizer(JSRuntime* rt, JSValue val) {
 
@@ -377,7 +397,8 @@ JSClassDef js_highgui_class = {.class_name = "cv", .finalizer = js_highgui_final
 typedef std::vector<JSCFunctionListEntry> js_function_list_t;
 
 js_function_list_t js_highgui_static_funcs{
-       JS_CFUNC_DEF("namedWindow", 1, js_highgui_named_window),
+    JS_CFUNC_DEF("imshow", 2, js_highgui_imshow),
+    JS_CFUNC_DEF("namedWindow", 1, js_highgui_named_window),
     JS_CFUNC_DEF("moveWindow", 2, js_highgui_move_window),
     JS_CFUNC_DEF("resizeWindow", 2, js_highgui_resize_window),
     JS_CFUNC_DEF("destroyWindow", 1, js_highgui_destroy_window),
@@ -395,51 +416,30 @@ js_function_list_t js_highgui_static_funcs{
     JS_CFUNC_DEF("setMouseCallback", 2, js_highgui_set_mouse_callback),
     JS_CFUNC_DEF("waitKey", 0, js_highgui_wait_key),
     JS_CFUNC_DEF("waitKeyEx", 0, js_highgui_wait_key_ex),
-   JS_CFUNC_MAGIC_DEF("displayOverlay", 2, js_highgui_gui_methods, DISPLAY_OVERLAY),
-     
+    JS_CFUNC_MAGIC_DEF("displayOverlay", 2, js_highgui_gui_methods, DISPLAY_OVERLAY),
+
 };
 js_function_list_t js_highgui_constants{
-  
-    JS_CV_CONSTANT(WINDOW_NORMAL),
-    JS_CV_CONSTANT(WINDOW_AUTOSIZE),
-    JS_CV_CONSTANT(WINDOW_OPENGL),
-    JS_CV_CONSTANT(WINDOW_FULLSCREEN),
-    JS_CV_CONSTANT(WINDOW_FREERATIO),
-    JS_CV_CONSTANT(WINDOW_KEEPRATIO),
-    JS_CV_CONSTANT(WINDOW_GUI_EXPANDED),
-    JS_CV_CONSTANT(WINDOW_GUI_NORMAL),
-    JS_CV_CONSTANT(WND_PROP_FULLSCREEN),
-    JS_CV_CONSTANT(WND_PROP_AUTOSIZE),
-    JS_CV_CONSTANT(WND_PROP_ASPECT_RATIO),
-    JS_CV_CONSTANT(WND_PROP_OPENGL),
-    JS_CV_CONSTANT(WND_PROP_VISIBLE),
-    JS_CV_CONSTANT(WND_PROP_TOPMOST),
-    JS_CV_CONSTANT(EVENT_MOUSEMOVE),
-    JS_CV_CONSTANT(EVENT_LBUTTONDOWN),
-    JS_CV_CONSTANT(EVENT_RBUTTONDOWN),
-    JS_CV_CONSTANT(EVENT_MBUTTONDOWN),
-    JS_CV_CONSTANT(EVENT_LBUTTONUP),
-    JS_CV_CONSTANT(EVENT_RBUTTONUP),
-    JS_CV_CONSTANT(EVENT_MBUTTONUP),
-    JS_CV_CONSTANT(EVENT_LBUTTONDBLCLK),
-    JS_CV_CONSTANT(EVENT_RBUTTONDBLCLK),
-    JS_CV_CONSTANT(EVENT_MBUTTONDBLCLK),
-    JS_CV_CONSTANT(EVENT_MOUSEWHEEL),
-    JS_CV_CONSTANT(EVENT_MOUSEHWHEEL),
-    JS_CV_CONSTANT(EVENT_FLAG_LBUTTON),
-    JS_CV_CONSTANT(EVENT_FLAG_RBUTTON),
-    JS_CV_CONSTANT(EVENT_FLAG_MBUTTON),
-    JS_CV_CONSTANT(EVENT_FLAG_CTRLKEY),
-    JS_CV_CONSTANT(EVENT_FLAG_SHIFTKEY),
-    JS_CV_CONSTANT(EVENT_FLAG_ALTKEY),
-    
-};  
+
+    JS_CV_CONSTANT(WINDOW_NORMAL),       JS_CV_CONSTANT(WINDOW_AUTOSIZE),       JS_CV_CONSTANT(WINDOW_OPENGL),
+    JS_CV_CONSTANT(WINDOW_FULLSCREEN),   JS_CV_CONSTANT(WINDOW_FREERATIO),      JS_CV_CONSTANT(WINDOW_KEEPRATIO),
+    JS_CV_CONSTANT(WINDOW_GUI_EXPANDED), JS_CV_CONSTANT(WINDOW_GUI_NORMAL),     JS_CV_CONSTANT(WND_PROP_FULLSCREEN),
+    JS_CV_CONSTANT(WND_PROP_AUTOSIZE),   JS_CV_CONSTANT(WND_PROP_ASPECT_RATIO), JS_CV_CONSTANT(WND_PROP_OPENGL),
+    JS_CV_CONSTANT(WND_PROP_VISIBLE),    JS_CV_CONSTANT(WND_PROP_TOPMOST),      JS_CV_CONSTANT(EVENT_MOUSEMOVE),
+    JS_CV_CONSTANT(EVENT_LBUTTONDOWN),   JS_CV_CONSTANT(EVENT_RBUTTONDOWN),     JS_CV_CONSTANT(EVENT_MBUTTONDOWN),
+    JS_CV_CONSTANT(EVENT_LBUTTONUP),     JS_CV_CONSTANT(EVENT_RBUTTONUP),       JS_CV_CONSTANT(EVENT_MBUTTONUP),
+    JS_CV_CONSTANT(EVENT_LBUTTONDBLCLK), JS_CV_CONSTANT(EVENT_RBUTTONDBLCLK),   JS_CV_CONSTANT(EVENT_MBUTTONDBLCLK),
+    JS_CV_CONSTANT(EVENT_MOUSEWHEEL),    JS_CV_CONSTANT(EVENT_MOUSEHWHEEL),     JS_CV_CONSTANT(EVENT_FLAG_LBUTTON),
+    JS_CV_CONSTANT(EVENT_FLAG_RBUTTON),  JS_CV_CONSTANT(EVENT_FLAG_MBUTTON),    JS_CV_CONSTANT(EVENT_FLAG_CTRLKEY),
+    JS_CV_CONSTANT(EVENT_FLAG_SHIFTKEY), JS_CV_CONSTANT(EVENT_FLAG_ALTKEY),
+
+};
 
 extern "C" int
 js_highgui_init(JSContext* ctx, JSModuleDef* m) {
   JSAtom atom;
-  JSValue cv_class,g = JS_GetGlobalObject(ctx);
-   if(m) {
+  JSValue cv_class, g = JS_GetGlobalObject(ctx);
+  if(m) {
     JS_SetModuleExportList(ctx, m, js_highgui_static_funcs.data(), js_highgui_static_funcs.size());
     JS_SetModuleExportList(ctx, m, js_highgui_constants.data(), js_highgui_constants.size());
   }

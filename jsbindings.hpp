@@ -691,4 +691,10 @@ js_iterable_to(JSContext* ctx, JSValueConst arr, cv::Scalar_<T>& out) {
   return js_iterable<T>::to_scalar(ctx, arr, out);
 }
 
+template<class T>
+static inline bool
+js_is_noarray(const T& array) {
+  return &array == &cv::noArray();
+}
+
 #endif

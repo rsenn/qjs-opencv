@@ -40,10 +40,4 @@ js_cv_inputoutputarray(JSContext* ctx, JSValueConst value) {
   return cv::noArray();
 }
 
-template<class T>
-static inline bool
-js_is_noarray(const T& array) {
-  return &array == &cv::noArray();
-}
-
 #endif /* defined(JS_CV_HPP) */
