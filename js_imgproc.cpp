@@ -5,6 +5,7 @@
 #include "js_rect.hpp"
 #include "js_array.hpp"
 #include "js_umat.hpp"
+#include "js_object.hpp"
 #include "js_cv.hpp"
 
 #include <opencv2/imgproc.hpp>
@@ -1047,12 +1048,40 @@ js_imgproc_misc(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
     }
     case MISC_MOMENTS: {
       BOOL binaryImage = false;
-cv::Moments moments;
-      if(argc >= 2) 
-        binaryImage =JS_ToBool(ctx, argv[1]);
+      cv::Moments moments;
+      std::map<std::string, double> moments_map;
+      if(argc >= 2)
+        binaryImage = JS_ToBool(ctx, argv[1]);
 
-moments = cv::moments(src, binaryImage);
+      moments = cv::moments(src, binaryImage);
 
+      moments_map["m00"] = moments.m00;
+      moments_map["m10"] = moments.m10;
+      moments_map["m01"] = moments.m01;
+      moments_map["m20"] = moments.m20;
+      moments_map["m11"] = moments.m11;
+      moments_map["m02"] = moments.m02;
+      moments_map["m30"] = moments.m30;
+      moments_map["m21"] = moments.m21;
+      moments_map["m12"] = moments.m12;
+      moments_map["m03"] = moments.m03;
+      moments_map["mu20"] = moments.mu20;
+      moments_map["mu11"] = moments.mu11;
+      moments_map["mu02"] = moments.mu02;
+      moments_map["mu30"] = moments.mu30;
+      moments_map["mu21"] = moments.mu21;
+      moments_map["mu12"] = moments.mu12;
+      moments_map["mu03"] = moments.mu03;
+      moments_map["nu20"] = moments.nu20;
+      moments_map["nu11"] = moments.nu11;
+      moments_map["nu02"] = moments.nu02;
+      moments_map["nu30"] = moments.nu30;
+      moments_map["nu21"] = moments.nu21;
+      moments_map["nu12"] = moments.nu12;
+      moments_map["nu03"] = moments.nu03;
+
+      ret = js_object::from_map(ctx, moments_map);
+      break;
     }
   }
   return ret;
@@ -1552,6 +1581,7 @@ js_function_list_t js_imgproc_static_funcs{
     JS_CFUNC_MAGIC_DEF("integral", 2, js_imgproc_misc, MISC_INTEGRAL),
     JS_CFUNC_MAGIC_DEF("watershed", 2, js_imgproc_misc, MISC_WATERSHED),
     JS_CFUNC_MAGIC_DEF("applyColorMap", 3, js_imgproc_misc, MISC_APPLY_COLORMAP),
+    JS_CFUNC_MAGIC_DEF("moments", 1, js_imgproc_misc, MISC_MOMENTS),
 
     JS_CFUNC_MAGIC_DEF("convertMaps", 5, js_imgproc_transform, TRANSFORM_CONVERT_MAPS),
     JS_CFUNC_MAGIC_DEF("getAffineTransform", 2, js_imgproc_transform, TRANSFORM_GET_AFFINE_TRANSFORM),
