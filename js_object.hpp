@@ -9,11 +9,11 @@ class js_object {
 public:
   template<class T>
   static int64_t
-  to_map(JSContext* ctx, JSValueConst obj, std::map<std::string, T>& out) {
+  to_map(JSContext* ctx, JSValueConst obj, std::map<std::string, T>& out, int flags = JS_GPN_STRING_MASK | JS_GPN_SYMBOL_MASK) {
     int64_t i = 0;
-    JSPropertyEnum* names;
-    uint32_t plen;
-    JS_GetOwnPropertyNames(ctx, &names, &plen, obj, JS_GPN_ENUM_ONLY);
+    JSPropertyEnum* names = 0;
+    uint32_t plen = 0;
+    JS_GetOwnPropertyNames(ctx, &names, &plen, obj, flags);
     for(auto penum : range_view<JSPropertyEnum>(names, plen)) {
       JSValue value = JS_GetProperty(ctx, obj, penum.atom);
       const char* name = JS_AtomToCString(ctx, penum.atom);
@@ -34,7 +34,7 @@ public:
 
     for(entry_type entry : in) {
       T prop = entry.second;
-      JS_SetPropertyStr(ctx, obj, entry.first.c_str(), js_value_from(ctx, prop) /*, JS_PROP_C_W_E*/);
+      JS_DefinePropertyValueStr(ctx, obj, entry.first.c_str(), js_value_from(ctx, prop), JS_PROP_C_W_E);
     }
 
     return obj;

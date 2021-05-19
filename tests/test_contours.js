@@ -77,8 +77,12 @@ function main(...args) {
   contours.reverse();
 
   let poly = [...contours[0]];
+  let moments = cv.moments(poly, false);
   console.log(`poly`, console.config({ maxArrayLength: 20, compact: 1 }), poly);
-  console.log(`cv.moments(poly)`, console.config({ compact: 1 }), cv.moments(poly, false));
+  console.log(`cv.moments(poly)`, console.config({ compact: 1 }), moments);
+  let huMoments;
+  cv.HuMoments(moments, (huMoments = []));
+  console.log(`huMoments`, console.config({ compact: 1 }), huMoments);
 
   cv.imshow('input', input);
 
