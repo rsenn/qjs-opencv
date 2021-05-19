@@ -7,6 +7,8 @@
 #include <iomanip>
 #include <sys/stat.h>
 
+#include <quickjs.h>
+
 #include <opencv2/core.hpp>
 
 #if defined(_WIN32) || defined(__MINGW32__)
@@ -338,6 +340,23 @@ template<class T, class Container>
 static inline range_view<T>
 range(Container& c) {
   return range_view<T>(reinterpret_cast<T>(begin(c)), reinterpret_cast<T>(end(c)));
+}
+
+std::string js_prop_flags(int flags);
+
+std::ostream& operator<<(std::ostream& s, const JSCFunctionListEntry& entry);
+
+template<class Stream, class Item>
+Stream&
+operator<<(Stream& s, const std::vector<Item>& vector) {
+  size_t i = 0;
+  for(auto entry : vector) {
+
+    s << "#" << i << " ";
+    s << entry;
+    i++;
+  }
+  return s;
 }
 
 #endif // defined(UTIL_HPP)

@@ -9,7 +9,6 @@
 #include "js_typed_array.hpp"
 #include "js_cv.hpp"
 #include "jsbindings.hpp"
-//#include "js_consts.hpp"
 #include "geometry.hpp"
 #include "util.hpp"
 #include "cutils.h"
@@ -35,11 +34,8 @@ JSClassID js_cv_class_id = 0;
 
 static JSValue
 js_cv_imread(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-
   const char* filename = JS_ToCString(ctx, argv[0]);
-
   cv::Mat mat = cv::imread(filename);
-
   return js_mat_wrap(ctx, mat);
 }
 
@@ -54,20 +50,13 @@ js_cv_imwrite(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* arg
 
   if(argc > 2 && /*image.type() == CV_8UC1 &&*/ str_end(filename, ".png") && image.isMat()) {
     double max;
-
     std::vector<JSColorData<uint8_t>> palette;
-
     js_array_to(ctx, argv[2], palette);
-
     cv::minMaxLoc(image, nullptr, &max);
-
     if(palette.size() < size_t(max))
       palette.resize(size_t(max));
-
     printf("png++ write_mat '%s' [%zu]\n", filename, palette.size());
-
     write_mat(filename, image.getMatRef(), palette);
-
   } else {
     cv::imwrite(filename, image);
   }
@@ -77,37 +66,24 @@ js_cv_imwrite(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* arg
 
 static JSValue
 js_cv_split(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-
   cv::Mat* src;
   std::vector<cv::Mat> dst;
   int code, dstCn = 0;
   int32_t length;
 
-  src = js_mat_data(ctx, argv[0]);
-
-  if(src == nullptr)
+  if(!(src = js_mat_data(ctx, argv[0])))
     return JS_ThrowInternalError(ctx, "src not an array!");
 
   length = js_array_length(ctx, argv[1]);
 
   for(int32_t i = 0; i < src->channels(); i++) { dst.push_back(cv::Mat(src->size(), src->type() & 0x7)); }
 
-  // dst.resize(src->channels());
-
   if(dst.size() >= src->channels()) {
-
-    /*  std::transform(js_begin(ctx, argv[1]), js_end(ctx, argv[1]), std::back_inserter(dst), [ctx,
-      src](const JSValue& v) -> cv::Mat { cv::Mat* mat = js_mat_data(ctx, v); return mat == nullptr
-      ? cv::Mat::zeros(src->rows, src->cols, src->type()) : *mat;
-      });
-  */
-
     cv::split(*src, dst.data());
-
     for(int32_t i = 0; i < src->channels(); i++) { JS_SetPropertyUint32(ctx, argv[1], i, js_mat_wrap(ctx, dst[i])); }
-
     return JS_UNDEFINED;
   }
+
   return JS_EXCEPTION;
 }
 
@@ -150,10 +126,6 @@ js_cv_add_weighted(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
   if(js_is_noarray(a1) || js_is_noarray(a2))
     return JS_ThrowInternalError(ctx, "a1 or a2 not an array!");
 
-  /*
-    src1 = js_mat_data(ctx, argv[0]);
-
-    src2 = js_mat_data(ctx, argv[2]);*/
   if(argc >= 6)
     dst = js_umat_or_mat(ctx, argv[5]);
 
@@ -1058,9 +1030,6 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv,
 
 void
 js_cv_finalizer(JSRuntime* rt, JSValue val) {
-
-  // JS_FreeValueRT(rt, val);
-  // JS_FreeValueRT(rt, cv_class);
 }
 
 JSClassDef js_cv_class = {.class_name = "cv", .finalizer = js_cv_finalizer};
@@ -1086,8 +1055,7 @@ js_function_list_t js_cv_static_funcs{
     JS_CFUNC_MAGIC_DEF("findNonZero", 1, js_cv_mat_functions, MAT_FINDNONZERO),
     JS_CFUNC_MAGIC_DEF("hconcat", 2, js_cv_mat_functions, MAT_HCONCAT),
     JS_CFUNC_MAGIC_DEF("vconcat", 2, js_cv_mat_functions, MAT_VCONCAT),
-    /*};
-    const js_function_list_t js_cv_core_flags{*/
+
     JS_PROP_STRING_DEF("CV_VERSION_STATUS", CV_VERSION_STATUS, 0),
     JS_PROP_DOUBLE_DEF("CV_PI", CV_PI, 0),
     JS_PROP_DOUBLE_DEF("CV_2PI", CV_2PI, 0),
@@ -1159,6 +1127,7 @@ js_function_list_t js_cv_static_funcs{
     JS_CFUNC_MAGIC_DEF("trace", 1, js_cv_other, OTHER_TRACE),
 
 };
+
 js_function_list_t js_cv_constants{
     JS_CONSTANT(CV_VERSION_MAJOR),
     JS_CONSTANT(CV_VERSION_MINOR),
@@ -1621,72 +1590,7 @@ js_function_list_t js_cv_constants{
     JS_CV_CONSTANT(COLORMAP_TWILIGHT_SHIFTED),
     JS_CV_CONSTANT(COLORMAP_TURBO),
     JS_CV_CONSTANT(COLORMAP_DEEPGREEN),
-
 };
-std::string
-js_prop_flags(int flags) {
-  std::vector<const char*> names;
-  if(flags & JS_PROP_CONFIGURABLE)
-    names.push_back("CONFIGURABLE");
-  if(flags & JS_PROP_WRITABLE)
-    names.push_back("WRITABLE");
-  if(flags & JS_PROP_ENUMERABLE)
-    names.push_back("ENUMERABLE");
-  if(flags & JS_PROP_NORMAL)
-    names.push_back("NORMAL");
-  if(flags & JS_PROP_GETSET)
-    names.push_back("GETSET");
-  if(flags & JS_PROP_VARREF)
-    names.push_back("VARREF");
-  if(flags & JS_PROP_AUTOINIT)
-    names.push_back("AUTOINIT");
-  return join(names.cbegin(), names.cend(), "|");
-}
-
-template<class Stream>
-Stream&
-operator<<(Stream& s, const JSCFunctionListEntry& entry) {
-  std::string name(entry.name);
-  s << name << std::setw(30 - name.size()) << ' ';
-  s << "type = "
-    << (std::vector<const char*>{"CFUNC",
-                                 "CGETSET",
-                                 "CGETSET_MAGIC",
-                                 "PROP_STRING",
-                                 "PROP_INT32",
-                                 "PROP_INT64",
-                                 "PROP_DOUBLE",
-                                 "PROP_UNDEFINED",
-                                 "OBJECT",
-                                 "ALIAS"})[entry.def_type]
-    << ", ";
-  switch(entry.def_type) {
-    case JS_DEF_CGETSET_MAGIC: s << "magic = " << (unsigned int)entry.magic << ", "; break;
-    case JS_DEF_PROP_INT32: s << "value = " << std::setw(9) << entry.u.i32 << ", "; break;
-    case JS_DEF_PROP_INT64: s << "value = " << std::setw(9) << entry.u.i64 << ", "; break;
-    case JS_DEF_PROP_DOUBLE: s << "value = " << std::setw(9) << entry.u.f64 << ", "; break;
-    case JS_DEF_PROP_UNDEFINED:
-      s << "value = " << std::setw(9) << "undefined"
-        << ", ";
-      break;
-    case JS_DEF_PROP_STRING: s << "value = " << std::setw(9) << entry.u.str << ", "; break;
-  }
-  s << "flags = " << js_prop_flags(entry.prop_flags) << std::endl;
-  return s;
-}
-
-template<class Stream, class Item>
-Stream&
-operator<<(Stream& s, const std::vector<Item>& vector) {
-  size_t i = 0;
-  for(auto entry : vector) {
-
-    s << "#" << i << " ";
-    s << entry;
-    i++;
-  }
-  return s;
-}
 
 extern "C" int
 js_cv_init(JSContext* ctx, JSModuleDef* m) {
