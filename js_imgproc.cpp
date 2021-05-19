@@ -1047,13 +1047,20 @@ js_imgproc_misc(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
       break;
     }
     case MISC_MOMENTS: {
+      std::vector<JSPointData<float>> polygon;
+
       BOOL binaryImage = false;
       cv::Moments moments;
       std::map<std::string, double> moments_map;
       if(argc >= 2)
         binaryImage = JS_ToBool(ctx, argv[1]);
 
-      moments = cv::moments(src, binaryImage);
+      if(!binaryImage) {
+        js_array_to(ctx, argv[0], polygon);
+        moments = cv::moments(polygon, binaryImage);
+      } else {
+        moments = cv::moments(src, true);
+      }
 
       moments_map["m00"] = moments.m00;
       moments_map["m10"] = moments.m10;
