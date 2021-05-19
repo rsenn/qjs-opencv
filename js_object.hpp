@@ -41,6 +41,12 @@ public:
   }
 };
 
+template<class T>
+static inline int64_t
+js_object_to(JSContext* ctx, JSValueConst obj, std::map<std::string, T>& map) {
+  return js_object::to_map<T>(ctx, obj, map);
+}
+
 template<class Container>
 static inline JSValue
 js_object_from(JSContext* ctx, const Container& v) {

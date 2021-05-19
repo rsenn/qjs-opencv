@@ -1662,7 +1662,7 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* 
     case SHAPE_HU_MOMENTS: {
       std::map<std::string, double> moments_map;
       std::array<double, 7> hu;
-      js_object::to_map(ctx, argv[0], moments_map);
+      js_object_to(ctx, argv[0], moments_map);
 
       cv::Moments moments(moments_map["m00"],
                           moments_map["m10"],
