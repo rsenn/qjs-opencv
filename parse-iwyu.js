@@ -20,7 +20,7 @@ function main() {
     if(!/:$/.test(lines[0])) throw new Error(`Invalid paragraph: ${lines[0]}`);
 
     let fields = lines.shift().split(/[\s:]+/g);
-    let [file, , what='full'] = fields;
+    let [file, , what = "full"] = fields;
 
     if(!files[file]) files[file] = {};
 
@@ -30,7 +30,7 @@ function main() {
 
     i++;
   }
-  console.log("files", console.config({compact:0}), files);
+  console.log("files", console.config({ compact: 0 }), files);
 }
 
 main();
