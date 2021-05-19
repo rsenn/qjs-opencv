@@ -936,7 +936,8 @@ enum {
   MISC_GRAB_CUT,
   MISC_INTEGRAL,
   MISC_WATERSHED,
-  MISC_APPLY_COLORMAP
+  MISC_APPLY_COLORMAP,
+  MISC_MOMENTS
 };
 
 static JSValue
@@ -1043,6 +1044,15 @@ js_imgproc_misc(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
         cv::applyColorMap(src, dst, colormap);
       }
       break;
+    }
+    case MISC_MOMENTS: {
+      BOOL binaryImage = false;
+cv::Moments moments;
+      if(argc >= 2) 
+        binaryImage =JS_ToBool(ctx, argv[1]);
+
+moments = cv::moments(src, binaryImage);
+
     }
   }
   return ret;
