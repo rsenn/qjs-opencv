@@ -609,5 +609,4 @@ js_array_from(JSContext* ctx, const Container& v) {
   return js_array<typename Container::value_type>::from_sequence(ctx, v.begin(), v.end());
 }
 
-
 #endif /* defined(JS_ARRAY_HPP) */

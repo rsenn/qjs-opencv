@@ -1,5 +1,9 @@
 #ifndef JS_OBJECT_HPP
 
+#include "util.hpp"
+#include <quickjs.h>
+#include <map>
+#include <string>
 
 class js_object {
 public:
