@@ -191,13 +191,13 @@ public:
    * @param _n_bins       Number of bins in pseudo-ordering of gradient modulus.
    */
   LSDImpl(int _refine = LSD_REFINE_STD,
-                          double _scale = 0.8,
-                          double _sigma_scale = 0.6,
-                          double _quant = 2.0,
-                          double _ang_th = 22.5,
-                          double _log_eps = 0,
-                          double _density_th = 0.7,
-                          int _n_bins = 1024);
+          double _scale = 0.8,
+          double _sigma_scale = 0.6,
+          double _quant = 2.0,
+          double _ang_th = 22.5,
+          double _log_eps = 0,
+          double _density_th = 0.7,
+          int _n_bins = 1024);
 
   /**
    * Detect lines in the input image with the specified ROI.
@@ -245,7 +245,10 @@ public:
    *                  Should have the size of the image, where the lines were found
    * @return          The number of mismatching pixels between lines1 and lines2.
    */
-  int compareSegments(const cv::Size& size, cv::InputArray lines1, cv::InputArray lines2, cv::InputOutputArray _image = cv::noArray());
+  int compareSegments(const cv::Size& size,
+                      cv::InputArray lines1,
+                      cv::InputArray lines2,
+                      cv::InputOutputArray _image = cv::noArray());
 
   /*
    * Shows the lines in a window.
@@ -266,8 +269,11 @@ public:
    * @param image     A optional pointer to an image that may be used as a background.
    * @return          The number of non overlapping pixels.
    */
-  int showSegments(
-      const std::string& name, cv::Size size, const std::vector<cv::Vec4i>& lines1, const std::vector<cv::Vec4i> lines2, cv::Mat* image = 0);
+  int showSegments(const std::string& name,
+                   cv::Size size,
+                   const std::vector<cv::Vec4i>& lines1,
+                   const std::vector<cv::Vec4i> lines2,
+                   cv::Mat* image = 0);
 
   /**
    * Find all line elements that are *not* fullfilling the angle and range requirenmnets.
@@ -385,7 +391,8 @@ private:
    *                                  * 0 corresponds to 1 mean false alarm
    *                                  * 1 corresponds to 0.1 mean false alarms
    */
-  void flsd(std::vector<cv::Vec4i>& lines, std::vector<double>& widths, std::vector<double>& precisions, std::vector<double>& nfas);
+  void
+  flsd(std::vector<cv::Vec4i>& lines, std::vector<double>& widths, std::vector<double>& precisions, std::vector<double>& nfas);
 
   /**
    * Finds the angles and the gradients of the image. Generates a list of pseudo ordered points.
@@ -517,13 +524,13 @@ createLSDPtr(int _refine,
 /////////////////////////////////////////////////////////////////////////////////////////
 
 LSDImpl::LSDImpl(int _refine,
-                                                 double _scale,
-                                                 double _sigma_scale,
-                                                 double _quant,
-                                                 double _ang_th,
-                                                 double _log_eps,
-                                                 double _density_th,
-                                                 int _n_bins)
+                 double _scale,
+                 double _sigma_scale,
+                 double _quant,
+                 double _ang_th,
+                 double _log_eps,
+                 double _density_th,
+                 int _n_bins)
     : SCALE(_scale), doRefine(_refine), SIGMA_SCALE(_sigma_scale), QUANT(_quant), ANG_TH(_ang_th), LOG_EPS(_log_eps),
       DENSITY_TH(_density_th), N_BINS(_n_bins) {
   CV_Assert(_scale > 0 && _sigma_scale > 0 && _quant >= 0 && _ang_th > 0 && _ang_th < 180 && _density_th >= 0 &&
@@ -561,9 +568,9 @@ cv::LSDImpl::detect(
 
 void
 cv::LSDImpl::flsd(std::vector<cv::Vec4i>& lines,
-                              std::vector<double>& widths,
-                              std::vector<double>& precisions,
-                              std::vector<double>& nfas) {
+                  std::vector<double>& widths,
+                  std::vector<double>& precisions,
+                  std::vector<double>& nfas) {
   // Angle tolerance
   const double prec = CV_PI * ANG_TH / 180;
   const double p = ANG_TH / 180;
@@ -798,11 +805,11 @@ cv::LSDImpl::region_grow(
 
 void
 cv::LSDImpl::region2rect(const std::vector<RegionPoint>& reg,
-                                     const int reg_size,
-                                     const double reg_angle,
-                                     const double prec,
-                                     const double p,
-                                     rect& rec) const {
+                         const int reg_size,
+                         const double reg_angle,
+                         const double prec,
+                         const double p,
+                         rect& rec) const {
   double x = 0, y = 0, sum = 0;
   for(int i = 0; i < reg_size; ++i) {
     const RegionPoint& pnt = reg[i];
@@ -863,11 +870,11 @@ cv::LSDImpl::region2rect(const std::vector<RegionPoint>& reg,
 
 double
 cv::LSDImpl::get_theta(const std::vector<RegionPoint>& reg,
-                                   const int& reg_size,
-                                   const double& x,
-                                   const double& y,
-                                   const double& reg_angle,
-                                   const double& prec) const {
+                       const int& reg_size,
+                       const double& x,
+                       const double& y,
+                       const double& reg_angle,
+                       const double& prec) const {
   double Ixx = 0.0;
   double Iyy = 0.0;
   double Ixy = 0.0;
@@ -905,12 +912,12 @@ cv::LSDImpl::get_theta(const std::vector<RegionPoint>& reg,
 
 bool
 cv::LSDImpl::refine(std::vector<RegionPoint>& reg,
-                                int& reg_size,
-                                double reg_angle,
-                                const double prec,
-                                double p,
-                                rect& rec,
-                                const double& density_th) {
+                    int& reg_size,
+                    double reg_angle,
+                    const double prec,
+                    double p,
+                    rect& rec,
+                    const double& density_th) {
   double density = double(reg_size) / (dist(rec.x1, rec.y1, rec.x2, rec.y2) * rec.width);
 
   if(density >= density_th) {
@@ -957,13 +964,13 @@ cv::LSDImpl::refine(std::vector<RegionPoint>& reg,
 
 bool
 cv::LSDImpl::reduce_region_radius(std::vector<RegionPoint>& reg,
-                                              int& reg_size,
-                                              double reg_angle,
-                                              const double prec,
-                                              double p,
-                                              rect& rec,
-                                              double density,
-                                              const double& density_th) {
+                                  int& reg_size,
+                                  double reg_angle,
+                                  const double prec,
+                                  double p,
+                                  rect& rec,
+                                  double density,
+                                  const double& density_th) {
   // Compute region's radius
   double xc = double(reg[0].x);
   double yc = double(reg[0].y);
@@ -1315,9 +1322,9 @@ cv::LSDImpl::drawSegments(cv::InputOutputArray _image, const cv::InputArray line
 
 int
 cv::LSDImpl::compareSegments(const cv::Size& size,
-                                         const cv::InputArray lines1,
-                                         const cv::InputArray lines2,
-                                         cv::InputOutputArray _image) {
+                             const cv::InputArray lines1,
+                             const cv::InputArray lines2,
+                             cv::InputOutputArray _image) {
   cv::Size sz = size;
   if(_image.needed() && _image.size() != size)
     sz = _image.size();
@@ -1382,8 +1389,11 @@ cv::LSDImpl::showSegments(const std::string& name, const cv::Mat& image, const s
 }
 
 int
-cv::LSDImpl::showSegments(
-    const std::string& name, cv::Size size, const std::vector<cv::Vec4i>& lines1, const std::vector<cv::Vec4i> lines2, cv::Mat* image) {
+cv::LSDImpl::showSegments(const std::string& name,
+                          cv::Size size,
+                          const std::vector<cv::Vec4i>& lines1,
+                          const std::vector<cv::Vec4i> lines2,
+                          cv::Mat* image) {
   cv::Mat img;
   if(!image)
     img = Mat_<uchar>::zeros(size);

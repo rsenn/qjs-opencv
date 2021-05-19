@@ -19,7 +19,7 @@ main(void) {
   img1.copyTo(left);
   cv::Mat right(img3, cv::Rect(img1.size().width, 0, img2.size().width, img2.size().height));
   img2.copyTo(right);
-  imshow("Image", img3);
+  cv::imshow("Image", img3);
 
   // cv::LSD call
   std::vector<cv::Vec4i> lines;

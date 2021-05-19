@@ -5,8 +5,6 @@
 
 #include "lsd_opencv.hpp"
 
-using namespace std;
-
 int
 main(int argc, char** argv) {
   if(argc != 3) {
@@ -32,16 +30,21 @@ main(int argc, char** argv) {
 
   std::cout << lines.size() << " line segments found. For " << duration_ms << " ms." << std::endl;
 
+  cv::cvtColor(image, image, cv::COLOR_GRAY2BGR);
+
   // Save to file
-  ofstream segfile;
+  std::ofstream segfile;
   segfile.open(out.c_str());
   for(unsigned int i = 0; i < lines.size(); ++i) {
-    cout << '\t' << "B: " << lines[i][0] << " " << lines[i][1] << " E: " << lines[i][2] << " " << lines[i][3]
-         << " W: " << width[i] << " P:" << prec[i] << endl;
+    std::cout << '\t' << "B: " << lines[i][0] << " " << lines[i][1] << " E: " << lines[i][2] << " " << lines[i][3]
+              << " W: " << width[i] << " P:" << prec[i] << std::endl;
     segfile << '\t' << "B: " << lines[i][0] << " " << lines[i][1] << " E: " << lines[i][2] << " " << lines[i][3]
-            << " W: " << width[i] << " P:" << prec[i] << endl;
+            << " W: " << width[i] << " P:" << prec[i] << std::endl;
+    cv::line(
+        image, cv::Point(lines[i][0], lines[i][1]), cv::Point(lines[i][2], lines[i][3]), cv::Scalar(0, 255, 0), 1, cv::LINE_AA);
   }
   segfile.close();
-
+  cv::imshow(in, image);
+  cv::waitKey(-1);
   return 0;
 }

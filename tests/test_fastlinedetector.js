@@ -1,7 +1,7 @@
 import * as cv from "opencv";
 
 function main(...args) {
-  let lsd = new cv.FastLineDetector(10);
+  let lsd = new cv.FastLineDetector(5, 1.414213562, 50, 50, 3, false);
   console.log("lsd", lsd);
 
   let image = cv.imread("tests/test_linesegmentdetector.jpg");
