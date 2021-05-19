@@ -74,11 +74,11 @@ function main(...args) {
   }
   // console.log(`lines`, [...lines]);
 
-contours.reverse();
+  contours.reverse();
 
-let poly = [...contours[0]];
- console.log(`poly`, console.config({ maxArrayLength: 20,compact:1 }), poly);
- console.log(`cv.moments(poly)`,cv.moments(poly, false));
+  let poly = [...contours[0]];
+  console.log(`poly`, console.config({ maxArrayLength: 20, compact: 1 }), poly);
+  console.log(`cv.moments(poly)`, console.config({ compact: 1 }), cv.moments(poly, false));
 
   cv.imshow('input', input);
 

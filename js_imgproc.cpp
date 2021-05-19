@@ -7,6 +7,7 @@
 #include "js_umat.hpp"
 #include "js_object.hpp"
 #include "js_cv.hpp"
+#include "js_rotated_rect.hpp"
 
 #include <opencv2/imgproc.hpp>
 
@@ -1531,22 +1532,153 @@ js_imgproc_filter(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
   }
   return ret;
 }
-enum{
-SHAPE_APPROX_POLY_DP=0, SHAPE_ARC_LENGTH, SHAPE_BOX_POINTS, SHAPE_CONNECTED_COMPONENTS, SHAPE_CONNECTED_COMPONENTS_WITH_STATS, SHAPE_CONTOUR_AREA, SHAPE_CONVEX_HULL, SHAPE_CONVEXITY_DEFECTS, SHAPE_CREATE_GENERALIZED_HOUGH_BALLARD, SHAPE_CREATE_GENERALIZED_HOUGH_GUIL, SHAPE_FIT_ELLIPSE, SHAPE_FIT_ELLIPSE_AMS, SHAPE_FIT_ELLIPSE_DIRECT, SHAPE_FIT_LINE, SHAPE_HU_MOMENTS, SHAPE_INTERSECT_CONVEX_CONVEX, SHAPE_IS_CONTOUR_CONVEX, SHAPE_MATCH_SHAPES, SHAPE_MIN_AREA_RECT, SHAPE_MIN_ENCLOSING_CIRCLE, SHAPE_MIN_ENCLOSING_TRIANGLE, SHAPE_ROTATED_RECTANGLE_INTERSECTION
+enum {
+  SHAPE_APPROX_POLY_DP = 0,
+  SHAPE_ARC_LENGTH,
+  SHAPE_BOX_POINTS,
+  SHAPE_CONNECTED_COMPONENTS,
+  SHAPE_CONNECTED_COMPONENTS_WITH_STATS,
+  SHAPE_CONTOUR_AREA,
+  SHAPE_CONVEX_HULL,
+  SHAPE_CONVEXITY_DEFECTS,
+  SHAPE_CREATE_GENERALIZED_HOUGH_BALLARD,
+  SHAPE_CREATE_GENERALIZED_HOUGH_GUIL,
+  SHAPE_FIT_ELLIPSE,
+  SHAPE_FIT_ELLIPSE_AMS,
+  SHAPE_FIT_ELLIPSE_DIRECT,
+  SHAPE_FIT_LINE,
+  SHAPE_HU_MOMENTS,
+  SHAPE_INTERSECT_CONVEX_CONVEX,
+  SHAPE_IS_CONTOUR_CONVEX,
+  SHAPE_MATCH_SHAPES,
+  SHAPE_MIN_AREA_RECT,
+  SHAPE_MIN_ENCLOSING_CIRCLE,
+  SHAPE_MIN_ENCLOSING_TRIANGLE,
+  SHAPE_ROTATED_RECTANGLE_INTERSECTION
 };
-
 
 static JSValue
 js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
   JSInputOutputArray src;
   JSValue ret = JS_UNDEFINED;
-
+  if(magic != SHAPE_BOX_POINTS)
     src = argc >= 1 ? js_umat_or_mat(ctx, argv[0]) : cv::noArray();
 
-  switch(magic) { 
+  switch(magic) {
+    case SHAPE_APPROX_POLY_DP: {
+      JSOutputArray approxCurve = js_umat_or_mat(ctx, argv[1]);
+      double epsilon;
+      BOOL closed;
+      JS_ToFloat64(ctx, &epsilon, argv[2]);
+      closed = JS_ToBool(ctx, argv[3]);
+      cv::approxPolyDP(src, approxCurve, epsilon, closed);
+      break;
     }
-    return ret;
+    case SHAPE_ARC_LENGTH: {
+      BOOL closed;
+      closed = JS_ToBool(ctx, argv[1]);
+      ret = JS_NewFloat64(ctx, cv::arcLength(src, closed));
+      break;
+    }
+    case SHAPE_BOX_POINTS: {
+      JSRotatedRectData* rr = js_rotated_rect_data(ctx, argv[0]);
+      JSContourData<double>* points = js_contour_data(ctx, argv[1]);
+
+      cv::boxPoints(*rr, *points);
+      break;
+    }
+    case SHAPE_CONNECTED_COMPONENTS: {
+      JSOutputArray labels = js_umat_or_mat(ctx, argv[1]);
+      int32_t connectivity, ltype, ccltype;
+      JS_ToInt32(ctx, &connectivity, argv[2]);
+      JS_ToInt32(ctx, &ltype, argv[3]);
+      JS_ToInt32(ctx, &ccltype, argv[4]);
+      // XXX: overload
+      ret = JS_NewInt32(ctx, cv::connectedComponents(src, labels, connectivity, ltype, ccltype));
+      break;
+    }
+    case SHAPE_CONNECTED_COMPONENTS_WITH_STATS: {
+      JSOutputArray labels = js_umat_or_mat(ctx, argv[1]);
+      JSOutputArray stats = js_umat_or_mat(ctx, argv[2]);
+      JSOutputArray centroids = js_umat_or_mat(ctx, argv[3]);
+      int32_t connectivity, ltype, ccltype;
+      JS_ToInt32(ctx, &connectivity, argv[4]);
+      JS_ToInt32(ctx, &ltype, argv[5]);
+      JS_ToInt32(ctx, &ccltype, argv[6]);
+      // XXX: overload
+      ret = JS_NewInt32(ctx, cv::connectedComponentsWithStats(src, labels, stats, centroids, connectivity, ltype, ccltype));
+      break;
+      break;
+    }
+    case SHAPE_CONTOUR_AREA: {
+      BOOL oriented;
+      oriented = JS_ToBool(ctx, argv[1]);
+      ret = JS_NewFloat64(ctx, cv::contourArea(src, oriented));
+      break;
+    }
+    case SHAPE_CONVEX_HULL: {
+      JSOutputArray hull = js_umat_or_mat(ctx, argv[1]);
+      BOOL clockwise = FALSE, returnPoints = TRUE;
+      if(argc >= 3)
+        clockwise = JS_ToBool(ctx, argv[2]);
+      if(argc >= 4)
+        returnPoints = JS_ToBool(ctx, argv[3]);
+      cv::convexHull(src, hull, clockwise, returnPoints);
+      break;
+    }
+    case SHAPE_CONVEXITY_DEFECTS: {
+      JSInputArray convexhull = js_umat_or_mat(ctx, argv[1]);
+      JSOutputArray convexityDefects = js_umat_or_mat(ctx, argv[2]);
+      cv::convexityDefects(src, convexhull, convexityDefects);
+      break;
+    }
+    case SHAPE_CREATE_GENERALIZED_HOUGH_BALLARD: {
+      break;
+    }
+    case SHAPE_CREATE_GENERALIZED_HOUGH_GUIL: {
+      break;
+    }
+    case SHAPE_FIT_ELLIPSE: {
+      JSRotatedRectData rr = cv::fitEllipse(src);
+      ret = js_rotated_rect_new(ctx, rr);
+      break;
+    }
+    case SHAPE_FIT_ELLIPSE_AMS: {
+      break;
+    }
+    case SHAPE_FIT_ELLIPSE_DIRECT: {
+      break;
+    }
+    case SHAPE_FIT_LINE: {
+      break;
+    }
+    case SHAPE_HU_MOMENTS: {
+      break;
+    }
+    case SHAPE_INTERSECT_CONVEX_CONVEX: {
+      break;
+    }
+    case SHAPE_IS_CONTOUR_CONVEX: {
+      break;
+    }
+    case SHAPE_MATCH_SHAPES: {
+      break;
+    }
+    case SHAPE_MIN_AREA_RECT: {
+      break;
+    }
+    case SHAPE_MIN_ENCLOSING_CIRCLE: {
+      break;
+    }
+    case SHAPE_MIN_ENCLOSING_TRIANGLE: {
+      break;
+    }
+    case SHAPE_ROTATED_RECTANGLE_INTERSECTION: {
+      break;
+    }
   }
+  return ret;
+}
 JSClassID js_imgproc_class_id = 0;
 
 void
@@ -1645,7 +1777,7 @@ js_function_list_t js_imgproc_static_funcs{
     JS_CFUNC_MAGIC_DEF("spatialGradient", 1, js_imgproc_filter, FILTER_SPATIAL_GRADIENT),
     JS_CFUNC_MAGIC_DEF("sqrBoxFilter", 1, js_imgproc_filter, FILTER_SQR_BOX_FILTER),
 
-        JS_CFUNC_MAGIC_DEF("approxPolyDP", 1, js_imgproc_shape, SHAPE_APPROX_POLY_DP),
+    JS_CFUNC_MAGIC_DEF("approxPolyDP", 1, js_imgproc_shape, SHAPE_APPROX_POLY_DP),
     JS_CFUNC_MAGIC_DEF("arcLength", 1, js_imgproc_shape, SHAPE_ARC_LENGTH),
     JS_CFUNC_MAGIC_DEF("boxPoints", 1, js_imgproc_shape, SHAPE_BOX_POINTS),
     JS_CFUNC_MAGIC_DEF("connectedComponents", 1, js_imgproc_shape, SHAPE_CONNECTED_COMPONENTS),
