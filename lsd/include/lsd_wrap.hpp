@@ -60,7 +60,6 @@
 
 //#pragma hdrstop
 
-
 namespace lsdwrap {
 
 /**
@@ -79,17 +78,15 @@ namespace lsdwrap {
  *    an angle precision of p in (0,1) given by angle_tolerance/180 degree, and
  *    Number of False Alarms (NFA) 0 <= NFA <= 2. Smaller is better
  */
-typedef struct seg_s
-{
-	float x1;		//Start point of a segment
-	float y1;
-	float x2;		//End point of a segment.  +90degree from the line from pt1 -> pt2 points into dark
-	float y2;
-	float width;	//The width of the rectangle that bounds the segment. Smaller is better
-	float p;		//Angle tollerance, default is 22.5 deg/180 deg
-	float NFA;		//Number of False Alarms (NFA) 0 <= NFA <= 2. Smaller is better
+typedef struct seg_s {
+  float x1; // Start point of a segment
+  float y1;
+  float x2; // End point of a segment.  +90degree from the line from pt1 -> pt2 points into dark
+  float y2;
+  float width; // The width of the rectangle that bounds the segment. Smaller is better
+  float p;     // Angle tollerance, default is 22.5 deg/180 deg
+  float NFA;   // Number of False Alarms (NFA) 0 <= NFA <= 2. Smaller is better
 } seg;
-
 
 /**
  * For rotation invariance, this class calls BarPose 3 times: 0 deg, 45 deg and 90 deg
@@ -99,78 +96,74 @@ typedef struct seg_s
 // BARCODE DETECTION CLASS ////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////
 
-class LsdWrap
-{
+class LsdWrap {
 public:
-	cv::Mat I64F;	 //Will convert lsd(I,...) to a gray 64 bit image here. If not allocated or the wrong size, will reallocate
-	cv::Mat Igray;   //Convert or point to gray. On multiple use, if same size, it saves on allocation
+  cv::Mat I64F;  // Will convert lsd(I,...) to a gray 64 bit image here. If not allocated or the wrong size, will reallocate
+  cv::Mat Igray; // Convert or point to gray. On multiple use, if same size, it saves on allocation
 
-	/**
-	 * Find line segments
-	 *
-	 * @param I			Input image, will be converted to gray, CV_64C1
-	 * @param segments	Return: Vector of found line segments "seg"
-	 * @param Roi		Optional region of interest to compute segments in. Smaller the image, finer the segments found
-	 * @return			Return number of segments found
-	 */
-	int lsdw(cv::Mat &I, std::vector<seg> &segments, cv::Rect *Roi = 0);
+  /**
+   * Find line segments
+   *
+   * @param I			Input image, will be converted to gray, CV_64C1
+   * @param segments	Return: Vector of found line segments "seg"
+   * @param Roi		Optional region of interest to compute segments in. Smaller the image, finer the segments found
+   * @return			Return number of segments found
+   */
+  int lsdw(cv::Mat& I, std::vector<seg>& segments, cv::Rect* Roi = 0);
 
-	/**
-	 * Subdivide image and call by parts
-	 * Basically, this just creates Rois to break up the image into div_factor x div_factor pieces, then calls lsd(I,segmetns,ROI) above
-	 *
-	 * @param I				Input image, will be converted to gray, CV_64C1
-	 * @param segments		Return: Vector of found line segments "seg"
-	 * @param div_factor	How many parts should image be divided into in each dimension? 2 => 4 parts, 3=>9 etc. [1,I.rows()/2]
-	 * @return				Return number of segments found
-	 */
-	int lsd_subdivided(cv::Mat &I, std::vector<seg> &segments, int div_factor = 1);
+  /**
+   * Subdivide image and call by parts
+   * Basically, this just creates Rois to break up the image into div_factor x div_factor pieces, then calls lsd(I,segmetns,ROI)
+   * above
+   *
+   * @param I				Input image, will be converted to gray, CV_64C1
+   * @param segments		Return: Vector of found line segments "seg"
+   * @param div_factor	How many parts should image be divided into in each dimension? 2 => 4 parts, 3=>9 etc. [1,I.rows()/2]
+   * @return				Return number of segments found
+   */
+  int lsd_subdivided(cv::Mat& I, std::vector<seg>& segments, int div_factor = 1);
 
-	/**
-	 * Visualize segments
-	 *
-	 * @param name		Name of window to display in when you declared it outside with void namedWindow(const string& winname)
-	 * @param gray		Image, CV_8UC1.  Will convert it to color image so that it can paint segments in red
-	 * @param segments  Segments found from a call to lsd(...)
-	 */
-	void imshow_segs(const std::string &name, cv::Mat &gray, std::vector<seg> &segments);
+  /**
+   * Visualize segments
+   *
+   * @param name		Name of window to display in when you declared it outside with void namedWindow(const string& winname)
+   * @param gray		Image, CV_8UC1.  Will convert it to color image so that it can paint segments in red
+   * @param segments  Segments found from a call to lsd(...)
+   */
+  void imshow_segs(const std::string& name, cv::Mat& gray, std::vector<seg>& segments);
 
-	/**
-	 * Pass in segments and image size, return segments drawn on 8UC1 image
-	 * @param seg1		Vector of segments to be drawn
-	 * @param size		width & height of image
-	 * @return			Drawn image segments on CV_8UC1 image
-	 */
-	cv::Mat segments_to_image8UC1(std::vector<seg> &seg1, cv::Size size);
+  /**
+   * Pass in segments and image size, return segments drawn on 8UC1 image
+   * @param seg1		Vector of segments to be drawn
+   * @param size		width & height of image
+   * @return			Drawn image segments on CV_8UC1 image
+   */
+  cv::Mat segments_to_image8UC1(std::vector<seg>& seg1, cv::Size size);
 
-	/**
-	 * To help in unit tests, compare 2 different segments, one from a gray image, 1 from a list & give number of differing pixels
-	 * @param Ig		CV_8UC1 image of drawn segments (drawn in blue)
-	 * @param seg2		Vector2 of segments (drawn in red)
-	 * @param size		Size of images that were used to find the segment
-	 * @param name		Optional name of window to display results in
-	 * @param I			Optional pointer. If not null, then draw image in namedWindow(name).
-	 * @return			How many points do not overlap between segments in seg1 and seg2
-	 */
-	int CompareSegs(cv::Mat &Ig, std::vector<seg> &seg2, const std::string &name, cv::Mat *I = 0);
+  /**
+   * To help in unit tests, compare 2 different segments, one from a gray image, 1 from a list & give number of differing pixels
+   * @param Ig		CV_8UC1 image of drawn segments (drawn in blue)
+   * @param seg2		Vector2 of segments (drawn in red)
+   * @param size		Size of images that were used to find the segment
+   * @param name		Optional name of window to display results in
+   * @param I			Optional pointer. If not null, then draw image in namedWindow(name).
+   * @return			How many points do not overlap between segments in seg1 and seg2
+   */
+  int CompareSegs(cv::Mat& Ig, std::vector<seg>& seg2, const std::string& name, cv::Mat* I = 0);
 
+  /**
+   * To help in unit tests, compare 2 different segment finds
+   * @param seg1		Vector1 of segments (drawn in blue)
+   * @param seg2		Vector2 of segments (drawn in red)
+   * @param size		Size of images that were used to find the segment
+   * @param name		Optional name of window to display results in
+   * @param I			Optional pointer. If not null, then draw image in namedWindow(name).
+   * @return			How many points do not overlap between segments in seg1 and seg2
+   */
+  int CompareSegs(std::vector<seg>& seg1, std::vector<seg>& seg2, cv::Size size, const std::string& name, cv::Mat* I = 0);
 
-	/**
-	 * To help in unit tests, compare 2 different segment finds
-	 * @param seg1		Vector1 of segments (drawn in blue)
-	 * @param seg2		Vector2 of segments (drawn in red)
-	 * @param size		Size of images that were used to find the segment
-	 * @param name		Optional name of window to display results in
-	 * @param I			Optional pointer. If not null, then draw image in namedWindow(name).
-	 * @return			How many points do not overlap between segments in seg1 and seg2
-	 */
-	int CompareSegs(std::vector<seg> &seg1,std::vector<seg> &seg2,
-			cv::Size size, const std::string &name, cv::Mat *I = 0);
+}; // end class
 
-}; //end class
-
-} //Namespace lsdwrap
+} // Namespace lsdwrap
 
 #endif /* LSD_WRAP_HPP_ */
-
-

@@ -8,47 +8,41 @@
 using namespace std;
 using namespace cv;
 
-int main(int argc, char** argv)
-{
-	if (argc != 3)
-	{
-		std::cout << "lsd_opencv_cmd [in] [out]" << std::endl
-			<< "\tin - input image" << std::endl
-			<< "\tout - output containing a line segment at each line [x1, y1, x2, y2, width, p, -log10(NFA)]" << std::endl;
-		return false;
-	}
+int
+main(int argc, char** argv) {
+  if(argc != 3) {
+    std::cout << "lsd_opencv_cmd [in] [out]" << std::endl
+              << "\tin - input image" << std::endl
+              << "\tout - output containing a line segment at each line [x1, y1, x2, y2, width, p, -log10(NFA)]" << std::endl;
+    return false;
+  }
 
-	std::string in = argv[1];
-	std::string out = argv[2];
+  std::string in = argv[1];
+  std::string out = argv[2];
 
-	Mat image = imread(in, IMREAD_GRAYSCALE);
+  Mat image = imread(in, IMREAD_GRAYSCALE);
 
-	// LSD call
-	std::vector<Vec4i> lines;
-    std::vector<double> width, prec;
-	Ptr<LSD> lsd = createLSDPtr();
+  // LSD call
+  std::vector<Vec4i> lines;
+  std::vector<double> width, prec;
+  Ptr<LSD> lsd = createLSDPtr();
 
-    double start = double(getTickCount());
-    lsd->detect(image, lines, width, prec);
-    double duration_ms = (double(getTickCount()) - start) * 1000 / getTickFrequency();
+  double start = double(getTickCount());
+  lsd->detect(image, lines, width, prec);
+  double duration_ms = (double(getTickCount()) - start) * 1000 / getTickFrequency();
 
-    std::cout << lines.size() <<" line segments found. For " << duration_ms << " ms." << std::endl;
+  std::cout << lines.size() << " line segments found. For " << duration_ms << " ms." << std::endl;
 
-	//Save to file
-	ofstream segfile;
-  	segfile.open(out.c_str());
-    for (unsigned int i = 0; i < lines.size(); ++i)
-    {
-		cout << '\t' << "B: " << lines[i][0] << " " << lines[i][1]
-		<< " E: " << lines[i][2] << " " << lines[i][3]
-		<< " W: " << width[i]
-		<< " P:" << prec[i] << endl;
-		segfile << '\t' << "B: " << lines[i][0] << " " << lines[i][1]
-		<< " E: " << lines[i][2] << " " << lines[i][3]
-		<< " W: " << width[i]
-		<< " P:" << prec[i] << endl;
-    }
-	segfile.close();
+  // Save to file
+  ofstream segfile;
+  segfile.open(out.c_str());
+  for(unsigned int i = 0; i < lines.size(); ++i) {
+    cout << '\t' << "B: " << lines[i][0] << " " << lines[i][1] << " E: " << lines[i][2] << " " << lines[i][3]
+         << " W: " << width[i] << " P:" << prec[i] << endl;
+    segfile << '\t' << "B: " << lines[i][0] << " " << lines[i][1] << " E: " << lines[i][2] << " " << lines[i][3]
+            << " W: " << width[i] << " P:" << prec[i] << endl;
+  }
+  segfile.close();
 
-	return 0;
+  return 0;
 }
