@@ -1531,7 +1531,22 @@ js_imgproc_filter(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
   }
   return ret;
 }
+enum{
+SHAPE_APPROX_POLY_DP=0, SHAPE_ARC_LENGTH, SHAPE_BOX_POINTS, SHAPE_CONNECTED_COMPONENTS, SHAPE_CONNECTED_COMPONENTS_WITH_STATS, SHAPE_CONTOUR_AREA, SHAPE_CONVEX_HULL, SHAPE_CONVEXITY_DEFECTS, SHAPE_CREATE_GENERALIZED_HOUGH_BALLARD, SHAPE_CREATE_GENERALIZED_HOUGH_GUIL, SHAPE_FIT_ELLIPSE, SHAPE_FIT_ELLIPSE_AMS, SHAPE_FIT_ELLIPSE_DIRECT, SHAPE_FIT_LINE, SHAPE_HU_MOMENTS, SHAPE_INTERSECT_CONVEX_CONVEX, SHAPE_IS_CONTOUR_CONVEX, SHAPE_MATCH_SHAPES, SHAPE_MIN_AREA_RECT, SHAPE_MIN_ENCLOSING_CIRCLE, SHAPE_MIN_ENCLOSING_TRIANGLE, SHAPE_ROTATED_RECTANGLE_INTERSECTION
+};
 
+
+static JSValue
+js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+  JSInputOutputArray src;
+  JSValue ret = JS_UNDEFINED;
+
+    src = argc >= 1 ? js_umat_or_mat(ctx, argv[0]) : cv::noArray();
+
+  switch(magic) { 
+    }
+    return ret;
+  }
 JSClassID js_imgproc_class_id = 0;
 
 void
@@ -1629,6 +1644,30 @@ js_function_list_t js_imgproc_static_funcs{
     JS_CFUNC_MAGIC_DEF("Sobel", 1, js_imgproc_filter, FILTER_SOBEL),
     JS_CFUNC_MAGIC_DEF("spatialGradient", 1, js_imgproc_filter, FILTER_SPATIAL_GRADIENT),
     JS_CFUNC_MAGIC_DEF("sqrBoxFilter", 1, js_imgproc_filter, FILTER_SQR_BOX_FILTER),
+
+        JS_CFUNC_MAGIC_DEF("approxPolyDP", 1, js_imgproc_shape, SHAPE_APPROX_POLY_DP),
+    JS_CFUNC_MAGIC_DEF("arcLength", 1, js_imgproc_shape, SHAPE_ARC_LENGTH),
+    JS_CFUNC_MAGIC_DEF("boxPoints", 1, js_imgproc_shape, SHAPE_BOX_POINTS),
+    JS_CFUNC_MAGIC_DEF("connectedComponents", 1, js_imgproc_shape, SHAPE_CONNECTED_COMPONENTS),
+    JS_CFUNC_MAGIC_DEF("connectedComponentsWithStats", 1, js_imgproc_shape, SHAPE_CONNECTED_COMPONENTS_WITH_STATS),
+    JS_CFUNC_MAGIC_DEF("contourArea", 1, js_imgproc_shape, SHAPE_CONTOUR_AREA),
+    JS_CFUNC_MAGIC_DEF("convexHull", 1, js_imgproc_shape, SHAPE_CONVEX_HULL),
+    JS_CFUNC_MAGIC_DEF("convexityDefects", 1, js_imgproc_shape, SHAPE_CONVEXITY_DEFECTS),
+    JS_CFUNC_MAGIC_DEF("createGeneralizedHoughBallard", 1, js_imgproc_shape, SHAPE_CREATE_GENERALIZED_HOUGH_BALLARD),
+    JS_CFUNC_MAGIC_DEF("createGeneralizedHoughGuil", 1, js_imgproc_shape, SHAPE_CREATE_GENERALIZED_HOUGH_GUIL),
+    JS_CFUNC_MAGIC_DEF("fitEllipse", 1, js_imgproc_shape, SHAPE_FIT_ELLIPSE),
+    JS_CFUNC_MAGIC_DEF("fitEllipseAMS", 1, js_imgproc_shape, SHAPE_FIT_ELLIPSE_AMS),
+    JS_CFUNC_MAGIC_DEF("fitEllipseDirect", 1, js_imgproc_shape, SHAPE_FIT_ELLIPSE_DIRECT),
+    JS_CFUNC_MAGIC_DEF("fitLine", 1, js_imgproc_shape, SHAPE_FIT_LINE),
+    JS_CFUNC_MAGIC_DEF("HuMoments", 1, js_imgproc_shape, SHAPE_HU_MOMENTS),
+    JS_CFUNC_MAGIC_DEF("intersectConvexConvex", 1, js_imgproc_shape, SHAPE_INTERSECT_CONVEX_CONVEX),
+    JS_CFUNC_MAGIC_DEF("isContourConvex", 1, js_imgproc_shape, SHAPE_IS_CONTOUR_CONVEX),
+    JS_CFUNC_MAGIC_DEF("matchShapes", 1, js_imgproc_shape, SHAPE_MATCH_SHAPES),
+    JS_CFUNC_MAGIC_DEF("minAreaRect", 1, js_imgproc_shape, SHAPE_MIN_AREA_RECT),
+    JS_CFUNC_MAGIC_DEF("minEnclosingCircle", 1, js_imgproc_shape, SHAPE_MIN_ENCLOSING_CIRCLE),
+    JS_CFUNC_MAGIC_DEF("minEnclosingTriangle", 1, js_imgproc_shape, SHAPE_MIN_ENCLOSING_TRIANGLE),
+    JS_CFUNC_MAGIC_DEF("rotatedRectangleIntersection", 1, js_imgproc_shape, SHAPE_ROTATED_RECTANGLE_INTERSECTION),
+
 };
 
 extern "C" int
