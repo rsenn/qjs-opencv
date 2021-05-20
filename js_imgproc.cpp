@@ -613,46 +613,24 @@ js_cv_find_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   JSContoursData<double> poly;
 
   cv::findContours(*m, contours, hier, mode, approx, offset);
-
-  /*printf("js_cv_find_contours contours.size() = %zu\n", contours.size());
-  if(contours.size())
-    printf("js_cv_find_contours contours.back().size() = %zu\n", contours.back().size());*/
-
+ 
   if(js_is_array(ctx, argv[1])) {
     js_array_truncate(ctx, argv[1], 0);
   }
 
   poly.resize(contours.size());
-
   transform_contours(contours.begin(), contours.end(), poly.begin());
-
-  /*printf("js_cv_find_contours poly.size() = %zu\n", poly.size());
-  if(poly.size())
-    printf("js_cv_find_contours poly.back().size() = %zu\n", poly.back().size());*/
-
+ 
   array_buffer = js_arraybuffer_from(ctx, begin(hier), end(hier));
 
   {
     size_t i, length = contours.size();
     JSValue ctor = js_global_get(ctx, "Int32Array");
-
     for(i = 0; i < length; i++) {
       JSValue array = js_typedarray_new(ctx, array_buffer, i * sizeof(cv::Vec4i), 4, ctor);
-
-      /*std::array<int32_t, 4> v;
-
-      v[0] = hier[i][0];
-      v[1] = hier[i][1];
-      v[2] = hier[i][2];
-      v[3] = hier[i][3];*/
-
       JS_SetPropertyUint32(ctx, argv[1], i, js_contour_new(ctx, poly[i]));
-
       if(!hier_callback) {
         JS_SetPropertyUint32(ctx, argv[2], i, array);
-        // JS_SetPropertyUint32(ctx, argv[2], i, js_typedarray_from(ctx, v.cbegin(), v.cend()));
-        // JS_SetPropertyUint32(ctx, argv[2], i, js_typedarray_from(ctx, begin(hier[i]),
-        // end(hier[i])));
       }
     }
     JS_FreeValue(ctx, ctor);
@@ -663,18 +641,14 @@ js_cv_find_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
     int32_t *hstart, *hend;
     hstart = reinterpret_cast<int32_t*>(&hier[0]);
     hend = reinterpret_cast<int32_t*>(&hier[hier.size()]);
-
     tarray = js_array_from(ctx, hstart, hend);
-
     JS_Call(ctx, argv[2], JS_NULL, 1, &tarray);
   }
 
   /*{
       JSValue hier_arr = js_vector_vec4i_to_array(ctx, hier);
       JSValue contours_obj = js_contours_new(ctx, poly);
-
       ret = JS_NewObject(ctx);
-
       JS_SetPropertyStr(ctx, ret, "hier", hier_arr);
       JS_SetPropertyStr(ctx, ret, "contours", contours_obj);
     }*/
