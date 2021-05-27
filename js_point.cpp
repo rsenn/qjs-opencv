@@ -40,6 +40,7 @@ js_point_arg(JSContext* ctx, JSPointData<T>* out, int argc, JSValueConst argv[])
   }
   return ret;
 }
+
 VISIBLE JSValue
 js_point_new(JSContext* ctx, JSValueConst proto, double x, double y) {
   JSValue ret;
@@ -48,15 +49,18 @@ js_point_new(JSContext* ctx, JSValueConst proto, double x, double y) {
   if(JS_IsUndefined(point_proto))
     js_point_init(ctx, NULL);
 
+  if(JS_IsUndefined(proto))
+    proto = point_proto;
+
   ret = JS_NewObjectProtoClass(ctx, proto, js_point_class_id);
 
   s = js_allocate<JSPointData<double>>(ctx);
 
   new(s) JSPointData<double>();
-  s->x = x <= DBL_EPSILON ? 0 : x;
-  s->y = y <= DBL_EPSILON ? 0 : y;
+  s->x = /*x <= DBL_EPSILON ? 0 : */ x;
+  s->y = /*y <= DBL_EPSILON ? 0 :*/ y;
 
-  points.push_back(s);
+  // points.push_back(s);
 
   JS_SetOpaque(ret, s);
   return ret;
@@ -72,15 +76,14 @@ js_point_data(JSValueConst val) {
 }
 VISIBLE JSValue
 js_point_new(JSContext* ctx, const JSPointData<double>& point) {
-  return js_point_new(ctx, point.x, point.y);
+  return js_point_new(ctx, point_proto, point.x, point.y);
 }
 
 extern "C" {
 
-
 JSValue
 js_point_clone(JSContext* ctx, const JSPointData<double>& point) {
-  return js_point_new(ctx, point.x, point.y);
+  return js_point_new(ctx, point_proto, point.x, point.y);
 }
 
 static JSValue
@@ -180,6 +183,7 @@ js_point_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
       ret = JS_NewFloat64(ctx, sqrt((double)s->x * s->x + (double)s->y * s->y));
       break;
     }
+
     case POINT_METHOD_ABS: {
       ret = js_point_new(ctx, JS_GetPrototype(ctx, this_val), fabs(s->x), fabs(s->y));
       break;

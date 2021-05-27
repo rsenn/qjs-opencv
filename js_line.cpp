@@ -7,7 +7,18 @@
 #include "util.hpp"
 #include "line.hpp"
 
-enum { PROP_SLOPE = 0, PROP_PIVOT, PROP_TO, PROP_ANGLE, PROP_ASPECT, PROP_LENGTH };
+enum {
+  PROP_A = 0,
+  PROP_B,
+  PROP_SLOPE,
+  PROP_PIVOT,
+  PROP_TO,
+  METHOD_XINTERCEPT,
+  METHOD_YINTERCEPT,
+  PROP_ANGLE,
+  PROP_ASPECT,
+  PROP_LENGTH
+};
 enum { METHOD_SWAP = 0, METHOD_AT, METHOD_INTERSECT, METHOD_ENDPOINT_DISTANCES, METHOD_DISTANCE };
 
 extern "C" {
@@ -100,22 +111,22 @@ js_line_get_xy12(JSContext* ctx, JSValueConst this_val, int magic) {
   else if(magic == 3)
     ret = JS_NewFloat64(ctx, ln->array[3]);
   return ret;
-}
+} /*
 
-static JSValue
-js_line_get_ab(JSContext* ctx, JSValueConst this_val, int magic) {
-  JSValue ret = JS_UNDEFINED;
-  JSLineData<double>* ln = static_cast<JSLineData<double>*>(JS_GetOpaque2(ctx, this_val, js_line_class_id));
-  if(!ln)
-    ret = JS_EXCEPTION;
-  else if(magic == 0)
-    ret = js_point_new(ctx, ln->array[0], ln->array[1]);
-  else if(magic == 1)
-    ret = js_point_new(ctx, ln->array[2], ln->array[3]);
+ static JSValue
+ js_line_get_ab(JSContext* ctx, JSValueConst this_val, int magic) {
+   JSValue ret = JS_UNDEFINED;
+   JSLineData<double>* ln = static_cast<JSLineData<double>*>(JS_GetOpaque2(ctx, this_val, js_line_class_id));
+   if(!ln)
+     ret = JS_EXCEPTION;
+   else if(magic == 0)
+     ret = js_point_new(ctx, ln->array[0], ln->array[1]);
+   else if(magic == 1)
+     ret = js_point_new(ctx, ln->array[2], ln->array[3]);
 
-  return ret;
-}
-
+   return ret;
+ }
+ */
 static JSValue
 js_line_get(JSContext* ctx, JSValueConst this_val, int magic) {
   JSLineData<double>* ln;
@@ -124,6 +135,12 @@ js_line_get(JSContext* ctx, JSValueConst this_val, int magic) {
     return JS_UNDEFINED;
 
   switch(magic) {
+    case PROP_A: {
+      return js_point_new(ctx, ln->x1, ln->y1);
+    }
+    case PROP_B: {
+      return js_point_new(ctx, ln->x2, ln->y2);
+    }
     case PROP_SLOPE: {
       Line<double> line(ln->array);
       JSPointData<double> slope = line.slope();
@@ -137,6 +154,7 @@ js_line_get(JSContext* ctx, JSValueConst this_val, int magic) {
       JSPointData<double> to(ln->x2, ln->y2);
       return js_point_new(ctx, to);
     }
+
     case PROP_ANGLE: {
       Line<double> line(ln->array);
       return JS_NewFloat64(ctx, std::atan2(ln->x2 - ln->x1, ln->y2 - ln->y1));
@@ -183,9 +201,9 @@ js_line_set(JSContext* ctx, JSValueConst this_val, JSValueConst val, int magic) 
 
 static JSValue
 js_line_set_xy12(JSContext* ctx, JSValueConst this_val, JSValueConst val, int magic) {
-  JSLineData<double>* ln = static_cast<JSLineData<double>*>(JS_GetOpaque2(ctx, this_val, js_line_class_id));
+  JSLineData<double>* ln;
   double v;
-  if(!ln)
+  if(!(ln = static_cast<JSLineData<double>*>(JS_GetOpaque2(ctx, this_val, js_line_class_id))))
     return JS_EXCEPTION;
   if(JS_ToFloat64(ctx, &v, val))
     return JS_EXCEPTION;
@@ -303,6 +321,22 @@ js_line_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
       ret = js_number_new(ctx, line.distance(pt));
       break;
     }
+    case METHOD_XINTERCEPT: {
+      Line<double> line(*ln);
+      double x = 0;
+      if(argc >= 1)
+        JS_ToFloat64(ctx, &x, argv[0]);
+      ret = JS_NewFloat64(ctx, line.x_intercept(x));
+      break;
+    }
+    case METHOD_YINTERCEPT: {
+      Line<double> line(*ln);
+      double y = 0;
+      if(argc >= 1)
+        JS_ToFloat64(ctx, &y, argv[0]);
+      ret = JS_NewFloat64(ctx, line.y_intercept(y));
+      break;
+    }
   }
   return ret;
 }
@@ -398,16 +432,18 @@ const JSCFunctionListEntry js_line_proto_funcs[] = {
     JS_CGETSET_ENUMERABLE_DEF("y1", js_line_get_xy12, js_line_set_xy12, 1),
     JS_CGETSET_ENUMERABLE_DEF("x2", js_line_get_xy12, js_line_set_xy12, 2),
     JS_CGETSET_ENUMERABLE_DEF("y2", js_line_get_xy12, js_line_set_xy12, 3),
-    JS_CGETSET_MAGIC_DEF("a", js_line_get_ab, js_line_set_ab, 0),
-    JS_CGETSET_MAGIC_DEF("b", js_line_get_ab, js_line_set_ab, 1),
-    JS_CGETSET_MAGIC_DEF("0", js_line_get_ab, js_line_set_ab, 0),
-    JS_CGETSET_MAGIC_DEF("1", js_line_get_ab, js_line_set_ab, 1),
+    JS_CGETSET_MAGIC_DEF("a", js_line_get, js_line_set_ab, PROP_A),
+    JS_CGETSET_MAGIC_DEF("b", js_line_get, js_line_set_ab, PROP_B),
+    JS_CGETSET_MAGIC_DEF("0", js_line_get, js_line_set_ab, PROP_A),
+    JS_CGETSET_MAGIC_DEF("1", js_line_get, js_line_set_ab, PROP_B),
     JS_CGETSET_MAGIC_DEF("slope", js_line_get, 0, PROP_SLOPE),
     JS_CGETSET_MAGIC_DEF("angle", js_line_get, 0, PROP_ANGLE),
     JS_CGETSET_MAGIC_DEF("aspect", js_line_get, 0, PROP_ASPECT),
     JS_CGETSET_MAGIC_DEF("length", js_line_get, 0, PROP_LENGTH),
     JS_CGETSET_MAGIC_DEF("pivot", js_line_get, js_line_set, PROP_PIVOT),
     JS_CGETSET_MAGIC_DEF("to", js_line_get, js_line_set, PROP_TO),
+    JS_CFUNC_MAGIC_DEF("xIntercept", 0, js_line_methods, METHOD_XINTERCEPT),
+    JS_CFUNC_MAGIC_DEF("yIntercept", 0, js_line_methods, METHOD_YINTERCEPT),
     JS_CFUNC_MAGIC_DEF("swap", 0, js_line_methods, METHOD_SWAP),
     JS_CFUNC_MAGIC_DEF("at", 1, js_line_methods, METHOD_AT),
     JS_CFUNC_MAGIC_DEF("intersect", 1, js_line_methods, METHOD_INTERSECT),

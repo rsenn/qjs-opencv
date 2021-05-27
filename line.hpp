@@ -9,6 +9,7 @@
 #include <string>
 #include <functional>
 #include <array>
+#include <limits>
 #include "psimpl.hpp"
 
 template<class T> class LineEnd;
@@ -20,6 +21,8 @@ public:
   typedef T value_type;
 
   point_type a, b;
+
+  template<class U> Line(const U& other) : a(other.x1, other.y1), b(other.x2, other.y2) {}
 
   Line(const point_type& p1, const point_type& p2) : a(p1), b(p2) {}
 
@@ -42,10 +45,7 @@ public:
 
   point_type
   slope() const {
-    point_type d;
-    d.x = b.x - a.x;
-    d.y = b.y - a.y;
-    return d;
+    return point_type(b.x - a.x, b.y - a.y);
   }
 
   const point_type&
@@ -98,16 +98,44 @@ public:
     return l.angle() - angle();
   }
 
-  std::array<cv::Point_<T>, 2>
+  std::array<point_type, 2>
   pointsArray() const {
-    std::array<cv::Point_<T>, 2> ret = {a, b};
+    std::array<point_type, 2> ret = {a, b};
     return ret;
   }
 
-  std::vector<cv::Point_<T>>
+  std::vector<point_type>
   points() const {
-    std::vector<cv::Point_<T>> ret{a, b};
+    std::vector<point_type> ret{a, b};
     return ret;
+  }
+
+  T
+  y_intercept(T yintercept) const {
+    T dx = b.x - a.x;
+    T dy = b.y - a.y;
+
+    T deltay = yintercept - b.y;
+    if(dy != 0)
+      // dy very close to 0 will be numerically unstable, account for that
+      return b.x + (dx / dy) * deltay;
+
+    // line is parrallel to x-axis, will never reach yintercept
+    return std::numeric_limits<T>::quiet_NaN();
+  }
+
+  T
+  x_intercept(T xintercept) const {
+    T dy = b.y - a.y;
+    T dx = b.x - a.x;
+
+    T deltax = xintercept - b.x;
+    if(dx != 0)
+      // dx verx close to 0 will be numericallx unstable, account for that
+      return b.y + (dy / dx) * deltax;
+
+    // line is parrallel to y-ayis, will never reach xintercept
+    return std::numeric_limits<T>::quiet_NaN();
   }
 
   /**
@@ -118,7 +146,7 @@ public:
    * @param intersect Result intersect.
    * @return True if there is intersect of two lines, otherwise false.
    */
-  bool intersect(const Line<T>& line2, cv::Point_<T>* pt = nullptr) const;
+  bool intersect(const Line<T>& line2, point_type* pt = nullptr) const;
 
   template<class OtherValueT> bool operator<(const Line<OtherValueT>& l2) const;
 
