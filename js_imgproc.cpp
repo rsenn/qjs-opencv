@@ -613,15 +613,14 @@ js_cv_find_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   JSContoursData<double> poly;
 
   cv::findContours(*m, contours, hier, mode, approx, offset);
- 
+
   if(js_is_array(ctx, argv[1])) {
     js_array_truncate(ctx, argv[1], 0);
-  } 
-  
+  }
 
   poly.resize(contours.size());
   transform_contours(contours.begin(), contours.end(), poly.begin());
- 
+
   array_buffer = js_arraybuffer_from(ctx, begin(hier), end(hier));
 
   {

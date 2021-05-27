@@ -7,7 +7,7 @@
 #include "util.hpp"
 #include "line.hpp"
 
-enum { PROP_SLOPE = 0, PROP_PIVOT, PROP_TO, PROP_ANGLE, PROP_LENGTH };
+enum { PROP_SLOPE = 0, PROP_PIVOT, PROP_TO, PROP_ANGLE, PROP_ASPECT, PROP_LENGTH };
 enum { METHOD_SWAP = 0, METHOD_AT, METHOD_INTERSECT, METHOD_ENDPOINT_DISTANCES, METHOD_DISTANCE };
 
 extern "C" {
@@ -140,6 +140,10 @@ js_line_get(JSContext* ctx, JSValueConst this_val, int magic) {
       Line<double> line(ln->array);
       return JS_NewFloat64(ctx, std::atan2(ln->x2 - ln->x1, ln->y2 - ln->y1));
     }
+    case PROP_ASPECT: {
+      Line<double> line(ln->array);
+      return JS_NewFloat64(ctx, std::fabs(ln->x2 - ln->x1) / fabs(ln->y2 - ln->y1));
+    }
     case PROP_LENGTH: {
       Line<double> line(ln->array);
       return JS_NewFloat64(ctx, line.length());
@@ -260,7 +264,7 @@ js_line_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
       JSPointData<double> p;
       js_value_to(ctx, argv[0], sigma);
 
-      sigma = fmin(fmax(sigma, 1), 0);
+      sigma = fmin(fmax(sigma, 0), 1);
 
       p.x = ln->points[0].x * (1.0 - sigma) + ln->points[1].x * sigma;
       p.y = ln->points[0].y * (1.0 - sigma) + ln->points[1].y * sigma;
@@ -399,6 +403,7 @@ const JSCFunctionListEntry js_line_proto_funcs[] = {
     JS_CGETSET_MAGIC_DEF("1", js_line_get_ab, js_line_set_ab, 1),
     JS_CGETSET_MAGIC_DEF("slope", js_line_get, 0, PROP_SLOPE),
     JS_CGETSET_MAGIC_DEF("angle", js_line_get, 0, PROP_ANGLE),
+    JS_CGETSET_MAGIC_DEF("aspect", js_line_get, 0, PROP_ASPECT),
     JS_CGETSET_MAGIC_DEF("length", js_line_get, 0, PROP_LENGTH),
     JS_CGETSET_MAGIC_DEF("pivot", js_line_get, js_line_set, PROP_PIVOT),
     JS_CGETSET_MAGIC_DEF("to", js_line_get, js_line_set, PROP_TO),

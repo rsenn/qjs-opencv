@@ -42,8 +42,10 @@ public:
 
   point_type
   slope() const {
-    point_type diff = b - a;
-    return diff;
+    point_type d;
+    d.x = b.x - a.x;
+    d.y = b.y - a.y;
+    return d;
   }
 
   const point_type&
