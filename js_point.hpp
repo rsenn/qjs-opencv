@@ -11,16 +11,17 @@ extern "C" {
 extern JSValue point_proto, point_class;
 extern JSClassID js_point_class_id;
 
-VISIBLE JSValue js_point_new(JSContext*, double x, double y);
-VISIBLE JSValue js_point_wrap(JSContext*, const JSPointData<double>&);
-
 int js_point_init(JSContext*, JSModuleDef* m);
 void js_point_constructor(JSContext* ctx, JSValue parent, const char* name);
 
 JSModuleDef* js_init_point_module(JSContext*, const char* module_name);
 }
 
+
+VISIBLE JSValue js_point_new(JSContext*, double x, double y);
+VISIBLE JSValue js_point_new(JSContext*, const JSPointData<double>&);
 VISIBLE JSValue js_point_new(JSContext*, JSValueConst, double x, double y);
+
 VISIBLE JSPointData<double>* js_point_data(JSContext*, JSValueConst val);
 VISIBLE JSPointData<double>* js_point_data(JSValueConst val);
 

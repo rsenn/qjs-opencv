@@ -70,13 +70,13 @@ VISIBLE JSPointData<double>*
 js_point_data(JSValueConst val) {
   return static_cast<JSPointData<double>*>(JS_GetOpaque(val, js_point_class_id));
 }
+VISIBLE JSValue
+js_point_new(JSContext* ctx, const JSPointData<double>& point) {
+  return js_point_new(ctx, point.x, point.y);
+}
 
 extern "C" {
 
-VISIBLE JSValue
-js_point_wrap(JSContext* ctx, const JSPointData<double>& point) {
-  return js_point_new(ctx, point.x, point.y);
-}
 
 JSValue
 js_point_clone(JSContext* ctx, const JSPointData<double>& point) {
@@ -229,7 +229,7 @@ js_point_arith(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
       point.y = s->y / other.y;
       break;
   }
-  return js_point_wrap(ctx, point);
+  return js_point_new(ctx, point);
 }
 
 static JSValue

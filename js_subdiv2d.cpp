@@ -126,7 +126,7 @@ js_subdiv2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
       int32_t vertex, firstEdge = 0;
       JS_ToInt32(ctx, &vertex, argv[0]);
 
-      ret = js_point_wrap(ctx, s->getVertex(vertex, &firstEdge));
+      ret = js_point_new(ctx, s->getVertex(vertex, &firstEdge));
 
       if(argc > 1) {
         JSValue val = JS_NewInt32(ctx, firstEdge);

@@ -369,7 +369,7 @@ public:
   copy_sequence(JSContext* ctx, JSValueConst arr, const Iterator& start, const Iterator& end) {
     size_t i = 0;
     for(Iterator it = start; it != end; ++it) {
-      JS_SetPropertyUint32(ctx, arr, i, js_point_wrap(ctx, *it));
+      JS_SetPropertyUint32(ctx, arr, i, js_point_new(ctx, *it));
       ++i;
     }
     return i;

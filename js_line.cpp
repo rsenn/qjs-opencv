@@ -126,15 +126,16 @@ js_line_get(JSContext* ctx, JSValueConst this_val, int magic) {
   switch(magic) {
     case PROP_SLOPE: {
       Line<double> line(ln->array);
-      return js_point_wrap(ctx, line.slope());
+      JSPointData<double> slope = line.slope();
+      return js_point_new(ctx, slope);
     }
     case PROP_PIVOT: {
       JSPointData<double> pivot(ln->x1, ln->y1);
-      return js_point_wrap(ctx, pivot);
+      return js_point_new(ctx, pivot);
     }
     case PROP_TO: {
       JSPointData<double> to(ln->x2, ln->y2);
-      return js_point_wrap(ctx, to);
+      return js_point_new(ctx, to);
     }
     case PROP_ANGLE: {
       Line<double> line(ln->array);
@@ -269,7 +270,7 @@ js_line_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
       p.x = ln->points[0].x * (1.0 - sigma) + ln->points[1].x * sigma;
       p.y = ln->points[0].y * (1.0 - sigma) + ln->points[1].y * sigma;
 
-      ret = js_point_wrap(ctx, p);
+      ret = js_point_new(ctx, p);
       break;
     }
     case METHOD_INTERSECT: {

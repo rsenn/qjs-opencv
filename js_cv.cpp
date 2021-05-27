@@ -256,14 +256,14 @@ js_cv_min_max_loc(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
   JS_SetPropertyStr(ctx,
                     ret,
                     "minLoc",
-                    js_array_from(ctx, std::array<int, 2>{minLoc.x, minLoc.y})); // js_point_wrap(ctx, minLoc));
+                    js_array_from(ctx, std::array<int, 2>{minLoc.x, minLoc.y})); // js_point_new(ctx, minLoc));
   JS_SetPropertyStr(ctx,
                     ret,
                     "maxLoc",
                     js_object::from_map(ctx,
                                         std::map<std::string, int>{
                                             std::pair<std::string, int>{"x", maxLoc.x},
-                                            std::pair<std::string, int>{"y", maxLoc.y}})); // js_point_wrap(ctx, maxLoc));
+                                            std::pair<std::string, int>{"y", maxLoc.y}})); // js_point_new(ctx, maxLoc));
 
   return ret;
 }*/
