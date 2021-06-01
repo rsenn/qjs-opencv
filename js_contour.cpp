@@ -1036,17 +1036,119 @@ js_contour_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
   if(!(contour = js_contour_data(ctx, this_val)))
     return JS_EXCEPTION;
 
-  JSValue obj = JS_NewObjectClass(ctx, js_contour_class_id);
+  JSValue obj = JS_NewObject /*Class*/ (ctx /*, js_contour_class_id*/);
 
   JS_DefinePropertyValueStr(ctx, obj, "length", JS_NewUint32(ctx, contour->size()), JS_PROP_ENUMERABLE);
   return obj;
 }
-
 extern "C" {
+
+static int
+js_contour_get_own_property(JSContext* ctx, JSPropertyDescriptor* pdesc, JSValueConst obj, JSAtom prop) {
+  JSContourData<double>* contour = js_contour_data(obj);
+
+  JSValue value = JS_UNDEFINED;
+  uint32_t index;
+
+  if(js_atom_is_index(ctx, &index, prop)) {
+    if(index < contour->size()) {
+      value = js_point_new(ctx, (*contour)[index]);
+
+      if(pdesc) {
+        pdesc->flags = JS_PROP_ENUMERABLE;
+        pdesc->value = value;
+        pdesc->getter = JS_UNDEFINED;
+        pdesc->setter = JS_UNDEFINED;
+      }
+      return TRUE;
+    }
+  }
+  return FALSE;
+}
+
+static int
+js_contour_get_own_property_names(JSContext* ctx, JSPropertyEnum** ptab, uint32_t* plen, JSValueConst obj) {
+  JSContourData<double>* contour = js_contour_data(obj);
+  size_t i, len = contour->size();
+  JSPropertyEnum* props = js_allocate<JSPropertyEnum>(ctx, len + 1);
+
+  for(i = 0; i < len; i++) {
+    props[i].is_enumerable = TRUE;
+    props[i].atom = i | (1U << 31);
+  }
+  props[len].is_enumerable = FALSE;
+  props[len].atom = JS_NewAtom(ctx, "length");
+
+  *ptab = props;
+  *plen = len + 1;
+  return 0;
+}
+
+static int
+js_contour_has(JSContext* ctx, JSValueConst obj, JSAtom prop) {
+  JSContourData<double>* contour = js_contour_data(obj);
+  uint32_t index;
+
+  if(js_atom_is_index(ctx, &index, prop)) {
+    if(index < contour->size())
+      return TRUE;
+  } else if(js_atom_is_length(ctx, prop)) {
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+static JSValue
+js_contour_get(JSContext* ctx, JSValueConst obj, JSAtom prop, JSValueConst receiver) {
+  JSContourData<double>* contour = js_contour_data(obj);
+  JSValue value = JS_UNDEFINED;
+  uint32_t index;
+
+  if(js_atom_is_index(ctx, &index, prop)) {
+    if(index < contour->size())
+      value = js_point_new(ctx, (*contour)[index]);
+  } else if(js_atom_is_length(ctx, prop)) {
+    value = JS_NewUint32(ctx, contour->size());
+  }
+
+  return value;
+}
+
+static int
+js_contour_set(JSContext* ctx, JSValueConst obj, JSAtom prop, JSValueConst value, JSValueConst receiver, int flags) {
+  JSContourData<double>* contour = js_contour_data(obj);
+  uint32_t index;
+
+  if(js_atom_is_index(ctx, &index, prop)) {
+    JSPointData<double> point;
+    if(index >= contour->size())
+      contour->resize(index + 1);
+
+    js_point_read(ctx, value, &point);
+    (*contour)[index] = point;
+    return TRUE;
+  } else if(js_atom_is_length(ctx, prop)) {
+    uint32_t len;
+    JS_ToUint32(ctx, &len, value);
+    contour->resize(len);
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+JSClassExoticMethods js_contour_exotic_methods = {
+    .get_own_property = js_contour_get_own_property, .get_own_property_names = js_contour_get_own_property_names,
+    /*    .has_property = js_contour_has,
+        .get_property = js_contour_get,
+        .set_property = js_contour_set,*/
+};
 
 JSClassDef js_contour_class = {
     .class_name = "Contour",
     .finalizer = js_contour_finalizer,
+    .exotic = &js_contour_exotic_methods,
 };
 
 JSValue
@@ -1104,8 +1206,9 @@ const JSCFunctionListEntry js_contour_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("toSource", 0, js_contour_tostring, 1),
     JS_CFUNC_MAGIC_DEF("lines", 0, js_contour_iterator, NEXT_LINE),
     JS_CFUNC_MAGIC_DEF("points", 0, js_contour_iterator, NEXT_POINT),
+    JS_CFUNC_MAGIC_DEF("[Symbol.iterator]", 0, js_contour_iterator, NEXT_POINT),
 
-    JS_ALIAS_DEF("[Symbol.iterator]", "points"),
+    // JS_ALIAS_DEF("[Symbol.iterator]", "points"),
     JS_ALIAS_DEF("size", "length"),
     //    JS_ALIAS_DEF("[Symbol.toStringTag]", "toString"),
 

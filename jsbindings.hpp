@@ -389,7 +389,8 @@ js_symbol_for_atom(JSContext* ctx, const char* sym_for) {
 static inline void
 js_set_inspect_method(JSContext* ctx, JSValueConst obj, JSCFunction* func) {
   JSAtom inspect_symbol = js_symbol_for_atom(ctx, "quickjs.inspect.custom");
-  JS_SetProperty(ctx, obj, inspect_symbol, JS_NewCFunction(ctx, func, "inspect", 1));
+  JS_DefinePropertyValue(
+      ctx, obj, inspect_symbol, JS_NewCFunction(ctx, func, "inspect", 1), JS_PROP_CONFIGURABLE | JS_PROP_WRITABLE);
   JS_FreeAtom(ctx, inspect_symbol);
 }
 
@@ -723,4 +724,42 @@ js_is_noarray(const T& array) {
   return &array == &cv::noArray();
 }
 
+static inline BOOL
+js_atom_is_index(JSContext* ctx, uint32_t* pval, JSAtom atom) {
+  JSValue value;
+  BOOL ret = FALSE;
+  int64_t index;
+
+  if(atom & (1U << 31)) {
+    *pval = atom & (~(1U << 31));
+    return TRUE;
+  }
+
+  value = JS_AtomToValue(ctx, atom);
+
+  if(JS_IsNumber(value)) {
+    JS_ToInt64(ctx, &index, value);
+    ret = TRUE;
+  } else if(JS_IsString(value)) {
+    const char* s = JS_ToCString(ctx, value);
+    if(isdigit(s[0])) {
+      index = atoi(s);
+      ret = TRUE;
+    }
+    JS_FreeCString(ctx, s);
+  }
+
+  if(ret == TRUE && index >= 0 && index <= UINT32_MAX)
+    *pval = index;
+
+  return ret;
+}
+
+static BOOL
+js_atom_is_length(JSContext* ctx, JSAtom atom) {
+  const char* str = JS_AtomToCString(ctx, atom);
+  BOOL ret = !strcmp(str, "length");
+  JS_FreeCString(ctx, str);
+  return ret;
+}
 #endif

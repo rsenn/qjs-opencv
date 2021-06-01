@@ -62,6 +62,11 @@ template<class T> struct js_alloc_quickjs {
     return static_cast<T*>(js_mallocz(ctx, size));
   }
 
+  static T*
+  allocate(JSContext* ctx, size_t n) {
+    return static_cast<T*>(js_mallocz(ctx, size * n));
+  }
+
   static void
   deallocate(JSContext* ctx, T* ptr) {
     js_free(ctx, ptr);
@@ -94,6 +99,12 @@ template<class T>
 static inline T*
 js_allocate(JSContext* ctx) {
   return js_allocator<T>::allocate(ctx);
+}
+
+template<class T>
+static inline T*
+js_allocate(JSContext* ctx, size_t n) {
+  return js_allocator<T>::allocate(ctx, n);
 }
 
 template<class T>

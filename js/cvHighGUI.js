@@ -72,6 +72,7 @@ export class Window {
   }
 
   setMouseCallback(fn) {
+    console.log('Window.setMouseCallback', fn);
     cv.setMouseCallback(this.name, (event, x, y, flags) => {
       //console.log("MouseCallback", {event,x,y,flags});
       fn.call(this, event, x, y, flags);
@@ -121,22 +122,8 @@ Object.assign(TextStyle.prototype, {
 });
 
 const palette16 = [
-  0x000000,
-  0xa00000,
-  0x00a000,
-  0xa0a000,
-  0x0000a0,
-  0xa000a0,
-  0x00a0a0,
-  0xc0c0c0,
-  0xa0a0a0,
-  0xff0000,
-  0x00ff00,
-  0xffff00,
-  0x0000ff,
-  0xff00ff,
-  0x00ffff,
-  0xffffff
+  0x000000, 0xa00000, 0x00a000, 0xa0a000, 0x0000a0, 0xa000a0, 0x00a0a0, 0xc0c0c0, 0xa0a0a0,
+  0xff0000, 0x00ff00, 0xffff00, 0x0000ff, 0xff00ff, 0x00ffff, 0xffffff
 ];
 
 export function DrawText(dst, text, color, fontFace, fontSize = 13) {

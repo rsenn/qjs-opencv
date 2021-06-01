@@ -957,7 +957,7 @@ js_mat_tostring(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
 static JSValue
 js_mat_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSMatData* mat = js_mat_data(ctx, this_val);
-  JSValue obj = JS_NewObjectClass(ctx, js_mat_class_id);
+  JSValue obj = JS_NewObject(ctx /*, js_mat_class_id*/);
 
   JS_DefinePropertyValueStr(ctx, obj, "cols", JS_NewUint32(ctx, mat->cols), JS_PROP_ENUMERABLE);
   JS_DefinePropertyValueStr(ctx, obj, "rows", JS_NewUint32(ctx, mat->rows), JS_PROP_ENUMERABLE);
@@ -1405,6 +1405,7 @@ js_mat_iterator_next(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
 
     /*std::cout << "mat_dimensions(*m) = " << dim.cols << "x" << dim.rows << std::endl;
     js_mat_iterator_dump(it);*/
+   /* printf("cols= %zu, rows = %zu\n",dim.cols,dim.rows);*/
 
     row = it->row;
     col = it->col;
@@ -1424,6 +1425,10 @@ js_mat_iterator_next(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
     *pdone = FALSE;
     channels = mat_channels(*m);
     offset = mat_offset(*m, row, col);
+
+    /*printf("col = %zu, row = %zu\n",col,row);
+    printf("offset = %zu, bytesize = %zu\n",offset, mat_bytesize(*m));*/
+
     switch(it->magic) {
       case MAT_ITERATOR_KEYS: {
         std::array<uint32_t, 2> pos = {row, col};
@@ -1448,6 +1453,7 @@ js_mat_iterator_next(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
       case MAT_ITERATOR_ENTRIES: {
         JSValue value = channels == 1 ? js_mat_get(ctx, it->obj, row, col)
                                       : js_typedarray_new(ctx, it->buf, offset, channels, TypedArrayType(*m));
+
         std::array<uint32_t, 2> pos = {row, col};
         std::array<JSValue, 2> entry = {js_array_from(ctx, pos), value};
         ret = js_array_from(ctx, entry);
