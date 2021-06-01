@@ -2,6 +2,7 @@
 #include "js_alloc.hpp"
 #include "js_point.hpp"
 #include "js_point_iterator.hpp"
+#include "js_line.hpp"
 #include "cutils.h"
 #include "quickjs.h"
 
@@ -62,7 +63,7 @@ js_point_iterator_next(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
     }
     case NEXT_LINE: {
       *pdone = it->first == nullptr || it->second == nullptr || (it->first + 1 >= it->second);
-      result = *pdone ? JS_NULL : js_line_new(ctx, it->first[0].x, it->first[0].y, it->first[1].x, it->first[1].y);
+      result = *pdone ? JS_NULL : js_line_new(ctx, it->first[0], it->first[1]);
       break;
     }
   }

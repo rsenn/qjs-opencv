@@ -217,24 +217,24 @@ JSClassDef js_subdiv2d_class = {
     .finalizer = js_subdiv2d_finalizer,
 };
 
-const JSCFunctionListEntry js_subdiv2d_proto_funcs[] = {JS_CFUNC_MAGIC_DEF("edgeDst", 1, js_subdiv2d_method, 0),
-                                                        JS_CFUNC_MAGIC_DEF("edgeOrg", 1, js_subdiv2d_method, 1),
-                                                        JS_CFUNC_MAGIC_DEF("findNearest", 1, js_subdiv2d_method, 2),
-                                                        JS_CFUNC_MAGIC_DEF("getEdge", 2, js_subdiv2d_method, 3),
-                                                        JS_CFUNC_MAGIC_DEF("getEdgeList", 1, js_subdiv2d_method, 4),
-                                                        JS_CFUNC_MAGIC_DEF("getLeadingEdgeList", 1, js_subdiv2d_method, 5),
-                                                        JS_CFUNC_MAGIC_DEF("getTriangleList", 1, js_subdiv2d_method, 6),
-                                                        JS_CFUNC_MAGIC_DEF("getVertex", 1, js_subdiv2d_method, 7),
-                                                        JS_CFUNC_MAGIC_DEF("getVoronoiFacetList", 3, js_subdiv2d_method, 8),
-                                                        JS_CFUNC_MAGIC_DEF("initDelaunay", 1, js_subdiv2d_method, 9),
-                                                        JS_CFUNC_MAGIC_DEF("insert", 1, js_subdiv2d_method, 10),
-                                                        JS_CFUNC_MAGIC_DEF("locate", 3, js_subdiv2d_method, 11),
-                                                        JS_CFUNC_MAGIC_DEF("nextEdge", 1, js_subdiv2d_method, 12),
-                                                        JS_CFUNC_MAGIC_DEF("rotateEdge", 2, js_subdiv2d_method, 13),
-                                                        JS_CFUNC_MAGIC_DEF("symEdge", 1, js_subdiv2d_method, 14),
-                                                        JS_PROP_STRING_DEF("[Symbol.toStringTag]",
-                                                                           "Subdiv2D",
-                                                                           JS_PROP_CONFIGURABLE)};
+const JSCFunctionListEntry js_subdiv2d_proto_funcs[] = {
+    JS_CFUNC_MAGIC_DEF("edgeDst", 1, js_subdiv2d_method, 0),
+    JS_CFUNC_MAGIC_DEF("edgeOrg", 1, js_subdiv2d_method, 1),
+    JS_CFUNC_MAGIC_DEF("findNearest", 1, js_subdiv2d_method, 2),
+    JS_CFUNC_MAGIC_DEF("getEdge", 2, js_subdiv2d_method, 3),
+    JS_CFUNC_MAGIC_DEF("getEdgeList", 1, js_subdiv2d_method, 4),
+    JS_CFUNC_MAGIC_DEF("getLeadingEdgeList", 1, js_subdiv2d_method, 5),
+    JS_CFUNC_MAGIC_DEF("getTriangleList", 1, js_subdiv2d_method, 6),
+    JS_CFUNC_MAGIC_DEF("getVertex", 1, js_subdiv2d_method, 7),
+    JS_CFUNC_MAGIC_DEF("getVoronoiFacetList", 3, js_subdiv2d_method, 8),
+    JS_CFUNC_MAGIC_DEF("initDelaunay", 1, js_subdiv2d_method, 9),
+    JS_CFUNC_MAGIC_DEF("insert", 1, js_subdiv2d_method, 10),
+    JS_CFUNC_MAGIC_DEF("locate", 3, js_subdiv2d_method, 11),
+    JS_CFUNC_MAGIC_DEF("nextEdge", 1, js_subdiv2d_method, 12),
+    JS_CFUNC_MAGIC_DEF("rotateEdge", 2, js_subdiv2d_method, 13),
+    JS_CFUNC_MAGIC_DEF("symEdge", 1, js_subdiv2d_method, 14),
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Subdiv2D", JS_PROP_CONFIGURABLE),
+};
 
 const JSCFunctionListEntry js_subdiv2d_static_funcs[] = {
     JS_PROP_INT32_DEF("PTLOC_ERROR", cv::Subdiv2D::PTLOC_ERROR, 0),
@@ -248,7 +248,8 @@ const JSCFunctionListEntry js_subdiv2d_static_funcs[] = {
     JS_PROP_INT32_DEF("PREV_AROUND_DST", cv::Subdiv2D::PREV_AROUND_DST, 0),
     JS_PROP_INT32_DEF("NEXT_AROUND_LEFT", cv::Subdiv2D::NEXT_AROUND_LEFT, 0),
     JS_PROP_INT32_DEF("NEXT_AROUND_RIGHT", cv::Subdiv2D::NEXT_AROUND_RIGHT, 0),
-    JS_PROP_INT32_DEF("PREV_AROUND_LEFT", cv::Subdiv2D::PREV_AROUND_LEFT, 0)};
+    JS_PROP_INT32_DEF("PREV_AROUND_LEFT", cv::Subdiv2D::PREV_AROUND_LEFT, 0),
+};
 
 extern "C" int
 js_subdiv2d_init(JSContext* ctx, JSModuleDef* m) {

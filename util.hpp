@@ -178,8 +178,8 @@ mat_at(cv::UMat& mat, uint32_t row, uint32_t col) {
 
 static inline size_t
 mat_bytesize(const cv::Mat& mat) {
-  return mat.ptr<uchar>(mat.rows-1, mat.cols-1) - mat.ptr<uchar>() + mat.elemSize();
-  //return mat.elemSize() * mat.total();
+  return mat.ptr<uchar>(mat.rows - 1, mat.cols - 1) - mat.ptr<uchar>() + mat.elemSize();
+  // return mat.elemSize() * mat.total();
 }
 
 template<class T>

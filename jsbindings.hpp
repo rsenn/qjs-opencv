@@ -50,17 +50,22 @@ typedef cv::_OutputArray JSOutputArray;
 typedef cv::_InputOutputArray JSInputOutputArray;
 
 template<class T> union JSLineData {
-  std::array<T, 4> array;
-  // cv::Vec<T, 4> vec;
-  // cv::Scalar_<T> scalar;
-  std::array<JSPointData<T>, 2> points;
-  std::pair<JSPointData<T>, JSPointData<T>> pt;
+  typedef std::array<T, 4> array_type;
+  typedef std::array<JSPointData<T>, 2> points_type;
+  typedef std::pair<JSPointData<T>, JSPointData<T>> pair_type;
+
+  array_type array;
+  points_type points;
+  pair_type pt;
+
   struct {
     T x1, y1, x2, y2;
   };
+
   struct {
     JSPointData<T> a, b;
   };
+
   JSLineData(const JSLineData<T>& other) {
     x1 = other.x1;
     y1 = other.y1;
@@ -68,6 +73,9 @@ template<class T> union JSLineData {
     y2 = other.y2;
   }
   JSLineData(T _x1, T _y1, T _x2, T _y2) : x1(_x1), y1(_y1), x2(_x2), y2(_y2) {}
+
+  operator array_type&() { return this->array; }
+  operator array_type const &() const { return this->array; }
 };
 
 template<class T> struct JSLineTraits {
@@ -111,8 +119,6 @@ extern "C" {
 
 int js_draw_functions(JSContext* ctx, JSValue parent);
 int js_draw_init(JSContext*, JSModuleDef*);
-
-VISIBLE JSValue js_line_new(JSContext* ctx, double x1, double y1, double x2, double y2);
 
 JSModuleDef* js_init_module(JSContext* ctx, const char* module_name);
 JSModuleDef* js_init_module_point(JSContext*, const char*);
@@ -166,7 +172,7 @@ template<> JSValue js_contour_new<int>(JSContext* ctx, const JSContourData<int>&
 
 JSValue js_vector_vec4i_to_array(JSContext*, const std::vector<cv::Vec4i>& vec);
 
-inline JSValueConst
+/*inline JSValueConst
 js_ctor(JSContext* ctx, const char* name) {
   JSValue global = JS_GetGlobalObject(ctx);
   JSValueConst ctor = JS_GetPropertyStr(ctx, global, name);
@@ -181,7 +187,7 @@ js_proto(JSContext* ctx, const char* name) {
 inline JSValue
 js_new(JSContext* ctx, const char* name) {
   return JS_NewObjectProto(ctx, js_proto(ctx, name));
-}
+}*/
 
 template<class T>
 static inline int

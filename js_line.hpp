@@ -21,6 +21,11 @@ js_line_new(JSContext* ctx, const JSLineData<T>& line) {
   return js_line_new(ctx, line.x1, line.y1, line.x2, line.y2);
 }
 
+static inline JSValue
+js_line_new(JSContext* ctx, const JSPointData<double>& a, const JSPointData<double>& b) {
+  return js_line_new(ctx, a.x,a.y, b.x,b.y);
+}
+
 template<class T>
 static inline int
 js_line_read(JSContext* ctx, JSValueConst line, std::array<T, 4>& out) {

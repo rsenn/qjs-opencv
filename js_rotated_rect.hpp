@@ -14,8 +14,18 @@ VISIBLE JSValue js_rotated_rect_new(
     JSContext* ctx, JSValueConst proto, const JSPointData<float>& center, const JSSizeData<float>& size, float angle);
 
 static inline JSValue
-js_rotated_rect_new(JSContext* ctx, const JSRotatedRectData& rotated_rect) {
-  return js_rotated_rect_new(ctx, rotated_rect_proto, rotated_rect.center, rotated_rect.size, rotated_rect.angle);
+js_rotated_rect_new(JSContext* ctx, const JSPointData<float>& center, const JSSizeData<float>& size, float angle) {
+  return js_rotated_rect_new(ctx, rotated_rect_proto, center, size, angle);
+}
+
+static inline JSValue
+js_rotated_rect_new(JSContext* ctx, JSValueConst proto, const JSRotatedRectData& rotated_rect) {
+  return js_rotated_rect_new(ctx, proto, rotated_rect.center, rotated_rect.size, rotated_rect.angle);
+}
+
+static inline JSValue
+js_rotated_rect_new(JSContext* ctx, const JSRotatedRectData& rrect) {
+  return js_rotated_rect_new(ctx, rotated_rect_proto, rrect);
 }
 
 VISIBLE JSRotatedRectData* js_rotated_rect_data(JSContext*, JSValueConst val);

@@ -48,13 +48,25 @@ js_clahe_finalizer(JSRuntime* rt, JSValue val) {
 }
 
 static JSValue
+js_clahe_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+  JSCLAHEData* s = js_clahe_data(ctx, this_val);
+  JSValue obj = JS_NewObjectClass(ctx, js_clahe_class_id);
+
+  JS_DefinePropertyValueStr(ctx, obj, "clipLimit", JS_NewFloat64(ctx, (*s)->getClipLimit()), JS_PROP_ENUMERABLE);
+  JS_DefinePropertyValueStr(ctx, obj, "tilesGridSize", js_size_new(ctx, (*s)->getTilesGridSize()), JS_PROP_ENUMERABLE);
+  return obj;
+}
+
+enum { METHOD_APPLY = 0, METHOD_COLLECT_GARBAGE };
+
+static JSValue
 js_clahe_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
   JSCLAHEData* s = static_cast<JSCLAHEData*>(JS_GetOpaque2(ctx, this_val, js_clahe_class_id));
   JSValue ret = JS_UNDEFINED;
   JSPointData<double> point = js_point_get(ctx, argv[0]);
 
   switch(magic) {
-    case 0: {
+    case METHOD_APPLY: {
       cv::Mat *input, *output;
       if(argc < 2)
         return JS_EXCEPTION;
@@ -65,29 +77,53 @@ js_clahe_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
       (*s)->apply(*input, *output);
       break;
     }
-    case 1: {
+    case METHOD_COLLECT_GARBAGE: {
       (*s)->collectGarbage();
       break;
     }
-    case 2: {
+  }
+  return ret;
+}
+
+enum { PROP_CLIP_LIMIT = 0, PROP_TILES_GRID_SIZE };
+
+static JSValue
+js_clahe_getter(JSContext* ctx, JSValueConst this_val, int magic) {
+  JSCLAHEData* s = static_cast<JSCLAHEData*>(JS_GetOpaque2(ctx, this_val, js_clahe_class_id));
+  JSValue ret = JS_UNDEFINED;
+
+  switch(magic) {
+
+    case PROP_CLIP_LIMIT: {
       ret = JS_NewFloat64(ctx, (*s)->getClipLimit());
       break;
     }
-    case 3: {
+    case PROP_TILES_GRID_SIZE: {
       ret = js_size_wrap(ctx, (*s)->getTilesGridSize());
       break;
     }
-    case 4: {
+  }
+  return ret;
+}
+
+static JSValue
+js_clahe_setter(JSContext* ctx, JSValueConst this_val, JSValueConst value, int magic) {
+  JSCLAHEData* s = static_cast<JSCLAHEData*>(JS_GetOpaque2(ctx, this_val, js_clahe_class_id));
+  JSValue ret = JS_UNDEFINED;
+
+  switch(magic) {
+
+    case PROP_CLIP_LIMIT: {
       double clipLimit;
-      if(argc < 1 || JS_ToFloat64(ctx, &clipLimit, argv[0]) == -1)
-        return JS_EXCEPTION;
+      if(JS_ToFloat64(ctx, &clipLimit, value) == -1)
+        return JS_ThrowTypeError(ctx, "clipLimit expecting float value");
       (*s)->setClipLimit(clipLimit);
       break;
     }
-    case 5: {
+    case PROP_TILES_GRID_SIZE: {
       JSSizeData<double> size;
-      if(argc < 1 || !js_size_read(ctx, argv[0], &size))
-        return JS_EXCEPTION;
+      if(!js_size_read(ctx, value, &size))
+        return JS_ThrowTypeError(ctx, "tilesGridSize expecting Size object");
       (*s)->setTilesGridSize(size);
       break;
     }
@@ -100,13 +136,13 @@ JSClassDef js_clahe_class = {
     .finalizer = js_clahe_finalizer,
 };
 
-const JSCFunctionListEntry js_clahe_proto_funcs[] = {JS_CFUNC_MAGIC_DEF("apply", 0, js_clahe_method, 0),
-                                                     JS_CFUNC_MAGIC_DEF("collectGarbage", 0, js_clahe_method, 1),
-                                                     JS_CFUNC_MAGIC_DEF("getClipLimit", 0, js_clahe_method, 2),
-                                                     JS_CFUNC_MAGIC_DEF("getTilesGridSize", 0, js_clahe_method, 3),
-                                                     JS_CFUNC_MAGIC_DEF("setClipLimit", 0, js_clahe_method, 4),
-                                                     JS_CFUNC_MAGIC_DEF("setTilesGridSize", 0, js_clahe_method, 5),
-                                                     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "CLAHE", JS_PROP_CONFIGURABLE)};
+const JSCFunctionListEntry js_clahe_proto_funcs[] = {
+    JS_CFUNC_MAGIC_DEF("apply", 0, js_clahe_method, METHOD_APPLY),
+    JS_CFUNC_MAGIC_DEF("collectGarbage", 0, js_clahe_method, METHOD_COLLECT_GARBAGE),
+    JS_CGETSET_MAGIC_DEF("clipLimit", js_clahe_getter, js_clahe_setter, PROP_CLIP_LIMIT),
+    JS_CGETSET_MAGIC_DEF("tilesGridSize", js_clahe_getter, js_clahe_setter, PROP_TILES_GRID_SIZE),
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "CLAHE", JS_PROP_CONFIGURABLE),
+};
 
 extern "C" int
 js_clahe_init(JSContext* ctx, JSModuleDef* m) {
@@ -122,6 +158,8 @@ js_clahe_init(JSContext* ctx, JSModuleDef* m) {
   clahe_class = JS_NewCFunction2(ctx, js_clahe_ctor, "CLAHE", 2, JS_CFUNC_constructor, 0);
   /* set proto.constructor and ctor.prototype */
   JS_SetConstructor(ctx, clahe_class, clahe_proto);
+
+  js_set_inspect_method(ctx, clahe_proto, js_clahe_inspect);
 
   if(m)
     JS_SetModuleExport(ctx, m, "CLAHE", clahe_class);

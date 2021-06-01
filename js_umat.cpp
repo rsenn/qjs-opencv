@@ -68,6 +68,10 @@ VISIBLE JSUMatData*
 js_umat_data(JSContext* ctx, JSValueConst val) {
   return static_cast<JSUMatData*>(JS_GetOpaque2(ctx, val, js_umat_class_id));
 }
+VISIBLE JSUMatData*
+js_umat_data(JSValueConst val) {
+  return static_cast<JSUMatData*>(JS_GetOpaque(val, js_umat_class_id));
+}
 
 static inline std::vector<int>
 js_umat_sizes(const JSUMatData& umat) {

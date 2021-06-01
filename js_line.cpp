@@ -76,8 +76,14 @@ js_line_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* ar
       goto fail;
     if(JS_ToFloat64(ctx, &ln->array[3], argv[3]))
       goto fail;
-  } else if(!js_line_read(ctx, argv[0], ln)) {
-    return JS_ThrowTypeError(ctx, "argument 1 is not a valid line");
+  } else if(argc == 1) {
+    if(!js_line_read(ctx, argv[0], ln))
+      return JS_ThrowTypeError(ctx, "argument 1 is not a valid line");
+  } else {
+    ln->array[0] = 0;
+    ln->array[1] = 0;
+    ln->array[2] = 0;
+    ln->array[3] = 0;
   }
   /* using new_target to get the prototype is necessary when the
      class is extended. */
@@ -256,10 +262,20 @@ js_line_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
   JSLineData<double>* ln = js_line_data(ctx, this_val);
   JSValue obj = JS_NewObjectClass(ctx, js_line_class_id);
 
-  JS_DefinePropertyValueStr(ctx, obj, "x1", JS_NewFloat64(ctx, ln->x1), JS_PROP_ENUMERABLE);
-  JS_DefinePropertyValueStr(ctx, obj, "y1", JS_NewFloat64(ctx, ln->y1), JS_PROP_ENUMERABLE);
-  JS_DefinePropertyValueStr(ctx, obj, "x2", JS_NewFloat64(ctx, ln->x2), JS_PROP_ENUMERABLE);
-  JS_DefinePropertyValueStr(ctx, obj, "y2", JS_NewFloat64(ctx, ln->y2), JS_PROP_ENUMERABLE);
+  std::array<JSAtom, 4> props{JS_NewAtom(ctx, "x1"), JS_NewAtom(ctx, "y1"), JS_NewAtom(ctx, "x2"), JS_NewAtom(ctx, "y2")};
+
+  /* JS_DefineProperty(ctx, obj, props[0], JS_NewFloat64(ctx, ln->x1), JS_UNDEFINED, JS_UNDEFINED, JS_PROP_ENUMERABLE);
+   JS_DefineProperty(ctx, obj, props[1], JS_NewFloat64(ctx, ln->y1), JS_UNDEFINED, JS_UNDEFINED, JS_PROP_ENUMERABLE);
+   JS_DefineProperty(ctx, obj, props[2], JS_NewFloat64(ctx, ln->x2), JS_UNDEFINED, JS_UNDEFINED, JS_PROP_ENUMERABLE);
+   JS_DefineProperty(ctx, obj, props[3], JS_NewFloat64(ctx, ln->y2), JS_UNDEFINED, JS_UNDEFINED, JS_PROP_ENUMERABLE);*/
+
+  JS_DefinePropertyValue(ctx, obj, props[0], JS_NewFloat64(ctx, ln->x1), JS_PROP_ENUMERABLE);
+  JS_DefinePropertyValue(ctx, obj, props[1], JS_NewFloat64(ctx, ln->y1), JS_PROP_ENUMERABLE);
+  JS_DefinePropertyValue(ctx, obj, props[2], JS_NewFloat64(ctx, ln->x2), JS_PROP_ENUMERABLE);
+  JS_DefinePropertyValue(ctx, obj, props[3], JS_NewFloat64(ctx, ln->y2), JS_PROP_ENUMERABLE);
+
+  for(auto const& prop : props) JS_FreeAtom(ctx, prop);
+
   return obj;
 }
 

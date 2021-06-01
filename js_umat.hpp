@@ -5,6 +5,7 @@
 #include "js_alloc.hpp"
 #include "js_array.hpp"
 #include "js_typed_array.hpp"
+#include "js_line.hpp"
 
 extern "C" VISIBLE int js_umat_init(JSContext*, JSModuleDef*);
 
@@ -12,6 +13,7 @@ extern "C" {
 
 extern JSValue umat_proto, umat_class;
 extern JSClassID js_umat_class_id;
+}
 
 VISIBLE JSValue js_umat_new(JSContext*, uint32_t, uint32_t, int);
 int js_umat_init(JSContext*, JSModuleDef*);
@@ -19,15 +21,16 @@ JSModuleDef* js_init_umat_module(JSContext* ctx, const char* module_name);
 void js_umat_constructor(JSContext* ctx, JSValue parent, const char* name);
 
 VISIBLE JSUMatData* js_umat_data(JSContext* ctx, JSValueConst val);
+VISIBLE JSUMatData* js_umat_data(JSValueConst val);
 
 static inline JSInputOutputArray
 js_umat_or_mat(JSContext* ctx, JSValueConst value) {
   cv::Mat* mat;
   cv::UMat* umat;
 
-  if((umat = static_cast<cv::UMat*>(JS_GetOpaque(value, js_umat_class_id))))
+  if((umat = js_umat_data(value)))
     return JSInputOutputArray(*umat);
-  if((mat = static_cast<cv::Mat*>(JS_GetOpaque(value, js_mat_class_id))))
+  if((mat = js_mat_data_nothrow(value)))
     return JSInputOutputArray(*mat);
 
   return cv::noArray();
@@ -38,9 +41,9 @@ js_input_array(JSContext* ctx, JSValueConst value) {
   cv::Mat* mat;
   cv::UMat* umat;
 
-  if((umat = static_cast<cv::UMat*>(JS_GetOpaque(value, js_umat_class_id))))
+  if((umat = js_umat_data(value)))
     return JSInputArray(*umat);
-  if((mat = static_cast<cv::Mat*>(JS_GetOpaque(value, js_mat_class_id))))
+  if((mat = js_mat_data_nothrow(value)))
     return JSInputArray(*mat);
 
   if(js_is_array(ctx, value)) {
@@ -67,22 +70,28 @@ js_umat_wrap(JSContext* ctx, const cv::UMat& umat) {
   JS_SetOpaque(ret, s);
   return ret;
 }
-}
 
 static inline JSInputOutputArray
 js_cv_inputoutputarray(JSContext* ctx, JSValueConst value) {
   cv::Mat* mat;
   cv::UMat* umat;
-  JSContourData<double>* contour;
-  JSContoursData<double>* contours;
 
-  if((mat = static_cast<cv::Mat*>(JS_GetOpaque(value, js_mat_class_id))))
+  if((mat = js_mat_data_nothrow(value)))
     return JSInputOutputArray(*mat);
-  if((umat = static_cast<cv::UMat*>(JS_GetOpaque(value, js_umat_class_id))))
+  if((umat = js_umat_data(value)))
     return JSInputOutputArray(*umat);
+
   if(js_contour_class_id) {
-    if((contour = static_cast<JSContourData<double>*>(JS_GetOpaque(value, js_contour_class_id))))
+    JSContourData<double>* contour;
+    JSContoursData<double>* contours;
+    if((contour = js_contour_data(value)))
       return JSInputOutputArray(cv::Mat(*contour));
+  }
+
+  if(js_line_class_id) {
+    JSLineData<double>* line;
+    if((line = js_line_data(value)))
+      return JSInputOutputArray(line->array);
   }
 
   if(js_is_arraybuffer(ctx, value)) {

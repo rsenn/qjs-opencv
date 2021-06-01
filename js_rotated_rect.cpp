@@ -72,7 +72,10 @@ js_rotated_rect_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueC
     JSPointData<float> point1, point2, point3;
     JSSizeData<float> size;
     double angle;
-    js_point_read(ctx, argv[0], &point1);
+
+    if(argc >= 1)
+      js_point_read(ctx, argv[0], &point1);
+
     if(argc >= 3 && js_size_read(ctx, argv[1], &size)) {
       JS_ToFloat64(ctx, &angle, argv[2]);
       new(rr) cv::RotatedRect(point1, size, angle);

@@ -1405,7 +1405,7 @@ js_mat_iterator_next(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
 
     /*std::cout << "mat_dimensions(*m) = " << dim.cols << "x" << dim.rows << std::endl;
     js_mat_iterator_dump(it);*/
-   /* printf("cols= %zu, rows = %zu\n",dim.cols,dim.rows);*/
+    /* printf("cols= %zu, rows = %zu\n",dim.cols,dim.rows);*/
 
     row = it->row;
     col = it->col;
