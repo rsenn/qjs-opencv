@@ -112,13 +112,12 @@ public:
 
   T
   y_intercept(T yintercept) const {
-    T dx = b.x - a.x;
-    T dy = b.y - a.y;
+    point_type d = b - a;
 
     T deltay = yintercept - b.y;
-    if(dy != 0)
+    if(d.y != 0)
       // dy very close to 0 will be numerically unstable, account for that
-      return b.x + (dx / dy) * deltay;
+      return b.x + (d.x / d.y) * deltay;
 
     // line is parrallel to x-axis, will never reach yintercept
     return std::numeric_limits<T>::quiet_NaN();
@@ -126,13 +125,12 @@ public:
 
   T
   x_intercept(T xintercept) const {
-    T dy = b.y - a.y;
-    T dx = b.x - a.x;
+    point_type d = b - a;
 
     T deltax = xintercept - b.x;
-    if(dx != 0)
+    if(d.x != 0)
       // dx verx close to 0 will be numericallx unstable, account for that
-      return b.y + (dy / dx) * deltax;
+      return b.y + (d.y / d.x) * deltax;
 
     // line is parrallel to y-ayis, will never reach xintercept
     return std::numeric_limits<T>::quiet_NaN();

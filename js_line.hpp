@@ -23,7 +23,7 @@ js_line_new(JSContext* ctx, const JSLineData<T>& line) {
 
 static inline JSValue
 js_line_new(JSContext* ctx, const JSPointData<double>& a, const JSPointData<double>& b) {
-  return js_line_new(ctx, a.x,a.y, b.x,b.y);
+  return js_line_new(ctx, a.x, a.y, b.x, b.y);
 }
 
 template<class T>
