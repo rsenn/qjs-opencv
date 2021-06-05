@@ -3,21 +3,21 @@
 
 #include "jsbindings.hpp"
 
+typedef cv::KeyPoint JSKeyPointData;
+
 extern "C" {
 
 extern JSValue keypoint_proto, keypoint_class;
 extern JSClassID js_keypoint_class_id;
-
 }
 
 extern "C" VISIBLE int js_keypoint_init(JSContext*, JSModuleDef*);
-VISIBLE JSKeyPointData<double>* js_keypoint_data(JSContext*, JSValueConst val);
-VISIBLE JSKeyPointData<double>* js_keypoint_data(JSValueConst val);
+VISIBLE JSKeyPointData* js_keypoint_data(JSContext*, JSValueConst val);
+VISIBLE JSKeyPointData* js_keypoint_data(JSValueConst val);
 
-template<class T>
-static inkeypoint JSValue
-js_keypoint_new(JSContext* ctx, const JSKeyPointData<T>& keypoint) {
-  return js_keypoint_new(ctx, keypoint.x1, keypoint.y1, keypoint.x2, keypoint.y2);
+static inline JSValue
+js_keypoint_new(JSContext* ctx, const JSKeyPointData& keypoint) {
+  return js_keypoint_new(ctx, keypoint);
 }
 
 extern "C" int js_keypoint_init(JSContext*, JSModuleDef*);

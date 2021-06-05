@@ -162,7 +162,7 @@ js_feature2d_getter(JSContext* ctx, JSValueConst this_val, int magic) {
   }
   return ret;
 }
-''
+
 JSClassDef js_feature2d_class = {
     .class_name = "Feature2D",
     .finalizer = js_feature2d_finalizer,
