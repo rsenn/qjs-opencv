@@ -1,3 +1,4 @@
+
 #ifndef PNG_WRITE_HPP
 #define PNG_WRITE_HPP
 
@@ -5,10 +6,12 @@
 //#include <png++/png.hpp>
 #include "pngpp/png.hpp"
 #include <vector>
+#include <fstream>
+#include <sstream>
 
 template<class ColorType>
-static inline void
-write_mat(const std::string& filename, const cv::Mat& mat, const std::vector<ColorType>& palette) {
+static inline png::image<png::index_pixel>
+create_image(const cv::Mat& mat, const std::vector<ColorType>& palette) {
 
   png::image<png::index_pixel> image(mat.cols, mat.rows);
 
@@ -30,7 +33,27 @@ write_mat(const std::string& filename, const cv::Mat& mat, const std::vector<Col
     }
   }
 
+  return image;
+}
+
+template<class ColorType>
+void
+write_mat(const std::string& filename, const cv::Mat& mat, const std::vector<ColorType>& palette) {
+
+  /*  std::ofstream stream(filename, std::ios::binary);
+         stream.exceptions(std::ios::badbit);*/
+  auto image = create_image(mat, palette);
+
   image.write(filename);
+}
+
+template<class ColorType>
+std::string
+write_mat(const cv::Mat& mat, const std::vector<ColorType>& palette) {
+  std::ostringstream os;
+  auto image = create_image(mat, palette);
+  image.write_stream(os);
+  return os.str();
 }
 
 #endif /* PNG_WRITE_HPP */

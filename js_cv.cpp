@@ -34,6 +34,51 @@ JSClassID js_cv_class_id = 0;
 }
 
 static JSValue
+js_cv_imdecode(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+  JSInputOutputArray buf = js_cv_inputoutputarray(ctx, argv[0]);
+  int32_t flags = 0;
+  cv::Mat image, *dst = nullptr;
+
+  if(argc >= 2)
+    JS_ToInt32(ctx, &flags, argv[1]);
+
+  if(argc >= 3)
+    dst = js_mat_data(ctx, argv[2]);
+
+  image = dst ? cv::imdecode(buf, flags, dst) : cv::imdecode(buf, flags);
+
+  return js_mat_wrap(ctx, image);
+}
+
+static JSValue
+js_cv_imencode(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+  const char* ext = JS_ToCString(ctx, argv[0]);
+  JSInputOutputArray image = js_cv_inputoutputarray(ctx, argv[1]);
+  JSValue ret = JS_UNDEFINED;
+  if(argc > 3 && str_end(ext, "png") && image.isMat()) {
+    double max;
+    std::string data;
+    std::vector<JSColorData<uint8_t>> palette;
+    js_array_to(ctx, argv[2], palette);
+    cv::minMaxLoc(image, nullptr, &max);
+    if(palette.size() < size_t(max))
+      palette.resize(size_t(max));
+    printf("png++ write_mat '%s' [%zu]\n", ext, palette.size());
+    data = write_mat(image.getMatRef(), palette);
+    ret = JS_NewArrayBufferCopy(ctx, (const uint8_t*)data.data(), data.size());
+  } else {
+    std::vector<uchar> buf;
+    std::vector<int> params;
+    if(argc >= 4)
+      js_array_to(ctx, argv[3], params);
+    cv::imencode(ext, image, buf, params);
+    ret = JS_NewArrayBufferCopy(ctx, buf.data(), buf.size());
+  }
+
+  return ret;
+}
+
+static JSValue
 js_cv_imread(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   const char* filename = JS_ToCString(ctx, argv[0]);
   cv::Mat mat = cv::imread(filename);
@@ -1039,6 +1084,8 @@ JSClassDef js_cv_class = {.class_name = "cv", .finalizer = js_cv_finalizer};
 typedef std::vector<JSCFunctionListEntry> js_function_list_t;
 
 js_function_list_t js_cv_static_funcs{
+    JS_CFUNC_DEF("imdecode", 1, js_cv_imdecode),
+    JS_CFUNC_DEF("imencode", 1, js_cv_imencode),
     JS_CFUNC_DEF("imread", 1, js_cv_imread),
     JS_CFUNC_DEF("imwrite", 2, js_cv_imwrite),
     JS_CFUNC_DEF("split", 2, js_cv_split),

@@ -211,14 +211,14 @@ struct TypedArrayProps {
   template<class T>
   const T*
   ptr() const {
-    return reinterpret_cast<T*>(buffer.ptr + byte_offset);
+    return reinterpret_cast<const T*>(buffer.ptr + byte_offset);
   }
 
-  /*  template<class T>
-    T*
-    ptr() {
-      return reinterpret_cast<T*>(buffer.ptr + byte_offset);
-    }*/
+  template<class T>
+  T*
+  ptr() {
+    return reinterpret_cast<T*>(buffer.ptr + byte_offset);
+  }
 
   template<class T>
   int
@@ -239,9 +239,18 @@ template<class T> struct TypedArrayRange : public TypedArrayProps {
   begin() const {
     return ptr<T>();
   }
+  T*
+  begin() {
+    return ptr<T>();
+  }
 
   const T*
   end() const {
+    return begin() + size<T>();
+  }
+
+  T*
+  end() {
     return begin() + size<T>();
   }
 };
@@ -415,12 +424,14 @@ js_typedarray_inputoutputarray(JSContext* ctx, JSValueConst obj) {
     case TYPEDARRAY_UINT8: return JSInputOutputArray(props.ptr<uint8_t>(), props.size<uint8_t>());
     case TYPEDARRAY_INT8: return JSInputOutputArray(props.ptr<int8_t>(), props.size<int8_t>());
     case TYPEDARRAY_UINT16: return JSInputOutputArray(props.ptr<uint16_t>(), props.size<uint16_t>());
-    case TYPEDARRAY_INT16: return JSInputOutputArray(props.ptr<int16_t>(), props.size<int16_t>());
-    /*case TYPEDARRAY_UINT32: {
-      TypedArrayRange<uint32_t> range(props);
-      return std::vector<uint32_t>(range.begin(), range.end());
-    }*/
-    case TYPEDARRAY_INT32: return JSInputOutputArray(props.ptr<int>(), props.size<int>());
+    case TYPEDARRAY_INT16:
+      return JSInputOutputArray(props.ptr<int16_t>(), props.size<int16_t>());
+      /*case TYPEDARRAY_UINT32: {
+        TypedArrayRange<uint32_t> range(props);
+        return std::vector<uint32_t>(range.begin(), range.end());
+      }*/
+      //    case TYPEDARRAY_UINT32: return JSInputOutputArray(props.ptr<uint32_t>(), props.size<uint32_t>());
+    case TYPEDARRAY_INT32: return JSInputOutputArray(props.ptr<int32_t>(), props.size<int32_t>());
     /*case TYPEDARRAY_BIGUINT64: {
       TypedArrayRange<uint64_t> range(props);
       return std::vector<uint64_t>(range.begin(), range.end());

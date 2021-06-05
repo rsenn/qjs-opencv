@@ -644,6 +644,13 @@ js_array_to(JSContext* ctx, JSValueConst arr, std::array<T, N>& out) {
   return array_type::to_array(ctx, arr, out);
 }
 
+template<class T, size_t N>
+static inline int64_t
+js_array_input(JSContext* ctx, JSValueConst arr, std::array<T, N>& out) {
+  typedef js_array<T> array_type;
+  return array_type::to_array(ctx, arr, out);
+}
+
 template<class T>
 static inline int64_t
 js_array_to(JSContext* ctx, JSValueConst arr, cv::Scalar_<T>& out) {

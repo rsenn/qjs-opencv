@@ -105,6 +105,15 @@ js_feature2d_kaze(JSContext* ctx, JSValueConst new_target, int argc, JSValueCons
   return js_feature2d_wrap(ctx, kaze);
 }
 
+static JSValue
+js_feature2d_freak(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+  cv::Ptr<cv::xfeatures2d::FREAK> freak;
+
+  freak = cv::xfeatures2d::FREAK::create();
+
+  return js_feature2d_wrap(ctx, freak);
+}
+
 void
 js_feature2d_finalizer(JSRuntime* rt, JSValue val) {
   JSFeature2DData* s = static_cast<JSFeature2DData*>(JS_GetOpaque(val, js_feature2d_class_id));
@@ -120,7 +129,7 @@ js_feature2d_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
   JSValue obj = JS_NewObjectClass(ctx, js_feature2d_class_id);
 
   JS_DefinePropertyValueStr(ctx, obj, "empty", JS_NewBool(ctx, (*s)->empty()), JS_PROP_ENUMERABLE);
-  JS_DefinePropertyValueStr(ctx, obj, "tilesGridSize", JS_NewString(ctx, (*s)->getDefaultName().c_str()), JS_PROP_ENUMERABLE);
+  JS_DefinePropertyValueStr(ctx, obj, "defaultName", JS_NewString(ctx, (*s)->getDefaultName().c_str()), JS_PROP_ENUMERABLE);
   return obj;
 }
 
@@ -142,7 +151,14 @@ js_feature2d_getter(JSContext* ctx, JSValueConst this_val, int magic) {
   JSFeature2DData* s = static_cast<JSFeature2DData*>(JS_GetOpaque2(ctx, this_val, js_feature2d_class_id));
   JSValue ret = JS_UNDEFINED;
 
-  switch(magic) {}
+  switch(magic) {
+    case PROP_DEFAULT_NAME: {
+      std::string name = (*s)->getDefaultName();
+
+      ret = JS_NewStringLen(ctx, name.data(), name.size());
+      break;
+    }
+  }
   return ret;
 }
 
@@ -176,12 +192,14 @@ js_feature2d_init(JSContext* ctx, JSModuleDef* m) {
   JSValue feature2d_gftt = JS_NewCFunction2(ctx, js_feature2d_gftt, "GFTTDetector", 0, JS_CFUNC_constructor, 0);
   JSValue feature2d_surf = JS_NewCFunction2(ctx, js_feature2d_surf, "SURF", 0, JS_CFUNC_constructor, 0);
   JSValue feature2d_kaze = JS_NewCFunction2(ctx, js_feature2d_kaze, "KAZE", 0, JS_CFUNC_constructor, 0);
+  JSValue feature2d_freak = JS_NewCFunction2(ctx, js_feature2d_freak, "FREAK", 0, JS_CFUNC_constructor, 0);
 
   if(m) {
     JS_SetModuleExport(ctx, m, "FastFeatureDetector", feature2d_fast);
     JS_SetModuleExport(ctx, m, "GFTTDetector", feature2d_gftt);
     JS_SetModuleExport(ctx, m, "SURF", feature2d_surf);
     JS_SetModuleExport(ctx, m, "KAZE", feature2d_kaze);
+    JS_SetModuleExport(ctx, m, "FREAK", feature2d_freak);
   }
 
   return 0;
@@ -196,6 +214,10 @@ js_feature2d_init(JSContext* ctx, JSModuleDef* m) {
 extern "C" VISIBLE void
 js_feature2d_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "FastFeatureDetector");
+  JS_AddModuleExport(ctx, m, "GFTTDetector");
+  JS_AddModuleExport(ctx, m, "SURF");
+  JS_AddModuleExport(ctx, m, "KAZE");
+  JS_AddModuleExport(ctx, m, "FREAK");
 }
 
 extern "C" JSModuleDef*
