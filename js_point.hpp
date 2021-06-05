@@ -56,6 +56,23 @@ js_point_read(JSContext* ctx, JSValueConst point, JSPointData<T>* out) {
 }
 
 template<class T>
+static inline int
+js_point_argument(JSContext* ctx, int argc, JSValueConst argv[], JSPointData<T>* out) {
+  int ret = 0;
+
+  if(JS_IsNumber(argv[0]) && JS_IsNumber(argv[1])) {
+    JSPointData<double> pt;
+    JS_ToFloat64(ctx, &pt.x, argv[0]);
+    JS_ToFloat64(ctx, &pt.y, argv[1]);
+    *out = pt;
+    ret = 2;
+  } else if(js_point_read(ctx, argv[0], out)) {
+    ret = 1;
+  }
+  return ret;
+}
+
+template<class T>
 static inline void
 js_point_write(JSContext* ctx, JSValueConst out, const JSPointData<T>& in) {
   JSValue x = js_number_new<T>(ctx, in.x);
