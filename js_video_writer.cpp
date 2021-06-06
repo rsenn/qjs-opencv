@@ -12,6 +12,8 @@
 #include <new>
 #include <string>
 
+typedef cv::VideoWriter JSVideoWriterData;
+
 extern "C" VISIBLE int js_video_writer_init(JSContext*, JSModuleDef*);
 
 extern "C" {

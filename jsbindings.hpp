@@ -52,7 +52,7 @@ typedef JSPointData<float> JSPointDataF;
 typedef JSPointData<double> JSPointDataD;*/
 
 typedef cv::VideoCapture JSVideoCaptureData;
-typedef cv::VideoWriter JSVideoWriterData;
+typedef cv::VideoWriter JSVideoWraiterData;
 typedef cv::TickMeter JSTickMeterData;
 typedef cv::Ptr<cv::CLAHE> JSCLAHEData;
 
@@ -177,7 +177,6 @@ struct JSConstructor {
 
   void
   add_export(JSContext* ctx, JSModuleDef* m) const {
-    assert(!JS_IsUndefined(class_obj));
     JS_AddModuleExport(ctx, m, name);
   }
 
