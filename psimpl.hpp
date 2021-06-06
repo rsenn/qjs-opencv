@@ -132,13 +132,13 @@ algorithm; miscellaneous refactoring of most algorithms.
 #ifndef PSIMPL_GENERIC
 #define PSIMPL_GENERIC
 
-#include <algorithm>   // for min
-#include <cmath>       // for sqrtl, sqrt
-#include <functional>  // for bind, minus
-#include <iterator>    // for iterator_traits, distance
-#include <numeric>     // for accumulate, inner_product
-#include <queue>       // for priority_queue
-#include <stack>       // for stack
+#include <algorithm>
+#include <cmath>
+#include <functional>
+#include <iterator>
+#include <numeric>
+#include <queue>
+#include <stack>
 
 /*!
     \brief Root namespace of the polyline simplification library.

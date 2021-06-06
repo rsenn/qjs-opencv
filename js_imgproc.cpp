@@ -1,41 +1,39 @@
-#include "cutils.h"                      // for BOOL, FALSE, TRUE
-#include "geometry.hpp"                  // for transform_contours
-#include "js_array.hpp"                  // for js_array_to, js_array_from
-#include "js_contour.hpp"                // for js_contour_data, js_contour_new
-#include "js_mat.hpp"                    // for js_mat_data, js_mat_wrap
-#include "js_object.hpp"                 // for js_object_from, js_object_to
-#include "js_point.hpp"                  // for js_point_read, js_point_new
-#include "js_rect.hpp"                   // for js_rect_read, js_rect_wrap
-#include "js_rotated_rect.hpp"           // for js_rotated_rect_new, js_rota...
-#include "js_size.hpp"                   // for js_size_read, js_size_get
-#include "js_typed_array.hpp"            // for js_typedarray_new
-#include "js_umat.hpp"                   // for js_umat_or_mat, js_cv_inputo...
-#include "jsbindings.hpp"                // for JSInputOutputArray, JSPointData
-#include <opencv2/core.hpp>              // for Exception
-#include <opencv2/core/base.hpp>         // for BORDER_CONSTANT, BORDER_DEFAULT
-#include <opencv2/core/cvdef.h>          // for CV_PI
-#include <opencv2/core/hal/interface.h>  // for CV_64F, CV_32F
-#include <opencv2/core/mat.hpp>          // for noArray, Mat, _InputOutputArray
-#include <opencv2/core/mat.inl.hpp>      // for _InputOutputArray::_InputOut...
-#include <opencv2/core/matx.hpp>         // for Vec3b, Vec4b, Vec4i, Vec2f, Vec
-#include <opencv2/core/types.hpp>        // for Scalar, Moments, Point, Rect
-#include "palette.hpp"                   // for palette_apply
-#include "pixel_neighborhood.hpp"        // for pixel_find_value, pixel_neig...
-#include <quickjs.h>                     // for JSValue, JS_ToInt32, JS_ToFl...
-#include "skeletonization.hpp"           // for skeletonization
-#include "util.hpp"                      // for begin, end, range_view
-#include <cassert>                      // for assert
-#include <stddef.h>                      // for size_t, NULL
-#include <array>                         // for array
-#include <cstdint>                       // for int32_t, uint8_t, uint32_t
-#include <iostream>                      // for operator<<, endl, basic_ostr...
-#include <map>                           // for map
-#include <memory>                        // for allocator, allocator_traits<...
-#include <opencv2/imgproc.hpp>           // for GaussianBlur, applyColorMap
-#include <string>                        // for string, operator<=>
-#include <vector>                        // for vector
-
-
+#include "cutils.h"
+#include "geometry.hpp"
+#include "js_array.hpp"
+#include "js_contour.hpp"
+#include "js_mat.hpp"
+#include "js_object.hpp"
+#include "js_point.hpp"
+#include "js_rect.hpp"
+#include "js_rotated_rect.hpp"
+#include "js_size.hpp"
+#include "js_typed_array.hpp"
+#include "js_umat.hpp"
+#include "jsbindings.hpp"
+#include <opencv2/core.hpp>
+#include <opencv2/core/base.hpp>
+#include <opencv2/core/cvdef.h>
+#include <opencv2/core/hal/interface.h>
+#include <opencv2/core/mat.hpp>
+#include <opencv2/core/mat.inl.hpp>
+#include <opencv2/core/matx.hpp>
+#include <opencv2/core/types.hpp>
+#include "palette.hpp"
+#include "pixel_neighborhood.hpp"
+#include <quickjs.h>
+#include "skeletonization.hpp"
+#include "util.hpp"
+#include <cassert>
+#include <stddef.h>
+#include <array>
+#include <cstdint>
+#include <iostream>
+#include <map>
+#include <memory>
+#include <opencv2/imgproc.hpp>
+#include <string>
+#include <vector>
 
 enum { HIER_NEXT = 0, HIER_PREV, HIER_CHILD, HIER_PARENT };
 

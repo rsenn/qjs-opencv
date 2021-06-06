@@ -1,19 +1,18 @@
 #include "js_point.hpp"
-#include "js_alloc.hpp"        // for js_allocate, js_deallocate
-#include "js_array.hpp"        // for js_array_to
-#include "js_rect.hpp"         // for js_rect_get
-#include "js_typed_array.hpp"  // for js_array_from
-#include "jsbindings.hpp"      // for JSPointData, VISIBLE, js_is_array, js_...
-#include <quickjs.h>           // for JSValue, JSValueConst, JS_ToFloat64
-#include <cctype>             // for isdigit
-#include <cmath>              // for ceil, fabs, floor, round, sqrt
-#include <cstdlib>            // for strtod, NULL, size_t
-#include <array>               // for array
-#include <new>                 // for operator new
-#include <ostream>             // for operator<<, basic_ostream, basic_ostre...
-#include <string>              // for char_traits, basic_string
-#include <vector>              // for vector
-
+#include "js_alloc.hpp"
+#include "js_array.hpp"
+#include "js_rect.hpp"
+#include "js_typed_array.hpp"
+#include "jsbindings.hpp"
+#include <quickjs.h>
+#include <cctype>
+#include <cmath>
+#include <cstdlib>
+#include <array>
+#include <new>
+#include <ostream>
+#include <string>
+#include <vector>
 
 std::vector<JSPointData<double>*> points;
 

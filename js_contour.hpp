@@ -1,13 +1,13 @@
 #ifndef JS_CONTOUR_HPP
 #define JS_CONTOUR_HPP
 
-#include "geometry.hpp"    // for transform_points
-#include "js_alloc.hpp"    // for js_allocate
-#include "jsbindings.hpp"  // for JSContourData
-#include <quickjs.h>       // for JSValue, JSContext, JSValueConst, JSModuleDef
-#include <cstdint>        // for uint32_t
-#include <new>             // for operator new
-#include <vector>          // for vector
+#include "geometry.hpp"
+#include "js_alloc.hpp"
+#include "jsbindings.hpp"
+#include <quickjs.h>
+#include <cstdint>
+#include <new>
+#include <vector>
 
 extern "C" {
 extern JSValue contour_class, contour_proto;

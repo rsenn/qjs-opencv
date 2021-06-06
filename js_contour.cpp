@@ -1,38 +1,34 @@
 #include "js_contour.hpp"
-#include "cutils.h"                      // for TRUE, FALSE
-#include "geometry.hpp"                  // for transform_points
-#include "js_alloc.hpp"                  // for js_allocate, js_deallocate
-#include "js_array.hpp"                  // for js_array_to, js_array_from
-#include "js_mat.hpp"                    // for js_mat_wrap
-#include "js_point.hpp"                  // for js_point_new, js_point_read
-#include "js_point_iterator.hpp"         // for NEXT_LINE, NEXT_POINT, js_po...
-#include "js_rect.hpp"                   // for js_rect_get, js_rect_new
-#include "js_rotated_rect.hpp"           // for js_rotated_rect_new
-#include "js_typed_array.hpp"            // for js_array_from
-#include "js_umat.hpp"                   // for js_cv_inputoutputarray
-#include "jsbindings.hpp"                // for JSContourData, JSPointData
-#include <opencv2/core/hal/interface.h>  // for CV_64FC2
-#include <opencv2/core/mat.hpp>          // for Mat
-#include <opencv2/core/mat.inl.hpp>      // for _InputArray::_InputArray
-#include <opencv2/core/matx.hpp>         // for Vec4i
-#include <opencv2/core/types.hpp>        // for Point, RotatedRect, Rect
-#include <opencv2/imgproc.hpp>           // for contourArea, boundingRect
-#include "psimpl.hpp"                    // for simplify_douglas_peucker
-#include "util.hpp"                      // for JSMatDimensions
-#include <ext/alloc_traits.h>            // for __alloc_traits<>::value_type
-#include <cmath>                        // for sqrt
-#include <stddef.h>                      // for NULL
-#include <algorithm>                     // for copy, rotate, for_each
-#include <iomanip>                       // for operator<<, setprecision
-#include <iterator>                      // for back_insert_iterator, back_i...
-#include <ostream>                       // for operator<<, basic_ostream
-#include <string>                        // for char_traits, basic_string
-#include <utility>                       // for move
-
-
-//#include "plot-cv.hpp"
-//#include "color.hpp"
-
+#include "cutils.h"
+#include "geometry.hpp"
+#include "js_alloc.hpp"
+#include "js_array.hpp"
+#include "js_mat.hpp"
+#include "js_point.hpp"
+#include "js_point_iterator.hpp"
+#include "js_rect.hpp"
+#include "js_rotated_rect.hpp"
+#include "js_typed_array.hpp"
+#include "js_umat.hpp"
+#include "jsbindings.hpp"
+#include "psimpl.hpp"
+#include <quickjs.h>
+#include "util.hpp"
+#include <ext/alloc_traits.h>
+#include <opencv2/core/hal/interface.h>
+#include <stddef.h>
+#include <algorithm>
+#include <cmath>
+#include <iomanip>
+#include <iterator>
+#include <opencv2/core/mat.hpp>
+#include <opencv2/core/mat.inl.hpp>
+#include <opencv2/core/matx.hpp>
+#include <opencv2/core/types.hpp>
+#include <opencv2/imgproc.hpp>
+#include <ostream>
+#include <string>
+#include <utility>
 
 extern "C" {
 JSValue contour_proto = JS_UNDEFINED, contour_class = JS_UNDEFINED;

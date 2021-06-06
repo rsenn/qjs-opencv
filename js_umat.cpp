@@ -1,21 +1,25 @@
 #include "js_umat.hpp"
-#include "cutils.h"                      // for FALSE
-#include "js_alloc.hpp"                  // for js_allocate, js_deallocate
-#include "js_array.hpp"                  // for js_array_to
-#include "js_point.hpp"                  // for js_point_read, js_point_get
-#include "js_rect.hpp"                   // for js_rect_get, js_rect_read
-#include "js_size.hpp"                   // for js_size_new, js_size_read
-#include "jsbindings.hpp"                // for JSUMatData, JSPointData, js_...
-#include <opencv2/core/hal/interface.h>  // for CV_8U, uint, CV_32FC1, CV_16S
-#include "util.hpp"                      // for mat_at, JSMatDimensions, join
-#include <cstdio>                       // for NULL, size_t, printf
-#include <algorithm>                     // for copy, transform
-#include <fstream>                       // for operator<<, basic_ostream
-#include <iomanip>                       // for operator<<, setbase, setfill
-#include <iterator>                      // for back_insert_iterator, back_i...
-#include <string>                        // for string, allocator, operator<<
-#include <type_traits>                   // for add_const<>::type, enable_if
-#include <utility>                       // for make_pair, tuple_element<>::...
+#include "cutils.h"
+#include "js_alloc.hpp"
+#include "js_array.hpp"
+#include "js_point.hpp"
+#include "js_rect.hpp"
+#include "js_size.hpp"
+#include "jsbindings.hpp"
+#include <opencv2/core/mat.hpp>
+#include <opencv2/core/mat.inl.hpp>
+#include <opencv2/core/types.hpp>
+#include <quickjs.h>
+#include "util.hpp"
+#include <opencv2/core/hal/interface.h>
+#include <algorithm>
+#include <cstdio>
+#include <fstream>
+#include <iomanip>
+#include <iterator>
+#include <string>
+#include <type_traits>
+#include <utility>
 
 enum {
   PROP_COLS = 0,

@@ -1,11 +1,13 @@
 #ifndef JS_LINE_HPP
 #define JS_LINE_HPP
 
-#include "jsbindings.hpp"  // for JSPointData, JSLineData, JSLineTraits<>::a...
-#include <quickjs.h>       // for JSValue, JSContext, JS_FreeValue, JS_GetPr...
-#include <array>           // for array
-namespace cv { template <typename _Tp, int cn> class Vec; }
-namespace cv { template <typename _Tp, int cn> class Vec; }
+#include "jsbindings.hpp"
+#include <quickjs.h>
+#include <array>
+
+namespace cv {
+template<typename _Tp, int cn> class Vec;
+}
 
 extern "C" {
 

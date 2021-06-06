@@ -1,8 +1,8 @@
 #ifndef JS_SIZE_HPP
 #define JS_SIZE_HPP
 
-#include "jsbindings.hpp"  // for JSSizeData, VISIBLE, js_is_array_like, js_...
-#include <quickjs.h>       // for JSValue, JSContext, JS_FreeValue, JS_GetPr...
+#include "jsbindings.hpp"
+#include <quickjs.h>
 
 extern "C" VISIBLE int js_size_init(JSContext*, JSModuleDef*);
 

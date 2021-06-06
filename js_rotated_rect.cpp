@@ -1,12 +1,12 @@
-#include "js_alloc.hpp"            // for js_allocate, js_deallocate
-#include "js_point.hpp"            // for js_point_read, js_point_new
-#include "js_rect.hpp"             // for js_rect_new
-#include "js_size.hpp"             // for js_size_new, js_size_read
-#include "jsbindings.hpp"          // for JSRotatedRectData, JSPointData
-#include <opencv2/core/types.hpp>  // for RotatedRect, Point2f, Size2f
-#include <quickjs.h>               // for JSValue, JSValueConst, JSContext
-#include <stddef.h>                // for NULL, size_t
-#include <new>                     // for operator new
+#include "js_alloc.hpp"
+#include "js_point.hpp"
+#include "js_rect.hpp"
+#include "js_size.hpp"
+#include "jsbindings.hpp"
+#include <opencv2/core/types.hpp>
+#include <quickjs.h>
+#include <stddef.h>
+#include <new>
 
 enum { ROTATED_RECT_PROP_CENTER = 0, ROTATED_RECT_PROP_SIZE, ROTATED_RECT_PROP_ANGLE };
 enum { ROTATED_RECT_METHOD_BOUNDING_RECT = 0, ROTATED_RECT_METHOD_BOUNDING_RECT2F, ROTATED_RECT_METHOD_POINTS };

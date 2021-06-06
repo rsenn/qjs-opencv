@@ -1,8 +1,8 @@
 #ifndef JS_ROTATED_RECT_HPP
 #define JS_ROTATED_RECT_HPP
 
-#include "jsbindings.hpp"  // for JSRotatedRectData, VISIBLE, JSPointData
-#include <quickjs.h>       // for JSContext, JSValue, JSValueConst, JSClassID
+#include "jsbindings.hpp"
+#include <quickjs.h>
 
 extern "C" {
 extern JSValue rotated_rect_proto, rotated_rect_class;

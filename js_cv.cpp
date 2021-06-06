@@ -1,34 +1,34 @@
 #include "js_cv.hpp"
-#include "cutils.h"                      // for BOOL, FALSE, TRUE
-#include "js_array.hpp"                  // for js_array_to, js_array_from
-#include "js_mat.hpp"                    // for js_mat_data, js_mat_wrap
-#include "js_point.hpp"                  // for js_point_new, js_point_read
-#include "js_umat.hpp"                   // for js_umat_or_mat, js_cv_inputo...
-#include "jsbindings.hpp"                // for JSInputOutputArray, JSColorData
-#include <opencv2/core.hpp>              // for minMaxLoc, LUT, Mahalanobis
-#include <opencv2/core/base.hpp>         // for NORM_L2, BORDER_CONSTANT
-#include <opencv2/core/core_c.h>         // for CV_CMP_EQ, CV_CMP_GE, CV_CMP_GT
-#include <opencv2/core/cvdef.h>          // for CV_2PI, CV_LOG2, CV_PI
-#include <opencv2/core/hal/interface.h>  // for uchar, CV_64F, CV_16S, CV_16SC1
-#include <opencv2/core/mat.hpp>          // for noArray, Mat, _InputOutputArray
-#include <opencv2/core/mat.inl.hpp>      // for _InputArray::~_InputArray
-#include <opencv2/core/types.hpp>        // for Scalar
-#include <opencv2/core/utility.hpp>      // for getCPUTickCount, getTickCount
-#include <opencv2/core/version.hpp>      // for CV_VERSION_MAJOR, CV_VERSION...
-#include "png_write.hpp"                 // for write_mat
-#include "util.hpp"                      // for str_end
-#include <bits/exception.h>              // for exception
-#include <float.h>                       // for DBL_MAX
-#include <png.h>                         // for png_create_write_struct, png...
-#include <cstdint>                      // for int32_t, uint8_t
-#include <cstdio>                       // for printf, size_t, NULL
-#include <array>                         // for array, array<>::value_type
-#include <opencv2/imgcodecs.hpp>         // for IMREAD_ANYCOLOR, IMREAD_ANYD...
-#include <opencv2/imgproc.hpp>           // for CHAIN_APPROX_NONE, CHAIN_APP...
-#include <opencv2/videoio.hpp>           // for CAP_ANDROID, CAP_ANY, CAP_AR...
-#include <string>                        // for allocator, string
-#include <vector>                        // for vector
-
+#include "cutils.h"
+#include "js_array.hpp"
+#include "js_mat.hpp"
+#include "js_point.hpp"
+#include "js_umat.hpp"
+#include "jsbindings.hpp"
+#include "png_write.hpp"
+#include <quickjs.h>
+#include "util.hpp"
+#include <bits/exception.h>
+#include <float.h>
+#include <opencv2/core/core_c.h>
+#include <opencv2/core/cvdef.h>
+#include <opencv2/core/hal/interface.h>
+#include <png.h>
+#include <array>
+#include <cstdint>
+#include <cstdio>
+#include <opencv2/core.hpp>
+#include <opencv2/core/base.hpp>
+#include <opencv2/core/mat.hpp>
+#include <opencv2/core/mat.inl.hpp>
+#include <opencv2/core/types.hpp>
+#include <opencv2/core/utility.hpp>
+#include <opencv2/core/version.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/videoio.hpp>
+#include <string>
+#include <vector>
 
 enum { HIER_NEXT = 0, HIER_PREV, HIER_CHILD, HIER_PARENT };
 

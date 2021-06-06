@@ -1,34 +1,36 @@
 #include "js_mat.hpp"
-#include "cutils.h"                      // for FALSE, BOOL, TRUE
-#include "js_alloc.hpp"                  // for js_allocate, js_deallocate
-#include "js_array.hpp"                  // for js_array_from, js_array_to
-#include "js_point.hpp"                  // for js_point_get, js_point_read
-#include "js_rect.hpp"                   // for js_rect_get, js_rect_read
-#include "js_size.hpp"                   // for js_size_new, js_size_read
-#include "js_typed_array.hpp"            // for js_typedarray_new, TypedArra...
-#include "js_umat.hpp"                   // for js_umat_or_mat, js_umat_wrap
-#include "jsbindings.hpp"                // for JSMatData, JSPointData, js_a...
-#include <opencv2/core.hpp>              // for bitwise_or, Exception
-#include <opencv2/core/cvdef.h>          // for int32_t, uint16_t, uint32_t
-#include <opencv2/core/hal/interface.h>  // for uint, uchar, CV_32FC1, CV_8U
-#include <opencv2/core/mat.hpp>          // for Mat, operator&, operator*
-#include <opencv2/core/mat.inl.hpp>      // for Mat::operator=, Mat::type
-#include <opencv2/core/operations.hpp>   // for operator&=, operator^=, oper...
-#include <opencv2/core/types.hpp>        // for Scalar, Size_, Point, Rect
-#include <opencv2/imgproc.hpp>           // for getRotationMatrix2D
-#include "util.hpp"                      // for JSMatDimensions, begin, end
-#include <cstring>                      // for NULL, size_t, memcpy
-#include <algorithm>                     // for copy, find, transform
-#include <array>                         // for array
-#include <iomanip>                       // for operator<<, setbase, setfill
-#include <iostream>                      // for operator<<, basic_ostream
-#include <iterator>                      // for back_insert_iterator, back_i...
-#include <list>                          // for operator==, list, _List_cons...
-#include <new>                           // for operator new
-#include <string>                        // for string, char_traits, allocator
-#include <type_traits>                   // for add_const<>::type
-#include <utility>                       // for make_pair, tuple_element<>::...
-#include <vector>                        // for vector
+#include "cutils.h"
+#include "js_alloc.hpp"
+#include "js_array.hpp"
+#include "js_point.hpp"
+#include "js_rect.hpp"
+#include "js_size.hpp"
+#include "js_typed_array.hpp"
+#include "js_umat.hpp"
+#include "jsbindings.hpp"
+#include <quickjs.h>
+#include "util.hpp"
+#include <opencv2/core/cvdef.h>
+#include <opencv2/core/hal/interface.h>
+#include <sys/types.h>
+#include <algorithm>
+#include <array>
+#include <cstring>
+#include <iomanip>
+#include <iostream>
+#include <iterator>
+#include <list>
+#include <new>
+#include <opencv2/core.hpp>
+#include <opencv2/core/mat.hpp>
+#include <opencv2/core/mat.inl.hpp>
+#include <opencv2/core/operations.hpp>
+#include <opencv2/core/types.hpp>
+#include <opencv2/imgproc.hpp>
+#include <string>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 enum {
   PROP_COLS = 0,

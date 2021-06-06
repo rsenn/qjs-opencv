@@ -1,11 +1,9 @@
-//#include "plot-cv.hpp"
 #include "jsbindings.hpp"
-#include <quickjs.h>  // for JSValue, JS_FreeValue, JS_GetPropertyStr, JS_Ge...
-#include <algorithm>  // for copy
-#include <cstdint>    // for uint8_t, uint32_t
-#include <iostream>   // for operator<<, basic_ostream, basic_ostream<>::__o...
-#include <limits>     // for numeric_limits
-
+#include <quickjs.h>
+#include <algorithm>
+#include <cstdint>
+#include <iostream>
+#include <limits>
 
 template<class T> class jsallocator {
 public:

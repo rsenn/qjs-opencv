@@ -1,11 +1,11 @@
 #ifndef PALETTE_HPP
 #define PALETTE_HPP
 
-#include "jsbindings.hpp"                // for JSOutputArray
-#include <opencv2/core/hal/interface.h>  // for uchar, CV_8UC3
-#include <opencv2/core/mat.hpp>          // for Mat, MatSize
-#include <opencv2/core/mat.inl.hpp>      // for MatSize::operator(), Mat::at
-#include <cstdio>                       // for printf
+#include "jsbindings.hpp"
+#include <opencv2/core/hal/interface.h>
+#include <opencv2/core/mat.hpp>
+#include <opencv2/core/mat.inl.hpp>
+#include <cstdio>
 
 template<class Pixel>
 static inline void

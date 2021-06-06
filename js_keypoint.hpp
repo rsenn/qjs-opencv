@@ -1,14 +1,15 @@
 #ifndef JS_KEYPOINT_HPP
 #define JS_KEYPOINT_HPP
 
-#include "jsbindings.hpp"          // for js_is_array, VISIBLE
-#include <opencv2/core/types.hpp>  // for KeyPoint
-#include <quickjs.h>               // for JSValue, JS_FreeValue, JSContext
-#include <stddef.h>                // for size_t
-#include <cstdint>                // for int64_t, uint32_t
-#include <vector>                  // for vector
-template <class T> class js_array;
-template <class T> class js_array;
+#include "jsbindings.hpp"
+#include <quickjs.h>
+#include <stddef.h>
+#include <cstdint>
+#include <opencv2/core/types.hpp>
+#include <vector>
+template<class T> class js_array;
+template<class T> class js_array;
+template<class T> class js_array;
 
 typedef cv::KeyPoint JSKeyPointData;
 

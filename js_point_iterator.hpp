@@ -1,9 +1,9 @@
 #ifndef JS_POINT_ITERATOR_HPP
 #define JS_POINT_ITERATOR_HPP
 
-#include "jsbindings.hpp"  // for JSPointData, VISIBLE
-#include <quickjs.h>       // for JSContext, JSModuleDef, JSValue, JSClassID
-#include <utility>         // for pair
+#include "jsbindings.hpp"
+#include <quickjs.h>
+#include <utility>
 
 extern "C" VISIBLE int js_point_iterator_init(JSContext*, JSModuleDef*);
 

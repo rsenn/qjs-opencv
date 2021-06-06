@@ -1,22 +1,22 @@
 #ifndef JS_UMAT_HPP
 #define JS_UMAT_HPP
 
-#include "js_alloc.hpp"              // for js_allocate
-#include "js_array.hpp"              // for js_array_to
-#include "js_contour.hpp"            // for js_contour_data, js_contour_clas...
-#include "js_line.hpp"               // for js_line_data, js_line_class_id
-#include "js_mat.hpp"                // for js_mat_data_nothrow
-#include "js_typed_array.hpp"        // for js_typedarray_inputoutputarray
-#include "jsbindings.hpp"            // for JSInputOutputArray, JSInputArray
-#include <opencv2/core/mat.hpp>      // for noArray, UMat, Mat, _InputOutput...
-#include <opencv2/core/mat.inl.hpp>  // for _InputOutputArray::_InputOutputA...
-#include <opencv2/core/matx.hpp>     // for Vec
-#include <opencv2/core/types.hpp>    // for Scalar
-#include <quickjs.h>                 // for JSContext, JSValue, JSValueConst
-#include <stddef.h>                  // for size_t
-#include <cstdint>                  // for uint32_t, uint8_t
-#include <new>                       // for operator new
-#include <vector>                    // for vector
+#include "js_alloc.hpp"
+#include "js_array.hpp"
+#include "js_contour.hpp"
+#include "js_line.hpp"
+#include "js_mat.hpp"
+#include "js_typed_array.hpp"
+#include "jsbindings.hpp"
+#include <opencv2/core/mat.hpp>
+#include <opencv2/core/mat.inl.hpp>
+#include <opencv2/core/matx.hpp>
+#include <opencv2/core/types.hpp>
+#include <quickjs.h>
+#include <stddef.h>
+#include <cstdint>
+#include <new>
+#include <vector>
 
 extern "C" VISIBLE int js_umat_init(JSContext*, JSModuleDef*);
 

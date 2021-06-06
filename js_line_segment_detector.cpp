@@ -1,19 +1,18 @@
-#include "js_alloc.hpp"                    // for js_allocate, js_deallocate
-#include "js_array.hpp"                    // for js_array_to
-#include "js_line.hpp"                     // for js_line_from, js_line_new
-#include "js_size.hpp"                     // for js_size_read
-#include "js_umat.hpp"                     // for js_umat_or_mat
-#include "jsbindings.hpp"                  // for js_is_array, JSInputOutput...
-#include <opencv2/core/cvstd_wrapper.hpp>  // for Ptr
-#include <opencv2/core/mat.hpp>            // for noArray
-#include <opencv2/core/mat.inl.hpp>        // for _InputArray::_InputArray
-#include <opencv2/core/matx.hpp>           // for Vec4i, Vec4f
-#include <quickjs.h>                       // for JSValue, JS_ToFloat64, JS_...
-#include <stddef.h>                        // for size_t, NULL
-#include <cstdint>                         // for int32_t
-#include <opencv2/imgproc.hpp>             // for LineSegmentDetector, creat...
-#include <vector>                          // for vector
-
+#include "js_alloc.hpp"
+#include "js_array.hpp"
+#include "js_line.hpp"
+#include "js_size.hpp"
+#include "js_umat.hpp"
+#include "jsbindings.hpp"
+#include <opencv2/core/cvstd_wrapper.hpp>
+#include <opencv2/core/mat.hpp>
+#include <opencv2/core/mat.inl.hpp>
+#include <opencv2/core/matx.hpp>
+#include <quickjs.h>
+#include <stddef.h>
+#include <cstdint>
+#include <opencv2/imgproc.hpp>
+#include <vector>
 
 typedef cv::Ptr<cv::LineSegmentDetector> JSLineSegmentDetector;
 

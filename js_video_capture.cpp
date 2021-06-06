@@ -1,18 +1,18 @@
-#include "js_alloc.hpp"              // for js_deallocate, js_allocate
-#include "js_mat.hpp"                // for js_mat_data
-#include "jsbindings.hpp"            // for JSVideoCaptureData, VISIBLE, JSM...
-#include <opencv2/core.hpp>          // for Exception
-#include <opencv2/core/cvstd.hpp>    // for String
-#include <opencv2/core/mat.inl.hpp>  // for _OutputArray::_OutputArray
-#include <opencv2/videoio.hpp>       // for CAP_ANY, VideoCapture (ptr only)
-#include <quickjs.h>                 // for JSValue, JS_NewBool, JS_ToInt32
-#include <cctype>                   // for isdigit
-#include <stddef.h>                  // for NULL
-#include <cstdint>                  // for int32_t
-#include <algorithm>                 // for all_of
-#include <iostream>                  // for operator<<, basic_ostream::opera...
-#include <new>                       // for operator new
-#include <string>                    // for string, operator<<, char_traits
+#include "js_alloc.hpp"
+#include "js_mat.hpp"
+#include "jsbindings.hpp"
+#include <opencv2/core.hpp>
+#include <opencv2/core/cvstd.hpp>
+#include <opencv2/core/mat.inl.hpp>
+#include <opencv2/videoio.hpp>
+#include <quickjs.h>
+#include <cctype>
+#include <stddef.h>
+#include <cstdint>
+#include <algorithm>
+#include <iostream>
+#include <new>
+#include <string>
 
 extern "C" VISIBLE int js_video_capture_init(JSContext*, JSModuleDef*);
 

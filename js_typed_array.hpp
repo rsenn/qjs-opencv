@@ -1,25 +1,32 @@
 #ifndef JS_TYPED_ARRAY_HPP
 #define JS_TYPED_ARRAY_HPP
 
-#include "jsbindings.hpp"                // for js_number_new, JSInputOutput...
-#include <opencv2/core/hal/interface.h>  // for CV_32F, CV_16S, CV_16U, CV_32S
-#include <opencv2/core/mat.hpp>          // for UMat, Mat, noArray
-#include <opencv2/core/mat.inl.hpp>      // for _InputOutputArray::_InputOut...
-#include <quickjs.h>                     // for JSValue, JSContext, JSValueC...
-#include "util.hpp"                      // for mat_depth, mat_floating, mat...
-#include <cassert>                      // for assert
-#include <cctype>                       // for isdigit, toupper
-#include <cstdlib>                      // for size_t, strtoul
-#include <cstring>                      // for strncmp
-#include <algorithm>                     // for find_if, find_if_not
-#include <array>                         // for array
-#include <cstdint>                       // for uint8_t, uint32_t, int32_t
-#include <ostream>                       // for operator<<, ostringstream
-#include <string>                        // for string, char_traits
-#include <type_traits>                   // for enable_if, remove_pointer
-#include <vector>                        // for vector
-namespace cv { template <typename _Tp> class Scalar_; }
-namespace cv { template <typename _Tp> class Scalar_; }
+#include "jsbindings.hpp"
+#include "util.hpp"
+#include <opencv2/core/hal/interface.h>
+#include <quickjs.h>
+#include <algorithm>
+#include <array>
+#include <cassert>
+#include <cctype>
+#include <cstdint>
+#include <cstdlib>
+#include <cstring>
+#include <opencv2/core/mat.hpp>
+#include <opencv2/core/mat.inl.hpp>
+#include <ostream>
+#include <string>
+#include <type_traits>
+#include <vector>
+namespace cv {
+template<typename _Tp> class Scalar_;
+}
+namespace cv {
+template<typename _Tp> class Scalar_;
+}
+namespace cv {
+template<typename _Tp> class Scalar_;
+}
 
 template<class T> struct number_type { static constexpr bool typed_array = false; };
 

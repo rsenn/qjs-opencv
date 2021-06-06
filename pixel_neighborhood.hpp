@@ -1,12 +1,12 @@
 #ifndef PIXEL_NEIGHBORHOOD_HPP
 #define PIXEL_NEIGHBORHOOD_HPP
 
-#include <opencv2/core/hal/interface.h>  // for uchar, CV_8UC1
-#include <opencv2/core/mat.hpp>          // for Mat, MatSize
-#include <opencv2/core/mat.inl.hpp>      // for Mat::at, MatSize::operator()
-#include <opencv2/core/types.hpp>        // for Point
-#include <stddef.h>                      // for size_t
-#include <vector>                        // for vector
+#include <opencv2/core/hal/interface.h>
+#include <opencv2/core/mat.hpp>
+#include <opencv2/core/mat.inl.hpp>
+#include <opencv2/core/types.hpp>
+#include <stddef.h>
+#include <vector>
 
 static uchar
 pixel_neighborhood_default_pred(uchar value, uchar count) {

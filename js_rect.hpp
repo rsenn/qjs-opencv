@@ -1,8 +1,8 @@
 #ifndef JS_RECT_HPP
 #define JS_RECT_HPP
 
-#include "jsbindings.hpp"  // for JSRectData, VISIBLE, js_number_read, js_is...
-#include <quickjs.h>       // for JSValue, JSContext, JS_FreeValue, JS_GetPr...
+#include "jsbindings.hpp"
+#include <quickjs.h>
 
 extern "C" VISIBLE int js_rect_init(JSContext*, JSModuleDef*);
 

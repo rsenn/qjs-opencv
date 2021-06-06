@@ -1,8 +1,8 @@
 #ifndef JS_POINT_HPP
 #define JS_POINT_HPP
 
-#include "jsbindings.hpp"  // for JSPointData, VISIBLE, js_is_array_like
-#include <quickjs.h>       // for JSValue, JSContext, JS_FreeValue, JS_IsNumber
+#include "jsbindings.hpp"
+#include <quickjs.h>
 
 extern "C" VISIBLE int js_point_init(JSContext*, JSModuleDef*);
 

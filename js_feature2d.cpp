@@ -1,25 +1,24 @@
-#include "cutils.h"                         // for BOOL, FALSE, TRUE
-#include "js_alloc.hpp"                     // for js_deallocate, js_allocate
-#include "js_array.hpp"                     // for js_array_to, js_array_copy
-#include "js_keypoint.hpp"                  // for JSKeyPointData
-#include "js_umat.hpp"                      // for js_umat_or_mat, js_input_...
-#include "jsbindings.hpp"                   // for js_set_tostringtag, JSCon...
-#include <opencv2/core.hpp>                 // for Exception
-#include <opencv2/core/cvstd.hpp>           // for String
-#include <opencv2/core/cvstd_wrapper.hpp>   // for Ptr
-#include <opencv2/core/mat.hpp>             // for noArray, _InputOutputArray
-#include <opencv2/core/mat.inl.hpp>         // for _InputArray::~_InputArray
-#include <opencv2/core/types.hpp>           // for KeyPoint
-#include <opencv2/xfeatures2d/nonfree.hpp>  // for SURF, xfeatures2d
-#include <quickjs.h>                        // for JSValue, JS_ToInt32, JS_T...
-#include <cstring>                         // for strstr, NULL
-#include <cstdint>                          // for int32_t
-#include <new>                              // for operator new
-#include <opencv2/features2d.hpp>           // for KAZE, AKAZE, AgastFeature...
-#include <opencv2/xfeatures2d.hpp>          // for BoostDesc, DAISY, VGG
-#include <string>                           // for string
-#include <vector>                           // for vector
-
+#include "cutils.h"
+#include "js_alloc.hpp"
+#include "js_array.hpp"
+#include "js_keypoint.hpp"
+#include "js_umat.hpp"
+#include "jsbindings.hpp"
+#include <opencv2/core.hpp>
+#include <opencv2/core/cvstd.hpp>
+#include <opencv2/core/cvstd_wrapper.hpp>
+#include <opencv2/core/mat.hpp>
+#include <opencv2/core/mat.inl.hpp>
+#include <opencv2/core/types.hpp>
+#include <opencv2/xfeatures2d/nonfree.hpp>
+#include <quickjs.h>
+#include <cstring>
+#include <cstdint>
+#include <new>
+#include <opencv2/features2d.hpp>
+#include <opencv2/xfeatures2d.hpp>
+#include <string>
+#include <vector>
 
 typedef cv::Ptr<cv::Feature2D> JSFeature2DData;
 

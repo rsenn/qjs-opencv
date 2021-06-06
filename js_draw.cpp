@@ -1,32 +1,31 @@
-#include "cutils.h"                        // for BOOL, FALSE
-#include "geometry.hpp"                    // for point_vector
-#include "js_array.hpp"                    // for js_array_to, js_array
-#include "js_line.hpp"                     // for js_line_data
-#include "js_mat.hpp"                      // for js_mat_data
-#include "js_point.hpp"                    // for js_point_read, js_point_data
-#include "js_rect.hpp"                     // for js_rect_read
-#include "js_size.hpp"                     // for js_size_read
-#include "js_umat.hpp"                     // for js_umat_or_mat
-#include "jsbindings.hpp"                  // for js_value_to, JSPointData
-#include <opencv2/core/cvstd.inl.hpp>      // for operator<<
-#include <opencv2/core/cvstd_wrapper.hpp>  // for Ptr
-#include <opencv2/core/mat.hpp>            // for _InputOutputArray, noArray
-#include <opencv2/core/mat.inl.hpp>        // for _InputOutputArray::_InputO...
-#include <opencv2/core/matx.hpp>           // for Vec4i, Vec
-#include <opencv2/core/types.hpp>          // for Scalar, Size
-#include <opencv2/imgproc.hpp>             // for LINE_AA, LINE_8, clipLine
-#include <quickjs.h>                       // for JSValue, JS_ToInt32, JSVal...
-#include "util.hpp"                        // for to_string
-#include <climits>                        // for INT_MAX
-#include <stddef.h>                        // for NULL
-#include <array>                           // for array
-#include <cstdint>                         // for int32_t, uint8_t
-#include <iostream>                        // for operator<<, basic_ostream:...
-#include <memory>                          // for allocator, operator==, sha...
-#include <opencv2/freetype.hpp>            // for createFreeType2, FreeType2
-#include <string>                          // for string, operator==, operat...
-#include <vector>                          // for vector
-
+#include "cutils.h"
+#include "geometry.hpp"
+#include "js_array.hpp"
+#include "js_line.hpp"
+#include "js_mat.hpp"
+#include "js_point.hpp"
+#include "js_rect.hpp"
+#include "js_size.hpp"
+#include "js_umat.hpp"
+#include "jsbindings.hpp"
+#include <opencv2/core/cvstd.inl.hpp>
+#include <opencv2/core/cvstd_wrapper.hpp>
+#include <opencv2/core/mat.hpp>
+#include <opencv2/core/mat.inl.hpp>
+#include <opencv2/core/matx.hpp>
+#include <opencv2/core/types.hpp>
+#include <opencv2/imgproc.hpp>
+#include <quickjs.h>
+#include "util.hpp"
+#include <climits>
+#include <stddef.h>
+#include <array>
+#include <cstdint>
+#include <iostream>
+#include <memory>
+#include <opencv2/freetype.hpp>
+#include <string>
+#include <vector>
 
 extern "C" VISIBLE int js_draw_init(JSContext*, JSModuleDef*);
 

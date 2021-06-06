@@ -1,30 +1,36 @@
 #ifndef JSBINDINGS_HPP
 #define JSBINDINGS_HPP
 
-#include <opencv2/core/cvstd_wrapper.hpp>  // for Ptr
-#include <opencv2/core/mat.hpp>            // for noArray, Mat, UMat, _Input...
-#include <opencv2/core/mat.inl.hpp>        // for _InputOutputArray::_InputO...
-#include <opencv2/core/matx.hpp>           // for Vec, Vec4i
-#include <opencv2/core/types.hpp>          // for Scalar, Point_, Rect2d, Rect_
-#include <opencv2/core/utility.hpp>        // for Mat::forEach_impl, TickMeter
-#include "util.hpp"                        // for range_view, begin, end
-#include <cassert>                        // for assert
-#include <cutils.h>                        // for BOOL, TRUE, FALSE
-#include <quickjs.h>                       // for JSValue, JSContext, JS_Fre...
-#include <cstdint>                        // for uint8_t, int64_t, uint32_t
-#include <cstdlib>                        // for atoi
-#include <cstring>                        // for size_t, strchr, strcmp
-#include <array>                           // for array
-#include <cctype>                          // for isdigit
-#include <opencv2/videoio.hpp>             // for VideoCapture, VideoWriter
-#include <ostream>                         // for operator<<, basic_ostream:...
-#include <string>                          // for string, allocator
-#include <type_traits>                     // for enable_if, is_floating_point
-#include <utility>                         // for pair
-#include <vector>                          // for vector
-namespace cv { class CLAHE; }
-namespace cv { class CLAHE; }
-
+#include "util.hpp"
+#include <cutils.h>
+#include <quickjs.h>
+#include <array>
+#include <cassert>
+#include <cctype>
+#include <cstdint>
+#include <cstdlib>
+#include <cstring>
+#include <opencv2/core/cvstd_wrapper.hpp>
+#include <opencv2/core/mat.hpp>
+#include <opencv2/core/mat.inl.hpp>
+#include <opencv2/core/matx.hpp>
+#include <opencv2/core/types.hpp>
+#include <opencv2/core/utility.hpp>
+#include <opencv2/videoio.hpp>
+#include <ostream>
+#include <string>
+#include <type_traits>
+#include <utility>
+#include <vector>
+namespace cv {
+class CLAHE;
+}
+namespace cv {
+class CLAHE;
+}
+namespace cv {
+class CLAHE;
+}
 
 #define JS_CONSTANT(name) JS_PROP_INT32_DEF(#name, name, 0)
 #define JS_CV_CONSTANT(name) JS_PROP_INT32_DEF(#name, cv::name, 0)
