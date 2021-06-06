@@ -1,4 +1,3 @@
-
 #ifndef PNG_WRITE_HPP
 #define PNG_WRITE_HPP
 
@@ -12,6 +11,7 @@
 #include <opencv2/core/hal/interface.h>
 #include <stddef.h>
 #include <fstream>
+#include <sstream>
 #include <opencv2/core/mat.hpp>
 #include <opencv2/core/mat.inl.hpp>
 #include <string>

@@ -4,9 +4,6 @@
 #include "jsbindings.hpp"
 #include <quickjs.h>
 #include <cstdint>
-namespace cv {
-class Mat;
-}
 
 extern "C" VISIBLE int js_mat_init(JSContext*, JSModuleDef*);
 

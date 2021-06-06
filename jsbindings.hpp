@@ -22,12 +22,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
-namespace cv {
-class CLAHE;
-}
-namespace cv {
-class CLAHE;
-}
+
 namespace cv {
 class CLAHE;
 }

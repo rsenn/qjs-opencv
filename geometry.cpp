@@ -1,5 +1,5 @@
 #include "geometry.hpp"
-#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/imgproc.hpp>
 
 point_vector<float>
 get_mass_centers(std::vector<point_vector<int>> contours) {

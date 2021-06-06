@@ -7,9 +7,6 @@
 #include <cstdint>
 #include <opencv2/core/types.hpp>
 #include <vector>
-template<class T> class js_array;
-template<class T> class js_array;
-template<class T> class js_array;
 
 typedef cv::KeyPoint JSKeyPointData;
 

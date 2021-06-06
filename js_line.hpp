@@ -5,10 +5,6 @@
 #include <quickjs.h>
 #include <array>
 
-namespace cv {
-template<typename _Tp, int cn> class Vec;
-}
-
 extern "C" {
 
 extern JSValue line_proto, line_class;

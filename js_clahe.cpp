@@ -10,15 +10,6 @@
 #include <opencv2/core/mat.inl.hpp>
 #include <opencv2/core/types.hpp>
 #include <opencv2/imgproc.hpp>
-namespace cv {
-class Mat;
-}
-namespace cv {
-class Mat;
-}
-namespace cv {
-class Mat;
-}
 
 JSValue clahe_proto = JS_UNDEFINED, clahe_class = JS_UNDEFINED;
 JSClassID js_clahe_class_id;

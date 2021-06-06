@@ -18,15 +18,6 @@
 #include <string>
 #include <type_traits>
 #include <vector>
-namespace cv {
-template<typename _Tp> class Scalar_;
-}
-namespace cv {
-template<typename _Tp> class Scalar_;
-}
-namespace cv {
-template<typename _Tp> class Scalar_;
-}
 
 template<class T> struct number_type { static constexpr bool typed_array = false; };
 
@@ -277,7 +268,7 @@ template<class T> struct TypedArrayRange : public TypedArrayProps {
 };
 
 template<class T> struct TypedArrayTraits {
-  typedef typename std::remove_cvref<T>::type value_type;
+  typedef typename std::remove_reference<typename std::remove_cv<T>::type>::type value_type;
 
   static_assert(std::is_arithmetic<T>::value, "TypedArray must contain arithmetic type");
   static_assert(sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 || sizeof(T) == 8,

@@ -2,6 +2,9 @@ import fs from 'fs';
 import path from 'path';
 import Console from 'console';
 
+function IsInclude(line) {
+  return /^\s*#\s*include/i.test(line);
+}
 class File {
   constructor(name) {
     const data = fs.readFileSync(name, 'utf-8');
@@ -12,15 +15,17 @@ class File {
   }
 
   get includes() {
-  return  new Map([...this.lines.entries()].filter(([i,l]) => /^\s*#\s*include/i.test(l)));
+  return  new Map([...this.lines.entries()].filter(([i,l]) => IsInclude(l)));
 }
 
   removeIncludes() {
-    this.lines.splice(0, this.lines.length, ...this.lines.filter(l => !/^\s*#\s*include/i.test(l)));
+    this.lines.splice(0, this.lines.length, ...this.lines.filter(l => !IsInclude(l)));
   }
 
   replaceIncludes(includes) {
-    let index = this.lines.findIndex(l => /^\s*#\s*include/i.test(l));
+    let index = this.lines.findIndex(IsInclude);
+
+    includes = includes.filter(IsInclude);
 
     if(index != -1) {
       this.removeIncludes();
@@ -66,9 +71,9 @@ function main(...args) {
       .split(/\n/g)
       .filter(line => typeof line == 'string' && !/^(-+$|\+ )/.test(line))
       .map(line =>
-        /*/quickjs/.test(line) ||*/ fs.existsSync(IncludeName(line))
+        fs.existsSync(IncludeName(line))
           ? AngleBracketsToQuotes(line)
-          : /opencv2|quickjs/.test(line)
+          : /opencv2|quickjs|cutils/.test(line)
           ? QuotesToAngleBrackets(line)
           : line
       )

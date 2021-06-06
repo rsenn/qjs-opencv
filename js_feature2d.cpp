@@ -35,6 +35,8 @@ using cv::SIFT;
 using cv::SimpleBlobDetector;
 using namespace cv::xfeatures2d;
 
+static SimpleBlobDetector::Params simple_blob_params;
+
 JSValue feature2d_proto = JS_UNDEFINED, feature2d_class = JS_UNDEFINED;
 JSClassID js_feature2d_class_id;
 
@@ -89,23 +91,7 @@ js_feature2d_get(JSValueConst val) {
   }
   return 0;
 }
-/*
-VISIBLE JSValue
-js_feature2d_new(JSContext* ctx, const JSFeature2DData& f2d) {
-  JSValue ret;
-  JSFeature2DData* s;
 
-  if(JS_IsUndefined(feature2d_proto))
-    js_feature2d_init(ctx, NULL);
-
-  ret = JS_NewObjectProtoClass(ctx, feature2d_proto, js_feature2d_class_id);
-
-  s = f2d.get();
-
-  JS_SetOpaque(ret, s);
-  return ret;
-}
-*/
 template<class T>
 VISIBLE JSValue
 js_feature2d_wrap(JSContext* ctx, const cv::Ptr<T>& f2d) {

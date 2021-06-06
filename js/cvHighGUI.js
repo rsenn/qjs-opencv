@@ -1,4 +1,3 @@
-[warn] Ignored unknown option { optionalChaining: true }.
 import * as cv from 'opencv';
 import { Size, Point, Draw } from 'opencv';
 import { BitsToNames } from './cvUtils.js';
