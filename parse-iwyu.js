@@ -1,3 +1,4 @@
+[warn] Ignored unknown option { optionalChaining: true }.
 import fs from 'fs';
 import path from 'path';
 import Console from 'console';
@@ -31,7 +32,7 @@ class File {
   }
 
   save() {
-    let r =  fs.writeFileSync(this.name, this.lines.join('\n'));
+    let r = fs.writeFileSync(this.name, this.lines.join('\n'));
     console.log(`Saved '${this.name}'...`, r);
   }
 }
@@ -50,7 +51,7 @@ function main(...args) {
   console.log(`process.cwd()`, process.cwd());
 
   let data = '\n' + fs.readFileSync('iwyu.txt');
- // console.log(`data`, data);
+  // console.log(`data`, data);
   let i = 0;
   let paragraphs = data.split(/\n\n+/g).filter(p => !/has correct/.test(p));
   let files = {};
@@ -83,7 +84,7 @@ function main(...args) {
     const file = new File(name);
     if(!files[name]) files[name] = {};
 
-   // console.log(`p#${i}`, console.config({ compact: 0 }), { name, what, lines });
+    // console.log(`p#${i}`, console.config({ compact: 0 }), { name, what, lines });
 
     files[name].file = file;
     files[name].includes = file.includes;
@@ -96,11 +97,13 @@ function main(...args) {
   for(let name in files) {
     const entry = files[name];
 
-      console.log('entry', console.config({ compact: 1 }), entry);
-if(entry.full) {
-entry.file.replaceIncludes(entry.full);
-entry.file.save();
-}
+    console.log('entry', console.config({ compact: 1 }), entry);
+    if(entry.full) {
+      const { file, full } = entry;
+
+      file.replaceIncludes(full.map(line => line.replace(/\s*\/\/.*/g, '')));
+      file.save();
+    }
   }
 }
 
