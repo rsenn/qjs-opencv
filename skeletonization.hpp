@@ -10,9 +10,13 @@
 #ifndef SKELETONIZATION_HPP
 #define SKELETONIZATION_HPP
 
-#include <iostream>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/core.hpp>              // for absdiff, countNonZero
+#include <opencv2/core/hal/interface.h>  // for uchar, CV_8UC1
+#include <opencv2/core/mat.hpp>          // for Mat, MatExpr, operator~, Mat...
+#include <opencv2/core/mat.inl.hpp>      // for Mat::at, MatSize::operator()
+#include <opencv2/core/operations.hpp>   // for operator&=, operator*=, oper...
+#include <opencv2/imgproc.hpp>           // for cvtColor, threshold, COLOR_B...
+#include <iostream>                      // for operator<<, endl, basic_ostream
 
 /**
  * Perform one thinning iteration.

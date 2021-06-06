@@ -1,15 +1,22 @@
 #ifndef UTIL_HPP
 #define UTIL_HPP
 
-#include <string>
-#include <numeric>
-#include <iostream>
-#include <iomanip>
-#include <sys/stat.h>
+#include <opencv2/core/hal/interface.h>  // for uchar, CV_16S, CV_32F, CV_32S
+#include <opencv2/core/mat.hpp>          // for Mat, UMat, UMatData
+#include <opencv2/core/mat.inl.hpp>      // for Mat::ptr, Mat::elemSize, Mat...
+#include <opencv2/core/matx.hpp>         // for Vec
+#include <opencv2/core/types.hpp>        // for Scalar, Size
+#include <quickjs.h>                     // for JSCFunctionListEntry
+#include <stddef.h>                      // for size_t
+#include <cstdint>                      // for uint8_t, uint32_t, int32_t
+#include <sys/stat.h>                    // for stat, st_mtime
+#include <iomanip>                       // for operator<<, setfill, setw
+#include <iostream>                      // for operator<<, basic_ostream
+#include <numeric>                       // for accumulate
+#include <string>                        // for string, allocator, operator+
+#include <vector>                        // for vector
 
-#include <quickjs.h>
 
-#include <opencv2/core.hpp>
 
 #if defined(_WIN32) || defined(__MINGW32__)
 #define VISIBLE __declspec(dllexport)

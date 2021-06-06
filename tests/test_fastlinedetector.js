@@ -1,3 +1,4 @@
+[warn] Ignored unknown option { optionalChaining: true }.
 import * as cv from 'opencv';
 
 function main(...args) {

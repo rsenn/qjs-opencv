@@ -1,11 +1,24 @@
-#include "jsbindings.hpp"
 #include "js_rect.hpp"
-#include "js_size.hpp"
-#include "js_point.hpp"
-#include "js_alloc.hpp"
-#include "js_array.hpp"
-#include "js_typed_array.hpp"
-#include "util.hpp"
+#include "js_alloc.hpp"            // for js_allocate, js_deallocate
+#include "js_array.hpp"            // for js_array_from, js_array_to
+#include "js_point.hpp"            // for js_point_new, js_point_read, js_po...
+#include "js_size.hpp"             // for js_size_new, js_size_read
+#include "js_typed_array.hpp"      // for js_array_from
+#include "jsbindings.hpp"          // for JSRectData, JSPointData, JSSizeData
+#include <opencv2/core/types.hpp>  // for Size2d
+#include "util.hpp"                // for argument_range, range_view
+#include <cctype>                 // for isdigit
+#include <float.h>                 // for DBL_EPSILON
+#include <cmath>                  // for round
+#include <cstdlib>                // for strtod, NULL, size_t
+#include <algorithm>               // for sort
+#include <array>                   // for array
+#include <cstdint>                 // for int32_t
+#include <memory>                  // for allocator_traits<>::value_type
+#include <new>                     // for operator new
+#include <ostream>                 // for operator<<, basic_ostream, basic_o...
+#include <string>                  // for basic_string, char_traits
+#include <vector>                  // for vector
 
 extern "C" {
 JSValue rect_proto = JS_UNDEFINED, rect_class = JS_UNDEFINED;

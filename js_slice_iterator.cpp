@@ -1,6 +1,10 @@
-#include "jsbindings.hpp"
-#include "js_alloc.hpp"
 #include "js_slice_iterator.hpp"
+#include "cutils.h"        // for BOOL
+#include "js_alloc.hpp"    // for js_allocate, js_deallocate
+#include "jsbindings.hpp"  // for js_arraybuffer_range, js_global_get, VISIBLE
+#include <cassert>        // for assert
+#include <iosfwd>          // for ostringstream
+#include <string>          // for string, basic_string
 
 extern "C" {
 

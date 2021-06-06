@@ -1,13 +1,11 @@
 #ifndef JS_ALLOC_HPP
 #define JS_ALLOC_HPP
 
-#include <unistd.h>
-#include <sys/mman.h>
-#include <sys/user.h>
-#include <limits.h>
-#include <cstdlib>
+#include <quickjs.h>   // for JSContext, js_mallocz, JSRuntime, js_free, js_...
+#include <sys/mman.h>  // for munmap, mmap, MAP_ANONYMOUS, MAP_PRIVATE, PROT...
+#include <unistd.h>    // for getpagesize
+#include <cstdlib>     // for size_t, malloc, free
 
-#include <quickjs.h>
 
 template<class T> struct js_alloc_mmap {
   static size_t page_size;

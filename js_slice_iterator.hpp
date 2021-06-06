@@ -1,8 +1,12 @@
 #ifndef JS_SLICE_ITERATOR_HPP
 #define JS_SLICE_ITERATOR_HPP
 
-#include "jsbindings.hpp"
-#include "js_typed_array.hpp"
+#include "js_typed_array.hpp"  // for TypedArrayType
+#include "jsbindings.hpp"      // for VISIBLE
+#include <quickjs.h>           // for JSValue, JSContext, JSModuleDef, JSCla...
+#include "util.hpp"            // for range_view
+#include <stddef.h>            // for size_t
+#include <cstdint>            // for uint8_t
 
 extern "C" VISIBLE int js_slice_iterator_init(JSContext*, JSModuleDef*);
 

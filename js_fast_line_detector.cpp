@@ -1,10 +1,18 @@
-#include "jsbindings.hpp"
-#include "js_alloc.hpp"
-#include "js_array.hpp"
-#include "js_umat.hpp"
-#include "js_line.hpp"
+#include "cutils.h"                                 // for BOOL, FALSE
+#include "js_alloc.hpp"                             // for js_allocate, js_d...
+#include "js_array.hpp"                             // for js_array_to
+#include "js_line.hpp"                              // for js_line_from, js_...
+#include "js_umat.hpp"                              // for js_umat_or_mat
+#include "jsbindings.hpp"                           // for JSInputOutputArray
+#include <opencv2/core/cvstd_wrapper.hpp>           // for Ptr
+#include <opencv2/core/mat.inl.hpp>                 // for _InputArray::_Inp...
+#include <opencv2/core/matx.hpp>                    // for Vec4f
+#include <quickjs.h>                                // for JSValue, JSContext
+#include <stddef.h>                                 // for size_t, NULL
+#include <cstdint>                                 // for int32_t
+#include <opencv2/ximgproc/fast_line_detector.hpp>  // for FastLineDetector
+#include <vector>                                   // for vector
 
-#include <opencv2/ximgproc/fast_line_detector.hpp>
 
 typedef cv::Ptr<cv::ximgproc::FastLineDetector> JSFastLineDetector;
 

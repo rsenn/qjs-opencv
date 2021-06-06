@@ -1,7 +1,11 @@
 #ifndef JS_MAT_HPP
 #define JS_MAT_HPP
 
-#include "jsbindings.hpp"
+#include "jsbindings.hpp"  // for JSMatData, VISIBLE
+#include <quickjs.h>       // for JSContext, JSValue, JSModuleDef, JS_GetOpaque
+#include <cstdint>        // for uint32_t
+namespace cv { class Mat; }
+namespace cv { class Mat; }
 
 extern "C" VISIBLE int js_mat_init(JSContext*, JSModuleDef*);
 
@@ -11,8 +15,9 @@ extern JSClassID js_mat_class_id;
 
 VISIBLE JSValue js_mat_new(JSContext*, uint32_t, uint32_t, int);
 int js_mat_init(JSContext*, JSModuleDef*);
-JSModuleDef* js_init_mat_module(JSContext* ctx, const char* module_name);
+JSModuleDef* js_init_module_mat(JSContext*, const char*);
 void js_mat_constructor(JSContext* ctx, JSValue parent, const char* name);
+VISIBLE JSValue js_mat_wrap(JSContext*, const cv::Mat& mat);
 }
 
 inline VISIBLE JSMatData*

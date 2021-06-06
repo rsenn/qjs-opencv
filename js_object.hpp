@@ -1,9 +1,11 @@
 #ifndef JS_OBJECT_HPP
 
-#include "util.hpp"
-#include <quickjs.h>
-#include <map>
-#include <string>
+#include "util.hpp"   // for range_view
+#include <quickjs.h>  // for JSContext, JSPropertyEnum, JSValue, JS_AtomToCS...
+#include <cstdint>   // for int64_t, uint32_t
+#include <map>        // for map
+#include <string>     // for string
+#include <utility>    // for pair
 
 class js_object {
 public:

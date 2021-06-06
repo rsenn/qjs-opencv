@@ -1,10 +1,16 @@
-#include "jsbindings.hpp"
-#include "js_rect.hpp"
-#include "js_point.hpp"
-#include "js_alloc.hpp"
-#include "js_array.hpp"
+#include "js_alloc.hpp"           // for js_allocate, js_deallocate
+#include "js_array.hpp"           // for js_array_to
+#include "js_point.hpp"           // for js_point_read, js_point_new
+#include "js_rect.hpp"            // for js_rect_read
+#include "jsbindings.hpp"         // for JSPointData, js_ref, JSRectData
+#include <opencv2/core/matx.hpp>  // for Vec4f, Vec6f
+#include <quickjs.h>              // for JSValue, JS_NewInt32, JS_ToInt32
+#include <stddef.h>               // for NULL
+#include <cstdint>               // for int32_t
+#include <new>                    // for operator new
+#include <opencv2/imgproc.hpp>    // for Subdiv2D, Subdiv2D::NEXT_AROUND_DST
+#include <vector>                 // for vector
 
-#include <opencv2/imgproc.hpp>
 
 extern "C" VISIBLE int js_subdiv2d_init(JSContext*, JSModuleDef*);
 

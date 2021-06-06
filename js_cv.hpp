@@ -1,10 +1,8 @@
 #ifndef JS_CV_HPP
 #define JS_CV_HPP
 
-#include <opencv2/core.hpp>
-#include "jsbindings.hpp"
-#include "js_contour.hpp"
-#include "js_typed_array.hpp"
+#include "jsbindings.hpp"  // for VISIBLE
+#include <quickjs.h>       // for JSClassID, JSContext, JSModuleDef, JSValue
 
 extern "C" JSClassID js_mat_class_id, js_umat_class_id, js_contour_class_id;
 extern "C" JSValue cv_class;

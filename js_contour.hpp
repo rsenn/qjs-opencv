@@ -1,9 +1,13 @@
 #ifndef JS_CONTOUR_HPP
 #define JS_CONTOUR_HPP
 
-#include "jsbindings.hpp"
-#include "js_alloc.hpp"
-#include "geometry.hpp"
+#include "geometry.hpp"    // for transform_points
+#include "js_alloc.hpp"    // for js_allocate
+#include "jsbindings.hpp"  // for JSContourData
+#include <quickjs.h>       // for JSValue, JSContext, JSValueConst, JSModuleDef
+#include <cstdint>        // for uint32_t
+#include <new>             // for operator new
+#include <vector>          // for vector
 
 extern "C" {
 extern JSValue contour_class, contour_proto;
@@ -14,7 +18,7 @@ void js_contour_finalizer(JSRuntime* rt, JSValue val);
 
 JSValue js_contour_to_string(JSContext*, JSValueConst this_val, int argc, JSValueConst* argv);
 int js_contour_init(JSContext*, JSModuleDef*);
-JSModuleDef* js_init_contour_module(JSContext* ctx, const char* module_name);
+JSModuleDef* js_init_module_contour(JSContext*, const char*);
 void js_contour_constructor(JSContext* ctx, JSValue parent, const char* name);
 };
 

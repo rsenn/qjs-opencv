@@ -1,8 +1,17 @@
-#include "jsbindings.hpp"
-#include "js_size.hpp"
-#include "js_point.hpp"
-#include "js_mat.hpp"
-#include "js_alloc.hpp"
+#include "js_alloc.hpp"                    // for js_allocate, js_deallocate
+#include "js_mat.hpp"                      // for js_mat_data
+#include "js_point.hpp"                    // for js_point_get
+#include "js_size.hpp"                     // for js_size_read, js_size_new
+#include "jsbindings.hpp"                  // for JSCLAHEData, JSSizeData
+#include <opencv2/core/cvstd_wrapper.hpp>  // for Ptr
+#include <opencv2/core/mat.inl.hpp>        // for _InputArray::_InputArray
+#include <opencv2/core/types.hpp>          // for Size, Size2d
+#include <opencv2/imgproc.hpp>             // for CLAHE, createCLAHE
+#include <quickjs.h>                       // for JSValue, JSContext, JS_Get...
+#include <stddef.h>                        // for NULL
+#include <new>                             // for operator new
+namespace cv { class Mat; }
+namespace cv { class Mat; }
 
 JSValue clahe_proto = JS_UNDEFINED, clahe_class = JS_UNDEFINED;
 JSClassID js_clahe_class_id;

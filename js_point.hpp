@@ -1,7 +1,8 @@
 #ifndef JS_POINT_HPP
 #define JS_POINT_HPP
 
-#include "jsbindings.hpp"
+#include "jsbindings.hpp"  // for JSPointData, VISIBLE, js_is_array_like
+#include <quickjs.h>       // for JSValue, JSContext, JS_FreeValue, JS_IsNumber
 
 extern "C" VISIBLE int js_point_init(JSContext*, JSModuleDef*);
 
@@ -14,7 +15,7 @@ extern JSClassID js_point_class_id;
 int js_point_init(JSContext*, JSModuleDef* m);
 void js_point_constructor(JSContext* ctx, JSValue parent, const char* name);
 
-JSModuleDef* js_init_point_module(JSContext*, const char* module_name);
+JSModuleDef* js_init_module_point(JSContext*, const char*);
 }
 
 VISIBLE JSValue js_point_new(JSContext*, double x, double y);

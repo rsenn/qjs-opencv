@@ -1,7 +1,16 @@
-#include "jsbindings.hpp"
-#include "js_umat.hpp"
-#include "js_size.hpp"
-#include "js_alloc.hpp"
+#include "js_alloc.hpp"              // for js_deallocate, js_allocate
+#include "js_size.hpp"               // for js_size_read
+#include "js_umat.hpp"               // for js_umat_or_mat
+#include "jsbindings.hpp"            // for JSVideoWriterData, VISIBLE, countof
+#include <opencv2/core.hpp>          // for Exception
+#include <opencv2/core/cvstd.hpp>    // for String
+#include <opencv2/core/mat.inl.hpp>  // for _InputArray::~_InputArray
+#include <opencv2/videoio.hpp>       // for CAP_ANY, VideoWriter
+#include <quickjs.h>                 // for JSValue, JS_ToInt32, JSContext
+#include <stddef.h>                  // for size_t, NULL
+#include <cstdint>                  // for int32_t, uint32_t
+#include <new>                       // for operator new
+#include <string>                    // for string
 
 extern "C" VISIBLE int js_video_writer_init(JSContext*, JSModuleDef*);
 

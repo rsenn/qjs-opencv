@@ -1,8 +1,15 @@
-#include "jsbindings.hpp"
 #include "js_size.hpp"
-#include "js_array.hpp"
-#include "js_alloc.hpp"
-#include "util.hpp"
+#include "js_alloc.hpp"    // for js_allocate, js_deallocate
+#include "js_array.hpp"    // for js_array_to
+#include "jsbindings.hpp"  // for JSSizeData, JS_CGETSET_ENUMERABLE_DEF, VIS...
+#include <cctype>         // for isdigit
+#include <cmath>          // for round
+#include <cstdlib>        // for strtod, NULL, size_t
+#include <array>           // for array
+#include <cstdint>         // for int32_t
+#include <new>             // for operator new
+#include <ostream>         // for operator<<, ostringstream, basic_ostream
+#include <string>          // for basic_string, char_traits
 
 enum js_size_fit_t { JS_SIZE_FIT_WIDTH = 1, JS_SIZE_FIT_HEIGHT = 2, JS_SIZE_FIT_INSIDE, JS_SIZE_FIT_OUTSIDE };
 enum { SIZE_PROP_WIDTH, SIZE_PROP_HEIGHT, SIZE_PROP_ASPECT, SIZE_PROP_EMPTY, SIZE_PROP_AREA };

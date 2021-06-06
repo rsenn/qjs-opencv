@@ -1,13 +1,17 @@
-#include "jsbindings.hpp"
-#include "js_alloc.hpp"
-#include "js_point.hpp"
 #include "js_point_iterator.hpp"
-#include "js_line.hpp"
-#include "cutils.h"
-#include "quickjs.h"
+#include "cutils.h"                // for BOOL
+#include "js_alloc.hpp"            // for js_allocate, js_deallocate
+#include "js_line.hpp"             // for js_line_new
+#include "js_point.hpp"            // for js_point_new
+#include "jsbindings.hpp"          // for JSContourData, VISIBLE, JSPointData
+#include <opencv2/core/types.hpp>  // for Point_
+#include <quickjs.h>               // for JSValue, JS_FreeValue, JS_GetOpaque
+#include <cassert>                // for assert
+#include <stddef.h>                // for NULL
+#include <iosfwd>                  // for ostringstream
+#include <new>                     // for operator new
+#include <string>                  // for basic_string
 
-#include <opencv2/core/core.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
 
 extern "C" {
 

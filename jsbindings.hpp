@@ -1,20 +1,30 @@
 #ifndef JSBINDINGS_HPP
 #define JSBINDINGS_HPP
 
-#include "util.hpp"
-#include <quickjs.h>
-#include <cutils.h>
+#include <opencv2/core/cvstd_wrapper.hpp>  // for Ptr
+#include <opencv2/core/mat.hpp>            // for noArray, Mat, UMat, _Input...
+#include <opencv2/core/mat.inl.hpp>        // for _InputOutputArray::_InputO...
+#include <opencv2/core/matx.hpp>           // for Vec, Vec4i
+#include <opencv2/core/types.hpp>          // for Scalar, Point_, Rect2d, Rect_
+#include <opencv2/core/utility.hpp>        // for Mat::forEach_impl, TickMeter
+#include "util.hpp"                        // for range_view, begin, end
+#include <cassert>                        // for assert
+#include <cutils.h>                        // for BOOL, TRUE, FALSE
+#include <quickjs.h>                       // for JSValue, JSContext, JS_Fre...
+#include <cstdint>                        // for uint8_t, int64_t, uint32_t
+#include <cstdlib>                        // for atoi
+#include <cstring>                        // for size_t, strchr, strcmp
+#include <array>                           // for array
+#include <cctype>                          // for isdigit
+#include <opencv2/videoio.hpp>             // for VideoCapture, VideoWriter
+#include <ostream>                         // for operator<<, basic_ostream:...
+#include <string>                          // for string, allocator
+#include <type_traits>                     // for enable_if, is_floating_point
+#include <utility>                         // for pair
+#include <vector>                          // for vector
+namespace cv { class CLAHE; }
+namespace cv { class CLAHE; }
 
-#include <opencv2/core/core.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/videoio.hpp>
-#include <iomanip>
-#include <map>
-#include <iterator>
-#include <array>
-#include <algorithm>
-#include <string>
-#include <cctype>
 
 #define JS_CONSTANT(name) JS_PROP_INT32_DEF(#name, name, 0)
 #define JS_CV_CONSTANT(name) JS_PROP_INT32_DEF(#name, cv::name, 0)
@@ -116,38 +126,67 @@ template<> union JSColorData<uint8_t> {
   }
 
 extern "C" {
+JSModuleDef* js_init_module_draw(JSContext*, const char*);
+JSModuleDef* js_init_module_video_capture(JSContext*, const char*);
+JSModuleDef* js_init_module_cv(JSContext*, const char*);
 
+/*
 int js_draw_functions(JSContext* ctx, JSValue parent);
 int js_draw_init(JSContext*, JSModuleDef*);
 
-JSModuleDef* js_init_module(JSContext* ctx, const char* module_name);
-JSModuleDef* js_init_module_point(JSContext*, const char*);
-JSModuleDef* js_init_module_size(JSContext*, const char*);
-JSModuleDef* js_init_module_rect(JSContext*, const char*);
-JSModuleDef* js_init_module_mat(JSContext*, const char*);
-JSModuleDef* js_init_module_contour(JSContext*, const char*);
-JSModuleDef* js_init_module_line(JSContext*, const char*);
-JSModuleDef* js_init_module_draw(JSContext*, const char*);
-JSModuleDef* js_init_module_cv(JSContext*, const char*);
-JSModuleDef* js_init_module_video_capture(JSContext*, const char*);
-
-int js_video_capture_init(JSContext*, JSModuleDef*);
-
 VISIBLE JSValue js_video_capture_wrap(JSContext*, cv::VideoCapture* cap);
 
-// extern "C" JSValue int32array_ctor, int32array_proto, mat_class, mat_proto, mat_iterator_proto,
-// point_class, line_class,  draw_class,  point_proto,
-// rect_class, rect_proto, size_class, size_proto, line_proto, draw_proto;
-
 VISIBLE JSValue js_mat_wrap(JSContext*, const cv::Mat& mat);
+*/
 }
-
+/*
 extern "C" JSClassDef js_size_class, js_point_class, js_mat_class, js_rect_class;
 extern "C" JSClassID js_line_class_id, js_draw_class_id;
 
 extern "C" const JSCFunctionListEntry js_rect_proto_funcs[];
 
 extern "C" JSClassID js_point_class_id, js_size_class_id, js_rect_class_id, js_mat_class_id, js_mat_iterator_class_id;
+*/
+struct JSConstructor {
+  JSConstructor(JSCFunction* _ctor, const char* _name)
+      : name(_name), ctor(_ctor), proto(nullptr), nfuncs(0), class_obj(JS_UNDEFINED) {}
+
+  template<int size>
+  JSConstructor(JSCFunction* _ctor, const char* _name, const JSCFunctionListEntry (&_funcs)[size])
+      : name(_name), ctor(_ctor), proto(_funcs), nfuncs(size), class_obj(JS_UNDEFINED) {}
+
+  JSValue
+  create(JSContext* ctx) {
+    class_obj = JS_NewCFunction2(ctx, ctor, name, 0, JS_CFUNC_constructor, 0);
+    if(proto && nfuncs)
+      JS_SetPropertyFunctionList(ctx, class_obj, proto, nfuncs);
+    return class_obj;
+  }
+
+  void
+  set_prototype(JSContext* ctx, JSValueConst proto) const {
+    assert(!JS_IsUndefined(class_obj));
+    JS_SetConstructor(ctx, class_obj, proto);
+  }
+  void
+  set_export(JSContext* ctx, JSModuleDef* m) const {
+    assert(!JS_IsUndefined(class_obj));
+    JS_SetModuleExport(ctx, m, name, class_obj);
+  }
+
+  void
+  add_export(JSContext* ctx, JSModuleDef* m) const {
+    assert(!JS_IsUndefined(class_obj));
+    JS_AddModuleExport(ctx, m, name);
+  }
+
+protected:
+  const char* name;
+  JSCFunction* ctor;
+  const JSCFunctionListEntry* proto;
+  size_t nfuncs;
+  JSValue class_obj;
+};
 
 extern "C" {
 static inline JSValue js_global_get(JSContext* ctx, const char* prop);
@@ -398,6 +437,26 @@ js_set_inspect_method(JSContext* ctx, JSValueConst obj, JSCFunction* func) {
   JS_DefinePropertyValue(
       ctx, obj, inspect_symbol, JS_NewCFunction(ctx, func, "inspect", 1), JS_PROP_CONFIGURABLE | JS_PROP_WRITABLE);
   JS_FreeAtom(ctx, inspect_symbol);
+}
+
+static inline JSValue
+js_get_tostringtag(JSContext* ctx, JSValueConst obj) {
+  JSAtom tostringtag_symbol = js_symbol_atom(ctx, "toStringTag");
+  JSValue ret = JS_GetProperty(ctx, obj, tostringtag_symbol);
+  JS_FreeAtom(ctx, tostringtag_symbol);
+  return ret;
+}
+
+static inline void
+js_set_tostringtag(JSContext* ctx, JSValueConst obj, JSValue value) {
+  JSAtom tostringtag_symbol = js_symbol_atom(ctx, "toStringTag");
+  JS_DefinePropertyValue(ctx, obj, tostringtag_symbol, value, JS_PROP_CONFIGURABLE);
+  JS_FreeAtom(ctx, tostringtag_symbol);
+}
+
+static inline void
+js_set_tostringtag(JSContext* ctx, JSValueConst obj, const char* str) {
+  return js_set_tostringtag(ctx, obj, JS_NewString(ctx, str));
 }
 
 static inline JSValue

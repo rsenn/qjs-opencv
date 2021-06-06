@@ -1,11 +1,20 @@
-#include "jsbindings.hpp"
-#include "js_alloc.hpp"
-#include "js_point.hpp"
-#include "js_size.hpp"
-#include "js_rect.hpp"
-#include "js_umat.hpp"
-#include "js_cv.hpp"
-#include <opencv2/highgui.hpp>
+#include "js_alloc.hpp"              // for js_allocate
+#include "js_cv.hpp"                 // for cv_class
+#include "js_point.hpp"              // for js_point_read
+#include "js_rect.hpp"               // for js_rect_wrap
+#include "js_size.hpp"               // for js_size_read
+#include "js_umat.hpp"               // for js_umat_or_mat
+#include "jsbindings.hpp"            // for JS_CV_CONSTANT, JSInputOutputArray
+#include <opencv2/core/cvstd.hpp>    // for String
+#include <opencv2/core/mat.hpp>      // for _InputArray
+#include <opencv2/core/mat.inl.hpp>  // for _InputArray::~_InputArray
+#include <quickjs.h>                 // for JSValue, JS_NewInt32, JS_ToCString
+#include <cctype>                   // for isalnum
+#include <stddef.h>                  // for NULL
+#include <cstdint>                  // for int32_t, uint32_t
+#include <algorithm>                 // for find
+#include <opencv2/highgui.hpp>       // for createButton, createTrackbar
+#include <vector>                    // for allocator, vector
 
 enum { DISPLAY_OVERLAY };
 

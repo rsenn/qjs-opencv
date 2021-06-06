@@ -1,11 +1,23 @@
 #ifndef JS_ARRAY_HPP
 #define JS_ARRAY_HPP
 
-#include <type_traits>
-#include "js_mat.hpp"
-#include "js_point.hpp"
-#include "js_contour.hpp"
-#include "jsbindings.hpp"
+#include "cutils.h"                  // for BOOL
+#include "js_contour.hpp"            // for js_contour_data, js_contour_new
+#include "js_mat.hpp"                // for js_mat_data
+#include "js_point.hpp"              // for js_point_read, js_point_new
+#include "jsbindings.hpp"            // for js_is_array, JSContourData, JSPo...
+#include <opencv2/core/mat.hpp>      // for Mat
+#include <opencv2/core/mat.inl.hpp>  // for Mat::Mat, Mat::~Mat
+#include <opencv2/core/matx.hpp>     // for Vec
+#include <opencv2/core/types.hpp>    // for Point_, Scalar_
+#include <quickjs.h>                 // for JSValue, JSContext, JS_FreeValue
+#include <stddef.h>                  // for size_t
+#include <algorithm>                 // for min
+#include <array>                     // for array
+#include <cstdint>                   // for int64_t, uint32_t
+#include <iterator>                  // for input_iterator_tag, iterator
+#include <type_traits>               // for enable_if, is_pointer, remove_po...
+#include <vector>                    // for vector
 
 static inline int64_t
 js_array_length(JSContext* ctx, const JSValueConst& arr) {
@@ -337,7 +349,6 @@ js_array<JSColorData<T>>::to_array(JSContext* ctx, JSValueConst arr, std::array<
   return i;
 }
 
-#include "js_point.hpp"
 
 template<class T> class js_array<JSPointData<T>> {
 public:

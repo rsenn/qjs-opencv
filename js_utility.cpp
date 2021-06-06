@@ -1,5 +1,12 @@
-#include "jsbindings.hpp"
-#include "js_alloc.hpp"
+#include "js_alloc.hpp"              // for js_allocate, js_deallocate
+#include "jsbindings.hpp"            // for JSTickMeterData, VISIBLE, countof
+#include <opencv2/core/utility.hpp>  // for operator<<, TickMeter
+#include <opencv2/core/version.hpp>  // for CV_VERSION_MAJOR, CV_VERSION_MINOR
+#include <quickjs.h>                 // for JSValue, JS_NewFloat64, JS_GetOp...
+#include <stddef.h>                  // for NULL
+#include <iosfwd>                    // for ostringstream, ostream
+#include <new>                       // for operator new
+#include <string>                    // for string
 
 extern "C" VISIBLE int js_utility_init(JSContext*, JSModuleDef*);
 

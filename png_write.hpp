@@ -2,12 +2,21 @@
 #ifndef PNG_WRITE_HPP
 #define PNG_WRITE_HPP
 
-#include <opencv2/core.hpp>
+#include <opencv2/core/hal/interface.h>  // for uchar
+#include <opencv2/core/mat.hpp>          // for Mat
+#include <opencv2/core/mat.inl.hpp>      // for Mat::at
+#include "pngpp/color.hpp"               // for color
+#include "pngpp/image.hpp"               // for image
+#include "pngpp/index_pixel.hpp"         // for index_pixel
+#include "pngpp/palette.hpp"             // for palette
+#include "pngpp/pixel_buffer.hpp"        // for basic_pixel_buffer<>::row_type
+#include "pngpp/types.hpp"               // for uint_32
+#include <ext/alloc_traits.h>            // for __alloc_traits<>::value_type
+#include <stddef.h>                      // for size_t
+#include <fstream>                       // for ostringstream
+#include <string>                        // for string
+#include <vector>                        // for vector
 //#include <png++/png.hpp>
-#include "pngpp/png.hpp"
-#include <vector>
-#include <fstream>
-#include <sstream>
 
 template<class ColorType>
 static inline png::image<png::index_pixel>

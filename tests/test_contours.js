@@ -1,3 +1,4 @@
+[warn] Ignored unknown option { optionalChaining: true }.
 import { Point, Size, Rect, Mat, UMat, Line, Contour, SliceIterator } from 'opencv';
 import * as cv from 'opencv';
 import { Pipeline, Processor } from '../js/cvPipeline.js';

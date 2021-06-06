@@ -1,14 +1,18 @@
 #ifndef GEOMETRY_HPP
 #define GEOMETRY_HPP
 
-#include <opencv2/core/core.hpp>
-#include <opencv2/imgproc/types_c.h>
+#include <opencv2/core/matx.hpp>   // for Vec4i
+#include <opencv2/core/types.hpp>  // for Point_
+#include "psimpl.hpp"              // for PolylineSimplification
+#include <cmath>                  // for fabs, sqrt
+#include <stddef.h>                // for size_t
+#include <iomanip>                 // for setfill, setw
+#include <iterator>                // for iterator_traits, back_inserter
+#include <sstream>                 // for basic_ostringstream
+#include <string>                  // for basic_string
+#include <vector>                  // for vector
 
-#include <vector>
-#include <sstream>
-#include <iomanip>
 
-#include "psimpl.hpp"
 
 template<class T> struct point {
   typedef T value_type;

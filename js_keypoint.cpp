@@ -1,8 +1,12 @@
-#include <opencv2/core.hpp>
+#include "js_alloc.hpp"            // for js_allocate, js_deallocate
+#include "js_point.hpp"            // for js_point_new, js_point_argument
+#include "jsbindings.hpp"          // for VISIBLE, JSPointData, js_set_inspe...
+#include <opencv2/core/types.hpp>  // for KeyPoint
+#include <quickjs.h>               // for JSValue, JS_DefinePropertyValueStr
+#include <cstdint>                // for int32_t
+#include <cstdio>                 // for snprintf, NULL
+#include <new>                     // for operator new
 
-#include "jsbindings.hpp"
-#include "js_point.hpp"
-#include "js_alloc.hpp"
 
 typedef cv::KeyPoint JSKeyPointData;
 

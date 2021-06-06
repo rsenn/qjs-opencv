@@ -1,7 +1,8 @@
 #ifndef JS_SIZE_HPP
 #define JS_SIZE_HPP
 
-#include "jsbindings.hpp"
+#include "jsbindings.hpp"  // for JSSizeData, VISIBLE, js_is_array_like, js_...
+#include <quickjs.h>       // for JSValue, JSContext, JS_FreeValue, JS_GetPr...
 
 extern "C" VISIBLE int js_size_init(JSContext*, JSModuleDef*);
 
@@ -13,7 +14,7 @@ VISIBLE JSValue js_size_wrap(JSContext* ctx, const JSSizeData<double>& size);
 VISIBLE JSSizeData<double>* js_size_data(JSContext*, JSValueConst val);
 
 int js_size_init(JSContext*, JSModuleDef* m);
-JSModuleDef* js_init_size_module(JSContext*, const char* module_name);
+JSModuleDef* js_init_module_size(JSContext*, const char*);
 void js_size_constructor(JSContext* ctx, JSValue parent, const char* name);
 }
 VISIBLE JSValue js_size_new(JSContext* ctx, double w, double h);

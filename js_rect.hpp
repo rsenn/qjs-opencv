@@ -1,7 +1,8 @@
 #ifndef JS_RECT_HPP
 #define JS_RECT_HPP
 
-#include "jsbindings.hpp"
+#include "jsbindings.hpp"  // for JSRectData, VISIBLE, js_number_read, js_is...
+#include <quickjs.h>       // for JSValue, JSContext, JS_FreeValue, JS_GetPr...
 
 extern "C" VISIBLE int js_rect_init(JSContext*, JSModuleDef*);
 
@@ -12,7 +13,7 @@ extern JSClassID js_rect_class_id;
 VISIBLE JSRectData<double>* js_rect_data(JSContext*, JSValueConst val);
 VISIBLE JSValue js_rect_wrap(JSContext*, const JSRectData<double>&);
 int js_rect_init(JSContext*, JSModuleDef*);
-JSModuleDef* js_init_rect_module(JSContext*, const char* module_name);
+JSModuleDef* js_init_module_rect(JSContext*, const char*);
 
 void js_rect_constructor(JSContext* ctx, JSValue parent, const char* name);
 }

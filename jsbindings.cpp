@@ -1,17 +1,11 @@
 //#include "plot-cv.hpp"
-#include "geometry.hpp"
 #include "jsbindings.hpp"
-#include "js_point.hpp"
-#include "js_size.hpp"
-#include "js_rect.hpp"
-#include "js_contour.hpp"
-#include "js_mat.hpp"
-#include "js_point_iterator.hpp"
-#include "cutils.h"
+#include <quickjs.h>  // for JSValue, JS_FreeValue, JS_GetPropertyStr, JS_Ge...
+#include <algorithm>  // for copy
+#include <cstdint>    // for uint8_t, uint32_t
+#include <iostream>   // for operator<<, basic_ostream, basic_ostream<>::__o...
+#include <limits>     // for numeric_limits
 
-#include <opencv2/core/core.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <iomanip>
 
 template<class T> class jsallocator {
 public:

@@ -1,5 +1,6 @@
-#include "quickjs.h"
-#include "util.hpp"
+#include <quickjs.h>  // for JSModuleDef, JSContext, JS_NewCModule
+#include "util.hpp"   // for VISIBLE
+#include <stddef.h>   // for NULL
 
 extern "C" int js_clahe_init(JSContext*, JSModuleDef*);
 extern "C" int js_contour_init(JSContext*, JSModuleDef*);

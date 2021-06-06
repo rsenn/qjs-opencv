@@ -1,11 +1,16 @@
-#include "jsbindings.hpp"
-#include "js_point.hpp"
-#include "js_alloc.hpp"
 #include "js_line.hpp"
-#include "js_array.hpp"
-#include "js_typed_array.hpp"
-#include "util.hpp"
-#include "line.hpp"
+#include "js_alloc.hpp"            // for js_allocate, js_deallocate
+#include "js_array.hpp"            // for js_array_from
+#include "js_point.hpp"            // for js_point_new, js_point_read, js_po...
+#include "js_typed_array.hpp"      // for js_typedarray_from
+#include "jsbindings.hpp"          // for JSLineData, JSLineData<>::array_type
+#include "line.hpp"                // for Line
+#include <opencv2/core/types.hpp>  // for Point_, Point2d
+#include <cctype>                 // for isdigit
+#include <cmath>                  // for fabs, atan2, fmax, fmin
+#include <cstdlib>                // for strtod, NULL, size_t
+#include <algorithm>               // for min, all_of
+#include <utility>                 // for pair
 
 enum {
   PROP_A = 0,
