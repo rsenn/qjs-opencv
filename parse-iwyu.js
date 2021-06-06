@@ -1,4 +1,3 @@
-[warn] Ignored unknown option { optionalChaining: true }.
 import fs from 'fs';
 import path from 'path';
 import Console from 'console';
