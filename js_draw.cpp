@@ -7,6 +7,7 @@
 #include "js_rect.hpp"
 #include "js_size.hpp"
 #include "js_umat.hpp"
+#include "js_keypoint.hpp"
 #include "jsbindings.hpp"
 #include <opencv2/core/cvstd.inl.hpp>
 #include <opencv2/core/cvstd_wrapper.hpp>
@@ -14,6 +15,7 @@
 #include <opencv2/core/mat.inl.hpp>
 #include <opencv2/core/matx.hpp>
 #include <opencv2/core/types.hpp>
+#include <opencv2/features2d.hpp>
 #include <opencv2/imgproc.hpp>
 #include <quickjs.h>
 #include "util.hpp"
@@ -397,6 +399,27 @@ js_draw_rectangle(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
 }
 
 static JSValue
+js_draw_keypoints(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+  int i = 0, ret = -1;
+  std::vector<JSKeyPointData> keypoints;
+  JSInputOutputArray image, outImage;
+  JSColorData<double> color = {-1, -1, -1, -1};
+  cv::Scalar scalar = cv::Scalar::all(-1);
+
+  image = js_umat_or_mat(ctx, argv[0]);
+  outImage = js_umat_or_mat(ctx, argv[2]);
+
+  js_array_to(ctx, argv[1], keypoints);
+
+  if(argc)
+    js_color_read(ctx, argv[3], &color);
+
+  cv::drawKeypoints(image, keypoints, outImage, *(cv::Scalar*)&color, cv::DrawMatchesFlags(0));
+
+  return JS_UNDEFINED;
+}
+
+static JSValue
 js_put_text(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   cv::Mat* dst;
   int i = 0, ret = -1;
@@ -611,6 +634,7 @@ const JSCFunctionListEntry js_draw_static_funcs[] = {
     JS_CFUNC_DEF("fontScaleFromHeight", 2, &js_get_font_scale_from_height),
     JS_CFUNC_DEF("loadFont", 1, &js_load_font),
     JS_CFUNC_DEF("clipLine", 3, &js_clip_line),
+    JS_CFUNC_DEF("drawKeypoints", 3, &js_draw_keypoints),
 };
 
 const JSCFunctionListEntry js_draw_global_funcs[] = {
@@ -620,6 +644,7 @@ const JSCFunctionListEntry js_draw_global_funcs[] = {
     JS_CFUNC_DEF("drawLine", 1, &js_draw_line),
     JS_CFUNC_DEF("drawPolygon", 1, &js_draw_polygon),
     JS_CFUNC_DEF("drawRect", 1, &js_draw_rectangle),
+    JS_CFUNC_DEF("drawKeypoints", 3, &js_draw_keypoints),
     JS_CFUNC_DEF("putText", 2, &js_put_text),
     JS_CFUNC_DEF("getTextSize", 5, &js_get_text_size),
     JS_CFUNC_DEF("getFontScaleFromHeight", 2, &js_get_font_scale_from_height),

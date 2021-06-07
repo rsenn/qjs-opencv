@@ -14,11 +14,12 @@ extern "C" {
 
 extern JSValue keypoint_proto, keypoint_class;
 extern JSClassID js_keypoint_class_id;
+
+VISIBLE JSKeyPointData* js_keypoint_data2(JSContext*, JSValueConst val);
+VISIBLE JSKeyPointData* js_keypoint_data(JSValueConst val);
 }
 
 extern "C" VISIBLE int js_keypoint_init(JSContext*, JSModuleDef*);
-VISIBLE JSKeyPointData* js_keypoint_data(JSContext*, JSValueConst val);
-VISIBLE JSKeyPointData* js_keypoint_data(JSValueConst val);
 
 VISIBLE JSValue js_keypoint_new(JSContext* ctx, const JSKeyPointData& keypoint);
 
@@ -38,7 +39,7 @@ public:
     for(i = 0; i < n; i++) {
       JSKeyPointData* kp;
       JSValue item = JS_GetPropertyUint32(ctx, arr, (uint32_t)i);
-      if((kp = js_keypoint_data(ctx, item))) {
+      if(!(kp = js_keypoint_data2(ctx, item))) {
         JS_FreeValue(ctx, item);
         out.clear();
         return -1;

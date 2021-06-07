@@ -1,5 +1,7 @@
 #include "js_alloc.hpp"
 #include "js_point.hpp"
+#include "js_array.hpp"
+#include "js_keypoint.hpp"
 #include "jsbindings.hpp"
 #include <opencv2/core/types.hpp>
 #include <quickjs.h>
@@ -71,7 +73,7 @@ fail:
 }
 
 VISIBLE JSKeyPointData*
-js_keypoint_data(JSContext* ctx, JSValueConst val) {
+js_keypoint_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSKeyPointData*>(JS_GetOpaque2(ctx, val, js_keypoint_class_id));
 }
 
@@ -114,11 +116,13 @@ js_keypoint_finalizer(JSRuntime* rt, JSValue val) {
 
 static JSValue
 js_keypoint_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  JSKeyPointData* kp = js_keypoint_data(ctx, this_val);
-  JSValue obj = JS_NewObjectClass(ctx, js_keypoint_class_id);
+  JSKeyPointData* kp = js_keypoint_data2(ctx, this_val);
+  JSValue obj = JS_NewObjectProto(ctx, keypoint_proto);
 
-  JS_DefinePropertyValueStr(ctx, obj, "angle", JS_NewFloat64(ctx, kp->angle), JS_PROP_ENUMERABLE);
-  JS_DefinePropertyValueStr(ctx, obj, "class_id", JS_NewInt32(ctx, kp->class_id), JS_PROP_ENUMERABLE);
+  if(kp->angle != -1)
+    JS_DefinePropertyValueStr(ctx, obj, "angle", JS_NewFloat64(ctx, kp->angle), JS_PROP_ENUMERABLE);
+  if(kp->class_id != -1)
+    JS_DefinePropertyValueStr(ctx, obj, "class_id", JS_NewInt32(ctx, kp->class_id), JS_PROP_ENUMERABLE);
   JS_DefinePropertyValueStr(ctx, obj, "octave", JS_NewInt32(ctx, kp->octave), JS_PROP_ENUMERABLE);
   JS_DefinePropertyValueStr(ctx, obj, "pt", js_point_new(ctx, kp->pt), JS_PROP_ENUMERABLE);
   JS_DefinePropertyValueStr(ctx, obj, "response", JS_NewFloat64(ctx, kp->response), JS_PROP_ENUMERABLE);

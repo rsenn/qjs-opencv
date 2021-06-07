@@ -779,50 +779,62 @@ js_feature2d_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
   return obj;
 }
 
-enum { METHOD_CLEAR = 0, METHOD_COMPUTE, METHOD_DETECT };
+enum { METHOD_CLEAR = 0, METHOD_COMPUTE, METHOD_DETECT, METHOD_WRITE, METHOD_READ };
 
 static JSValue
 js_feature2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
   JSFeature2DData* s = static_cast<JSFeature2DData*>(JS_GetOpaque2(ctx, this_val, js_feature2d_class_id));
   JSValue ret = JS_UNDEFINED;
   cv::Feature2D* ptr = s->get();
+  try {
 
-  switch(magic) {
-    case METHOD_CLEAR: {
-      (*s)->clear();
-      break;
-    }
-    case METHOD_COMPUTE: {
-      JSInputArray image = js_umat_or_mat(ctx, argv[0]);
-      cv::Mat descriptors;
-      std::vector<JSKeyPointData> keypoints;
+    switch(magic) {
+      case METHOD_CLEAR: {
+        (*s)->clear();
+        break;
+      }
+      case METHOD_COMPUTE: {
+        JSInputArray image = js_umat_or_mat(ctx, argv[0]);
+        cv::Mat descriptors;
+        std::vector<JSKeyPointData> keypoints;
 
-      try {
-        ptr->compute(image, keypoints, descriptors);
+        ptr->compute(image, keypoints, JSOutputArray(descriptors));
 
         js_array_copy(ctx, argv[1], keypoints.data(), keypoints.data() + keypoints.size());
-      } catch(const cv::Exception& e) {
-        const char *msg, *what = e.what();
-        if((msg = strstr(what, ") ")))
-          what = msg + 2;
-        ret = JS_ThrowInternalError(ctx, "cv::Exception %s", what);
+
+        break;
       }
-      break;
+      case METHOD_DETECT: {
+        JSInputArray image = js_umat_or_mat(ctx, argv[0]);
+        JSInputArray mask = cv::noArray();
+        std::vector<JSKeyPointData> keypoints;
+
+        if(argc >= 3)
+          mask = js_umat_or_mat(ctx, argv[2]);
+
+        ptr->detect(image, keypoints, mask);
+
+        js_array_copy(ctx, argv[1], keypoints.data(), keypoints.data() + keypoints.size());
+        break;
+      }
+      case METHOD_WRITE: {
+        std::string str;
+        js_value_to(ctx, argv[0], str);
+        ptr->write(str);
+      }
+      case METHOD_READ: {
+        std::string str;
+        js_value_to(ctx, argv[0], str);
+        ptr->read(str);
+      }
     }
-    case METHOD_DETECT: {
-      JSInputArray image = js_umat_or_mat(ctx, argv[0]);
-      JSInputArray mask = cv::noArray();
-      std::vector<JSKeyPointData> keypoints;
-
-      if(argc >= 3)
-        mask = js_umat_or_mat(ctx, argv[2]);
-
-      ptr->detect(image, keypoints, mask);
-
-      js_array_copy(ctx, argv[1], keypoints.data(), keypoints.data() + keypoints.size());
-      break;
-    }
+  } catch(const cv::Exception& e) {
+    const char *msg, *what = e.what();
+    if((msg = strstr(what, ") ")))
+      what = msg + 2;
+    ret = JS_ThrowInternalError(ctx, "cv::Exception %s", what);
   }
+
   return ret;
 }
 
@@ -841,26 +853,33 @@ js_feature2d_getter(JSContext* ctx, JSValueConst this_val, int magic) {
 
   if(!(s = js_feature2d_data(this_val)))
     return ret;
+  try {
 
-  switch(magic) {
-    case PROP_DEFAULT_NAME: {
-      std::string name = (*s)->getDefaultName();
+    switch(magic) {
+      case PROP_DEFAULT_NAME: {
+        std::string name = (*s)->getDefaultName();
 
-      ret = JS_NewStringLen(ctx, name.data(), name.size());
-      break;
+        ret = JS_NewStringLen(ctx, name.data(), name.size());
+        break;
+      }
+      case PROP_DEFAULT_NORM: {
+        ret = JS_NewInt32(ctx, (*s)->defaultNorm());
+        break;
+      }
+      case PROP_DESCRIPTOR_SIZE: {
+        ret = JS_NewInt32(ctx, (*s)->descriptorSize());
+        break;
+      }
+      case PROP_DESCRIPTOR_TYPE: {
+        ret = JS_NewInt32(ctx, (*s)->descriptorType());
+        break;
+      }
     }
-    case PROP_DEFAULT_NORM: {
-      ret = JS_NewInt32(ctx, (*s)->defaultNorm());
-      break;
-    }
-    case PROP_DESCRIPTOR_SIZE: {
-      ret = JS_NewInt32(ctx, (*s)->descriptorSize());
-      break;
-    }
-    case PROP_DESCRIPTOR_TYPE: {
-      ret = JS_NewInt32(ctx, (*s)->descriptorType());
-      break;
-    }
+  } catch(const cv::Exception& e) {
+    const char *msg, *what = e.what();
+    if((msg = strstr(what, ") ")))
+      what = msg + 2;
+    ret = JS_ThrowInternalError(ctx, "cv::Exception %s", what);
   }
   return ret;
 }
@@ -925,6 +944,8 @@ const JSCFunctionListEntry js_feature2d_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("clear", 0, js_feature2d_method, METHOD_CLEAR),
     JS_CFUNC_MAGIC_DEF("compute", 2, js_feature2d_method, METHOD_COMPUTE),
     JS_CFUNC_MAGIC_DEF("detect", 2, js_feature2d_method, METHOD_DETECT),
+    JS_CFUNC_MAGIC_DEF("write", 1, js_feature2d_method, METHOD_WRITE),
+    JS_CFUNC_MAGIC_DEF("read", 1, js_feature2d_method, METHOD_READ),
     JS_CGETSET_MAGIC_DEF("empty", js_feature2d_getter, 0, PROP_EMPTY),
     JS_CGETSET_MAGIC_DEF("defaultName", js_feature2d_getter, 0, PROP_DEFAULT_NAME),
     JS_CGETSET_MAGIC_DEF("defaultNorm", js_feature2d_getter, 0, PROP_DEFAULT_NORM),
