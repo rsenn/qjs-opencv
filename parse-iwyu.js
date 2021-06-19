@@ -10,8 +10,7 @@ class File {
     const data = fs.readFileSync(name, 'utf-8');
     this.name = name;
 
-    if(typeof data == 'string')
-      Object.defineProperty(this, 'lines', { value: data.split(/\r?\n/g) });
+    if(typeof data == 'string') Object.defineProperty(this, 'lines', { value: data.split(/\r?\n/g) });
   }
 
   /* prettier-ignore */ get includes() {

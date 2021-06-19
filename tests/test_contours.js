@@ -32,14 +32,7 @@ function main(...args) {
 
   let contours = [];
   let hierarchy = [];
-  cv.findContours(
-    canny,
-    contours,
-    hierarchy,
-    cv.RETR_TREE,
-    cv.CHAIN_APPROX_SIMPLE,
-    new Point(0, 0)
-  );
+  cv.findContours(canny, contours, hierarchy, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE, new Point(0, 0));
   let i = 0;
 
   for(let contour of contours) {
