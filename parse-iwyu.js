@@ -14,7 +14,7 @@ class File {
       Object.defineProperty(this, 'lines', { value: data.split(/\r?\n/g) });
   }
 
-  get includes() {
+  /* prettier-ignore */ get includes() {
   return  new Map([...this.lines.entries()].filter(([i,l]) => IsInclude(l)));
 }
 
@@ -117,7 +117,8 @@ function ReplaceStd(str) {
   if(matches) {
     let [pre, name, post] = [...matches].slice(1, 4);
 
-    if([
+    if(
+      [
         'assert.h',
         'complex.h',
         'ctype.h',

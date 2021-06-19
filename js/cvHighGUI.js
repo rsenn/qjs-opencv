@@ -55,7 +55,7 @@ export class Window {
     cv.resizeWindow(this.name, ...size);
   }
 
-  get imageRect() {
+  /* prettier-ignore */ get imageRect() {
     return cv.getWindowImageRect(this.name);
   }
 
