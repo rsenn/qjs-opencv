@@ -7,7 +7,7 @@ set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "build type")
 
 set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release MinSizeRel RelWithDebInfo)
 
-set(quickjs_sources_root ${CMAKE_CURRENT_SOURCE_DIR}/quickjs)
+set(QUICKJS_SOURCES_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/quickjs)
 
 if(NOT CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL "")
   set(CMAKE_BUILD_TYPE "Debug")
