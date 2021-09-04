@@ -118,7 +118,7 @@ macro(check_debug_gdb_flag)
 endmacro(check_debug_gdb_flag)
 
 macro(check_cxx_standard_flag)
-  foreach(CXX_STANDARD c++20 c++17 c++14 c++11)
+  foreach(CXX_STANDARD c++17 c++14 c++11)
     string(REPLACE "c++" "CPLUSPLUS" CXX_STANDARD_NUM "${CXX_STANDARD}")
     set(CMAKE_REQUIRED_QUIET TRUE)
     check_cxx_compiler_flag("-std=${CXX_STANDARD}" CXX_STANDARD_${CXX_STANDARD_NUM})

@@ -76,6 +76,11 @@ if(HAVE_OPENCV2_FREETYPE_HPP)
   add_definitions(-DHAVE_OPENCV_FREETYPE)
 endif(HAVE_OPENCV2_FREETYPE_HPP)
 
+check_include_file_cxx(opencv2/xfeatures2d.hpp HAVE_OPENCV2_XFEATURES2D_HPP)
+if(HAVE_OPENCV2_XFEATURES2D_HPP)
+  add_definitions(-DHAVE_OPENCV_XFEATURES2D)
+endif(HAVE_OPENCV2_XFEATURES2D_HPP)
+
 check_cxx_standard_flag()
 
 string(REGEX REPLACE " -Wall" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
