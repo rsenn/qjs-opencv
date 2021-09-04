@@ -74,12 +74,22 @@ set(CMAKE_REQUIRED_INCLUDES "${OPENCV_INCLUDE_DIRS}")
 check_include_file_cxx(opencv2/freetype.hpp HAVE_OPENCV2_FREETYPE_HPP)
 if(HAVE_OPENCV2_FREETYPE_HPP)
   add_definitions(-DHAVE_OPENCV_FREETYPE)
+  set(OPENCV_FREETYPE_LIBRARY opencv_freetype)
 endif(HAVE_OPENCV2_FREETYPE_HPP)
 
 check_include_file_cxx(opencv2/xfeatures2d.hpp HAVE_OPENCV2_XFEATURES2D_HPP)
 if(HAVE_OPENCV2_XFEATURES2D_HPP)
   add_definitions(-DHAVE_OPENCV_XFEATURES2D)
 endif(HAVE_OPENCV2_XFEATURES2D_HPP)
+
+include(CheckCXXSymbolExists)
+check_cxx_symbol_exists(cv::AffineFeature opencv2/features2d.hpp HAVE_OPENCV_AFFINE_FEATURE)
+
+dump(HAVE_OPENCV2_FREETYPE_HPP OPENCV_FREETYPE_LIBRARY HAVE_OPENCV2_XFEATURES2D_HPP HAVE_OPENCV_AFFINE_FEATURE)
+if(HAVE_OPENCV_AFFINE_FEATURE)
+  add_definitions(-DHAVE_OPENCV_AFFINE_FEATURE)
+endif(HAVE_OPENCV_AFFINE_FEATURE)
+
 
 check_cxx_standard_flag()
 
@@ -143,7 +153,7 @@ set_target_properties(qjs-opencv PROPERTIES PREFIX "" OUTPUT_NAME opencv
 target_compile_definitions(qjs-opencv PRIVATE CONFIG_PREFIX="${CMAKE_INSTALL_PREFIX}")
 dump(PNG_LIBRARIES PNG_LIBRARY)
 target_include_directories(qjs-opencv PUBLIC "${PNG_INCLUDE_DIR}")
-target_link_libraries(qjs-opencv PUBLIC "${PNG_LIBRARIES}")
+target_link_libraries(qjs-opencv PUBLIC "${PNG_LIBRARIES}" "${OPENCV_FREETYPE_LIBRARY}")
 
 install(TARGETS qjs-opencv DESTINATION lib/quickjs)
 set(jsbindings_LIBRARIES qjs-opencv)

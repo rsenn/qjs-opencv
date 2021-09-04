@@ -10,18 +10,22 @@
 #include <opencv2/core/mat.hpp>
 #include <opencv2/core/mat.inl.hpp>
 #include <opencv2/core/types.hpp>
-#include <opencv2/xfeatures2d/nonfree.hpp>
 #include <quickjs.h>
 #include <cstring>
 #include <cstdint>
 #include <new>
-#include <opencv2/features2d.hpp>
-#include <opencv2/xfeatures2d.hpp>
 #include <string>
 #include <vector>
+#include <opencv2/features2d.hpp>
 
 typedef cv::Ptr<cv::Feature2D> JSFeature2DData;
 
+#ifdef HAVE_OPENCV_XFEATURES2D
+#include <opencv2/xfeatures2d.hpp>
+#include <opencv2/xfeatures2d/nonfree.hpp>
+
+using cv::SIFT;
+#endif
 using cv::AffineFeature;
 using cv::AgastFeatureDetector;
 using cv::AKAZE;
@@ -31,7 +35,6 @@ using cv::GFTTDetector;
 using cv::KAZE;
 using cv::MSER;
 using cv::ORB;
-using cv::SIFT;
 using cv::SimpleBlobDetector;
 using namespace cv::xfeatures2d;
 
