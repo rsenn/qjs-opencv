@@ -40,7 +40,7 @@ macro(find_quickjs)
 
   set(QUICKJS_INCLUDE_DIRS "${QUICKJS_INCLUDE_DIRS}" CACHE STRING "QuickJS include dirs" FORCE)
 
-  set(CMAKE_REQUIRED_INCLUDES "${QUICKJS_INCLUDE_DIRS}")
+  set(CMAKE_REQUIRED_INCLUDES "${CMAKE_SYSROOT}${QUICKJS_INCLUDE_DIR};${CMAKE_SYSROOT}${QUICKJS_PREFIX}/include/quickjs")
 
   check_include_file(quickjs.h HAVE_QUICKJS_H)
   check_include_file(quickjs-config.h HAVE_QUICKJS_CONFIG_H)
@@ -51,7 +51,7 @@ macro(find_quickjs)
   endif(HAVE_QUICKJS_CONFIG_H)
 
   if(NOT HAVE_QUICKJS_H)
-    message(FATAL_ERROR "QuickJS headers not found")
+    message(FATAL_ERROR "QuickJS headers not found in: ${CMAKE_REQUIRED_INCLUDES}")
   endif(NOT HAVE_QUICKJS_H)
 
   include_directories(${QUICKJS_INCLUDE_DIRS})
