@@ -25,14 +25,16 @@
 #include <cstdint>
 #include <iostream>
 #include <memory>
-#include <opencv2/freetype.hpp>
 #include <string>
 #include <vector>
 
 extern "C" VISIBLE int js_draw_init(JSContext*, JSModuleDef*);
 
+#ifdef HAVE_OPENCV_FREETYPE
+#include <opencv2/freetype.hpp>
 cv::Ptr<cv::freetype::FreeType2> freetype2 = nullptr;
 std::string freetype2_face;
+#endif
 
 extern "C" {
 
@@ -475,15 +477,17 @@ js_put_text(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv)
   if(argc > i)
     bottomLeftOrigin = JS_ToBool(ctx, argv[i++]);
 
+#ifdef HAVE_OPENCV_FREETYPE
   if(!fontName.empty() && fontName != freetype2_face) {
     freetype2->loadFontData(fontName, 0);
     freetype2_face = fontName;
   }
 
-  if(fontName.empty())
-    cv::putText(*dst, text, point, fontFace, fontScale, js_to_scalar(color), thickness, lineType, bottomLeftOrigin);
-  else
+  if(!fontName.empty())
     freetype2->putText(*dst, text, point, fontScale, js_to_scalar(color), thickness, lineType, bottomLeftOrigin);
+  else
+#endif
+    cv::putText(*dst, text, point, fontFace, fontScale, js_to_scalar(color), thickness, lineType, bottomLeftOrigin);
 
   return JS_UNDEFINED;
 }
@@ -515,6 +519,7 @@ js_get_text_size(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* 
   if(argc > i)
     JS_ToInt32(ctx, &thickness, argv[i++]);
 
+#ifdef HAVE_OPENCV_FREETYPE
   if(freetype2 == nullptr)
     freetype2 = cv::freetype::createFreeType2();
 
@@ -523,10 +528,11 @@ js_get_text_size(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* 
     freetype2_face = fontName;
   }
 
-  if(fontName.empty())
-    size = cv::getTextSize(text, fontFace, fontScale, thickness, &baseline);
-  else
+  if(!fontName.empty())
     size = freetype2->getTextSize(text, fontScale, thickness, &baseline);
+  else
+#endif
+    size = cv::getTextSize(text, fontFace, fontScale, thickness, &baseline);
 
   baselineVal = JS_NewInt32(ctx, baseline);
 
@@ -563,13 +569,18 @@ js_load_font(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv
   int32_t id = 0;
   std::string fontName;
 
+#ifdef HAVE_OPENCV_FREETYPE
   if(freetype2 == nullptr)
     freetype2 = cv::freetype::createFreeType2();
+#endif
 
   js_value_to(ctx, argv[0], fontName);
   if(argc > 1)
     js_value_to(ctx, argv[1], id);
+
+#ifdef HAVE_OPENCV_FREETYPE
   freetype2->loadFontData(fontName, id);
+#endif
   return JS_UNDEFINED;
 }
 

@@ -20,6 +20,7 @@ else(WIN32)
 endif(WIN32)
 
 include(FindThreads)
+include(FindPNG)
 include(FindPkgConfig)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Functions.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CheckFlags.cmake)
@@ -66,6 +67,14 @@ find_opencv()
 set(CMAKE_INSTALL_RPATH "${OPENCV_LIB_DIR}" CACHE PATH "Build with install rpath" FORCE)
 
 include_directories(${OPENCV_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
+
+include(CheckIncludeFileCXX)
+
+set(CMAKE_REQUIRED_INCLUDES "${OPENCV_INCLUDE_DIRS}")
+check_include_file_cxx(opencv2/freetype.hpp HAVE_OPENCV2_FREETYPE_HPP)
+if(HAVE_OPENCV2_FREETYPE_HPP)
+  add_definitions(-DHAVE_OPENCV_FREETYPE)
+endif(HAVE_OPENCV2_FREETYPE_HPP)
 
 check_cxx_standard_flag()
 
@@ -127,6 +136,9 @@ add_library(qjs-opencv STATIC ${OPENCV_SOURCES})
 set_target_properties(qjs-opencv PROPERTIES PREFIX "" OUTPUT_NAME opencv
                                             COMPILE_FLAGS "${QUICKJS_MODULE_CFLAGS} ${F_PIC}")
 target_compile_definitions(qjs-opencv PRIVATE CONFIG_PREFIX="${CMAKE_INSTALL_PREFIX}")
+dump(PNG_LIBRARIES PNG_LIBRARY)
+target_include_directories(qjs-opencv PUBLIC "${PNG_INCLUDE_DIR}")
+target_link_libraries(qjs-opencv PUBLIC "${PNG_LIBRARIES}")
 
 install(TARGETS qjs-opencv DESTINATION lib/quickjs)
 set(jsbindings_LIBRARIES qjs-opencv)
