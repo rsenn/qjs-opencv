@@ -151,7 +151,7 @@ add_library(qjs-opencv STATIC ${OPENCV_SOURCES})
 set_target_properties(qjs-opencv PROPERTIES PREFIX "" OUTPUT_NAME opencv
                                             COMPILE_FLAGS "${QUICKJS_MODULE_CFLAGS} ${F_PIC}")
 target_compile_definitions(qjs-opencv PRIVATE CONFIG_PREFIX="${CMAKE_INSTALL_PREFIX}")
-dump(PNG_LIBRARIES PNG_LIBRARY)
+dump(PNG_LIBRARIES PNG_LIBRARY OPENCV_FREETYPE_LIBRARY)
 target_include_directories(qjs-opencv PUBLIC "${PNG_INCLUDE_DIR}")
 target_link_libraries(qjs-opencv PUBLIC "${PNG_LIBRARIES}" "${OPENCV_FREETYPE_LIBRARY}")
 
