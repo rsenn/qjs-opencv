@@ -212,12 +212,12 @@ export class VideoSource {
       ')'
     );
     if(args.length > 0) {
-      let [device, backend = 'ANY', loop = true] = args;
+      let [device, backend = 'V4L2', loop = true] = args;
       const driverId = VideoSource.backends[backend];
       let isVideo = (args.length <= 2 && backend in VideoSource.backends) || isVideoPath(device);
 
       // if(cv.imread(args[0])) isVideo = false;
-      console.log('VideoSource', { args, backend, driverId, isVideo });
+      console.log('VideoSource', args, {  backend, driverId, isVideo });
 
       if(isVideo) {
         if(typeof device == 'string' && isVideoPath(device))

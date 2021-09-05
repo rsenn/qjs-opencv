@@ -56,13 +56,15 @@ js_video_capture_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValue
 
   s = js_allocate<JSVideoCaptureData>(ctx);
   if(!s)
-    return JS_EXCEPTION;
+    return JS_ThrowOutOfMemory(ctx);
 
   new(s) JSVideoCaptureData();
 
   if(argc > 0) {
-    if(!js_video_capture_open(ctx, s, argc, argv))
-      return JS_EXCEPTION;
+    if(!js_video_capture_open(ctx, s, argc, argv)) {
+      delete s;
+      return JS_ThrowInternalError(ctx, "VideoCapture.open error");
+    }
   }
 
   /* using new_target to get the prototype is necessary when the
@@ -129,8 +131,11 @@ js_video_capture_method(JSContext* ctx, JSValueConst video_capture, int argc, JS
         JS_ToFloat64(ctx, &value, argv[1]);
 
         s->set(propID, value);
-      } else
-        ret = JS_EXCEPTION;
+      } else {
+        const char* arg = JS_ToCString(ctx, argv[0]);
+        ret = JS_ThrowInternalError(ctx, "VideoCapture.set propertyId = %s", arg);
+        JS_FreeCString(ctx, arg);
+      }
       break;
     }
     case VIDEO_CAPTURE_METHOD_GET_BACKEND_NAME: {

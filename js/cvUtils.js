@@ -121,16 +121,20 @@ export const GetOpt = (options = {}, args) => {
       else if((end = arg.indexOf('=')) == -1) end = arg.length;
       name = arg.substring(start, end);
       if((opt = findOpt(name))) {
-        const [has_arg, handler] = opt[1];
+        const [,[has_arg, handler]] = opt;
+        console.log(`name: ${name} has_arg: ${has_arg} opt[0]: ${opt[0]}`)
         if(has_arg) {
           if(arg.length > end) value = arg.substring(end + (arg[end] == '='));
           else value = args[++i];
         } else {
           value = true;
         }
+        console.log(`value: ${value}`)
         try {
-          value = null;
-          value = handler(value, result[opt[0]], options, result);
+//          value = null;
+          let tmp;
+          if((tmp = handler(value, result[opt[0]], options, result)) !== undefined)
+           value = tmp;
         } catch(e) {}
         result[opt[0]] = value;
         continue;
@@ -138,16 +142,18 @@ export const GetOpt = (options = {}, args) => {
     }
     if(params.length) {
       const param = params.shift();
-      if((opt = findOpt(param))) {
-        const [, [, handler]] = opt;
-        let value = arg;
+   if((opt = findOpt(param))) {
+        const [name, [, handler]] = opt;
+                   console.log(`param: ${param} name: ${name}`)
+let value = arg;
         if(typeof handler == 'function') {
           try {
-            value = handler(value, result[opt[0]], options, result);
+            let tmp;
+            if((tmp = handler(value, result[name], options, result)) !== undefined)
+              value = tmp;
           } catch(e) {}
         }
-        const name = opt[0];
-        result[opt[0]] = value;
+         result[name] = value;
         continue;
       }
     }
