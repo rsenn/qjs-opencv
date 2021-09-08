@@ -25,6 +25,8 @@ typedef cv::Ptr<cv::Feature2D> JSFeature2DData;
 #include <opencv2/xfeatures2d/nonfree.hpp>
 
 using cv::SIFT;
+#else
+#warning No xfeatures2d
 #endif
 using cv::AffineFeature;
 using cv::AgastFeatureDetector;
