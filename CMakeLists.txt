@@ -20,13 +20,17 @@ else(WIN32)
 endif(WIN32)
 
 include(FindThreads)
-include(FindPNG)
+#include(FindPNG)
 include(FindPkgConfig)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Functions.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CheckFlags.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindQuickJS.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/JSBindings.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/OpenCV.cmake)
+
+pkg_search_module(PNG libpng16)
+pkg_get_variable(PNG_INCLUDE_DIR ${PNG_MODULE_NAME} includedir)
+dump(PNG_MODULE_NAME PNG_INCLUDE_DIR)
 
 if(ENABLE_CCACHE)
   include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CCache.cmake)
@@ -90,7 +94,6 @@ if(HAVE_OPENCV_AFFINE_FEATURE)
   add_definitions(-DHAVE_OPENCV_AFFINE_FEATURE)
 endif(HAVE_OPENCV_AFFINE_FEATURE)
 
-
 check_cxx_standard_flag()
 
 string(REGEX REPLACE " -Wall" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
@@ -148,19 +151,17 @@ list(FILTER OPENCV_SOURCES EXCLUDE REGEX "init_module\\.cpp")
 list(FILTER OPENCV_SOURCES EXCLUDE REGEX "js\\.[hc]pp")
 
 add_library(qjs-opencv STATIC ${OPENCV_SOURCES})
-set_target_properties(qjs-opencv PROPERTIES PREFIX "" OUTPUT_NAME opencv
-                                            COMPILE_FLAGS "${QUICKJS_MODULE_CFLAGS} ${F_PIC}")
+set_target_properties(qjs-opencv PROPERTIES PREFIX "" OUTPUT_NAME opencv COMPILE_FLAGS "${QUICKJS_MODULE_CFLAGS} ${F_PIC}")
 target_compile_definitions(qjs-opencv PRIVATE CONFIG_PREFIX="${CMAKE_INSTALL_PREFIX}")
-dump(PNG_LIBRARIES PNG_LIBRARY OPENCV_FREETYPE_LIBRARY)
+dump(PNG_INCLUDE_DIR PNG_LIBRARIES PNG_LIBRARY OPENCV_FREETYPE_LIBRARY)
 target_include_directories(qjs-opencv PUBLIC "${PNG_INCLUDE_DIR}")
-target_link_libraries(qjs-opencv PUBLIC "${PNG_LIBRARIES}" "${OPENCV_FREETYPE_LIBRARY}")
+target_link_libraries(qjs-opencv PUBLIC ${PNG_LIBRARIES} ${OPENCV_FREETYPE_LIBRARY})
 
 install(TARGETS qjs-opencv DESTINATION lib/quickjs)
 set(jsbindings_LIBRARIES qjs-opencv)
 
 # make_static_module(opencv init_module.cpp)
 make_shared_module(opencv init_module.cpp)
-
 
 if(OPENCV_FREETYPE_LIBRARY)
   message(STATUS "OpenCV freetype: ${OPENCV_FREETYPE_LIBRARY}")
