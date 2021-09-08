@@ -160,3 +160,8 @@ set(jsbindings_LIBRARIES qjs-opencv)
 
 # make_static_module(opencv init_module.cpp)
 make_shared_module(opencv init_module.cpp)
+
+
+if(OPENCV_FREETYPE_LIBRARY)
+  message(STATUS "OpenCV freetype: ${OPENCV_FREETYPE_LIBRARY}")
+endif(OPENCV_FREETYPE_LIBRARY)
