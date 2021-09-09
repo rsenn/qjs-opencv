@@ -212,7 +212,7 @@ export class VideoSource {
       ')'
     );
     if(args.length > 0) {
-      let [device, backend = 'V4L2', loop = true] = args;
+      let [device, backend = 'ANY', loop = true] = args;
       const driverId = VideoSource.backends[backend];
       let isVideo = (args.length <= 2 && backend in VideoSource.backends) || isVideoPath(device);
 
@@ -220,8 +220,11 @@ export class VideoSource {
       console.log('VideoSource', args, {  backend, driverId, isVideo });
 
       if(isVideo) {
-        if(typeof device == 'string' && isVideoPath(device))
+        if(typeof device == 'string' && isVideoPath(device)) {
           if(backend == 'ANY') backend = 'FFMPEG';
+        } else {
+          if(backend == 'ANY') backend = 'V4L2';
+        }
 
         //console.debug('VideoSource', { device, backend, driverId, args });
 
