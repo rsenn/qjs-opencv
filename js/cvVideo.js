@@ -212,7 +212,7 @@ export class VideoSource {
       ')'
     );
     if(args.length > 0) {
-      let [device, backend = 'V4L2', loop = true] = args;
+      let [device, backend = 'ANY', loop = true] = args;
       const driverId = VideoSource.backends[backend];
       let isVideo = (args.length <= 2 && backend in VideoSource.backends) || isVideoPath(device);
 
@@ -235,7 +235,8 @@ export class VideoSource {
   }
 
   capture(device, driverId) {
-    let cap = new VideoCapture(device, driverId);
+     console.debug('VideoSource.capture', { device,  driverId });
+ let cap = new VideoCapture(device, driverId);
     this.cap = cap;
 
     this.propId = prop => {
