@@ -300,6 +300,14 @@ export class VideoSource {
     };
   }
 
+  set size(s) {
+    this.set('CAP_PROP_FRAME_WIDTH', s.width);
+    this.set('CAP_PROP_FRAME_HEIGHT', s.height);
+  }
+  get size() {
+    return new Size(this.get('CAP_PROP_FRAME_WIDTH'), this.get('CAP_PROP_FRAME_HEIGHT'));
+  }
+
   get(prop) {
     const { cap } = this;
     if(cap && typeof cap.get == 'function') return this.cap.get(this.propId(prop));

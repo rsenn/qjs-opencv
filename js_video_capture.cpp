@@ -28,7 +28,7 @@ is_numeric(const std::string& s) {
 
 static bool
 js_video_capture_open(JSContext* ctx, JSVideoCaptureData* s, int argc, JSValueConst* argv) {
-  int32_t camID, apiPreference = cv::CAP_ANY;
+  int32_t camID = -1, apiPreference = cv::CAP_ANY;
   cv::String filename;
 
   filename = JS_ToCString(ctx, argv[0]);
@@ -36,8 +36,10 @@ js_video_capture_open(JSContext* ctx, JSVideoCaptureData* s, int argc, JSValueCo
   if(argc > 1)
     JS_ToInt32(ctx, &apiPreference, argv[1]);
 
-  if(is_numeric(filename))
+  if(is_numeric(filename)) {
     JS_ToInt32(ctx, &camID, argv[0]);
+    filename = "";
+  }
 
   std::cerr << "VideoCapture.open filename='" << filename << "', camID=" << camID << ", apiPreference=" << apiPreference
             << std::endl;

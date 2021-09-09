@@ -443,9 +443,9 @@ JSClassDef js_size_class = {
 const JSCFunctionListEntry js_size_proto_funcs[] = {
     JS_CGETSET_ENUMERABLE_DEF("width", js_size_get, js_size_set, SIZE_PROP_WIDTH),
     JS_CGETSET_ENUMERABLE_DEF("height", js_size_get, js_size_set, SIZE_PROP_HEIGHT),
-    JS_CGETSET_ENUMERABLE_DEF("aspect", js_size_get, 0, SIZE_PROP_ASPECT),
-    JS_CGETSET_ENUMERABLE_DEF("empty", js_size_get, 0, SIZE_PROP_EMPTY),
-    JS_CGETSET_ENUMERABLE_DEF("area", js_size_get, 0, SIZE_PROP_AREA),
+    JS_CGETSET_MAGIC_DEF("aspect", js_size_get, 0, SIZE_PROP_ASPECT),
+    JS_CGETSET_MAGIC_DEF("empty", js_size_get, 0, SIZE_PROP_EMPTY),
+    JS_CGETSET_MAGIC_DEF("area", js_size_get, 0, SIZE_PROP_AREA),
     JS_CFUNC_MAGIC_DEF("equals", 1, js_size_funcs, SIZE_METHOD_EQUALS),
     JS_CFUNC_MAGIC_DEF("round", 0, js_size_funcs, SIZE_METHOD_ROUND),
     JS_CFUNC_MAGIC_DEF("toObject", 0, js_size_funcs, SIZE_METHOD_TOOBJECT),
