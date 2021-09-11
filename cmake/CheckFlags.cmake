@@ -127,9 +127,9 @@ macro(check_cxx_standard_flag)
       message("CXX_STANDARD_NAME = ${CXX_STANDARD_NAME}")
       message("CXX_STANDARD_VERSION = ${CXX_STANDARD_VERSION}")
 
-      if(NOT "${CXX_STANDARD_NAME}" STREQUAL "")
+      if(NOT "X${CXX_STANDARD_NAME}" STREQUAL "X")
         add_definitions(-D"${CXX_STANDARD_NAME}")
-      endif(NOT "${CXX_STANDARD_NAME}" STREQUAL "")
+      endif(NOT "X${CXX_STANDARD_NAME}" STREQUAL "X")
 
       set(CXX_STANDARD_VALUE "${CXX_STANDARD}" CACHE STRING "C++ standard" FORCE)
       set(CXX_STANDARD_FLAG "-std=${CXX_STANDARD}" CACHE STRING "C++ standard argument" FORCE)
