@@ -1,4 +1,0 @@
-[submodule "pngpp"]
-	path = pngpp
-	url = https://github.com/usagi/pngpp.git
-	branch = master
