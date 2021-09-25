@@ -1,4 +1,4 @@
 [submodule "pngpp"]
 	path = pngpp
-	url = https://github.com/rsenn/pngpp.git
+	url = git@github.com:rsenn/pngpp.git
 	branch = main
