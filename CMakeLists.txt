@@ -147,8 +147,8 @@ file(GLOB OPENCV_SOURCES *.hpp *.cpp)
 
 dump(QUICKJS_MODULE_CFLAGS F_PIC)
 
-list(FILTER OPENCV_SOURCES EXCLUDE REGEX "init_module\\.cpp")
-list(FILTER OPENCV_SOURCES EXCLUDE REGEX "js\\.[hc]pp")
+list(REMOVE_ITEM OPENCV_SOURCES init_module.cpp)
+list(REMOVE_ITEM OPENCV_SOURCES js.hpp js.cpp)
 
 add_library(qjs-opencv STATIC ${OPENCV_SOURCES})
 set_target_properties(qjs-opencv PROPERTIES PREFIX "" OUTPUT_NAME opencv COMPILE_FLAGS "${QUICKJS_MODULE_CFLAGS} ${F_PIC}")

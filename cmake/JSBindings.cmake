@@ -7,7 +7,7 @@ set(QUICKJS_MODULE_CFLAGS "-fvisibility=hidden")
 
 function(config_shared_module TARGET_NAME)
   if(QUICKJS_LIBRARY_DIR)
-    target_link_directories(${TARGET_NAME} PRIVATE "${QUICKJS_LIBRARY_DIR}")
+    link_directories("${QUICKJS_LIBRARY_DIR}")
   endif(QUICKJS_LIBRARY_DIR)
   if(QUICKJS_MODULE_DEPENDENCIES)
     target_link_libraries(${TARGET_NAME} ${QUICKJS_MODULE_DEPENDENCIES})
