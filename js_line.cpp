@@ -320,8 +320,8 @@ js_line_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
       if(argc > 1)
         point = js_point_data(ctx, argv[1]);
 
-      Line<double> line = Line(ln->array);
-      Line<double> other = Line(arg);
+      Line<double> line /*= Line*/(ln->array);
+      Line<double> other /*= Line*/(arg);
 
       ret = JS_NewBool(ctx, line.intersect(other, point));
       break;
@@ -329,7 +329,7 @@ js_line_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
     case METHOD_ENDPOINT_DISTANCES: {
       JSPointData<double> pt;
       js_point_read(ctx, argv[0], &pt);
-      Line<double> line = Line(ln->array);
+      Line<double> line(ln->array);
       auto distances = line.endpoint_distances(pt);
       ret = JS_NewArray(ctx);
       JS_SetPropertyUint32(ctx, ret, 0, js_number_new(ctx, distances.first));
@@ -339,7 +339,7 @@ js_line_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
     case METHOD_DISTANCE: {
       cv::Point2d pt;
       js_point_read(ctx, argv[0], &pt);
-      Line<double> line = Line(ln->array);
+      Line<double> line(ln->array);
       ret = js_number_new(ctx, line.distance(pt));
       break;
     }

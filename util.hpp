@@ -12,6 +12,7 @@
 #include <sys/stat.h>
 #include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <numeric>
 #include <string>
 #include <vector>
