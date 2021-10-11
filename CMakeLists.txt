@@ -36,6 +36,12 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/UseMultiArch.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/QuickJSModule.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindQuickJS.cmake)
 
+
+message(STATUS "Finding QuickJS...")
+
+find_quickjs()
+configure_quickjs()
+
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/JSBindings.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/OpenCV.cmake)
 
@@ -80,6 +86,7 @@ find_quickjs()
 find_opencv()
 
 set(CMAKE_INSTALL_RPATH "${OPENCV_LIB_DIR}" CACHE PATH "Build with install rpath" FORCE)
+
 
 include_directories(${OPENCV_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
 
