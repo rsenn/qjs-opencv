@@ -87,7 +87,7 @@ fail:
 }
 
 extern "C" VISIBLE JSVideoCaptureData*
-js_video_capture_data(JSContext* ctx, JSValueConst val) {
+js_video_capture_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSVideoCaptureData*>(JS_GetOpaque2(ctx, val, js_video_capture_class_id));
 }
 
@@ -161,7 +161,7 @@ js_video_capture_method(JSContext* ctx, JSValueConst video_capture, int argc, JS
       break;
     }
     case VIDEO_CAPTURE_METHOD_READ: {
-      JSMatData* m = js_mat_data(ctx, argv[0]);
+      JSMatData* m = js_mat_data2(ctx, argv[0]);
 
       if(m == nullptr)
         return JS_EXCEPTION;
@@ -170,7 +170,7 @@ js_video_capture_method(JSContext* ctx, JSValueConst video_capture, int argc, JS
       break;
     }
     case VIDEO_CAPTURE_METHOD_RETRIEVE: {
-      JSMatData* m = js_mat_data(ctx, argv[0]);
+      JSMatData* m = js_mat_data2(ctx, argv[0]);
 
       if(m == nullptr)
         return JS_EXCEPTION;

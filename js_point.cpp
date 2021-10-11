@@ -69,7 +69,7 @@ js_point_new(JSContext* ctx, JSValueConst proto, double x, double y) {
 }
 
 VISIBLE JSPointData<double>*
-js_point_data(JSContext* ctx, JSValueConst val) {
+js_point_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSPointData<double>*>(JS_GetOpaque2(ctx, val, js_point_class_id));
 }
 VISIBLE JSPointData<double>*
@@ -90,8 +90,8 @@ js_point_clone(JSContext* ctx, const JSPointData<double>& point) {
 
 static JSValue
 js_point_cross(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  JSPointData<double>* s = js_point_data(ctx, this_val);
-  JSPointData<double>* other = js_point_data(ctx, argv[0]);
+  JSPointData<double>* s = js_point_data2(ctx, this_val);
+  JSPointData<double>* other = js_point_data2(ctx, argv[0]);
   double retval;
   if(!s || !other)
     return JS_EXCEPTION;
@@ -126,8 +126,8 @@ js_point_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* a
 
 static JSValue
 js_point_ddot(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  JSPointData<double>* s = js_point_data(ctx, this_val);
-  JSPointData<double>* other = js_point_data(ctx, argv[0]);
+  JSPointData<double>* s = js_point_data2(ctx, this_val);
+  JSPointData<double>* other = js_point_data2(ctx, argv[0]);
   double retval;
   if(!s || !other)
     return JS_EXCEPTION;
@@ -137,8 +137,8 @@ js_point_ddot(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* arg
 
 static JSValue
 js_point_diff(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  JSPointData<double>* s = js_point_data(ctx, this_val);
-  JSPointData<double>* other = js_point_data(ctx, argv[0]);
+  JSPointData<double>* s = js_point_data2(ctx, this_val);
+  JSPointData<double>* other = js_point_data2(ctx, argv[0]);
 
   JSValue ret;
   if(!s || !other)
@@ -150,7 +150,7 @@ js_point_diff(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* arg
 
 static JSValue
 js_point_get_xy(JSContext* ctx, JSValueConst this_val, int magic) {
-  JSPointData<double>* s = js_point_data(ctx, this_val);
+  JSPointData<double>* s = js_point_data2(ctx, this_val);
   if(!s)
     return JS_EXCEPTION;
   if(magic == 0)
@@ -162,7 +162,7 @@ js_point_get_xy(JSContext* ctx, JSValueConst this_val, int magic) {
 
 static JSValue
 js_point_inside(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  JSPointData<double>* s = js_point_data(ctx, this_val);
+  JSPointData<double>* s = js_point_data2(ctx, this_val);
   JSRectData<double> r = js_rect_get(ctx, argv[0]);
   bool retval;
   if(!s /*|| !r*/)
@@ -178,7 +178,7 @@ static JSValue
 js_point_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
   JSPointData<double>* s;
   JSValue ret = JS_UNDEFINED;
-  if(!(s = js_point_data(ctx, this_val)))
+  if(!(s = js_point_data2(ctx, this_val)))
     return JS_EXCEPTION;
   switch(magic) {
     case POINT_METHOD_NORM: {
@@ -196,7 +196,7 @@ js_point_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
 
 static JSValue
 js_point_set_xy(JSContext* ctx, JSValueConst this_val, JSValueConst val, int magic) {
-  JSPointData<double>* s = js_point_data(ctx, this_val);
+  JSPointData<double>* s = js_point_data2(ctx, this_val);
   double v;
   if(!s)
     return JS_EXCEPTION;
@@ -212,7 +212,7 @@ enum { POINT_ARITH_ADD = 0, POINT_ARITH_SUB, POINT_ARITH_MUL, POINT_ARITH_DIV };
 
 static JSValue
 js_point_arith(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
-  JSPointData<double> other, point, *s = js_point_data(ctx, this_val);
+  JSPointData<double> other, point, *s = js_point_data2(ctx, this_val);
 
   if(!js_point_arg(ctx, &other, argc, argv))
     other.y = other.x = magic >= POINT_ARITH_MUL ? 1 : 0;
@@ -240,7 +240,7 @@ js_point_arith(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
 
 static JSValue
 js_point_to_string(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
-  JSPointData<double>* s = js_point_data(ctx, this_val);
+  JSPointData<double>* s = js_point_data2(ctx, this_val);
   std::ostringstream os;
   JSValue xv, yv;
   const char* delim = ",";
@@ -281,7 +281,7 @@ js_point_to_string(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
 
 static JSValue
 js_point_to_array(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  JSPointData<double>* s = js_point_data(ctx, this_val);
+  JSPointData<double>* s = js_point_data2(ctx, this_val);
   std::array<double, 2> arr;
 
   arr[0] = s->x;
@@ -292,7 +292,7 @@ js_point_to_array(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
 
 static JSValue
 js_point_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  JSPointData<double>* s = js_point_data(ctx, this_val);
+  JSPointData<double>* s = js_point_data2(ctx, this_val);
   JSValue obj = JS_NewObjectClass(ctx, js_point_class_id);
 
   JS_DefinePropertyValueStr(ctx, obj, "x", JS_NewFloat64(ctx, s->x), JS_PROP_ENUMERABLE);
@@ -318,7 +318,7 @@ js_point_symbol_iterator(JSContext* ctx, JSValueConst this_val, int argc, JSValu
 
 static JSValue
 js_point_round(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
-  JSPointData<double> point, *s = js_point_data(ctx, this_val);
+  JSPointData<double> point, *s = js_point_data2(ctx, this_val);
   double x, y;
   double prec = 1;
   point = *s;

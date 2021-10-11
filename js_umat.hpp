@@ -31,7 +31,7 @@ int js_umat_init(JSContext*, JSModuleDef*);
 JSModuleDef* js_init_umat_module(JSContext* ctx, const char* module_name);
 void js_umat_constructor(JSContext* ctx, JSValue parent, const char* name);
 
-VISIBLE JSUMatData* js_umat_data(JSContext* ctx, JSValueConst val);
+VISIBLE JSUMatData* js_umat_data2(JSContext* ctx, JSValueConst val);
 VISIBLE JSUMatData* js_umat_data(JSValueConst val);
 
 static inline JSInputOutputArray

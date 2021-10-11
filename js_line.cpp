@@ -30,15 +30,15 @@ enum { METHOD_SWAP = 0, METHOD_AT, METHOD_INTERSECT, METHOD_ENDPOINT_DISTANCES, 
 extern "C" {
 JSValue line_proto = JS_UNDEFINED, line_class = JS_UNDEFINED;
 JSClassID js_line_class_id = 0;
-}
 
 VISIBLE JSLineData<double>*
-js_line_data(JSContext* ctx, JSValueConst val) {
+js_line_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSLineData<double>*>(JS_GetOpaque2(ctx, val, js_line_class_id));
 }
 VISIBLE JSLineData<double>*
 js_line_data(JSValueConst val) {
   return static_cast<JSLineData<double>*>(JS_GetOpaque(val, js_line_class_id));
+}
 }
 
 extern "C" {
@@ -265,7 +265,7 @@ js_line_points(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
 
 static JSValue
 js_line_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  JSLineData<double>* ln = js_line_data(ctx, this_val);
+  JSLineData<double>* ln = js_line_data2(ctx, this_val);
   JSValue obj = JS_NewObjectClass(ctx, js_line_class_id);
 
   std::array<JSAtom, 4> props{JS_NewAtom(ctx, "x1"), JS_NewAtom(ctx, "y1"), JS_NewAtom(ctx, "x2"), JS_NewAtom(ctx, "y2")};
@@ -318,7 +318,7 @@ js_line_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
       JSPointData<double>* point = nullptr;
 
       if(argc > 1)
-        point = js_point_data(ctx, argv[1]);
+        point = js_point_data2(ctx, argv[1]);
 
       Line<double> line /*= Line*/(ln->array);
       Line<double> other /*= Line*/(arg);

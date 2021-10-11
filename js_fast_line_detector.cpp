@@ -79,7 +79,7 @@ js_fast_line_detector_ctor(JSContext* ctx, JSValueConst new_target, int argc, JS
 }
 
 JSFastLineDetector*
-js_fast_line_detector_data(JSContext* ctx, JSValueConst val) {
+js_fast_line_detector_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSFastLineDetector*>(JS_GetOpaque2(ctx, val, js_fast_line_detector_class_id));
 }
 
@@ -99,7 +99,7 @@ js_fast_line_detector_detect(JSContext* ctx, JSValueConst this_val, int argc, JS
   JSInputArray image;
   std::vector<cv::Vec4f> lines;
 
-  if((s = js_fast_line_detector_data(ctx, this_val)) == nullptr)
+  if((s = js_fast_line_detector_data2(ctx, this_val)) == nullptr)
     return JS_EXCEPTION;
 
   image = js_umat_or_mat(ctx, argv[0]);
@@ -125,7 +125,7 @@ js_fast_line_detector_draw_segments(JSContext* ctx, JSValueConst this_val, int a
   JSInputOutputArray image;
   std::vector<cv::Vec4f> lines;
 
-  if((s = js_fast_line_detector_data(ctx, this_val)) == nullptr)
+  if((s = js_fast_line_detector_data2(ctx, this_val)) == nullptr)
     return JS_EXCEPTION;
 
   image = js_umat_or_mat(ctx, argv[0]);

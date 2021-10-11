@@ -41,7 +41,7 @@ js_clahe_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* a
 }
 
 JSCLAHEData*
-js_clahe_data(JSContext* ctx, JSValueConst val) {
+js_clahe_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSCLAHEData*>(JS_GetOpaque2(ctx, val, js_clahe_class_id));
 }
 
@@ -56,7 +56,7 @@ js_clahe_finalizer(JSRuntime* rt, JSValue val) {
 
 static JSValue
 js_clahe_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  JSCLAHEData* s = js_clahe_data(ctx, this_val);
+  JSCLAHEData* s = js_clahe_data2(ctx, this_val);
   JSValue obj = JS_NewObjectClass(ctx, js_clahe_class_id);
 
   JS_DefinePropertyValueStr(ctx, obj, "clipLimit", JS_NewFloat64(ctx, (*s)->getClipLimit()), JS_PROP_ENUMERABLE);
@@ -77,8 +77,8 @@ js_clahe_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
       cv::Mat *input, *output;
       if(argc < 2)
         return JS_EXCEPTION;
-      input = js_mat_data(ctx, argv[0]);
-      output = js_mat_data(ctx, argv[1]);
+      input = js_mat_data2(ctx, argv[0]);
+      output = js_mat_data2(ctx, argv[1]);
       if(input == nullptr || output == nullptr)
         return JS_EXCEPTION;
       (*s)->apply(*input, *output);

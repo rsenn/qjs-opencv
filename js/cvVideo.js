@@ -1,6 +1,6 @@
 import { Mat, VideoCapture, Size, Rect } from 'opencv';
 import * as cv from 'opencv';
-import { WeakMapper, Modulo, WeakAssign, BindMethods, FindKey } from './cvUtils.js';
+import { WeakMapper, Modulo, WeakAssign, BindMethods,BindMethodsTo, FindKey } from './cvUtils.js';
 
 const Crop = (() => {
   const mapper = WeakMapper(() => new Mat());
@@ -20,7 +20,7 @@ function ImageSize(src,
     roi,
     f,
     ssize = src.size;
-  //console.debug('ImageSize', { src, dst, ssize, dsize });
+  console.debug('ImageSize', { src, dst, ssize, dsize });
   if(!ssize.equals(dsize)) {
     let [fx, fy] = dsize.div(ssize);
     if(fx != fy) {
@@ -104,10 +104,13 @@ export class ImageSequence {
     };
 
     if(!dimensions) {
-      let mat = cv.imread(images[0]);
+      let mat = cv.imread(images[0], cv.IMREAD_IGNORE_ORIENTATION);
       dimensions = mat.size;
+      const  { cols,rows} =mat;
+    console.debug('mat', images[0],  {cols,rows});
+      dimensions = new Size(mat.cols,mat.rows);
     }
-    //console.debug('dimensions', dimensions);
+    console.debug('dimensions', dimensions);
     this.set('frame_width', dimensions.width);
     this.set('frame_height', dimensions.height);
   }
@@ -143,6 +146,7 @@ export class ImageSequence {
 
     return ret;
   }
+
   retrieve(mat) {
     let { framePos, frame, size: targetSize } = this;
     if(mat) {
@@ -160,6 +164,7 @@ export class ImageSequence {
     }
     return this.frame;
   }
+
   read(mat) {
     if(this.grab()) return this.retrieve(mat);
   }
@@ -208,7 +213,7 @@ export class VideoSource {
 
   constructor(...args) {
     console.log('VideoSource.constructor(',
-      ...args.reduce((acc, arg) => [...acc, ', ', arg], []),
+      ...args.reduce((acc, arg) => acc.length ? [...acc, ', ', arg] : [arg], []),
       ')'
     );
     if(args.length > 0) {
@@ -293,7 +298,8 @@ export class VideoSource {
       return prop;
     };
 
-    Object.assign(this, BindMethods(this.cap, ImageSequence.prototype));
+  //  Object.assign(this, BindMethods(this.cap, ImageSequence.prototype));
+    BindMethodsTo(this, this.cap, ImageSequence.prototype);
 
     // this.size = new Size(1280, 720);
 

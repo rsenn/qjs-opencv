@@ -75,7 +75,7 @@ fail:
 }
 
 VISIBLE JSFeature2DData*
-js_feature2d_data(JSContext* ctx, JSValueConst val) {
+js_feature2d_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSFeature2DData*>(JS_GetOpaque2(ctx, val, js_feature2d_class_id));
 }
 
@@ -120,7 +120,7 @@ static JSValue
 js_feature2d_affine(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
   cv::Ptr<AffineFeature> affine;
   JSValue ret;
-  cv::Ptr<cv::Feature2D> backend = *js_feature2d_data(ctx, argv[0]);
+  cv::Ptr<cv::Feature2D> backend = *js_feature2d_data2(ctx, argv[0]);
   int32_t maxTilt = 5, minTilt = 0;
   double tiltStep = 1.4142135623730951, rotateStepBase = 72;
 
@@ -457,10 +457,10 @@ static JSValue
 js_feature2d_affine2d(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
   cv::Ptr<AffineFeature2D> affine2d;
   JSValue ret;
-  cv::Ptr<cv::Feature2D> keypointDetector = *js_feature2d_data(ctx, argv[0]);
+  cv::Ptr<cv::Feature2D> keypointDetector = *js_feature2d_data2(ctx, argv[0]);
 
   if(argc > 1) {
-    cv::Ptr<cv::Feature2D> descriptorExtractor = *js_feature2d_data(ctx, argv[1]);
+    cv::Ptr<cv::Feature2D> descriptorExtractor = *js_feature2d_data2(ctx, argv[1]);
 
     affine2d = AffineFeature2D::create(keypointDetector, descriptorExtractor);
   } else {
@@ -769,7 +769,7 @@ js_feature2d_finalizer(JSRuntime* rt, JSValue val) {
 
 static JSValue
 js_feature2d_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  JSFeature2DData* s = js_feature2d_data(ctx, this_val);
+  JSFeature2DData* s = js_feature2d_data2(ctx, this_val);
   JSValue obj = JS_NewObject(ctx);
   cv::Feature2D* f2d = s->get();
   FREAK* freak = js_feature2d_get<FREAK>(this_val);

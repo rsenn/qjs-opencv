@@ -19,7 +19,7 @@ VISIBLE JSValue js_mat_wrap(JSContext*, const cv::Mat& mat);
 }
 
 inline VISIBLE JSMatData*
-js_mat_data(JSContext* ctx, JSValueConst val) {
+js_mat_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSMatData*>(JS_GetOpaque2(ctx, val, js_mat_class_id));
 }
 

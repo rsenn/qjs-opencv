@@ -22,9 +22,25 @@ endif(WIN32)
 include(FindThreads)
 #include(FindPNG)
 include(FindPkgConfig)
+
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Functions.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CheckFlags.cmake)
+
+if(UNIX AND NOT APPLE)
+  include(GNUInstallDirs)
+elseif(NOT DEFINED CMAKE_INSTALL_LIBDIR)
+  set(CMAKE_INSTALL_LIBDIR "" CACHE PATH "Specify the output directory for libraries (default is lib)")
+endif()
+
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/UseMultiArch.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/QuickJSModule.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindQuickJS.cmake)
+
+message(STATUS "Finding QuickJS...")
+
+find_quickjs()
+configure_quickjs()
+
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/JSBindings.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/OpenCV.cmake)
 
@@ -69,6 +85,7 @@ find_quickjs()
 find_opencv()
 
 set(CMAKE_INSTALL_RPATH "${OPENCV_LIB_DIR}" CACHE PATH "Build with install rpath" FORCE)
+
 
 include_directories(${OPENCV_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -159,7 +176,7 @@ dump(PNG_INCLUDE_DIRS PNG_LIBRARIES PNG_LIBRARY OPENCV_FREETYPE_LIBRARY)
 target_include_directories(qjs-opencv PUBLIC "${PNG_INCLUDE_DIRS}")
 target_link_libraries(qjs-opencv PUBLIC ${PNG_LIBRARIES} ${OPENCV_FREETYPE_LIBRARY})
 
-install(TARGETS qjs-opencv DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/quickjs)
+install(TARGETS qjs-opencv DESTINATION "${QUICKJS_C_MODULE_DIR}")
 set(jsbindings_LIBRARIES qjs-opencv)
 
 # make_static_module(opencv init_module.cpp)

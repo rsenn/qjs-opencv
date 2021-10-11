@@ -108,7 +108,7 @@ fail:
 }
 
 VISIBLE JSSizeData<double>*
-js_size_data(JSContext* ctx, JSValueConst val) {
+js_size_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSSizeData<double>*>(JS_GetOpaque(val, js_size_class_id));
 }
 
@@ -117,7 +117,7 @@ js_size_get(JSContext* ctx, JSValueConst this_val, int magic) {
   JSSizeData<double>* s;
   JSValue ret = JS_UNDEFINED;
 
-  if(!(s = js_size_data(ctx, this_val)))
+  if(!(s = js_size_data2(ctx, this_val)))
     return JS_EXCEPTION;
 
   switch(magic) {
@@ -171,7 +171,7 @@ js_size_wrap(JSContext* ctx, const JSSizeData<double>& sz) {
 
 static JSValue
 js_size_set(JSContext* ctx, JSValueConst this_val, JSValueConst val, int magic) {
-  JSSizeData<double>* s = js_size_data(ctx, this_val);
+  JSSizeData<double>* s = js_size_data2(ctx, this_val);
   double v;
   if(!s)
     return JS_EXCEPTION;
@@ -189,7 +189,7 @@ js_size_to_string(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
   JSSizeData<double> size, *s;
   std::ostringstream os;
   const char* delim = "×";
-  if((s = js_size_data(ctx, this_val)) == nullptr) {
+  if((s = js_size_data2(ctx, this_val)) == nullptr) {
     js_size_read(ctx, this_val, &size);
   } else {
     size = *s;
@@ -206,7 +206,7 @@ static JSValue
 js_size_to_source(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSSizeData<double> size, *s;
   std::ostringstream os;
-  if((s = js_size_data(ctx, this_val)) == nullptr) {
+  if((s = js_size_data2(ctx, this_val)) == nullptr) {
     js_size_read(ctx, this_val, &size);
   } else {
     size = *s;
@@ -218,7 +218,7 @@ js_size_to_source(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
 
 static JSValue
 js_size_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  JSSizeData<double>* s = js_size_data(ctx, this_val);
+  JSSizeData<double>* s = js_size_data2(ctx, this_val);
   JSValue obj = JS_NewObjectClass(ctx, js_size_class_id);
 
   JS_DefinePropertyValueStr(ctx, obj, "width", JS_NewFloat64(ctx, s->width), JS_PROP_ENUMERABLE);
@@ -231,7 +231,7 @@ js_size_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* arg
   JSSizeData<double> size, *s;
   JSValue ret = JS_UNDEFINED;
 
-  if((s = js_size_data(ctx, this_val)) == nullptr)
+  if((s = js_size_data2(ctx, this_val)) == nullptr)
     return ret;
 
   size = *s;
@@ -241,7 +241,7 @@ js_size_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* arg
       JSSizeData<double> other, *arg;
       bool equals = false;
       if(argc > 0) {
-        if((arg = js_size_data(ctx, argv[0]))) {
+        if((arg = js_size_data2(ctx, argv[0]))) {
           equals = s->width == arg->width && s->height == arg->height;
         } else if(js_size_read(ctx, argv[0], &other)) {
           equals = s->width == other.width && s->height == other.height;
@@ -306,7 +306,7 @@ static JSValue
 js_size_add(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSSizeData<double>*s, size;
 
-  if((s = js_size_data(ctx, this_val)) == nullptr)
+  if((s = js_size_data2(ctx, this_val)) == nullptr)
     return JS_EXCEPTION;
 
   if(js_size_read(ctx, argv[0], &size)) {
@@ -328,7 +328,7 @@ static JSValue
 js_size_sub(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSSizeData<double>*s, size;
 
-  if((s = js_size_data(ctx, this_val)) == nullptr)
+  if((s = js_size_data2(ctx, this_val)) == nullptr)
     return JS_EXCEPTION;
 
   if(js_size_read(ctx, argv[0], &size)) {
@@ -348,7 +348,7 @@ js_size_sub(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv)
 
 static JSValue
 js_size_mul(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  JSSizeData<double> size, *s = js_size_data(ctx, this_val);
+  JSSizeData<double> size, *s = js_size_data2(ctx, this_val);
   double factor;
   JS_ToFloat64(ctx, &factor, argv[0]);
 
@@ -363,7 +363,7 @@ static JSValue
 js_size_div(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSSizeData<double> size, other, *s, *a = nullptr;
   JSValue ret = JS_EXCEPTION;
-  if((s = js_size_data(ctx, this_val)) != nullptr) {
+  if((s = js_size_data2(ctx, this_val)) != nullptr) {
     size = *s;
 
     if(JS_IsNumber(argv[0])) {
@@ -373,7 +373,7 @@ js_size_div(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv)
       size.height /= divider;
       ret = js_size_wrap(ctx, size);
     } else {
-      if((a = js_size_data(ctx, argv[0])) != nullptr)
+      if((a = js_size_data2(ctx, argv[0])) != nullptr)
         other = *a;
       else {
         js_size_read(ctx, argv[0], &other);

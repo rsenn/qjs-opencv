@@ -301,7 +301,7 @@ js_mat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv
   JSValue ret = JS_UNDEFINED;
   int64_t i = -1, i2 = -1;
   JSPointData<double> pt;
-  JSMatData* m = js_mat_data(ctx, this_val);
+  JSMatData* m = js_mat_data2(ctx, this_val);
 
   if(argc > 0) {
     JS_ToInt64(ctx, &i, argv[0]);
@@ -413,7 +413,7 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv,
   JSMatData *input = nullptr, *output = nullptr, *other = nullptr;
   double scale = 1.0;
 
-  if((input = js_mat_data(ctx, this_val)) == nullptr)
+  if((input = js_mat_data2(ctx, this_val)) == nullptr)
     return JS_EXCEPTION;
 
   if(argc < 1)
@@ -432,7 +432,7 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv,
   }
 
   if(argc > 1)
-    output = js_mat_data(ctx, argv[1]);
+    output = js_mat_data2(ctx, argv[1]);
 
   if(output == nullptr)
     output = input;
@@ -515,7 +515,7 @@ js_mat_init(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv,
 
   auto [size, type] = js_mat_params(ctx, argc, argv);
 
-  if((m = js_mat_data(ctx, this_val))) {
+  if((m = js_mat_data2(ctx, this_val))) {
     if(size.width == 0 || size.height == 0) {
       if(m->rows && m->cols) {
         size.width = m->cols;
@@ -527,7 +527,7 @@ js_mat_init(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv,
   } else if(size.width > 0 && size.height > 0) {
     ret = js_mat_new(ctx, size.height, size.width, type);
 
-    m = js_mat_data(ctx, ret);
+    m = js_mat_data2(ctx, ret);
   } else {
     return JS_EXCEPTION;
   }
@@ -551,7 +551,7 @@ js_mat_init(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv,
 template<class T>
 void
 js_mat_get(JSContext* ctx, JSValueConst this_val, uint32_t row, uint32_t col, T& value) {
-  cv::Mat* m = js_mat_data(ctx, this_val);
+  cv::Mat* m = js_mat_data2(ctx, this_val);
 
   if(m)
     value = (*m).at<T>(row, col);
@@ -562,7 +562,7 @@ js_mat_get(JSContext* ctx, JSValueConst this_val, uint32_t row, uint32_t col, T&
 static JSValue
 js_mat_get(JSContext* ctx, JSValueConst this_val, uint32_t row, uint32_t col) {
   JSValue ret = JS_EXCEPTION;
-  cv::Mat* m = js_mat_data(ctx, this_val);
+  cv::Mat* m = js_mat_data2(ctx, this_val);
 
   if(m) {
     uint32_t bytes = m->elemSize();
@@ -622,7 +622,7 @@ js_mat_get(JSContext* ctx, JSValueConst this_val, uint32_t row, uint32_t col) {
 
 static int
 js_mat_get_wh(JSContext* ctx, JSMatDimensions* size, JSValueConst obj) {
-  cv::Mat* m = js_mat_data(ctx, obj);
+  cv::Mat* m = js_mat_data2(ctx, obj);
 
   if(m) {
     size->rows = m->rows;
@@ -634,7 +634,7 @@ js_mat_get_wh(JSContext* ctx, JSMatDimensions* size, JSValueConst obj) {
 
 static JSValue
 js_mat_at(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  JSMatData* m = js_mat_data(ctx, this_val);
+  JSMatData* m = js_mat_data2(ctx, this_val);
   if(!m)
     return JS_EXCEPTION;
   JSPointData<double> pt;
@@ -661,7 +661,7 @@ js_mat_at(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
 
 static JSValue
 js_mat_set(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  cv::Mat* m = js_mat_data(ctx, this_val);
+  cv::Mat* m = js_mat_data2(ctx, this_val);
   uint32_t bytes;
   if(!m)
     return JS_EXCEPTION;
@@ -783,7 +783,7 @@ js_mat_set_vector(JSContext* ctx, JSMatData* m, int argc, JSValueConst* argv) {
 */
 static JSValue
 js_mat_set_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  JSMatData* m = js_mat_data(ctx, this_val);
+  JSMatData* m = js_mat_data2(ctx, this_val);
   uint32_t bytes;
   std::vector<bool> defined;
 
@@ -844,7 +844,7 @@ js_mat_get_props(JSContext* ctx, JSValueConst this_val, int magic) {
   cv::Mat* m;
   JSValue ret = JS_UNDEFINED;
 
-  if(!(m = js_mat_data(ctx, this_val)))
+  if(!(m = js_mat_data2(ctx, this_val)))
     return JS_EXCEPTION;
 
   if(m->empty())
@@ -910,7 +910,7 @@ js_mat_get_props(JSContext* ctx, JSValueConst this_val, int magic) {
 
 static JSValue
 js_mat_tostring(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  cv::Mat* m = js_mat_data(ctx, this_val);
+  cv::Mat* m = js_mat_data2(ctx, this_val);
   int x, y;
 
   std::ostringstream os;
@@ -973,7 +973,7 @@ js_mat_tostring(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
 
 static JSValue
 js_mat_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  JSMatData* mat = js_mat_data(ctx, this_val);
+  JSMatData* mat = js_mat_data2(ctx, this_val);
   JSValue obj = JS_NewObject(ctx /*, js_mat_class_id*/);
 
   JS_DefinePropertyValueStr(ctx, obj, "cols", JS_NewUint32(ctx, mat->cols), JS_PROP_ENUMERABLE);
@@ -1015,8 +1015,8 @@ js_mat_convert_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
   int32_t rtype;
   double alpha = 1, beta = 0;
 
-  m = js_mat_data(ctx, this_val);
-  output = js_mat_data(ctx, argv[0]);
+  m = js_mat_data2(ctx, this_val);
+  output = js_mat_data2(ctx, argv[0]);
 
   if(m == nullptr || output == nullptr)
     return JS_EXCEPTION;
@@ -1040,7 +1040,7 @@ js_mat_copy_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
   JSOutputArray output;
   JSInputArray /*output,*/ mask = cv::noArray();
 
-  m = js_mat_data(ctx, this_val);
+  m = js_mat_data2(ctx, this_val);
 
   output = js_umat_or_mat(ctx, argv[0]);
   // output = js_umat_or_mat(ctx, argv[0]);
@@ -1067,7 +1067,7 @@ js_mat_reshape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
   int32_t cn, rows = 0;
   JSValue ret = JS_EXCEPTION;
 
-  m = js_mat_data(ctx, this_val);
+  m = js_mat_data2(ctx, this_val);
 
   if(m == nullptr || argc < 1)
     return ret;
@@ -1110,7 +1110,7 @@ js_mat_getumat(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
   int32_t accessFlags, usageFlags = cv::USAGE_DEFAULT;
   JSValue ret = JS_EXCEPTION;
 
-  m = js_mat_data(ctx, this_val);
+  m = js_mat_data2(ctx, this_val);
 
   if(m == nullptr || argc < 1)
     return ret;
@@ -1137,7 +1137,7 @@ js_mat_class_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
   while(v < e) {
     JSValueConst arg = *v++;
 
-    if(nullptr == (mat = js_mat_data(ctx, arg)))
+    if(nullptr == (mat = js_mat_data2(ctx, arg)))
       return JS_EXCEPTION;
 
     if(prev) {
@@ -1166,7 +1166,7 @@ static JSValue
 js_mat_fill(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
   JSMatData* m;
 
-  m = js_mat_data(ctx, this_val);
+  m = js_mat_data2(ctx, this_val);
 
   if(m == nullptr)
     return JS_EXCEPTION;
@@ -1200,7 +1200,7 @@ js_mat_class_create(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
     return JS_EXCEPTION;
 
   ret = js_mat_new(ctx, uint32_t(0), uint32_t(0), int(0));
-  JSMatData& mat = *js_mat_data(ctx, ret);
+  JSMatData& mat = *js_mat_data2(ctx, ret);
 
   switch(magic) {
     case 0: {
@@ -1241,7 +1241,7 @@ js_mat_buffer(JSContext* ctx, JSValueConst this_val) {
   JSValue buf = JS_NULL;
   size_t byte_size;
 
-  if(!(m = js_mat_data(ctx, this_val)))
+  if(!(m = js_mat_data2(ctx, this_val)))
     return JS_EXCEPTION;
 
   byte_size = mat_bytesize(*m);
@@ -1268,7 +1268,7 @@ js_mat_array(JSContext* ctx, JSValueConst this_val) {
   JSMatData* m;
   const char* ctor;
 
-  if((m = js_mat_data(ctx, this_val))) {
+  if((m = js_mat_data2(ctx, this_val))) {
     JSValue buffer, typed_array;
     TypedArrayType type(*m);
     buffer = js_mat_buffer(ctx, this_val);
@@ -1288,7 +1288,7 @@ js_mat_call(JSContext* ctx, JSValueConst func_obj, JSValueConst this_val, int ar
   cv::Rect rect = {0, 0, 0, 0};
   JSMatData* src;
 
-  if((src = js_mat_data(ctx, func_obj)) == nullptr)
+  if((src = js_mat_data2(ctx, func_obj)) == nullptr)
     return JS_EXCEPTION;
 
   if(!js_rect_read(ctx, argv[0], &rect))
@@ -1416,7 +1416,7 @@ js_mat_iterator_next(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
     uint32_t row, col;
     size_t offset, channels;
     JSMatDimensions dim;
-    if((m = js_mat_data(ctx, it->obj)) == nullptr)
+    if((m = js_mat_data2(ctx, it->obj)) == nullptr)
       return JS_EXCEPTION;
     dim = mat_dimensions(*m);
 

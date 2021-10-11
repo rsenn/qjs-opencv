@@ -523,7 +523,7 @@ public:
     for(i = 0; i < n; i++) {
       JSMatData* value;
       JSValue item = JS_GetPropertyUint32(ctx, arr, (uint32_t)i);
-      value = js_mat_data(ctx, item);
+      value = js_mat_data2(ctx, item);
       if(value == nullptr) {
         JS_FreeValue(ctx, item);
         out.clear();
@@ -556,7 +556,7 @@ public:
       JSContourData<double>* ptr;
       contour_type contour;
       JSValue item = JS_GetPropertyUint32(ctx, arr, (uint32_t)i);
-      if((ptr = js_contour_data(ctx, item))) {
+      if((ptr = js_contour_data2(ctx, item))) {
         for(const auto& point : *ptr) contour.emplace_back(point.x, point.y);
       } else {
         js_array<JSPointData<T>>::to_vector(ctx, item, contour);

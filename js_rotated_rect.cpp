@@ -16,7 +16,7 @@ JSClassID js_rotated_rect_class_id = 0;
 }
 
 VISIBLE JSRotatedRectData*
-js_rotated_rect_data(JSContext* ctx, JSValueConst val) {
+js_rotated_rect_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSRotatedRectData*>(JS_GetOpaque2(ctx, val, js_rotated_rect_class_id));
 }
 VISIBLE JSRotatedRectData*
@@ -103,7 +103,7 @@ js_rotated_rect_get(JSContext* ctx, JSValueConst this_val, int magic) {
   JSRotatedRectData* rr;
   JSValue ret = JS_UNDEFINED;
 
-  if(!(rr = js_rotated_rect_data(ctx, this_val)))
+  if(!(rr = js_rotated_rect_data2(ctx, this_val)))
     return JS_EXCEPTION;
 
   switch(magic) {
@@ -129,7 +129,7 @@ js_rotated_rect_set(JSContext* ctx, JSValueConst this_val, JSValueConst value, i
   JSRotatedRectData* rr;
   JSValue ret = JS_UNDEFINED;
 
-  if(!(rr = js_rotated_rect_data(ctx, this_val)))
+  if(!(rr = js_rotated_rect_data2(ctx, this_val)))
     return JS_EXCEPTION;
 
   switch(magic) {
@@ -161,7 +161,7 @@ js_rotated_rect_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
   JSRotatedRectData* rr;
   JSValue ret = JS_UNDEFINED;
 
-  if(!(rr = js_rotated_rect_data(ctx, this_val)))
+  if(!(rr = js_rotated_rect_data2(ctx, this_val)))
     return JS_EXCEPTION;
 
   switch(magic) {
@@ -196,7 +196,7 @@ js_rotated_rect_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
 
 static JSValue
 js_rotated_rect_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  JSRotatedRectData* rr = js_rotated_rect_data(ctx, this_val);
+  JSRotatedRectData* rr = js_rotated_rect_data2(ctx, this_val);
   JSValue obj = JS_NewObjectClass(ctx, js_rotated_rect_class_id);
 
   JS_DefinePropertyValueStr(ctx, obj, "center", js_point_new(ctx, rr->center), JS_PROP_ENUMERABLE);

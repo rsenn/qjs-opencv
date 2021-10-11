@@ -47,7 +47,7 @@ js_subdiv2d_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst
 }
 
 cv::Subdiv2D*
-js_subdiv2d_data(JSContext* ctx, JSValueConst val) {
+js_subdiv2d_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<cv::Subdiv2D*>(JS_GetOpaque2(ctx, val, js_subdiv2d_class_id));
 }
 
@@ -64,7 +64,7 @@ js_subdiv2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
   cv::Subdiv2D* s;
   JSValue ret = JS_UNDEFINED;
 
-  if((s = js_subdiv2d_data(ctx, this_val)) == nullptr)
+  if((s = js_subdiv2d_data2(ctx, this_val)) == nullptr)
     return JS_EXCEPTION;
 
   switch(magic) {
