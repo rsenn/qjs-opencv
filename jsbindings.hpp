@@ -28,7 +28,7 @@ class CLAHE;
 }
 
 #define JS_CONSTANT(name) JS_PROP_INT32_DEF(#name, name, 0)
-#define JS_CV_CONSTANT(name) JS_PROP_INT32_DEF(#name, cv::name, 0)
+#define JS_CV_CONSTANT(name) JS_PROP_INT32_DEF(#name, cv::name, JS_PROP_ENUMERABLE)
 
 typedef struct {
   BOOL done;

@@ -29,8 +29,15 @@ export function WeakAssign(...args) {
   return obj;
 }
 
-export const GetMethodNames = (obj, depth = 1, start = 0) =>
-  Object.getOwnPropertyNames(obj).filter(name => typeof obj[name] == 'function');
+export function *GetMethodNames (obj, depth = 1, start = 0) {
+  const desc = Object.getOwnPropertyDescriptors(obj);
+  for(let name in desc) {
+    if('value' in desc[name])
+if(typeof desc[name].value == 'function')
+  yield name;
+  }
+//  Object.getOwnPropertyNames(obj).filter(name => typeof obj[name] == 'function');
+}
 
 export const BindMethods = (obj, methods) => BindMethodsTo({}, obj, methods || obj);
 
@@ -39,7 +46,7 @@ export function BindMethodsTo(dest, obj, methods) {
     for(let name of methods) if(typeof obj[name] == 'function') dest[name] = obj[name].bind(obj);
     return dest;
   }
-  let names = GetMethodNames(methods);
+  let names = [...GetMethodNames(methods)];
 
   for(let name of names)
     if(typeof methods[name] == 'function') dest[name] = methods[name].bind(obj);

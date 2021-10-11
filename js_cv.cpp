@@ -33,7 +33,7 @@
 enum { HIER_NEXT = 0, HIER_PREV, HIER_CHILD, HIER_PARENT };
 
 #define JS_CONSTANT(name) JS_PROP_INT32_DEF(#name, name, 0)
-#define JS_CV_CONSTANT(name) JS_PROP_INT32_DEF(#name, cv::name, 0)
+#define JS_CV_CONSTANT(name) JS_PROP_INT32_DEF(#name, cv::name, JS_PROP_ENUMERABLE)
 
 enum { DISPLAY_OVERLAY };
 
