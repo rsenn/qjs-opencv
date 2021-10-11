@@ -22,9 +22,20 @@ endif(WIN32)
 include(FindThreads)
 #include(FindPNG)
 include(FindPkgConfig)
+
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Functions.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CheckFlags.cmake)
+
+if(UNIX AND NOT APPLE)
+  include(GNUInstallDirs)
+elseif(NOT DEFINED CMAKE_INSTALL_LIBDIR)
+  set(CMAKE_INSTALL_LIBDIR "" CACHE PATH "Specify the output directory for libraries (default is lib)")
+endif()
+
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/UseMultiArch.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/QuickJSModule.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindQuickJS.cmake)
+
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/JSBindings.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/OpenCV.cmake)
 
