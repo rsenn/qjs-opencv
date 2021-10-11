@@ -36,7 +36,6 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/UseMultiArch.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/QuickJSModule.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindQuickJS.cmake)
 
-
 message(STATUS "Finding QuickJS...")
 
 find_quickjs()
@@ -177,7 +176,7 @@ dump(PNG_INCLUDE_DIRS PNG_LIBRARIES PNG_LIBRARY OPENCV_FREETYPE_LIBRARY)
 target_include_directories(qjs-opencv PUBLIC "${PNG_INCLUDE_DIRS}")
 target_link_libraries(qjs-opencv PUBLIC ${PNG_LIBRARIES} ${OPENCV_FREETYPE_LIBRARY})
 
-install(TARGETS qjs-opencv DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/quickjs)
+install(TARGETS qjs-opencv DESTINATION "${QUICKJS_C_MODULE_DIR}")
 set(jsbindings_LIBRARIES qjs-opencv)
 
 # make_static_module(opencv init_module.cpp)
