@@ -320,8 +320,8 @@ js_cv_good_features_to_track(JSContext* ctx, JSValueConst this_val, int argc, JS
   bool useHarrisDetector = false;
   int argind;
 
-  image = js_mat_data(ctx, argv[0]);
-  corners = js_mat_data(ctx, argv[1]);
+  image = js_mat_data2(ctx, argv[0]);
+  corners = js_mat_data2(ctx, argv[1]);
 
   if(image == nullptr || corners == nullptr || image->empty())
     return JS_ThrowInternalError(ctx, "argument 1 or argument 2 not an array!");
@@ -331,7 +331,7 @@ js_cv_good_features_to_track(JSContext* ctx, JSValueConst this_val, int argc, JS
   JS_ToFloat64(ctx, &minDistance, argv[4]);
 
   if(argc >= 6)
-    mask = js_mat_data(ctx, argv[5]);
+    mask = js_mat_data2(ctx, argv[5]);
 
   if(argc >= 7)
     JS_ToInt32(ctx, &blockSize, argv[6]);
@@ -476,8 +476,8 @@ js_cv_calc_hist(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
 
   if(js_array_to(ctx, argv[1], channels) == -1)
     return JS_EXCEPTION;
-  mask = js_mat_data(ctx, argv[2]);
-  hist = js_mat_data(ctx, argv[3]);
+  mask = js_mat_data2(ctx, argv[2]);
+  hist = js_mat_data2(ctx, argv[3]);
 
   if(mask == nullptr || hist == nullptr || argc < 8)
     return JS_EXCEPTION;
@@ -621,7 +621,7 @@ js_cv_median_blur(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
 
 static JSValue
 js_cv_find_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  cv::Mat* m = js_mat_data(ctx, argv[0]);
+  cv::Mat* m = js_mat_data2(ctx, argv[0]);
   JSValue array_buffer, ret = JS_UNDEFINED;
   int mode = cv::RETR_TREE;
   int approx = cv::CHAIN_APPROX_SIMPLE;
@@ -716,7 +716,7 @@ js_cv_point_polygon_test(JSContext* ctx, JSValueConst this_val, int argc, JSValu
   JSPointData<float> point;
   bool measureDist = false;
 
-  contour = js_contour_data(ctx, argv[0]);
+  contour = js_contour_data2(ctx, argv[0]);
 
   if(contour == nullptr)
     return JS_EXCEPTION;
@@ -751,7 +751,7 @@ js_cv_pixel_neighborhood(JSContext* ctx, JSValueConst this_val, int argc, JSValu
   cv::Mat output;
   int count;
 
-  src = js_mat_data(ctx, argv[0]);
+  src = js_mat_data2(ctx, argv[0]);
   dst = js_umat_or_mat(ctx, argv[1]);
 
   if(src == nullptr || js_is_noarray(dst))
@@ -778,7 +778,7 @@ js_cv_pixel_find_value(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
   std::vector<JSPointData<int>> output;
   uint32_t value;
 
-  src = js_mat_data(ctx, argv[0]);
+  src = js_mat_data2(ctx, argv[0]);
 
   if(src == nullptr)
     return JS_ThrowInternalError(ctx, "src not an array!");
@@ -796,7 +796,7 @@ js_cv_palette_apply(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   std::array<uint32_t, 256> palette32;
   std::vector<cv::Vec3b> palette;
 
-  src = js_mat_data(ctx, argv[0]);
+  src = js_mat_data2(ctx, argv[0]);
   dst = js_umat_or_mat(ctx, argv[1]);
 
   if(src == nullptr || js_is_noarray(dst))
@@ -1574,8 +1574,8 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* 
       break;
     }
     case SHAPE_BOX_POINTS: {
-      JSRotatedRectData* rr = js_rotated_rect_data(ctx, argv[0]);
-      JSContourData<double>* points = js_contour_data(ctx, argv[1]);
+      JSRotatedRectData* rr = js_rotated_rect_data2(ctx, argv[0]);
+      JSContourData<double>* points = js_contour_data2(ctx, argv[1]);
 
       cv::boxPoints(*rr, *points);
       break;

@@ -109,7 +109,7 @@ js_rect_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* ar
 }
 
 VISIBLE JSRectData<double>*
-js_rect_data(JSContext* ctx, JSValueConst val) {
+js_rect_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSRectData<double>*>(JS_GetOpaque2(ctx, val, js_rect_class_id));
 }
 
@@ -258,7 +258,7 @@ js_rect_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* arg
   JSRectData<double> rect, other, *s, *a;
   JSValue ret = JS_EXCEPTION;
 
-  if((s = js_rect_data(ctx, this_val)) == nullptr)
+  if((s = js_rect_data2(ctx, this_val)) == nullptr)
     return ret;
 
   rect = *s;
@@ -305,7 +305,7 @@ js_rect_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* arg
 
 static JSValue
 js_rect_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  JSRectData<double>* r = js_rect_data(ctx, this_val);
+  JSRectData<double>* r = js_rect_data2(ctx, this_val);
   JSValue obj = JS_NewObjectClass(ctx, js_rect_class_id);
 
   JS_DefinePropertyValueStr(ctx, obj, "x", JS_NewFloat64(ctx, r->x), JS_PROP_ENUMERABLE);

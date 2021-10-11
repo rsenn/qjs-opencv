@@ -84,7 +84,7 @@ fail:
 }
 
 VISIBLE JSVideoWriterData*
-js_video_writer_data(JSContext* ctx, JSValueConst val) {
+js_video_writer_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSVideoWriterData*>(JS_GetOpaque2(ctx, val, js_video_writer_class_id));
 }
 

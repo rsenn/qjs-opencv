@@ -73,7 +73,7 @@ typedef struct JSUMatIteratorData {
 } JSUMatIteratorData;
 
 VISIBLE JSUMatData*
-js_umat_data(JSContext* ctx, JSValueConst val) {
+js_umat_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSUMatData*>(JS_GetOpaque2(ctx, val, js_umat_class_id));
 }
 VISIBLE JSUMatData*
@@ -254,7 +254,7 @@ js_umat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* arg
   JSValue ret = JS_UNDEFINED;
   int64_t i = -1, i2 = -1;
   JSPointData<double> pt;
-  JSUMatData* um = js_umat_data(ctx, this_val);
+  JSUMatData* um = js_umat_data2(ctx, this_val);
 
   if(argc > 0) {
     JS_ToInt64(ctx, &i, argv[0]);
@@ -341,7 +341,7 @@ js_umat_init(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv
 
   auto [size, type] = js_umat_params(ctx, argc, argv);
 
-  if((um = js_umat_data(ctx, this_val))) {
+  if((um = js_umat_data2(ctx, this_val))) {
     if(size.width == 0 || size.height == 0) {
       if(um->rows && um->cols) {
         size.width = um->cols;
@@ -353,7 +353,7 @@ js_umat_init(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv
   } else if(size.width > 0 && size.height > 0) {
     ret = js_umat_new(ctx, size.height, size.width, type);
 
-    um = js_umat_data(ctx, ret);
+    um = js_umat_data2(ctx, ret);
   } else {
     return JS_EXCEPTION;
   }
@@ -377,7 +377,7 @@ js_umat_init(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv
 template<class T>
 void
 js_umat_get(JSContext* ctx, JSValueConst this_val, uint32_t row, uint32_t col, T& value) {
-  cv::UMat* um = js_umat_data(ctx, this_val);
+  cv::UMat* um = js_umat_data2(ctx, this_val);
 
   if(um)
     value = mat_at<T>(*um, row, col);
@@ -388,7 +388,7 @@ js_umat_get(JSContext* ctx, JSValueConst this_val, uint32_t row, uint32_t col, T
 static JSValue
 js_umat_get(JSContext* ctx, JSValueConst this_val, uint32_t row, uint32_t col) {
   JSValue ret = JS_EXCEPTION;
-  cv::UMat* um = js_umat_data(ctx, this_val);
+  cv::UMat* um = js_umat_data2(ctx, this_val);
 
   if(um) {
     uint32_t bytes = (1 << um->depth()) * um->channels();
@@ -442,7 +442,7 @@ js_umat_get(JSContext* ctx, JSValueConst this_val, uint32_t row, uint32_t col) {
 
 static int
 js_umat_get_wh(JSContext* ctx, JSMatDimensions* size, JSValueConst obj) {
-  cv::UMat* um = js_umat_data(ctx, obj);
+  cv::UMat* um = js_umat_data2(ctx, obj);
 
   if(um) {
     size->rows = um->rows;
@@ -454,7 +454,7 @@ js_umat_get_wh(JSContext* ctx, JSMatDimensions* size, JSValueConst obj) {
 
 static JSValue
 js_umat_at(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  JSUMatData* um = js_umat_data(ctx, this_val);
+  JSUMatData* um = js_umat_data2(ctx, this_val);
   if(!um)
     return JS_EXCEPTION;
   JSPointData<double> pt;
@@ -482,7 +482,7 @@ js_umat_at(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) 
 
 static JSValue
 js_umat_set(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  cv::UMat* um = js_umat_data(ctx, this_val);
+  cv::UMat* um = js_umat_data2(ctx, this_val);
   uint32_t bytes;
   if(!um)
     return JS_EXCEPTION;
@@ -604,7 +604,7 @@ js_umat_set_vector(JSContext* ctx, JSUMatData* um, int argc, JSValueConst* argv)
 
 static JSValue
 js_umat_set_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  JSUMatData* m = js_umat_data(ctx, this_val);
+  JSUMatData* m = js_umat_data2(ctx, this_val);
   uint32_t bytes;
   std::vector<bool> defined;
 
@@ -632,7 +632,7 @@ js_umat_set_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
 
 static JSValue
 js_umat_get_props(JSContext* ctx, JSValueConst this_val, int magic) {
-  cv::UMat* um = js_umat_data(ctx, this_val);
+  cv::UMat* um = js_umat_data2(ctx, this_val);
   if(!um)
     return JS_EXCEPTION;
 
@@ -657,7 +657,7 @@ js_umat_get_props(JSContext* ctx, JSValueConst this_val, int magic) {
 
 static JSValue
 js_umat_tostring(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  cv::UMat* um = js_umat_data(ctx, this_val);
+  cv::UMat* um = js_umat_data2(ctx, this_val);
   int x, y;
 
   std::ostringstream os;
@@ -720,7 +720,7 @@ js_umat_tostring(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* 
 
 static JSValue
 js_umat_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  JSUMatData* umat = js_umat_data(ctx, this_val);
+  JSUMatData* umat = js_umat_data2(ctx, this_val);
   JSValue obj = JS_NewObjectClass(ctx, js_umat_class_id);
 
   JS_DefinePropertyValueStr(ctx, obj, "cols", JS_NewUint32(ctx, umat->cols), JS_PROP_ENUMERABLE);
@@ -731,7 +731,7 @@ js_umat_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
 }
 /*static JSValue
 js_umat_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  cv::UMat* um = js_umat_data(ctx, this_val);
+  cv::UMat* um = js_umat_data2(ctx, this_val);
   int x, y;
   std::ostringstream os;
   std::string str;
@@ -766,8 +766,8 @@ js_umat_convert_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
   int32_t rtype;
   double alpha = 1, beta = 0;
 
-  um = js_umat_data(ctx, this_val);
-  output = js_umat_data(ctx, argv[0]);
+  um = js_umat_data2(ctx, this_val);
+  output = js_umat_data2(ctx, argv[0]);
 
   if(um == nullptr || output == nullptr)
     return JS_EXCEPTION;
@@ -789,11 +789,11 @@ static JSValue
 js_umat_copy_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSUMatData *um = nullptr, *output = nullptr, *mask = nullptr;
 
-  um = js_umat_data(ctx, this_val);
-  output = js_umat_data(ctx, argv[0]);
+  um = js_umat_data2(ctx, this_val);
+  output = js_umat_data2(ctx, argv[0]);
 
   if(argc > 1)
-    mask = js_umat_data(ctx, argv[1]);
+    mask = js_umat_data2(ctx, argv[1]);
 
   if(um == nullptr || output == nullptr)
     return JS_EXCEPTION;
@@ -816,7 +816,7 @@ js_umat_reshape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
   int32_t cn, rows = 0;
   JSValue ret = JS_EXCEPTION;
 
-  um = js_umat_data(ctx, this_val);
+  um = js_umat_data2(ctx, this_val);
 
   if(um == nullptr || argc < 1)
     return ret;
@@ -859,7 +859,7 @@ js_umat_getmat(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
   int32_t accessFlags;
   JSValue ret = JS_EXCEPTION;
 
-  um = js_umat_data(ctx, this_val);
+  um = js_umat_data2(ctx, this_val);
 
   if(um == nullptr || argc < 1)
     return ret;
@@ -878,7 +878,7 @@ static JSValue
 js_umat_fill(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
   JSUMatData* um;
 
-  um = js_umat_data(ctx, this_val);
+  um = js_umat_data2(ctx, this_val);
 
   if(um == nullptr)
     return JS_EXCEPTION;
@@ -912,7 +912,7 @@ js_umat_class_create(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
     return JS_EXCEPTION;
 
   ret = js_umat_new(ctx, uint32_t(0), uint32_t(0), int(0));
-  JSUMatData& umat = *js_umat_data(ctx, ret);
+  JSUMatData& umat = *js_umat_data2(ctx, ret);
 
   switch(magic) {
     case 0: {
@@ -954,7 +954,7 @@ js_umat_buffer(JSContext* ctx, JSValueConst this_val) {
   size_t size;
   uint8_t* ptr;
 
-  if((um = js_umat_data(ctx, this_val)) == nullptr)
+  if((um = js_umat_data2(ctx, this_val)) == nullptr)
     return JS_EXCEPTION;
 
   data = um->u;
@@ -977,7 +977,7 @@ js_umat_array(JSContext* ctx, JSValueConst this_val) {
   int elem_size;
   const char* ctor;
 
-  if((um = js_umat_data(ctx, this_val)) == nullptr)
+  if((um = js_umat_data2(ctx, this_val)) == nullptr)
     return JS_EXCEPTION;
 
   elem_size = um->elemSize();
@@ -1006,7 +1006,7 @@ js_umat_call(JSContext* ctx, JSValueConst func_obj, JSValueConst this_val, int a
   cv::Rect rect = {0, 0, 0, 0};
   JSUMatData* src;
 
-  if((src = js_umat_data(ctx, func_obj)) == nullptr)
+  if((src = js_umat_data2(ctx, func_obj)) == nullptr)
     return JS_EXCEPTION;
 
   if(!js_rect_read(ctx, argv[0], &rect))

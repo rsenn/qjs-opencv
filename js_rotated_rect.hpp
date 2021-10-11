@@ -29,7 +29,7 @@ js_rotated_rect_new(JSContext* ctx, const JSRotatedRectData& rrect) {
   return js_rotated_rect_new(ctx, rotated_rect_proto, rrect);
 }
 
-VISIBLE JSRotatedRectData* js_rotated_rect_data(JSContext*, JSValueConst val);
+VISIBLE JSRotatedRectData* js_rotated_rect_data2(JSContext*, JSValueConst val);
 VISIBLE JSRotatedRectData* js_rotated_rect_data(JSValueConst val);
 
 #endif /* defined(JS_ROTATED_RECT_HPP) */

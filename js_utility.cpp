@@ -59,7 +59,7 @@ fail:
 }
 
 JSTickMeterData*
-js_tick_meter_data(JSContext* ctx, JSValueConst val) {
+js_tick_meter_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSTickMeterData*>(JS_GetOpaque2(ctx, val, js_tick_meter_class_id));
 }
 

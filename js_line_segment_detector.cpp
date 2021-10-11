@@ -80,7 +80,7 @@ js_line_segment_detector_ctor(JSContext* ctx, JSValueConst new_target, int argc,
 }
 
 JSLineSegmentDetector*
-js_line_segment_detector_data(JSContext* ctx, JSValueConst val) {
+js_line_segment_detector_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSLineSegmentDetector*>(JS_GetOpaque2(ctx, val, js_line_segment_detector_class_id));
 }
 
@@ -102,7 +102,7 @@ js_line_segment_detector_compare_segments(JSContext* ctx, JSValueConst this_val,
   JSInputOutputArray image;
   int32_t ret;
 
-  if((s = js_line_segment_detector_data(ctx, this_val)) == nullptr)
+  if((s = js_line_segment_detector_data2(ctx, this_val)) == nullptr)
     return JS_EXCEPTION;
 
   js_size_read(ctx, argv[0], &size);
@@ -125,7 +125,7 @@ js_line_segment_detector_detect(JSContext* ctx, JSValueConst this_val, int argc,
   std::vector<float> width, prec;
   std::vector<int32_t> nfa;
 
-  if((s = js_line_segment_detector_data(ctx, this_val)) == nullptr)
+  if((s = js_line_segment_detector_data2(ctx, this_val)) == nullptr)
     return JS_EXCEPTION;
 
   image = js_umat_or_mat(ctx, argv[0]);
@@ -166,7 +166,7 @@ js_line_segment_detector_draw_segments(JSContext* ctx, JSValueConst this_val, in
   JSInputOutputArray image;
   std::vector<cv::Vec4f> lines;
 
-  if((s = js_line_segment_detector_data(ctx, this_val)) == nullptr)
+  if((s = js_line_segment_detector_data2(ctx, this_val)) == nullptr)
     return JS_EXCEPTION;
 
   image = js_umat_or_mat(ctx, argv[0]);

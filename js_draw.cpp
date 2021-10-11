@@ -432,7 +432,7 @@ js_put_text(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv)
   double fontScale = 1;
   bool bottomLeftOrigin = false;
 
-  if(argc > i && (dst = js_mat_data(ctx, argv[i])))
+  if(argc > i && (dst = js_mat_data2(ctx, argv[i])))
     i++;
   else
     dst = dptr;

@@ -52,7 +52,7 @@ js_cv_imdecode(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
     JS_ToInt32(ctx, &flags, argv[1]);
 
   if(argc >= 3)
-    dst = js_mat_data(ctx, argv[2]);
+    dst = js_mat_data2(ctx, argv[2]);
 
   image = dst ? cv::imdecode(buf, flags, dst) : cv::imdecode(buf, flags);
 
@@ -126,7 +126,7 @@ js_cv_split(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv)
   int code, dstCn = 0;
   int32_t length;
 
-  if(!(src = js_mat_data(ctx, argv[0])))
+  if(!(src = js_mat_data2(ctx, argv[0])))
     return JS_ThrowInternalError(ctx, "src not an array!");
 
   length = js_array_length(ctx, argv[1]);
@@ -255,7 +255,7 @@ js_cv_merge(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv)
   if(js_array_to(ctx, argv[0], mv) == -1)
     return JS_EXCEPTION;
 
-  dst = js_mat_data(ctx, argv[1]);
+  dst = js_mat_data2(ctx, argv[1]);
 
   if(dst == nullptr)
     return JS_EXCEPTION;
@@ -293,13 +293,13 @@ js_cv_min_max_loc(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
   cv::Point minLoc, maxLoc;
   JSValue ret;
 
-  src = js_mat_data(ctx, argv[0]);
+  src = js_mat_data2(ctx, argv[0]);
 
   if(src == nullptr)
     return JS_EXCEPTION;
 
   if(argc >= 2)
-    if((mask = js_mat_data(ctx, argv[1])) == nullptr)
+    if((mask = js_mat_data2(ctx, argv[1])) == nullptr)
       return JS_EXCEPTION;
 
   cv::minMaxLoc(*src, &minVal, &maxVal, &minLoc, &maxLoc, mask == nullptr ? cv::noArray() : *mask);

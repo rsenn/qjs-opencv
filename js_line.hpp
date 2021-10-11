@@ -12,11 +12,13 @@ extern JSClassID js_line_class_id;
 
 VISIBLE JSValue js_line_new(JSContext* ctx, double x1, double y1, double x2, double y2);
 JSModuleDef* js_init_module_line(JSContext*, const char*);
+
+VISIBLE JSLineData<double>* js_line_data2(JSContext*, JSValueConst val);
+VISIBLE JSLineData<double>* js_line_data(JSValueConst val);
+
+VISIBLE int js_line_init(JSContext*, JSModuleDef*);
 }
 
-extern "C" VISIBLE int js_line_init(JSContext*, JSModuleDef*);
-VISIBLE JSLineData<double>* js_line_data(JSContext*, JSValueConst val);
-VISIBLE JSLineData<double>* js_line_data(JSValueConst val);
 
 template<class T>
 static inline JSValue

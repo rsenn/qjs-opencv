@@ -22,7 +22,7 @@ VISIBLE JSValue js_point_new(JSContext*, double x, double y);
 VISIBLE JSValue js_point_new(JSContext*, const JSPointData<double>&);
 VISIBLE JSValue js_point_new(JSContext*, JSValueConst, double x, double y);
 
-VISIBLE JSPointData<double>* js_point_data(JSContext*, JSValueConst val);
+VISIBLE JSPointData<double>* js_point_data2(JSContext*, JSValueConst val);
 VISIBLE JSPointData<double>* js_point_data(JSValueConst val);
 
 template<class T>
@@ -107,7 +107,7 @@ static inline bool
 js_is_point(JSContext* ctx, JSValueConst point) {
   JSPointData<double> r;
 
-  if(js_point_data(ctx, point))
+  if(js_point_data2(ctx, point))
     return true;
 
   if(js_point_read(ctx, point, &r))
