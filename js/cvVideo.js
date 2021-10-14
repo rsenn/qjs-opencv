@@ -140,7 +140,7 @@ export class ImageSequence {
     this.framePos = this.index++;
     this.frameFile = images[this.framePos];
     const { index, framePos, frameFile } = this;
-    //console.debug(`ImageSequence.grab[${this.framePos}] ${frameFile}`);
+  console.log(`ImageSequence.grab[${this.framePos}] ${frameFile}`);
 
     let ret = !!(this.frame = cv.imread(frameFile));
 
@@ -243,7 +243,7 @@ export class VideoSource {
   }
 
   capture(device, driverId) {
-     console.debug('VideoSource.capture', { device,  driverId });
+     console.log('VideoSource.capture', { device,  driverId });
  let cap = new VideoCapture(device, driverId);
     this.cap = cap;
 
