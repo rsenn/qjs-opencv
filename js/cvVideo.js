@@ -1,8 +1,9 @@
 import { Mat, VideoCapture, Size, Rect } from 'opencv';
 import * as cv from 'opencv';
 import { WeakMapper, Modulo, WeakAssign, BindMethods,BindMethodsTo, FindKey } from './cvUtils.js';
+import {   DirIterator, RecursiveDirIterator, ReadDirRecursive, Filter, FilterImages, SortFiles, StatFiles } from '../../../io-helpers.js';
 
-const Crop = (() => {
+ const Crop = (() => {
   const mapper = WeakMapper(() => new Mat());
   return function Crop(mat, rect) {
     let tmp = mapper(mat);
@@ -10,7 +11,7 @@ const Crop = (() => {
     return tmp;
   };
 })();
-
+ 
 function ImageSize(src,
   dst,
   dsize,
@@ -76,6 +77,16 @@ function ImageSize(src,
 export class ImageSequence {
   constructor(images = [], dimensions) {
     const imgs = this;
+
+    if(typeof images == 'string') {
+      let gen = FilterImages(ReadDirRecursive(images));
+           console.log('gen',gen);
+ let entries=[...SortFiles(StatFiles(gen),'ctime')];
+            console.log('entries',entries);
+
+      images =entries.map(e => e+'');
+    }
+
     this.images = images;
     this.frame = null;
     this.index = 0;

@@ -53,6 +53,7 @@ export class Window {
     //console.log("Window.resize", ...args);
     let size = new Size(...args);
     cv.resizeWindow(this.name, ...size);
+    return size;
   }
 
   /* prettier-ignore */ get imageRect() {

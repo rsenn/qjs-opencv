@@ -952,7 +952,10 @@ js_mat_tostring(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
         if(m->type() == CV_32FC1)
           os << m->at<float>(y, x);
         else
-          os << std::setfill('0') << std::setbase(16) << std::setw(m->type() == CV_8UC4 ? 8 : m->type() == CV_8UC1 ? 2 : 6)
+          os << std::setfill('0') << std::setbase(16)
+             << std::setw(m->type() == CV_8UC4   ? 8
+                          : m->type() == CV_8UC1 ? 2
+                                                 : 6)
              << m->at<uint32_t>(y, x);
       }
     }
@@ -971,6 +974,10 @@ js_mat_tostring(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
   return JS_NewStringLen(ctx, str.data(), str.size());
 }
 
+const JSCFunctionListEntry js_mat_tostring_tag[] = {
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Mat", JS_PROP_CONFIGURABLE),
+};
+
 static JSValue
 js_mat_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSMatData* mat = js_mat_data2(ctx, this_val);
@@ -980,6 +987,9 @@ js_mat_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
   JS_DefinePropertyValueStr(ctx, obj, "rows", JS_NewUint32(ctx, mat->rows), JS_PROP_ENUMERABLE);
   JS_DefinePropertyValueStr(ctx, obj, "depth", JS_NewUint32(ctx, mat->depth()), JS_PROP_ENUMERABLE);
   JS_DefinePropertyValueStr(ctx, obj, "channels", JS_NewUint32(ctx, mat->channels()), JS_PROP_ENUMERABLE);
+
+  JS_SetPropertyFunctionList(ctx, obj, js_mat_tostring_tag, 1);
+
   return obj;
 }
 
@@ -1008,7 +1018,6 @@ js_mat_getrotationmatrix2d(JSContext* ctx, JSValueConst this_val, int argc, JSVa
   ret = js_mat_wrap(ctx, m);
   return ret;
 }
-
 static JSValue
 js_mat_convert_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSMatData *m, *output;
