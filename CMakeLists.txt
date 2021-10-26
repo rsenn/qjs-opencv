@@ -42,7 +42,7 @@ find_quickjs()
 configure_quickjs()
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/JSBindings.cmake)
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/OpenCV.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindOpenCV.cmake)
 
 pkg_search_module(PNG libpng16)
 #pkg_get_variable(PNG_INCLUDE_DIR "${PNG_MODULE_NAME}" includedir)
