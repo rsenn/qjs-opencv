@@ -57,9 +57,11 @@ copy_to_vector(TypedArrayProps& props, std::vector<T>& vec) {
 }
 
 template<class T>
-JSInputArray
+static inline JSInputArray
 typed_input_array(TypedArrayProps& prop) {
-  return JSInputArray(prop.ptr<T>(), prop.size<T>());
+  T* ptr = prop.ptr<T>();
+  size_t sz = prop.size<T>();
+  return JSInputArray(ptr, sz);
 }
 
 static inline JSInputArray

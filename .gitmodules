@@ -2,3 +2,9 @@
 	path = pngpp
 	url = git@github.com:rsenn/pngpp.git
 	branch = main
+[submodule "giflib-turbo"]
+	path = giflib-turbo
+	url = https://github.com/bitbank2/giflib-turbo
+[submodule "gifenc"]
+	path = gifenc
+	url = https://github.com/lecram/gifenc

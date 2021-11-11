@@ -465,10 +465,14 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv,
           }
         }
       } else {
-        auto& scalar = *reinterpret_cast<cv::Scalar_<uint8_t>*>(&arr);
-        auto& v4b = *reinterpret_cast<cv::Vec4b*>(&arr);
+        std::array<double, 4> arr;
 
-        uint32_t value = (v4b.val[0] << 24) | (v4b.val[1] << 16) | (v4b.val[2] << 8) | (v4b.val[3]);
+        js_array_to(ctx, argv[0], arr);
+        auto& scalar = *reinterpret_cast<cv::Scalar*>(&arr);
+        /*        auto& scalar = *reinterpret_cast<cv::Scalar_<uint8_t>*>(&arr);
+                auto& v4b = *reinterpret_cast<cv::Vec4b*>(&arr);
+
+                uint32_t value = (v4b.val[0] << 24) | (v4b.val[1] << 16) | (v4b.val[2] << 8) | (v4b.val[3]);*/
         /*   std::array<uint8_t,4> arr;
          */
 
@@ -476,10 +480,10 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv,
         // scalar << std::endl;
 
         switch(magic) {
-          case MAT_EXPR_AND: expr = mat & value; break;
-          case MAT_EXPR_OR: expr = mat | value; break;
-          case MAT_EXPR_XOR: expr = mat ^ value; break;
-          case MAT_EXPR_MUL: expr = mat.mul(value, scale); break;
+          case MAT_EXPR_AND: expr = mat & scalar; break;
+          case MAT_EXPR_OR: expr = mat | scalar; break;
+          case MAT_EXPR_XOR: expr = mat ^ scalar; break;
+          case MAT_EXPR_MUL: expr = mat.mul(scalar, scale); break;
         }
         tmp = static_cast<cv::Mat>(expr);
       }

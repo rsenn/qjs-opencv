@@ -213,6 +213,22 @@ struct TypedArrayType {
   operator TypedArrayValue() const { return flags(); }
 };
 
+static inline std::string
+dump(TypedArrayType type) {
+  std::ostringstream os;
+  os << type.constructor_name();
+  return os.str();
+}
+
+static inline std::string
+dump(TypedArrayValue type) {
+  std::ostringstream os;
+  os << "CV_";
+  os << ((type & TYPEDARRAY_BITS_FIELD) * 8);
+  os << (type & TYPEDARRAY_FLOATING_POINT) ? 'F' : (type & TYPEDARRAY_SIGNED) ? 'S' : 'U';
+  return os.str();
+}
+
 struct TypedArrayProps {
   explicit TypedArrayProps(size_t offset, size_t length, size_t elem_size, ArrayBufferProps const& props)
       : byte_offset(offset), byte_length(length), bytes_per_element(elem_size), buffer(props) {}
@@ -244,6 +260,17 @@ struct TypedArrayProps {
   }
 };
 
+static inline std::string
+dump(TypedArrayProps props) {
+  std::ostringstream os;
+  os << "{ ";
+  os << "buffer: " << props.buffer;
+  os << ", byte_offset: " << props.byte_offset;
+  os << ", byte_length: " << props.byte_length;
+  os << ", bytes_per_element: " << props.bytes_per_element;
+  os << " }";
+  return os.str();
+}
 template<class T> struct TypedArrayRange : public TypedArrayProps {
   TypedArrayRange(const TypedArrayProps& props) : TypedArrayProps(props) {}
 
@@ -396,6 +423,12 @@ template<class T>
 static inline JSValue
 js_typedarray_to(JSContext* ctx, JSValueConst typed_arr, std::vector<T>& v) {
   return js_typedarray<T>::to_vector(ctx, typed_arr, v);
+}
+
+template<class T>
+static inline JSValue
+js_typedarray_to(JSContext* ctx, JSValueConst typed_arr, cv::Scalar_<T>& s) {
+  return js_typedarray<T>::to_scalar(ctx, typed_arr, s);
 }
 
 static inline TypedArrayType

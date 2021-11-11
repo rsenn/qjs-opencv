@@ -140,14 +140,53 @@ VISIBLE JSValue js_video_capture_wrap(JSContext*, cv::VideoCapture* cap);
 VISIBLE JSValue js_mat_wrap(JSContext*, const cv::Mat& mat);
 */
 }
-/*
-extern "C" JSClassDef js_size_class, js_point_class, js_mat_class, js_rect_class;
-extern "C" JSClassID js_line_class_id, js_draw_class_id;
 
-extern "C" const JSCFunctionListEntry js_rect_proto_funcs[];
+template<class Stream>
+static inline Stream&
+operator<<(Stream& os, const cv::_InputOutputArray& arr) {
+  os << "{ ";
+  os << "type: " << arr.type();
+  os << ", depth: " << arr.depth();
+  os << ", channels: " << arr.channels();
+  os << ", total: " << arr.total();
+  os << " }";
 
-extern "C" JSClassID js_point_class_id, js_size_class_id, js_rect_class_id, js_mat_class_id, js_mat_iterator_class_id;
-*/
+  return os;
+}
+
+static inline std::string
+dump(const cv::_InputArray& arr) {
+  std::ostringstream os;
+  os << "{ ";
+  os << "type: " << arr.type();
+  os << ", depth: " << arr.depth();
+  os << ", channels: " << arr.channels();
+  os << ", total: " << arr.total();
+  os << " }";
+
+  return os.str();
+}
+
+static inline std::string
+dump(const cv::_InputOutputArray& arr) {
+  std::ostringstream os;
+  os << arr;
+  return os.str();
+}
+
+static inline std::string
+dump(const cv::_OutputArray& arr) {
+  std::ostringstream os;
+  os << "{ ";
+  os << "type: " << arr.type();
+  os << ", depth: " << arr.depth();
+  os << ", channels: " << arr.channels();
+  os << ", total: " << arr.total();
+  os << " }";
+
+  return os.str();
+}
+
 struct JSConstructor {
   JSConstructor(JSCFunction* _ctor, const char* _name)
       : name(_name), ctor(_ctor), proto(nullptr), nfuncs(0), class_obj(JS_UNDEFINED) {}
@@ -318,7 +357,7 @@ js_color_new(JSContext* ctx, const cv::Scalar& scalar) {
   return js_color_new(ctx, color);
 }
 
-static inline const cv::Scalar&
+/*static inline const cv::Scalar&
 js_to_scalar(const JSColorData<double>& color) {
   return *reinterpret_cast<const cv::Scalar*>(&color);
 }
@@ -326,6 +365,18 @@ js_to_scalar(const JSColorData<double>& color) {
 static inline cv::Scalar&
 js_to_scalar(JSColorData<double>& color) {
   return *reinterpret_cast<cv::Scalar*>(&color);
+}*/
+
+template<class T>
+static inline const cv::Scalar&
+js_to_scalar(const JSColorData<T>& color) {
+  return *reinterpret_cast<const cv::Scalar_<T>*>(&color);
+}
+
+template<class T>
+static inline cv::Scalar&
+js_to_scalar(JSColorData<T>& color) {
+  return *reinterpret_cast<cv::Scalar_<T>*>(&color);
 }
 
 template<class T>
@@ -520,12 +571,51 @@ js_is_array_like(JSContext* ctx, JSValueConst obj) {
   return ret;
 }
 
+static inline BOOL
+js_is_scalar(JSContext* ctx, JSValueConst obj) {
+  JSValue length;
+  size_t len = 0;
+  bool ret = FALSE;
+  length = JS_GetPropertyStr(ctx, obj, "length");
+  JS_ToIndex(ctx, &len, length);
+  JS_FreeValue(ctx, length);
+  if(len >= 2 && len <= 4) {
+    size_t i;
+    ret = TRUE;
+    for(i = 0; i < len; i++) {
+      JSValue item = JS_GetPropertyUint32(ctx, obj, i);
+      BOOL is_num = JS_IsNumber(item);
+      JS_FreeValue(ctx, item);
+      if(!is_num)
+        return FALSE;
+    }
+  }
+  return ret;
+}
+
 struct ArrayBufferProps {
   uint8_t* ptr;
   size_t len;
 
   ArrayBufferProps(uint8_t* _ptr, size_t _len) : ptr(_ptr), len(_len) {}
 };
+
+template<class Stream>
+static inline Stream&
+operator<<(Stream& os, const ArrayBufferProps& abp) {
+  os << "{ ";
+  os << "ptr: " << static_cast<void*>(abp.ptr);
+  os << ", len: " << abp.len;
+  os << " }";
+  return os;
+}
+
+static inline std::string
+dump(const ArrayBufferProps& abp) {
+  std::ostringstream os;
+  os << abp;
+  return os.str();
+}
 
 static inline BOOL
 js_is_arraybuffer(JSContext* ctx, JSValueConst obj) {
@@ -827,4 +917,5 @@ js_atom_is_length(JSContext* ctx, JSAtom atom) {
   JS_FreeCString(ctx, str);
   return ret;
 }
+
 #endif

@@ -350,6 +350,18 @@ js_cv_bitwise(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* arg
   if(argc > 3)
     mask = js_input_array(ctx, argv[3]);
 
+  std::string s_str, o_str, d_str;
+
+  s_str = dump(src);
+  o_str = dump(other);
+  d_str = dump(dst);
+
+  printf("js_cv_bitwise %s src=%s other=%s dst=%s\n",
+         ((const char*[]){"cv::bitwise_and", "cv::bitwise_or", "cv::bitwise_xor", "cv::bitwise_not"})[magic],
+         s_str.c_str(),
+         o_str.c_str(),
+         d_str.c_str());
+
   switch(magic) {
     case 0: cv::bitwise_and(src, other, dst, mask); break;
     case 1: cv::bitwise_or(src, other, dst, mask); break;
