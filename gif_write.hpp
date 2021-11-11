@@ -10,12 +10,15 @@
 #include <algorithm>
 
 namespace {
-template<class ColorType, template<typename> typename C = std::vector>
+using std::vector;
+
+template<class ColorType>
 void
-gif_write(const std::string& file, const C<cv::Mat>& mats, const C<int>& delays, const C<ColorType>& palette, int transparent = -1, int loop = 0) {
+gif_write(
+    const std::string& file, const vector<cv::Mat>& mats, const vector<int>& delays, const vector<ColorType>& palette, int transparent = -1, int loop = 0) {
   size_t i, n, size, depth;
 
-  C<uint8_t> pal;
+  vector<uint8_t> pal;
 
   depth = ceil(log2(palette.size()));
   size = pow(2, depth);
@@ -29,7 +32,7 @@ gif_write(const std::string& file, const C<cv::Mat>& mats, const C<int>& delays,
   }
 
   size_t frames = mats.size();
-  C<size_t> widths, heights;
+  vector<size_t> widths, heights;
 
   widths.resize(frames);
   heights.resize(frames);
@@ -70,5 +73,4 @@ gif_write(const std::string& file, const C<cv::Mat>& mats, const C<int>& delays,
   ge_close_gif(gif);
 }
 } // namespace
-
 #endif /* GIF_WRITE_HPP */
