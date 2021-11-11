@@ -65,51 +65,62 @@ dominant_colors_grabber::GetDomColors(cv::Mat img, color_space cs, dist_type dt,
   }
   return res;
 }
+
 #pragma region SET / GET
 void
 dominant_colors_grabber::SetDistanceType(dist_type dt) {
   if(dt != DT_UNDEFINED)
     _dt = dt;
 }
+
 dist_type
 dominant_colors_grabber::GetDistanceType() {
   return _dt;
 }
+
 void
 dominant_colors_grabber::SetColorSpace(color_space cs) {
   if(cs != CS_UNDEFINED)
     _cs = cs;
 }
+
 color_space
 dominant_colors_grabber::GetColorSpace() {
   return _cs;
 }
+
 void
 dominant_colors_grabber::SetColorsCount(unsigned colors_count) {
   if(colors_count != 0)
     _colors_count = colors_count;
 }
+
 unsigned
 dominant_colors_grabber::GetColorsCount() {
   return _colors_count;
 }
+
 void
 dominant_colors_grabber::SetColorsPart(double colors_part) {
   if(colors_part > 0)
     _colors_part = colors_part;
 }
+
 double
 dominant_colors_grabber::GetColorsPart() {
   return _colors_part;
 }
+
 void
 dominant_colors_grabber::SetParam(cv::Vec3i param) {
   _param = param;
 }
+
 cv::Vec3i
 dominant_colors_grabber::GetParam() {
   return _param;
 }
+
 #pragma endregion
 void
 MarkNearColors(cv::Mat mask, cv::Point3i center, cv::Vec3f size, unsigned char value, color_space cs, dist_type dt) {
@@ -123,6 +134,7 @@ MarkNearColors(cv::Mat mask, cv::Point3i center, cv::Vec3f size, unsigned char v
     case DT_CUBE: DrawCube<unsigned char>(mask, center, size, value, cyclic_dims); break;
   }
 }
+
 void
 MarkNearColorsCIE(cv::Mat mask, cv::Point3i color, double dist, unsigned char value, color_space cs, dist_type dt) {
   cv::Vec3i center_color;
@@ -149,6 +161,7 @@ MarkNearColorsCIE(cv::Mat mask, cv::Point3i color, double dist, unsigned char va
         }
       }
 }
+
 double
 GetCIE76Dist(cv::Vec3i c1, cv::Vec3i c2, color_space cs) {
   double res = 0;
@@ -164,6 +177,7 @@ GetCIE76Dist(cv::Vec3i c1, cv::Vec3i c2, color_space cs) {
   res = cv::norm(c1 - c2);
   return res;
 }
+
 double
 GetCIE94Dist(cv::Vec3i c1, cv::Vec3i c2, color_space cs) {
   double res = 0;
@@ -189,6 +203,7 @@ GetCIE94Dist(cv::Vec3i c1, cv::Vec3i c2, color_space cs) {
   res = sqrt(pow(dL / (kL * SL), 2) + pow(dC / (kC * SC), 2) + pow(dH / (kH * SH), 2));
   return res;
 }
+
 cv::Mat
 GetHist(cv::Mat img, color_space cs) {
   cv::Mat img_colors;
@@ -214,6 +229,7 @@ DrawCube(cv::Mat img, cv::Point3i center, cv::Vec3i size, val_type value, std::v
   std::vector<cv::Vec3i> p = GetGabarits(center, size);
   return DrawCube<val_type>(img, p[0], p[1], value, cyclic);
 }
+
 template<class val_type>
 void
 DrawCube(cv::Mat img, cv::Vec3i p1, cv::Vec3i p2, val_type value, std::vector<bool> cyclic) {
@@ -230,6 +246,7 @@ DrawCube(cv::Mat img, cv::Vec3i p1, cv::Vec3i p2, val_type value, std::vector<bo
         img.at<val_type>(p) = value; // uchar because of mask
       }
 }
+
 cv::Vec4f
 GetCenter(cv::Mat img, cv::Mat w_mask, cv::Mat v_mask) {
   cv::Vec4f res(0, 0, 0, 0);
@@ -277,6 +294,7 @@ CycleRange(val_type val, val_type val1, val_type val2) {
     ranged_val += (val2 - val1);
   return ranged_val + val1;
 }
+
 void
 CyclePoint3d(cv::Vec3i& p, cv::MatSize size) {
   for(unsigned i = 0; i < 3; i++) p[i] = CycleRange(p[i], 0, size[i]);
