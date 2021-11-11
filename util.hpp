@@ -171,8 +171,8 @@ mat_offset(const cv::UMat& mat, uint32_t row, uint32_t col) {
 
 template<class T>
 static inline T&
-mat_at(cv::Mat& mat, uint32_t row, uint32_t col) {
-  return *mat.ptr<T>(row, col);
+mat_at(const cv::Mat& mat, uint32_t row, uint32_t col) {
+  return *const_cast<cv::Mat*>(&mat)->ptr<T>(row, col);
 }
 
 template<class T>

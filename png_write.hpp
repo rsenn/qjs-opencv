@@ -19,7 +19,7 @@
 
 template<class ColorType>
 static inline png::image<png::index_pixel>
-create_image(const cv::Mat& mat, const std::vector<ColorType>& palette) {
+png_create(const cv::Mat& mat, const std::vector<ColorType>& palette) {
 
   png::image<png::index_pixel> image(mat.cols, mat.rows);
 
@@ -46,20 +46,20 @@ create_image(const cv::Mat& mat, const std::vector<ColorType>& palette) {
 
 template<class ColorType>
 void
-write_mat(const std::string& filename, const cv::Mat& mat, const std::vector<ColorType>& palette) {
+png_write(const std::string& filename, const cv::Mat& mat, const std::vector<ColorType>& palette) {
 
   /*  std::ofstream stream(filename, std::ios::binary);
          stream.exceptions(std::ios::badbit);*/
-  auto image = create_image(mat, palette);
+  auto image = png_create(mat, palette);
 
   image.write(filename);
 }
 
 template<class ColorType>
 std::string
-write_mat(const cv::Mat& mat, const std::vector<ColorType>& palette) {
+png_write(const cv::Mat& mat, const std::vector<ColorType>& palette) {
   std::ostringstream os;
-  auto image = create_image(mat, palette);
+  auto image = png_create(mat, palette);
   image.write_stream(os);
   return os.str();
 }

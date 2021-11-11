@@ -2,61 +2,68 @@
 #define GIF_WRITE_HPP
 
 #include "gifenc/gifenc.h"
-#include <ext/alloc_traits.h>
-#include <opencv2/core/hal/interface.h>
-#include <stddef.h>
-#include <fstream>
-#include <sstream>
-#include <opencv2/core/mat.hpp>
-#include <opencv2/core/mat.inl.hpp>
-#include <string>
+#include "util.hpp"
+#include <opencv2/core.hpp>
 #include <vector>
-
-/*template<class ColorType>
-static inline ge_GIF *
-create_image(const cv::Mat& mat, const std::vector<ColorType>& palette) {
-
-  gif::image<gif::index_pixel> image(mat.cols, mat.rows);
-
-  gif::palette pal(palette.size());
-  size_t i = 0;
-
-  for(const ColorType& color : palette) {
-    pal[i] = gif::color(color.r, color.g, color.b);
-    i++;
-  }
-
-  image.set_palette(pal);
-
-  for(gif::uint_32 y = 0; y < mat.rows; ++y) {
-    for(gif::uint_32 x = 0; x < mat.cols; ++x) {
-      auto index = mat.at<uchar>(y, x);
-       image[y][x] = gif::index_pixel(index);
-    }
-  }
-
-  return image;
-}*/
+#include <algorithm>
 
 template<class ColorType>
 void
-write_mat(const std::string& filename, const cv::Mat& mat, const std::vector<ColorType>& palette) {
+gif_write(const std::string& filename,
+          const std::vector<cv::Mat>& mats,
+          const std::vector<int>& delays,
+          const std::vector<ColorType>& palette,
+          int transparent = -1,
+          int loop = 0) {
+  size_t i, n, size, depth;
 
-ge_GIF *gif = ge_new_gif(filename.c_str(), mat.cols, mat.rows, reinterpret_cast<uint8_t*>( palette.data() ), 8, 0, -1);
+  std::vector<std::array<uint8_t, 3>> pal;
 
-/*
-  auto image = create_image(mat, palette);
+  depth = ceil(log2(palette.size()));
+  size = pow(2, depth);
+  n = palette.size();
+  pal.resize(size);
 
-  image.write(filename);*/
+  for(i = 0; i < n; i++) {
+    pal[i][0] = palette[i].r;
+    pal[i][1] = palette[i].g;
+    pal[i][2] = palette[i].b;
+  }
+
+  size_t frames = mats.size();
+  std::vector<size_t> widths, heights;
+
+  widths.resize(frames);
+  heights.resize(frames);
+
+  std::transform(mats.begin(), mats.end(), widths.begin(), [](const cv::Mat& mat) -> size_t { return mat.cols; });
+  std::transform(mats.begin(), mats.end(), heights.begin(), [](const cv::Mat& mat) -> size_t { return mat.rows; });
+
+  std::sort(widths.begin(), widths.end());
+  std::sort(heights.begin(), heights.end());
+
+  size_t w = widths[0];
+  size_t h = heights[0];
+
+  ge_GIF* gif = ge_new_gif(filename.c_str(), w, h, reinterpret_cast<uint8_t*>(pal.data()), depth, transparent, loop);
+  size_t frame = 0;
+
+  for(const cv::Mat& mat : mats) {
+    size_t x, y, index = 0;
+
+    if(frame > 0)
+      ge_add_frame(gif, delays[(frame - 1) % delays.size()]);
+
+    for(x = 0; x < w; x++) {
+      for(y = 0; y < h; y++) {
+        uint8_t pixel = mat_at<uchar>(mat, y, x);
+
+        gif->frame[index++] = pixel;
+      }
+    }
+    frame++;
+  }
+  ge_close_gif(gif);
 }
-
-/*template<class ColorType>
-std::string
-write_mat(const cv::Mat& mat, const std::vector<ColorType>& palette) {
-  std::ostringstream os;
-  auto image = create_image(mat, palette);
-  image.write_stream(os);
-  return os.str();
-}*/
 
 #endif /* GIF_WRITE_HPP */

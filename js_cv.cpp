@@ -6,6 +6,7 @@
 #include "js_umat.hpp"
 #include "jsbindings.hpp"
 #include "png_write.hpp"
+#include "gif_write.hpp"
 #include <quickjs.h>
 #include "util.hpp"
 #include <bits/exception.h>
@@ -64,7 +65,7 @@ js_cv_imencode(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
   const char* ext = JS_ToCString(ctx, argv[0]);
   JSInputOutputArray image = js_cv_inputoutputarray(ctx, argv[1]);
   JSValue ret = JS_UNDEFINED;
-  if(argc > 3 && str_end(ext, "png") && image.isMat()) {
+  if(argc >= 3 && str_end(ext, "png") && image.isMat()) {
     double max;
     std::string data;
     std::vector<JSColorData<uint8_t>> palette;
@@ -72,8 +73,8 @@ js_cv_imencode(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
     cv::minMaxLoc(image, nullptr, &max);
     if(palette.size() < size_t(max))
       palette.resize(size_t(max));
-    printf("png++ write_mat '%s' [%zu]\n", ext, palette.size());
-    data = write_mat(image.getMatRef(), palette);
+    printf("png_write '%s' [%zu]\n", ext, palette.size());
+    data = png_write(image.getMatRef(), palette);
     ret = JS_NewArrayBufferCopy(ctx, (const uint8_t*)data.data(), data.size());
   } else {
     std::vector<uchar> buf;
@@ -103,7 +104,30 @@ js_cv_imwrite(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* arg
   if(image.empty())
     return JS_ThrowInternalError(ctx, "Empty image");
 
-  if(argc > 2 && /*image.type() == CV_8UC1 &&*/ str_end(filename, ".png") && image.isMat()) {
+  if(argc >= 4 && str_end(filename, "gif") && js_is_array(ctx, argv[1])) {
+    double max;
+    std::string data;
+    std::vector<JSColorData<uint8_t>> palette;
+    std::vector<cv::Mat> mats;
+    std::vector<int> delays;
+    int32_t transparent = -1, loop = 0;
+
+    js_array_to(ctx, argv[2], palette);
+    cv::minMaxLoc(image, nullptr, &max);
+    if(palette.size() < size_t(max))
+      palette.resize(size_t(max));
+    js_array_to(ctx, argv[1], mats);
+    js_array_to(ctx, argv[3], delays);
+
+    if(argc > 4)
+      JS_ToInt32(ctx, &transparent, argv[4]);
+    if(argc > 5)
+      JS_ToInt32(ctx, &loop, argv[5]);
+
+    printf("gif_write '%s' [%zu]\n", filename, palette.size());
+    gif_write(filename, mats, delays, palette, transparent, loop);
+
+  } else if(argc > 2 && /*image.type() == CV_8UC1 &&*/ str_end(filename, ".png") && image.isMat()) {
     double max;
     std::vector<JSColorData<uint8_t>> palette;
     js_array_to(ctx, argv[2], palette);
@@ -111,7 +135,7 @@ js_cv_imwrite(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* arg
     if(palette.size() < size_t(max))
       palette.resize(size_t(max));
     printf("png++ write_mat '%s' [%zu]\n", filename, palette.size());
-    write_mat(filename, image.getMatRef(), palette);
+    png_write(filename, image.getMatRef(), palette);
   } else {
     cv::imwrite(filename, image);
   }
