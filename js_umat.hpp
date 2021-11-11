@@ -74,8 +74,9 @@ js_input_array(JSContext* ctx, JSValueConst value) {
 
   if(js_is_typedarray(ctx, value)) {
     TypedArrayProps props = js_typedarray_props(ctx, value);
-    size_t len = props.size();
-    switch(TypedArrayValue(js_typedarray_type(ctx, value))) {
+    TypedArrayValue type = js_typedarray_type(ctx, value);
+
+    switch(type) {
       case TYPEDARRAY_UINT8: return typed_input_array<uint8_t>(props);
       case TYPEDARRAY_INT8: return typed_input_array<int8_t>(props);
       case TYPEDARRAY_UINT16: return typed_input_array<uint16_t>(props);
