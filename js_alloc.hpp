@@ -18,8 +18,7 @@ template<class T> struct js_alloc_mmap {
 
   static T*
   allocate(JSContext* ctx) {
-    return reinterpret_cast<T*>(
-        static_cast<char*>(mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)) + offset);
+    return reinterpret_cast<T*>(static_cast<char*>(mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)) + offset);
   }
   static void
   deallocate(JSContext* ctx, T* ptr) {

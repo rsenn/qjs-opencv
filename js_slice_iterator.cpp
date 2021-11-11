@@ -156,10 +156,7 @@ js_slice_iterator_init(JSContext* ctx, JSModuleDef* m) {
     JS_NewClass(JS_GetRuntime(ctx), js_slice_iterator_class_id, &js_slice_iterator_class);
 
     slice_iterator_proto = JS_NewObject(ctx);
-    JS_SetPropertyFunctionList(ctx,
-                               slice_iterator_proto,
-                               js_slice_iterator_proto_funcs,
-                               countof(js_slice_iterator_proto_funcs));
+    JS_SetPropertyFunctionList(ctx, slice_iterator_proto, js_slice_iterator_proto_funcs, countof(js_slice_iterator_proto_funcs));
     JS_SetClassProto(ctx, js_slice_iterator_class_id, slice_iterator_proto);
 
     slice_iterator_class = JS_NewCFunction2(ctx, js_slice_iterator_constructor, "SliceIterator", 2, JS_CFUNC_constructor, 0);

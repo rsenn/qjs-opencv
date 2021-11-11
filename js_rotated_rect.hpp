@@ -11,8 +11,7 @@ extern JSClassID js_rotated_rect_class_id;
 
 extern "C" VISIBLE int js_rotated_rect_init(JSContext*, JSModuleDef*);
 
-VISIBLE JSValue js_rotated_rect_new(
-    JSContext* ctx, JSValueConst proto, const JSPointData<float>& center, const JSSizeData<float>& size, float angle);
+VISIBLE JSValue js_rotated_rect_new(JSContext* ctx, JSValueConst proto, const JSPointData<float>& center, const JSSizeData<float>& size, float angle);
 
 static inline JSValue
 js_rotated_rect_new(JSContext* ctx, const JSPointData<float>& center, const JSSizeData<float>& size, float angle) {

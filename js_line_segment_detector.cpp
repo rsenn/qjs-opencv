@@ -201,20 +201,13 @@ js_line_segment_detector_init(JSContext* ctx, JSModuleDef* m) {
     JS_NewClass(JS_GetRuntime(ctx), js_line_segment_detector_class_id, &js_line_segment_detector_class);
 
     line_segment_detector_proto = JS_NewObject(ctx);
-    JS_SetPropertyFunctionList(ctx,
-                               line_segment_detector_proto,
-                               js_line_segment_detector_proto_funcs,
-                               countof(js_line_segment_detector_proto_funcs));
+    JS_SetPropertyFunctionList(ctx, line_segment_detector_proto, js_line_segment_detector_proto_funcs, countof(js_line_segment_detector_proto_funcs));
     JS_SetClassProto(ctx, js_line_segment_detector_class_id, line_segment_detector_proto);
 
-    line_segment_detector_class =
-        JS_NewCFunction2(ctx, js_line_segment_detector_ctor, "LineSegmentDetector", 2, JS_CFUNC_constructor, 0);
+    line_segment_detector_class = JS_NewCFunction2(ctx, js_line_segment_detector_ctor, "LineSegmentDetector", 2, JS_CFUNC_constructor, 0);
     /* set proto.constructor and ctor.prototype */
     JS_SetConstructor(ctx, line_segment_detector_class, line_segment_detector_proto);
-    JS_SetPropertyFunctionList(ctx,
-                               line_segment_detector_class,
-                               js_line_segment_detector_static_funcs,
-                               countof(js_line_segment_detector_static_funcs));
+    JS_SetPropertyFunctionList(ctx, line_segment_detector_class, js_line_segment_detector_static_funcs, countof(js_line_segment_detector_static_funcs));
   }
 
   if(m)

@@ -9,17 +9,13 @@
 #include <vector>
 #include <algorithm>
 
-template<class ColorType>
+namespace {
+template<class ColorType, template<typename> typename C = std::vector>
 void
-gif_write(const std::string& filename,
-          const std::vector<cv::Mat>& mats,
-          const std::vector<int>& delays,
-          const std::vector<ColorType>& palette,
-          int transparent = -1,
-          int loop = 0) {
+gif_write(const std::string& file, const C<cv::Mat>& mats, const C<int>& delays, const C<ColorType>& palette, int transparent = -1, int loop = 0) {
   size_t i, n, size, depth;
 
-  std::vector<uint8_t> pal;
+  C<uint8_t> pal;
 
   depth = ceil(log2(palette.size()));
   size = pow(2, depth);
@@ -33,7 +29,7 @@ gif_write(const std::string& filename,
   }
 
   size_t frames = mats.size();
-  std::vector<size_t> widths, heights;
+  C<size_t> widths, heights;
 
   widths.resize(frames);
   heights.resize(frames);
@@ -47,7 +43,7 @@ gif_write(const std::string& filename,
   size_t w = widths[0];
   size_t h = heights[0];
 
-  ge_GIF* gif = ge_new_gif(filename.c_str(), w, h, reinterpret_cast<uint8_t*>(pal.data()), depth, transparent, loop);
+  ge_GIF* gif = ge_new_gif(file.c_str(), w, h, reinterpret_cast<uint8_t*>(pal.data()), depth, transparent, loop);
   size_t frame = 0;
 
   for(const cv::Mat& mat : mats) {
@@ -73,5 +69,6 @@ gif_write(const std::string& filename,
   }
   ge_close_gif(gif);
 }
+} // namespace
 
 #endif /* GIF_WRITE_HPP */

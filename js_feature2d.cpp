@@ -186,13 +186,8 @@ js_feature2d_akaze(JSContext* ctx, JSValueConst new_target, int argc, JSValueCon
   if(argc >= 7)
     JS_ToInt32(ctx, &diffusivity, argv[6]);
 
-  akaze = AKAZE::create(AKAZE::DescriptorType(descriptor_type),
-                        descriptor_size,
-                        descriptor_channels,
-                        threshold,
-                        nOctaves,
-                        nOctaveLayers,
-                        KAZE::DiffusivityType(diffusivity));
+  akaze = AKAZE::create(
+      AKAZE::DescriptorType(descriptor_type), descriptor_size, descriptor_channels, threshold, nOctaves, nOctaveLayers, KAZE::DiffusivityType(diffusivity));
 
   ret = js_feature2d_wrap(ctx, akaze);
   js_set_tostringtag(ctx, ret, "AKAZE");
@@ -367,8 +362,7 @@ js_feature2d_mser(JSContext* ctx, JSValueConst new_target, int argc, JSValueCons
   if(argc >= 9)
     JS_ToInt32(ctx, &edgeBlurSize, argv[8]);
 
-  mser =
-      MSER::create(delta, minArea, maxArea, maxVariation, minDiversity, maxEvolution, areaThreshold, minMargin, edgeBlurSize);
+  mser = MSER::create(delta, minArea, maxArea, maxVariation, minDiversity, maxEvolution, areaThreshold, minMargin, edgeBlurSize);
   ret = js_feature2d_wrap(ctx, mser);
   js_set_tostringtag(ctx, ret, "MSER");
   return ret;
@@ -403,8 +397,7 @@ js_feature2d_orb(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst
   if(argc >= 9)
     JS_ToInt32(ctx, &fastThreshold, argv[8]);
 
-  orb = ORB::create(
-      nfeatures, scaleFactor, nlevels, edgeThreshold, firstLevel, WTA_K, ORB::ScoreType(scoreType), patchSize, fastThreshold);
+  orb = ORB::create(nfeatures, scaleFactor, nlevels, edgeThreshold, firstLevel, WTA_K, ORB::ScoreType(scoreType), patchSize, fastThreshold);
   ret = js_feature2d_wrap(ctx, orb);
   js_set_tostringtag(ctx, ret, "ORB");
   return ret;
@@ -668,15 +661,8 @@ js_feature2d_msd(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst
   if(argc >= 9)
     m_compute_orientation = JS_ToBool(ctx, argv[8]);
 
-  msd = MSDDetector::create(m_patch_radius,
-                            m_search_area_radius,
-                            m_nms_radius,
-                            m_nms_scale_radius,
-                            m_th_saliency,
-                            m_kNN,
-                            m_scale_factor,
-                            m_n_scales,
-                            m_compute_orientation);
+  msd = MSDDetector::create(
+      m_patch_radius, m_search_area_radius, m_nms_radius, m_nms_scale_radius, m_th_saliency, m_kNN, m_scale_factor, m_n_scales, m_compute_orientation);
   ret = js_feature2d_wrap(ctx, msd);
   js_set_tostringtag(ctx, ret, "MSDDetector");
   return ret;
@@ -961,30 +947,29 @@ const JSCFunctionListEntry js_feature2d_proto_funcs[] = {
     // JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Feature2D", JS_PROP_CONFIGURABLE),
 };
 
-static JSConstructor js_feature2d_classes[] = {
-    JSConstructor(js_feature2d_affine, "AffineFeature"),
-    JSConstructor(js_feature2d_agast, "AgastFeatureDetector", js_feature2d_agast_static_funcs),
-    JSConstructor(js_feature2d_akaze, "AKAZE", js_feature2d_akaze_static_funcs),
-    JSConstructor(js_feature2d_brisk, "BRISK"),
-    JSConstructor(js_feature2d_fast, "FastFeatureDetector", js_feature2d_fast_static_funcs),
-    JSConstructor(js_feature2d_gftt, "GFTTDetector"),
-    JSConstructor(js_feature2d_kaze, "KAZE", js_feature2d_kaze_static_funcs),
-    JSConstructor(js_feature2d_mser, "MSER"),
-    JSConstructor(js_feature2d_orb, "ORB", js_feature2d_orb_static_funcs),
-    JSConstructor(js_feature2d_sift, "SIFT"),
-    JSConstructor(js_feature2d_simple_blob, "SimpleBlobDetector"),
-    JSConstructor(js_feature2d_affine, "AffineFeature2D"),
-    JSConstructor(js_feature2d_boost, "BoostDesc", js_feature2d_boost_static_funcs),
-    JSConstructor(js_feature2d_brief, "BriefDescriptorExtractor"),
-    JSConstructor(js_feature2d_daisy, "DAISY", js_feature2d_daisy_static_funcs),
-    JSConstructor(js_feature2d_freak, "FREAK"),
-    JSConstructor(js_feature2d_harris_laplace, "HarrisLaplaceFeatureDetector"),
-    JSConstructor(js_feature2d_latch, "LATCH"),
-    JSConstructor(js_feature2d_lucid, "LUCID"),
-    JSConstructor(js_feature2d_msd, "MSDDetector"),
-    JSConstructor(js_feature2d_star, "StarDetector"),
-    JSConstructor(js_feature2d_surf, "SURF"),
-    JSConstructor(js_feature2d_vgg, "VGG", js_feature2d_vgg_static_funcs)};
+static JSConstructor js_feature2d_classes[] = {JSConstructor(js_feature2d_affine, "AffineFeature"),
+                                               JSConstructor(js_feature2d_agast, "AgastFeatureDetector", js_feature2d_agast_static_funcs),
+                                               JSConstructor(js_feature2d_akaze, "AKAZE", js_feature2d_akaze_static_funcs),
+                                               JSConstructor(js_feature2d_brisk, "BRISK"),
+                                               JSConstructor(js_feature2d_fast, "FastFeatureDetector", js_feature2d_fast_static_funcs),
+                                               JSConstructor(js_feature2d_gftt, "GFTTDetector"),
+                                               JSConstructor(js_feature2d_kaze, "KAZE", js_feature2d_kaze_static_funcs),
+                                               JSConstructor(js_feature2d_mser, "MSER"),
+                                               JSConstructor(js_feature2d_orb, "ORB", js_feature2d_orb_static_funcs),
+                                               JSConstructor(js_feature2d_sift, "SIFT"),
+                                               JSConstructor(js_feature2d_simple_blob, "SimpleBlobDetector"),
+                                               JSConstructor(js_feature2d_affine, "AffineFeature2D"),
+                                               JSConstructor(js_feature2d_boost, "BoostDesc", js_feature2d_boost_static_funcs),
+                                               JSConstructor(js_feature2d_brief, "BriefDescriptorExtractor"),
+                                               JSConstructor(js_feature2d_daisy, "DAISY", js_feature2d_daisy_static_funcs),
+                                               JSConstructor(js_feature2d_freak, "FREAK"),
+                                               JSConstructor(js_feature2d_harris_laplace, "HarrisLaplaceFeatureDetector"),
+                                               JSConstructor(js_feature2d_latch, "LATCH"),
+                                               JSConstructor(js_feature2d_lucid, "LUCID"),
+                                               JSConstructor(js_feature2d_msd, "MSDDetector"),
+                                               JSConstructor(js_feature2d_star, "StarDetector"),
+                                               JSConstructor(js_feature2d_surf, "SURF"),
+                                               JSConstructor(js_feature2d_vgg, "VGG", js_feature2d_vgg_static_funcs)};
 
 extern "C" int
 js_feature2d_init(JSContext* ctx, JSModuleDef* m) {

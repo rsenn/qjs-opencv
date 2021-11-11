@@ -353,19 +353,10 @@ js_cv_good_features_to_track(JSContext* ctx, JSValueConst this_val, int argc, JS
     JS_ToFloat64(ctx, &k, argv[argind]);
 
   if(argind == 9)
-    cv::goodFeaturesToTrack(*image,
-                            *corners,
-                            maxCorners,
-                            qualityLevel,
-                            minDistance,
-                            mask ? *mask : cv::noArray(),
-                            blockSize,
-                            gradientSize,
-                            useHarrisDetector,
-                            k);
-  else
     cv::goodFeaturesToTrack(
-        *image, *corners, maxCorners, qualityLevel, minDistance, mask ? *mask : cv::noArray(), blockSize, useHarrisDetector, k);
+        *image, *corners, maxCorners, qualityLevel, minDistance, mask ? *mask : cv::noArray(), blockSize, gradientSize, useHarrisDetector, k);
+  else
+    cv::goodFeaturesToTrack(*image, *corners, maxCorners, qualityLevel, minDistance, mask ? *mask : cv::noArray(), blockSize, useHarrisDetector, k);
 
   return JS_UNDEFINED;
 }
@@ -505,16 +496,8 @@ js_cv_calc_hist(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
       rangePtr[i] = ranges[i].data();
     }
 
-    cv::calcHist(const_cast<const cv::Mat*>(images.data()),
-                 images.size(),
-                 channels.data(),
-                 *mask,
-                 *hist,
-                 dims,
-                 histSize.data(),
-                 rangePtr.data(),
-                 uniform,
-                 accumulate);
+    cv::calcHist(
+        const_cast<const cv::Mat*>(images.data()), images.size(), channels.data(), *mask, *hist, dims, histSize.data(), rangePtr.data(), uniform, accumulate);
   }
   return JS_UNDEFINED;
 }
@@ -816,9 +799,7 @@ js_cv_palette_generate(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
 
   result.resize(palette.size());
 
-  std::transform(palette.begin(), palette.end(), result.begin(), [](const cv::Scalar& entry) -> cv::Vec3i {
-    return cv::Vec3b(entry[0], entry[1], entry[2]);
-  });
+  std::transform(palette.begin(), palette.end(), result.begin(), [](const cv::Scalar& entry) -> cv::Vec3i { return cv::Vec3b(entry[0], entry[1], entry[2]); });
   ret = js_array_from(ctx, result);
 
   return ret;

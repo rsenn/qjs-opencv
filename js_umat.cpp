@@ -99,10 +99,7 @@ js_umat_dimensions(const JSUMatData& umat) {
   std::vector<int> sizes = js_umat_sizes(umat);
   std::vector<std::string> dimensions;
 
-  std::transform(sizes.cbegin(),
-                 sizes.cend(),
-                 std::back_inserter(dimensions),
-                 static_cast<std::string (*)(int)>(&std::to_string));
+  std::transform(sizes.cbegin(), sizes.cend(), std::back_inserter(dimensions), static_cast<std::string (*)(int)>(&std::to_string));
   return dimensions;
 }
 
@@ -699,11 +696,7 @@ js_umat_tostring(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* 
         if(um->type() == CV_32FC1)
           os << mat_at<float>(*um, y, x);
         else
-          os << std::setfill('0') << std::setbase(16)
-             << std::setw(um->type() == CV_8UC4   ? 8
-                          : um->type() == CV_8UC1 ? 2
-                                                  : 6)
-             << mat_at<uint32_t>(*um, y, x);
+          os << std::setfill('0') << std::setbase(16) << std::setw(um->type() == CV_8UC4 ? 8 : um->type() == CV_8UC1 ? 2 : 6) << mat_at<uint32_t>(*um, y, x);
       }
     }
 
@@ -1026,50 +1019,49 @@ JSClassDef js_umat_class = {
     .call = js_umat_call,
 };
 
-const JSCFunctionListEntry js_umat_proto_funcs[] = {
-    JS_CGETSET_MAGIC_DEF("cols", js_umat_get_props, NULL, PROP_COLS),
-    JS_CGETSET_MAGIC_DEF("rows", js_umat_get_props, NULL, PROP_ROWS),
-    JS_CGETSET_MAGIC_DEF("channels", js_umat_get_props, NULL, PROP_CHANNELS),
-    JS_CGETSET_MAGIC_DEF("type", js_umat_get_props, NULL, PROP_TYPE),
-    JS_CGETSET_MAGIC_DEF("depth", js_umat_get_props, NULL, PROP_DEPTH),
-    JS_CGETSET_MAGIC_DEF("empty", js_umat_get_props, NULL, PROP_EMPTY),
-    JS_CGETSET_MAGIC_DEF("total", js_umat_get_props, NULL, PROP_TOTAL),
-    JS_CGETSET_MAGIC_DEF("size", js_umat_get_props, NULL, PROP_SIZE),
-    JS_CGETSET_MAGIC_DEF("continuous", js_umat_get_props, NULL, PROP_CONTINUOUS),
-    JS_CGETSET_MAGIC_DEF("submatrix", js_umat_get_props, NULL, PROP_SUBMATRIX),
-    JS_CGETSET_MAGIC_DEF("step", js_umat_get_props, NULL, PROP_STEP),
-    JS_CGETSET_MAGIC_DEF("elemSize", js_umat_get_props, NULL, PROP_ELEMSIZE),
-    JS_CGETSET_MAGIC_DEF("elemSize1", js_umat_get_props, NULL, PROP_ELEMSIZE1),
-    JS_CGETSET_DEF("buffer", js_umat_buffer, NULL),
-    JS_CGETSET_DEF("array", js_umat_array, NULL),
-    JS_CFUNC_MAGIC_DEF("col", 1, js_umat_funcs, METHOD_COL),
-    JS_CFUNC_MAGIC_DEF("row", 1, js_umat_funcs, METHOD_ROW),
-    JS_CFUNC_MAGIC_DEF("colRange", 2, js_umat_funcs, METHOD_COL_RANGE),
-    JS_CFUNC_MAGIC_DEF("rowRange", 2, js_umat_funcs, METHOD_ROW_RANGE),
-    JS_CFUNC_MAGIC_DEF("clone", 0, js_umat_funcs, METHOD_CLONE),
-    JS_CFUNC_MAGIC_DEF("roi", 0, js_umat_funcs, METHOD_ROI),
-    JS_CFUNC_MAGIC_DEF("release", 0, js_umat_funcs, METHOD_RELEASE),
-    JS_CFUNC_MAGIC_DEF("dup", 0, js_umat_funcs, METHOD_DUP),
-    JS_CFUNC_MAGIC_DEF("clear", 0, js_umat_funcs, METHOD_CLEAR),
-    JS_CFUNC_MAGIC_DEF("reset", 0, js_umat_funcs, METHOD_RESET),
-    JS_CFUNC_MAGIC_DEF("step1", 0, js_umat_funcs, METHOD_STEP1),
-    JS_CFUNC_MAGIC_DEF("locateROI", 0, js_umat_funcs, METHOD_LOCATE_ROI),
+const JSCFunctionListEntry js_umat_proto_funcs[] = {JS_CGETSET_MAGIC_DEF("cols", js_umat_get_props, NULL, PROP_COLS),
+                                                    JS_CGETSET_MAGIC_DEF("rows", js_umat_get_props, NULL, PROP_ROWS),
+                                                    JS_CGETSET_MAGIC_DEF("channels", js_umat_get_props, NULL, PROP_CHANNELS),
+                                                    JS_CGETSET_MAGIC_DEF("type", js_umat_get_props, NULL, PROP_TYPE),
+                                                    JS_CGETSET_MAGIC_DEF("depth", js_umat_get_props, NULL, PROP_DEPTH),
+                                                    JS_CGETSET_MAGIC_DEF("empty", js_umat_get_props, NULL, PROP_EMPTY),
+                                                    JS_CGETSET_MAGIC_DEF("total", js_umat_get_props, NULL, PROP_TOTAL),
+                                                    JS_CGETSET_MAGIC_DEF("size", js_umat_get_props, NULL, PROP_SIZE),
+                                                    JS_CGETSET_MAGIC_DEF("continuous", js_umat_get_props, NULL, PROP_CONTINUOUS),
+                                                    JS_CGETSET_MAGIC_DEF("submatrix", js_umat_get_props, NULL, PROP_SUBMATRIX),
+                                                    JS_CGETSET_MAGIC_DEF("step", js_umat_get_props, NULL, PROP_STEP),
+                                                    JS_CGETSET_MAGIC_DEF("elemSize", js_umat_get_props, NULL, PROP_ELEMSIZE),
+                                                    JS_CGETSET_MAGIC_DEF("elemSize1", js_umat_get_props, NULL, PROP_ELEMSIZE1),
+                                                    JS_CGETSET_DEF("buffer", js_umat_buffer, NULL),
+                                                    JS_CGETSET_DEF("array", js_umat_array, NULL),
+                                                    JS_CFUNC_MAGIC_DEF("col", 1, js_umat_funcs, METHOD_COL),
+                                                    JS_CFUNC_MAGIC_DEF("row", 1, js_umat_funcs, METHOD_ROW),
+                                                    JS_CFUNC_MAGIC_DEF("colRange", 2, js_umat_funcs, METHOD_COL_RANGE),
+                                                    JS_CFUNC_MAGIC_DEF("rowRange", 2, js_umat_funcs, METHOD_ROW_RANGE),
+                                                    JS_CFUNC_MAGIC_DEF("clone", 0, js_umat_funcs, METHOD_CLONE),
+                                                    JS_CFUNC_MAGIC_DEF("roi", 0, js_umat_funcs, METHOD_ROI),
+                                                    JS_CFUNC_MAGIC_DEF("release", 0, js_umat_funcs, METHOD_RELEASE),
+                                                    JS_CFUNC_MAGIC_DEF("dup", 0, js_umat_funcs, METHOD_DUP),
+                                                    JS_CFUNC_MAGIC_DEF("clear", 0, js_umat_funcs, METHOD_CLEAR),
+                                                    JS_CFUNC_MAGIC_DEF("reset", 0, js_umat_funcs, METHOD_RESET),
+                                                    JS_CFUNC_MAGIC_DEF("step1", 0, js_umat_funcs, METHOD_STEP1),
+                                                    JS_CFUNC_MAGIC_DEF("locateROI", 0, js_umat_funcs, METHOD_LOCATE_ROI),
 
-    JS_CFUNC_MAGIC_DEF("zero", 2, js_umat_fill, 0),
-    JS_CFUNC_MAGIC_DEF("one", 2, js_umat_fill, 1),
+                                                    JS_CFUNC_MAGIC_DEF("zero", 2, js_umat_fill, 0),
+                                                    JS_CFUNC_MAGIC_DEF("one", 2, js_umat_fill, 1),
 
-    JS_CFUNC_DEF("toString", 0, js_umat_tostring),
-    JS_CFUNC_DEF("inspect", 0, js_umat_inspect),
-    JS_CFUNC_DEF("at", 1, js_umat_at),
-    JS_CFUNC_DEF("set", 2, js_umat_set),
-    JS_CFUNC_DEF("setTo", 0, js_umat_set_to),
-    JS_CFUNC_DEF("convertTo", 2, js_umat_convert_to),
-    JS_CFUNC_DEF("copyTo", 1, js_umat_copy_to),
-    JS_CFUNC_DEF("reshape", 1, js_umat_reshape),
-    JS_CFUNC_DEF("getMat", 1, js_umat_getmat),
-    JS_ALIAS_DEF("[Symbol.toPrimitive]", "toString"),
+                                                    JS_CFUNC_DEF("toString", 0, js_umat_tostring),
+                                                    JS_CFUNC_DEF("inspect", 0, js_umat_inspect),
+                                                    JS_CFUNC_DEF("at", 1, js_umat_at),
+                                                    JS_CFUNC_DEF("set", 2, js_umat_set),
+                                                    JS_CFUNC_DEF("setTo", 0, js_umat_set_to),
+                                                    JS_CFUNC_DEF("convertTo", 2, js_umat_convert_to),
+                                                    JS_CFUNC_DEF("copyTo", 1, js_umat_copy_to),
+                                                    JS_CFUNC_DEF("reshape", 1, js_umat_reshape),
+                                                    JS_CFUNC_DEF("getMat", 1, js_umat_getmat),
+                                                    JS_ALIAS_DEF("[Symbol.toPrimitive]", "toString"),
 
-    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "UMat", JS_PROP_CONFIGURABLE)
+                                                    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "UMat", JS_PROP_CONFIGURABLE)
 
 };
 

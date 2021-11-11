@@ -154,8 +154,7 @@ js_draw_ellipse(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
     }
   }
 
-  cv::ellipse(
-      dst, center, axes, angle, startAngle, endAngle, js_to_scalar(color), thickness < 0 ? cv::FILLED : thickness, lineType);
+  cv::ellipse(dst, center, axes, angle, startAngle, endAngle, js_to_scalar(color), thickness < 0 ? cv::FILLED : thickness, lineType);
 
   return JS_UNDEFINED;
 }
@@ -192,8 +191,7 @@ js_draw_contour(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
   if(argc > i)
     JS_ToInt32(ctx, &lineType, argv[i]);
 
-  std::cerr << "draw_contour() contours.length=" << contours.size() << " contourIdx=" << contourIdx
-            << " thickness=" << thickness << std::endl;
+  std::cerr << "draw_contour() contours.length=" << contours.size() << " contourIdx=" << contourIdx << " thickness=" << thickness << std::endl;
 
   cv::drawContours(dst, contours, contourIdx, js_to_scalar(color), thickness, lineType);
 
@@ -240,15 +238,7 @@ js_draw_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* 
   // contourIdx << " thickness="
   // << thickness << std::endl;
 
-  cv::drawContours(dst,
-                   contours,
-                   contourIdx,
-                   js_to_scalar(color),
-                   thickness,
-                   lineType,
-                   argc > 6 ? JSInputOutputArray(hier) : cv::noArray(),
-                   maxLevel,
-                   offset);
+  cv::drawContours(dst, contours, contourIdx, js_to_scalar(color), thickness, lineType, argc > 6 ? JSInputOutputArray(hier) : cv::noArray(), maxLevel, offset);
 
   // std::cerr << "draw_contours() ret:" << ret << " color: " <<
   // js_to_scalar(color) << std::endl;
@@ -297,15 +287,7 @@ js_draw_line(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv
   if(argc > i && JS_IsBool(argv[i]))
     js_value_to(ctx, argv[i++], antialias);
 
-  printf("cv::line %i|%i -> %i|%i [%.0lf,%.0lf,%.0lf] %i\n",
-         points[0].x,
-         points[0].y,
-         points[1].x,
-         points[1].y,
-         scalar[0],
-         scalar[1],
-         scalar[2],
-         thickness);
+  printf("cv::line %i|%i -> %i|%i [%.0lf,%.0lf,%.0lf] %i\n", points[0].x, points[0].y, points[1].x, points[1].y, scalar[0], scalar[1], scalar[2], thickness);
 
   cv::line(dst, points[0], points[1], scalar, thickness, antialias ? cv::LINE_AA : cv::LINE_8);
   return JS_UNDEFINED;
@@ -346,8 +328,7 @@ js_draw_polygon(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
     std::cerr << "drawPolygon() points: " << (points) << " color: " << to_string(color) << std::endl;
 
     // cv::fillPoly(*dptr, points, color, antialias ? cv::LINE_AA : cv::LINE_8);
-    (thickness <= 0 ? cv::fillPoly(dst, &pts, &size, 1, color, lineType)
-                    : cv::polylines(dst, &pts, &size, 1, true, color, thickness, lineType));
+    (thickness <= 0 ? cv::fillPoly(dst, &pts, &size, 1, color, lineType) : cv::polylines(dst, &pts, &size, 1, true, color, thickness, lineType));
 
     return JS_UNDEFINED;
   }

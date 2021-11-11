@@ -22,8 +22,7 @@ pixel_neighborhood_cross_pred(const cv::Mat& mat, Callable pred) {
   for(int y = 1; y < mat.rows - 1; y++) {
     for(int x = 1; x < mat.cols - 1; x++) {
 
-      uchar count = (mat.at<uchar>(y - 1, x) > 0) + (mat.at<uchar>(y, x + 1) > 0) + (mat.at<uchar>(y + 1, x) > 0) +
-                    (mat.at<uchar>(y, x - 1) > 0);
+      uchar count = (mat.at<uchar>(y - 1, x) > 0) + (mat.at<uchar>(y, x + 1) > 0) + (mat.at<uchar>(y + 1, x) > 0) + (mat.at<uchar>(y, x - 1) > 0);
 
       result.at<uchar>(y, x) = pred(mat.at<uchar>(y, x), count);
     }

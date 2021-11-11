@@ -315,18 +315,7 @@ js_rect_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
   return obj;
 }
 
-enum {
-  METHOD_CONTAINS = 0,
-  METHOD_EMPTY,
-  METHOD_AREA,
-  METHOD_BR,
-  METHOD_TL,
-  METHOD_SIZE,
-  METHOD_INSET,
-  METHOD_OUTSET,
-  METHOD_HSPLIT,
-  METHOD_VSPLIT
-};
+enum { METHOD_CONTAINS = 0, METHOD_EMPTY, METHOD_AREA, METHOD_BR, METHOD_TL, METHOD_SIZE, METHOD_INSET, METHOD_OUTSET, METHOD_HSPLIT, METHOD_VSPLIT };
 
 static JSValue
 js_rect_method(JSContext* ctx, JSValueConst rect, int argc, JSValueConst* argv, int magic) {

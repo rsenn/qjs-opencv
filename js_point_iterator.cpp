@@ -148,10 +148,7 @@ js_point_iterator_init(JSContext* ctx, JSModuleDef* m) {
     JS_NewClass(JS_GetRuntime(ctx), js_point_iterator_class_id, &js_point_iterator_class);
 
     point_iterator_proto = JS_NewObject(ctx);
-    JS_SetPropertyFunctionList(ctx,
-                               point_iterator_proto,
-                               js_point_iterator_proto_funcs,
-                               countof(js_point_iterator_proto_funcs));
+    JS_SetPropertyFunctionList(ctx, point_iterator_proto, js_point_iterator_proto_funcs, countof(js_point_iterator_proto_funcs));
     JS_SetClassProto(ctx, js_point_iterator_class_id, point_iterator_proto);
 
     point_iterator_class = JS_NewCFunction2(ctx, js_point_iterator_constructor, "PointIterator", 2, JS_CFUNC_constructor, 0);

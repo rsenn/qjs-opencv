@@ -75,8 +75,7 @@ color_distance_squared(const ColorType& c1, const ColorType& c2) {
   float dg = a.g - b.g;
   float db = a.b - b.b;
 
-  return ((2.0f + mean_r * (1.0f / 256.0f)) * square(dr) + (4.0f * square(dg)) +
-          (2.0f + ((255.0f - mean_r) * (1.0f / 256.0f))) * square(db));
+  return ((2.0f + mean_r * (1.0f / 256.0f)) * square(dr) + (4.0f * square(dg)) + (2.0f + ((255.0f - mean_r) * (1.0f / 256.0f))) * square(db));
 }
 
 template<class ColorType>
@@ -103,25 +102,34 @@ template<class ColorType>
 static inline void
 palette_match(const cv::Mat& src, JSOutputArray dst, const std::vector<ColorType>& palette, int transparent = -1) {
   cv::Mat result(src.rows, src.cols, CV_8U);
-  //(src.size(), CV_8UC1);
-  // cv::cvtColor(src, result, cv::COLOR_BGR2GRAY);
+
+  const uchar* ptr(src.ptr());
+  size_t step(src.step);
+  size_t elem_size(src.elemSize());
 
   if(transparent == -1) {
+
     for(int y = 0; y < src.rows; y++) {
       for(int x = 0; x < src.cols; x++) {
-        ColorType color = src.at<ColorType>(y, x);
+        const ColorType& color = *reinterpret_cast<const ColorType*>(ptr + (x * elem_size));
         int index = find_nearest(color, palette);
-        result.at<uchar>(y, x) = index;
+
+        if((int)(unsigned int)(uchar)index == index)
+          result.at<uchar>(y, x) = index;
       }
+      ptr += step;
     }
 
   } else {
     for(int y = 0; y < src.rows; y++) {
       for(int x = 0; x < src.cols; x++) {
-        ColorType color = src.at<ColorType>(y, x);
+        const ColorType& color = *reinterpret_cast<const ColorType*>(ptr + (x * elem_size));
         int index = color.a > 127 ? find_nearest(color, palette, transparent) : transparent;
-        result.at<uchar>(y, x) = index;
+
+        if((int)(unsigned int)(uchar)index == index)
+          result.at<uchar>(y, x) = index;
       }
+      ptr += step;
     }
   }
 

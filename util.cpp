@@ -57,16 +57,8 @@ operator<<(std::ostream& s, const JSCFunctionListEntry& entry) {
   std::string name(entry.name);
   s << name << std::setw(30 - name.size()) << ' ';
   s << "type = "
-    << (std::vector<const char*>{"CFUNC",
-                                 "CGETSET",
-                                 "CGETSET_MAGIC",
-                                 "PROP_STRING",
-                                 "PROP_INT32",
-                                 "PROP_INT64",
-                                 "PROP_DOUBLE",
-                                 "PROP_UNDEFINED",
-                                 "OBJECT",
-                                 "ALIAS"})[entry.def_type]
+    << (std::vector<const char*>{
+           "CFUNC", "CGETSET", "CGETSET_MAGIC", "PROP_STRING", "PROP_INT32", "PROP_INT64", "PROP_DOUBLE", "PROP_UNDEFINED", "OBJECT", "ALIAS"})[entry.def_type]
     << ", ";
   switch(entry.def_type) {
     case JS_DEF_CGETSET_MAGIC: s << "magic = " << (unsigned int)entry.magic << ", "; break;

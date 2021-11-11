@@ -1,8 +1,10 @@
 import * as cv from 'opencv';
 
 function main(...args) {
-  let images = [];
-  let palette = [];
+  let images = [],
+    images2 = [];
+  let palette = [],
+    palette2 = [];
   let size = new cv.Size(640, 480);
 
   let paletteImage = cv.imread('lsd/images/building.jpg');
@@ -14,6 +16,12 @@ function main(...args) {
 
     images.push(mat);
   }
+  for(let i = 0; i < 16; i++) {
+    palette2[i] = [i & 1, i & 2, i & 4].map(n => !!n | 0).map(n => n * (i & 8 ? 255 : 128));
+  }
+  /*palette2.pop();
+  palette2.unshift([0,0,0]);
+  */
   const ansiColor = (r, g, b, bg = false) => `\x1b[${bg ? 48 : 38};2;${r};${g};${b}m`;
   const noColor = () => `\x1b[0m`;
 
@@ -32,14 +40,26 @@ function main(...args) {
     for(let j = 0; j < 10; j++) {
       let coords = [randCoord(), randCoord()];
       let color = palette[j];
-      console.log('coords', coords.map(({ x, y }) => x + ',' + y).join(' -> '));
+      /* console.log('coords', coords.map(({ x, y }) => x + ',' + y).join(' -> '));
       console.log('color', color);
-      console.log('j', j);
+      console.log('j', j);*/
       cv.line(images[i], ...coords, [...color.slice(0, 3), 255], 3, false);
     }
+    images2[i] = cv.Mat.zeros(size, cv.CV_8UC1);
 
-    cv.imwrite(`test-${i}.png`, images[i], palette);
+    cv.paletteMatch(images[i], images2[i], palette, 15);
+
+    //cv.imwrite(`test-${i}.png`, images[i]/*, palette*/);
+    cv.imwrite(`test-${i}.png`, images2[i], palette, 15);
   }
+  console.log(
+    'palette2',
+    palette2
+      .map(c => c.map(n => (n + '').padStart(3)).join(', '))
+      .map(c => `[ ${c} ]`)
+      .join('\n')
+  );
+  cv.imwrite(`output.gif`, images, palette, 0);
 }
 
 main(...scriptArgs.slice(1));

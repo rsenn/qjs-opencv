@@ -17,50 +17,76 @@
 #include <string>
 #include <vector>
 
+typedef png::image<png::index_pixel> IndexedPNG;
+
+static inline IndexedPNG
+png_new(const cv::Size& size) {
+  return IndexedPNG(size.width, size.height);
+}
+
 template<class ColorType>
-static inline png::image<png::index_pixel>
-png_create(const cv::Mat& mat, const std::vector<ColorType>& palette) {
-
-  png::image<png::index_pixel> image(mat.cols, mat.rows);
-
-  png::palette pal(palette.size());
+static inline void
+png_set_palette(IndexedPNG& img, const std::vector<ColorType>& pal) {
+  png::palette palette(pal.size());
   size_t i = 0;
 
-  for(const ColorType& color : palette) {
-    pal[i] = png::color(color.r, color.g, color.b);
+  for(const ColorType& pix : pal) {
+    palette[i] = png::color(pix.r, pix.g, pix.b);
     i++;
   }
 
-  image.set_palette(pal);
+  img.set_palette(palette);
+}
 
-  for(png::uint_32 y = 0; y < mat.rows; ++y) {
-    for(png::uint_32 x = 0; x < mat.cols; ++x) {
+static inline void
+png_set_pixels(IndexedPNG& img, const cv::Mat& mat) {
+  size_t w = img.get_width(), h = img.get_height();
+
+  for(png::uint_32 y = 0; y < h; ++y) {
+    for(png::uint_32 x = 0; x < w; ++x) {
       auto index = mat.at<uchar>(y, x);
-      // if(index > 0) std::cout << x << "," << y << ": " << (int)index << std::endl;
-      image[y][x] = png::index_pixel(index);
+      img[y][x] = png::index_pixel(index);
     }
   }
+}
 
-  return image;
+static inline void
+png_set_transparency(IndexedPNG& img, png::byte transparent_index) {
+  png::tRNS t(1);
+  t[0] = transparent_index;
+  img.set_tRNS(t);
+}
+
+template<class ColorType>
+static inline IndexedPNG
+png_create(const cv::Mat& mat, const std::vector<ColorType>& pal, int trans = -1) {
+  IndexedPNG img = png_new(mat.size());
+
+  png_set_palette(img, pal);
+
+  if(trans >= 0 && trans <= 255)
+    png_set_transparency(img, trans);
+
+  png_set_pixels(img, mat);
+
+  return img;
 }
 
 template<class ColorType>
 void
-png_write(const std::string& filename, const cv::Mat& mat, const std::vector<ColorType>& palette) {
+png_write(const std::string& filename, const cv::Mat& mat, const std::vector<ColorType>& pal, int trans = -1) {
+  IndexedPNG img = png_create(mat, pal, trans);
 
-  /*  std::ofstream stream(filename, std::ios::binary);
-         stream.exceptions(std::ios::badbit);*/
-  auto image = png_create(mat, palette);
-
-  image.write(filename);
+  img.write(filename);
 }
 
 template<class ColorType>
 std::string
-png_write(const cv::Mat& mat, const std::vector<ColorType>& palette) {
+png_write(const cv::Mat& mat, const std::vector<ColorType>& pal, int trans = -1) {
   std::ostringstream os;
-  auto image = png_create(mat, palette);
-  image.write_stream(os);
+  IndexedPNG img = png_create(mat, pal, trans);
+
+  img.write_stream(os);
   return os.str();
 }
 

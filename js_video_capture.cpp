@@ -41,8 +41,7 @@ js_video_capture_open(JSContext* ctx, JSVideoCaptureData* s, int argc, JSValueCo
     filename = "";
   }
 
-  std::cerr << "VideoCapture.open filename='" << filename << "', camID=" << camID << ", apiPreference=" << apiPreference
-            << std::endl;
+  std::cerr << "VideoCapture.open filename='" << filename << "', camID=" << camID << ", apiPreference=" << apiPreference << std::endl;
 
   if(filename.empty())
     return s->open(camID, apiPreference);

@@ -27,8 +27,7 @@ js_rotated_rect_data(JSValueConst val) {
 extern "C" int js_rotated_rect_init(JSContext* ctx, JSModuleDef* m);
 
 VISIBLE JSValue
-js_rotated_rect_new(
-    JSContext* ctx, JSValueConst proto, const JSPointData<float>& center, const JSSizeData<float>& size, float angle) {
+js_rotated_rect_new(JSContext* ctx, JSValueConst proto, const JSPointData<float>& center, const JSSizeData<float>& size, float angle) {
   JSValue ret;
   JSRotatedRectData* rr;
 

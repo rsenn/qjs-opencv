@@ -160,16 +160,11 @@ enum TypedArrayValue {
 
 struct TypedArrayType {
   TypedArrayType(int bsize, bool sig, bool flt) : byte_size(bsize), is_signed(sig), is_floating_point(flt) {}
-  TypedArrayType(const cv::Mat& mat)
-      : byte_size(1 << (mat_depth(mat) >> 1)), is_signed(mat_signed(mat)), is_floating_point(mat_floating(mat)) {}
-  TypedArrayType(const cv::UMat& mat)
-      : byte_size(1 << (mat_depth(mat) >> 1)), is_signed(mat_signed(mat)), is_floating_point(mat_floating(mat)) {}
-  TypedArrayType(int32_t cvId)
-      : byte_size(1 << (mattype_depth(cvId) >> 1)), is_signed(mattype_signed(cvId)), is_floating_point(mattype_floating(cvId)) {
-  }
+  TypedArrayType(const cv::Mat& mat) : byte_size(1 << (mat_depth(mat) >> 1)), is_signed(mat_signed(mat)), is_floating_point(mat_floating(mat)) {}
+  TypedArrayType(const cv::UMat& mat) : byte_size(1 << (mat_depth(mat) >> 1)), is_signed(mat_signed(mat)), is_floating_point(mat_floating(mat)) {}
+  TypedArrayType(int32_t cvId) : byte_size(1 << (mattype_depth(cvId) >> 1)), is_signed(mattype_signed(cvId)), is_floating_point(mattype_floating(cvId)) {}
   TypedArrayType(TypedArrayValue i)
-      : byte_size(i & TYPEDARRAY_BITS_FIELD), is_signed(!!(i & TYPEDARRAY_SIGNED)),
-        is_floating_point(!!(i & TYPEDARRAY_FLOATING_POINT)) {}
+      : byte_size(i & TYPEDARRAY_BITS_FIELD), is_signed(!!(i & TYPEDARRAY_SIGNED)), is_floating_point(!!(i & TYPEDARRAY_FLOATING_POINT)) {}
 
   template<class T> TypedArrayType(JSContext* ctx, const T& ctor_name) { *this = js_typedarray_type(ctx, ctor_name); }
 
@@ -207,8 +202,8 @@ struct TypedArrayType {
 
   TypedArrayValue
   flags() const {
-    return TypedArrayValue(uint8_t(is_floating_point ? TYPEDARRAY_FLOATING_POINT : 0) |
-                           uint8_t(is_signed ? TYPEDARRAY_SIGNED : 0) | uint8_t(byte_size) & TYPEDARRAY_BITS_FIELD);
+    return TypedArrayValue(uint8_t(is_floating_point ? TYPEDARRAY_FLOATING_POINT : 0) | uint8_t(is_signed ? TYPEDARRAY_SIGNED : 0) |
+                           uint8_t(byte_size) & TYPEDARRAY_BITS_FIELD);
   }
   operator TypedArrayValue() const { return flags(); }
 };
@@ -298,8 +293,7 @@ template<class T> struct TypedArrayTraits {
   typedef typename std::remove_reference<typename std::remove_cv<T>::type>::type value_type;
 
   static_assert(std::is_arithmetic<T>::value, "TypedArray must contain arithmetic type");
-  static_assert(sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 || sizeof(T) == 8,
-                "TypedArray must contain type of size 1, 2, 4 or 8");
+  static_assert(sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 || sizeof(T) == 8, "TypedArray must contain type of size 1, 2, 4 or 8");
 
   static constexpr size_t byte_size = sizeof(T);
 
@@ -370,8 +364,7 @@ public:
 
   template<class Iterator>
   static JSValue
-  from_sequence(
-      JSContext* ctx, const Iterator& start, const Iterator& end, uint32_t byteOffset = 0, uint32_t length = UINT32_MAX) {
+  from_sequence(JSContext* ctx, const Iterator& start, const Iterator& end, uint32_t byteOffset = 0, uint32_t length = UINT32_MAX) {
     JSValue buf = js_arraybuffer_from(ctx, start, end);
     uint32_t count = std::min<uint32_t>(length, end - start);
 
@@ -401,15 +394,13 @@ public:
 
 template<class Iterator>
 static inline typename std::enable_if<std::is_pointer<Iterator>::value, JSValue>::type
-js_typedarray_from(
-    JSContext* ctx, const Iterator& start, const Iterator& end, uint32_t byteOffset = 0, uint32_t length = UINT32_MAX) {
+js_typedarray_from(JSContext* ctx, const Iterator& start, const Iterator& end, uint32_t byteOffset = 0, uint32_t length = UINT32_MAX) {
   return js_typedarray<typename std::remove_pointer<Iterator>::type>::from_sequence(ctx, start, end, byteOffset);
 }
 
 template<class Iterator>
 static inline typename std::enable_if<Iterator::value_type, JSValue>::type
-js_typedarray_from(
-    JSContext* ctx, const Iterator& start, const Iterator& end, uint32_t byteOffset = 0, uint32_t length = UINT32_MAX) {
+js_typedarray_from(JSContext* ctx, const Iterator& start, const Iterator& end, uint32_t byteOffset = 0, uint32_t length = UINT32_MAX) {
   return js_typedarray<typename Iterator::value_type>::from_sequence(ctx, start, end, byteOffset);
 }
 

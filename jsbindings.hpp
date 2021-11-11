@@ -120,8 +120,7 @@ template<> union JSColorData<uint8_t> {
 
 #define JS_CGETSET_ENUMERABLE_DEF(prop_name, fgetter, fsetter, magic_num) \
   { \
-    .name = prop_name, .prop_flags = JS_PROP_ENUMERABLE | JS_PROP_CONFIGURABLE, .def_type = JS_DEF_CGETSET_MAGIC, \
-    .magic = magic_num, .u = { \
+    .name = prop_name, .prop_flags = JS_PROP_ENUMERABLE | JS_PROP_CONFIGURABLE, .def_type = JS_DEF_CGETSET_MAGIC, .magic = magic_num, .u = { \
       .getset = {.get = {.getter_magic = fgetter}, .set = {.setter_magic = fsetter}} \
     } \
   }
@@ -188,8 +187,7 @@ dump(const cv::_OutputArray& arr) {
 }
 
 struct JSConstructor {
-  JSConstructor(JSCFunction* _ctor, const char* _name)
-      : name(_name), ctor(_ctor), proto(nullptr), nfuncs(0), class_obj(JS_UNDEFINED) {}
+  JSConstructor(JSCFunction* _ctor, const char* _name) : name(_name), ctor(_ctor), proto(nullptr), nfuncs(0), class_obj(JS_UNDEFINED) {}
 
   template<int size>
   JSConstructor(JSCFunction* _ctor, const char* _name, const JSCFunctionListEntry (&_funcs)[size])
@@ -382,8 +380,7 @@ js_to_scalar(JSColorData<T>& color) {
 template<class T>
 std::ostream&
 operator<<(std::ostream& stream, const JSColorData<T>& color) {
-  stream << "[ " << (int)color.arr[0] << ", " << (int)color.arr[1] << ", " << (int)color.arr[2] << ", " << (int)color.arr[3]
-         << " ]";
+  stream << "[ " << (int)color.arr[0] << ", " << (int)color.arr[1] << ", " << (int)color.arr[2] << ", " << (int)color.arr[3] << " ]";
   return stream;
 }
 
@@ -427,12 +424,7 @@ js_arraybuffer_from(JSContext* ctx, const Ptr& begin, const Ptr& end) {
 
 template<class Ptr>
 static inline JSValue
-js_arraybuffer_from(JSContext* ctx,
-                    const Ptr& begin,
-                    const Ptr& end,
-                    JSFreeArrayBufferDataFunc& free_func,
-                    void* opaque = nullptr,
-                    bool is_shared = false) {
+js_arraybuffer_from(JSContext* ctx, const Ptr& begin, const Ptr& end, JSFreeArrayBufferDataFunc& free_func, void* opaque = nullptr, bool is_shared = false) {
   const uint8_t* ptr;
   size_t len;
   ptr = reinterpret_cast<const uint8_t*>(begin);
@@ -485,8 +477,7 @@ js_symbol_for_atom(JSContext* ctx, const char* sym_for) {
 static inline void
 js_set_inspect_method(JSContext* ctx, JSValueConst obj, JSCFunction* func) {
   JSAtom inspect_symbol = js_symbol_for_atom(ctx, "quickjs.inspect.custom");
-  JS_DefinePropertyValue(
-      ctx, obj, inspect_symbol, JS_NewCFunction(ctx, func, "inspect", 1), JS_PROP_CONFIGURABLE | JS_PROP_WRITABLE);
+  JS_DefinePropertyValue(ctx, obj, inspect_symbol, JS_NewCFunction(ctx, func, "inspect", 1), JS_PROP_CONFIGURABLE | JS_PROP_WRITABLE);
   JS_FreeAtom(ctx, inspect_symbol);
 }
 

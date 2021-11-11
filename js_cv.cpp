@@ -66,6 +66,8 @@ js_cv_imencode(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
   const char* ext = JS_ToCString(ctx, argv[0]);
   JSInputOutputArray image = js_cv_inputoutputarray(ctx, argv[1]);
   JSValue ret = JS_UNDEFINED;
+  int32_t transparent = -1;
+
   if(argc >= 3 && str_end(ext, "png") && image.isMat()) {
     double max;
     std::string data;
@@ -74,7 +76,10 @@ js_cv_imencode(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
     cv::minMaxLoc(image, nullptr, &max);
     if(palette.size() < size_t(max))
       palette.resize(size_t(max));
-    printf("png_write '%s' [%zu]\n", ext, palette.size());
+    if(argc >= 4)
+      JS_ToInt32(ctx, &transparent, argv[3]);
+
+    printf("png_write '%s' [%zu] (transparent: %i)\n", ext, palette.size(), transparent);
     data = png_write(image.getMatRef(), palette);
     ret = JS_NewArrayBufferCopy(ctx, (const uint8_t*)data.data(), data.size());
   } else {
@@ -101,12 +106,13 @@ js_cv_imwrite(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* arg
 
   const char* filename = JS_ToCString(ctx, argv[0]);
   JSInputOutputArray image;
+  int32_t transparent = -1;
 
   if(argc >= 3 && str_end(filename, "gif") && js_is_array_like(ctx, argv[1])) {
     std::vector<JSColorData<uint8_t>> palette;
     std::vector<cv::Mat> mats;
     std::vector<int> delays;
-    int32_t transparent = -1, loop = 0;
+    int32_t loop = 0;
 
     js_array_to(ctx, argv[1], mats);
     palette_read(ctx, argv[2], palette);
@@ -121,12 +127,12 @@ js_cv_imwrite(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* arg
       std::fill(delays.begin(), delays.end(), delay);
     }
 
-    if(argc > 4)
+    if(argc >= 5)
       JS_ToInt32(ctx, &transparent, argv[4]);
-    if(argc > 5)
+    if(argc >= 6)
       JS_ToInt32(ctx, &loop, argv[5]);
 
-    printf("gif_write '%s' (%zu) [%zu]\n", filename, mats.size(), palette.size());
+    printf("gif_write '%s' (%zu) [%zu] (transparent: %i)\n", filename, mats.size(), palette.size(), transparent);
     gif_write(filename, mats, delays, palette, transparent, loop);
     return JS_UNDEFINED;
   }
@@ -136,16 +142,22 @@ js_cv_imwrite(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* arg
   if(image.empty())
     return JS_ThrowInternalError(ctx, "Empty image");
 
-  if(argc > 2 && /*image.type() == CV_8UC1 &&*/ str_end(filename, ".png") && image.isMat()) {
+  if(argc >= 3 && /*image.type() == CV_8UC1 &&*/ str_end(filename, ".png") && image.isMat()) {
     double max;
     std::vector<JSColorData<uint8_t>> palette;
 
     palette_read(ctx, argv[2], palette);
+
+    if(argc >= 4)
+      JS_ToInt32(ctx, &transparent, argv[3]);
+
     cv::minMaxLoc(image, nullptr, &max);
     if(palette.size() < size_t(max))
       palette.resize(size_t(max));
-    printf("png++ write_mat '%s' [%zu]\n", filename, palette.size());
-    png_write(filename, image.getMatRef(), palette);
+    printf("png++ write_mat '%s' [%zu] (transparent: %i)\n", filename, palette.size(), transparent);
+
+    png_write(filename, image.getMatRef(), palette, transparent);
+
   } else {
     cv::imwrite(filename, image);
   }
@@ -314,8 +326,7 @@ js_cv_mix_channels(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
   if(js_array_to(ctx, argv[2], fromTo) == -1)
     return JS_EXCEPTION;
 
-  cv::mixChannels(
-      const_cast<const cv::Mat*>(srcs.data()), srcs.size(), dsts.data(), dsts.size(), fromTo.data(), fromTo.size() >> 1);
+  cv::mixChannels(const_cast<const cv::Mat*>(srcs.data()), srcs.size(), dsts.data(), dsts.size(), fromTo.data(), fromTo.size() >> 1);
 
   return JS_UNDEFINED;
 }
@@ -406,18 +417,7 @@ js_cv_bitwise(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* arg
   return JS_UNDEFINED;
 }
 
-enum {
-  MATH_ABSDIFF = 0,
-  MATH_ADD,
-  MATH_COMPARE,
-  MATH_DIVIDE,
-  MATH_GEMM,
-  MATH_MAX,
-  MATH_MIN,
-  MATH_MULTIPLY,
-  MATH_SOLVE,
-  MATH_SUBTRACT
-};
+enum { MATH_ABSDIFF = 0, MATH_ADD, MATH_COMPARE, MATH_DIVIDE, MATH_GEMM, MATH_MAX, MATH_MIN, MATH_MULTIPLY, MATH_SOLVE, MATH_SUBTRACT };
 
 static JSValue
 js_cv_math(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {

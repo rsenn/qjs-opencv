@@ -66,8 +66,7 @@ enum {
 enum { MAT_EXPR_AND = 0, MAT_EXPR_OR, MAT_EXPR_XOR, MAT_EXPR_MUL };
 enum { MAT_ITERATOR_KEYS, MAT_ITERATOR_VALUES, MAT_ITERATOR_ENTRIES };
 extern "C" {
-JSValue mat_proto = JS_UNDEFINED, mat_class = JS_UNDEFINED, mat_iterator_proto = JS_UNDEFINED,
-        mat_iterator_class = JS_UNDEFINED;
+JSValue mat_proto = JS_UNDEFINED, mat_class = JS_UNDEFINED, mat_iterator_proto = JS_UNDEFINED, mat_iterator_class = JS_UNDEFINED;
 JSClassID js_mat_class_id = 0, js_mat_iterator_class_id = 0;
 
 JSValue umat_proto = JS_UNDEFINED, umat_class = JS_UNDEFINED;
@@ -110,10 +109,7 @@ js_mat_dimensions(const JSMatData& mat) {
   std::vector<int> sizes = js_mat_sizes(mat);
   std::vector<std::string> dimensions;
 
-  std::transform(sizes.cbegin(),
-                 sizes.cend(),
-                 std::back_inserter(dimensions),
-                 static_cast<std::string (*)(int)>(&std::to_string));
+  std::transform(sizes.cbegin(), sizes.cend(), std::back_inserter(dimensions), static_cast<std::string (*)(int)>(&std::to_string));
   return dimensions;
 }
 
@@ -964,11 +960,7 @@ js_mat_tostring(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
         if(m->type() == CV_32FC1)
           os << m->at<float>(y, x);
         else
-          os << std::setfill('0') << std::setbase(16)
-             << std::setw(m->type() == CV_8UC4   ? 8
-                          : m->type() == CV_8UC1 ? 2
-                                                 : 6)
-             << m->at<uint32_t>(y, x);
+          os << std::setfill('0') << std::setbase(16) << std::setw(m->type() == CV_8UC4 ? 8 : m->type() == CV_8UC1 ? 2 : 6) << m->at<uint32_t>(y, x);
       }
     }
 
@@ -1278,8 +1270,7 @@ js_mat_buffer(JSContext* ctx, JSValueConst this_val) {
 
     new(mat) cv::Mat(*m);
 
-    buf = js_arraybuffer_from(
-        ctx, mat_ptr(*mat), mat_ptr(*mat) + byte_size, *(JSFreeArrayBufferDataFunc*)&js_mat_free_func, (void*)mat);
+    buf = js_arraybuffer_from(ctx, mat_ptr(*mat), mat_ptr(*mat) + byte_size, *(JSFreeArrayBufferDataFunc*)&js_mat_free_func, (void*)mat);
   }
   return buf;
 }
@@ -1422,8 +1413,7 @@ js_mat_iterator_new(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 
 void
 js_mat_iterator_dump(JSMatIteratorData* it) {
-  std::cout << "MatIterator { row: " << it->row << ", col: " << it->col << ", magic: " << it->magic << ", type: " << it->type
-            << " }" << std::endl;
+  std::cout << "MatIterator { row: " << it->row << ", col: " << it->col << ", magic: " << it->magic << ", type: " << it->type << " }" << std::endl;
 }
 
 JSValue
@@ -1489,8 +1479,7 @@ js_mat_iterator_next(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
         break;
       }
       case MAT_ITERATOR_ENTRIES: {
-        JSValue value = channels == 1 ? js_mat_get(ctx, it->obj, row, col)
-                                      : js_typedarray_new(ctx, it->buf, offset, channels, TypedArrayType(*m));
+        JSValue value = channels == 1 ? js_mat_get(ctx, it->obj, row, col) : js_typedarray_new(ctx, it->buf, offset, channels, TypedArrayType(*m));
 
         std::array<uint32_t, 2> pos = {row, col};
         std::array<JSValue, 2> entry = {js_array_from(ctx, pos), value};

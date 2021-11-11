@@ -38,8 +38,7 @@ js_fast_line_detector_new(JSContext* ctx,
   ret = JS_NewObjectProtoClass(ctx, proto, js_fast_line_detector_class_id);
   s = js_allocate<JSFastLineDetector>(ctx);
 
-  ptr = cv::ximgproc::createFastLineDetector(
-      length_threshold, distance_threshold, canny_th1, canny_th2, canny_aperture_size, do_merge);
+  ptr = cv::ximgproc::createFastLineDetector(length_threshold, distance_threshold, canny_th1, canny_th2, canny_aperture_size, do_merge);
   *s = ptr;
   JS_SetOpaque(ret, s);
 
@@ -74,8 +73,7 @@ js_fast_line_detector_ctor(JSContext* ctx, JSValueConst new_target, int argc, JS
   if(argc >= 6)
     do_merge = JS_ToBool(ctx, argv[5]);
 
-  return js_fast_line_detector_new(
-      ctx, proto, length_threshold, distance_threshold, canny_th1, canny_th2, canny_aperture_size, do_merge);
+  return js_fast_line_detector_new(ctx, proto, length_threshold, distance_threshold, canny_th1, canny_th2, canny_aperture_size, do_merge);
 }
 
 JSFastLineDetector*
@@ -159,20 +157,13 @@ js_fast_line_detector_init(JSContext* ctx, JSModuleDef* m) {
     JS_NewClass(JS_GetRuntime(ctx), js_fast_line_detector_class_id, &js_fast_line_detector_class);
 
     fast_line_detector_proto = JS_NewObject(ctx);
-    JS_SetPropertyFunctionList(ctx,
-                               fast_line_detector_proto,
-                               js_fast_line_detector_proto_funcs,
-                               countof(js_fast_line_detector_proto_funcs));
+    JS_SetPropertyFunctionList(ctx, fast_line_detector_proto, js_fast_line_detector_proto_funcs, countof(js_fast_line_detector_proto_funcs));
     JS_SetClassProto(ctx, js_fast_line_detector_class_id, fast_line_detector_proto);
 
-    fast_line_detector_class =
-        JS_NewCFunction2(ctx, js_fast_line_detector_ctor, "FastLineDetector", 2, JS_CFUNC_constructor, 0);
+    fast_line_detector_class = JS_NewCFunction2(ctx, js_fast_line_detector_ctor, "FastLineDetector", 2, JS_CFUNC_constructor, 0);
     /* set proto.constructor and ctor.prototype */
     JS_SetConstructor(ctx, fast_line_detector_class, fast_line_detector_proto);
-    JS_SetPropertyFunctionList(ctx,
-                               fast_line_detector_class,
-                               js_fast_line_detector_static_funcs,
-                               countof(js_fast_line_detector_static_funcs));
+    JS_SetPropertyFunctionList(ctx, fast_line_detector_class, js_fast_line_detector_static_funcs, countof(js_fast_line_detector_static_funcs));
   }
 
   if(m)
