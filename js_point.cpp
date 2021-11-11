@@ -182,15 +182,35 @@ js_point_diff(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* arg
   return ret;
 }
 
+enum { POINT_PROP_X = 0, POINT_PROP_Y };
+
 static JSValue
 js_point_get_xy(JSContext* ctx, JSValueConst this_val, int magic) {
-  JSPointData<double>* s = js_point_data2(ctx, this_val);
-  if(!s)
+  JSPointData<double>* s;
+
+  if(!(s = js_point_data2(ctx, this_val)))
     return JS_EXCEPTION;
-  if(magic == 0)
-    return JS_NewFloat64(ctx, s->x);
-  else if(magic == 1)
-    return JS_NewFloat64(ctx, s->y);
+
+  switch(magic) {
+    case POINT_PROP_X: return JS_NewFloat64(ctx, s->x);
+    case POINT_PROP_Y: return JS_NewFloat64(ctx, s->y);
+  }
+
+  return JS_UNDEFINED;
+}
+
+static JSValue
+js_point_set_xy(JSContext* ctx, JSValueConst this_val, JSValueConst val, int magic) {
+  JSPointData<double>* s;
+
+  if(!(s = js_point_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  switch(magic) {
+    case POINT_PROP_X: JS_ToFloat64(ctx, &s->x, val); break;
+    case POINT_PROP_Y: JS_ToFloat64(ctx, &s->y, val); break;
+  }
+
   return JS_UNDEFINED;
 }
 
@@ -239,8 +259,8 @@ js_point_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
           deg = JS_ToBool(ctx, argv[i]);
         i++;
       }
-      if(arg) 
-        point = sub(*arg, point);     
+      if(arg)
+        point = sub(*arg, point);
 
       double phi = std::atan2(point.y, point.x);
       if(deg)
@@ -250,25 +270,6 @@ js_point_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
     }
   }
   return ret;
-}
-
-static JSValue
-js_point_set_xy(JSContext* ctx, JSValueConst this_val, JSValueConst val, int magic) {
-  JSPointData<double>* s;
-  double v;
-
-  if(!(s = js_point_data2(ctx, this_val)))
-    return JS_EXCEPTION;
-
-  if(JS_ToFloat64(ctx, &v, val))
-    return JS_EXCEPTION;
-
-  switch(magic) {
-    case 0: s->x = v; break;
-    case 1: s->y = v; break;
-  }
-
-  return JS_UNDEFINED;
 }
 
 enum { POINT_ARITH_ADD = 0, POINT_ARITH_SUB, POINT_ARITH_MUL, POINT_ARITH_DIV, POINT_ARITH_MOD };
@@ -512,8 +513,8 @@ JSClassDef js_point_class = {
 };
 
 const JSCFunctionListEntry js_point_proto_funcs[] = {
-    JS_CGETSET_ENUMERABLE_DEF("x", js_point_get_xy, js_point_set_xy, 0),
-    JS_CGETSET_ENUMERABLE_DEF("y", js_point_get_xy, js_point_set_xy, 1),
+    JS_CGETSET_ENUMERABLE_DEF("x", js_point_get_xy, js_point_set_xy, POINT_PROP_X),
+    JS_CGETSET_ENUMERABLE_DEF("y", js_point_get_xy, js_point_set_xy, POINT_PROP_Y),
     JS_CFUNC_DEF("cross", 1, js_point_cross),
     JS_CFUNC_DEF("dot", 1, js_point_ddot),
     JS_CFUNC_DEF("inside", 1, js_point_inside),
