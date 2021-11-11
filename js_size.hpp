@@ -82,4 +82,19 @@ js_size_get(JSContext* ctx, JSValueConst size) {
 
 extern "C" int js_size_init(JSContext*, JSModuleDef*);
 
+template<class T>
+static inline BOOL
+js_size_arg(JSContext* ctx, int argc, JSValueConst* argv, int& argind, JSSizeData<T>& size) {
+  if(argind < argc && js_size_read(ctx, argv[argind], &size)) {
+    ++argind;
+    return TRUE;
+  }
+
+  if(argind + 1 < argc && js_number_read(ctx, argv[argind], &size.width) && js_number_read(ctx, argv[argind + 1], &size.height)) {
+    argind += 2;
+    return TRUE;
+  }
+  return FALSE;
+}
+
 #endif /* defined(JS_SIZE_HPP) */

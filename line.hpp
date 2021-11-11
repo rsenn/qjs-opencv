@@ -71,11 +71,11 @@ public:
 
   double distance(const cv::Point_<T>& p) const;
 
-  std::pair<T, size_t> endpoint_distances(const Line<T>& l) const;
+  std::pair<T, size_t> endpointDistances(const Line<T>& l) const;
 
-  std::pair<T, T> endpoint_distances(const cv::Point_<T>& p) const;
+  std::pair<T, T> endpointDistances(const cv::Point_<T>& p) const;
 
-  T endpoint_distance(const cv::Point_<T>& p, size_t* point_index = nullptr) const;
+  T endpointDistance(const cv::Point_<T>& p, size_t* point_index = nullptr) const;
 
   template<class OtherT>
   std::pair<line_type&, line_type&>
@@ -89,12 +89,12 @@ public:
     return other.a == this->a && other.b == this->b;
   }
 
-  T min_distance(Line<T>& l2, size_t* point_index = nullptr) const;
+  T minDistance(Line<T>& l2, size_t* point_index = nullptr) const;
 
-  T nearest_end(Line<T>& l2, LineEnd<T>& end) const;
+  T nearestEnd(Line<T>& l2, LineEnd<T>& end) const;
 
   T
-  angle_diff(const Line<T>& l) const {
+  angleDiff(const Line<T>& l) const {
     return l.angle() - angle();
   }
 
@@ -110,31 +110,9 @@ public:
     return ret;
   }
 
-  T
-  y_intercept(T yintercept) const {
-    point_type d = b - a;
+  T yIntercept(T yintercept) const;
 
-    T deltay = yintercept - b.y;
-    if(d.y != 0)
-      // dy very close to 0 will be numerically unstable, account for that
-      return b.x + (d.x / d.y) * deltay;
-
-    // line is parrallel to x-axis, will never reach yintercept
-    return std::numeric_limits<T>::quiet_NaN();
-  }
-
-  T
-  x_intercept(T xintercept) const {
-    point_type d = b - a;
-
-    T deltax = xintercept - b.x;
-    if(d.x != 0)
-      // dx verx close to 0 will be numericallx unstable, account for that
-      return b.y + (d.y / d.x) * deltax;
-
-    // line is parrallel to y-ayis, will never reach xintercept
-    return std::numeric_limits<T>::quiet_NaN();
-  }
+  T xIntercept(T xintercept) const;
 
   /**
    * Calculates intersect of two lines if exists.
@@ -149,7 +127,131 @@ public:
   template<class OtherValueT> bool operator<(const Line<OtherValueT>& l2) const;
 
   std::string str(const std::string& comma = ",", const std::string& sep = "|") const;
+
+  template<class U>
+  Line<T>&
+  operator-=(const Line<U>& other) {
+    a = sub(a, other.a);
+    b = sub(b, other.b);
+    return *this;
+  }
+
+  template<class U>
+  Line<T>&
+  operator-=(const cv::Point_<U>& pt) {
+    a = sub(a, pt);
+    b = sub(b, pt);
+    return *this;
+  }
+
+  template<class U>
+  Line<T>&
+  operator+=(const Line<U>& other) {
+    a = add(a, other.a);
+    b = add(b, other.b);
+    return *this;
+  }
+
+  template<class U>
+  Line<T>&
+  operator+=(const cv::Point_<U>& pt) {
+    a = add(a, pt);
+    b = add(b, pt);
+    return *this;
+  }
+
+  template<class U>
+  Line<T>&
+  operator/=(const cv::Size_<U>& sz) {
+    a = div(a, sz);
+    b = div(b, sz);
+    return *this;
+  }
+
+  template<class U>
+  Line<T>&
+  operator/=(U divisor) {
+    a = div(a, divisor);
+    b = div(b, divisor);
+    return *this;
+  }
+
+  template<class U>
+  Line<T>&
+  operator*=(const cv::Size_<U>& sz) {
+    a = mul(a, sz);
+    b = mul(b, sz);
+    return *this;
+  }
+
+  template<class U>
+  Line<T>&
+  operator*=(U factor) {
+    a = mul(a, factor);
+    b = mul(b, factor);
+    return *this;
+  }
+
+  template<class U>
+  Line<T>
+  operator-(const Line<U>& o) const {
+    Line<T> l = *this;
+    l -= o;
+    return l;
+  }
+
+  template<class U>
+  Line<T>
+  operator+(const Line<U>& o) const {
+    Line<T> l = *this;
+    l += o;
+    return l;
+  }
+
+  template<class U>
+  Line<T>
+  operator/(const U& o) const {
+    Line<T> l = *this;
+    l /= o;
+    return l;
+  }
+
+  template<class U>
+  Line<T>
+  operator*(const U& o) const {
+    Line<T> l = *this;
+    l *= o;
+    return l;
+  }
 };
+
+template<class T>
+T
+Line<T>::yIntercept(T yintercept) const {
+  point_type d = b - a;
+
+  T deltay = yintercept - b.y;
+  // dy very close to 0 will be numerically unstable, account for that
+  if(d.y != 0)
+    return b.x + (d.x / d.y) * deltay;
+
+  // line is parrallel to x-axis, will never reach yintercept
+  return std::numeric_limits<T>::quiet_NaN();
+}
+
+template<class T>
+T
+Line<T>::xIntercept(T xintercept) const {
+  point_type d = b - a;
+
+  T deltax = xintercept - b.x;
+  // dx verx close to 0 will be numericallx unstable, account for that
+  if(d.x != 0)
+    return b.y + (d.y / d.x) * deltax;
+
+  // line is parrallel to y-ayis, will never reach xintercept
+  return std::numeric_limits<T>::quiet_NaN();
+}
 
 template<class T> struct line_list {
   typedef T coord_type;
@@ -296,7 +398,7 @@ find_nearest_line(typename ContainerT::value_type& line, ContainerT& lines) {
   iterator_type ret = end;
 
   for(iterator_type it = lines.begin(); it != end; ++it) {
-    value_type d = (*it).min_distance(line);
+    value_type d = (*it).minDistance(line);
     if(*it == line)
       continue;
     if(d < distance) {
@@ -318,7 +420,7 @@ find_nearest_line(typename ContainerT::iterator& line, ContainerT& lines) {
   iterator_type end = lines.end();
 
   for(iterator_type it = lines.begin(); it != end; ++it) {
-    value_type d = (*it).min_distance(*line);
+    value_type d = (*it).minDistance(*line);
     if(std::distance(line, it) == 0)
       continue;
     if(d < distance) {
@@ -339,7 +441,7 @@ point_type::value_type value_type; value_type distance = 1e10; iterator_type
 index = to;
 
   for(iterator_type it = from; it != to; ++it) {
-    value_type d = (*it).min_distance(*line);
+    value_type d = (*it).minDistance(*line);
     if(std::distance(line, it) == 0)
       continue;
     if(d < distance) {
@@ -436,16 +538,16 @@ Line<T>::angle() const {
 
 template<class T>
 inline std::pair<T, T>
-Line<T>::endpoint_distances(const cv::Point_<T>& p) const {
+Line<T>::endpointDistances(const cv::Point_<T>& p) const {
   return std::make_pair<T, T>(point_distance(a, p), point_distance(b, p));
 }
 
 #if SIZEOF_SIZE_T == SIZEOF_LONG
 template<class T>
 inline std::pair<T, unsigned long int>
-Line<T>::endpoint_distances(const Line<T>& l) const {
+Line<T>::endpointDistances(const Line<T>& l) const {
   size_t offs1, offs2;
-  std::pair<T, T> dist(endpoint_distance(l.a, &offs1), endpoint_distance(l.b, &offs2));
+  std::pair<T, T> dist(endpointDistance(l.a, &offs1), endpointDistance(l.b, &offs2));
   size_t offs = dist.first < dist.second ? offs1 : offs2;
   return std::make_pair(dist.first < dist.second ? dist.first : dist.second, offs);
 }
@@ -453,9 +555,9 @@ Line<T>::endpoint_distances(const Line<T>& l) const {
 #else
 template<class T>
 inline std::pair<T, unsigned long long int>
-Line<T>::endpoint_distances(const Line<T>& l) const {
+Line<T>::endpointDistances(const Line<T>& l) const {
   size_t offs1, offs2;
-  std::pair<T, T> dist(endpoint_distance(l.a, &offs1), endpoint_distance(l.b, &offs2));
+  std::pair<T, T> dist(endpointDistance(l.a, &offs1), endpointDistance(l.b, &offs2));
   size_t offs = dist.first < dist.second ? offs1 : offs2;
   return std::make_pair(dist.first < dist.second ? dist.first : dist.second, offs);
 }
@@ -464,7 +566,7 @@ Line<T>::endpoint_distances(const Line<T>& l) const {
 
 template<class T>
 inline T
-Line<T>::endpoint_distance(const cv::Point_<T>& p, size_t* point_index) const {
+Line<T>::endpointDistance(const cv::Point_<T>& p, size_t* point_index) const {
   T dist1 = point_distance(a, p), dist2 = point_distance(b, p);
   T ret = std::min(dist1, dist2);
   if(point_index)
@@ -475,8 +577,8 @@ Line<T>::endpoint_distance(const cv::Point_<T>& p, size_t* point_index) const {
 
 template<class T>
 inline T
-Line<T>::min_distance(Line<T>& l2, size_t* point_index) const {
-  std::pair<T, size_t> dist = endpoint_distances(l2);
+Line<T>::minDistance(Line<T>& l2, size_t* point_index) const {
+  std::pair<T, size_t> dist = endpointDistances(l2);
   /* if(intersect(l2))
    return 0;*/
   if(point_index)
@@ -487,9 +589,9 @@ Line<T>::min_distance(Line<T>& l2, size_t* point_index) const {
 
 template<class T>
 inline T
-Line<T>::nearest_end(Line<T>& l2, LineEnd<T>& end) const {
+Line<T>::nearestEnd(Line<T>& l2, LineEnd<T>& end) const {
   size_t point_index;
-  T dist = min_distance(l2, &point_index);
+  T dist = minDistance(l2, &point_index);
   end = LineEnd<T>(l2, point_index);
   return dist;
 }
@@ -532,7 +634,7 @@ angle_diffs(Line<ValueT>& line, InputIterator from, InputIterator to) {
   for(iterator_type it = from; it != to; ++it) {
     value_type d;
 
-    ret.push_back((*it).angle_diff(line));
+    ret.push_back((*it).angleDiff(line));
   }
   return ret;
 }
@@ -552,7 +654,7 @@ line_distances(typename std::iterator_traits<InputIterator>::value_type& line, I
   for(InputIterator it = from; it != to; ++it) {
     /* if(line == *it)
        continue;*/
-    ret.push_back(it->min_distance(line));
+    ret.push_back(it->minDistance(line));
   }
   return ret;
 }

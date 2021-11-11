@@ -92,6 +92,25 @@ js_line_read(JSContext* ctx, JSValueConst value, JSPointData<T>* a, JSPointData<
 }
 
 template<class T>
+static inline BOOL
+js_line_arg(JSContext* ctx, int argc, JSValueConst* argv, int& argind, JSLineData<T>& line) {
+  if(argind < argc && js_line_read(ctx, argv[argind], &line)) {
+    ++argind;
+    return TRUE;
+  }
+  if(argind + 1 < argc && js_point_read(ctx, argv[argind], &line.a) && js_point_read(ctx, argv[argind + 1], &line.b)) {
+    argind += 2;
+    return TRUE;
+  }
+  if(argind + 3 < argc && js_number_read(ctx, argv[argind], &line.x1) && js_number_read(ctx, argv[argind + 1], &line.y1) &&
+     js_number_read(ctx, argv[argind + 2], &line.x2) && js_number_read(ctx, argv[argind + 3], &line.y2)) {
+    argind += 4;
+    return TRUE;
+  }
+  return FALSE;
+}
+
+template<class T>
 static std::array<T, 4>
 js_line_get(JSContext* ctx, JSValueConst line) {
   std::array<T, 4> r{0, 0, 0, 0};

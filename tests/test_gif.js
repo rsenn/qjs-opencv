@@ -1,5 +1,8 @@
 import * as cv from 'opencv';
 
+const NUM_IMAGES = 30;
+const NUM_COLORS = 16;
+
 function main(...args) {
   let images = [];
   let palette = [],
@@ -9,35 +12,29 @@ function main(...args) {
 
   let paletteImage = cv.imread('lsd/images/building.jpg');
 
-  palette = cv.paletteGenerate(paletteImage, (0 << 1) + 1, 16);
+  palette = cv.paletteGenerate(paletteImage, (0 << 1) + 1, NUM_COLORS);
 
-  for(let i = 0; i < 10; i++) {
+  for(let i = 0; i < NUM_IMAGES; i++) {
     let mat = new cv.Mat(size, cv.CV_8UC4);
-    // paletteImage.copyTo(mat);
-
     images.push(mat);
   }
-  /*
-  for(let i = 0; i < 15; i++) {
-    palette.push([i & 1, i & 2, i & 4].map(n => (n ? (i & 8 ? 255 : 128) : 0)));
-  }
-  palette.unshift([255, 170, 85]);*/
 
   const ansiColor = (r, g, b, bg = false) => `\x1b[${bg ? 48 : 38};2;${r};${g};${b}m`;
   const noColor = () => `\x1b[0m`;
   const colorize = (text, color) => ansiColor(...color, true) + text + noColor();
 
-  console.log(images);
   for(let i = 0; i < palette.length; i++) {
     const [r, g, b] = palette[i];
 
     console.log(ansiColor(r, g, b, true) + `palette #${i}` + noColor(), palette[i]);
   }
-  for(let i = 0; i < 16; i++) {
+
+  for(let i = 0; i < NUM_COLORS; i++) {
     palette2[i] = [i & 1, i & 2, i & 4].map(n => !!n | 0).map(n => n * (i & 8 ? 255 : 128));
   }
-  const hsv_pal = new cv.Mat(1, 16, cv.CV_8UC3),
-    bgr_pal = new cv.Mat(1, 16, cv.CV_8UC3);
+
+  const hsv_pal = new cv.Mat(1, NUM_COLORS, cv.CV_8UC3),
+    bgr_pal = new cv.Mat(1, NUM_COLORS, cv.CV_8UC3);
   {
     let i = 0;
     for(let color of hsv_pal) {
@@ -55,25 +52,33 @@ function main(...args) {
   const decTriplet = (...args) => args.map(toDec).join(', ');
 
   const randInt = max => Math.floor(Math.random() * max);
-  const randCoord = () => new cv.Point(randInt(size.width), randInt(size.height));
+  const randCoord = () => new cv.Point(randInt(size.width - 100) + 100, randInt(size.height));
+  const randLine = () => new cv.Line(...randCoord(), ...randCoord());
 
   const dumpPalette = (palette, fmt = hexColor) =>
     [...palette].map((c, i) => i + ' ' + colorize(fmt(...c), c)).join(', ');
-  console.log('hsv_pal', hsv_pal);
-  console.log('hsv_pal', dumpPalette(hsv_pal, decTriplet));
 
   cv.cvtColor(hsv_pal, bgr_pal, cv.COLOR_HSV2BGR);
-  console.log('bgr_pal', bgr_pal);
+
   palette3 = [...bgr_pal];
   console.log('palette3', dumpPalette(palette3));
 
+  let start=[],end=[], a = [],
+    b = [];
+  for(let j = 0; j < 15; j++) {
+    start[j]= randLine();
+
+    a[j] = randLine();
+    b[j] = randLine();
+  }
+  console.log('a', a);
+  console.log('b', b);
+
   for(let i = 0; i < images.length; i++) {
     for(let j = 0; j < 15; j++) {
-      let coords = [randCoord(), randCoord()];
+      let coords = [a[j].at(i / (images.length - 1)), b[j].at(i / (images.length - 1))];
+
       let color = palette3[j];
-      console.log('coords', coords.map(({ x, y }) => x + ',' + y).join(' -> '));
-      console.log('color', color);
-      console.log('j', j);
       cv.line(images[i], ...coords, [...color.slice(0, 3), 255], 3, false);
     }
     for(let j = 0; j < 15; j++) {
@@ -82,16 +87,10 @@ function main(...args) {
       cv.rectangle(images[i], rect, [...color.slice(0, 3), 255], cv.FILLED, false);
     }
 
-    cv.imwrite(`image-${i}.png`, images[i]);
+    cv.imwrite(`image-${(i + '').padStart(3, '0')}.png`, images[i]);
   }
-  /*
-  let mats = images.map(im => {
-    let mat = new cv.Mat(im.size, cv.CV_8UC1);
 
-    cv.cvtColor(im, mat, cv.COLOR_BGR2GRAY);
-    return mat;
-  });*/
-  cv.imwrite('output.gif', images, palette3, 100, 15, 0);
+  cv.imwrite('output.gif', images, palette3, 10, 15, 0);
 }
 
 main(...scriptArgs.slice(1));

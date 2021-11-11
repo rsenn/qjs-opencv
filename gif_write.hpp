@@ -72,7 +72,7 @@ gif_write(const string& file, const vector<cv::Mat>& mats, const vector<int>& de
     if(mat.channels() == 1 && mat.depth() == 0)
       mat.copyTo(indexed);
     else
-      palette_match(mat, indexed, palette, mat.channels() > 3 ? 0 : -1);
+      palette_match(mat, indexed, palette, mat.channels() > 3 ? transparent : -1);
 
     if(frame > 0)
       ge_add_frame(gif, delays[(frame - 1) % delays.size()]);

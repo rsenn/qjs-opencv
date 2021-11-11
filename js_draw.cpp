@@ -287,7 +287,9 @@ js_draw_line(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv
   if(argc > i && JS_IsBool(argv[i]))
     js_value_to(ctx, argv[i++], antialias);
 
+#ifdef DEBUG_OUTPUT
   printf("cv::line %i|%i -> %i|%i [%.0lf,%.0lf,%.0lf] %i\n", points[0].x, points[0].y, points[1].x, points[1].y, scalar[0], scalar[1], scalar[2], thickness);
+#endif
 
   cv::line(dst, points[0], points[1], scalar, thickness, antialias ? cv::LINE_AA : cv::LINE_8);
   return JS_UNDEFINED;

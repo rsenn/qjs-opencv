@@ -1,4 +1,5 @@
 #include "js_line.hpp"
+#include "js_size.hpp"
 #include "js_alloc.hpp"
 #include "js_array.hpp"
 #include "js_point.hpp"
@@ -13,8 +14,7 @@
 #include <opencv2/core/types.hpp>
 #include <utility>
 
-enum { PROP_A = 0, PROP_B, PROP_SLOPE, PROP_PIVOT, PROP_TO, METHOD_XINTERCEPT, METHOD_YINTERCEPT, PROP_ANGLE, PROP_ASPECT, PROP_LENGTH };
-enum { METHOD_SWAP = 0, METHOD_AT, METHOD_INTERSECT, METHOD_ENDPOINT_DISTANCES, METHOD_DISTANCE };
+enum { PROP_A = 0, PROP_B, PROP_SLOPE, PROP_PIVOT, PROP_TO, PROP_ANGLE, PROP_ASPECT, PROP_LENGTH };
 
 extern "C" {
 JSValue line_proto = JS_UNDEFINED, line_class = JS_UNDEFINED;
@@ -274,6 +274,20 @@ js_line_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
   return obj;
 }
 
+enum {
+  METHOD_SWAP = 0,
+  METHOD_AT,
+  METHOD_INTERSECT,
+  METHOD_ENDPOINT_DISTANCES,
+  METHOD_DISTANCE,
+  METHOD_XINTERCEPT,
+  METHOD_YINTERCEPT,
+  METHOD_ADD,
+  METHOD_SUB,
+  METHOD_MUL,
+  METHOD_DIV
+};
+
 static JSValue
 js_line_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
   JSLineData<double>* ln;
@@ -319,7 +333,7 @@ js_line_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
       JSPointData<double> pt;
       js_point_read(ctx, argv[0], &pt);
       Line<double> line(ln->array);
-      auto distances = line.endpoint_distances(pt);
+      auto distances = line.endpointDistances(pt);
       ret = JS_NewArray(ctx);
       JS_SetPropertyUint32(ctx, ret, 0, js_number_new(ctx, distances.first));
       JS_SetPropertyUint32(ctx, ret, 1, js_number_new(ctx, distances.second));
@@ -337,7 +351,7 @@ js_line_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
       double x = 0;
       if(argc >= 1)
         JS_ToFloat64(ctx, &x, argv[0]);
-      ret = JS_NewFloat64(ctx, line.x_intercept(x));
+      ret = JS_NewFloat64(ctx, line.xIntercept(x));
       break;
     }
     case METHOD_YINTERCEPT: {
@@ -345,7 +359,85 @@ js_line_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
       double y = 0;
       if(argc >= 1)
         JS_ToFloat64(ctx, &y, argv[0]);
-      ret = JS_NewFloat64(ctx, line.y_intercept(y));
+      ret = JS_NewFloat64(ctx, line.yIntercept(y));
+      break;
+    }
+    case METHOD_ADD: {
+      int i = 0;
+      JSLineData<double> l = {0, 0, 0, 0};
+      ret = JS_DupValue(ctx, this_val);
+      while(i < argc) {
+        if(js_line_arg(ctx, argc, argv, i, l)) {
+          ln->a = add(ln->a, l.a);
+          ln->b = add(ln->b, l.b);
+        } else if(js_point_arg(ctx, argc, argv, i, l.a)) {
+          ln->a = add(ln->a, l.a);
+          ln->b = add(ln->b, l.a);
+        } else {
+          break;
+        }
+      }
+      break;
+    }
+    case METHOD_SUB: {
+      int i = 0;
+      JSLineData<double> l = {0, 0, 0, 0};
+      ret = JS_DupValue(ctx, this_val);
+      while(i < argc) {
+        if(js_line_arg(ctx, argc, argv, i, l)) {
+          ln->a = sub(ln->a, l.a);
+          ln->b = sub(ln->b, l.b);
+        } else if(js_point_arg(ctx, argc, argv, i, l.a)) {
+          ln->a = sub(ln->a, l.a);
+          ln->b = sub(ln->b, l.a);
+        } else {
+          break;
+        }
+      }
+      break;
+    }
+    case METHOD_MUL: {
+      int i = 0;
+      JSSizeData<double> s = {1, 1};
+      ret = JS_DupValue(ctx, this_val);
+      while(i < argc) {
+        if(js_size_arg(ctx, argc, argv, i, s)) {
+          ln->a = mul(ln->a, s);
+          ln->b = mul(ln->b, s);
+        } else if(js_point_arg(ctx, argc, argv, i, *reinterpret_cast<JSPointData<double>*>(&s))) {
+          ln->a = mul(ln->a, s);
+          ln->b = mul(ln->b, s);
+        } else if(JS_IsNumber(argv[i])) {
+          double n = 1;
+          JS_ToFloat64(ctx, &n, argv[i++]);
+          ln->a = mul(ln->a, n);
+          ln->b = mul(ln->b, n);
+        } else {
+          break;
+        }
+      }
+      break;
+    }
+    case METHOD_DIV: {
+      int i = 0;
+      JSSizeData<double> s = {1, 1};
+      ret = JS_DupValue(ctx, this_val);
+      while(i < argc) {
+        if(js_size_arg(ctx, argc, argv, i, s)) {
+          ln->a = div(ln->a, s);
+          ln->b = div(ln->b, s);
+        } else if(js_point_arg(ctx, argc, argv, i, *reinterpret_cast<JSPointData<double>*>(&s))) {
+          ln->a = div(ln->a, s);
+          ln->b = div(ln->b, s);
+        } else if(JS_IsNumber(argv[i])) {
+          double n = 1;
+          JS_ToFloat64(ctx, &n, argv[i++]);
+          ln->a = div(ln->a, n);
+          ln->b = div(ln->b, n);
+        } else {
+          break;
+        }
+      }
       break;
     }
   }
@@ -424,6 +516,23 @@ js_line_from(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv
   return ret;
 }
 
+static JSValue
+js_line_sum(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+  JSLineData<double> line = {0, 0, 0, 0};
+
+  for(int i = 0; i < argc; i++) {
+    JSLineData<double> tmp = {0, 0, 0, 0};
+    if(js_line_read(ctx, argv[i], &tmp)) {
+      line.x1 += tmp.x1;
+      line.y1 += tmp.y1;
+      line.x2 += tmp.x2;
+      line.y2 += tmp.y2;
+    }
+  }
+
+  return js_line_new(ctx, line.array[0], line.array[1], line.array[2], line.array[3]);
+}
+
 void
 js_line_finalizer(JSRuntime* rt, JSValue val) {
   JSLineData<double>* ln;
@@ -460,6 +569,10 @@ const JSCFunctionListEntry js_line_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("intersect", 1, js_line_methods, METHOD_INTERSECT),
     JS_CFUNC_MAGIC_DEF("endpointDistances", 1, js_line_methods, METHOD_ENDPOINT_DISTANCES),
     JS_CFUNC_MAGIC_DEF("distance", 1, js_line_methods, METHOD_DISTANCE),
+    JS_CFUNC_MAGIC_DEF("add", 1, js_line_methods, METHOD_ADD),
+    JS_CFUNC_MAGIC_DEF("sub", 1, js_line_methods, METHOD_SUB),
+    JS_CFUNC_MAGIC_DEF("mul", 1, js_line_methods, METHOD_MUL),
+    JS_CFUNC_MAGIC_DEF("div", 1, js_line_methods, METHOD_DIV),
     JS_CFUNC_DEF("toArray", 0, js_line_toarray),
     JS_CFUNC_MAGIC_DEF("toPoints", 0, js_line_iterator, JS_LINE_AS_POINTS),
     JS_CFUNC_MAGIC_DEF("toString", 0, js_line_iterator, JS_LINE_AS_POINTS | JS_LINE_TO_STRING),
@@ -470,7 +583,10 @@ const JSCFunctionListEntry js_line_proto_funcs[] = {
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Line", JS_PROP_CONFIGURABLE),
 };
 
-const JSCFunctionListEntry js_line_static_funcs[] = {JS_CFUNC_DEF("from", 1, js_line_from)};
+const JSCFunctionListEntry js_line_static_funcs[] = {
+    JS_CFUNC_DEF("from", 1, js_line_from),
+    JS_CFUNC_DEF("sum", 1, js_line_sum),
+};
 
 int
 js_line_init(JSContext* ctx, JSModuleDef* m) {

@@ -364,4 +364,52 @@ operator<<(Stream& s, const std::vector<Item>& vector) {
   return s;
 }
 
+template<class T>
+static inline cv::Point_<T>
+add(const cv::Point_<T>& a, const cv::Point_<T>& b) {
+  return cv::Point_<T>(a.x + b.x, a.y + b.y);
+}
+
+template<class T, class U>
+static inline cv::Point_<double>
+add(const cv::Point_<T>& a, const cv::Point_<U>& b) {
+  return cv::Point_<double>(a.x + b.x, a.y + b.y);
+}
+
+template<class T>
+static inline cv::Point_<T>
+sub(const cv::Point_<T>& a, const cv::Point_<T>& b) {
+  return cv::Point_<T>(a.x - b.x, a.y - b.y);
+}
+
+template<class T, class U>
+static inline cv::Point_<double>
+sub(const cv::Point_<T>& a, const cv::Point_<U>& b) {
+  return cv::Point_<double>(a.x - b.x, a.y - b.y);
+}
+
+template<class T>
+static inline cv::Point_<T>
+div(const cv::Point_<T>& p, T d) {
+  return cv::Point_<T>(p.x / d, p.y / d);
+}
+
+template<class T>
+static inline cv::Point_<T>
+div(const cv::Point_<T>& p, const cv::Size_<T>& s) {
+  return cv::Point_<T>(p.x / s.width, p.y / s.height);
+}
+
+template<class T>
+static inline cv::Point_<T>
+mul(const cv::Point_<T>& p, T f) {
+  return cv::Point_<T>(p.x * f, p.y * f);
+}
+
+template<class T>
+static inline cv::Point_<T>
+mul(const cv::Point_<T>& p, const cv::Size_<T>& s) {
+  return cv::Point_<T>(p.x * s.width, p.y * s.height);
+}
+
 #endif // defined(UTIL_HPP)

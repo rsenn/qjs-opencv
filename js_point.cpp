@@ -2,8 +2,10 @@
 #include "js_alloc.hpp"
 #include "js_array.hpp"
 #include "js_rect.hpp"
+#include "js_size.hpp"
 #include "js_typed_array.hpp"
 #include "jsbindings.hpp"
+#include "util.hpp"
 #include <quickjs.h>
 #include <cctype>
 #include <cmath>
@@ -41,6 +43,29 @@ js_point_arg(JSContext* ctx, JSPointData<T>* out, int argc, JSValueConst argv[])
     out->y = y;
   }
   return ret;
+}
+
+template<class T>
+static inline BOOL
+js_point_argument(JSContext* ctx, int argc, JSValueConst argv[], int& argind, JSPointData<T>* out) {
+  int ret = 0;
+
+  JSPointData<T>* pt;
+
+  if((pt = js_point_data(argv[argind]))) {
+    *out = *pt;
+    argind++;
+    return TRUE;
+  }
+
+  if(argind + 1 < argc && JS_IsNumber(argv[argind]) && JS_IsNumber(argv[argind + 1])) {
+    if(js_number_read(ctx, argv[argind], &out->x) && js_number_read(ctx, argv[argind + 1], &out->y)) {
+      argind += 2;
+      return TRUE;
+    }
+  }
+
+  return FALSE;
 }
 
 VISIBLE JSValue
@@ -137,14 +162,23 @@ js_point_ddot(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* arg
 
 static JSValue
 js_point_diff(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  JSPointData<double>* s = js_point_data2(ctx, this_val);
-  JSPointData<double>* other = js_point_data2(ctx, argv[0]);
-
   JSValue ret;
-  if(!s || !other)
+  int argind = 0;
+  JSPointData<double>*s, other, pt;
+
+  if(!(s = js_point_data2(ctx, this_val)))
     return JS_EXCEPTION;
 
-  ret = js_point_new(ctx, s->x - other->x, s->y - other->y);
+  pt = *s;
+
+  while(argind < argc) {
+    if(!js_point_argument(ctx, argc, argv, argind, &other))
+      break;
+    pt.x = other.x - pt.x;
+    pt.y = other.y - pt.y;
+  }
+
+  ret = js_point_new(ctx, pt.x, pt.y);
   return ret;
 }
 
@@ -172,14 +206,17 @@ js_point_inside(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
 
   return JS_NewBool(ctx, retval);
 }
-enum { POINT_METHOD_NORM = 0, POINT_METHOD_ABS };
+
+enum { POINT_METHOD_NORM = 0, POINT_METHOD_ABS, POINT_METHOD_ANGLE };
 
 static JSValue
 js_point_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
   JSPointData<double>* s;
   JSValue ret = JS_UNDEFINED;
+
   if(!(s = js_point_data2(ctx, this_val)))
     return JS_EXCEPTION;
+
   switch(magic) {
     case POINT_METHOD_NORM: {
       ret = JS_NewFloat64(ctx, sqrt((double)s->x * s->x + (double)s->y * s->y));
@@ -190,51 +227,78 @@ js_point_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
       ret = js_point_new(ctx, JS_GetPrototype(ctx, this_val), fabs(s->x), fabs(s->y));
       break;
     }
+
+    case POINT_METHOD_ANGLE: {
+      JSPointData<double> pt(*s), *other = nullptr;
+      BOOL deg = FALSE;
+      if(argc >= 1)
+        other = js_point_data(argv[0]);
+      if(argc >= 2)
+        deg = JS_ToBool(ctx, argv[1]);
+
+      if(other) {
+        pt.x = other->x - pt.x;
+        pt.y = other->y - pt.y;
+      }
+      double phi = std::atan2(pt.y, pt.x);
+
+      if(deg)
+        phi = phi * 180 / M_PI;
+
+      ret = JS_NewFloat64(ctx, phi);
+      break;
+    }
   }
   return ret;
 }
 
 static JSValue
 js_point_set_xy(JSContext* ctx, JSValueConst this_val, JSValueConst val, int magic) {
-  JSPointData<double>* s = js_point_data2(ctx, this_val);
+  JSPointData<double>* s;
   double v;
-  if(!s)
+
+  if(!(s = js_point_data2(ctx, this_val)))
     return JS_EXCEPTION;
+
   if(JS_ToFloat64(ctx, &v, val))
     return JS_EXCEPTION;
-  if(magic == 0)
-    s->x = v;
-  else
-    s->y = v;
+
+  switch(magic) {
+    case 0: s->x = v; break;
+    case 1: s->y = v; break;
+  }
+
   return JS_UNDEFINED;
 }
-enum { POINT_ARITH_ADD = 0, POINT_ARITH_SUB, POINT_ARITH_MUL, POINT_ARITH_DIV };
+
+enum { POINT_ARITH_ADD = 0, POINT_ARITH_SUB, POINT_ARITH_MUL, POINT_ARITH_DIV, POINT_ARITH_MOD };
 
 static JSValue
 js_point_arith(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
-  JSPointData<double> other, point, *s = js_point_data2(ctx, this_val);
+  JSPointData<double> other, point, *s;
+  int argind = 0;
+  if(!(s = js_point_data2(ctx, this_val)))
+    return JS_EXCEPTION;
 
-  if(!js_point_arg(ctx, &other, argc, argv))
-    other.y = other.x = magic >= POINT_ARITH_MUL ? 1 : 0;
+  point = *s;
 
-  switch(magic) {
-    case POINT_ARITH_ADD:
-      point.x = s->x + other.x;
-      point.y = s->y + other.y;
-      break;
-    case POINT_ARITH_SUB:
-      point.x = s->x - other.x;
-      point.y = s->y - other.y;
-      break;
-    case POINT_ARITH_MUL:
-      point.x = s->x * other.x;
-      point.y = s->y * other.y;
-      break;
-    case POINT_ARITH_DIV:
-      point.x = s->x / other.x;
-      point.y = s->y / other.y;
-      break;
+  while(argind < argc) {
+    if(!js_point_argument(ctx, argc, argv, argind, &other)) {
+      if(js_number_read(ctx, argv[argind], &other.x)) {
+        other.y = other.x;
+        argind++;
+      } else {
+        break;
+      }
+    }
+    switch(magic) {
+      case POINT_ARITH_ADD: point = add(point, other); break;
+      case POINT_ARITH_SUB: point = sub(point, other); break;
+      case POINT_ARITH_MUL: point = mul(point, *reinterpret_cast<JSSizeData<double>*>(&other)); break;
+      case POINT_ARITH_DIV: point = div(point, *reinterpret_cast<JSSizeData<double>*>(&other)); break;
+    }
   }
+
   return js_point_new(ctx, point);
 }
 
@@ -369,10 +433,52 @@ js_point_from(JSContext* ctx, JSValueConst point, int argc, JSValueConst* argv) 
       str = endptr;
     }
   } else if(js_is_array(ctx, argv[0])) {
-    js_array_to<double, 2>(ctx, argv[0], array);
+    js_array_to(ctx, argv[0], array);
   }
   if(array[0] > 0 && array[1] > 0)
     ret = js_point_new(ctx, array[0], array[1]);
+
+  return ret;
+}
+
+static JSValue
+js_point_fromangle(JSContext* ctx, JSValueConst point, int argc, JSValueConst argv[]) {
+  JSValue ret = JS_EXCEPTION;
+  double phi = 0;
+  JSSizeData<double> f = {1.0, 1.0};
+  BOOL deg = FALSE;
+
+  JS_ToFloat64(ctx, &phi, argv[0]);
+
+  if(argc >= 2) {
+    if(!js_size_read(ctx, argv[1], &f)) {
+      JS_ToFloat64(ctx, &f.width, argv[1]);
+      f.height = f.width;
+    }
+  }
+
+  if(argc >= 3)
+    deg = JS_ToBool(ctx, argv[2]);
+
+  if(deg)
+    phi = phi * M_PI / 180.0;
+
+  return js_point_new(ctx, std::cos(phi) * f.width, std::sin(phi) * f.height);
+}
+
+static JSValue
+js_point_difference(JSContext* ctx, JSValueConst point, int argc, JSValueConst argv[]) {
+  JSValue ret = JS_NewArray(ctx);
+  int argind = 0, i = 0, outind = 0;
+  JSPointData<double> pt, prev;
+
+  while(argind < argc) {
+    js_point_arg(ctx, argc, argv, argind, pt);
+    JS_SetPropertyUint32(ctx, ret, outind++, js_point_new(ctx, pt.x - prev.x, pt.y - prev.y));
+    prev = pt;
+    ++i;
+  }
+
   return ret;
 }
 
@@ -395,6 +501,7 @@ VISIBLE JSValue
 js_point_new(JSContext* ctx, double x, double y) {
   return js_point_new(ctx, point_proto, x, y);
 }
+
 extern "C" {
 
 JSValue point_class = JS_UNDEFINED;
@@ -417,6 +524,7 @@ const JSCFunctionListEntry js_point_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("div", 1, js_point_arith, POINT_ARITH_DIV),
     JS_CFUNC_MAGIC_DEF("norm", 0, js_point_method, POINT_METHOD_NORM),
     JS_CFUNC_MAGIC_DEF("abs", 0, js_point_method, POINT_METHOD_ABS),
+    JS_CFUNC_MAGIC_DEF("angle", 0, js_point_method, POINT_METHOD_ANGLE),
     JS_CFUNC_MAGIC_DEF("round", 0, js_point_round, 0),
     JS_CFUNC_MAGIC_DEF("floor", 0, js_point_round, 1),
     JS_CFUNC_MAGIC_DEF("ceil", 0, js_point_round, 2),
@@ -427,7 +535,11 @@ const JSCFunctionListEntry js_point_proto_funcs[] = {
 
     // JS_CFUNC_MAGIC_DEF("[Symbol.toStringTag]", 0, js_point_to_string, 1),
 };
-const JSCFunctionListEntry js_point_static_funcs[] = {JS_CFUNC_DEF("from", 1, js_point_from)};
+const JSCFunctionListEntry js_point_static_funcs[] = {
+    JS_CFUNC_DEF("from", 1, js_point_from),
+    JS_CFUNC_DEF("fromAngle", 1, js_point_fromangle),
+    JS_CFUNC_DEF("diff", 2, js_point_difference),
+};
 
 int
 js_point_init(JSContext* ctx, JSModuleDef* m) {

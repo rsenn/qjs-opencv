@@ -74,6 +74,21 @@ js_point_argument(JSContext* ctx, int argc, JSValueConst argv[], JSPointData<T>*
 }
 
 template<class T>
+static inline BOOL
+js_point_arg(JSContext* ctx, int argc, JSValueConst* argv, int& argind, JSPointData<T>& point) {
+  if(argind < argc && js_point_read(ctx, argv[argind], &point)) {
+    ++argind;
+    return TRUE;
+  }
+
+  if(argind + 1 < argc && js_number_read(ctx, argv[argind], &point.x) && js_number_read(ctx, argv[argind + 1], &point.y)) {
+    argind += 2;
+    return TRUE;
+  }
+  return FALSE;
+}
+
+template<class T>
 static inline void
 js_point_write(JSContext* ctx, JSValueConst out, const JSPointData<T>& in) {
   JSValue x = js_number_new<T>(ctx, in.x);

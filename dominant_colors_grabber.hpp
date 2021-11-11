@@ -30,13 +30,13 @@ public:
 
   void SetColorSpace(color_space cs);
   color_space GetColorSpace();
-  
+
   void SetColorsCount(unsigned colors_count);
   unsigned GetColorsCount();
-  
+
   void SetColorsPart(double colors_part);
   double GetColorsPart();
-  
+
   void SetParam(cv::Vec3i param);
   cv::Vec3i GetParam();
 
