@@ -164,21 +164,21 @@ static JSValue
 js_point_diff(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSValue ret;
   int argind = 0;
-  JSPointData<double>*s, other, pt;
+  JSPointData<double>*s, arg, point;
 
   if(!(s = js_point_data2(ctx, this_val)))
     return JS_EXCEPTION;
 
-  pt = *s;
+  point = *s;
 
   while(argind < argc) {
-    if(!js_point_argument(ctx, argc, argv, argind, &other))
+    if(!js_point_argument(ctx, argc, argv, argind, &arg))
       break;
-    pt.x = other.x - pt.x;
-    pt.y = other.y - pt.y;
+    point.x = arg.x - point.x;
+    point.y = arg.y - point.y;
   }
 
-  ret = js_point_new(ctx, pt.x, pt.y);
+  ret = js_point_new(ctx, JS_GetPrototype(ctx, this_val), point.x, point.y);
   return ret;
 }
 
@@ -229,22 +229,22 @@ js_point_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
     }
 
     case POINT_METHOD_ANGLE: {
-      JSPointData<double> pt(*s), *other = nullptr;
+      JSPointData<double> point(*s), *arg = nullptr;
       BOOL deg = FALSE;
-      if(argc >= 1)
-        other = js_point_data(argv[0]);
-      if(argc >= 2)
-        deg = JS_ToBool(ctx, argv[1]);
-
-      if(other) {
-        pt.x = other->x - pt.x;
-        pt.y = other->y - pt.y;
+      int i = 0;
+      if(i < argc && (arg = js_point_data(argv[i])))
+        i++;
+      while(i < argc) {
+        if(JS_IsBool(argv[i]))
+          deg = JS_ToBool(ctx, argv[i]);
+        i++;
       }
-      double phi = std::atan2(pt.y, pt.x);
+      if(arg) 
+        point = sub(*arg, point);     
 
+      double phi = std::atan2(point.y, point.x);
       if(deg)
         phi = phi * 180 / M_PI;
-
       ret = JS_NewFloat64(ctx, phi);
       break;
     }
@@ -299,7 +299,7 @@ js_point_arith(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
     }
   }
 
-  return js_point_new(ctx, point);
+  return js_point_new(ctx, JS_GetPrototype(ctx, this_val), point.x, point.y);
 }
 
 static JSValue
