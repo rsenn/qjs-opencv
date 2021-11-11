@@ -10,12 +10,28 @@
 #include <algorithm>
 
 namespace {
+using std::sort;
+using std::string;
+using std::transform;
 using std::vector;
+
+static inline void
+gif_write_image(ge_GIF* gif, const cv::Mat& indexed) {
+  size_t index = 0;
+  uint16_t width = gif->w, height = gif->h;
+
+  for(uint16_t y = 0; y < height; y++) {
+    for(uint16_t x = 0; x < width; x++) {
+      uchar pixel = indexed.at<uchar>(y, x);
+
+      gif->frame[index++] = pixel;
+    }
+  }
+}
 
 template<class ColorType>
 void
-gif_write(
-    const std::string& file, const vector<cv::Mat>& mats, const vector<int>& delays, const vector<ColorType>& palette, int transparent = -1, int loop = 0) {
+gif_write(const string& file, const vector<cv::Mat>& mats, const vector<int>& delays, const vector<ColorType>& palette, int transparent = -1, int loop = 0) {
   size_t i, n, size, depth;
 
   vector<uint8_t> pal;
@@ -37,11 +53,11 @@ gif_write(
   widths.resize(frames);
   heights.resize(frames);
 
-  std::transform(mats.begin(), mats.end(), widths.begin(), [](const cv::Mat& mat) -> size_t { return mat.cols; });
-  std::transform(mats.begin(), mats.end(), heights.begin(), [](const cv::Mat& mat) -> size_t { return mat.rows; });
+  transform(mats.begin(), mats.end(), widths.begin(), [](const cv::Mat& mat) -> size_t { return mat.cols; });
+  transform(mats.begin(), mats.end(), heights.begin(), [](const cv::Mat& mat) -> size_t { return mat.rows; });
 
-  std::sort(widths.begin(), widths.end());
-  std::sort(heights.begin(), heights.end());
+  sort(widths.begin(), widths.end());
+  sort(heights.begin(), heights.end());
 
   size_t w = widths[0];
   size_t h = heights[0];
@@ -50,7 +66,7 @@ gif_write(
   size_t frame = 0;
 
   for(const cv::Mat& mat : mats) {
-    size_t x, y, index = 0;
+
     cv::Mat indexed(mat.size(), CV_8UC1);
 
     if(mat.channels() == 1 && mat.depth() == 0)
@@ -61,15 +77,11 @@ gif_write(
     if(frame > 0)
       ge_add_frame(gif, delays[(frame - 1) % delays.size()]);
 
-    for(x = 0; x < w; x++) {
-      for(y = 0; y < h; y++) {
-        uchar pixel = indexed.at<uchar>(y, x);
+    gif_write_image(gif, indexed);
 
-        gif->frame[index++] = pixel;
-      }
-    }
     frame++;
   }
+
   ge_close_gif(gif);
 }
 } // namespace

@@ -59,7 +59,6 @@ function main(...args) {
       .map(c => `[ ${c} ]`)
       .join('\n')
   );
-  cv.imwrite(`output.gif`, images, palette, 0);
-}
+ }
 
 main(...scriptArgs.slice(1));

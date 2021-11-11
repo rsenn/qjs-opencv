@@ -91,7 +91,7 @@ function main(...args) {
     cv.cvtColor(im, mat, cv.COLOR_BGR2GRAY);
     return mat;
   });*/
-  cv.imwrite('output.gif', images, palette, 100, 15, 0);
+  cv.imwrite('output.gif', images, palette3, 100, 15, 0);
 }
 
 main(...scriptArgs.slice(1));

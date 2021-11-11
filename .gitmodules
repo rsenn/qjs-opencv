@@ -8,6 +8,3 @@
 [submodule "gifenc"]
 	path = gifenc
 	url = https://github.com/lecram/gifenc
-[submodule "dominant-colors"]
-	path = dominant-colors
-	url = https://github.com/ZZPot/Dominant-colors

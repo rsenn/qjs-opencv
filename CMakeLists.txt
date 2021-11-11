@@ -159,7 +159,7 @@ option(QUICKJS_MODULES "Build .so modules for quickjs" ON)
 
 option(BUILD_QUICKJS "Build QuickJS" ON)
 
-file(GLOB OPENCV_SOURCES *.hpp *.cpp gifenc/gifenc.c dominant-colors/DomColors.cpp)
+file(GLOB OPENCV_SOURCES *.hpp *.cpp gifenc/gifenc.c dominant_colors_grabber.cpp)
 # dump(OPENCV_SOURCES)
 
 dump(QUICKJS_MODULE_CFLAGS F_PIC)

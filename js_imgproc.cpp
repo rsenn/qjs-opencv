@@ -20,7 +20,7 @@
 #include <opencv2/core/matx.hpp>
 #include <opencv2/core/types.hpp>
 #include "palette.hpp"
-#include "dominant-colors/DomColors.h"
+#include "dominant_colors_grabber.hpp"
 #include "pixel_neighborhood.hpp"
 #include <quickjs.h>
 #include "skeletonization.hpp"
@@ -778,7 +778,7 @@ js_cv_palette_generate(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
 
   JSInputArray src = js_umat_or_mat(ctx, argv[0]);
 
-  dominant_colors_graber dcg;
+  dominant_colors_grabber dcg;
   int32_t mode = 0, count = 0;
   enum color_space cs;
   enum dist_type dt;
