@@ -353,6 +353,21 @@ public:
     return js_typedarray_new(ctx, buf, 0, count, TypedArrayTraits<T>::getProps());
   }
 
+  static int64_t
+  to_vector(JSContext* ctx, JSValueConst arr, std::vector<T>& out) {
+    JSValue length = JS_GetPropertyStr(ctx, arr, "length");
+    size_t i, len = 0;
+    JS_ToIndex(ctx, &len, length);
+    JS_FreeValue(ctx, length);
+    out.resize(len);
+    for(i = 0; i < len; i++) {
+      JSValue item = JS_GetPropertyUint32(ctx, arr, i);
+      js_value_to(ctx, item, out[i]);
+      JS_FreeValue(ctx, item);
+    }
+    return len;
+  }
+
   template<size_t N> static int64_t to_array(JSContext* ctx, JSValueConst arr, std::array<T, N>& out);
   static int64_t to_scalar(JSContext* ctx, JSValueConst arr, cv::Scalar_<T>& out);
 };
@@ -375,6 +390,12 @@ template<class Container>
 static inline JSValue
 js_typedarray_from(JSContext* ctx, const Container& v, uint32_t byteOffset = 0, uint32_t length = UINT32_MAX) {
   return js_typedarray<typename Container::value_type>::from_sequence(ctx, v.begin(), v.end(), byteOffset);
+}
+
+template<class T>
+static inline JSValue
+js_typedarray_to(JSContext* ctx, JSValueConst typed_arr, std::vector<T>& v) {
+  return js_typedarray<T>::to_vector(ctx, typed_arr, v);
 }
 
 static inline TypedArrayType

@@ -92,10 +92,15 @@ js_color_read(JSContext* ctx, JSValueConst color, JSColorData<double>* out) {
       v[2] = JS_GetPropertyStr(ctx, color, "b");
       v[3] = JS_GetPropertyStr(ctx, color, "a");
     }
-    JS_ToFloat64(ctx, &c[0], v[0]);
-    JS_ToFloat64(ctx, &c[1], v[1]);
-    JS_ToFloat64(ctx, &c[2], v[2]);
-    JS_ToFloat64(ctx, &c[3], v[3]);
+
+    if(!(JS_IsNumber(v[0]) && JS_IsNumber(v[1]) && JS_IsNumber(v[2]) && JS_IsNumber(v[3]))) {
+      ret = 0;
+    } else {
+      JS_ToFloat64(ctx, &c[0], v[0]);
+      JS_ToFloat64(ctx, &c[1], v[1]);
+      JS_ToFloat64(ctx, &c[2], v[2]);
+      JS_ToFloat64(ctx, &c[3], v[3]);
+    }
 
     JS_FreeValue(ctx, v[0]);
     JS_FreeValue(ctx, v[1]);

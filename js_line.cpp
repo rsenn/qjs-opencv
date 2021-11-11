@@ -320,8 +320,8 @@ js_line_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
       if(argc > 1)
         point = js_point_data2(ctx, argv[1]);
 
-      Line<double> line /*= Line*/(ln->array);
-      Line<double> other /*= Line*/(arg);
+      Line<double> line /*= Line*/ (ln->array);
+      Line<double> other /*= Line*/ (arg);
 
       ret = JS_NewBool(ctx, line.intersect(other, point));
       break;

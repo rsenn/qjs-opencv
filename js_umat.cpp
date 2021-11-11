@@ -699,7 +699,10 @@ js_umat_tostring(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* 
         if(um->type() == CV_32FC1)
           os << mat_at<float>(*um, y, x);
         else
-          os << std::setfill('0') << std::setbase(16) << std::setw(um->type() == CV_8UC4 ? 8 : um->type() == CV_8UC1 ? 2 : 6)
+          os << std::setfill('0') << std::setbase(16)
+             << std::setw(um->type() == CV_8UC4   ? 8
+                          : um->type() == CV_8UC1 ? 2
+                                                  : 6)
              << mat_at<uint32_t>(*um, y, x);
       }
     }

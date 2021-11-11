@@ -47,6 +47,21 @@ js_umat_or_mat(JSContext* ctx, JSValueConst value) {
   return cv::noArray();
 }
 
+template<class T>
+void
+copy_to_vector(TypedArrayProps& props, std::vector<T>& vec) {
+  TypedArrayRange<T> range(props);
+
+  vec.resize(props.size());
+  std::copy(range.begin(), range.end(), vec.begin());
+}
+
+template<class T>
+JSInputArray
+typed_input_array(TypedArrayProps& prop) {
+  return JSInputArray(prop.ptr<T>(), prop.size<T>());
+}
+
 static inline JSInputArray
 js_input_array(JSContext* ctx, JSValueConst value) {
   cv::Mat* mat;
@@ -57,7 +72,18 @@ js_input_array(JSContext* ctx, JSValueConst value) {
   if((mat = js_mat_data_nothrow(value)))
     return JSInputArray(*mat);
 
-  if(js_is_array(ctx, value)) {
+  if(js_is_typedarray(ctx, value)) {
+    TypedArrayProps props = js_typedarray_props(ctx, value);
+    size_t len = props.size();
+    switch(TypedArrayValue(js_typedarray_type(ctx, value))) {
+      case TYPEDARRAY_UINT8: return typed_input_array<uint8_t>(props);
+      case TYPEDARRAY_INT8: return typed_input_array<int8_t>(props);
+      case TYPEDARRAY_UINT16: return typed_input_array<uint16_t>(props);
+      case TYPEDARRAY_INT16: return typed_input_array<int16_t>(props);
+      case TYPEDARRAY_FLOAT32: return typed_input_array<float>(props);
+      case TYPEDARRAY_FLOAT64: return typed_input_array<double>(props);
+    }
+  } else if(js_is_array(ctx, value)) {
     std::vector<double> arr;
     cv::Scalar scalar;
     js_array_to(ctx, value, arr);

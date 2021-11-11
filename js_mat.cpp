@@ -412,6 +412,7 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv,
   double value = 0;
   JSMatData *input = nullptr, *output = nullptr, *other = nullptr;
   double scale = 1.0;
+  std::array<uint8_t, 4> arr;
 
   if((input = js_mat_data2(ctx, this_val)) == nullptr)
     return JS_EXCEPTION;
@@ -422,8 +423,10 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv,
   if(JS_IsNumber(argv[0])) {
     JS_ToFloat64(ctx, &value, argv[0]);
 
-  } else if((other = js_mat_data_nothrow(argv[0])) == nullptr)
+  } else if((other = js_mat_data_nothrow(argv[0])) == nullptr) {
+    js_array_to(ctx, argv[0], arr);
     js_color_read(ctx, argv[0], &color);
+  }
 
   if(magic == 3 && argc > 1) {
     JS_ToFloat64(ctx, &scale, argv[1]);
@@ -462,16 +465,21 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv,
           }
         }
       } else {
-        cv::Scalar& scalar = js_to_scalar(color);
+        auto& scalar = *reinterpret_cast<cv::Scalar_<uint8_t>*>(&arr);
+        auto& v4b = *reinterpret_cast<cv::Vec4b*>(&arr);
+
+        uint32_t value = (v4b.val[0] << 24) | (v4b.val[1] << 16) | (v4b.val[2] << 8) | (v4b.val[3]);
+        /*   std::array<uint8_t,4> arr;
+         */
 
         // std::cerr << "js_mat_expr input=" << (void*)input << " output=" << (void*)output << " scalar=" <<
         // scalar << std::endl;
 
         switch(magic) {
-          case MAT_EXPR_AND: expr = mat & scalar; break;
-          case MAT_EXPR_OR: expr = mat | scalar; break;
-          case MAT_EXPR_XOR: expr = mat ^ scalar; break;
-          case MAT_EXPR_MUL: expr = mat.mul(scalar, scale); break;
+          case MAT_EXPR_AND: expr = mat & value; break;
+          case MAT_EXPR_OR: expr = mat | value; break;
+          case MAT_EXPR_XOR: expr = mat ^ value; break;
+          case MAT_EXPR_MUL: expr = mat.mul(value, scale); break;
         }
         tmp = static_cast<cv::Mat>(expr);
       }

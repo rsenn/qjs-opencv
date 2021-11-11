@@ -348,7 +348,6 @@ js_cv_bitwise(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* arg
 
   mask = cv::noArray();
   if(argc > 3)
-
     mask = js_input_array(ctx, argv[3]);
 
   switch(magic) {

@@ -19,7 +19,6 @@ VISIBLE JSLineData<double>* js_line_data(JSValueConst val);
 VISIBLE int js_line_init(JSContext*, JSModuleDef*);
 }
 
-
 template<class T>
 static inline JSValue
 js_line_new(JSContext* ctx, const JSLineData<T>& line) {
