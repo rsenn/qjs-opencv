@@ -161,7 +161,7 @@ js_point_ddot(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* arg
 }
 
 static JSValue
-js_point_diff(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_point_difference(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSValue ret;
   int argind = 0;
   JSPointData<double>*s, arg, point;
@@ -468,19 +468,39 @@ js_point_fromangle(JSContext* ctx, JSValueConst point, int argc, JSValueConst ar
 }
 
 static JSValue
-js_point_difference(JSContext* ctx, JSValueConst point, int argc, JSValueConst argv[]) {
+js_point_diff(JSContext* ctx, JSValueConst point, int argc, JSValueConst argv[]) {
   JSValue ret = JS_NewArray(ctx);
   int argind = 0, i = 0, outind = 0;
   JSPointData<double> pt, prev;
 
   while(argind < argc) {
     js_point_arg(ctx, argc, argv, argind, pt);
-    JS_SetPropertyUint32(ctx, ret, outind++, js_point_new(ctx, pt.x - prev.x, pt.y - prev.y));
+    if(i > 0)
+      JS_SetPropertyUint32(ctx, ret, outind++, js_point_new(ctx, pt.x - prev.x, pt.y - prev.y));
     prev = pt;
     ++i;
   }
 
   return ret;
+}
+
+static JSValue
+js_point_distance(JSContext* ctx, JSValueConst point, int argc, JSValueConst argv[]) {
+  int argind = 0, i = 0, outind = 0;
+  JSPointData<double> pt, prev;
+  double d = 0;
+
+  while(argind < argc) {
+    js_point_arg(ctx, argc, argv, argind, pt);
+
+    if(i > 0)
+      d += distance(prev, pt);
+
+    prev = pt;
+    ++i;
+  }
+
+  return JS_NewFloat64(ctx, d);
 }
 
 static void
@@ -518,7 +538,7 @@ const JSCFunctionListEntry js_point_proto_funcs[] = {
     JS_CFUNC_DEF("cross", 1, js_point_cross),
     JS_CFUNC_DEF("dot", 1, js_point_ddot),
     JS_CFUNC_DEF("inside", 1, js_point_inside),
-    JS_CFUNC_DEF("diff", 1, js_point_diff),
+    JS_CFUNC_DEF("difference", 1, js_point_difference),
     JS_CFUNC_MAGIC_DEF("add", 1, js_point_arith, POINT_ARITH_ADD),
     JS_CFUNC_MAGIC_DEF("sub", 1, js_point_arith, POINT_ARITH_SUB),
     JS_CFUNC_MAGIC_DEF("mul", 1, js_point_arith, POINT_ARITH_MUL),
@@ -539,7 +559,8 @@ const JSCFunctionListEntry js_point_proto_funcs[] = {
 const JSCFunctionListEntry js_point_static_funcs[] = {
     JS_CFUNC_DEF("from", 1, js_point_from),
     JS_CFUNC_DEF("fromAngle", 1, js_point_fromangle),
-    JS_CFUNC_DEF("diff", 2, js_point_difference),
+    JS_CFUNC_DEF("diff", 2, js_point_diff),
+    JS_CFUNC_DEF("distance", 2, js_point_distance),
 };
 
 int

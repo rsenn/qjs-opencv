@@ -146,6 +146,24 @@ angle(cv::Point_<T> pt1, cv::Point_<T> pt2, cv::Point_<T> pt0) {
   return (dx1 * dx2 + dy1 * dy2) / sqrt((dx1 * dx1 + dy1 * dy1) * (dx2 * dx2 + dy2 * dy2) + 1e-10);
 }
 
+template<class T>
+inline cv::Point_<T>
+difference(const cv::Point_<T>& a, const cv::Point_<T>& b) {
+  return cv::Point_<T>(b.x - a.x, b.y - a.y);
+}
+
+template<class T>
+inline double
+distance(const cv::Point_<T>& p) {
+  return std::sqrt(p.x * p.x + p.y * p.y);
+}
+
+template<class T>
+inline double
+distance(const cv::Point_<T>& a, const cv::Point_<T>& b) {
+  return distance(difference(a, b));
+}
+
 template<class To, class From>
 inline void
 convert_points(const typename point_list<From>::type& from, typename point_list<To>::type& to) {
