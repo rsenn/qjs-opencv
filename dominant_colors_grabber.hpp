@@ -1,57 +1,51 @@
+#ifndef DOMINANT_COLORS_GRABBER_HPP
+#define DOMINANT_COLORS_GRABBER_HPP
+
 #pragma once
 #include <vector>
 #include <opencv2/core.hpp>
 
-enum color_space
-{
-	CS_UNDEFINED = -1,
-	CS_BGR = 0,
-	CS_HSV
-};
+enum color_space { CS_UNDEFINED = -1, CS_BGR = 0, CS_HSV };
 
-enum dist_type
-{
-	DT_UNDEFINED = -1,
-	DT_CUBE = 0,
-	DT_CIE76,
-	DT_CIE94,
-	DT_KMEANS
-};
+enum dist_type { DT_UNDEFINED = -1, DT_CUBE = 0, DT_CIE76, DT_CIE94, DT_KMEANS };
 
-#define DOM_COLORS_COUNT_DEFAULT		12
-#define DOM_COLORS_PART_DEFAULT			95 // colors % of whole image
-#define DOM_COLORS_COLOR_SPACE_DEFAULT	color_space::CS_BGR
-#define DOM_COLORS_DIST_TYPE_DEFAULT	dist_type::DT_CUBE
+#define DOM_COLORS_COUNT_DEFAULT 12
+#define DOM_COLORS_PART_DEFAULT 95 // colors % of whole image
+#define DOM_COLORS_COLOR_SPACE_DEFAULT color_space::CS_BGR
+#define DOM_COLORS_DIST_TYPE_DEFAULT dist_type::DT_CUBE
 
-#define COLOR_HEIGHT_DEFAULT	20
+#define COLOR_HEIGHT_DEFAULT 20
 
-class dominant_colors_grabber
-{
+class dominant_colors_grabber {
 public:
-	dominant_colors_grabber(color_space cs = DOM_COLORS_COLOR_SPACE_DEFAULT,
-					dist_type dt = DOM_COLORS_DIST_TYPE_DEFAULT,
-					unsigned colors_count = DOM_COLORS_COUNT_DEFAULT,
-					double colors_part = DOM_COLORS_PART_DEFAULT);
-	std::vector<cv::Scalar> GetDomColors(cv::Mat img, color_space cs = CS_UNDEFINED,
-					dist_type dt = DT_UNDEFINED,
-					unsigned colors_count = 0, double colors_part = 0);
+  dominant_colors_grabber(color_space cs = DOM_COLORS_COLOR_SPACE_DEFAULT,
+                          dist_type dt = DOM_COLORS_DIST_TYPE_DEFAULT,
+                          unsigned colors_count = DOM_COLORS_COUNT_DEFAULT,
+                          double colors_part = DOM_COLORS_PART_DEFAULT);
+  std::vector<cv::Scalar>
+  GetDomColors(cv::Mat img, color_space cs = CS_UNDEFINED, dist_type dt = DT_UNDEFINED, unsigned colors_count = 0, double colors_part = 0);
 
-	void SetDistanceType(dist_type dt);
-	dist_type GetDistanceType();
-	void SetColorSpace(color_space cs);
-	color_space GetColorSpace();
-	void SetColorsCount(unsigned colors_count);
-	unsigned GetColorsCount();
-	void SetColorsPart(double colors_part);
-	double GetColorsPart();
-	void SetParam(cv::Vec3i param);
-	cv::Vec3i GetParam();
+  void SetDistanceType(dist_type dt);
+  dist_type GetDistanceType();
+
+  void SetColorSpace(color_space cs);
+  color_space GetColorSpace();
+  
+  void SetColorsCount(unsigned colors_count);
+  unsigned GetColorsCount();
+  
+  void SetColorsPart(double colors_part);
+  double GetColorsPart();
+  
+  void SetParam(cv::Vec3i param);
+  cv::Vec3i GetParam();
+
 protected:
-	unsigned _colors_count;
-	double _colors_part;
-	color_space _cs;
-	dist_type _dt;
-	cv::Vec3i _param;
+  unsigned _colors_count;
+  double _colors_part;
+  color_space _cs;
+  dist_type _dt;
+  cv::Vec3i _param;
 };
 
 cv::Mat GetHist(cv::Mat img, color_space cs);
@@ -72,3 +66,5 @@ cv::Mat ShowColors(cv::Mat img, std::vector<cv::Scalar> colors, unsigned color_h
 
 extern const std::vector<int> hist_sizes[2];
 extern const std::vector<float> hist_ranges[2];
+
+#endif // defined(DOMINANT_COLORS_GRABBER_HPP)
