@@ -29,9 +29,7 @@ export class Pipeline extends Function {
       // self.currentProcessor = -1;
       return mat;
     };
-    processors = processors.map(processor =>
-      processor instanceof Processor ? processor : Processor(processor)
-    );
+    processors = processors.map(processor => (processor instanceof Processor ? processor : Processor(processor)));
     Object.assign(self, {
       processors,
       currentProcessor: -1,
@@ -51,8 +49,7 @@ export class Pipeline extends Function {
   recalc(up_to) {
     let { currentProcessor } = this;
     up_to ??= currentProcessor;
-    console.log(`Pipeline recalc \x1b[38;5;112m#${up_to} \x1b[38;5;32m'${this.names[up_to]}'\x1b[m`
-    );
+    console.log(`Pipeline recalc \x1b[38;5;112m#${up_to} \x1b[38;5;32m'${this.names[up_to]}'\x1b[m`);
 
     return this(0, up_to + 1);
   }
@@ -61,7 +58,7 @@ export class Pipeline extends Function {
     return this.processors.length;
   }
   get names() {
-    return this.processors.map((p) => p.functionName ?? p.fnName ?? p.name);
+    return this.processors.map(p => p.functionName ?? p.fnName ?? p.name);
   }
 
   get processor() {
@@ -69,8 +66,8 @@ export class Pipeline extends Function {
   }
 
   get current() {
-    const { currentProcessor, processors,names}= this;
-    return [names[currentProcessor],processors[currentProcessor]];
+    const { currentProcessor, processors, names } = this;
+    return [names[currentProcessor], processors[currentProcessor]];
   }
 
   *imageEntries() {

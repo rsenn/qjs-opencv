@@ -29,14 +29,12 @@ export function WeakAssign(...args) {
   return obj;
 }
 
-export function *GetMethodNames (obj, depth = 1, start = 0) {
+export function* GetMethodNames(obj, depth = 1, start = 0) {
   const desc = Object.getOwnPropertyDescriptors(obj);
   for(let name in desc) {
-    if('value' in desc[name])
-if(typeof desc[name].value == 'function')
-  yield name;
+    if('value' in desc[name]) if (typeof desc[name].value == 'function') yield name;
   }
-//  Object.getOwnPropertyNames(obj).filter(name => typeof obj[name] == 'function');
+  //  Object.getOwnPropertyNames(obj).filter(name => typeof obj[name] == 'function');
 }
 
 export const BindMethods = (obj, methods) => BindMethodsTo({}, obj, methods || obj);
@@ -48,8 +46,7 @@ export function BindMethodsTo(dest, obj, methods) {
   }
   let names = [...GetMethodNames(methods)];
 
-  for(let name of names)
-    if(typeof methods[name] == 'function') dest[name] = methods[name].bind(obj);
+  for(let name of names) if(typeof methods[name] == 'function') dest[name] = methods[name].bind(obj);
   return dest;
 }
 
@@ -111,9 +108,7 @@ export const GetOpt = (options = {}, args) => {
   let positional = (result['@'] = []);
   if(!(options instanceof Array)) options = Object.entries(options);
   const findOpt = arg =>
-    options.find(([optname, option]) =>
-        (Array.isArray(option) ? option.indexOf(arg) != -1 : false) || arg == optname
-    );
+    options.find(([optname, option]) => (Array.isArray(option) ? option.indexOf(arg) != -1 : false) || arg == optname);
   let [, params] = options.find(opt => opt[0] == '@') || [];
   if(typeof params == 'string') params = params.split(',');
   for(let i = 0; i < args.length; i++) {
@@ -128,20 +123,19 @@ export const GetOpt = (options = {}, args) => {
       else if((end = arg.indexOf('=')) == -1) end = arg.length;
       name = arg.substring(start, end);
       if((opt = findOpt(name))) {
-        const [,[has_arg, handler]] = opt;
-        console.log(`name: ${name} has_arg: ${has_arg} opt[0]: ${opt[0]}`)
+        const [, [has_arg, handler]] = opt;
+        console.log(`name: ${name} has_arg: ${has_arg} opt[0]: ${opt[0]}`);
         if(has_arg) {
           if(arg.length > end) value = arg.substring(end + (arg[end] == '='));
           else value = args[++i];
         } else {
           value = true;
         }
-        console.log(`value: ${value}`)
+        console.log(`value: ${value}`);
         try {
-//          value = null;
+          //          value = null;
           let tmp;
-          if((tmp = handler(value, result[opt[0]], options, result)) !== undefined)
-           value = tmp;
+          if((tmp = handler(value, result[opt[0]], options, result)) !== undefined) value = tmp;
         } catch(e) {}
         result[opt[0]] = value;
         continue;
@@ -149,18 +143,17 @@ export const GetOpt = (options = {}, args) => {
     }
     if(params.length) {
       const param = params.shift();
-   if((opt = findOpt(param))) {
+      if((opt = findOpt(param))) {
         const [name, [, handler]] = opt;
-                   console.log(`param: ${param} name: ${name}`)
-let value = arg;
+        console.log(`param: ${param} name: ${name}`);
+        let value = arg;
         if(typeof handler == 'function') {
           try {
             let tmp;
-            if((tmp = handler(value, result[name], options, result)) !== undefined)
-              value = tmp;
+            if((tmp = handler(value, result[name], options, result)) !== undefined) value = tmp;
           } catch(e) {}
         }
-         result[name] = value;
+        result[name] = value;
         continue;
       }
     }
@@ -193,7 +186,6 @@ export const BitsToNames = (flags, map = (name, flag) => name) => {
   const entries = [...Object.entries(flags)];
 
   return function* (value) {
-    for(let [name, flag] of entries)
-      if(value & flag && (value & flag) == flag) yield map(name, flag);
+    for(let [name, flag] of entries) if(value & flag && (value & flag) == flag) yield map(name, flag);
   };
 };

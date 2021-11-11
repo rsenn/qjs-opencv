@@ -90,8 +90,13 @@ js_input_array(JSContext* ctx, JSValueConst value) {
     std::vector<double> arr;
     cv::Scalar scalar;
     js_array_to(ctx, value, arr);
-    for(size_t i = 0; i < arr.size(); i++) scalar[i] = arr[i];
-    return JSInputArray(scalar);
+
+    if(arr.size() >= 2 && arr.size() <= 4) {
+      for(size_t i = 0; i < arr.size(); i++) scalar[i] = arr[i];
+      return JSInputArray(scalar);
+    } else {
+      return JSInputArray(arr);
+    }
   }
 
   return cv::noArray();

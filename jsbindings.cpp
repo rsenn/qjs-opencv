@@ -1,4 +1,5 @@
 #include "jsbindings.hpp"
+#include "js_array.hpp"
 #include <quickjs.h>
 #include <algorithm>
 #include <cstdint>
@@ -125,6 +126,18 @@ js_color_read(JSContext* ctx, JSValueConst color, JSColorData<double>* out) {
 int
 js_color_read(JSContext* ctx, JSValueConst value, JSColorData<uint8_t>* out) {
   JSColorData<double> color;
+
+  if(js_is_array(ctx, value)) {
+    std::array<uint8_t, 4> a;
+    if(js_array_to(ctx, value, a) >= 3) {
+      out->arr[0] = a[0];
+      out->arr[1] = a[1];
+      out->arr[2] = a[2];
+      out->arr[3] = a[3];
+      return 1;
+    }
+  }
+
   if(js_color_read(ctx, value, &color)) {
     out->arr[0] = color.arr[0];
     out->arr[1] = color.arr[1];

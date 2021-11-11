@@ -11,13 +11,7 @@ function main() {
   const fourcc = VideoWriter.fourcc('avc1');
   const vw = new VideoWriter('test.mp4', /* cv.CAP_GSTREAMER,*/ fourcc, 29.7, frameSize);
 
-  cv.line(mat,
-    new Point(0, frameSize.height),
-    new Point(frameSize.width, 0),
-    [0xdd, 0xdd, 0xdd],
-    2,
-    cv.LINE_AA
-  );
+  cv.line(mat, new Point(0, frameSize.height), new Point(frameSize.width, 0), [0xdd, 0xdd, 0xdd], 2, cv.LINE_AA);
 
   repeat(30, () => vw.write(mat));
 

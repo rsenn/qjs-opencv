@@ -1,9 +1,17 @@
 import { Mat, VideoCapture, Size, Rect } from 'opencv';
 import * as cv from 'opencv';
-import { WeakMapper, Modulo, WeakAssign, BindMethods,BindMethodsTo, FindKey } from './cvUtils.js';
-import {   DirIterator, RecursiveDirIterator, ReadDirRecursive, Filter, FilterImages, SortFiles, StatFiles } from '../../../io-helpers.js';
+import { WeakMapper, Modulo, WeakAssign, BindMethods, BindMethodsTo, FindKey } from './cvUtils.js';
+import {
+  DirIterator,
+  RecursiveDirIterator,
+  ReadDirRecursive,
+  Filter,
+  FilterImages,
+  SortFiles,
+  StatFiles
+} from '../../../io-helpers.js';
 
- const Crop = (() => {
+const Crop = (() => {
   const mapper = WeakMapper(() => new Mat());
   return function Crop(mat, rect) {
     let tmp = mapper(mat);
@@ -11,12 +19,8 @@ import {   DirIterator, RecursiveDirIterator, ReadDirRecursive, Filter, FilterIm
     return tmp;
   };
 })();
- 
-function ImageSize(src,
-  dst,
-  dsize,
-  action = (name, arg1, arg2) => console.debug(`${name} ${arg1} -> ${arg2}`)
-) {
+
+function ImageSize(src, dst, dsize, action = (name, arg1, arg2) => console.debug(`${name} ${arg1} -> ${arg2}`)) {
   let s,
     roi,
     f,
@@ -80,11 +84,11 @@ export class ImageSequence {
 
     if(typeof images == 'string') {
       let gen = FilterImages(ReadDirRecursive(images));
-           console.log('gen',gen);
- let entries=[...SortFiles(StatFiles(gen),'ctime')];
-            console.log('entries',entries);
+      console.log('gen', gen);
+      let entries = [...SortFiles(StatFiles(gen), 'ctime')];
+      console.log('entries', entries);
 
-      images =entries.map(e => e+'');
+      images = entries.map(e => e + '');
     }
 
     this.images = images;
@@ -117,9 +121,9 @@ export class ImageSequence {
     if(!dimensions) {
       let mat = cv.imread(images[0], cv.IMREAD_IGNORE_ORIENTATION);
       dimensions = mat.size;
-      const  { cols,rows} =mat;
-    console.debug('mat', images[0],  {cols,rows});
-      dimensions = new Size(mat.cols,mat.rows);
+      const { cols, rows } = mat;
+      console.debug('mat', images[0], { cols, rows });
+      dimensions = new Size(mat.cols, mat.rows);
     }
     console.debug('dimensions', dimensions);
     this.set('frame_width', dimensions.width);
@@ -151,7 +155,7 @@ export class ImageSequence {
     this.framePos = this.index++;
     this.frameFile = images[this.framePos];
     const { index, framePos, frameFile } = this;
-  console.log(`ImageSequence.grab[${this.framePos}] ${frameFile}`);
+    console.log(`ImageSequence.grab[${this.framePos}] ${frameFile}`);
 
     let ret = !!(this.frame = cv.imread(frameFile));
 
@@ -166,8 +170,7 @@ export class ImageSequence {
       //console.debug(`ImageSequence.retrieve[${framePos}]`, { frame, frameSize, mat, targetSize, doResize });
       if(doResize)
         ImageSize(frame, mat, targetSize, (name, arg1, arg2) =>
-          console.debug(`ImageSize[${this.framePos}] ${name} ${arg1.toString()} -> ${arg2.toString()}`
-          )
+          console.debug(`ImageSize[${this.framePos}] ${name} ${arg1.toString()} -> ${arg2.toString()}`)
         );
       else frame.copyTo(mat);
       //console.debug(`ImageSequence.retrieve[${framePos}]`, { mat });
@@ -181,11 +184,11 @@ export class ImageSequence {
   }
 }
 
-const isVideoPath = arg =>
-  /\.(3gp|avi|f4v|flv|m4v|m2v|mkv|mov|mp4|mpeg|mpg|ogm|vob|webm|wmv)$/i.test(arg);
+const isVideoPath = arg => /\.(3gp|avi|f4v|flv|m4v|m2v|mkv|mov|mp4|mpeg|mpg|ogm|vob|webm|wmv)$/i.test(arg);
 
 export class VideoSource {
-  static backends = Object.fromEntries([
+  static backends = Object.fromEntries(
+    [
       'ANY',
       'VFW',
       'V4L',
@@ -223,8 +226,9 @@ export class VideoSource {
   );
 
   constructor(...args) {
-    console.log('VideoSource.constructor(',
-      ...args.reduce((acc, arg) => acc.length ? [...acc, ', ', arg] : [arg], []),
+    console.log(
+      'VideoSource.constructor(',
+      ...args.reduce((acc, arg) => (acc.length ? [...acc, ', ', arg] : [arg]), []),
       ')'
     );
     if(args.length > 0) {
@@ -233,7 +237,7 @@ export class VideoSource {
       let isVideo = (args.length <= 2 && backend in VideoSource.backends) || isVideoPath(device);
 
       // if(cv.imread(args[0])) isVideo = false;
-      console.log('VideoSource', args, {  backend, driverId, isVideo });
+      console.log('VideoSource', args, { backend, driverId, isVideo });
 
       if(isVideo) {
         if(typeof device == 'string' && isVideoPath(device)) {
@@ -254,8 +258,8 @@ export class VideoSource {
   }
 
   capture(device, driverId) {
-     console.log('VideoSource.capture', { device,  driverId });
- let cap = new VideoCapture(device, driverId);
+    console.log('VideoSource.capture', { device, driverId });
+    let cap = new VideoCapture(device, driverId);
     this.cap = cap;
 
     this.propId = prop => {
@@ -309,7 +313,7 @@ export class VideoSource {
       return prop;
     };
 
-  //  Object.assign(this, BindMethods(this.cap, ImageSequence.prototype));
+    //  Object.assign(this, BindMethods(this.cap, ImageSequence.prototype));
     BindMethodsTo(this, this.cap, ImageSequence.prototype);
 
     // this.size = new Size(1280, 720);
@@ -340,8 +344,7 @@ export class VideoSource {
 
   get backend() {
     const { cap } = this;
-    if(cap && typeof cap.getBackendName == 'function')
-      return cap.getBackendName();
+    if(cap && typeof cap.getBackendName == 'function') return cap.getBackendName();
 
     if(typeof this.get == 'function') {
       const id = this.get('BACKEND');
@@ -353,7 +356,8 @@ export class VideoSource {
     return this.get('fps');
   }
 
-  dump(props = [
+  dump(
+    props = [
       'frame_count',
       'frame_width',
       'frame_height',
@@ -365,8 +369,7 @@ export class VideoSource {
       'pos_msec'
     ]
   ) {
-    return new Map(props.map(propName => [propName, this.get(propName)]).filter(([k, v]) => v !== undefined)
-    );
+    return new Map(props.map(propName => [propName, this.get(propName)]).filter(([k, v]) => v !== undefined));
   }
 
   seekFrames(relative) {
@@ -388,20 +391,19 @@ export class VideoSource {
 
   position(type = 'frames') {
     if(type.startsWith('frame')) return [this.get('pos_frames'), this.get('frame_count')];
-    if(type.startsWith('percent') || type == '%')
-      return (this.get('pos_frames') * 100) / this.get('frame_count');
+    if(type.startsWith('percent') || type == '%') return (this.get('pos_frames') * 100) / this.get('frame_count');
 
     return [(+this.get('pos_msec')).toFixed(3), this.durationMsecs];
   }
 
   get size() {
-    let size =  new Size(this.get('frame_width'), this.get('frame_height'));
+    let size = new Size(this.get('frame_width'), this.get('frame_height'));
     //console.debug(`VideoCapture.size = ${size}`);
     return size;
   }
 
   set size(size) {
-    size = size instanceof Size ?  size : new Size(size);
+    size = size instanceof Size ? size : new Size(size);
     this.set('frame_width', size.width);
     this.set('frame_height', size.height);
   }

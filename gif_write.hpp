@@ -3,6 +3,8 @@
 
 #include "gifenc/gifenc.h"
 #include "util.hpp"
+#include "jsbindings.hpp"
+#include "palette.hpp"
 #include <opencv2/core.hpp>
 #include <vector>
 #include <algorithm>
@@ -17,17 +19,17 @@ gif_write(const std::string& filename,
           int loop = 0) {
   size_t i, n, size, depth;
 
-  std::vector<std::array<uint8_t, 3>> pal;
+  std::vector<uint8_t> pal;
 
   depth = ceil(log2(palette.size()));
   size = pow(2, depth);
   n = palette.size();
-  pal.resize(size);
+  pal.resize(size * 3);
 
-  for(i = 0; i < n; i++) {
-    pal[i][0] = palette[i].r;
-    pal[i][1] = palette[i].g;
-    pal[i][2] = palette[i].b;
+  for(i = 0; i < size; i++) {
+    pal[i * 3 + 0] = i < n ? palette[i].r : 0;
+    pal[i * 3 + 1] = i < n ? palette[i].g : 0;
+    pal[i * 3 + 2] = i < n ? palette[i].b : 0;
   }
 
   size_t frames = mats.size();
@@ -50,13 +52,19 @@ gif_write(const std::string& filename,
 
   for(const cv::Mat& mat : mats) {
     size_t x, y, index = 0;
+    cv::Mat indexed(mat.size(), CV_8UC1);
+
+    if(mat.channels() == 1 && mat.depth() == 0)
+      mat.copyTo(indexed);
+    else
+      palette_match(mat, indexed, palette, mat.channels() > 3 ? 0 : -1);
 
     if(frame > 0)
       ge_add_frame(gif, delays[(frame - 1) % delays.size()]);
 
     for(x = 0; x < w; x++) {
       for(y = 0; y < h; y++) {
-        uint8_t pixel = mat_at<uchar>(mat, y, x);
+        uchar pixel = indexed.at<uchar>(y, x);
 
         gif->frame[index++] = pixel;
       }

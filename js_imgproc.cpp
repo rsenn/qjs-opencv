@@ -20,6 +20,7 @@
 #include <opencv2/core/matx.hpp>
 #include <opencv2/core/types.hpp>
 #include "palette.hpp"
+#include "dominant-colors/DomColors.h"
 #include "pixel_neighborhood.hpp"
 #include <quickjs.h>
 #include "skeletonization.hpp"
@@ -790,6 +791,39 @@ js_cv_pixel_find_value(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
 }
 
 static JSValue
+js_cv_palette_generate(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+
+  JSInputArray src = js_umat_or_mat(ctx, argv[0]);
+
+  dominant_colors_graber dcg;
+  int32_t mode = 0, count = 0;
+  enum color_space cs;
+  enum dist_type dt;
+  cv::Vec3i params[] = {{1, 1, 1}, {1, 2, 2}, {25, 0, 0}, {25, 0, 0}, {15, 0, 0}, {15, 0, 0}, {0, 0, 0}, {0, 0, 0}};
+  std::vector<cv::Scalar> palette;
+  std::vector<cv::Vec3b> result;
+  JSValue ret = JS_UNDEFINED;
+
+  if(argc >= 2 && JS_IsNumber(argv[1]))
+    JS_ToInt32(ctx, &mode, argv[1]);
+  if(argc >= 3 && JS_IsNumber(argv[2]))
+    JS_ToInt32(ctx, &count, argv[2]);
+
+  cs = color_space(mode & 1);
+  dt = dist_type((mode >> 1) & 3);
+
+  palette = dcg.GetDomColors(src.getMat(), cs, dt, count);
+
+  result.resize(palette.size());
+
+  std::transform(palette.begin(), palette.end(), result.begin(), [](const cv::Scalar& entry) -> cv::Vec3i {
+    return cv::Vec3b(entry[0], entry[1], entry[2]);
+  });
+  ret = js_array_from(ctx, result);
+
+  return ret;
+}
+static JSValue
 js_cv_palette_apply(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSMatData* src;
   JSOutputArray dst;
@@ -819,7 +853,7 @@ js_cv_palette_apply(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
       std::vector<cv::Vec4b> palette4b;
       std::vector<cv::Scalar> palettesc;
 
-      js_array_to(ctx, argv[2], palette);
+      palette_read(ctx, argv[2], palette);
 
       for(auto& color : palette) {
         palette4b.push_back(cv::Vec4b(color.arr[0], color.arr[1], color.arr[2], color.arr[3]));
@@ -833,7 +867,7 @@ js_cv_palette_apply(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
       std::vector<cv::Vec3b> palette3b;
       std::vector<cv::Scalar> palettesc;
 
-      js_array_to(ctx, argv[2], palette);
+      palette_read(ctx, argv[2], palette);
 
       for(auto& color : palette) {
         palette3b.push_back(cv::Vec3b(color.arr[2], color.arr[1], color.arr[0]));
@@ -845,6 +879,28 @@ js_cv_palette_apply(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
       return JS_ThrowInternalError(ctx, "output mat channels = %u", output.channels());
     }
   }
+  return JS_UNDEFINED;
+}
+
+static JSValue
+js_cv_palette_match(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+  JSMatData* src;
+  JSOutputArray dst;
+  std::vector<JSColorData<uint8_t>> palette;
+
+  src = js_mat_data2(ctx, argv[0]);
+  dst = js_umat_or_mat(ctx, argv[1]);
+
+  if(src == nullptr)
+    return JS_ThrowInternalError(ctx, "src is not an array!");
+
+  if(js_is_noarray(dst))
+    return JS_ThrowInternalError(ctx, "dst is not an array!");
+
+  palette_read(ctx, argv[2], palette);
+
+  palette_match(*src, dst, palette);
+
   return JS_UNDEFINED;
 }
 
@@ -1757,7 +1813,9 @@ js_function_list_t js_imgproc_static_funcs{
     JS_CFUNC_MAGIC_DEF("pixelNeighborhood", 2, js_cv_pixel_neighborhood, 0),
     JS_CFUNC_MAGIC_DEF("pixelNeighborhoodCross", 2, js_cv_pixel_neighborhood, 1),
     JS_CFUNC_DEF("pixelFindValue", 2, js_cv_pixel_find_value),
+    JS_CFUNC_DEF("paletteGenerate", 1, js_cv_palette_generate),
     JS_CFUNC_DEF("paletteApply", 2, js_cv_palette_apply),
+    JS_CFUNC_DEF("paletteMatch", 3, js_cv_palette_match),
 
     JS_CFUNC_MAGIC_DEF("accumulate", 2, js_imgproc_motion, MOTION_ACCUMULATE),
     JS_CFUNC_MAGIC_DEF("accumulateProduct", 3, js_imgproc_motion, MOTION_ACCUMULATE_PRODUCT),
