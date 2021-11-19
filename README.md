@@ -5,7 +5,11 @@ OpenCV bindings for QuickJS (https://bellard.org/quickjs/)
 ## Rationale
 This put in use with "plot-cv" (https://github.com/rsenn/plot-cv) which converts contours from any video source to SVG ready to pass into LaserWeb4.
 With this and the QuickJS interactive REPL from Fabrice Bellard you have a modern ES2020 live-coding environment for an OpenCV processing pipeline.
+<<<<<<< HEAD
 QuickJS is 6 files of highly portable C99 and cleverly I/O multi-plexed and in asynchronous ways interoperable with other library bindings.
+=======
+QuickJS is 6 files of highly portable C99 and has a lean startup time, compiling directly to byte-code without AST.
+>>>>>>> 65f941b6be427846cb34f08d5f10937b795573cd
 
 ## Basic ideas implemented
 * Running cv.Canny, cv.findContours algorithm, then have a cv.Contour based on an ArrayBuffer of the underlying std::vector
