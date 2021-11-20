@@ -16,6 +16,12 @@
 #include <opencv2/highgui.hpp>
 #include <vector>
 
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <X11/Xlib.h>
+#endif
+
 enum { DISPLAY_OVERLAY };
 
 static std::vector<cv::String> window_list;
@@ -91,6 +97,21 @@ js_cv_resize_window(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 
   cv::resizeWindow(name, w, h);
   return JS_UNDEFINED;
+}
+
+static JSValue
+js_cv_get_screen_resolution(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+  int width, height;
+#if _WIN32
+  width = (int)GetSystemMetrics(SM_CXSCREEN);
+  height = (int)GetSystemMetrics(SM_CYSCREEN);
+#else
+  Display* disp = XOpenDisplay(NULL);
+  Screen* scrn = DefaultScreenOfDisplay(disp);
+  width = scrn->width;
+  height = scrn->height;
+#endif
+  return js_size_new(ctx, width, height);
 }
 
 static JSValue
@@ -422,6 +443,7 @@ js_function_list_t js_highgui_static_funcs{
     JS_CFUNC_DEF("setMouseCallback", 2, js_cv_set_mouse_callback),
     JS_CFUNC_DEF("waitKey", 0, js_cv_wait_key),
     JS_CFUNC_DEF("waitKeyEx", 0, js_cv_wait_key_ex),
+    JS_CFUNC_DEF("getScreenResolution", 0, js_cv_get_screen_resolution),
     JS_CFUNC_MAGIC_DEF("displayOverlay", 2, js_cv_gui_methods, DISPLAY_OVERLAY),
 
 };
