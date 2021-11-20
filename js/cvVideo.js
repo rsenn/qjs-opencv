@@ -25,7 +25,7 @@ function ImageSize(src, dst, dsize, action = (name, arg1, arg2) => console.debug
     roi,
     f,
     ssize = src.size;
-  console.debug('ImageSize', { src, dst, ssize, dsize });
+//  console.debug('ImageSize', { src, dst, ssize, dsize });
   if(!ssize.equals(dsize)) {
     let [fx, fy] = dsize.div(ssize);
     if(fx != fy) {
@@ -68,7 +68,8 @@ function ImageSize(src, dst, dsize, action = (name, arg1, arg2) => console.debug
       }
       action(`Scale (ₓ${factors[0].toFixed(5)})`, ssize, dsize);
       dst.reset();
-      cv.resize(src, dst, dsize, 0, 0, cv.INTER_CUBIC);
+       console.debug('ImageSize',{dsize});
+    cv.resize(src, dst, dsize, 0, 0, cv.INTER_CUBIC);
       dst.resize(dsize.height);
       //console.debug(`Scale ${src} -> ${dst}`);
       return;
@@ -182,6 +183,12 @@ export class ImageSequence {
   read(mat) {
     if(this.grab()) return this.retrieve(mat);
   }
+
+  *[Symbol.iterator]() {
+for(let image of this.images) {
+yield cv.imread(image);
+  }
+}
 }
 
 const isVideoPath = arg => /\.(3gp|avi|f4v|flv|m4v|m2v|mkv|mov|mp4|mpeg|mpg|ogm|vob|webm|wmv)$/i.test(arg);

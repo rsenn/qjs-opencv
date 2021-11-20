@@ -50,7 +50,7 @@ export class Window {
   }
 
   resize(...args) {
-    //console.log("Window.resize", ...args);
+    console.log("Window.resize", ...args);
     let size = new Size(...args);
     cv.resizeWindow(this.name, ...size);
     return size;

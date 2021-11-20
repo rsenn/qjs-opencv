@@ -14,16 +14,7 @@
 
 enum js_size_fit_t { JS_SIZE_FIT_WIDTH = 1, JS_SIZE_FIT_HEIGHT = 2, JS_SIZE_FIT_INSIDE, JS_SIZE_FIT_OUTSIDE };
 enum { SIZE_PROP_WIDTH, SIZE_PROP_HEIGHT, SIZE_PROP_ASPECT, SIZE_PROP_EMPTY, SIZE_PROP_AREA };
-enum {
-  SIZE_METHOD_EQUALS,
-  SIZE_METHOD_ROUND,
-  SIZE_METHOD_TOOBJECT,
-  SIZE_METHOD_TOARRAY,
-  SIZE_METHOD_FITWIDTH,
-  SIZE_METHOD_FITHEIGHT,
-  SIZE_METHOD_FITINSIDE,
-  SIZE_METHOD_FITOUTSIDE
-};
+
 extern "C" {
 JSValue size_proto = JS_UNDEFINED, size_class = JS_UNDEFINED;
 JSClassID js_size_class_id = 0;
@@ -226,6 +217,19 @@ js_size_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
   return obj;
 }
 
+enum {
+  SIZE_METHOD_EQUALS,
+  SIZE_METHOD_ROUND,
+  SIZE_METHOD_FLOOR,
+  SIZE_METHOD_CEIL,
+  SIZE_METHOD_TOOBJECT,
+  SIZE_METHOD_TOARRAY,
+  SIZE_METHOD_FITWIDTH,
+  SIZE_METHOD_FITHEIGHT,
+  SIZE_METHOD_FITINSIDE,
+  SIZE_METHOD_FITOUTSIDE
+};
+
 static JSValue
 js_size_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
   JSSizeData<double> size, *s;
@@ -258,6 +262,28 @@ js_size_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* arg
       f = std::pow(10, precision);
       width = std::round(size.width * f) / f;
       height = std::round(size.height * f) / f;
+      ret = js_size_new(ctx, width, height);
+      break;
+    }
+    case SIZE_METHOD_FLOOR: {
+      double width, height, f;
+      int32_t precision = 0;
+      if(argc > 0)
+        JS_ToInt32(ctx, &precision, argv[0]);
+      f = std::pow(10, precision);
+      width = std::floor(size.width * f) / f;
+      height = std::floor(size.height * f) / f;
+      ret = js_size_new(ctx, width, height);
+      break;
+    }
+    case SIZE_METHOD_CEIL: {
+      double width, height, f;
+      int32_t precision = 0;
+      if(argc > 0)
+        JS_ToInt32(ctx, &precision, argv[0]);
+      f = std::pow(10, precision);
+      width = std::ceil(size.width * f) / f;
+      height = std::ceil(size.height * f) / f;
       ret = js_size_new(ctx, width, height);
       break;
     }
@@ -394,7 +420,7 @@ static JSAtom iterator_symbol;
 static JSValue
 js_size_symbol_iterator(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSValue arr, iter;
-  arr = js_size_funcs(ctx, this_val, argc, argv, 3);
+  arr = js_size_funcs(ctx, this_val, argc, argv, SIZE_METHOD_TOARRAY);
 
   if(iterator_symbol == 0)
     iterator_symbol = js_symbol_atom(ctx, "iterator");
@@ -448,6 +474,8 @@ const JSCFunctionListEntry js_size_proto_funcs[] = {
     JS_CGETSET_MAGIC_DEF("area", js_size_get, 0, SIZE_PROP_AREA),
     JS_CFUNC_MAGIC_DEF("equals", 1, js_size_funcs, SIZE_METHOD_EQUALS),
     JS_CFUNC_MAGIC_DEF("round", 0, js_size_funcs, SIZE_METHOD_ROUND),
+    JS_CFUNC_MAGIC_DEF("floor", 0, js_size_funcs, SIZE_METHOD_FLOOR),
+    JS_CFUNC_MAGIC_DEF("ceil", 0, js_size_funcs, SIZE_METHOD_CEIL),
     JS_CFUNC_MAGIC_DEF("toObject", 0, js_size_funcs, SIZE_METHOD_TOOBJECT),
     JS_CFUNC_MAGIC_DEF("toArray", 0, js_size_funcs, SIZE_METHOD_TOARRAY),
     JS_CFUNC_MAGIC_DEF("fitWidth", 0, js_size_funcs, SIZE_METHOD_FITWIDTH),
