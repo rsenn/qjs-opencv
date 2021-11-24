@@ -45,6 +45,15 @@
 
 #define COLOR_NONE "\x1b[m"
 
+#define ALIGN_CENTER 0
+#define ALIGN_LEFT 1
+#define ALIGN_RIGHT 2
+#define ALIGN_HORIZONTAL (ALIGN_LEFT | ALIGN_RIGHT)
+#define ALIGN_MIDDLE 0
+#define ALIGN_TOP 4
+#define ALIGN_BOTTOM 8
+#define ALIGN_VERTICAL (ALIGN_TOP | ALIGN_BOTTOM)
+
 bool str_end(const char* str, const char* suffix);
 bool str_end(const std::string& str, const std::string& suffix);
 

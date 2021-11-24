@@ -1,6 +1,7 @@
 #include "js_size.hpp"
 #include "js_alloc.hpp"
 #include "js_array.hpp"
+#include "js_rect.hpp"
 #include "jsbindings.hpp"
 #include <quickjs.h>
 #include <array>
@@ -227,7 +228,8 @@ enum {
   SIZE_METHOD_FITWIDTH,
   SIZE_METHOD_FITHEIGHT,
   SIZE_METHOD_FITINSIDE,
-  SIZE_METHOD_FITOUTSIDE
+  SIZE_METHOD_FITOUTSIDE,
+  SIZE_METHOD_ALIGN,
 };
 
 static JSValue
@@ -321,6 +323,66 @@ js_size_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* arg
 
       if(!result.empty())
         ret = js_size_new(ctx, result.width, result.height);
+      break;
+    }
+
+    case SIZE_METHOD_ALIGN: {
+
+      JSSizeData<double> sz;
+      JSPointData<double> pt[2];
+      JSRectData<double> other, rect;
+      int32_t align = 0;
+
+      if(!js_size_read(ctx, argv[0], &sz))
+        return JS_ThrowTypeError(ctx, "argument 1 must be cv.Size");
+
+      JS_ToInt32(ctx, &align, argv[1]);
+
+      js_point_read(ctx, argv[0], &pt[0]);
+
+      other.x = pt[0].x;
+      other.y = pt[0].y;
+      other.width = sz.width;
+      other.height = sz.height;
+
+      pt[1].x = pt[0].x + sz.width;
+      pt[1].y = pt[0].y + sz.height;
+
+      rect.width = size.width;
+      rect.height = size.height;
+
+      switch(align & ALIGN_HORIZONTAL) {
+        case ALIGN_LEFT: {
+          rect.x = other.x;
+
+          break;
+        }
+        case ALIGN_CENTER: {
+          rect.x = other.x + (other.width - size.width) / 2;
+          break;
+        }
+        case ALIGN_RIGHT: {
+          rect.x = other.x + other.width - size.width;
+          break;
+        }
+      }
+
+      switch(align & ALIGN_VERTICAL) {
+        case ALIGN_TOP: {
+          rect.y = other.y;
+          break;
+        }
+        case ALIGN_MIDDLE: {
+          rect.y = other.y + (other.height - size.height) / 2;
+          break;
+        }
+        case ALIGN_BOTTOM: {
+          rect.y = other.y + other.height - size.height;
+          break;
+        }
+      }
+      ret = js_rect_new(ctx, rect);
+
       break;
     }
   }
@@ -482,6 +544,7 @@ const JSCFunctionListEntry js_size_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("fitHeight", 0, js_size_funcs, SIZE_METHOD_FITHEIGHT),
     JS_CFUNC_MAGIC_DEF("fitInside", 0, js_size_funcs, SIZE_METHOD_FITINSIDE),
     JS_CFUNC_MAGIC_DEF("fitOutside", 0, js_size_funcs, SIZE_METHOD_FITOUTSIDE),
+    JS_CFUNC_MAGIC_DEF("align", 1, js_size_funcs, SIZE_METHOD_ALIGN),
     JS_CFUNC_DEF("toString", 0, js_size_to_string),
     JS_CFUNC_DEF("toSource", 0, js_size_to_source),
     JS_CFUNC_DEF("add", 1, js_size_add),

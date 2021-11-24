@@ -37,6 +37,12 @@ export const Mouse = {
   })()
 };
 
+export class Screen {
+ static size() {
+  return cv.getScreenResolution();
+ }
+};
+
 export class Window {
   constructor(name, flags = cv.WINDOW_NORMAL) {
     this.name = name;
@@ -45,8 +51,9 @@ export class Window {
     cv.namedWindow(this.name, this.flags);
   }
 
-  move(x, y) {
-    cv.moveWindow(this.name, x, y);
+  move(...args) {
+    let pos = new Point(...args);
+    cv.moveWindow(this.name, pos.x, pos.y);
   }
 
   resize(...args) {
@@ -54,6 +61,15 @@ export class Window {
     let size = new Size(...args);
     cv.resizeWindow(this.name, ...size);
     return size;
+  }
+
+  align(n= 0) {
+    let s=Screen.size();
+  let rect =this.imageRect;
+let dim = new Size(rect);
+let {x,y} = dim.align(s, n);
+console.log('pos',{x,y});
+return this.move(x, y);
   }
 
   /* prettier-ignore */ get imageRect() {
