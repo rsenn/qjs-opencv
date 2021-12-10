@@ -40,7 +40,7 @@ static JSValue float64_array;
 // using namespace cv;
 
 JSValue
-js_contour_new(JSContext* ctx, const JSContourData<double>& points) {
+js_contour_new(JSContext* ctx) {
   JSValue ret;
   JSContourData<double>* contour;
 
@@ -49,10 +49,38 @@ js_contour_new(JSContext* ctx, const JSContourData<double>& points) {
 
   new(contour) JSContourData<double>();
 
+  JS_SetOpaque(ret, contour);
+  return ret;
+}
+
+JSValue
+js_contour_new(JSContext* ctx, const JSContourData<double>& points) {
+  JSValue ret = js_contour_new(ctx);
+  JSContourData<double>* contour = js_contour_data(ret);
+
   contour->resize(points.size());
   transform_points(points.cbegin(), points.cend(), contour->begin());
 
-  JS_SetOpaque(ret, contour);
+  return ret;
+}
+
+JSValue
+js_contour_new(JSContext* ctx, const JSContourData<float>& points) {
+  JSValue ret = js_contour_new(ctx);
+  JSContourData<double>* contour = js_contour_data(ret);
+
+  contour->resize(points.size());
+  transform_points(points.cbegin(), points.cend(), contour->begin());
+  return ret;
+}
+
+JSValue
+js_contour_new(JSContext* ctx, const JSContourData<uint>& points) {
+  JSValue ret = js_contour_new(ctx);
+  JSContourData<double>* contour = js_contour_data(ret);
+
+  contour->resize(points.size());
+  transform_points(points.cbegin(), points.cend(), contour->begin());
   return ret;
 }
 
@@ -662,7 +690,7 @@ js_contour_psimpl(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
 
   size = it - (double*)&r[0];
   r.resize(size / 2);
-  ret = js_contour_new<double>(ctx, r);
+  ret = js_contour_new(ctx, r);
   return ret;
 }
 
@@ -922,7 +950,7 @@ js_contour_rect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
   points.push_back(JSPointData<double>(s.x, s.y + s.height));
   points.push_back(JSPointData<double>(s.x, s.y));
 
-  ret = js_contour_new<double>(ctx, points);
+  ret = js_contour_new(ctx, points);
   return ret;
 }
 
@@ -933,8 +961,9 @@ js_contour_get(JSContext* ctx, JSValueConst this_val, int magic) {
   JSContourData<double>* contour;
   JSValue ret = JS_UNDEFINED;
 
-  if(!(contour = static_cast<JSContourData<double>*>(JS_GetOpaque(this_val, js_contour_class_id))))
+  if(!(contour = js_contour_data(this_val))) {
     return JS_UNDEFINED;
+  }
 
   switch(magic) {
     case PROP_ASPECT_RATIO: {

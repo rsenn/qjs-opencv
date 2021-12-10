@@ -86,7 +86,7 @@ template<class T> union JSLineData {
   JSLineData(T _x1, T _y1, T _x2, T _y2) : x1(_x1), y1(_y1), x2(_x2), y2(_y2) {}
 
   operator array_type&() { return this->array; }
-  operator array_type const &() const { return this->array; }
+  operator array_type const&() const { return this->array; }
 };
 
 template<class T> struct JSLineTraits {

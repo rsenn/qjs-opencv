@@ -12,7 +12,7 @@
 extern "C" {
 extern JSValue contour_class, contour_proto;
 extern JSClassDef js_contour_class;
-extern JSClassID js_contour_class_id;
+extern VISIBLE JSClassID js_contour_class_id;
 
 void js_contour_finalizer(JSRuntime* rt, JSValue val);
 
@@ -21,22 +21,24 @@ int js_contour_init(JSContext*, JSModuleDef*);
 JSModuleDef* js_init_module_contour(JSContext*, const char*);
 void js_contour_constructor(JSContext* ctx, JSValue parent, const char* name);
 };
+JSValue js_contour_new(JSContext* ctx, const JSContourData<double>& points);
+JSValue js_contour_new(JSContext* ctx, const JSContourData<float>& points);
+JSValue js_contour_new(JSContext* ctx, const JSContourData<uint>& points);
 
 static inline JSContourData<double>*
 js_contour_data2(JSContext* ctx, JSValueConst val) {
-  return js_contour_class_id ? static_cast<JSContourData<double>*>(JS_GetOpaque2(ctx, val, js_contour_class_id)) : 0;
+  return static_cast<JSContourData<double>*>(JS_GetOpaque2(ctx, val, js_contour_class_id));
 }
 
 static inline JSContourData<double>*
 js_contour_data(JSValueConst val) {
-  return js_contour_class_id ? static_cast<JSContourData<double>*>(JS_GetOpaque(val, js_contour_class_id)) : 0;
+  return static_cast<JSContourData<double>*>(JS_GetOpaque(val, js_contour_class_id));
 }
 
 JSValue js_contour_new(JSContext* ctx, const JSContourData<double>& points);
 
-template<class T>
-static inline JSValue
-js_contour_new(JSContext* ctx, const JSContourData<T>& points) {
+inline JSValue
+js_contour_new(JSContext* ctx, const JSContourData<int>& points) {
   JSValue ret;
   JSContourData<double>* contour;
   ret = JS_NewObjectProtoClass(ctx, contour_proto, js_contour_class_id);

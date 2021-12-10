@@ -609,31 +609,46 @@ js_cv_find_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   JSValue array_buffer, ret = JS_UNDEFINED;
   int mode = cv::RETR_TREE;
   int approx = cv::CHAIN_APPROX_SIMPLE;
-  bool hier_callback = JS_IsFunction(ctx, argv[2]);
+  bool hier_callback, array_contours, array_hier, mat_hier;
   cv::Point offset(0, 0);
 
   JSContoursData<int> contours;
-  std::vector<cv::Vec4i> hier;
+  std::vector<cv::Vec4i> vec4i;
   JSContoursData<double> poly;
+  JSInputOutputArray hier;
+
+  mat_hier = hier.isUMat() || hier.isMat() || js_mat_data_nothrow(argv[2]);
+  hier_callback = !mat_hier && JS_IsFunction(ctx, argv[2]);
+  array_contours = JS_IsArray(ctx, argv[1]);
+  array_hier = js_is_array(ctx, argv[2]);
+
+  if(mat_hier)
+    hier = js_umat_or_mat(ctx, argv[2]);
+  else
+    hier = JSInputOutputArray(vec4i);
 
   cv::findContours(*m, contours, hier, mode, approx, offset);
 
-  if(js_is_array(ctx, argv[1])) {
+  if(array_contours)
     js_array_truncate(ctx, argv[1], 0);
-  }
 
   poly.resize(contours.size());
   transform_contours(contours.begin(), contours.end(), poly.begin());
 
-  array_buffer = js_arraybuffer_from(ctx, begin(hier), end(hier));
+  array_buffer = js_arraybuffer_from(ctx, begin(vec4i), end(vec4i));
 
   {
-    size_t i, length = contours.size();
+    size_t i, length = poly.size();
     JSValue ctor = js_global_get(ctx, "Int32Array");
     for(i = 0; i < length; i++) {
-      JSValue array = js_typedarray_new(ctx, array_buffer, i * sizeof(cv::Vec4i), 4, ctor);
-      JS_SetPropertyUint32(ctx, argv[1], i, js_contour_new(ctx, poly[i]));
-      if(!hier_callback) {
+      if(array_contours) {
+        JSValue contour = js_contour_new(ctx, poly[i]);
+        JS_SetPropertyUint32(ctx, argv[1], i, contour);
+      }
+
+      if(array_hier) {
+        JSValue array = js_typedarray_new(ctx, array_buffer, i * sizeof(cv::Vec4i), 4, ctor);
+
         JS_SetPropertyUint32(ctx, argv[2], i, array);
       }
     }
@@ -643,8 +658,8 @@ js_cv_find_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   if(hier_callback) {
     JSValueConst tarray;
     int32_t *hstart, *hend;
-    hstart = reinterpret_cast<int32_t*>(&hier[0]);
-    hend = reinterpret_cast<int32_t*>(&hier[hier.size()]);
+    hstart = reinterpret_cast<int32_t*>(&vec4i[0]);
+    hend = reinterpret_cast<int32_t*>(&vec4i[vec4i.size()]);
     tarray = js_array_from(ctx, hstart, hend);
     JS_Call(ctx, argv[2], JS_NULL, 1, &tarray);
   }
