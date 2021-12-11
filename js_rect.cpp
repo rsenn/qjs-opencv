@@ -113,7 +113,7 @@ js_rect_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSRectData<double>*>(JS_GetOpaque2(ctx, val, js_rect_class_id));
 }
 
-enum { PROP_X = 0, PROP_Y, PROP_WIDTH, PROP_HEIGHT, PROP_X2, PROP_Y2, PROP_POS, PROP_SIZE };
+enum { PROP_X = 0, PROP_Y, PROP_WIDTH, PROP_HEIGHT, PROP_X2, PROP_Y2, PROP_POS, PROP_SIZE, PROP_TOPLEFT, PROP_BOTTOM_RIGHT };
 
 static JSValue
 js_rect_get(JSContext* ctx, JSValueConst this_val, int magic) {
@@ -154,6 +154,14 @@ js_rect_get(JSContext* ctx, JSValueConst this_val, int magic) {
     }
     case PROP_SIZE: {
       ret = js_size_new(ctx, s->width, s->height);
+      break;
+    }
+    case PROP_TOPLEFT: {
+      ret = js_point_new(ctx, s->x, s->y);
+      break;
+    }
+    case PROP_BOTTOM_RIGHT: {
+      ret = js_point_new(ctx, s->x + s->width, s->y + s->height);
       break;
     }
   }
@@ -538,6 +546,8 @@ const JSCFunctionListEntry js_rect_proto_funcs[] = {
     JS_CGETSET_MAGIC_DEF("y2", js_rect_get, js_rect_set, PROP_Y2),
     JS_CGETSET_MAGIC_DEF("point", js_rect_get, js_rect_set, PROP_POS),
     JS_CGETSET_MAGIC_DEF("size", js_rect_get, js_rect_set, PROP_SIZE),
+    JS_CGETSET_MAGIC_DEF("tl", js_rect_get, 0, PROP_TOPLEFT),
+    JS_CGETSET_MAGIC_DEF("br", js_rect_get, 0, PROP_BOTTOM_RIGHT),
     JS_ALIAS_DEF("x1", "x"),
     JS_ALIAS_DEF("y1", "y"),
     JS_CFUNC_MAGIC_DEF("contains", 0, js_rect_method, METHOD_CONTAINS),

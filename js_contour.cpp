@@ -166,7 +166,7 @@ js_contour_approxpolydp(JSContext* ctx, JSValueConst this_val, int argc, JSValue
   JSValue ret = JS_UNDEFINED;
   double epsilon;
   bool closed = false;
-  std::vector<cv::Point> curve;
+  std::vector<cv::Point> contour;
   JSContourData<float> approxCurve;
   JSContourData<double>*out, *v;
 
@@ -184,9 +184,9 @@ js_contour_approxpolydp(JSContext* ctx, JSValueConst this_val, int argc, JSValue
     }
   }
 
-  contour_copy(*v, curve);
+  contour_copy(*v, contour);
 
-  cv::approxPolyDP(curve, approxCurve, epsilon, closed);
+  cv::approxPolyDP(contour, approxCurve, epsilon, closed);
 
   contour_copy(approxCurve, *out);
 
@@ -275,7 +275,7 @@ static JSValue
 js_contour_convexhull(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSValue ret = JS_UNDEFINED;
   bool clockwise = false, returnPoints = true;
-  JSContourData<float> curve, hull;
+  JSContourData<float> contour, hull;
   JSContourData<double>*out, *v;
   std::vector<int> hullIndices;
 
@@ -288,12 +288,12 @@ js_contour_convexhull(JSContext* ctx, JSValueConst this_val, int argc, JSValueCo
       returnPoints = !!JS_ToBool(ctx, argv[1]);
   }
 
-  contour_copy(*v, curve);
+  contour_copy(*v, contour);
 
   if(returnPoints)
-    cv::convexHull(curve, hull, clockwise, true);
+    cv::convexHull(contour, hull, clockwise, true);
   else
-    cv::convexHull(curve, hullIndices, clockwise, false);
+    cv::convexHull(contour, hullIndices, clockwise, false);
 
   if(returnPoints) {
     ret = js_contour_new(ctx, hull);
