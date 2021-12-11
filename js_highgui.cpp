@@ -411,6 +411,37 @@ js_cv_imshow(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv
   return JS_UNDEFINED;
 }
 
+static JSValue
+js_cv_select_roi(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+  JSValue ret = JS_UNDEFINED;
+  const char* winname = JS_ToCString(ctx, argv[0]);
+  JSInputOutputArray image = js_umat_or_mat(ctx, argv[1]);
+  BOOL showCrosshair = TRUE, fromCenter = FALSE;
+  cv::Rect2d rect;
+
+  if(argc >= 3)
+    showCrosshair = JS_ToBool(ctx, argv[2]);
+  if(argc >= 4)
+    fromCenter = JS_ToBool(ctx, argv[3]);
+
+  if(image.empty())
+    return JS_ThrowInternalError(ctx, "argument 1 must be image");
+
+  rect = cv::selectROI(winname, image, showCrosshair, fromCenter);
+
+  if(rect.width > 0 && rect.height > 0)
+    ret = js_rect_new(ctx, rect);
+  else
+    ret = JS_NULL;
+
+  return ret;
+}
+
+static JSValue
+js_cv_select_rois(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+  JSValue ret = JS_UNDEFINED;
+  return ret;
+}
 /*void
 js_highgui_finalizer(JSRuntime* rt, JSValue val) {
   for(const auto& name : window_list) {
@@ -444,6 +475,8 @@ js_function_list_t js_highgui_static_funcs{
     JS_CFUNC_DEF("waitKey", 0, js_cv_wait_key),
     JS_CFUNC_DEF("waitKeyEx", 0, js_cv_wait_key_ex),
     JS_CFUNC_DEF("getScreenResolution", 0, js_cv_get_screen_resolution),
+    JS_CFUNC_DEF("selectROI", 1, js_cv_select_roi),
+    JS_CFUNC_DEF("selectROIs", 2, js_cv_select_rois),
     JS_CFUNC_MAGIC_DEF("displayOverlay", 2, js_cv_gui_methods, DISPLAY_OVERLAY),
 
 };

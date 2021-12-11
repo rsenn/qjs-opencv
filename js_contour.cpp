@@ -240,15 +240,15 @@ js_contour_area(JSContext* ctx, JSValueConst this_val) {
 static JSValue
 js_contour_boundingrect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSValue ret = JS_UNDEFINED;
-  JSContourData<float> curve;
+  JSContourData<float> contour;
   JSContourData<double>* v;
   JSRectData<double> r;
 
   if(!(v = js_contour_data2(ctx, this_val)))
     return JS_EXCEPTION;
 
-  contour_copy(*v, curve);
-  r = cv::boundingRect(curve);
+  contour_copy(*v, contour);
+  r = cv::boundingRect(contour);
   ret = js_rect_new(ctx, r);
   return ret;
 }
