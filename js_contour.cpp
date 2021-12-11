@@ -43,7 +43,7 @@ js_contour_create(JSContext* ctx, JSValueConst proto) {
   assert(JS_IsObject(proto));
   JSValue this_val = JS_NewObjectProtoClass(ctx, proto, js_contour_class_id);
 
-  printf("js_contour_create   cid=%i this_val=%p\n", JS_GetClassID(this_val), JS_VALUE_GET_OBJ(this_val));
+  // printf("js_contour_create   cid=%i this_val=%p\n", JS_GetClassID(this_val), JS_VALUE_GET_OBJ(this_val));
 
   JS_SetOpaque(this_val, contour_allocate<double>(ctx));
   return this_val;
@@ -932,7 +932,7 @@ js_contour_get(JSContext* ctx, JSValueConst this_val, int magic) {
   JSValue ret = JS_UNDEFINED;
 
   if(!(contour = static_cast<JSContourData<double>*>(JS_GetOpaque(this_val, js_contour_class_id)))) {
-    printf("js_contour_get   cid=%i this_val=%p contour=%p\n", JS_GetClassID(this_val), JS_VALUE_GET_OBJ(this_val), contour);
+    // printf("js_contour_get   cid=%i this_val=%p contour=%p\n", JS_GetClassID(this_val), JS_VALUE_GET_OBJ(this_val), contour);
     return JS_UNDEFINED;
   }
 
@@ -1015,8 +1015,11 @@ js_contour_get_own_property(JSContext* ctx, JSPropertyDescriptor* pdesc, JSValue
   JSContourData<double>* contour;
   JSValue value = JS_UNDEFINED;
   uint32_t index;
+  const char* propStr = JS_AtomToCString(ctx, prop);
+  printf("js_contour_get_own_property  cid=%i this_val=%p prop=%s\n", JS_GetClassID(obj), JS_VALUE_GET_OBJ(obj), propStr);
+  JS_FreeCString(ctx, propStr);
 
-  if(!(contour = js_contour_data(obj)))
+  if(!(contour = static_cast<JSContourData<double>*>(JS_GetOpaque(obj, js_contour_class_id))))
     return FALSE;
 
   if(js_atom_is_index(ctx, &index, prop)) {
@@ -1031,7 +1034,9 @@ js_contour_get_own_property(JSContext* ctx, JSPropertyDescriptor* pdesc, JSValue
       }
       return TRUE;
     }
+  } else {
   }
+
   return FALSE;
 }
 
@@ -1067,7 +1072,11 @@ static int
 js_contour_has_property(JSContext* ctx, JSValueConst obj, JSAtom prop) {
   JSContourData<double>* contour = js_contour_data(obj);
   uint32_t index;
-
+  {
+    const char* propStr = JS_AtomToCString(ctx, prop);
+    printf("js_contour_has_property  cid=%i this_val=%p prop=%s\n", JS_GetClassID(obj), JS_VALUE_GET_OBJ(obj), propStr);
+    JS_FreeCString(ctx, propStr);
+  }
   if(js_atom_is_index(ctx, &index, prop)) {
     if(index < contour->size())
       return TRUE;
@@ -1087,6 +1096,11 @@ js_contour_get_property(JSContext* ctx, JSValueConst obj, JSAtom prop, JSValueCo
   JSContourData<double>* contour = js_contour_data(obj);
   JSValue value = JS_UNDEFINED;
   uint32_t index;
+  {
+    const char* propStr = JS_AtomToCString(ctx, prop);
+    printf("js_contour_get_property  cid=%i this_val=%p prop=%s\n", JS_GetClassID(obj), JS_VALUE_GET_OBJ(obj), propStr);
+    JS_FreeCString(ctx, propStr);
+  }
 
   if(js_atom_is_index(ctx, &index, prop)) {
     if(index < contour->size())
@@ -1095,8 +1109,13 @@ js_contour_get_property(JSContext* ctx, JSValueConst obj, JSAtom prop, JSValueCo
     value = JS_NewUint32(ctx, contour->size());
   } else {
     JSValue proto = JS_GetPrototype(ctx, obj);
-    if(JS_IsObject(proto))
-      value = JS_GetProperty(ctx, proto, prop);
+    if(JS_IsObject(proto)) {
+      JSPropertyDescriptor desc = {0, JS_UNDEFINED, JS_UNDEFINED, JS_UNDEFINED};
+      if(JS_GetOwnProperty(ctx, &desc, proto, prop) > 0) {
+
+        value = JS_Call(ctx, desc.getter, obj, 0, 0);
+      }
+    }
   }
 
   return value;
@@ -1106,7 +1125,11 @@ static int
 js_contour_set_property(JSContext* ctx, JSValueConst obj, JSAtom prop, JSValueConst value, JSValueConst receiver, int flags) {
   JSContourData<double>* contour = js_contour_data(obj);
   uint32_t index;
-
+  {
+    const char* propStr = JS_AtomToCString(ctx, prop);
+    printf("js_contour_set_property  cid=%i this_val=%p prop=%s\n", JS_GetClassID(obj), JS_VALUE_GET_OBJ(obj), propStr);
+    JS_FreeCString(ctx, propStr);
+  }
   if(js_atom_is_index(ctx, &index, prop)) {
     JSPointData<double> point;
     if(index >= contour->size())
@@ -1225,7 +1248,8 @@ js_contour_init(JSContext* ctx, JSModuleDef* m) {
     JS_SetConstructor(ctx, contour_class, contour_proto);
     JS_SetPropertyFunctionList(ctx, contour_class, js_contour_static_funcs, countof(js_contour_static_funcs));
   }
-  js_set_inspect_method(ctx, contour_proto, js_contour_inspect);
+
+  // js_set_inspect_method(ctx, contour_proto, js_contour_inspect);
 
   {
     JSValue global = JS_GetGlobalObject(ctx);
