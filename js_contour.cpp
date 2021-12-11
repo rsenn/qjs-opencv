@@ -1114,8 +1114,8 @@ js_contour_get_property(JSContext* ctx, JSValueConst obj, JSAtom prop, JSValueCo
     if(JS_IsObject(proto)) {
       JSPropertyDescriptor desc = {0, JS_UNDEFINED, JS_UNDEFINED, JS_UNDEFINED};
       if(JS_GetOwnProperty(ctx, &desc, proto, prop) > 0) {
-
-        value = JS_Call(ctx, desc.getter, obj, 0, 0);
+        if(JS_IsFunction(ctx, desc.getter))
+          value = JS_Call(ctx, desc.getter, obj, 0, 0);
       }
     }
   }

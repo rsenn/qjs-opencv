@@ -53,29 +53,20 @@ static inline void
 contour_deallocate(JSContext* ctx, JSContourData<T>* contour) {
   return js_deallocate<JSContourData<T>>(ctx, contour);
 }
+
 template<typename T>
 static inline void
 contour_deallocate(JSRuntime* rt, JSContourData<T>* contour) {
   return js_deallocate<JSContourData<T>>(rt, contour);
 }
 
-/*
-JSValue js_contour_new(JSContext* ctx, const JSContourData<double>& points);
+template<typename T, typename U>
+static inline void
+contour_copy(const JSContourData<T>& src, JSContourData<U>& dst) {
+  dst.resize(src.size());
+  std::copy(src.begin(), src.end(), dst.begin());
+}
 
-inline JSValue
-js_contour_new(JSContext* ctx, const JSContourData<int>& points) {
-  JSValue ret;
-  JSContourData<double>* contour;
-  ret = JS_NewObjectProtoClass(ctx, contour_proto, js_contour_class_id);
-  contour = js_allocate<JSContourData<double>>(ctx);
-  new(contour) JSContourData<double>();
-  contour->resize(points.size());
-  transform_points(points.cbegin(), points.cend(), contour->begin());
-
-  JS_SetOpaque(ret, contour);
-  return ret;
-};
-*/
 static inline int
 js_contour_read(JSContext* ctx, JSValueConst contour, JSContourData<double>* out) {
   int ret = 0;
