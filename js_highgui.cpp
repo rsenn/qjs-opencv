@@ -440,6 +440,26 @@ js_cv_select_roi(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
 static JSValue
 js_cv_select_rois(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSValue ret = JS_UNDEFINED;
+  const char* winname = JS_ToCString(ctx, argv[0]);
+  JSInputOutputArray image = js_umat_or_mat(ctx, argv[1]);
+  BOOL showCrosshair = TRUE, fromCenter = FALSE;
+  std::vector<cv::Rect> rects;
+
+  if(argc >= 3)
+    showCrosshair = JS_ToBool(ctx, argv[2]);
+  if(argc >= 4)
+    fromCenter = JS_ToBool(ctx, argv[3]);
+
+  if(image.empty())
+    return JS_ThrowInternalError(ctx, "argument 1 must be image");
+
+  cv::selectROIs(winname, image, rects, showCrosshair, fromCenter);
+
+  if(rects.size())
+    ret = js_array_from(ctx, rects);
+  else
+    ret = JS_NULL;
+
   return ret;
 }
 /*void
