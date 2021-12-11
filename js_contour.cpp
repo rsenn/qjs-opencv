@@ -938,46 +938,56 @@ js_contour_get(JSContext* ctx, JSValueConst this_val, int magic) {
 
   switch(magic) {
     case PROP_ASPECT_RATIO: {
-      JSContourData<float> points;
+      std::vector<cv::Point2f> points;
       JSRectData<float> rect;
-
-      points.resize(contour->size());
-
-      std::copy(contour->begin(), contour->end(), points.begin());
-
+      contour_copy(*contour, points);
       rect = cv::boundingRect(points);
-
       ret = JS_NewFloat64(ctx, (double)rect.width / rect.height);
       break;
     }
     case PROP_EXTENT: {
-      JSContourData<int32_t> fc;
-      contour_copy(*contour,fc);
-      double area = cv::contourArea(fc);
-      JSRectData<double> rect = cv::boundingRect(fc);
+      std::vector<cv::Point> points;
+      contour_copy(*contour, points);
+
+      /*cv::Mat fc(contour->size(), 1, CV_32FC2);
+      size_t i, n = contour->size();
+      for(i = 0; i < n; i++) {
+        cv::Point2f* pt = fc.ptr<cv::Point2f>(i, 0);
+        pt->x = (*contour)[i].x;
+        pt->y = (*contour)[i].y;
+      }*/
+
+      double area = cv::contourArea(points);
+      JSRectData<double> rect = cv::boundingRect(points);
 
       ret = JS_NewFloat64(ctx, area / (rect.width * rect.height));
       break;
     }
     case PROP_SOLIDITY: {
-      double area = cv::contourArea(*contour);
-      JSContourData<double> hull;
-      cv::convexHull(*contour, hull);
+      std::vector<cv::Point> points, hull;
+      contour_copy(*contour, points);
+      double area = cv::contourArea(points);
+      cv::convexHull(points, hull);
       double hullArea = cv::contourArea(hull);
 
       ret = JS_NewFloat64(ctx, area / cv::contourArea(hull));
       break;
     }
     case PROP_EQUIVALENT_DIAMETER: {
-      double area = cv::contourArea(*contour);
+      std::vector<cv::Point2f> points;
+      contour_copy(*contour, points);
+      double area = cv::contourArea(points);
 
       ret = JS_NewFloat64(ctx, std::sqrt(4 * area / 3.14159265358979323846));
       break;
     }
     case PROP_ORIENTATION: {
-      cv::RotatedRect rect = cv::fitEllipse(*contour);
-
-      ret = JS_NewFloat64(ctx, rect.angle);
+      std::vector<cv::Point2f> points;
+      contour_copy(*contour, points);
+      if(points.size() >= 5) {
+        cv::RotatedRect rect = cv::fitEllipse(points);
+        ret = JS_NewFloat64(ctx, rect.angle);
+      }
       break;
     }
   }
@@ -1035,11 +1045,11 @@ js_contour_get_own_property(JSContext* ctx, JSPropertyDescriptor* pdesc, JSValue
     }
   } else {
   }
-  {
-    const char* propStr = JS_AtomToCString(ctx, prop);
-    printf("js_contour_get_own_property  cid=%i this_val=%p prop=%s\n", JS_GetClassID(obj), JS_VALUE_GET_OBJ(obj), propStr);
-    JS_FreeCString(ctx, propStr);
-  }
+  /* {
+     const char* propStr = JS_AtomToCString(ctx, prop);
+     printf("js_contour_get_own_property  cid=%i this_val=%p prop=%s\n", JS_GetClassID(obj), JS_VALUE_GET_OBJ(obj), propStr);
+     JS_FreeCString(ctx, propStr);
+   }*/
   return FALSE;
 }
 
@@ -1082,11 +1092,11 @@ js_contour_has_property(JSContext* ctx, JSValueConst obj, JSAtom prop) {
   } else if(js_atom_is_length(ctx, prop)) {
     return TRUE;
   } else {
-    {
+    /*{
       const char* propStr = JS_AtomToCString(ctx, prop);
       printf("js_contour_has_property  cid=%i this_val=%p prop=%s\n", JS_GetClassID(obj), JS_VALUE_GET_OBJ(obj), propStr);
       JS_FreeCString(ctx, propStr);
-    }
+    }*/
     JSValue proto = JS_GetPrototype(ctx, obj);
     if(JS_IsObject(proto) && JS_HasProperty(ctx, proto, prop))
       return TRUE;
@@ -1107,11 +1117,11 @@ js_contour_get_property(JSContext* ctx, JSValueConst obj, JSAtom prop, JSValueCo
   } else if(js_atom_is_length(ctx, prop)) {
     value = JS_NewUint32(ctx, contour->size());
   } else {
-    {
+    /*{
       const char* propStr = JS_AtomToCString(ctx, prop);
       printf("js_contour_get_property  cid=%i this_val=%p prop=%s\n", JS_GetClassID(obj), JS_VALUE_GET_OBJ(obj), propStr);
       JS_FreeCString(ctx, propStr);
-    }
+    }*/
     JSValue proto = JS_GetPrototype(ctx, obj);
     if(JS_IsObject(proto)) {
       JSPropertyDescriptor desc = {0, JS_UNDEFINED, JS_UNDEFINED, JS_UNDEFINED};
@@ -1129,11 +1139,11 @@ static int
 js_contour_set_property(JSContext* ctx, JSValueConst obj, JSAtom prop, JSValueConst value, JSValueConst receiver, int flags) {
   JSContourData<double>* contour = js_contour_data(obj);
   uint32_t index;
-  {
+  /*{
     const char* propStr = JS_AtomToCString(ctx, prop);
     printf("js_contour_set_property  cid=%i this_val=%p prop=%s\n", JS_GetClassID(obj), JS_VALUE_GET_OBJ(obj), propStr);
     JS_FreeCString(ctx, propStr);
-  }
+  }*/
   if(js_atom_is_index(ctx, &index, prop)) {
     JSPointData<double> point;
     if(index >= contour->size())
