@@ -82,32 +82,29 @@ js_contour_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValu
   } else
     new(contour) JSContourData<double>();
 
-  if(argc > 0) {
-    int i;
-
-    for(i = 0; i < argc; i++) {
-      JSPointData<double> p;
-      if(js_is_array(ctx, argv[i])) {
-        if(js_array_length(ctx, argv[i]) > 0) {
-          JSValue pt = JS_GetPropertyUint32(ctx, argv[i], 0);
-
-          if(js_is_point(ctx, pt)) {
-            js_array_to /*< JSPointData<double> >*/ (ctx, argv[i], *contour);
-            JS_FreeValue(ctx, pt);
-            continue;
-          }
-          JS_FreeValue(ctx, pt);
-        }
-      }
-
-      if(js_point_read(ctx, argv[i], &p)) {
-        contour->push_back(p);
-        continue;
-      }
-      goto fail;
-    }
-  }
-
+  /* if(argc > 0) {
+     int i;
+     for(i = 0; i < argc; i++) {
+       JSPointData<double> p;
+       if(js_is_array(ctx, argv[i])) {
+         if(js_array_length(ctx, argv[i]) > 0) {
+           JSValue pt = JS_GetPropertyUint32(ctx, argv[i], 0);
+           if(js_is_point(ctx, pt)) {
+             js_array_to(ctx, argv[i], *contour);
+             JS_FreeValue(ctx, pt);
+             continue;
+           }
+           JS_FreeValue(ctx, pt);
+         }
+       }
+       if(js_point_read(ctx, argv[i], &p)) {
+         contour->push_back(p);
+         continue;
+       }
+       goto fail;
+     }
+   }
+ */
   return obj;
 
 fail:
