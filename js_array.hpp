@@ -765,9 +765,9 @@ js_array_copy(JSContext* ctx, JSValueConst array, const Iterator& start, const I
 }
 
 template<class Container>
-static inline JSValue
+static inline void
 js_array_copy(JSContext* ctx, JSValueConst array, const Container& v) {
-  return js_array<typename Container::value_type>::copy_sequence(ctx, array, v.begin(), v.end());
+  js_array<typename Container::value_type>::copy_sequence(ctx, array, v.begin(), v.end());
 }
 
 #endif /* defined(JS_ARRAY_HPP) */

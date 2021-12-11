@@ -62,8 +62,6 @@ public:
 JSValue int32array_proto, int32array_ctor;
 JSClassID int32array_class_id;*/
 
-extern "C++" template<class Type> JSValue js_contour_new(JSContext* ctx, const std::vector<Type>& points);
-
 /*JSValue
 js_vector_vec4i_to_array(JSContext* ctx, const std::vector<cv::Vec4i>& vec) {
   JSValue ret = JS_NewArray(ctx);

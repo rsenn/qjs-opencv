@@ -637,12 +637,15 @@ js_cv_find_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 
   array_buffer = js_arraybuffer_from(ctx, begin(vec4i), end(vec4i));
 
+  /* if(array_contours)
+     js_array_copy<JSContoursData<double>>(ctx, argv[1], poly);
+ */
   {
     size_t i, length = poly.size();
     JSValue ctor = js_global_get(ctx, "Int32Array");
     for(i = 0; i < length; i++) {
       if(array_contours) {
-        JSValue contour = js_contour_new(ctx, poly[i]);
+        JSValue contour = js_contour_move(ctx, std::move(poly[i]));
         JS_SetPropertyUint32(ctx, argv[1], i, contour);
       }
 

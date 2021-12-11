@@ -8,12 +8,14 @@
 #include <cstdint>
 #include <new>
 #include <vector>
+#include <cassert>
 
 extern "C" {
 extern JSValue contour_class, contour_proto;
 extern JSClassDef js_contour_class;
 extern VISIBLE JSClassID js_contour_class_id;
 
+JSValue js_contour_create(JSContext* ctx, JSValueConst proto);
 void js_contour_finalizer(JSRuntime* rt, JSValue val);
 
 JSValue js_contour_to_string(JSContext*, JSValueConst this_val, int argc, JSValueConst* argv);
@@ -21,20 +23,52 @@ int js_contour_init(JSContext*, JSModuleDef*);
 JSModuleDef* js_init_module_contour(JSContext*, const char*);
 void js_contour_constructor(JSContext* ctx, JSValue parent, const char* name);
 };
-JSValue js_contour_new(JSContext* ctx, const JSContourData<double>& points);
-JSValue js_contour_new(JSContext* ctx, const JSContourData<float>& points);
-JSValue js_contour_new(JSContext* ctx, const JSContourData<uint>& points);
+
+JSValue js_contour_move(JSContext* ctx, JSContourData<double>&& points);
 
 static inline JSContourData<double>*
 js_contour_data2(JSContext* ctx, JSValueConst val) {
+  assert(js_contour_class_id);
   return static_cast<JSContourData<double>*>(JS_GetOpaque2(ctx, val, js_contour_class_id));
 }
 
 static inline JSContourData<double>*
 js_contour_data(JSValueConst val) {
+  assert(js_contour_class_id);
   return static_cast<JSContourData<double>*>(JS_GetOpaque(val, js_contour_class_id));
 }
 
+template<typename T>
+static inline JSValue
+js_contour_new(JSContext* ctx, const JSContourData<T>& points) {
+  JSValue ret = js_contour_create(ctx, contour_proto);
+  JSContourData<double>* contour = js_contour_data(ret);
+
+  new(contour) JSContourData<double>();
+  contour->resize(points.size());
+  transform_points(points.cbegin(), points.cend(), contour->begin());
+
+  return ret;
+}
+
+template<typename T>
+static inline JSContourData<T>*
+contour_allocate(JSContext* ctx) {
+  return js_allocate<JSContourData<T>>(ctx);
+}
+
+template<typename T>
+static inline void
+contour_deallocate(JSContext* ctx, JSContourData<T>* contour) {
+  return js_deallocate<JSContourData<T>>(ctx, contour);
+}
+template<typename T>
+static inline void
+contour_deallocate(JSRuntime* rt, JSContourData<T>* contour) {
+  return js_deallocate<JSContourData<T>>(rt, contour);
+}
+
+/*
 JSValue js_contour_new(JSContext* ctx, const JSContourData<double>& points);
 
 inline JSValue
@@ -50,7 +84,7 @@ js_contour_new(JSContext* ctx, const JSContourData<int>& points) {
   JS_SetOpaque(ret, contour);
   return ret;
 };
-
+*/
 static inline int
 js_contour_read(JSContext* ctx, JSValueConst contour, JSContourData<double>* out) {
   int ret = 0;
