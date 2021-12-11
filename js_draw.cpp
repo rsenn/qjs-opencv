@@ -357,8 +357,18 @@ js_draw_rectangle(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
   if(js_is_noarray(dst))
     return JS_EXCEPTION;
 
-  if(argc > i && js_rect_read(ctx, argv[i], &rect))
+  if(argc > i && js_rect_read(ctx, argv[i], &rect)) {
     i++;
+  } else {
+    cv::Point pt1, pt2;
+
+    if(argc > i + 1 && js_point_read(ctx, argv[i], &pt1) && js_point_read(ctx, argv[i + 1], &pt2)) {
+      rect.x = std::min(pt1.x, pt2.x);
+      rect.y = std::min(pt1.y, pt2.y);
+      rect.width = std::max(pt1.x, pt2.x) - rect.x;
+      rect.height = std::max(pt1.y, pt2.y) - rect.y;
+    }
+  }
 
   if(argc > i && js_color_read(ctx, argv[i], &color)) {
     i++;
@@ -387,9 +397,8 @@ js_draw_rectangle(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
   points[1].x = rect.x + rect.width;
   points[1].y = rect.y + rect.height;
 
-  // cv::rectangle(dst, points[0], points[1], color, thickness, antialias ? cv::LINE_AA :
-  // cv::LINE_8);
-  cv::rectangle(dst, rect, scalar, thickness, antialias ? cv::LINE_AA : cv::LINE_8);
+ //printf("cv::rectangle %i,%i.%ux%u [%.0lf,%.0lf,%.0lf,%.0lf]\n", rect.x, rect.y, rect.width, rect.height, scalar[0], scalar[1], scalar[2], scalar[3]);
+  cv::rectangle(dst, points[0], points[1], scalar, thickness, antialias ? cv::LINE_AA : cv::LINE_8);
 
   return JS_UNDEFINED;
 }
