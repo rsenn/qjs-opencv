@@ -609,27 +609,27 @@ js_cv_find_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   JSValue array_buffer, ret = JS_UNDEFINED;
   int mode = cv::RETR_TREE;
   int approx = cv::CHAIN_APPROX_SIMPLE;
-  bool hier_callback, array_contours, array_hier, mat_hier;
+  bool hier_callback, contours_array, hier_array, hier_mat;
   cv::Point offset(0, 0);
 
   JSContoursData<int> contours;
   std::vector<cv::Vec4i> vec4i;
   JSContoursData<double> poly;
-  JSInputOutputArray hier;
+  JSInputOutputArray hier(vec4i);
 
-  mat_hier = hier.isUMat() || hier.isMat() || js_mat_data_nothrow(argv[2]);
-  hier_callback = !mat_hier && JS_IsFunction(ctx, argv[2]);
-  array_contours = JS_IsArray(ctx, argv[1]);
-  array_hier = js_is_array(ctx, argv[2]);
+  hier_mat = /*hier.isUMat() || hier.isMat() || */ js_mat_data_nothrow(argv[2]);
+  hier_callback = !hier_mat && JS_IsFunction(ctx, argv[2]);
+  contours_array = JS_IsArray(ctx, argv[1]);
+  hier_array = js_is_array(ctx, argv[2]);
 
-  if(mat_hier)
+  if(hier_mat)
     hier = js_umat_or_mat(ctx, argv[2]);
-  else
-    hier = JSInputOutputArray(vec4i);
+  /*else
+    hier = JSInputOutputArray(vec4i);*/
 
   cv::findContours(*m, contours, hier, mode, approx, offset);
 
-  if(array_contours)
+  if(contours_array)
     js_array_truncate(ctx, argv[1], 0);
 
   poly.resize(contours.size());
@@ -637,19 +637,19 @@ js_cv_find_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 
   array_buffer = js_arraybuffer_from(ctx, begin(vec4i), end(vec4i));
 
-  /* if(array_contours)
+  /* if(contours_array)
      js_array_copy<JSContoursData<double>>(ctx, argv[1], poly);
  */
   {
     size_t i, length = poly.size();
     JSValue ctor = js_global_get(ctx, "Int32Array");
     for(i = 0; i < length; i++) {
-      if(array_contours) {
+      if(contours_array) {
         JSValue contour = js_contour_move(ctx, std::move(poly[i]));
         JS_SetPropertyUint32(ctx, argv[1], i, contour);
       }
 
-      if(array_hier) {
+      if(hier_array) {
         JSValue array = js_typedarray_new(ctx, array_buffer, i * sizeof(cv::Vec4i), 4, ctor);
 
         JS_SetPropertyUint32(ctx, argv[2], i, array);
