@@ -648,10 +648,8 @@ js_cv_find_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
         JSValue contour = js_contour_move(ctx, std::move(poly[i]));
         JS_SetPropertyUint32(ctx, argv[1], i, contour);
       }
-
       if(hier_array) {
         JSValue array = js_typedarray_new(ctx, array_buffer, i * sizeof(cv::Vec4i), 4, ctor);
-
         JS_SetPropertyUint32(ctx, argv[2], i, array);
       }
     }

@@ -40,13 +40,27 @@ static JSValue float64_array;
 extern "C" JSValue
 js_contour_create(JSContext* ctx, JSValueConst proto) {
   assert(js_contour_class_id);
+  assert(JS_IsObject(proto));
   JSValue this_val = JS_NewObjectProtoClass(ctx, proto, js_contour_class_id);
-  JSContourData<double>* contour = contour_allocate<double>(ctx);
 
-  // printf("js_contour_create   cid=%i this_val=%p contour=%p\n", JS_GetClassID(this_val), JS_VALUE_GET_OBJ(this_val), contour);
+  printf("js_contour_create   cid=%i this_val=%p\n", JS_GetClassID(this_val), JS_VALUE_GET_OBJ(this_val));
 
-  JS_SetOpaque(this_val, contour);
+  JS_SetOpaque(this_val, contour_allocate<double>(ctx));
   return this_val;
+}
+
+extern "C" {
+VISIBLE JSContourData<double>*
+js_contour_data2(JSContext* ctx, JSValueConst val) {
+  assert(js_contour_class_id);
+  return static_cast<JSContourData<double>*>(JS_GetOpaque2(ctx, val, js_contour_class_id));
+}
+
+VISIBLE JSContourData<double>*
+js_contour_data(JSValueConst val) {
+  assert(js_contour_class_id);
+  return static_cast<JSContourData<double>*>(JS_GetOpaque(val, js_contour_class_id));
+}
 }
 
 JSValue
@@ -67,12 +81,11 @@ js_contour_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValu
   if(JS_IsException(proto))
     return JS_ThrowTypeError(ctx, "new target requiring prototype");
 
-  assert(js_contour_class_id);
   JSValue obj = js_contour_create(ctx, proto);
-  JSContourData<double>*other, *contour = js_contour_data(obj);
+  JSContourData<double>*other, *contour = static_cast<JSContourData<double>*>(JS_GetOpaque(obj, js_contour_class_id));
 
   if(argc > 0) {
-    if((other = js_contour_data(argv[0]))) {
+    if((other = static_cast<JSContourData<double>*>(JS_GetOpaque(argv[0], js_contour_class_id)))) {
       new(contour) JSContourData<double>(*other);
     } else if(js_is_array_like(ctx, argv[0])) {
       JSContourData<double> tmp;

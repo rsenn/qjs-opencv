@@ -22,21 +22,12 @@ JSValue js_contour_to_string(JSContext*, JSValueConst this_val, int argc, JSValu
 int js_contour_init(JSContext*, JSModuleDef*);
 JSModuleDef* js_init_module_contour(JSContext*, const char*);
 void js_contour_constructor(JSContext* ctx, JSValue parent, const char* name);
+
+VISIBLE JSContourData<double>* js_contour_data2(JSContext* ctx, JSValueConst val);
+VISIBLE JSContourData<double>* js_contour_data(JSValueConst val);
 };
 
 JSValue js_contour_move(JSContext* ctx, JSContourData<double>&& points);
-
-static inline JSContourData<double>*
-js_contour_data2(JSContext* ctx, JSValueConst val) {
-  assert(js_contour_class_id);
-  return static_cast<JSContourData<double>*>(JS_GetOpaque2(ctx, val, js_contour_class_id));
-}
-
-static inline JSContourData<double>*
-js_contour_data(JSValueConst val) {
-  assert(js_contour_class_id);
-  return static_cast<JSContourData<double>*>(JS_GetOpaque(val, js_contour_class_id));
-}
 
 template<typename T>
 static inline JSValue
