@@ -179,45 +179,33 @@ js_contour_approxpolydp(JSContext* ctx, JSValueConst this_val, int argc, JSValue
   if(argc > 1) {
     JS_ToFloat64(ctx, &epsilon, argv[1]);
 
-    if(argc > 2) {
+    if(argc > 2)
       closed = !!JS_ToBool(ctx, argv[2]);
-    }
   }
 
   contour_copy(*v, contour);
-
   cv::approxPolyDP(contour, approxCurve, epsilon, closed);
-
   contour_copy(approxCurve, *out);
-
   return JS_UNDEFINED;
 }
 
 static JSValue
 js_contour_arclength(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  JSContourData<double>*v, *other = nullptr, *ptr;
+  JSContourData<double>* v;
   JSValue ret = JS_UNDEFINED;
-  JSPointData<float> pt;
   bool closed = false;
   JSContourData<float> contour;
-  JSPointData<double>* point;
-  double retval;
+  double len;
 
-  v = js_contour_data2(ctx, this_val);
-  if(!v)
-
+  if(!(v = js_contour_data2(ctx, this_val)))
     return JS_EXCEPTION;
 
-  if(argc > 0) {
+  if(argc > 0)
     closed = !!JS_ToBool(ctx, argv[0]);
-  }
 
   contour_copy(*v, contour);
-
-  retval = cv::arcLength(contour, closed);
-
-  ret = JS_NewFloat64(ctx, retval);
-
+  len = cv::arcLength(contour, closed);
+  ret = JS_NewFloat64(ctx, len);
   return ret;
 }
 
@@ -240,16 +228,28 @@ js_contour_area(JSContext* ctx, JSValueConst this_val) {
 static JSValue
 js_contour_boundingrect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSValue ret = JS_UNDEFINED;
-  JSContourData<float> contour;
   JSContourData<double>* v;
-  JSRectData<double> r;
 
   if(!(v = js_contour_data2(ctx, this_val)))
     return JS_EXCEPTION;
 
-  contour_copy(*v, contour);
-  r = cv::boundingRect(contour);
-  ret = js_rect_new(ctx, r);
+  if(!v->empty()) {
+    JSContourData<double>& pts = *v;
+    JSPointData<double> tl, br;
+    size_t i, n = pts.size();
+    tl = br = pts[0];
+    for(i = 1; i < n; ++i) {
+      if(tl.x > pts[i].x)
+        tl.x = pts[i].x;
+      if(tl.y > pts[i].y)
+        tl.y = pts[i].y;
+      if(br.x < pts[i].x)
+        br.x = pts[i].x;
+      if(br.y < pts[i].y)
+        br.y = pts[i].y;
+    }
+    ret = js_rect_new(ctx, tl.x, tl.y, br.x - tl.x, br.y - tl.y);
+  }
   return ret;
 }
 
@@ -531,14 +531,13 @@ js_contour_minenclosingtriangle(JSContext* ctx, JSValueConst this_val, int argc,
 
 static JSValue
 js_contour_pointpolygontest(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  JSContourData<double>*v, *other = nullptr, *ptr;
+  JSContourData<double>* v /*, *other = nullptr, *ptr*/;
   JSValue ret = JS_UNDEFINED;
-  cv::RotatedRect rr;
   JSPointData<float> pt;
-  bool measureDist = false;
-  JSContourData<float> contour, triangle;
+  BOOL measureDist = FALSE;
+  JSContourData<float> contour /*, triangle*/;
   JSPointData<double> point;
-  double retval;
+  double dist;
 
   if(!(v = js_contour_data2(ctx, this_val)))
     return JS_EXCEPTION;
@@ -555,13 +554,11 @@ js_contour_pointpolygontest(JSContext* ctx, JSValueConst this_val, int argc, JSV
   }
 
   contour_copy(*v, contour);
-
-  retval = cv::pointPolygonTest(contour, pt, measureDist);
-
-  ret = JS_NewFloat64(ctx, retval);
-
+  dist = cv::pointPolygonTest(contour, pt, measureDist);
+  ret = JS_NewFloat64(ctx, dist);
   return ret;
 }
+
 enum {
   SIMPLIFY_REUMANN_WITKAM = 0,
   SIMPLIFY_OPHEIM,

@@ -22,7 +22,7 @@
 #include <vector>
 
 extern "C" {
-JSValue rect_proto = JS_UNDEFINED, rect_class = JS_UNDEFINED;
+thread_local VISIBLE JSValue rect_proto = JS_UNDEFINED, rect_class = JS_UNDEFINED;
 thread_local VISIBLE JSClassID js_rect_class_id = 0;
 }
 
@@ -578,8 +578,8 @@ const JSCFunctionListEntry js_rect_proto_funcs[] = {
     JS_CGETSET_MAGIC_DEF("y2", js_rect_get, js_rect_set, PROP_Y2),
     JS_CGETSET_MAGIC_DEF("point", js_rect_get, js_rect_set, PROP_POS),
     JS_CGETSET_MAGIC_DEF("size", js_rect_get, js_rect_set, PROP_SIZE),
-    JS_CGETSET_MAGIC_DEF("tl", js_rect_get, 0, PROP_TOPLEFT),
-    JS_CGETSET_MAGIC_DEF("br", js_rect_get, 0, PROP_BOTTOM_RIGHT),
+    /*   JS_CGETSET_MAGIC_DEF("tl", js_rect_get, 0, PROP_TOPLEFT),
+       JS_CGETSET_MAGIC_DEF("br", js_rect_get, 0, PROP_BOTTOM_RIGHT),*/
     JS_ALIAS_DEF("x1", "x"),
     JS_ALIAS_DEF("y1", "y"),
     JS_CFUNC_MAGIC_DEF("contains", 0, js_rect_method, METHOD_CONTAINS),
@@ -599,9 +599,10 @@ const JSCFunctionListEntry js_rect_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("toObject", 0, js_rect_funcs, FUNC_TOOBJECT),
     JS_CFUNC_MAGIC_DEF("toArray", 0, js_rect_funcs, FUNC_TOARRAY),
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Rect", JS_PROP_CONFIGURABLE),
-
 };
-const JSCFunctionListEntry js_rect_static_funcs[] = {JS_CFUNC_DEF("from", 1, js_rect_from)};
+const JSCFunctionListEntry js_rect_static_funcs[] = {
+    JS_CFUNC_DEF("from", 1, js_rect_from),
+};
 
 extern "C" VISIBLE int
 js_rect_init(JSContext* ctx, JSModuleDef* m) {
