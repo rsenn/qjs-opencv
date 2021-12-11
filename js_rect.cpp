@@ -323,7 +323,19 @@ js_rect_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
   return obj;
 }
 
-enum { METHOD_CONTAINS = 0, METHOD_EMPTY, METHOD_AREA, METHOD_BR, METHOD_TL, METHOD_SIZE, METHOD_INSET, METHOD_OUTSET, METHOD_HSPLIT, METHOD_VSPLIT };
+enum {
+  METHOD_CONTAINS = 0,
+  METHOD_EMPTY,
+  METHOD_AREA,
+  METHOD_BR,
+  METHOD_TL,
+  METHOD_SIZE,
+  METHOD_INSET,
+  METHOD_OUTSET,
+  METHOD_HSPLIT,
+  METHOD_VSPLIT,
+  METHOD_MERGE
+};
 
 static JSValue
 js_rect_method(JSContext* ctx, JSValueConst rect, int argc, JSValueConst* argv, int magic) {
@@ -479,6 +491,26 @@ js_rect_method(JSContext* ctx, JSValueConst rect, int argc, JSValueConst* argv, 
       ret = js_array_from(ctx, rects);
       break;
     }
+    case METHOD_MERGE: {
+
+      double x1 = s->x, x2 = s->x + s->width, y1 = s->y, y2 = s->y + s->height;
+      size_t i;
+      for(i = 0; i < argc; i++) {
+        JSRectData<double> rect;
+        js_rect_read(ctx, argv[i], &rect);
+        if(x1 > rect.x)
+          x1 = rect.x;
+        if(x2 < rect.x + rect.width)
+          x2 = rect.x + rect.width;
+        if(y1 > rect.y)
+          y1 = rect.y;
+        if(y2 < rect.y + rect.height)
+          y2 = rect.y + rect.height;
+      }
+
+      ret = js_rect_new(ctx, x1, y1, x2, y2);
+      break;
+    }
   }
 
   return ret;
@@ -559,6 +591,7 @@ const JSCFunctionListEntry js_rect_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("outset", 1, js_rect_method, METHOD_OUTSET),
     JS_CFUNC_MAGIC_DEF("hsplit", 1, js_rect_method, METHOD_HSPLIT),
     JS_CFUNC_MAGIC_DEF("vsplit", 1, js_rect_method, METHOD_VSPLIT),
+    JS_CFUNC_MAGIC_DEF("merge", 1, js_rect_method, METHOD_MERGE),
     JS_CFUNC_DEF("toString", 0, js_rect_to_string),
     JS_CFUNC_DEF("toSource", 0, js_rect_to_source),
     JS_CFUNC_MAGIC_DEF("equals", 1, js_rect_funcs, FUNC_EQUALS),
@@ -570,7 +603,7 @@ const JSCFunctionListEntry js_rect_proto_funcs[] = {
 };
 const JSCFunctionListEntry js_rect_static_funcs[] = {JS_CFUNC_DEF("from", 1, js_rect_from)};
 
-int
+extern "C" VISIBLE int
 js_rect_init(JSContext* ctx, JSModuleDef* m) {
 
   if(js_rect_class_id == 0) {
