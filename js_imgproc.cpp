@@ -1773,7 +1773,7 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* 
   }
   return ret;
 }
-JSClassID js_imgproc_class_id = 0;
+thread_local VISIBLE JSClassID js_imgproc_class_id = 0;
 
 void
 js_imgproc_finalizer(JSRuntime* rt, JSValue val) {

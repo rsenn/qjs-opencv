@@ -23,7 +23,7 @@
 
 extern "C" {
 JSValue rect_proto = JS_UNDEFINED, rect_class = JS_UNDEFINED;
-JSClassID js_rect_class_id = 0;
+thread_local VISIBLE JSClassID js_rect_class_id = 0;
 }
 
 extern "C" VISIBLE JSValue

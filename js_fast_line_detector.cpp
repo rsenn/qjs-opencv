@@ -19,7 +19,7 @@ extern "C" VISIBLE int js_fast_line_detector_init(JSContext*, JSModuleDef*);
 
 extern "C" {
 JSValue fast_line_detector_proto = JS_UNDEFINED, fast_line_detector_class = JS_UNDEFINED;
-JSClassID js_fast_line_detector_class_id = 0;
+thread_local VISIBLE JSClassID js_fast_line_detector_class_id = 0;
 }
 
 JSValue

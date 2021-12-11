@@ -18,7 +18,7 @@ enum { PROP_A = 0, PROP_B, PROP_SLOPE, PROP_PIVOT, PROP_TO, PROP_ANGLE, PROP_ASP
 
 extern "C" {
 JSValue line_proto = JS_UNDEFINED, line_class = JS_UNDEFINED;
-JSClassID js_line_class_id = 0;
+thread_local VISIBLE JSClassID js_line_class_id = 0;
 
 VISIBLE JSLineData<double>*
 js_line_data2(JSContext* ctx, JSValueConst val) {

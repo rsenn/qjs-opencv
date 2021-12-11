@@ -23,7 +23,7 @@ extern "C" VISIBLE int js_umat_init(JSContext*, JSModuleDef*);
 extern "C" {
 
 extern JSValue umat_proto, umat_class;
-extern JSClassID js_umat_class_id;
+extern thread_local VISIBLE JSClassID js_umat_class_id;
 }
 
 VISIBLE JSValue js_umat_new(JSContext*, uint32_t, uint32_t, int);

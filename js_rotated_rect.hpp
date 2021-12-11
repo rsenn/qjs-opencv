@@ -6,7 +6,7 @@
 
 extern "C" {
 extern JSValue rotated_rect_proto, rotated_rect_class;
-extern JSClassID js_rotated_rect_class_id;
+extern thread_local VISIBLE JSClassID js_rotated_rect_class_id;
 }
 
 extern "C" VISIBLE int js_rotated_rect_init(JSContext*, JSModuleDef*);

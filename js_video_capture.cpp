@@ -18,7 +18,7 @@ extern "C" VISIBLE int js_video_capture_init(JSContext*, JSModuleDef*);
 
 extern "C" {
 JSValue video_capture_proto = JS_UNDEFINED, video_capture_class = JS_UNDEFINED;
-JSClassID js_video_capture_class_id = 0;
+thread_local VISIBLE JSClassID js_video_capture_class_id = 0;
 }
 
 static inline int

@@ -10,7 +10,7 @@
 extern "C" {
 
 JSValue slice_iterator_proto = JS_UNDEFINED, slice_iterator_class = JS_UNDEFINED;
-VISIBLE JSClassID js_slice_iterator_class_id = 0;
+thread_local VISIBLE JSClassID js_slice_iterator_class_id = 0;
 
 VISIBLE JSSliceIteratorData*
 js_slice_iterator_create(JSContext* ctx, JSValueConst buffer, const TypedArrayType& type, int num_elems) {

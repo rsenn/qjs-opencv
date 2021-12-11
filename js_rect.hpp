@@ -8,7 +8,7 @@ extern "C" VISIBLE int js_rect_init(JSContext*, JSModuleDef*);
 
 extern "C" {
 extern JSValue rect_proto, rect_class;
-extern JSClassID js_rect_class_id;
+extern thread_local VISIBLE JSClassID js_rect_class_id;
 
 VISIBLE JSRectData<double>* js_rect_data2(JSContext*, JSValueConst val);
 VISIBLE JSValue js_rect_wrap(JSContext*, const JSRectData<double>&);

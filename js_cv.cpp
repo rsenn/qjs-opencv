@@ -41,7 +41,7 @@ enum { DISPLAY_OVERLAY };
 
 extern "C" {
 JSValue cv_proto = JS_UNDEFINED, cv_class = JS_UNDEFINED;
-JSClassID js_cv_class_id = 0;
+thread_local VISIBLE JSClassID js_cv_class_id = 0;
 }
 
 static JSValue

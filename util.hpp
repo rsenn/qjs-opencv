@@ -25,6 +25,18 @@
 #define HIDDEN __attribute__((visibility("hidden")))
 #endif
 
+#ifndef thread_local
+#ifdef _Thread_local
+#define thread_local _Thread_local
+#elif defined(__GNUC__) || defined(__INTEL_COMPILER) || defined(__SUNPRO_CC) || defined(__IBMCPP__)
+#define thread_local __thread
+#elif defined(_WIN32)
+#define thread_local __declspec(thread)
+#else
+#error No TLS implementation found.
+#endif
+#endif
+
 #define COLOR_BLACK "\x1b[30m"
 #define COLOR_RED "\x1b[31m"
 #define COLOR_GREEN "\x1b[32m"

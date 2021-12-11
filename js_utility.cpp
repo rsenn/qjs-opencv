@@ -13,7 +13,7 @@ extern "C" VISIBLE int js_utility_init(JSContext*, JSModuleDef*);
 extern "C" {
 
 JSValue tick_meter_proto = JS_UNDEFINED, tick_meter_class = JS_UNDEFINED;
-JSClassID js_tick_meter_class_id = 0;
+thread_local VISIBLE JSClassID js_tick_meter_class_id = 0;
 
 VISIBLE JSValue
 js_tick_meter_new(JSContext* ctx) {

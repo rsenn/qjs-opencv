@@ -32,7 +32,7 @@
 
 extern "C" {
 JSValue contour_proto = JS_UNDEFINED, contour_class = JS_UNDEFINED;
-VISIBLE JSClassID js_contour_class_id = 0;
+thread_local VISIBLE JSClassID js_contour_class_id = 0;
 }
 
 static JSValue float64_array;

@@ -10,7 +10,7 @@ extern "C" JSValue js_point_clone(JSContext* ctx, const JSPointData<double>& poi
 extern "C" {
 
 extern JSValue point_proto, point_class;
-extern JSClassID js_point_class_id;
+extern thread_local VISIBLE JSClassID js_point_class_id;
 
 int js_point_init(JSContext*, JSModuleDef* m);
 void js_point_constructor(JSContext* ctx, JSValue parent, const char* name);

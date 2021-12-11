@@ -67,10 +67,10 @@ enum { MAT_EXPR_AND = 0, MAT_EXPR_OR, MAT_EXPR_XOR, MAT_EXPR_MUL };
 enum { MAT_ITERATOR_KEYS, MAT_ITERATOR_VALUES, MAT_ITERATOR_ENTRIES };
 extern "C" {
 JSValue mat_proto = JS_UNDEFINED, mat_class = JS_UNDEFINED, mat_iterator_proto = JS_UNDEFINED, mat_iterator_class = JS_UNDEFINED;
-JSClassID js_mat_class_id = 0, js_mat_iterator_class_id = 0;
+thread_local VISIBLE JSClassID js_mat_class_id = 0, js_mat_iterator_class_id = 0;
 
 JSValue umat_proto = JS_UNDEFINED, umat_class = JS_UNDEFINED;
-JSClassID js_umat_class_id = 0;
+thread_local VISIBLE JSClassID js_umat_class_id = 0;
 
 typedef struct JSMatIteratorData {
   JSValue obj, buf;

@@ -18,7 +18,7 @@ enum { SIZE_PROP_WIDTH, SIZE_PROP_HEIGHT, SIZE_PROP_ASPECT, SIZE_PROP_EMPTY, SIZ
 
 extern "C" {
 JSValue size_proto = JS_UNDEFINED, size_class = JS_UNDEFINED;
-JSClassID js_size_class_id = 0;
+thread_local VISIBLE JSClassID js_size_class_id = 0;
 }
 
 template<class T>

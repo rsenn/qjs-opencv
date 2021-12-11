@@ -18,7 +18,7 @@ extern "C" VISIBLE int js_video_writer_init(JSContext*, JSModuleDef*);
 
 extern "C" {
 JSValue video_writer_proto = JS_UNDEFINED, video_writer_class = JS_UNDEFINED;
-JSClassID js_video_writer_class_id = 0;
+thread_local VISIBLE JSClassID js_video_writer_class_id = 0;
 }
 
 static bool

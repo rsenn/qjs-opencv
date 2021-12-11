@@ -8,7 +8,7 @@
 extern "C" {
 
 extern JSValue line_proto, line_class;
-extern JSClassID js_line_class_id;
+extern thread_local VISIBLE JSClassID js_line_class_id;
 
 VISIBLE JSValue js_line_new(JSContext* ctx, double x1, double y1, double x2, double y2);
 JSModuleDef* js_init_module_line(JSContext*, const char*);

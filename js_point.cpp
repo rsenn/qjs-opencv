@@ -21,7 +21,7 @@ std::vector<JSPointData<double>*> points;
 extern "C" {
 
 JSValue point_proto = JS_UNDEFINED;
-JSClassID js_point_class_id = 0;
+thread_local VISIBLE JSClassID js_point_class_id = 0;
 }
 
 template<class T>

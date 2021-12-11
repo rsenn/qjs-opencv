@@ -13,7 +13,7 @@
 extern "C" {
 extern JSValue contour_class, contour_proto;
 extern JSClassDef js_contour_class;
-extern VISIBLE JSClassID js_contour_class_id;
+extern thread_local VISIBLE JSClassID js_contour_class_id;
 
 JSValue js_contour_create(JSContext* ctx, JSValueConst proto);
 void js_contour_finalizer(JSRuntime* rt, JSValue val);

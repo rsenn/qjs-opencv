@@ -13,7 +13,7 @@ extern "C" VISIBLE int js_slice_iterator_init(JSContext*, JSModuleDef*);
 extern "C" {
 
 extern JSValue slice_iterator_proto, slice_iterator_class;
-extern JSClassID js_slice_iterator_class_id;
+extern thread_local VISIBLE JSClassID js_slice_iterator_class_id;
 
 VISIBLE JSValue js_slice_iterator_new(JSContext* ctx, JSValueConst buffer, const TypedArrayType& type, int num_elems);
 

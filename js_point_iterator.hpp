@@ -11,7 +11,7 @@ extern "C" {
 enum JSPointIteratorMagic { NEXT_POINT = 0, NEXT_LINE };
 
 extern JSValue point_iterator_proto, point_iterator_class;
-extern JSClassID js_point_iterator_class_id;
+extern thread_local VISIBLE JSClassID js_point_iterator_class_id;
 
 VISIBLE JSValue js_point_iterator_new(JSContext* ctx, JSPointData<double>* first, JSPointData<double>* last, int magic);
 

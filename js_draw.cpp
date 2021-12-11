@@ -615,7 +615,7 @@ js_clip_line(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv
 }
 
 JSValue draw_proto = JS_UNDEFINED, draw_class = JS_UNDEFINED;
-JSClassID js_draw_class_id = 0;
+thread_local VISIBLE JSClassID js_draw_class_id = 0;
 
 JSClassDef js_draw_class = {
     .class_name = "Draw",
