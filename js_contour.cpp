@@ -1015,9 +1015,6 @@ js_contour_get_own_property(JSContext* ctx, JSPropertyDescriptor* pdesc, JSValue
   JSContourData<double>* contour;
   JSValue value = JS_UNDEFINED;
   uint32_t index;
-  const char* propStr = JS_AtomToCString(ctx, prop);
-  printf("js_contour_get_own_property  cid=%i this_val=%p prop=%s\n", JS_GetClassID(obj), JS_VALUE_GET_OBJ(obj), propStr);
-  JS_FreeCString(ctx, propStr);
 
   if(!(contour = static_cast<JSContourData<double>*>(JS_GetOpaque(obj, js_contour_class_id))))
     return FALSE;
@@ -1036,7 +1033,11 @@ js_contour_get_own_property(JSContext* ctx, JSPropertyDescriptor* pdesc, JSValue
     }
   } else {
   }
-
+  {
+    const char* propStr = JS_AtomToCString(ctx, prop);
+    printf("js_contour_get_own_property  cid=%i this_val=%p prop=%s\n", JS_GetClassID(obj), JS_VALUE_GET_OBJ(obj), propStr);
+    JS_FreeCString(ctx, propStr);
+  }
   return FALSE;
 }
 
@@ -1072,17 +1073,18 @@ static int
 js_contour_has_property(JSContext* ctx, JSValueConst obj, JSAtom prop) {
   JSContourData<double>* contour = js_contour_data(obj);
   uint32_t index;
-  {
-    const char* propStr = JS_AtomToCString(ctx, prop);
-    printf("js_contour_has_property  cid=%i this_val=%p prop=%s\n", JS_GetClassID(obj), JS_VALUE_GET_OBJ(obj), propStr);
-    JS_FreeCString(ctx, propStr);
-  }
+
   if(js_atom_is_index(ctx, &index, prop)) {
     if(index < contour->size())
       return TRUE;
   } else if(js_atom_is_length(ctx, prop)) {
     return TRUE;
   } else {
+    {
+      const char* propStr = JS_AtomToCString(ctx, prop);
+      printf("js_contour_has_property  cid=%i this_val=%p prop=%s\n", JS_GetClassID(obj), JS_VALUE_GET_OBJ(obj), propStr);
+      JS_FreeCString(ctx, propStr);
+    }
     JSValue proto = JS_GetPrototype(ctx, obj);
     if(JS_IsObject(proto) && JS_HasProperty(ctx, proto, prop))
       return TRUE;
@@ -1096,11 +1098,6 @@ js_contour_get_property(JSContext* ctx, JSValueConst obj, JSAtom prop, JSValueCo
   JSContourData<double>* contour = js_contour_data(obj);
   JSValue value = JS_UNDEFINED;
   uint32_t index;
-  {
-    const char* propStr = JS_AtomToCString(ctx, prop);
-    printf("js_contour_get_property  cid=%i this_val=%p prop=%s\n", JS_GetClassID(obj), JS_VALUE_GET_OBJ(obj), propStr);
-    JS_FreeCString(ctx, propStr);
-  }
 
   if(js_atom_is_index(ctx, &index, prop)) {
     if(index < contour->size())
@@ -1108,6 +1105,11 @@ js_contour_get_property(JSContext* ctx, JSValueConst obj, JSAtom prop, JSValueCo
   } else if(js_atom_is_length(ctx, prop)) {
     value = JS_NewUint32(ctx, contour->size());
   } else {
+    {
+      const char* propStr = JS_AtomToCString(ctx, prop);
+      printf("js_contour_get_property  cid=%i this_val=%p prop=%s\n", JS_GetClassID(obj), JS_VALUE_GET_OBJ(obj), propStr);
+      JS_FreeCString(ctx, propStr);
+    }
     JSValue proto = JS_GetPrototype(ctx, obj);
     if(JS_IsObject(proto)) {
       JSPropertyDescriptor desc = {0, JS_UNDEFINED, JS_UNDEFINED, JS_UNDEFINED};
