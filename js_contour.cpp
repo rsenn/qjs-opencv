@@ -951,8 +951,10 @@ js_contour_get(JSContext* ctx, JSValueConst this_val, int magic) {
       break;
     }
     case PROP_EXTENT: {
-      double area = cv::contourArea(*contour);
-      JSRectData<double> rect = cv::boundingRect(*contour);
+      JSContourData<int32_t> fc;
+      contour_copy(*contour,fc);
+      double area = cv::contourArea(fc);
+      JSRectData<double> rect = cv::boundingRect(fc);
 
       ret = JS_NewFloat64(ctx, area / (rect.width * rect.height));
       break;
