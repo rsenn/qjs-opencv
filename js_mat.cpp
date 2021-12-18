@@ -317,12 +317,12 @@ js_mat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv
       break;
     }
     case METHOD_COL_RANGE: {
-      int x1 = mat_col(*m, i), x2 = mat_col(*m, i2);
+      int x1 = mat_col(*m, i), x2 = i2 == -1 ? m->cols : mat_col(*m, i2);
       ret = js_mat_wrap(ctx, m->colRange(x1, x2));
       break;
     }
     case METHOD_ROW_RANGE: {
-      int y1 = mat_row(*m, i), y2 = mat_row(*m, i2);
+      int y1 = mat_row(*m, i), y2 = i2 == -1 ? m->rows : mat_row(*m, i2);
       ret = js_mat_wrap(ctx, m->rowRange(y1, y2));
       break;
     }
