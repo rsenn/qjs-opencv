@@ -136,8 +136,7 @@ export function Processor(fn, ...args) {
   });
 
   self = function(src, dst, i) {
-    if(dst && mapper.get(self) && dst !== mapper.get(self))
-      throw new Error(`Duplicate output Mat for processor '${self.name}`);
+    if(dst && mapper.get(self) && dst !== mapper.get(self)) throw new Error(`Duplicate output Mat for processor '${self.name}`);
 
     if(dst) mapper.set(self, dst);
     else if(!dst) dst = mapper(self, src?.size, src?.type);

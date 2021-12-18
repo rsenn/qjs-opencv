@@ -18,11 +18,11 @@ function main(...args) {
   }
   for(let i = 0; i < 16; i++) {
     palette2[i] = [i & 1, i & 2, i & 4].map(n => !!n | 0).map(n => n * (i & 8 ? 255 : 128));
-  } 
+  }
   const ansiColor = (r, g, b, bg = false) => `\x1b[${bg ? 48 : 38};2;${r};${g};${b}m`;
   const noColor = () => `\x1b[0m`;
 
-   for(let i = 0; i < palette.length; i++) {
+  for(let i = 0; i < palette.length; i++) {
     const [r, g, b] = palette[i];
 
     console.log(ansiColor(r, g, b, true) + `palette #${i}` + noColor(), palette[i]);

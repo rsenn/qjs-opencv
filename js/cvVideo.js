@@ -1,15 +1,7 @@
 import { Mat, VideoCapture, Size, Rect } from 'opencv';
 import * as cv from 'opencv';
 import { WeakMapper, Modulo, WeakAssign, BindMethods, BindMethodsTo, FindKey } from './cvUtils.js';
-import {
-  DirIterator,
-  RecursiveDirIterator,
-  ReadDirRecursive,
-  Filter,
-  FilterImages,
-  SortFiles,
-  StatFiles
-} from '../../../io-helpers.js';
+import { DirIterator, RecursiveDirIterator, ReadDirRecursive, Filter, FilterImages, SortFiles, StatFiles } from '../../../io-helpers.js';
 
 const Crop = (() => {
   const mapper = WeakMapper(() => new Mat());
@@ -25,7 +17,7 @@ function ImageSize(src, dst, dsize, action = (name, arg1, arg2) => console.debug
     roi,
     f,
     ssize = src.size;
-//  console.debug('ImageSize', { src, dst, ssize, dsize });
+  //  console.debug('ImageSize', { src, dst, ssize, dsize });
   if(!ssize.equals(dsize)) {
     let [fx, fy] = dsize.div(ssize);
     if(fx != fy) {
@@ -68,8 +60,8 @@ function ImageSize(src, dst, dsize, action = (name, arg1, arg2) => console.debug
       }
       action(`Scale (ₓ${factors[0].toFixed(5)})`, ssize, dsize);
       dst.reset();
-       console.debug('ImageSize',{dsize});
-    cv.resize(src, dst, dsize, 0, 0, cv.INTER_CUBIC);
+      console.debug('ImageSize', { dsize });
+      cv.resize(src, dst, dsize, 0, 0, cv.INTER_CUBIC);
       dst.resize(dsize.height);
       //console.debug(`Scale ${src} -> ${dst}`);
       return;
@@ -169,10 +161,7 @@ export class ImageSequence {
       let { size: frameSize } = frame;
       let doResize = !frameSize.equals(targetSize);
       //console.debug(`ImageSequence.retrieve[${framePos}]`, { frame, frameSize, mat, targetSize, doResize });
-      if(doResize)
-        ImageSize(frame, mat, targetSize, (name, arg1, arg2) =>
-          console.debug(`ImageSize[${this.framePos}] ${name} ${arg1.toString()} -> ${arg2.toString()}`)
-        );
+      if(doResize) ImageSize(frame, mat, targetSize, (name, arg1, arg2) => console.debug(`ImageSize[${this.framePos}] ${name} ${arg1.toString()} -> ${arg2.toString()}`));
       else frame.copyTo(mat);
       //console.debug(`ImageSequence.retrieve[${framePos}]`, { mat });
       return !mat.emtpy;
@@ -185,59 +174,19 @@ export class ImageSequence {
   }
 
   *[Symbol.iterator]() {
-for(let image of this.images) {
-yield cv.imread(image);
+    for(let image of this.images) {
+      yield cv.imread(image);
+    }
   }
-}
 }
 
 const isVideoPath = arg => /\.(3gp|avi|f4v|flv|m4v|m2v|mkv|mov|mp4|mpeg|mpg|ogm|vob|webm|wmv)$/i.test(arg);
 
 export class VideoSource {
-  static backends = Object.fromEntries(
-    [
-      'ANY',
-      'VFW',
-      'V4L',
-      'V4L2',
-      'FIREWIRE',
-      'FIREWARE',
-      'IEEE1394',
-      'DC1394',
-      'CMU1394',
-      'QT',
-      'UNICAP',
-      'DSHOW',
-      'PVAPI',
-      'OPENNI',
-      'OPENNI_ASUS',
-      'ANDROID',
-      'XIAPI',
-      'AVFOUNDATION',
-      'GIGANETIX',
-      'MSMF',
-      'WINRT',
-      'INTELPERC',
-      'REALSENSE',
-      'OPENNI2',
-      'OPENNI2_ASUS',
-      'GPHOTO2',
-      'GSTREAMER',
-      'FFMPEG',
-      'IMAGES',
-      'ARAVIS',
-      'OPENCV_MJPEG',
-      'INTEL_MFX',
-      'XINE'
-    ].map(name => [name, cv['CAP_' + name]])
-  );
+  static backends = Object.fromEntries(['ANY', 'VFW', 'V4L', 'V4L2', 'FIREWIRE', 'FIREWARE', 'IEEE1394', 'DC1394', 'CMU1394', 'QT', 'UNICAP', 'DSHOW', 'PVAPI', 'OPENNI', 'OPENNI_ASUS', 'ANDROID', 'XIAPI', 'AVFOUNDATION', 'GIGANETIX', 'MSMF', 'WINRT', 'INTELPERC', 'REALSENSE', 'OPENNI2', 'OPENNI2_ASUS', 'GPHOTO2', 'GSTREAMER', 'FFMPEG', 'IMAGES', 'ARAVIS', 'OPENCV_MJPEG', 'INTEL_MFX', 'XINE'].map(name => [name, cv['CAP_' + name]]));
 
   constructor(...args) {
-    console.log(
-      'VideoSource.constructor(',
-      ...args.reduce((acc, arg) => (acc.length ? [...acc, ', ', arg] : [arg]), []),
-      ')'
-    );
+    console.log('VideoSource.constructor(', ...args.reduce((acc, arg) => (acc.length ? [...acc, ', ', arg] : [arg]), []), ')');
     if(args.length > 0) {
       let [device, backend = 'ANY', loop = true] = args;
       const driverId = VideoSource.backends[backend];
@@ -363,19 +312,7 @@ export class VideoSource {
     return this.get('fps');
   }
 
-  dump(
-    props = [
-      'frame_count',
-      'frame_width',
-      'frame_height',
-      'fps',
-      'format',
-      'fourcc',
-      'backend',
-      'pos_frames',
-      'pos_msec'
-    ]
-  ) {
+  dump(props = ['frame_count', 'frame_width', 'frame_height', 'fps', 'format', 'fourcc', 'backend', 'pos_frames', 'pos_msec']) {
     return new Map(props.map(propName => [propName, this.get(propName)]).filter(([k, v]) => v !== undefined));
   }
 
