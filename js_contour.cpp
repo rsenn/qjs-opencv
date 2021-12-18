@@ -95,29 +95,29 @@ js_contour_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValu
   } else
     new(contour) JSContourData<double>();
 
-  /* if(argc > 0) {
-     int i;
-     for(i = 0; i < argc; i++) {
-       JSPointData<double> p;
-       if(js_is_array(ctx, argv[i])) {
-         if(js_array_length(ctx, argv[i]) > 0) {
-           JSValue pt = JS_GetPropertyUint32(ctx, argv[i], 0);
-           if(js_is_point(ctx, pt)) {
-             js_array_to(ctx, argv[i], *contour);
-             JS_FreeValue(ctx, pt);
-             continue;
-           }
-           JS_FreeValue(ctx, pt);
-         }
-       }
-       if(js_point_read(ctx, argv[i], &p)) {
-         contour->push_back(p);
-         continue;
-       }
-       goto fail;
-     }
-   }
- */
+  if(argc > 0) {
+    int i;
+    for(i = 0; i < argc; i++) {
+      JSPointData<double> p;
+      if(js_is_array(ctx, argv[i])) {
+        if(js_array_length(ctx, argv[i]) > 0) {
+          JSValue pt = JS_GetPropertyUint32(ctx, argv[i], 0);
+          if(js_is_point(ctx, pt)) {
+            js_array_to(ctx, argv[i], *contour);
+            JS_FreeValue(ctx, pt);
+            continue;
+          }
+          JS_FreeValue(ctx, pt);
+        }
+      }
+      if(js_point_read(ctx, argv[i], &p)) {
+        contour->push_back(p);
+        continue;
+      }
+      goto fail;
+    }
+  }
+
   return obj;
 
 fail:
@@ -189,6 +189,16 @@ js_contour_approxpolydp(JSContext* ctx, JSValueConst this_val, int argc, JSValue
   return JS_UNDEFINED;
 }
 
+/**
+ * @brief      cv.Contour.prototype.arcLength
+ *
+ * @param      ctx       The context
+ * @param[in]  this_val  The this value
+ * @param[in]  argc      The count of arguments
+ * @param      argv      The arguments array
+ *
+ * @return     The js value.
+ */
 static JSValue
 js_contour_arclength(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSContourData<double>* v;
@@ -449,6 +459,10 @@ js_contour_isconvex(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   return ret;
 }
 
+/**
+ * @brief      cv.Contour.prototype.length
+ * @return     Contour length.
+ */
 static JSValue
 js_contour_length(JSContext* ctx, JSValueConst this_val) {
   JSContourData<double>* v;
@@ -649,6 +663,11 @@ js_contour_psimpl(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
   return ret;
 }
 
+/**
+ * @brief      cv.Contour.prototype.push
+ * @param      value     Pushed value
+ * @return     undefined
+ */
 static JSValue
 js_contour_push(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSContourData<double>* v;
@@ -679,6 +698,10 @@ js_contour_push(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
   return JS_UNDEFINED;
 }
 
+/**
+ * @brief      cv.Contour.prototype.pop
+ * @return     Tail value
+ */
 static JSValue
 js_contour_pop(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSContourData<double>* v;
@@ -702,6 +725,12 @@ js_contour_pop(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
   return ret;
 }
 
+
+/**
+ * @brief      cv.Contour.prototype.unshift
+ * @param      value     Added value
+ * @return     undefined
+ */
 static JSValue
 js_contour_unshift(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSContourData<double>* v;
@@ -733,6 +762,10 @@ js_contour_unshift(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
   return JS_UNDEFINED;
 }
 
+/**
+ * @brief      cv.Contour.prototype.shift
+ * @return     Head value
+ */
 static JSValue
 js_contour_shift(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSContourData<double>* v;
@@ -756,6 +789,11 @@ js_contour_shift(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* 
   return ret;
 }
 
+/**
+ * @brief      cv.Contour.prototype.concat
+ * @param      other     Other contour
+ * @return     concatenated
+ */
 static JSValue
 js_contour_concat(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSContourData<double>*v, *other, *r;
@@ -830,6 +868,10 @@ js_contour_rotatepoints(JSContext* ctx, JSValueConst this_val, int argc, JSValue
   return JSValue(this_val);
 }
 
+/**
+ * @brief      cv.Contour.prototype.toArray
+ * @return     Array
+ */
 static JSValue
 js_contour_toarray(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSContourData<double>* s;
@@ -849,6 +891,10 @@ js_contour_toarray(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
   return ret;
 }
 
+/**
+ * @brief      cv.Contour.prototype.toString
+ * @return     String
+ */
 static JSValue
 js_contour_tostring(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
   JSContourData<double>* s;
@@ -897,6 +943,14 @@ js_contour_tostring(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   return JS_NewString(ctx, os.str().c_str());
 }
 
+/**
+ * @brief      cv.Contour.prototype.rect
+ * @param    {Number}  x        Horizontal position
+ * @param    {Number}   y        Vertical position
+ * @param    {Number}   width    Horizontal size
+ * @param    {Number}   height   Vertical size
+ * @return   {Object Contour}   New Contour
+ */
 static JSValue
 js_contour_rect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSValue ret = JS_UNDEFINED;
@@ -913,7 +967,7 @@ js_contour_rect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
   return ret;
 }
 
-enum { PROP_ASPECT_RATIO = 0, PROP_EXTENT, PROP_SOLIDITY, PROP_EQUIVALENT_DIAMETER, PROP_ORIENTATION };
+enum { PROP_ASPECT_RATIO = 0, PROP_EXTENT, PROP_SOLIDITY, PROP_EQUIVALENT_DIAMETER, PROP_ORIENTATION, PROP_BOUNDING_RECT };
 
 static JSValue
 js_contour_get(JSContext* ctx, JSValueConst this_val, int magic) {
@@ -970,6 +1024,10 @@ js_contour_get(JSContext* ctx, JSValueConst this_val, int magic) {
       }
       break;
     }
+    case PROP_BOUNDING_RECT: {
+      ret = js_contour_boundingrect(ctx, this_val, 0, 0);
+      break;
+    }
   }
   return ret;
 }
@@ -993,10 +1051,12 @@ js_contour_finalizer(JSRuntime* rt, JSValue this_val) {
 
   assert(js_contour_class_id);
   contour = static_cast<JSContourData<double>*>(JS_GetOpaque(this_val, js_contour_class_id));
-  assert(contour);
-  // printf("js_contour_finalizer  cid=%i this_val=%p contour=%p\n", JS_GetClassID(this_val), JS_VALUE_GET_OBJ(this_val), contour);
 
-  contour_deallocate(rt, contour);
+  if(contour) {
+    // printf("js_contour_finalizer  cid=%i this_val=%p contour=%p\n", JS_GetClassID(this_val), JS_VALUE_GET_OBJ(this_val), contour);
+
+    contour_deallocate(rt, contour);
+  }
   JS_FreeValueRT(rt, this_val);
 }
 
@@ -1165,10 +1225,11 @@ const JSCFunctionListEntry js_contour_proto_funcs[] = {
     JS_CGETSET_MAGIC_DEF("solidity", js_contour_get, NULL, PROP_SOLIDITY),
     JS_CGETSET_MAGIC_DEF("equivalentDiameter", js_contour_get, NULL, PROP_EQUIVALENT_DIAMETER),
     JS_CGETSET_MAGIC_DEF("orientation", js_contour_get, NULL, PROP_ORIENTATION),
+    JS_CGETSET_MAGIC_DEF("boundingRect", js_contour_get, NULL, PROP_BOUNDING_RECT),
 
     JS_CFUNC_DEF("approxPolyDP", 1, js_contour_approxpolydp),
     JS_CFUNC_DEF("convexHull", 1, js_contour_convexhull),
-    JS_CFUNC_DEF("boundingRect", 0, js_contour_boundingrect),
+    JS_CFUNC_DEF("getBoundingClientRect", 0, js_contour_boundingrect),
     JS_CFUNC_DEF("fitEllipse", 0, js_contour_fitellipse),
     JS_CFUNC_DEF("fitLine", 1, js_contour_fitline),
     JS_CFUNC_DEF("intersectConvex", 0, js_contour_intersectconvex),

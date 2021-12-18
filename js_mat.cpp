@@ -30,6 +30,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include <cassert>
 #include "util.hpp"
 
 enum {
@@ -1307,7 +1308,14 @@ js_mat_call(JSContext* ctx, JSValueConst func_obj, JSValueConst this_val, int ar
 
   if(!js_rect_read(ctx, argv[0], &rect))
     return JS_ThrowTypeError(ctx, "argument 1 expecting Rect");
+
   // printf("js_mat_call %u,%u %ux%u\n", rect.x, rect.y, rect.width, rect.height);
+  // printf("js_mat_call %u,%u %ux%u rows=%u,cols=%u\n", rect.x, rect.y, rect.width, rect.height, src->rows, src->cols);
+
+  assert(rect.x >= 0);
+  assert(rect.y >= 0);
+  assert(rect.width <= src->cols - rect.x);
+  assert(rect.height <= src->rows - rect.y);
 
   cv::Mat mat = src->operator()(rect);
   return js_mat_wrap(ctx, mat);
