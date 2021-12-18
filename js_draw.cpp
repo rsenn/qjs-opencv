@@ -459,32 +459,47 @@ js_put_text(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv)
     i += 2;
   }
 
-  if(argc > i) {
+  if(i < argc) {
     if(JS_IsNumber(argv[i]))
       JS_ToInt32(ctx, &fontFace, argv[i]);
     else
       js_value_to(ctx, argv[i], fontName);
-    i++;
+
+    if(++i < argc) {
+      JS_ToFloat64(ctx, &fontScale, argv[i]);
+
+      if(++i < argc) {
+        js_color_read(ctx, argv[i], &color);
+
+        if(++i < argc) {
+          JS_ToInt32(ctx, &thickness, argv[i]);
+
+          if(++i < argc) {
+            JS_ToInt32(ctx, &lineType, argv[i]);
+
+            if(++i < argc)
+              bottomLeftOrigin = JS_ToBool(ctx, argv[i]);
+          }
+        }
+      }
+    }
   }
 
-  if(argc > i)
-    JS_ToFloat64(ctx, &fontScale, argv[i++]);
-
-  if(argc > i && js_color_read(ctx, argv[i], &color))
-    i++;
-
-  if(argc > i)
-    JS_ToInt32(ctx, &thickness, argv[i++]);
-
-  if(argc > i)
-    JS_ToInt32(ctx, &lineType, argv[i++]);
-
-  if(argc > i)
-    bottomLeftOrigin = JS_ToBool(ctx, argv[i++]);
-
 #ifdef HAVE_OPENCV_FREETYPE
+  if(freetype2 == nullptr)
+    freetype2 = cv::freetype::createFreeType2();
+
   if(!fontName.empty() && fontName != freetype2_face) {
-    freetype2->loadFontData(fontName, 0);
+    try {
+      freetype2->loadFontData(fontName, 0);
+    } catch(const cv::Exception& e) {
+      const char *errstr = e.what(), *err2;
+
+      if((err2 = strchr(errstr, '!')))
+        errstr = err2 + 1;
+
+      return JS_ThrowInternalError(ctx, "freetype2 exception: %s\n", errstr);
+    }
     freetype2_face = fontName;
   }
 

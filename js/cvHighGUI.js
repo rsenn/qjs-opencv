@@ -85,7 +85,7 @@ export class Window {
   }
 }
 
-export function TextStyle(fontFace = cv.FONT_HERSHEY_PLAIN, fontScale = 1.0, thickness = 1) {
+export function TextStyle(fontFace = cv.FONT_HERSHEY_PLAIN, fontScale = 1.0, thickness = -1) {
   Object.assign(this, { fontFace, fontScale, thickness });
 }
 
@@ -103,7 +103,7 @@ Object.assign(TextStyle.prototype, {
 
   draw(mat, text, pos, color, lineThickness, lineType) {
     const { fontFace, fontScale, thickness } = this;
-    const args = [mat, text, pos, fontFace, fontScale, color ?? 0xffffff, lineThickness ?? thickness, lineType ?? cv.LINE_AA];
+    const args = [mat, text, pos, fontFace, fontScale, color ?? [255, 255, 255, 255], lineThickness ?? thickness, lineType ?? cv.LINE_AA];
     //console.log('TextStyle draw(', ...args.reduce((acc, arg) => (acc.length ? [...acc, ',', arg] : [arg]), []), ')');
     Draw.text(...args);
   }
