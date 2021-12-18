@@ -692,10 +692,6 @@ js_cv_draw_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 
   js_array_to(ctx, argv[1], contours);
 
-  /*printf("js_cv_draw_contours contours.size() = %zu\n", contours.size());
-  if(contours.size())
-    printf("js_cv_draw_contours contours.back().size() = %zu\n", contours.back().size());*/
-
   JS_ToInt32(ctx, &contourIdx, argv[2]);
 
   js_color_read(ctx, argv[3], &color);

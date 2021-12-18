@@ -1454,9 +1454,6 @@ js_mat_iterator_next(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
     channels = mat_channels(*m);
     offset = mat_offset(*m, row, col);
 
-    /*printf("col = %zu, row = %zu\n",col,row);
-    printf("offset = %zu, bytesize = %zu\n",offset, mat_bytesize(*m));*/
-
     switch(it->magic) {
       case MAT_ITERATOR_KEYS: {
         std::array<uint32_t, 2> pos = {row, col};
@@ -1465,12 +1462,6 @@ js_mat_iterator_next(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
       }
       case MAT_ITERATOR_VALUES: {
         TypedArrayType type(*m);
-
-        /*   printf("js_mat_iterator_next is_signed=%d\n", type.is_signed);
-           printf("js_mat_iterator_next is_floating_point=%d\n", type.is_floating_point);
-           printf("js_mat_iterator_next byte_size=%d\n", type.byte_size);
-           printf("js_mat_iterator_next channels=%d type=%d\n", m->channels(), m->type());
-           printf("js_mat_iterator_next %s\n", type.constructor_name().c_str());*/
 
         if(channels == 1)
           return js_mat_get(ctx, it->obj, row, col);

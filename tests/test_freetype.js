@@ -8,7 +8,7 @@ function main() {
     inspectOptions: {
       colors: true,
       depth: 1,
-      maxArrayLength: 30,
+      maxArrayLength: Infinity,
       compact: 1
     }
   });
@@ -27,16 +27,27 @@ function main() {
   let str = util.range(0x20, 0x80).reduce((s, n) => s + String.fromCodePoint(n), '');
 
   let size = style.size(str);
-  let rect = new cv.Rect(1, 1, size.width, size.height + 1);
+  let rect = new cv.Rect(1, 1, size.width, size.height + 2);
 
   let step = rect.width / str.length;
   console.log('step', step);
   console.log('rect.height', rect.height);
+  let boxes = rect.hsplit(...util.range(0, rect.width, step));
+  console.log('boxes', boxes);
 
-  style.draw(mat, str, new cv.Point(-1, -1), colors[0], -1, cv.LINE_8);
-  let roi = mat(rect);
-  console.log('roi', roi);
-  cv.imwrite('roi.png', roi);
+  style.draw(mat, str, new cv.Point(2, 0), colors[0], -1, cv.LINE_8);
+
+  function writeROI(i, rect) {
+    cv.rectangle(mat, rect.tl, rect.br, [255, 0, 0], 1, cv.LINE_8);
+    let roi = mat(rect);
+    console.log('roi', roi);
+    cv.imwrite('roi' + i + '.png', roi);
+  }
+
+  for(let i = 0; i < boxes.length; i++) {
+    writeROI(i, boxes[i]);
+  }
+  cv.resizeWindow('out', mat.cols * 2, mat.rows * 2);
   cv.imshow('out', mat);
 
   cv.waitKey(-1);

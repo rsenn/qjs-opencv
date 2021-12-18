@@ -1023,13 +1023,8 @@ js_contour_get_own_property(JSContext* ctx, JSPropertyDescriptor* pdesc, JSValue
       }
       return TRUE;
     }
-  } else {
   }
-  /* {
-     const char* propStr = JS_AtomToCString(ctx, prop);
-     printf("js_contour_get_own_property  cid=%i this_val=%p prop=%s\n", JS_GetClassID(obj), JS_VALUE_GET_OBJ(obj), propStr);
-     JS_FreeCString(ctx, propStr);
-   }*/
+
   return FALSE;
 }
 
@@ -1072,11 +1067,6 @@ js_contour_has_property(JSContext* ctx, JSValueConst obj, JSAtom prop) {
   } else if(js_atom_is_length(ctx, prop)) {
     return TRUE;
   } else {
-    /*{
-      const char* propStr = JS_AtomToCString(ctx, prop);
-      printf("js_contour_has_property  cid=%i this_val=%p prop=%s\n", JS_GetClassID(obj), JS_VALUE_GET_OBJ(obj), propStr);
-      JS_FreeCString(ctx, propStr);
-    }*/
     JSValue proto = JS_GetPrototype(ctx, obj);
     if(JS_IsObject(proto) && JS_HasProperty(ctx, proto, prop))
       return TRUE;
@@ -1097,11 +1087,6 @@ js_contour_get_property(JSContext* ctx, JSValueConst obj, JSAtom prop, JSValueCo
   } else if(js_atom_is_length(ctx, prop)) {
     value = JS_NewUint32(ctx, contour->size());
   } else {
-    /*{
-      const char* propStr = JS_AtomToCString(ctx, prop);
-      printf("js_contour_get_property  cid=%i this_val=%p prop=%s\n", JS_GetClassID(obj), JS_VALUE_GET_OBJ(obj), propStr);
-      JS_FreeCString(ctx, propStr);
-    }*/
     JSValue proto = JS_GetPrototype(ctx, obj);
     if(JS_IsObject(proto)) {
       JSPropertyDescriptor desc = {0, JS_UNDEFINED, JS_UNDEFINED, JS_UNDEFINED};
@@ -1121,11 +1106,7 @@ static int
 js_contour_set_property(JSContext* ctx, JSValueConst obj, JSAtom prop, JSValueConst value, JSValueConst receiver, int flags) {
   JSContourData<double>* contour = js_contour_data(obj);
   uint32_t index;
-  /*{
-    const char* propStr = JS_AtomToCString(ctx, prop);
-    printf("js_contour_set_property  cid=%i this_val=%p prop=%s\n", JS_GetClassID(obj), JS_VALUE_GET_OBJ(obj), propStr);
-    JS_FreeCString(ctx, propStr);
-  }*/
+
   if(js_atom_is_index(ctx, &index, prop)) {
     JSPointData<double> point;
     if(index >= contour->size())

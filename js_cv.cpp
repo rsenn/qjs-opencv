@@ -79,7 +79,7 @@ js_cv_imencode(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
     if(argc >= 4)
       JS_ToInt32(ctx, &transparent, argv[3]);
 
-    printf("png_write '%s' [%zu] (transparent: %i)\n", ext, palette.size(), transparent);
+    // printf("png_write '%s' [%zu] (transparent: %i)\n", ext, palette.size(), transparent);
     data = png_write(image.getMatRef(), palette);
     ret = JS_NewArrayBufferCopy(ctx, (const uint8_t*)data.data(), data.size());
   } else {
@@ -132,7 +132,7 @@ js_cv_imwrite(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* arg
     if(argc >= 6)
       JS_ToInt32(ctx, &loop, argv[5]);
 
-    printf("gif_write '%s' (%zu) [%zu] (transparent: %i)\n", filename, mats.size(), palette.size(), transparent);
+    // printf("gif_write '%s' (%zu) [%zu] (transparent: %i)\n", filename, mats.size(), palette.size(), transparent);
     gif_write(filename, mats, delays, palette, transparent, loop);
     return JS_UNDEFINED;
   }
@@ -154,7 +154,7 @@ js_cv_imwrite(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* arg
     cv::minMaxLoc(image, nullptr, &max);
     if(palette.size() < size_t(max))
       palette.resize(size_t(max));
-    printf("png++ write_mat '%s' [%zu] (transparent: %i)\n", filename, palette.size(), transparent);
+    // printf("png++ write_mat '%s' [%zu] (transparent: %i)\n", filename, palette.size(), transparent);
 
     png_write(filename, image.getMatRef(), palette, transparent);
 
@@ -401,11 +401,8 @@ js_cv_bitwise(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* arg
   o_str = dump(other);
   d_str = dump(dst);
 
-  printf("js_cv_bitwise %s src=%s other=%s dst=%s\n",
-         ((const char*[]){"cv::bitwise_and", "cv::bitwise_or", "cv::bitwise_xor", "cv::bitwise_not"})[magic],
-         s_str.c_str(),
-         o_str.c_str(),
-         d_str.c_str());
+  // printf("js_cv_bitwise %s src=%s other=%s dst=%s\n", ((const char*[]){"cv::bitwise_and", "cv::bitwise_or", "cv::bitwise_xor", "cv::bitwise_not"})[magic],
+  // s_str.c_str(), o_str.c_str(), d_str.c_str());
 
   switch(magic) {
     case 0: cv::bitwise_and(src, other, dst, mask); break;

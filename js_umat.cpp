@@ -980,7 +980,7 @@ js_umat_array(JSContext* ctx, JSValueConst this_val) {
 
   global = JS_GetGlobalObject(ctx);
 
-  printf("um->type()=%x um->channels()=%x\n", um->type(), um->channels());
+  // printf("um->type()=%x um->channels()=%x\n", um->type(), um->channels());
   switch(um->type()) {
     case CV_8U:
     case CV_8S: ctor = "Uint8Array"; break;
