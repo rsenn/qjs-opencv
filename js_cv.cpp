@@ -10,7 +10,7 @@
 #include "gif_write.hpp"
 #include <quickjs.h>
 #include "util.hpp"
-#include <bits/exception.h>
+#include <exception>
 #include <float.h>
 #include <opencv2/core/core_c.h>
 #include <opencv2/core/cvdef.h>

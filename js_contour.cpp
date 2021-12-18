@@ -14,7 +14,7 @@
 #include "psimpl.hpp"
 #include <quickjs.h>
 #include "util.hpp"
-#include <ext/alloc_traits.h>
+//#include <ext/alloc_traits.h>
 #include <opencv2/core/hal/interface.h>
 #include <stddef.h>
 #include <algorithm>

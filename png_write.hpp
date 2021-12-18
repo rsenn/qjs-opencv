@@ -7,7 +7,7 @@
 #include "pngpp/palette.hpp"
 #include "pngpp/pixel_buffer.hpp"
 #include "pngpp/types.hpp"
-#include <ext/alloc_traits.h>
+//#include <ext/alloc_traits.h>
 #include <opencv2/core/hal/interface.h>
 #include <stddef.h>
 #include <fstream>
