@@ -102,6 +102,11 @@ js_rect_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* ar
           optind++;
         }
       }
+    } else {
+      x = rect.x;
+      y = rect.y;
+      w = rect.width;
+      h = rect.height;
     }
   }
 
@@ -113,7 +118,22 @@ js_rect_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSRectData<double>*>(JS_GetOpaque2(ctx, val, js_rect_class_id));
 }
 
-enum { PROP_X = 0, PROP_Y, PROP_WIDTH, PROP_HEIGHT, PROP_X2, PROP_Y2, PROP_POS, PROP_SIZE, PROP_TOPLEFT, PROP_BOTTOM_RIGHT };
+enum {
+  PROP_X = 0,
+  PROP_Y,
+  PROP_WIDTH,
+  PROP_HEIGHT,
+  PROP_X1,
+  PROP_Y1,
+  PROP_X2,
+  PROP_Y2,
+  PROP_POS,
+  PROP_SIZE,
+  PROP_TOPLEFT,
+  PROP_BOTTOM_RIGHT,
+  PROP_EMPTY,
+  PROP_AREA
+};
 
 static JSValue
 js_rect_get(JSContext* ctx, JSValueConst this_val, int magic) {
@@ -124,11 +144,13 @@ js_rect_get(JSContext* ctx, JSValueConst this_val, int magic) {
     return JS_UNDEFINED;
 
   switch(magic) {
-    case PROP_X: {
+    case PROP_X:
+    case PROP_X1: {
       ret = JS_NewFloat64(ctx, s->x);
       break;
     }
-    case PROP_Y: {
+    case PROP_Y:
+    case PROP_Y1: {
       ret = JS_NewFloat64(ctx, s->y);
       break;
     }
@@ -164,6 +186,14 @@ js_rect_get(JSContext* ctx, JSValueConst this_val, int magic) {
       ret = js_point_new(ctx, s->x + s->width, s->y + s->height);
       break;
     }
+    case PROP_EMPTY: {
+      ret = JS_NewBool(ctx, s->empty());
+      break;
+    }
+    case PROP_AREA: {
+      ret = JS_NewFloat64(ctx, s->area());
+      break;
+    }
   }
   return ret;
 }
@@ -193,6 +223,20 @@ js_rect_set(JSContext* ctx, JSValueConst this_val, JSValueConst val, int magic) 
     }
     case PROP_HEIGHT: {
       s->height = v;
+      break;
+    }
+    case PROP_X1: {
+      double x2 = s->x + s->width;
+
+      s->x = v;
+      s->width = x2 - v;
+      break;
+    }
+    case PROP_Y1: {
+      double y2 = s->y + s->height;
+
+      s->y = v;
+      s->height = y2 - v;
       break;
     }
     case PROP_X2: {
@@ -323,19 +367,7 @@ js_rect_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
   return obj;
 }
 
-enum {
-  METHOD_CONTAINS = 0,
-  METHOD_EMPTY,
-  METHOD_AREA,
-  METHOD_BR,
-  METHOD_TL,
-  METHOD_SIZE,
-  METHOD_INSET,
-  METHOD_OUTSET,
-  METHOD_HSPLIT,
-  METHOD_VSPLIT,
-  METHOD_MERGE
-};
+enum { METHOD_CONTAINS = 0, METHOD_BR, METHOD_TL, METHOD_SIZE, METHOD_INSET, METHOD_OUTSET, METHOD_HSPLIT, METHOD_VSPLIT, METHOD_MERGE };
 
 static JSValue
 js_rect_method(JSContext* ctx, JSValueConst rect, int argc, JSValueConst* argv, int magic) {
@@ -348,14 +380,7 @@ js_rect_method(JSContext* ctx, JSValueConst rect, int argc, JSValueConst* argv, 
       ret = JS_NewBool(ctx, s->contains(point));
       break;
     }
-    case METHOD_EMPTY: {
-      ret = JS_NewBool(ctx, s->empty());
-      break;
-    }
-    case METHOD_AREA: {
-      ret = JS_NewFloat64(ctx, s->area());
-      break;
-    }
+
     case METHOD_BR:
     case METHOD_TL: {
       JSPointData<double> pt = magic == 3 ? s->br() : s->tl();
@@ -574,17 +599,17 @@ const JSCFunctionListEntry js_rect_proto_funcs[] = {
     JS_CGETSET_ENUMERABLE_DEF("y", js_rect_get, js_rect_set, PROP_Y),
     JS_CGETSET_ENUMERABLE_DEF("width", js_rect_get, js_rect_set, PROP_WIDTH),
     JS_CGETSET_ENUMERABLE_DEF("height", js_rect_get, js_rect_set, PROP_HEIGHT),
+    JS_CGETSET_MAGIC_DEF("x1", js_rect_get, js_rect_set, PROP_X1),
+    JS_CGETSET_MAGIC_DEF("y1", js_rect_get, js_rect_set, PROP_Y1),
     JS_CGETSET_MAGIC_DEF("x2", js_rect_get, js_rect_set, PROP_X2),
     JS_CGETSET_MAGIC_DEF("y2", js_rect_get, js_rect_set, PROP_Y2),
     JS_CGETSET_MAGIC_DEF("point", js_rect_get, js_rect_set, PROP_POS),
     JS_CGETSET_MAGIC_DEF("size", js_rect_get, js_rect_set, PROP_SIZE),
     JS_CGETSET_MAGIC_DEF("tl", js_rect_get, 0, PROP_TOPLEFT),
     JS_CGETSET_MAGIC_DEF("br", js_rect_get, 0, PROP_BOTTOM_RIGHT),
-    JS_ALIAS_DEF("x1", "x"),
-    JS_ALIAS_DEF("y1", "y"),
     JS_CFUNC_MAGIC_DEF("contains", 0, js_rect_method, METHOD_CONTAINS),
-    JS_CFUNC_MAGIC_DEF("empty", 0, js_rect_method, METHOD_EMPTY),
-    JS_CFUNC_MAGIC_DEF("area", 0, js_rect_method, METHOD_AREA),
+    JS_CGETSET_MAGIC_DEF("empty", js_rect_get, 0, PROP_EMPTY),
+    JS_CGETSET_MAGIC_DEF("area", js_rect_get, 0, PROP_AREA),
     /*  JS_CFUNC_MAGIC_DEF("br", 0, js_rect_method, METHOD_BR),
       JS_CFUNC_MAGIC_DEF("tl", 0, js_rect_method, METHOD_TL),*/
     JS_CFUNC_MAGIC_DEF("inset", 1, js_rect_method, METHOD_INSET),

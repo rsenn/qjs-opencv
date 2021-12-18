@@ -54,16 +54,20 @@ function main(...argv) {
   console.log('roi', roi);
   console.log('cv.threshold', cv.threshold);
   let boxes2 = rect2.hsplit(...util.range(0, rect2.width, step));
-  console.log('boxes2', boxes2);
 
   let binary = new cv.Mat();
   cv.threshold(roi, binary, 50, 255, cv.THRESH_BINARY_INV);
 
   console.log('binary', binary);
   console.log('binary.colRange()', binary.colRange());
-  let box = boxes2[1];
-  //let {size}=box;
-  let { area } = box.size;
+   console.log('boxes2', boxes2);
+ let box = new cv.Rect(boxes2[2]);
+    console.log('box', box);
+   box.y1+=1;
+    console.log('box', box);
+
+
+   let { area } = box.size;
   console.log('box.size', box.size);
   console.log('size.area', area);
   const bytes = (area + 7) >> 3;
