@@ -231,6 +231,27 @@ static inline bool
 mat_floating(const T& mat) {
   return mattype_floating(mat.type());
 }
+template<class T, class U>
+static inline bool
+mat_col(const T& mat, const U col) {
+  U x = col;
+  if(x < 0)
+    x %= mat.cols;
+  if(x < 0)
+    x += mat.cols;
+  return x;
+}
+
+template<class T, class U>
+static inline bool
+mat_row(const T& mat, const U row) {
+  U y = row;
+  if(y < 0)
+    y %= mat.rows;
+  if(y < 0)
+    y += mat.rows;
+  return y;
+}
 
 template<class T, int N>
 static inline T*

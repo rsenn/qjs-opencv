@@ -295,7 +295,7 @@ js_mat_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* arg
 static JSValue
 js_mat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
   JSValue ret = JS_UNDEFINED;
-  int64_t i = -1, i2 = -1;
+  int64_t i = 0, i2 = -1;
   JSPointData<double> pt;
   JSMatData* m = js_mat_data2(ctx, this_val);
 
@@ -317,11 +317,11 @@ js_mat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv
       break;
     }
     case METHOD_COL_RANGE: {
-      ret = js_mat_wrap(ctx, m->colRange(i, i2));
+      ret = js_mat_wrap(ctx, m->colRange(mat_col(*m, i), mat_col(*m, i2)));
       break;
     }
     case METHOD_ROW_RANGE: {
-      ret = js_mat_wrap(ctx, m->rowRange(i, i2));
+      ret = js_mat_wrap(ctx, m->rowRange(mat_col(*m, i), mat_col(*m, i2)));
       break;
     }
     case METHOD_CLONE: {
