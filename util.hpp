@@ -231,23 +231,24 @@ static inline bool
 mat_floating(const T& mat) {
   return mattype_floating(mat.type());
 }
-template<class T, class U>
-static inline bool
-mat_col(const T& mat, const U col) {
-  U x = col;
-  if(x < 0)
-    x %= mat.cols;
+
+template<typename T = int>
+static inline T
+mat_col(const cv::Mat& mat, const T col) {
+  T x = col;
+  if(x < 0 && -x >= T(mat.cols))
+    x %= T(mat.cols);
   if(x < 0)
     x += mat.cols;
   return x;
 }
 
-template<class T, class U>
-static inline bool
-mat_row(const T& mat, const U row) {
-  U y = row;
-  if(y < 0)
-    y %= mat.rows;
+template<typename T = int>
+static inline T
+mat_row(const cv::Mat& mat, const T row) {
+  T y = row;
+  if(y < 0 && -y >= T(mat.rows))
+    y %= T(mat.rows);
   if(y < 0)
     y += mat.rows;
   return y;

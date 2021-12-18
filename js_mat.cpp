@@ -9,7 +9,6 @@
 #include "js_umat.hpp"
 #include "jsbindings.hpp"
 #include <quickjs.h>
-#include "util.hpp"
 #include <opencv2/core/cvdef.h>
 #include <opencv2/core/hal/interface.h>
 #include <sys/types.h>
@@ -31,6 +30,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include "util.hpp"
 
 enum {
   PROP_COLS = 0,
@@ -317,11 +317,13 @@ js_mat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv
       break;
     }
     case METHOD_COL_RANGE: {
-      ret = js_mat_wrap(ctx, m->colRange(mat_col(*m, i), mat_col(*m, i2)));
+      int x1 = mat_col(*m, i), x2 = mat_col(*m, i2);
+      ret = js_mat_wrap(ctx, m->colRange(x1, x2));
       break;
     }
     case METHOD_ROW_RANGE: {
-      ret = js_mat_wrap(ctx, m->rowRange(mat_col(*m, i), mat_col(*m, i2)));
+      int y1 = mat_row(*m, i), y2 = mat_row(*m, i2);
+      ret = js_mat_wrap(ctx, m->rowRange(y1, y2));
       break;
     }
     case METHOD_CLONE: {
