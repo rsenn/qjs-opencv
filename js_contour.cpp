@@ -725,7 +725,6 @@ js_contour_pop(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
   return ret;
 }
 
-
 /**
  * @brief      cv.Contour.prototype.unshift
  * @param      value     Added value

@@ -1776,7 +1776,10 @@ js_imgproc_finalizer(JSRuntime* rt, JSValue val) {
   // JS_FreeValueRT(rt, cv_class);
 }
 
-JSClassDef js_imgproc_class = {.class_name = "cv", .finalizer = js_imgproc_finalizer};
+JSClassDef js_imgproc_class = {
+    .class_name = "cv",
+    .finalizer = js_imgproc_finalizer,
+};
 
 typedef std::vector<JSCFunctionListEntry> js_function_list_t;
 

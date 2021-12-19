@@ -462,15 +462,6 @@ js_cv_select_rois(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
 
   return ret;
 }
-/*void
-js_highgui_finalizer(JSRuntime* rt, JSValue val) {
-  for(const auto& name : window_list) {
-    std::cerr << "Destroy window '" << name << "'" << std::endl;
-    cv::destroyWindow(name);
-  }
-}
-*/
-// JSClassDef js_highgui_class = {.class_name = "cv", .finalizer = js_highgui_finalizer};
 
 typedef std::vector<JSCFunctionListEntry> js_function_list_t;
 
@@ -498,7 +489,6 @@ js_function_list_t js_highgui_static_funcs{
     JS_CFUNC_DEF("selectROI", 1, js_cv_select_roi),
     JS_CFUNC_DEF("selectROIs", 2, js_cv_select_rois),
     JS_CFUNC_MAGIC_DEF("displayOverlay", 2, js_cv_gui_methods, DISPLAY_OVERLAY),
-
 };
 
 js_function_list_t js_highgui_constants{

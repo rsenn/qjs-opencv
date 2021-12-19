@@ -1130,7 +1130,10 @@ void
 js_cv_finalizer(JSRuntime* rt, JSValue val) {
 }
 
-JSClassDef js_cv_class = {.class_name = "cv", .finalizer = js_cv_finalizer};
+JSClassDef js_cv_class = {
+    .class_name = "cv",
+    .finalizer = js_cv_finalizer,
+};
 
 typedef std::vector<JSCFunctionListEntry> js_function_list_t;
 
