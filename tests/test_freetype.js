@@ -39,7 +39,7 @@ function main(...argv) {
 
   let powerOf2 = n => Math.pow(2, Math.ceil(Math.log2(n)));
 
-  let dim = new cv.Size(powerOf2(rect.width), powerOf2(rect.height));
+  let dim = new cv.Size(powerOf2(rect.width), powerOf2(Math.round(Math.min(rect.width/1.7777), rect.height)));
   console.log('dim', dim);
   mat = new cv.Mat(dim, cv.CV_8UC3);
   cv.rectangle(mat, [0, 0], [mat.cols - 1, mat.rows - 1], colors[1], cv.FILLED);
@@ -50,7 +50,7 @@ function main(...argv) {
   let boxes = rect.hsplit(...util.range(0, rect.width, step));
   // console.log('boxes', boxes);
 
-  style.draw(mat, str, new cv.Point(1, 0), colors[0], -1, cv.LINE_8);
+  style.draw(mat, str, new cv.Point(1, 0), colors[0], -1, cv.LINE_AA);
 
   let gray = new cv.Mat();
   cv.cvtColor(mat, gray, cv.COLOR_BGR2GRAY);
@@ -66,10 +66,17 @@ function main(...argv) {
   let binary = new cv.Mat();
   cv.threshold(roi, binary, 50, 255, cv.THRESH_BINARY_INV);
 
-  console.log('binary', binary);
+  cv.namedWindow('out', cv.WINDOW_NORMAL);
+  let winsize=new cv.Size(rect.width, Math.max(mat.cols/1.77777, rect.height));
+  console.log('winsize',winsize);
+  cv.resizeWindow('out', ...mat.size);
+  cv.imshow('out', mat);
+  cv.waitKey(-1);
+
+    console.log('binary', binary);
   //  console.log('binary.colRange()', binary.colRange());
 
-  util.range(65, 100).forEach(code => {
+  util.range(0x30, 0x39).forEach(code => {
     dumpChar(code);
   });
 
@@ -158,10 +165,8 @@ function main(...argv) {
 
   for(let box of boxes) cv.rectangle(mat, box.tl, box.br.sub(1, 1), [255, 0, 0], 1, cv.LINE_8);
 
-  /* cv.resizeWindow('out', mat.cols * 2, mat.rows * 2);
   cv.imshow('out', mat);
-
-  cv.waitKey(-1);*/
+  cv.waitKey(-1);
 }
 
 main(...process.argv.slice(1));
