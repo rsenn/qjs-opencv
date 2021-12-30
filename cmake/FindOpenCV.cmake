@@ -102,7 +102,7 @@ macro(find_opencv)
   # dump(OPENCV_PREFIX)
 
   if(NOT OPENCV_CHECKED)
-    message(CHECK_START "Finding opencv library")
+    message(STATUS "Finding opencv library")
 
     set(OPENCV_PREFIX "${OPENCV_PREFIX}" CACHE PATH "OpenCV root dir")
 
@@ -154,10 +154,10 @@ macro(find_opencv)
       set(CMAKE_INSTALL_RPATH "${OPENCV_LIB_DIR}:${CMAKE_INSTALL_RPATH}")
       set(CMAKE_BUILD_RPATH "${OPENCV_LIB_DIR}:${CMAKE_BUILD_RPATH}")
       set(OPENCV_RESULT TRUE)
-      message(CHECK_PASS "found")
-
+    
+      message(STATUS "Finding opencv library - found")
     else(OPENCV_FOUND OR OPENCV_LIBRARIES)
-      message(CHECK_FAIL "fail")
+      message(STATUS "Finding opencv library - not found")
     endif(OPENCV_FOUND OR OPENCV_LIBRARIES)
 
     if(OPENCV_FOUND)
