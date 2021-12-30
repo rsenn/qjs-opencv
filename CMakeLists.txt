@@ -159,6 +159,7 @@ file(GLOB OPENCV_SOURCES *.hpp *.cpp gifenc/gifenc.c dominant_colors_grabber.cpp
 # dump(OPENCV_SOURCES)
 
 dump(QUICKJS_MODULE_CFLAGS F_PIC)
+dump(QUICKJS_C_MODULE_DIR)
 
 list(REMOVE_ITEM OPENCV_SOURCES init_module.cpp)
 list(REMOVE_ITEM OPENCV_SOURCES js.hpp js.cpp)
