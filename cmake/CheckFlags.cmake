@@ -124,8 +124,6 @@ macro(check_cxx_standard_flag)
       string(REGEX REPLACE "\\+" "x" CXX_STANDARD_NAME "${CXX_STANDARD_VALUE}")
       string(TOUPPER "${CXX_STANDARD_NAME}" CXX_STANDARD_NAME)
       string(REGEX REPLACE "CXX" "" CXX_STANDARD_VERSION "${CXX_STANDARD_NAME}")
-      message("CXX_STANDARD_NAME = ${CXX_STANDARD_NAME}")
-      message("CXX_STANDARD_VERSION = ${CXX_STANDARD_VERSION}")
 
       if(NOT "X${CXX_STANDARD_NAME}" STREQUAL "X")
         add_definitions(-D"${CXX_STANDARD_NAME}")
