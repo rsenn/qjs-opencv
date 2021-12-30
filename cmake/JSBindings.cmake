@@ -48,7 +48,7 @@ function(make_shared_module FNAME)
       "${CMAKE_CURRENT_BINARY_DIR}:${CMAKE_CURRENT_BINARY_DIR}:${CMAKE_CURRENT_BINARY_DIR}/quickjs:${CMAKE_CURRENT_BINARY_DIR}/quickjs"
   )
   target_compile_definitions(${TARGET_NAME} PRIVATE JS_${UNAME}_MODULE CONFIG_PREFIX="${CMAKE_INSTALL_PREFIX}")
-  install(TARGETS ${TARGET_NAME} DESTINATION lib/quickjs PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ
+  install(TARGETS ${TARGET_NAME} DESTINATION "${CMAKE_C_MODULE_DIR}" PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ
                                                                      GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
   config_shared_module(${TARGET_NAME})
@@ -78,7 +78,7 @@ function(make_static_module FNAME)
   set_target_properties(${TARGET_NAME} PROPERTIES PREFIX "" OUTPUT_NAME "${NAME}" COMPILE_FLAGS
                                                                                   "${QUICKJS_MODULE_CFLAGS}")
   target_compile_definitions(${TARGET_NAME} PRIVATE CONFIG_PREFIX="${CMAKE_INSTALL_PREFIX}")
-  install(TARGETS ${TARGET_NAME} DESTINATION lib/quickjs)
+  install(TARGETS ${TARGET_NAME} DESTINATION "${CMAKE_C_MODULE_DIR}")
 
   config_shared_module(${TARGET_NAME})
 
