@@ -1,0 +1,7 @@
+toksubst.sh -i endpoint_distances endpointDistances "$@"
+toksubst.sh -i endpoint_distance endpointDistance "$@"
+toksubst.sh -i min_distance minDistance "$@"
+toksubst.sh -i nearest_end nearestEnd "$@"
+toksubst.sh -i angle_diff angleDiff "$@"
+toksubst.sh -i y_intercept yIntercept "$@"
+toksubst.sh -i x_intercept xIntercept "$@"
