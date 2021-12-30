@@ -62,7 +62,8 @@ if(ZLIB_FOUND)
     if(PNG_FIND_VERSION_EXACT)
       set(_PNG_VERSION_SUFFIXES ${_PNG_VERSION_SUFFIX_MIN})
     else()
-      string(REGEX REPLACE "${_PNG_VERSION_SUFFIX_MIN}.*" "${_PNG_VERSION_SUFFIX_MIN}" _PNG_VERSION_SUFFIXES "${_PNG_VERSION_SUFFIXES}")
+      string(REGEX REPLACE "${_PNG_VERSION_SUFFIX_MIN}.*" "${_PNG_VERSION_SUFFIX_MIN}" _PNG_VERSION_SUFFIXES
+                           "${_PNG_VERSION_SUFFIXES}")
     endif()
     unset(_PNG_VERSION_SUFFIX_MIN)
   endif()
@@ -107,21 +108,28 @@ if(ZLIB_FOUND)
 
     if(NOT TARGET PNG::PNG)
       add_library(PNG::PNG UNKNOWN IMPORTED)
-      set_target_properties(PNG::PNG PROPERTIES INTERFACE_COMPILE_DEFINITIONS "${_PNG_COMPILE_DEFINITIONS}" INTERFACE_INCLUDE_DIRECTORIES "${PNG_INCLUDE_DIRS}" INTERFACE_LINK_LIBRARIES ZLIB::ZLIB)
+      set_target_properties(
+        PNG::PNG
+        PROPERTIES INTERFACE_COMPILE_DEFINITIONS "${_PNG_COMPILE_DEFINITIONS}" INTERFACE_INCLUDE_DIRECTORIES
+                                                                               "${PNG_INCLUDE_DIRS}"
+                   INTERFACE_LINK_LIBRARIES ZLIB::ZLIB)
       if((CMAKE_SYSTEM_NAME STREQUAL "Linux") AND ("${PNG_LIBRARY}" MATCHES "\\${CMAKE_STATIC_LIBRARY_SUFFIX}$"))
         set_property(TARGET PNG::PNG APPEND PROPERTY INTERFACE_LINK_LIBRARIES m)
       endif()
 
       if(EXISTS "${PNG_LIBRARY}")
-        set_target_properties(PNG::PNG PROPERTIES IMPORTED_LINK_INTERFACE_LANGUAGES "C" IMPORTED_LOCATION "${PNG_LIBRARY}")
+        set_target_properties(PNG::PNG PROPERTIES IMPORTED_LINK_INTERFACE_LANGUAGES "C" IMPORTED_LOCATION
+                                                                                        "${PNG_LIBRARY}")
       endif()
       if(EXISTS "${PNG_LIBRARY_RELEASE}")
         set_property(TARGET PNG::PNG APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
-        set_target_properties(PNG::PNG PROPERTIES IMPORTED_LINK_INTERFACE_LANGUAGES_RELEASE "C" IMPORTED_LOCATION_RELEASE "${PNG_LIBRARY_RELEASE}")
+        set_target_properties(PNG::PNG PROPERTIES IMPORTED_LINK_INTERFACE_LANGUAGES_RELEASE "C"
+                                                  IMPORTED_LOCATION_RELEASE "${PNG_LIBRARY_RELEASE}")
       endif()
       if(EXISTS "${PNG_LIBRARY_DEBUG}")
         set_property(TARGET PNG::PNG APPEND PROPERTY IMPORTED_CONFIGURATIONS DEBUG)
-        set_target_properties(PNG::PNG PROPERTIES IMPORTED_LINK_INTERFACE_LANGUAGES_DEBUG "C" IMPORTED_LOCATION_DEBUG "${PNG_LIBRARY_DEBUG}")
+        set_target_properties(PNG::PNG PROPERTIES IMPORTED_LINK_INTERFACE_LANGUAGES_DEBUG "C" IMPORTED_LOCATION_DEBUG
+                                                                                              "${PNG_LIBRARY_DEBUG}")
       endif()
     endif()
 
@@ -131,7 +139,8 @@ if(ZLIB_FOUND)
   if(PNG_PNG_INCLUDE_DIR AND EXISTS "${PNG_PNG_INCLUDE_DIR}/png.h")
     file(STRINGS "${PNG_PNG_INCLUDE_DIR}/png.h" png_version_str REGEX "^#define[ \t]+PNG_LIBPNG_VER_STRING[ \t]+\".+\"")
 
-    string(REGEX REPLACE "^#define[ \t]+PNG_LIBPNG_VER_STRING[ \t]+\"([^\"]+)\".*" "\\1" PNG_VERSION_STRING "${png_version_str}")
+    string(REGEX REPLACE "^#define[ \t]+PNG_LIBPNG_VER_STRING[ \t]+\"([^\"]+)\".*" "\\1" PNG_VERSION_STRING
+                         "${png_version_str}")
     unset(png_version_str)
   endif()
 endif()
