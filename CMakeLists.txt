@@ -167,7 +167,7 @@ list(REMOVE_ITEM OPENCV_SOURCES js.hpp js.cpp)
 set(CMAKE_CXX11_EXTENSION_COMPILE_OPTION "${CXX_STANDARD_FLAG}" CACHE STRING "" FORCE)
 
 add_library(qjs-opencv STATIC ${OPENCV_SOURCES})
-set_target_properties(qjs-opencv PROPERTIES PREFIX lib OUTPUT_NAME opencv COMPILE_FLAGS
+set_target_properties(qjs-opencv PROPERTIES PREFIX lib OUTPUT_NAME "qjs-opencv" COMPILE_FLAGS
                                                                          "${QUICKJS_MODULE_CFLAGS} ${F_PIC}")
 target_compile_definitions(qjs-opencv PRIVATE CONFIG_PREFIX="${CMAKE_INSTALL_PREFIX}")
 dump(PNG_INCLUDE_DIRS PNG_LIBRARIES PNG_LIBRARY OPENCV_FREETYPE_LIBRARY)
