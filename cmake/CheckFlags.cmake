@@ -31,7 +31,6 @@ function(check_flag FLAG VAR)
   if(RESULT)
     append_vars(${FLAG} ${ARGN})
     message(STATUS "Compiler flag ${FLAG} ... supported")
-    # message("append_vars(${FLAG} ${ARGN})")
   endif(RESULT)
 endfunction(check_flag FLAG VAR)
 
