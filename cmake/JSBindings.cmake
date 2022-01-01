@@ -22,7 +22,6 @@ set(JS_BINDINGS_COMMON color.hpp geometry.hpp js.hpp js_alloc.hpp js_array.hpp j
 set(js_line_SOURCES line.cpp line.hpp)
 
 function(make_shared_module FNAME)
-  message("make_shared_module(${FNAME})")
   string(REGEX REPLACE "_" "-" NAME "${FNAME}")
   string(TOUPPER "${FNAME}" UNAME)
 
@@ -60,7 +59,6 @@ function(make_shared_module FNAME)
 endfunction()
 
 function(make_static_module FNAME)
-  message("make_static_module(${FNAME})")
   string(REGEX REPLACE "_" "-" NAME "${FNAME}")
   string(TOUPPER "${FNAME}" UNAME)
 
@@ -89,7 +87,6 @@ function(make_static_module FNAME)
 endfunction()
 
 function(make_js_bindings)
-  message("make_js_bindings")
   file(GLOB JS_BINDINGS_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/js_*.cpp)
 
   foreach(MOD ${JS_BINDINGS_SOURCES})
