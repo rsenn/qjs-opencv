@@ -69,7 +69,13 @@ function main(...args) {
       .replace(/-\s#include/g, '#include')
       .split(/\n/g)
       .filter(line => typeof line == 'string' && !/^(-+$|\+ )/.test(line))
-      .map(line => (fs.existsSync(IncludeName(line)) ? AngleBracketsToQuotes(line) : /opencv2|quickjs|cutils/.test(line) ? QuotesToAngleBrackets(line) : line))
+      .map(line =>
+        fs.existsSync(IncludeName(line))
+          ? AngleBracketsToQuotes(line)
+          : /opencv2|quickjs|cutils/.test(line)
+          ? QuotesToAngleBrackets(line)
+          : line
+      )
       .map(ReplaceStd);
 
     if(lines.length == 0) continue;
@@ -110,7 +116,31 @@ function ReplaceStd(str) {
   if(matches) {
     let [pre, name, post] = [...matches].slice(1, 4);
 
-    if(['assert.h', 'complex.h', 'ctype.h', 'errno.h', 'fenv.h', 'inttypes.h', 'limits.h', 'locale.h', 'math.h', 'setjmp.h', 'signal.h', 'stdint.h', 'stdio.h', 'stdlib.h', 'string.h', 'tgmath.h', 'time.h', 'uchar.h', 'wchar.h', 'wctype.h'].indexOf(name) != -1) name = 'c' + path.basename(name, '.h');
+    if(
+      [
+        'assert.h',
+        'complex.h',
+        'ctype.h',
+        'errno.h',
+        'fenv.h',
+        'inttypes.h',
+        'limits.h',
+        'locale.h',
+        'math.h',
+        'setjmp.h',
+        'signal.h',
+        'stdint.h',
+        'stdio.h',
+        'stdlib.h',
+        'string.h',
+        'tgmath.h',
+        'time.h',
+        'uchar.h',
+        'wchar.h',
+        'wctype.h'
+      ].indexOf(name) != -1
+    )
+      name = 'c' + path.basename(name, '.h');
     return [pre, name, post].join('');
   }
   return str;
