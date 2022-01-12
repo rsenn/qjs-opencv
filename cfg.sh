@@ -462,8 +462,8 @@ cfg-emscripten() {
     export PKG_CONFIG_PATH
     echo PKG_CONFIG_PATH="${PKG_CONFIG_PATH}"
     CC="emcc" CXX="em++" TYPE="Release" \
-      CFLAGS="'-sWASM=1 -sUSE_PTHREADS=0 -sLLD_REPORT_UNDEFINED'" \
-      CXXFLAGS="'-sWASM=1 -sUSE_PTHREADS=0 -sLLD_REPORT_UNDEFINED'" \
+      CFLAGS="'-sUSE_PTHREADS=0'" \
+      CXXFLAGS="'-sUSE_PTHREADS=0'" \
       CMAKE_WRAPPER="emcmake" \
       prefix=/opt/${PWD##*/}-wasm \
       cfg \
