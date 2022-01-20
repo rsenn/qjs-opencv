@@ -56,6 +56,9 @@ js_point_argument(JSContext* ctx, int argc, JSValueConst argv[], int& argind, JS
     *out = *pt;
     argind++;
     return TRUE;
+  } else if(js_point_read(ctx, argv[argind], out)) {
+    argind++;
+    return TRUE;
   }
 
   if(argind + 1 < argc && JS_IsNumber(argv[argind]) && JS_IsNumber(argv[argind + 1])) {
@@ -272,16 +275,33 @@ js_point_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
   return ret;
 }
 
-enum { POINT_ARITH_ADD = 0, POINT_ARITH_SUB, POINT_ARITH_MUL, POINT_ARITH_DIV, POINT_ARITH_MOD };
+enum {
+  POINT_ARITH_ADD = 0,
+  POINT_ARITH_SUB,
+  POINT_ARITH_MUL,
+  POINT_ARITH_DIV,
+  POINT_ARITH_MOD,
+  POINT_ARITH_SUM,
+  POINT_ARITH_DIFF,
+  POINT_ARITH_PROD,
+  POINT_ARITH_QUOT
+};
 
 static JSValue
 js_point_arith(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
   JSPointData<double> other, point, *s;
-  int argind = 0;
-  if(!(s = js_point_data2(ctx, this_val)))
-    return JS_EXCEPTION;
+  int argind = magic >= POINT_ARITH_SUM ? 1 : 0;
 
-  point = *s;
+  if(magic < POINT_ARITH_SUM) {
+    if(!(s = js_point_data2(ctx, magic >= POINT_ARITH_SUM ? argv[0] : this_val)))
+      return JS_EXCEPTION;
+
+    point = *s;
+  } else {
+    if(!js_point_read(ctx, argv[0], &point)) {
+      return JS_ThrowTypeError(ctx, "argument must be a Point somehow");
+    }
+  }
 
   while(argind < argc) {
     if(!js_point_argument(ctx, argc, argv, argind, &other)) {
@@ -292,7 +312,7 @@ js_point_arith(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
         break;
       }
     }
-    switch(magic) {
+    switch(magic % POINT_ARITH_SUM) {
       case POINT_ARITH_ADD: point = add(point, other); break;
       case POINT_ARITH_SUB: point = sub(point, other); break;
       case POINT_ARITH_MUL: point = mul(point, *reinterpret_cast<JSSizeData<double>*>(&other)); break;
@@ -300,7 +320,13 @@ js_point_arith(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
     }
   }
 
-  return js_point_new(ctx, JS_GetPrototype(ctx, this_val), point.x, point.y);
+  if(magic >= POINT_ARITH_SUM) {
+    return js_point_new(ctx, point_proto, point.x, point.y);
+  }
+
+  *s = point;
+
+  return JS_DupValue(ctx, this_val);
 }
 
 static JSValue
@@ -559,8 +585,12 @@ const JSCFunctionListEntry js_point_proto_funcs[] = {
 const JSCFunctionListEntry js_point_static_funcs[] = {
     JS_CFUNC_DEF("from", 1, js_point_from),
     JS_CFUNC_DEF("fromAngle", 1, js_point_fromangle),
-    JS_CFUNC_DEF("diff", 2, js_point_diff),
+    // JS_CFUNC_DEF("diff", 2, js_point_diff),
     JS_CFUNC_DEF("distance", 2, js_point_distance),
+    JS_CFUNC_MAGIC_DEF("sum", 1, js_point_arith, POINT_ARITH_SUM),
+    JS_CFUNC_MAGIC_DEF("diff", 1, js_point_arith, POINT_ARITH_DIFF),
+    JS_CFUNC_MAGIC_DEF("prod", 1, js_point_arith, POINT_ARITH_PROD),
+    JS_CFUNC_MAGIC_DEF("quot", 1, js_point_arith, POINT_ARITH_QUOT),
 };
 
 int
