@@ -100,8 +100,13 @@ fail:
 }
 
 VISIBLE JSSizeData<double>*
-js_size_data2(JSContext* ctx, JSValueConst val) {
+js_size_data(JSValueConst val) {
   return static_cast<JSSizeData<double>*>(JS_GetOpaque(val, js_size_class_id));
+}
+
+VISIBLE JSSizeData<double>*
+js_size_data2(JSContext* ctx, JSValueConst val) {
+  return static_cast<JSSizeData<double>*>(JS_GetOpaque2(ctx, val, js_size_class_id));
 }
 
 static JSValue
@@ -163,9 +168,9 @@ js_size_wrap(JSContext* ctx, const JSSizeData<double>& sz) {
 
 static JSValue
 js_size_set(JSContext* ctx, JSValueConst this_val, JSValueConst val, int magic) {
-  JSSizeData<double>* s = js_size_data2(ctx, this_val);
+  JSSizeData<double>* s;
   double v;
-  if(!s)
+  if(!(s = js_size_data2(ctx, this_val)))
     return JS_EXCEPTION;
   if(JS_ToFloat64(ctx, &v, val))
     return JS_EXCEPTION;
@@ -181,7 +186,7 @@ js_size_to_string(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
   JSSizeData<double> size, *s;
   std::ostringstream os;
   const char* delim = "×";
-  if((s = js_size_data2(ctx, this_val)) == nullptr) {
+  if((s = js_size_data(this_val)) == nullptr) {
     js_size_read(ctx, this_val, &size);
   } else {
     size = *s;
@@ -198,7 +203,7 @@ static JSValue
 js_size_to_source(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSSizeData<double> size, *s;
   std::ostringstream os;
-  if((s = js_size_data2(ctx, this_val)) == nullptr) {
+  if((s = js_size_data(this_val)) == nullptr) {
     js_size_read(ctx, this_val, &size);
   } else {
     size = *s;
@@ -247,7 +252,7 @@ js_size_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* arg
       JSSizeData<double> other, *arg;
       bool equals = false;
       if(argc > 0) {
-        if((arg = js_size_data2(ctx, argv[0]))) {
+        if((arg = js_size_data(argv[0]))) {
           equals = s->width == arg->width && s->height == arg->height;
         } else if(js_size_read(ctx, argv[0], &other)) {
           equals = s->width == other.width && s->height == other.height;
@@ -461,7 +466,7 @@ js_size_div(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv)
       size.height /= divider;
       ret = js_size_wrap(ctx, size);
     } else {
-      if((a = js_size_data2(ctx, argv[0])) != nullptr)
+      if((a = js_size_data(argv[0])) != nullptr)
         other = *a;
       else {
         js_size_read(ctx, argv[0], &other);

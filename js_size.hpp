@@ -11,6 +11,7 @@ extern JSValue size_proto, size_class;
 extern thread_local VISIBLE JSClassID js_size_class_id;
 
 VISIBLE JSValue js_size_wrap(JSContext* ctx, const JSSizeData<double>& size);
+VISIBLE JSSizeData<double>* js_size_data(JSValueConst val);
 VISIBLE JSSizeData<double>* js_size_data2(JSContext*, JSValueConst val);
 
 int js_size_init(JSContext*, JSModuleDef* m);
@@ -59,7 +60,6 @@ js_size_write(JSContext* ctx, JSValueConst out, const JSSizeData<T>& in) {
   if(JS_IsArray(ctx, out)) {
     JS_SetPropertyUint32(ctx, out, 0, width);
     JS_SetPropertyUint32(ctx, out, 1, height);
-
   } else if(JS_IsObject(out)) {
     JS_SetPropertyStr(ctx, out, "x", width);
     JS_SetPropertyStr(ctx, out, "y", height);

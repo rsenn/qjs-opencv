@@ -284,11 +284,27 @@ js_draw_line(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv
   if(argc > i)
     js_value_to(ctx, argv[i++], thickness);
 
-  if(argc > i && JS_IsBool(argv[i]))
-    js_value_to(ctx, argv[i++], antialias);
+  if(argc > i) {
+    if(JS_IsBool(argv[i])) {
+      js_value_to(ctx, argv[i++], antialias);
+    } else {
+      int32_t type;
+      JS_ToInt32(ctx, &type, argv[i++]);
+      antialias = type == cv::LINE_AA;
+    }
+  }
 
 #ifdef DEBUG_OUTPUT
-  printf("cv::line %i|%i -> %i|%i [%.0lf,%.0lf,%.0lf] %i\n", points[0].x, points[0].y, points[1].x, points[1].y, scalar[0], scalar[1], scalar[2], thickness);
+  printf("cv::line %i|%i -> %i|%i [%.0lf,%.0lf,%.0lf] %i %s\n",
+         points[0].x,
+         points[0].y,
+         points[1].x,
+         points[1].y,
+         scalar[0],
+         scalar[1],
+         scalar[2],
+         thickness,
+         antialias ? "true" : "false");
 #endif
 
   cv::line(dst, points[0], points[1], scalar, thickness, antialias ? cv::LINE_AA : cv::LINE_8);

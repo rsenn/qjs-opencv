@@ -114,6 +114,11 @@ js_rect_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* ar
 }
 
 VISIBLE JSRectData<double>*
+js_rect_data(JSValueConst val) {
+  return static_cast<JSRectData<double>*>(JS_GetOpaque(val, js_rect_class_id));
+}
+
+VISIBLE JSRectData<double>*
 js_rect_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSRectData<double>*>(JS_GetOpaque2(ctx, val, js_rect_class_id));
 }
@@ -367,7 +372,7 @@ js_rect_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
   return obj;
 }
 
-enum { METHOD_CONTAINS = 0, METHOD_BR, METHOD_TL, METHOD_SIZE, METHOD_INSET, METHOD_OUTSET, METHOD_HSPLIT, METHOD_VSPLIT, METHOD_MERGE };
+enum { METHOD_CONTAINS = 0, METHOD_BR, METHOD_TL, METHOD_SIZE, METHOD_INSET, METHOD_OUTSET, METHOD_HSPLIT, METHOD_VSPLIT, METHOD_MERGE, METHOD_CLONE };
 
 static JSValue
 js_rect_method(JSContext* ctx, JSValueConst rect, int argc, JSValueConst* argv, int magic) {
@@ -533,7 +538,12 @@ js_rect_method(JSContext* ctx, JSValueConst rect, int argc, JSValueConst* argv, 
           y2 = rect.y + rect.height;
       }
 
-      ret = js_rect_new(ctx, x1, y1, x2, y2);
+      ret = js_rect_new(ctx, x1, y1, x2 - x1, y2 - y1);
+      break;
+    }
+
+    case METHOD_CLONE: {
+      ret = js_rect_new(ctx, s->x, s->y, s->width, s->height);
       break;
     }
   }
@@ -617,6 +627,7 @@ const JSCFunctionListEntry js_rect_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("hsplit", 1, js_rect_method, METHOD_HSPLIT),
     JS_CFUNC_MAGIC_DEF("vsplit", 1, js_rect_method, METHOD_VSPLIT),
     JS_CFUNC_MAGIC_DEF("merge", 1, js_rect_method, METHOD_MERGE),
+    JS_CFUNC_MAGIC_DEF("clone", 0, js_rect_method, METHOD_CLONE),
     JS_CFUNC_DEF("toString", 0, js_rect_to_string),
     JS_CFUNC_DEF("toSource", 0, js_rect_to_source),
     JS_CFUNC_MAGIC_DEF("equals", 1, js_rect_funcs, FUNC_EQUALS),

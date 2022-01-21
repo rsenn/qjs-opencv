@@ -754,12 +754,12 @@ enum {
   OTHER_SOLVE_CUBIC,
   OTHER_SOLVE_POLY,
   OTHER_SUM,
-  OTHER_TRACE
+  OTHER_TRACE,
+  OTHER_RGB,
 };
 
 static JSValue
 js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
-
   JSInputOutputArray src;
   JSValue ret = JS_UNDEFINED;
 
@@ -1122,6 +1122,14 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv,
       ret = js_color_new(ctx, r);
       break;
     }
+    case OTHER_RGB: {
+      cv::Scalar color;
+      JS_ToFloat64(ctx, &color[2], argv[0]);
+      JS_ToFloat64(ctx, &color[1], argv[1]);
+      JS_ToFloat64(ctx, &color[0], argv[2]);
+      ret = js_color_new(ctx, color);
+      break;
+    }
   }
   return ret;
 }
@@ -1228,6 +1236,7 @@ js_function_list_t js_cv_static_funcs{
     JS_CFUNC_MAGIC_DEF("solvePoly", 2, js_cv_other, OTHER_SOLVE_POLY),
     JS_CFUNC_MAGIC_DEF("sum", 1, js_cv_other, OTHER_SUM),
     JS_CFUNC_MAGIC_DEF("trace", 1, js_cv_other, OTHER_TRACE),
+    JS_CFUNC_MAGIC_DEF("CV_RGB", 3, js_cv_other, OTHER_RGB),
 };
 
 js_function_list_t js_cv_constants{

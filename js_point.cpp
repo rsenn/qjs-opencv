@@ -96,6 +96,11 @@ js_point_new(JSContext* ctx, JSValueConst proto, double x, double y) {
   return ret;
 }
 
+VISIBLE JSValue
+js_point_new(JSContext* ctx, JSValueConst proto, JSPointData<double> point) {
+  return js_point_new(ctx, proto, point.x, point.y);
+}
+
 VISIBLE JSPointData<double>*
 js_point_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSPointData<double>*>(JS_GetOpaque2(ctx, val, js_point_class_id));
@@ -230,7 +235,7 @@ js_point_inside(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
   return JS_NewBool(ctx, retval);
 }
 
-enum { POINT_METHOD_NORM = 0, POINT_METHOD_ABS, POINT_METHOD_ANGLE };
+enum { POINT_METHOD_MAG = 0, POINT_METHOD_NORM, POINT_METHOD_ABS, POINT_METHOD_ANGLE, POINT_METHOD_ROTATE, POINT_METHOD_MOD, POINT_METHOD_CLONE };
 
 static JSValue
 js_point_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
@@ -241,8 +246,15 @@ js_point_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
     return JS_EXCEPTION;
 
   switch(magic) {
+    case POINT_METHOD_MAG: {
+      ret = JS_NewFloat64(ctx, sqrt(s->x * s->x + s->y * s->y));
+      break;
+    }
+
     case POINT_METHOD_NORM: {
-      ret = JS_NewFloat64(ctx, sqrt((double)s->x * s->x + (double)s->y * s->y));
+      double magnitude = sqrt(s->x * s->x + s->y * s->y);
+      JSPointData<double> normalized(s->x / magnitude, s->y / magnitude);
+      ret = js_point_new(ctx, JS_GetPrototype(ctx, this_val), normalized);
       break;
     }
 
@@ -271,6 +283,40 @@ js_point_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
       ret = JS_NewFloat64(ctx, phi);
       break;
     }
+
+    case POINT_METHOD_ROTATE: {
+      JSPointData<double> point;
+      double theta = 0;
+
+      JS_ToFloat64(ctx, &theta, argv[0]);
+
+      point.x = s->x * cos(theta) - s->y * sin(theta);
+      point.y = s->x * sin(theta) + s->y * cos(theta);
+      ret = js_point_new(ctx, JS_GetPrototype(ctx, this_val), point);
+      break;
+    }
+
+    case POINT_METHOD_MOD: {
+      JSPointData<double> other;
+
+      if(js_point_read(ctx, argv[0], &other)) {
+        double x = fmod(s->x, other.x);
+        double y = fmod(s->y, other.y);
+
+        if(x < 0)
+          x += other.x;
+        if(y < 0)
+          y += other.y;
+
+        ret = js_point_new(ctx, JS_GetPrototype(ctx, this_val), x, y);
+      }
+      break;
+    }
+
+    case POINT_METHOD_CLONE: {
+      ret = js_point_new(ctx, JS_GetPrototype(ctx, this_val), s->x, s->y);
+      break;
+    }
   }
   return ret;
 }
@@ -290,18 +336,29 @@ enum {
 static JSValue
 js_point_arith(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
   JSPointData<double> other, point, *s;
-  int argind = magic >= POINT_ARITH_SUM ? 1 : 0;
+  int argind = 0;
+  BOOL method = TRUE;
 
-  if(magic < POINT_ARITH_SUM) {
-    if(!(s = js_point_data2(ctx, magic >= POINT_ARITH_SUM ? argv[0] : this_val)))
-      return JS_EXCEPTION;
-
-    point = *s;
-  } else {
+  if(!(s = js_point_data(this_val))) {
     if(!js_point_read(ctx, argv[0], &point)) {
       return JS_ThrowTypeError(ctx, "argument must be a Point somehow");
     }
-  }
+    argind++;
+    method = FALSE;
+  } else {
+    point = *s;
+  } /*else {
+
+   if(magic < POINT_ARITH_SUM) {
+     if(!(s = js_point_data2(ctx, magic >= POINT_ARITH_SUM ? argv[0] : this_val)))
+       return JS_EXCEPTION;
+
+     point = *s;
+   } else {
+     if(!js_point_read(ctx, argv[0], &point)) {
+       return JS_ThrowTypeError(ctx, "argument must be a Point somehow");
+     }
+   }*/
 
   while(argind < argc) {
     if(!js_point_argument(ctx, argc, argv, argind, &other)) {
@@ -320,9 +377,8 @@ js_point_arith(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
     }
   }
 
-  if(magic >= POINT_ARITH_SUM) {
+  if(!method || magic >= POINT_ARITH_SUM)
     return js_point_new(ctx, point_proto, point.x, point.y);
-  }
 
   *s = point;
 
@@ -569,6 +625,11 @@ const JSCFunctionListEntry js_point_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("sub", 1, js_point_arith, POINT_ARITH_SUB),
     JS_CFUNC_MAGIC_DEF("mul", 1, js_point_arith, POINT_ARITH_MUL),
     JS_CFUNC_MAGIC_DEF("div", 1, js_point_arith, POINT_ARITH_DIV),
+    JS_CFUNC_MAGIC_DEF("sum", 1, js_point_arith, POINT_ARITH_SUM),
+    JS_CFUNC_MAGIC_DEF("diff", 1, js_point_arith, POINT_ARITH_DIFF),
+    JS_CFUNC_MAGIC_DEF("prod", 1, js_point_arith, POINT_ARITH_PROD),
+    JS_CFUNC_MAGIC_DEF("quot", 1, js_point_arith, POINT_ARITH_QUOT),
+    JS_CFUNC_MAGIC_DEF("mag", 0, js_point_method, POINT_METHOD_MAG),
     JS_CFUNC_MAGIC_DEF("norm", 0, js_point_method, POINT_METHOD_NORM),
     JS_CFUNC_MAGIC_DEF("abs", 0, js_point_method, POINT_METHOD_ABS),
     JS_CFUNC_MAGIC_DEF("angle", 0, js_point_method, POINT_METHOD_ANGLE),
@@ -576,6 +637,9 @@ const JSCFunctionListEntry js_point_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("floor", 0, js_point_round, 1),
     JS_CFUNC_MAGIC_DEF("ceil", 0, js_point_round, 2),
     JS_CFUNC_MAGIC_DEF("toString", 0, js_point_to_string, 0),
+    JS_CFUNC_MAGIC_DEF("rotate", 1, js_point_method, POINT_METHOD_ROTATE),
+    JS_CFUNC_MAGIC_DEF("mod", 1, js_point_method, POINT_METHOD_MOD),
+    JS_CFUNC_MAGIC_DEF("clone", 0, js_point_method, POINT_METHOD_CLONE),
     JS_CFUNC_DEF("toArray", 0, js_point_to_array),
     JS_CFUNC_DEF("[Symbol.iterator]", 0, js_point_symbol_iterator),
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Point", JS_PROP_CONFIGURABLE),

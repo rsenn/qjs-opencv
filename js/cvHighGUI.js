@@ -1,10 +1,8 @@
-import * as cv from 'opencv';
-import { Size, Point, Draw } from 'opencv';
+import { Size, Point, Draw, FILLED, FONT_HERSHEY_PLAIN, getScreenResolution, getWindowImageRect, getWindowProperty, imshow, LINE_AA, moveWindow, namedWindow, resizeWindow, setMouseCallback, setWindowProperty, setWindowTitle, WINDOW_NORMAL, EVENT_MOUSEMOVE, EVENT_LBUTTONDOWN, EVENT_RBUTTONDOWN, EVENT_MBUTTONDOWN, EVENT_LBUTTONUP, EVENT_RBUTTONUP, EVENT_MBUTTONUP, EVENT_LBUTTONDBLCLK, EVENT_RBUTTONDBLCLK, EVENT_MBUTTONDBLCLK, EVENT_MOUSEWHEEL, EVENT_MOUSEHWHEEL, EVENT_FLAG_LBUTTON, EVENT_FLAG_RBUTTON, EVENT_FLAG_MBUTTON, EVENT_FLAG_CTRLKEY, EVENT_FLAG_SHIFTKEY, EVENT_FLAG_ALTKEY } from 'opencv';
 import { BitsToNames } from './cvUtils.js';
 
-export const MouseEvents = ['EVENT_MOUSEMOVE', 'EVENT_LBUTTONDOWN', 'EVENT_RBUTTONDOWN', 'EVENT_MBUTTONDOWN', 'EVENT_LBUTTONUP', 'EVENT_RBUTTONUP', 'EVENT_MBUTTONUP', 'EVENT_LBUTTONDBLCLK', 'EVENT_RBUTTONDBLCLK', 'EVENT_MBUTTONDBLCLK', 'EVENT_MOUSEWHEEL', 'EVENT_MOUSEHWHEEL'].reduce((acc, name) => ({ ...acc, [cv[name]]: name }), {});
-
-export const MouseFlags = ['EVENT_FLAG_LBUTTON', 'EVENT_FLAG_RBUTTON', 'EVENT_FLAG_MBUTTON', 'EVENT_FLAG_CTRLKEY', 'EVENT_FLAG_SHIFTKEY', 'EVENT_FLAG_ALTKEY'].reduce((acc, name) => ({ ...acc, [name]: cv[name] }), {});
+export const MouseEvents = { EVENT_MOUSEMOVE, EVENT_LBUTTONDOWN, EVENT_RBUTTONDOWN, EVENT_MBUTTONDOWN, EVENT_LBUTTONUP, EVENT_RBUTTONUP, EVENT_MBUTTONUP, EVENT_LBUTTONDBLCLK, EVENT_RBUTTONDBLCLK, EVENT_MBUTTONDBLCLK, EVENT_MOUSEWHEEL, EVENT_MOUSEHWHEEL };
+export const MouseFlags = { EVENT_FLAG_LBUTTON, EVENT_FLAG_RBUTTON, EVENT_FLAG_MBUTTON, EVENT_FLAG_CTRLKEY, EVENT_FLAG_SHIFTKEY, EVENT_FLAG_ALTKEY };
 
 export const Mouse = {
   printEvent: (() => {
@@ -19,27 +17,27 @@ export const Mouse = {
 
 export class Screen {
   static size() {
-    return cv.getScreenResolution();
+    return getScreenResolution();
   }
 }
 
 export class Window {
-  constructor(name, flags = cv.WINDOW_NORMAL) {
+  constructor(name, flags = WINDOW_NORMAL) {
     this.name = name;
     this.flags = flags;
 
-    cv.namedWindow(this.name, this.flags);
+    namedWindow(this.name, this.flags);
   }
 
   move(...args) {
     let pos = new Point(...args);
-    cv.moveWindow(this.name, pos.x, pos.y);
+    moveWindow(this.name, pos.x, pos.y);
   }
 
   resize(...args) {
     //console.log("Window.resize", ...args);
     let size = new Size(...args);
-    cv.resizeWindow(this.name, ...size);
+    resizeWindow(this.name, ...size);
     return size;
   }
 
@@ -53,31 +51,31 @@ export class Window {
   }
 
   /* prettier-ignore */ get imageRect() {
-    return cv.getWindowImageRect(this.name);
+    return getWindowImageRect(this.name);
   }
 
   get(propId) {
-    return cv.getWindowProperty(this.name, propId);
+    return getWindowProperty(this.name, propId);
   }
   set(propId, value) {
-    cv.setWindowProperty(this.name, propId, value);
+    setWindowProperty(this.name, propId, value);
   }
 
   setTitle(title) {
     this.title = title;
-    cv.setWindowTitle(this.name, title);
+    setWindowTitle(this.name, title);
   }
 
   setMouseCallback(fn) {
     console.log('Window.setMouseCallback', fn);
-    cv.setMouseCallback(this.name, (event, x, y, flags) => {
+    setMouseCallback(this.name, (event, x, y, flags) => {
       //console.log("MouseCallback", {event,x,y,flags});
       fn.call(this, event, x, y, flags);
     });
   }
 
   show(mat) {
-    cv.imshow(this.name, mat);
+    imshow(this.name, mat);
   }
 
   valueOf() {
@@ -85,7 +83,7 @@ export class Window {
   }
 }
 
-export function TextStyle(fontFace = cv.FONT_HERSHEY_PLAIN, fontScale = 1.0, thickness = -1) {
+export function TextStyle(fontFace = FONT_HERSHEY_PLAIN, fontScale = 1.0, thickness = -1) {
   Object.assign(this, { fontFace, fontScale, thickness });
 }
 
@@ -101,11 +99,9 @@ Object.assign(TextStyle.prototype, {
     return size;
   },
 
-  draw(mat, text, pos, color, lineThickness, lineType) {
+  draw(mat, text, pos, color = [255, 255, 255, 255], lineThickness = FILLED, lineType = LINE_AA) {
     const { fontFace, fontScale, thickness } = this;
-    const args = [mat, text, pos, fontFace, fontScale, color ?? [255, 255, 255, 255], lineThickness ?? thickness, lineType ?? cv.LINE_AA];
-    //console.log('TextStyle draw(', ...args.reduce((acc, arg) => (acc.length ? [...acc, ',', arg] : [arg]), []), ')');
-    Draw.text(...args);
+    Draw.text(mat, text, pos, fontFace, fontScale, color, lineThickness, lineType);
   }
 });
 
@@ -141,7 +137,7 @@ export function DrawText(dst, text, color, fontFace, fontSize = 13) {
       continue;
     }
     size = font.size(line);
-    font.draw(dst, line, pos, c, -1, cv.LINE_AA);
+    font.draw(dst, line, pos, c, -1, LINE_AA);
     pos.x += size.width;
   }
 }

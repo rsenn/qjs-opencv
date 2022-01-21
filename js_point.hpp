@@ -19,7 +19,7 @@ JSModuleDef* js_init_module_point(JSContext*, const char*);
 }
 
 VISIBLE JSValue js_point_new(JSContext*, double x, double y);
-VISIBLE JSValue js_point_new(JSContext*, const JSPointData<double>&);
+VISIBLE JSValue js_point_new(JSContext*, JSValueConst, JSPointData<double>);
 VISIBLE JSValue js_point_new(JSContext*, JSValueConst, double x, double y);
 
 VISIBLE JSPointData<double>* js_point_data2(JSContext*, JSValueConst val);
@@ -97,7 +97,6 @@ js_point_write(JSContext* ctx, JSValueConst out, const JSPointData<T>& in) {
   if(js_is_array_like(ctx, out)) {
     JS_SetPropertyUint32(ctx, out, 0, x);
     JS_SetPropertyUint32(ctx, out, 1, y);
-
   } else if(JS_IsObject(out)) {
     JS_SetPropertyStr(ctx, out, "x", x);
     JS_SetPropertyStr(ctx, out, "y", y);

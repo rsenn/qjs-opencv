@@ -18,7 +18,7 @@ extern "C" VISIBLE int js_keypoint_init(JSContext*, JSModuleDef*);
 
 static JSValue
 js_keypoint_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
-  JSKeyPointData keypoint, *kp;
+  JSKeyPointData* kp;
   JSValue obj = JS_UNDEFINED;
   JSValue proto;
   int optind = 0;

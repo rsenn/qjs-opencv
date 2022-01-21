@@ -353,8 +353,8 @@ template<class T> class js_typedarray {
 public:
   template<class Container>
   static JSValue
-  from(JSContext* ctx, const Container& in) {
-    return from_sequence<typename Container::const_iterator>(ctx, in.begin(), in.end());
+  from(JSContext* ctx, const Container& in, uint32_t byteOffset = 0) {
+    return from_sequence<typename Container::const_iterator>(ctx, in.begin(), in.end(), byteOffset);
   }
 
   static JSValue
@@ -407,7 +407,7 @@ js_typedarray_from(JSContext* ctx, const Iterator& start, const Iterator& end, u
 template<class Container>
 static inline JSValue
 js_typedarray_from(JSContext* ctx, const Container& v, uint32_t byteOffset = 0, uint32_t length = UINT32_MAX) {
-  return js_typedarray<typename Container::value_type>::from_sequence(ctx, v.begin(), v.end(), byteOffset);
+  return js_typedarray<typename Container::value_type>::from(ctx, v, byteOffset);
 }
 
 template<class T>
