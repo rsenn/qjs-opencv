@@ -354,6 +354,43 @@ js_draw_polygon(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
 }
 
 static JSValue
+js_draw_polylines(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+  JSInputOutputArray dst;
+  int i = 0, ret = -1;
+ JSContoursData<int> points;
+  cv::Scalar color;
+  bool isClosed=false,antialias = true;
+  int thickness = -1;
+
+  if(argc > i) {
+    if(!js_is_noarray((dst = js_umat_or_mat(ctx, argv[i]))))
+      i++;
+  } else
+    dst = *dptr;
+
+  if(argc > i)
+    js_array_to(ctx, argv[i++], points);
+
+  if(argc > i)
+    isClosed = JS_ToBool(ctx, argv[i++]);
+
+  if(argc > i && js_color_read(ctx, argv[i], &color))
+    i++;
+
+  if(argc > i)
+    js_value_to(ctx, argv[i++], thickness);
+
+  if(argc > i)
+    js_value_to(ctx, argv[i++], antialias);
+   
+  std::cerr << "polylines() points: " << (points) << " color: " << to_string(color) << std::endl;
+
+  cv::polylines(dst, /*&pts, &size, 1,*/ points, isClosed, color, thickness,  antialias ? cv::LINE_AA : cv::LINE_8);
+
+  return JS_UNDEFINED;
+}
+
+static JSValue
 js_draw_rectangle(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSInputOutputArray dst;
   int i = 0, ret = -1;
@@ -675,6 +712,7 @@ const JSCFunctionListEntry js_draw_static_funcs[] = {
     JS_CFUNC_DEF("contours", 4, &js_draw_contours),
     JS_CFUNC_DEF("line", 1, &js_draw_line),
     JS_CFUNC_DEF("polygon", 1, &js_draw_polygon),
+    JS_CFUNC_DEF("polylines", 1, &js_draw_polylines),
     JS_CFUNC_DEF("rectangle", 1, &js_draw_rectangle),
     JS_CFUNC_DEF("text", 2, &js_put_text),
     JS_CFUNC_DEF("textSize", 5, &js_get_text_size),
@@ -690,6 +728,7 @@ const JSCFunctionListEntry js_draw_global_funcs[] = {
     JS_CFUNC_DEF("drawContour", 1, &js_draw_contour),
     JS_CFUNC_DEF("drawLine", 1, &js_draw_line),
     JS_CFUNC_DEF("drawPolygon", 1, &js_draw_polygon),
+    JS_CFUNC_DEF("drawPolylines", 1, &js_draw_polylines),
     JS_CFUNC_DEF("drawRect", 1, &js_draw_rectangle),
     JS_CFUNC_DEF("drawKeypoints", 3, &js_draw_keypoints),
     JS_CFUNC_DEF("putText", 2, &js_put_text),
