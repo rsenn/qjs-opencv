@@ -397,20 +397,20 @@ js_contour_fitline(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
 static JSValue
 js_contour_getmat(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSContourData<double>* v;
-  JSMatDimensions size;
-  int32_t type;
-  cv::Mat mat;
-
+  /*  JSMatDimensions size;
+    int32_t type;
+    cv::Mat mat;
+  */
   if(!(v = js_contour_data2(ctx, this_val)))
     return JS_EXCEPTION;
 
-  size.rows = 1;
-  size.cols = v->size();
-  type = CV_64FC2;
+  /*  size.rows = 1;
+    size.cols = v->size();
+    type = CV_64FC2;
 
-  mat = cv::Mat(cv::Size(size), type, static_cast<void*>(v->data()));
-
-  return js_mat_wrap(ctx, mat);
+    mat = cv::Mat(cv::Size(size), type, static_cast<void*>(v->data()));
+  */
+  return js_mat_wrap(ctx, contour_getmat(*v));
 }
 
 static JSValue

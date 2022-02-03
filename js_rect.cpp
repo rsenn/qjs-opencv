@@ -88,8 +88,10 @@ js_rect_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* ar
             x = point.x;
             y = point.y;
           } else {
-            w = point2.x - x;
-            h = point2.y - y;
+            w = fabs(point2.x - x);
+            h = fabs(point2.y - y);
+            x = fmin(point2.x, x);
+            y = fmin(point2.y, y);
           }
           optind++;
         }

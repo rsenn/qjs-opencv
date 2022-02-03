@@ -3,6 +3,7 @@
 
 #include "geometry.hpp"
 #include "js_alloc.hpp"
+#include "js_point.hpp"
 #include "jsbindings.hpp"
 #include <quickjs.h>
 #include <cstdint>
@@ -65,6 +66,18 @@ static inline void
 contour_copy(const JSContourData<T>& src, JSContourData<U>& dst) {
   dst.resize(src.size());
   std::copy(src.begin(), src.end(), dst.begin());
+}
+
+template<typename T>
+static inline cv::Mat
+contour_getmat(JSContourData<T>& contour) {
+  JSMatDimensions size;
+  int t = point_traits<T>::type;
+
+  size.rows = 1;
+  size.cols = contour.size();
+
+  return cv::Mat(cv::Size(size), t, static_cast<void*>(contour.data()));
 }
 
 static inline int

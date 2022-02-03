@@ -538,7 +538,9 @@ js_cv_core(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, 
   JSInputArray src;
   JSValue ret = JS_UNDEFINED;
 
-  src = argc >= 1 ? js_umat_or_mat(ctx, argv[0]) : cv::noArray();
+  if(argc >= 1)
+    src = js_input_array(ctx, argv[0]);
+
   dst = argc >= 2 ? js_umat_or_mat(ctx, argv[1]) : cv::noArray();
 
   switch(magic) {

@@ -74,6 +74,14 @@ js_input_array(JSContext* ctx, JSValueConst value) {
   if((mat = js_mat_data_nothrow(value)))
     return JSInputArray(*mat);
 
+  if(js_contour_class_id) {
+    JSContourData<double>* contour;
+    if((contour = js_contour_data(value))) {
+      cv::Mat m = contour_getmat(*contour);
+      return JSInputArray(m);
+    }
+  }
+
   if(js_is_typedarray(ctx, value)) {
     TypedArrayProps props = js_typedarray_props(ctx, value);
     TypedArrayValue type = js_typedarray_type(ctx, value);
@@ -130,7 +138,7 @@ js_cv_inputoutputarray(JSContext* ctx, JSValueConst value) {
     JSContourData<double>* contour;
     JSContoursData<double>* contours;
     if((contour = js_contour_data(value)))
-      return JSInputOutputArray(cv::Mat(*contour));
+      return JSInputOutputArray(*contour);
   }
 
   if(js_line_class_id) {

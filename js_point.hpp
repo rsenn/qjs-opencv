@@ -4,6 +4,14 @@
 #include "jsbindings.hpp"
 #include <quickjs.h>
 
+template<typename T> struct point_traits {};
+
+template<> struct point_traits<uint16_t> { static const int type = CV_16UC2; };
+template<> struct point_traits<int16_t> { static const int type = CV_16SC2; };
+template<> struct point_traits<int32_t> { static const int type = CV_32SC2; };
+template<> struct point_traits<float> { static const int type = CV_32FC2; };
+template<> struct point_traits<double> { static const int type = CV_64FC2; };
+
 extern "C" VISIBLE int js_point_init(JSContext*, JSModuleDef*);
 
 extern "C" JSValue js_point_clone(JSContext* ctx, const JSPointData<double>& point);

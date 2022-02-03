@@ -699,11 +699,16 @@ js_mat_set(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) 
     }
   }
   bytes = m->elemSize();
-  if(m->type() == CV_32FC1) {
+
+  if(m->type() == CV_32FC1 || m->type() == CV_64FC1) {
     double data;
     if(JS_ToFloat64(ctx, &data, argv[0]))
       return JS_EXCEPTION;
-    (*m).at<float>(row, col) = (float)data;
+    if(m->depth() == CV_32F)
+      (*m).at<float>(row, col) = (float)data;
+    else
+      (*m).at<double>(row, col) = data;
+
   } else if(bytes <= sizeof(uint)) {
     uint32_t mask = (1LU << (bytes * 8)) - 1;
     uint32_t data;
