@@ -357,10 +357,10 @@ static JSValue
 js_draw_polylines(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   JSInputOutputArray dst;
   int i = 0, ret = -1;
- JSContoursData<int> points;
-  cv::Scalar color;
-  bool isClosed=false,antialias = true;
-  int thickness = -1;
+  JSContoursData<int> points;
+  JSColorData<double> color = {0, 0, 0};
+  bool isClosed = false;
+  int32_t thickness = -1, lineType = cv::LINE_AA;
 
   if(argc > i) {
     if(!js_is_noarray((dst = js_umat_or_mat(ctx, argv[i]))))
@@ -374,18 +374,24 @@ js_draw_polylines(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
   if(argc > i)
     isClosed = JS_ToBool(ctx, argv[i++]);
 
-  if(argc > i && js_color_read(ctx, argv[i], &color))
-    i++;
+  if(argc > i)
+    js_array_to(ctx, argv[i++], color.arr);
+  //    js_color_read(ctx, argv[i++], &color);
 
   if(argc > i)
-    js_value_to(ctx, argv[i++], thickness);
+    JS_ToInt32(ctx, &thickness, argv[i++]);
 
-  if(argc > i)
-    js_value_to(ctx, argv[i++], antialias);
-   
-  std::cerr << "polylines() points: " << (points) << " color: " << to_string(color) << std::endl;
+  if(argc > i) {
+    if(JS_IsBool(argv[i]))
+      lineType = JS_ToBool(ctx, argv[i++]) ? cv::LINE_AA : cv::LINE_8;
+    else
+      JS_ToInt32(ctx, &lineType, argv[i++]);
+  }
 
-  cv::polylines(dst, /*&pts, &size, 1,*/ points, isClosed, color, thickness,  antialias ? cv::LINE_AA : cv::LINE_8);
+  std::cerr << "polylines()" /* << " points: " << points*/
+            << " isClosed: " << isClosed << " color: " << /*to_string*/ (color) << " thickness: " << thickness << " lineType: " << lineType << std::endl;
+
+  cv::polylines(dst, /*&pts, &size, 1,*/ points, isClosed, *reinterpret_cast<cv::Scalar const*>(&color), thickness, lineType);
 
   return JS_UNDEFINED;
 }
@@ -398,8 +404,7 @@ js_draw_rectangle(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
   JSPointData<double> points[2];
   JSColorData<uint8_t> color;
   cv::Scalar scalar;
-  int thickness = 1;
-  bool antialias = true;
+  int32_t thickness = 1, lineType = cv::LINE_AA;
 
   if(argc > i) {
     if(!js_is_noarray((dst = js_umat_or_mat(ctx, argv[i]))))
@@ -438,13 +443,9 @@ js_draw_rectangle(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
 
   if(argc > i) {
     if(JS_IsBool(argv[i]))
-      js_value_to(ctx, argv[i], antialias);
-    else {
-      int32_t aa;
-      JS_ToInt32(ctx, &aa, argv[i++]);
-      antialias = (aa == cv::LINE_AA);
-    }
-    i++;
+      lineType = JS_ToBool(ctx, argv[i++]) ? cv::LINE_AA : cv::LINE_8;
+    else
+      JS_ToInt32(ctx, &lineType, argv[i++]);
   }
 
   points[0].x = rect.x;
@@ -453,7 +454,7 @@ js_draw_rectangle(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
   points[1].y = rect.y + rect.height;
 
   // printf("cv::rectangle %lf,%lf %lfx%lf [%.0lf,%.0lf,%.0lf,%.0lf]\n", rect.x, rect.y, rect.width, rect.height, scalar[0], scalar[1], scalar[2], scalar[3]);
-  cv::rectangle(dst, points[0], points[1], scalar, thickness, antialias ? cv::LINE_AA : cv::LINE_8);
+  cv::rectangle(dst, points[0], points[1], scalar, thickness, lineType);
 
   return JS_UNDEFINED;
 }

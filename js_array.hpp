@@ -623,10 +623,11 @@ public:
       JSContourData<double>* ptr;
       contour_type contour;
       JSValue item = JS_GetPropertyUint32(ctx, arr, (uint32_t)i);
-      if((ptr = js_contour_data2(ctx, item))) {
+      if((ptr = js_contour_data(item))) {
         for(const auto& point : *ptr) contour.emplace_back(point.x, point.y);
       } else {
-        js_array<JSPointData<T>>::to_vector(ctx, item, contour);
+        // js_array<JSPointData<T>>::to_vector(ctx, item, contour);
+        js_array_to(ctx, item, contour);
       }
       out.push_back(contour);
       JS_FreeValue(ctx, item);
