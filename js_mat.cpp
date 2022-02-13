@@ -454,9 +454,7 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv,
             case MAT_EXPR_OR: cv::bitwise_or(mat, cv::Scalar(value, value, value, value), mat); break;
             case MAT_EXPR_XOR: mat ^= (uchar)value; break;
             case MAT_EXPR_MUL: mat = mat * value; break;
-            case MAT_EXPR_DIV: mat = mat /value; break;
-            case MAT_EXPR_SHL: mat = mat * ((int)value * (int)value); break;
-            case MAT_EXPR_SHR: mat = mat  / ((int)value * (int)value);   break;
+            case MAT_EXPR_DIV: mat = mat / value; break;
           }
         } else {
           switch(magic) {
@@ -465,8 +463,6 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv,
             case MAT_EXPR_XOR: mat ^= value; break;
             case MAT_EXPR_MUL: mat *= value; break;
             case MAT_EXPR_DIV: mat /= value; break;
-          case MAT_EXPR_SHL: mat *= (int)value * (int)value; break;
-            case MAT_EXPR_SHR: mat /= (int)value * (int)value; break;
           }
         }
       } else {
@@ -489,9 +485,7 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv,
           case MAT_EXPR_OR: expr = mat | scalar; break;
           case MAT_EXPR_XOR: expr = mat ^ scalar; break;
           case MAT_EXPR_MUL: expr = mat.mul(scalar, scale); break;
-          case MAT_EXPR_DIV: expr = mat /scalar; break;
-       case MAT_EXPR_SHL: expr = mat  * (scalar * scalar); break;
-          case MAT_EXPR_SHR: expr = mat / (scalar * scalar); break;
+          case MAT_EXPR_DIV: expr = mat / scalar; break;
         }
         tmp = static_cast<cv::Mat>(expr);
       }
@@ -513,8 +507,6 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv,
             case MAT_EXPR_XOR: (*input) ^= (*other); break;
             case MAT_EXPR_MUL: (*input) *= (*other); break;
             case MAT_EXPR_DIV: (*input) /= (*other); break;
-         case MAT_EXPR_SHL: (*input) <<= (*other); break;
-            case MAT_EXPR_SHR: (*input) >>= (*other); break;
           }
         } else {
           switch(magic) {
@@ -523,8 +515,6 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv,
             case MAT_EXPR_XOR: (*output) = (*input) ^ (*other); break;
             case MAT_EXPR_MUL: (*output) = (*input) * (*other); break;
             case MAT_EXPR_DIV: (*output) = (*input) / (*other); break;
- case MAT_EXPR_SHL: (*output) = (*input) << (*other); break;
-            case MAT_EXPR_SHR: (*output) = (*input) >> (*other); break;
           }
         }
       }
@@ -1570,8 +1560,6 @@ const JSCFunctionListEntry js_mat_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("xor", 3, js_mat_expr, MAT_EXPR_XOR),
     JS_CFUNC_MAGIC_DEF("mul", 3, js_mat_expr, MAT_EXPR_MUL),
     JS_CFUNC_MAGIC_DEF("div", 3, js_mat_expr, MAT_EXPR_DIV),
-    JS_CFUNC_MAGIC_DEF("shr", 3, js_mat_expr, MAT_EXPR_SHR),
-    JS_CFUNC_MAGIC_DEF("shl", 3, js_mat_expr, MAT_EXPR_SHL),
 
     JS_CFUNC_MAGIC_DEF("zero", 2, js_mat_fill, 0),
     JS_CFUNC_MAGIC_DEF("one", 2, js_mat_fill, 1),
