@@ -16,9 +16,12 @@ export class Pipeline extends Function {
       for(let [i, processor] of processors) {
         self.currentProcessor = i;
         let args = [mat ?? self.images[i - 1], self.images[i]];
+
         self.invokeCallback('before', ...args);
         //console.log(`Pipeline \x1b[38;5;112m#${i} \x1b[38;5;32m'${processor.name}'\x1b[m`);
+        
         mat = processor.call(self, ...args);
+        
         self.invokeCallback('after', ...args);
         //console.log(`Pipeline`, { i, mat, isObj: isObject(mat) });
 
@@ -26,7 +29,6 @@ export class Pipeline extends Function {
         mat = self.images[i];
         if(typeof callback == 'function') callback.call(self, i, self.processors.length);
       }
-      // self.currentProcessor = -1;
       return mat;
     };
     processors = processors.map(processor => (processor instanceof Processor ? processor : Processor(processor)));
@@ -49,7 +51,7 @@ export class Pipeline extends Function {
   recalc(up_to) {
     let { currentProcessor } = this;
     up_to ??= currentProcessor;
-    console.log(`Pipeline recalc \x1b[38;5;112m#${up_to} \x1b[38;5;32m'${this.names[up_to]}'\x1b[m`);
+    //console.log(`Pipeline recalc \x1b[38;5;112m#${up_to} \x1b[38;5;32m'${this.names[up_to]}'\x1b[m`);
 
     return this(0, up_to + 1);
   }
