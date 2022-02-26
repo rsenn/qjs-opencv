@@ -44,7 +44,7 @@ configure_quickjs()
 
 pkg_search_module(PNG libpng16)
 #pkg_get_variable(PNG_INCLUDE_DIR "${PNG_MODULE_NAME}" includedir)
-dump(PNG_MODULE_NAME PNG_INCLUDE_DIRS)
+#dump(PNG_MODULE_NAME PNG_INCLUDE_DIRS)
 
 if(ENABLE_CCACHE)
   include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CCache.cmake)
@@ -106,7 +106,7 @@ include(CheckCXXSymbolExists)
 check_cxx_symbol_exists(cv::AffineFeature opencv2/features2d.hpp
                         HAVE_OPENCV_AFFINE_FEATURE)
 
-dump(HAVE_OPENCV2_FREETYPE_HPP OPENCV_FREETYPE_LIBRARY
+#dump(HAVE_OPENCV2_FREETYPE_HPP OPENCV_FREETYPE_LIBRARY
      HAVE_OPENCV2_XFEATURES2D_HPP HAVE_OPENCV_AFFINE_FEATURE)
 if(HAVE_OPENCV_AFFINE_FEATURE)
   add_definitions(-DHAVE_OPENCV_AFFINE_FEATURE)
@@ -164,8 +164,8 @@ file(GLOB OPENCV_SOURCES *.hpp *.cpp gifenc/gifenc.c
      dominant_colors_grabber.cpp)
 # dump(OPENCV_SOURCES)
 
-dump(QUICKJS_MODULE_CFLAGS F_PIC)
-dump(QUICKJS_C_MODULE_DIR)
+#dump(QUICKJS_MODULE_CFLAGS F_PIC)
+#dump(QUICKJS_C_MODULE_DIR)
 
 list(REMOVE_ITEM OPENCV_SOURCES init_module.cpp)
 list(REMOVE_ITEM OPENCV_SOURCES js.hpp js.cpp)
@@ -179,7 +179,7 @@ set_target_properties(
                         COMPILE_FLAGS "${QUICKJS_MODULE_CFLAGS} ${F_PIC}")
 target_compile_definitions(qjs-opencv
                            PRIVATE CONFIG_PREFIX="${CMAKE_INSTALL_PREFIX}")
-dump(PNG_INCLUDE_DIRS PNG_LIBRARIES PNG_LIBRARY OPENCV_FREETYPE_LIBRARY)
+#dump(PNG_INCLUDE_DIRS PNG_LIBRARIES PNG_LIBRARY OPENCV_FREETYPE_LIBRARY)
 target_include_directories(qjs-opencv PUBLIC "${PNG_INCLUDE_DIRS}")
 target_link_libraries(
   qjs-opencv PUBLIC ${PNG_LIBRARIES} ${OPENCV_FREETYPE_LIBRARY}
