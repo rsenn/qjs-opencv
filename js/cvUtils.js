@@ -107,7 +107,8 @@ export const GetOpt = (options = {}, args) => {
   let result = {};
   let positional = (result['@'] = []);
   if(!(options instanceof Array)) options = Object.entries(options);
-  const findOpt = arg => options.find(([optname, option]) => (Array.isArray(option) ? option.indexOf(arg) != -1 : false) || arg == optname);
+  const findOpt = arg =>
+    options.find(([optname, option]) => (Array.isArray(option) ? option.indexOf(arg) != -1 : false) || arg == optname);
   let [, params] = options.find(opt => opt[0] == '@') || [];
   if(typeof params == 'string') params = params.split(',');
   for(let i = 0; i < args.length; i++) {

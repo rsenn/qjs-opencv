@@ -1,8 +1,65 @@
-import { selectROI, Size, Point, Draw, FILLED, FONT_HERSHEY_PLAIN, getScreenResolution, getWindowImageRect, getWindowProperty, imshow, LINE_AA, moveWindow, namedWindow, resizeWindow, setMouseCallback, setWindowProperty, setWindowTitle, WINDOW_NORMAL, EVENT_MOUSEMOVE, EVENT_LBUTTONDOWN, EVENT_RBUTTONDOWN, EVENT_MBUTTONDOWN, EVENT_LBUTTONUP, EVENT_RBUTTONUP, EVENT_MBUTTONUP, EVENT_LBUTTONDBLCLK, EVENT_RBUTTONDBLCLK, EVENT_MBUTTONDBLCLK, EVENT_MOUSEWHEEL, EVENT_MOUSEHWHEEL, EVENT_FLAG_LBUTTON, EVENT_FLAG_RBUTTON, EVENT_FLAG_MBUTTON, EVENT_FLAG_CTRLKEY, EVENT_FLAG_SHIFTKEY, EVENT_FLAG_ALTKEY } from 'opencv';
+import {
+  selectROI,
+  Size,
+  Point,
+  Draw,
+  FILLED,
+  FONT_HERSHEY_PLAIN,
+  getScreenResolution,
+  getWindowImageRect,
+  getWindowProperty,
+  imshow,
+  LINE_AA,
+  moveWindow,
+  namedWindow,
+  resizeWindow,
+  setMouseCallback,
+  setWindowProperty,
+  setWindowTitle,
+  WINDOW_NORMAL,
+  EVENT_MOUSEMOVE,
+  EVENT_LBUTTONDOWN,
+  EVENT_RBUTTONDOWN,
+  EVENT_MBUTTONDOWN,
+  EVENT_LBUTTONUP,
+  EVENT_RBUTTONUP,
+  EVENT_MBUTTONUP,
+  EVENT_LBUTTONDBLCLK,
+  EVENT_RBUTTONDBLCLK,
+  EVENT_MBUTTONDBLCLK,
+  EVENT_MOUSEWHEEL,
+  EVENT_MOUSEHWHEEL,
+  EVENT_FLAG_LBUTTON,
+  EVENT_FLAG_RBUTTON,
+  EVENT_FLAG_MBUTTON,
+  EVENT_FLAG_CTRLKEY,
+  EVENT_FLAG_SHIFTKEY,
+  EVENT_FLAG_ALTKEY
+} from 'opencv';
 import { BitsToNames } from './cvUtils.js';
 
-export const MouseEvents = { EVENT_MOUSEMOVE, EVENT_LBUTTONDOWN, EVENT_RBUTTONDOWN, EVENT_MBUTTONDOWN, EVENT_LBUTTONUP, EVENT_RBUTTONUP, EVENT_MBUTTONUP, EVENT_LBUTTONDBLCLK, EVENT_RBUTTONDBLCLK, EVENT_MBUTTONDBLCLK, EVENT_MOUSEWHEEL, EVENT_MOUSEHWHEEL };
-export const MouseFlags = { EVENT_FLAG_LBUTTON, EVENT_FLAG_RBUTTON, EVENT_FLAG_MBUTTON, EVENT_FLAG_CTRLKEY, EVENT_FLAG_SHIFTKEY, EVENT_FLAG_ALTKEY };
+export const MouseEvents = {
+  EVENT_MOUSEMOVE,
+  EVENT_LBUTTONDOWN,
+  EVENT_RBUTTONDOWN,
+  EVENT_MBUTTONDOWN,
+  EVENT_LBUTTONUP,
+  EVENT_RBUTTONUP,
+  EVENT_MBUTTONUP,
+  EVENT_LBUTTONDBLCLK,
+  EVENT_RBUTTONDBLCLK,
+  EVENT_MBUTTONDBLCLK,
+  EVENT_MOUSEWHEEL,
+  EVENT_MOUSEHWHEEL
+};
+export const MouseFlags = {
+  EVENT_FLAG_LBUTTON,
+  EVENT_FLAG_RBUTTON,
+  EVENT_FLAG_MBUTTON,
+  EVENT_FLAG_CTRLKEY,
+  EVENT_FLAG_SHIFTKEY,
+  EVENT_FLAG_ALTKEY
+};
 
 export const Mouse = {
   printEvent: (() => {
@@ -83,7 +140,7 @@ export class Window {
     return this.name;
   }
 
-  selectROI(mat, showCrosshair  =true, fromCenter=false) {
+  selectROI(mat, showCrosshair = true, fromCenter = false) {
     return selectROI(this.name, mat ?? this.mat, showCrosshair, fromCenter);
   }
 }
@@ -110,11 +167,17 @@ Object.assign(TextStyle.prototype, {
   }
 });
 
-const palette16 = [0x000000, 0xa00000, 0x00a000, 0xa0a000, 0x0000a0, 0xa000a0, 0x00a0a0, 0xc0c0c0, 0xa0a0a0, 0xff0000, 0x00ff00, 0xffff00, 0x0000ff, 0xff00ff, 0x00ffff, 0xffffff];
+const palette16 = [
+  0x000000, 0xa00000, 0x00a000, 0xa0a000, 0x0000a0, 0xa000a0, 0x00a0a0, 0xc0c0c0, 0xa0a0a0, 0xff0000, 0x00ff00,
+  0xffff00, 0x0000ff, 0xff00ff, 0x00ffff, 0xffffff
+];
 
 export function DrawText(dst, text, color, fontFace, fontSize = 13) {
   let c = color;
-  let font = typeof fontFace == 'object' && fontFace != null && fontFace instanceof TextStyle ? fontFace : new TextStyle(fontFace, fontSize, -1);
+  let font =
+    typeof fontFace == 'object' && fontFace != null && fontFace instanceof TextStyle
+      ? fontFace
+      : new TextStyle(fontFace, fontSize, -1);
   let lines = [...text.matchAll(/(\x1b[^a-z]*[a-z]|\n|[^\x1b\n]*)/g)].map(m => m[0]);
   let baseY;
   let size = font.size('yP', y => (baseY = y));
