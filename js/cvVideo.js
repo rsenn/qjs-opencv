@@ -60,7 +60,7 @@ function ImageSize(src, dst, dsize, action = (name, arg1, arg2) => console.debug
       }
       action(`Scale (ₓ${factors[0].toFixed(5)})`, ssize, dsize);
       dst.reset();
-      console.debug('ImageSize', { dsize });
+      //console.debug('ImageSize', { dsize });
       cv.resize(src, dst, dsize, 0, 0, cv.INTER_CUBIC);
       dst.resize(dsize.height);
       //console.debug(`Scale ${src} -> ${dst}`);
@@ -77,9 +77,9 @@ export class ImageSequence {
 
     if(typeof images == 'string') {
       let gen = FilterImages(ReadDirRecursive(images));
-      console.log('gen', gen);
+      //console.log('gen', gen);
       let entries = [...SortFiles(StatFiles(gen), 'ctime')];
-      console.log('entries', entries);
+      //console.log('entries', entries);
 
       images = entries.map(e => e + '');
     }
@@ -115,10 +115,10 @@ export class ImageSequence {
       let mat = cv.imread(images[0], cv.IMREAD_IGNORE_ORIENTATION);
       dimensions = mat.size;
       const { cols, rows } = mat;
-      console.debug('mat', images[0], { cols, rows });
+      //console.debug('mat', images[0], { cols, rows });
       dimensions = new Size(mat.cols, mat.rows);
     }
-    console.debug('dimensions', dimensions);
+    //console.debug('dimensions', dimensions);
     this.set('frame_width', dimensions.width);
     this.set('frame_height', dimensions.height);
   }
@@ -148,7 +148,7 @@ export class ImageSequence {
     this.framePos = this.index++;
     this.frameFile = images[this.framePos];
     const { index, framePos, frameFile } = this;
-    console.log(`ImageSequence.grab[${this.framePos}] ${frameFile}`);
+    //console.log(`ImageSequence.grab[${this.framePos}] ${frameFile}`);
 
     let ret = !!(this.frame = cv.imread(frameFile));
 
@@ -186,14 +186,14 @@ export class VideoSource {
   static backends = Object.fromEntries(['ANY', 'VFW', 'V4L', 'V4L2', 'FIREWIRE', 'FIREWARE', 'IEEE1394', 'DC1394', 'CMU1394', 'QT', 'UNICAP', 'DSHOW', 'PVAPI', 'OPENNI', 'OPENNI_ASUS', 'ANDROID', 'XIAPI', 'AVFOUNDATION', 'GIGANETIX', 'MSMF', 'WINRT', 'INTELPERC', 'REALSENSE', 'OPENNI2', 'OPENNI2_ASUS', 'GPHOTO2', 'GSTREAMER', 'FFMPEG', 'IMAGES', 'ARAVIS', 'OPENCV_MJPEG', 'INTEL_MFX', 'XINE'].map(name => [name, cv['CAP_' + name]]));
 
   constructor(...args) {
-    console.log('VideoSource.constructor(', ...args.reduce((acc, arg) => (acc.length ? [...acc, ', ', arg] : [arg]), []), ')');
+    //console.log('VideoSource.constructor(', ...args.reduce((acc, arg) => (acc.length ? [...acc, ', ', arg] : [arg]), []), ')');
     if(args.length > 0) {
       let [device, backend = 'ANY', loop = true] = args;
       const driverId = VideoSource.backends[backend];
       let isVideo = (args.length <= 2 && backend in VideoSource.backends) || isVideoPath(device);
 
       // if(cv.imread(args[0])) isVideo = false;
-      console.log('VideoSource', args, { backend, driverId, isVideo });
+      //console.log('VideoSource', args, { backend, driverId, isVideo });
 
       if(isVideo) {
         if(typeof device == 'string' && isVideoPath(device)) {
@@ -214,7 +214,7 @@ export class VideoSource {
   }
 
   capture(device, driverId) {
-    console.log('VideoSource.capture', { device, driverId });
+    //console.log('VideoSource.capture', { device, driverId });
     let cap = new VideoCapture(device, driverId);
     this.cap = cap;
 
