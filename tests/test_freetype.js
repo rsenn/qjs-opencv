@@ -127,12 +127,16 @@ function main(...argv) {
 
     let a = [...binary(box)].map(n => !!n);
 
-    let contour = new cv.Contour([...binary(box).entries()].filter(([coord, entry]) => entry != 0).map(p => new cv.Point(...p)));
+    let contour = new cv.Contour(
+      [...binary(box).entries()].filter(([coord, entry]) => entry != 0).map(p => new cv.Point(...p))
+    );
 
     console.log('contour.boundingRect', contour.boundingRect);
     //console.log('contour',[...contour]);
 
-    let pointList = [...binary(box).entries()].filter(([coord, entry]) => entry != 0).map(([coord, entry]) => new cv.Point(...coord));
+    let pointList = [...binary(box).entries()]
+      .filter(([coord, entry]) => entry != 0)
+      .map(([coord, entry]) => new cv.Point(...coord));
     //console.log('pointList',  (pointList));
     console.log('PointReducer(pointList)', PointReducer(pointList));
 

@@ -55,7 +55,8 @@ function main(...args) {
   const randCoord = () => new cv.Point(randInt(size.width - 100) + 100, randInt(size.height));
   const randLine = () => new cv.Line(...randCoord(), ...randCoord());
 
-  const dumpPalette = (palette, fmt = hexColor) => [...palette].map((c, i) => i + ' ' + colorize(fmt(...c), c)).join(', ');
+  const dumpPalette = (palette, fmt = hexColor) =>
+    [...palette].map((c, i) => i + ' ' + colorize(fmt(...c), c)).join(', ');
 
   cv.cvtColor(hsv_pal, bgr_pal, cv.COLOR_HSV2BGR);
 

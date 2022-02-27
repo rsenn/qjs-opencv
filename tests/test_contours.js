@@ -48,7 +48,11 @@ function main(...args) {
       lpoly.length,
       lpoly.map(({ x1, y1, x2, y2 }) => `${x1},${y1}|${x2},${y2}`)
     );
-    console.log('lpoly angles', lpoly.length, (angles = lpoly.map(l => Math.floor((l.angle * 180) / Math.PI)).map(a => a % 90)));
+    console.log(
+      'lpoly angles',
+      lpoly.length,
+      (angles = lpoly.map(l => Math.floor((l.angle * 180) / Math.PI)).map(a => a % 90))
+    );
     console.log(
       'lpoly slopes',
       lpoly.length,

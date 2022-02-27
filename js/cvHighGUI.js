@@ -1,41 +1,4 @@
-import {
-  selectROI,
-  Size,
-  Point,
-  Draw,
-  FILLED,
-  FONT_HERSHEY_PLAIN,
-  getScreenResolution,
-  getWindowImageRect,
-  getWindowProperty,
-  imshow,
-  LINE_AA,
-  moveWindow,
-  namedWindow,
-  resizeWindow,
-  setMouseCallback,
-  setWindowProperty,
-  setWindowTitle,
-  WINDOW_NORMAL,
-  EVENT_MOUSEMOVE,
-  EVENT_LBUTTONDOWN,
-  EVENT_RBUTTONDOWN,
-  EVENT_MBUTTONDOWN,
-  EVENT_LBUTTONUP,
-  EVENT_RBUTTONUP,
-  EVENT_MBUTTONUP,
-  EVENT_LBUTTONDBLCLK,
-  EVENT_RBUTTONDBLCLK,
-  EVENT_MBUTTONDBLCLK,
-  EVENT_MOUSEWHEEL,
-  EVENT_MOUSEHWHEEL,
-  EVENT_FLAG_LBUTTON,
-  EVENT_FLAG_RBUTTON,
-  EVENT_FLAG_MBUTTON,
-  EVENT_FLAG_CTRLKEY,
-  EVENT_FLAG_SHIFTKEY,
-  EVENT_FLAG_ALTKEY
-} from 'opencv';
+import { selectROI, Size, Point, Draw, FILLED, FONT_HERSHEY_PLAIN, getScreenResolution, getWindowImageRect, getWindowProperty, imshow, LINE_AA, moveWindow, namedWindow, resizeWindow, setMouseCallback, setWindowProperty, setWindowTitle, WINDOW_NORMAL, EVENT_MOUSEMOVE, EVENT_LBUTTONDOWN, EVENT_RBUTTONDOWN, EVENT_MBUTTONDOWN, EVENT_LBUTTONUP, EVENT_RBUTTONUP, EVENT_MBUTTONUP, EVENT_LBUTTONDBLCLK, EVENT_RBUTTONDBLCLK, EVENT_MBUTTONDBLCLK, EVENT_MOUSEWHEEL, EVENT_MOUSEHWHEEL, EVENT_FLAG_LBUTTON, EVENT_FLAG_RBUTTON, EVENT_FLAG_MBUTTON, EVENT_FLAG_CTRLKEY, EVENT_FLAG_SHIFTKEY, EVENT_FLAG_ALTKEY } from 'opencv';
 import { BitsToNames } from './cvUtils.js';
 
 export const MouseEvents = {
