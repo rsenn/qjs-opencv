@@ -615,7 +615,7 @@ const JSCFunctionListEntry js_rect_proto_funcs[] = {
     JS_CGETSET_MAGIC_DEF("y1", js_rect_get, js_rect_set, PROP_Y1),
     JS_CGETSET_MAGIC_DEF("x2", js_rect_get, js_rect_set, PROP_X2),
     JS_CGETSET_MAGIC_DEF("y2", js_rect_get, js_rect_set, PROP_Y2),
-    JS_CGETSET_MAGIC_DEF("point", js_rect_get, js_rect_set, PROP_POS),
+    JS_CGETSET_MAGIC_DEF("position", js_rect_get, js_rect_set, PROP_POS),
     JS_CGETSET_MAGIC_DEF("size", js_rect_get, js_rect_set, PROP_SIZE),
     JS_CGETSET_MAGIC_DEF("tl", js_rect_get, 0, PROP_TOPLEFT),
     JS_CGETSET_MAGIC_DEF("br", js_rect_get, 0, PROP_BOTTOM_RIGHT),
