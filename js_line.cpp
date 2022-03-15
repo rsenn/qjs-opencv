@@ -30,6 +30,16 @@ js_line_data(JSValueConst val) {
 }
 }
 
+VISIBLE JSValue
+js_line_wrap(JSContext* ctx, const JSLineData<double>& line) {
+  return js_line_new(ctx, line.x1, line.y1, line.x2, line.y2);
+}
+
+VISIBLE JSValue
+js_line_wrap(JSContext* ctx, const JSLineData<int>& line) {
+  return js_line_new(ctx, line.x1, line.y1, line.x2, line.y2);
+}
+
 extern "C" {
 VISIBLE JSValue
 js_line_new(JSContext* ctx, double x1, double y1, double x2, double y2) {
@@ -317,16 +327,49 @@ js_line_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
       break;
     }
     case METHOD_INTERSECT: {
-      std::array<double, 4> arg = js_line_get<double>(ctx, argv[0]);
-      JSPointData<double>* point = nullptr;
+      JSLineData<double>* lptr;
 
-      if(argc > 1)
-        point = js_point_data2(ctx, argv[1]);
+      lptr = js_line_data(argv[0]);
 
-      Line<double> line /*= Line*/ (ln->array);
-      Line<double> other /*= Line*/ (arg);
+      if(!lptr && js_is_array_like(ctx, argv[0])) {
+        std::vector<std::array<double, 4> /*cv::Vec4d*/> arr;
+        std::vector<BOOL> results;
+        uint32_t i, n = js_array_length(ctx, argv[0]);
 
-      ret = JS_NewBool(ctx, line.intersect(other, point));
+        arr.resize(n);
+        results.resize(n);
+
+        for(i = 0; i < n; i++) {
+          JSValue item = JS_GetPropertyUint32(ctx, argv[0], i);
+          Line<double>* ln2 = reinterpret_cast<Line<double>*>(&arr[i]);
+
+          js_array_to(ctx, item, arr[i] /**reinterpret_cast<std::array<double, 4>*>(&arr[i])*/);
+
+          results[i] = ln2->intersect(*reinterpret_cast<Line<double>*>(ln));
+        }
+        ret = js_array_from(ctx, results);
+
+      } else {
+        std::array<double, 4> arg = js_line_get<double>(ctx, argv[0]);
+        JSPointData<double> point, *pptr;
+        BOOL result;
+
+        Line<double> line(ln->array);
+        Line<double> other(arg);
+
+        result = line.intersect(other, &point);
+        ret = JS_NewBool(ctx, result);
+
+        if(argc > 1 && result) {
+          if((pptr = js_point_data(argv[1])))
+            *pptr = point;
+          else if(js_is_array(ctx, argv[1]))
+            js_array_copy(ctx, argv[1], reinterpret_cast<double*>(&point), reinterpret_cast<double*>(&point) + 2);
+          else
+            return JS_ThrowTypeError(ctx, "argument 2 type must be cv.Point or Array");
+        }
+      }
+
       break;
     }
     case METHOD_ENDPOINT_DISTANCES: {

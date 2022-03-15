@@ -35,6 +35,8 @@
 #include <opencv2/imgproc.hpp>
 #include <string>
 #include <vector>
+#include "lsd_opencv.hpp"
+#include "trace_skeleton.hpp"
 
 enum { HIER_NEXT = 0, HIER_PREV, HIER_CHILD, HIER_PARENT };
 
@@ -783,6 +785,70 @@ js_cv_pixel_find_value(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
   output = pixel_find_value(*src, value);
 
   return js_array_from(ctx, output);
+}
+
+static JSValue
+js_cv_lsd(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+  std::vector<cv::Vec4i> lines;
+  // JSInputOutputArray lines;
+  std::vector<double> width, prec, nfa;
+  JSInputArray src = js_umat_or_mat(ctx, argv[0]);
+
+  if(src.empty())
+    return JS_ThrowInternalError(ctx, "argument 1 must be Mat or UMat");
+
+  // lines = js_cv_inputoutputarray(ctx, argv[1]);
+
+  cv::Ptr<cv::LSD> ls = cv::createLSDPtr(::LSD_REFINE_ADV);
+
+  ls->detect(src, lines, width, prec, nfa);
+
+  if(!js_is_array(ctx, argv[1]))
+    return JS_ThrowTypeError(ctx, "argument 2 must be line array");
+
+  js_array_copy(ctx, argv[1], reinterpret_cast<JSLineData<int>*>(lines.data()), reinterpret_cast<JSLineData<int>*>(lines.data() + lines.size()));
+
+  if(argc >= 3) {
+    if(!js_is_array(ctx, argv[2]))
+      return JS_ThrowTypeError(ctx, "argument 3 must be array");
+    js_array_copy(ctx, argv[2], width);
+
+    if(argc >= 4) {
+      if(!js_is_array(ctx, argv[3]))
+        return JS_ThrowTypeError(ctx, "argument 4 must be array");
+      js_array_copy(ctx, argv[3], prec);
+
+      if(argc >= 5) {
+        if(!js_is_array(ctx, argv[4]))
+          return JS_ThrowTypeError(ctx, "argument 5 must be array");
+        js_array_copy(ctx, argv[4], nfa);
+      }
+    }
+  }
+
+  return JS_UNDEFINED;
+}
+
+static JSValue
+js_cv_trace_skeleton(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+  JSContoursData<double> contours;
+  JSInputArray src = js_umat_or_mat(ctx, argv[0]);
+
+  if(src.empty())
+    return JS_ThrowInternalError(ctx, "argument 1 must be Mat or UMat");
+
+  trace_skeleton(src.getMat(), contours);
+
+  if(argc >= 2) {
+    if(!js_is_array(ctx, argv[1]))
+      return JS_ThrowTypeError(ctx, "argument 2 must be array");
+
+    js_array_copy(ctx, argv[1], contours);
+
+    return JS_UNDEFINED;
+  }
+
+  return js_array_from(ctx, contours);
 }
 
 static JSValue
@@ -1809,6 +1875,8 @@ js_function_list_t js_imgproc_static_funcs{
     JS_CFUNC_MAGIC_DEF("pixelNeighborhood", 2, js_cv_pixel_neighborhood, 0),
     JS_CFUNC_MAGIC_DEF("pixelNeighborhoodCross", 2, js_cv_pixel_neighborhood, 1),
     JS_CFUNC_DEF("pixelFindValue", 2, js_cv_pixel_find_value),
+    JS_CFUNC_DEF("lineSegmentDetector", 2, js_cv_lsd),
+    JS_CFUNC_DEF("traceSkeleton", 1, js_cv_trace_skeleton),
     JS_CFUNC_DEF("paletteGenerate", 1, js_cv_palette_generate),
     JS_CFUNC_DEF("paletteApply", 2, js_cv_palette_apply),
     JS_CFUNC_DEF("paletteMatch", 3, js_cv_palette_match),

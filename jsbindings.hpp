@@ -2,6 +2,7 @@
 #define JSBINDINGS_HPP
 
 #include "util.hpp"
+#include "line.hpp"
 #include <cutils.h>
 #include <quickjs.h>
 #include <array>
@@ -778,6 +779,24 @@ js_value_to(JSContext* ctx, JSValueConst value, std::string& out) {
   return 1;
 }
 
+template<class T, int N>
+static inline int
+js_value_to(JSContext* ctx, JSValueConst value, cv::Vec<T, N>& in) {
+  return js_array_to(ctx, value, in);
+}
+
+template<class T>
+static inline int
+js_value_to(JSContext* ctx, JSValueConst value, std::vector<T>& in) {
+  return js_array_to(ctx, value, in);
+}
+
+template<class T>
+static inline int
+js_value_to(JSContext* ctx, JSValueConst value, Line<T>& in) {
+  return js_array_to(ctx, value, reinterpret_cast<std::array<T, 4>*>(&in));
+}
+
 template<class T, typename std::enable_if<std::is_integral<T>::value || std::is_floating_point<T>::value, T>::type* = nullptr>
 static inline JSValue
 js_value_from(JSContext* ctx, const T& in) {
@@ -797,6 +816,12 @@ js_value_from(JSContext* ctx, const std::string& in) {
 template<class T, int N>
 static inline JSValue
 js_value_from(JSContext* ctx, const cv::Vec<T, N>& in) {
+  return js_array_from(ctx, begin(in), end(in));
+}
+
+template<class T>
+static inline JSValue
+js_value_from(JSContext* ctx, const std::vector<T>& in) {
   return js_array_from(ctx, begin(in), end(in));
 }
 

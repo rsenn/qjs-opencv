@@ -159,4 +159,10 @@ js_line_set(JSContext* ctx, JSValue out, T x1, T y1, T x2, T y2) {
 
 extern "C" int js_line_init(JSContext*, JSModuleDef*);
 
+VISIBLE JSValue js_line_wrap(JSContext* ctx, const JSLineData<double>& line);
+VISIBLE JSValue js_line_wrap(JSContext* ctx, const JSLineData<int>& line);
+
+VISIBLE JSLineData<double>* js_line_data(JSValueConst val);
+VISIBLE JSLineData<double>* js_line_data2(JSContext*, JSValueConst val);
+
 #endif /* defined(JS_LINE_HPP) */

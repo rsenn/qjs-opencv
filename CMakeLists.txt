@@ -83,7 +83,7 @@ find_opencv()
 #set(CMAKE_INSTALL_RPATH "${OPENCV_LIB_DIR}" CACHE PATH "Build with install rpath" FORCE)
 set(CMAKE_INSTALL_RPATH "${OPENCV_LIBDIR}")
 
-include_directories(${OPENCV_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${OPENCV_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}  lsd/include)
 
 include(CheckIncludeFileCXX)
 
@@ -155,7 +155,7 @@ option(QUICKJS_MODULES "Build .so modules for quickjs" ON)
 
 option(BUILD_QUICKJS "Build QuickJS" ON)
 
-file(GLOB OPENCV_SOURCES *.hpp *.cpp gifenc/gifenc.c dominant_colors_grabber.cpp)
+file(GLOB OPENCV_SOURCES *.hpp *.cpp gifenc/gifenc.c dominant_colors_grabber.cpp lsd/src/*.cpp)
 # dump(OPENCV_SOURCES)
 
 #dump(QUICKJS_MODULE_CFLAGS F_PIC)
