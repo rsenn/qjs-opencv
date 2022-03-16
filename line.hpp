@@ -378,14 +378,6 @@ operator<<(std::ostream& os, const typename line_list<Value>::type& c) {
   return os;
 }
 
-/*
-template<class T>
-inline std::ostream&
-operator<<(std::ostream& os, const cv::Point_<T>& p) {
-  os << "{x:" << p.x << ",y:" << p.y << "}";
-  return os;
-}*/
-
 template<class ContainerT>
 
 typename ContainerT::iterator

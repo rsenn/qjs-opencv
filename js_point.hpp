@@ -140,4 +140,30 @@ js_is_point(JSContext* ctx, JSValueConst point) {
 
 extern "C" int js_point_init(JSContext*, JSModuleDef*);
 
+template<class T>
+inline std::ostream&
+operator<<(std::ostream& os, const cv::Point_<T>& p) {
+  os << p.x << "," << p.y;
+  return os;
+}
+
+template<class T>
+inline bool
+point_parse(std::istream& is, cv::Point_<T>& p) {
+  is >> std::skipws >> p.x;
+  if(is.peek() == ',') {
+    is.get();
+    is >> std::skipws >> p.y;
+    return true;
+  }
+  return false;
+}
+
+template<class T>
+inline std::istream&
+operator>>(std::istream& is, cv::Point_<T>& p) {
+  point_parse(is, p);
+  return is;
+}
+
 #endif /* defined(JS_POINT_HPP) */

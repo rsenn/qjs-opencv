@@ -906,6 +906,33 @@ js_contour_tostring(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   if(!(s = js_contour_data2(ctx, this_val)))
     return JS_EXCEPTION;
 
+  std::for_each(s->begin(), s->end(), [&i, &os, flags, prec](const JSPointData<double>& point) {
+    if(i > 0)
+      os << ' ';
+
+    os << std::setprecision(prec) << point.x << "," << point.y;
+
+    i++;
+  });
+
+  return JS_NewString(ctx, os.str().c_str());
+}
+
+/**
+ * @brief      cv.Contour.prototype.toSource
+ * @return     String
+ */
+static JSValue
+js_contour_tosource(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+  JSContourData<double>* s;
+  std::ostringstream os;
+  int i = 0;
+  int prec = 9;
+  int32_t flags;
+
+  if(!(s = js_contour_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
   if(magic == 1 && !(flags & 0x100))
     os << "new Contour(";
 
@@ -964,6 +991,29 @@ js_contour_rect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
   points.push_back(JSPointData<double>(s.x, s.y));
 
   ret = js_contour_new(ctx, points);
+  return ret;
+}
+
+static JSValue
+js_contour_fromstr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+  JSValue ret = JS_UNDEFINED;
+  const char* str;
+  JSContourData<double> points;
+
+  str = JS_ToCString(ctx, argv[0]);
+
+  std::istringstream is(str);
+
+  while(!is.eof()) {
+    JSPointData<double> pt;
+    if(!point_parse(is, pt))
+      break;
+
+    points.push_back(pt);
+  }
+
+  if(points.size())
+    ret = js_contour_new(ctx, points);
   return ret;
 }
 
@@ -1087,16 +1137,16 @@ js_contour_get_own_property(JSContext* ctx, JSPropertyDescriptor* pdesc, JSValue
       }
       return TRUE;
     }
-  }else if(js_atom_is_length(ctx, prop)) {
+  } else if(js_atom_is_length(ctx, prop)) {
     value = JS_NewUint32(ctx, contour->size());
 
-       if(pdesc) {
-        pdesc->flags = JS_PROP_CONFIGURABLE;
-        pdesc->value = value;
-        pdesc->getter = JS_UNDEFINED;
-        pdesc->setter = JS_UNDEFINED;
-      }
-      return TRUE;
+    if(pdesc) {
+      pdesc->flags = JS_PROP_CONFIGURABLE;
+      pdesc->value = value;
+      pdesc->getter = JS_UNDEFINED;
+      pdesc->setter = JS_UNDEFINED;
+    }
+    return TRUE;
   }
 
   return FALSE;
@@ -1265,7 +1315,7 @@ const JSCFunctionListEntry js_contour_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("simplifyPerpendicularDistance", 0, js_contour_psimpl, SIMPLIFY_PERPENDICULAR_DISTANCE),
     JS_CFUNC_DEF("toArray", 0, js_contour_toarray),
     JS_CFUNC_MAGIC_DEF("toString", 0, js_contour_tostring, 0),
-    JS_CFUNC_MAGIC_DEF("toSource", 0, js_contour_tostring, 1),
+    JS_CFUNC_MAGIC_DEF("toSource", 0, js_contour_tosource, 1),
     JS_CFUNC_MAGIC_DEF("lines", 0, js_contour_iterator, NEXT_LINE),
     JS_CFUNC_MAGIC_DEF("points", 0, js_contour_iterator, NEXT_POINT),
     JS_ALIAS_DEF("[Symbol.iterator]", "points"),
@@ -1275,6 +1325,7 @@ const JSCFunctionListEntry js_contour_proto_funcs[] = {
 };
 const JSCFunctionListEntry js_contour_static_funcs[] = {
     JS_CFUNC_DEF("fromRect", 1, js_contour_rect),
+    JS_CFUNC_DEF("fromString", 1, js_contour_fromstr),
     JS_PROP_INT32_DEF("FORMAT_XY", 0x00, 0),
     JS_PROP_INT32_DEF("FORMAT_01", 0x02, 0),
     JS_PROP_INT32_DEF("FORMAT_SPACE", 0x10, 0),

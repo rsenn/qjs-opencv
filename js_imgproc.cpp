@@ -682,7 +682,7 @@ js_cv_draw_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   JSInputOutputArray mat;
   JSContoursData<int> contours;
   JSColorData<double> color;
-  int32_t contourIdx = -1, thickness = 1, lineType = cv::LINE_8;
+  int32_t index = -1, thickness = 1, lineType = cv::LINE_8;
 
   mat = js_umat_or_mat(ctx, argv[0]);
 
@@ -694,7 +694,7 @@ js_cv_draw_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 
   js_array_to(ctx, argv[1], contours);
 
-  JS_ToInt32(ctx, &contourIdx, argv[2]);
+  JS_ToInt32(ctx, &index, argv[2]);
 
   js_color_read(ctx, argv[3], &color);
 
@@ -704,7 +704,16 @@ js_cv_draw_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   if(argc > 5)
     JS_ToInt32(ctx, &lineType, argv[5]);
 
-  cv::drawContours(mat, contours, contourIdx, js_to_scalar(color), thickness, lineType);
+  cv::Scalar scalar = js_to_scalar(color);
+
+  if(mat.isMat()) {
+    cv::Mat& mref = mat.getMatRef();
+
+    cv::drawContours(mref, contours, index, scalar, thickness, lineType);
+  } else {
+    cv::drawContours(mat, contours, index, scalar, thickness, lineType);
+  }
+
   return JS_UNDEFINED;
 }
 
@@ -1863,7 +1872,7 @@ js_function_list_t js_imgproc_static_funcs{
     JS_CFUNC_DEF("threshold", 5, js_cv_threshold),
     JS_CFUNC_DEF("bilateralFilter", 5, js_cv_bilateral_filter),
     JS_CFUNC_DEF("findContours", 1, js_cv_find_contours),
-    JS_CFUNC_DEF("drawContours", 4, js_cv_draw_contours),
+    // JS_CFUNC_DEF("drawContours", 4, js_cv_draw_contours),
     JS_CFUNC_DEF("pointPolygonTest", 2, js_cv_point_polygon_test),
     JS_CFUNC_DEF("cornerHarris", 5, js_cv_corner_harris),
     JS_CFUNC_DEF("calcHist", 8, js_cv_calc_hist),

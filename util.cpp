@@ -74,3 +74,30 @@ operator<<(std::ostream& s, const JSCFunctionListEntry& entry) {
   s << "flags = " << js_prop_flags(entry.prop_flags) << std::endl;
   return s;
 }
+
+JSMatDimensions
+mat_dimensions(const cv::Mat& mat) {
+  JSMatDimensions ret;
+  ret.rows = mat.rows;
+  ret.cols = mat.cols;
+  return ret;
+}
+
+JSMatDimensions
+mat_dimensions(const cv::UMat& mat) {
+  JSMatDimensions ret;
+  ret.rows = mat.rows;
+  ret.cols = mat.cols;
+  return ret;
+}
+
+/* clang-format off */
+int mat_depth(const cv::Mat& mat) { return mattype_depth(mat.type()); }
+int mat_channels(const cv::Mat& mat) { return mattype_channels(mat.type()); }
+bool mat_signed(const cv::Mat& mat) { return mattype_signed(mat.type()); }
+bool mat_floating(const cv::Mat& mat) { return mattype_floating(mat.type()); }
+int mat_depth(const cv::UMat& mat) { return mattype_depth(mat.type()); }
+int mat_channels(const cv::UMat& mat) { return mattype_channels(mat.type()); }
+bool mat_signed(const cv::UMat& mat) { return mattype_signed(mat.type()); }
+bool mat_floating(const cv::UMat& mat) { return mattype_floating(mat.type()); }
+/* clang-format on */

@@ -50,7 +50,7 @@ js_draw_circle(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
   JSColorData<double> color;
   bool antialias = true;
   int thickness = -1;
-  int lineType = cv::LINE_AA;
+  int line_type = cv::LINE_AA;
 
   if(argc > i) {
     if(!js_is_noarray((dst = js_umat_or_mat(ctx, argv[i]))))
@@ -82,14 +82,14 @@ js_draw_circle(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
   if(argc > i) {
     if(JS_IsBool(argv[i])) {
       js_value_to(ctx, argv[i++], antialias);
-      lineType = antialias ? cv::LINE_AA : cv::LINE_8;
+      line_type = antialias ? cv::LINE_AA : cv::LINE_8;
 
     } else if(JS_IsNumber(argv[i])) {
-      js_value_to(ctx, argv[i++], lineType);
+      js_value_to(ctx, argv[i++], line_type);
     }
   }
 
-  cv::circle(dst, point, radius, js_to_scalar(color), thickness < 0 ? cv::FILLED : thickness, lineType);
+  cv::circle(dst, point, radius, js_to_scalar(color), thickness < 0 ? cv::FILLED : thickness, line_type);
   return JS_UNDEFINED;
 }
 
@@ -99,11 +99,11 @@ js_draw_ellipse(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
   int i = 0, ret = -1;
   JSPointData<double> center;
   JSSizeData<double> axes;
-  double angle = 0, startAngle = 0, endAngle = 0;
+  double angle = 0, start_angle = 0, end_angle = 0;
   JSColorData<double> color;
   bool antialias = true;
   int thickness = -1;
-  int lineType = cv::LINE_AA;
+  int line_type = cv::LINE_AA;
 
   if(argc > i) {
     if(!js_is_noarray((dst = js_umat_or_mat(ctx, argv[i]))))
@@ -138,9 +138,9 @@ js_draw_ellipse(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
   if(argc > i)
     js_value_to(ctx, argv[i++], angle);
   if(argc > i)
-    js_value_to(ctx, argv[i++], startAngle);
+    js_value_to(ctx, argv[i++], start_angle);
   if(argc > i)
-    js_value_to(ctx, argv[i++], endAngle);
+    js_value_to(ctx, argv[i++], end_angle);
   if(argc > i)
     js_color_read(ctx, argv[i++], &color);
   if(argc > i)
@@ -148,13 +148,13 @@ js_draw_ellipse(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
   if(argc > i) {
     if(JS_IsBool(argv[i])) {
       js_value_to(ctx, argv[i++], antialias);
-      lineType = antialias ? cv::LINE_AA : cv::LINE_8;
+      line_type = antialias ? cv::LINE_AA : cv::LINE_8;
     } else if(JS_IsNumber(argv[i])) {
-      js_value_to(ctx, argv[i++], lineType);
+      js_value_to(ctx, argv[i++], line_type);
     }
   }
 
-  cv::ellipse(dst, center, axes, angle, startAngle, endAngle, js_to_scalar(color), thickness < 0 ? cv::FILLED : thickness, lineType);
+  cv::ellipse(dst, center, axes, angle, start_angle, end_angle, js_to_scalar(color), thickness < 0 ? cv::FILLED : thickness, line_type);
 
   return JS_UNDEFINED;
 }
@@ -164,7 +164,7 @@ js_draw_contour(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
   JSInputOutputArray dst;
   int i = 0, ret = -1;
   JSContoursData<int> contours;
-  int32_t contourIdx = -1, lineType = cv::LINE_8;
+  int32_t index = -1, line_type = cv::LINE_8;
 
   JSColorData<double> color;
   int thickness = 1;
@@ -183,17 +183,17 @@ js_draw_contour(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
     return JS_EXCEPTION;
 
   if(argc > i)
-    JS_ToInt32(ctx, &contourIdx, argv[i]);
+    JS_ToInt32(ctx, &index, argv[i]);
   if(argc > i)
     js_color_read(ctx, argv[i++], &color);
   if(argc > i)
     js_value_to(ctx, argv[i++], thickness);
   if(argc > i)
-    JS_ToInt32(ctx, &lineType, argv[i]);
+    JS_ToInt32(ctx, &line_type, argv[i]);
 
-  std::cerr << "draw_contour() contours.length=" << contours.size() << " contourIdx=" << contourIdx << " thickness=" << thickness << std::endl;
+  std::cerr << "draw_contour() contours.length=" << contours.size() << " index=" << index << " thickness=" << thickness << std::endl;
 
-  cv::drawContours(dst, contours, contourIdx, js_to_scalar(color), thickness, lineType);
+  cv::drawContours(dst, contours, index, js_to_scalar(color), thickness, line_type);
 
   std::cerr << "draw_contour() ret:" << ret << " color: " << js_to_scalar(color) << std::endl;
   return JS_UNDEFINED;
@@ -204,7 +204,7 @@ js_draw_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* 
   JSInputOutputArray dst;
   int i = 0, ret = -1;
   JSContoursData<int> contours;
-  int32_t contourIdx = -1, lineType = cv::LINE_8;
+  int32_t index = -1, line_type = cv::LINE_8;
   JSColorData<double> color;
   JSPointData<int> offset{0, 0};
   std::vector<cv::Vec4i> hier;
@@ -215,14 +215,21 @@ js_draw_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* 
     return JS_EXCEPTION;
 
   js_array_to(ctx, argv[1], contours);
+  js_value_to(ctx, argv[2], index);
 
-  js_value_to(ctx, argv[2], contourIdx);
+  if(index >= 0 && index < contours.size()) {
+    std::cerr << "contour #" << (index + 1) << ": " << contours[index].size() << std::endl;
+  } else {
+    for(size_t m = 0; m < contours.size(); ++m) {
+      std::cerr << "contour #" << (m + 1) << "/" << (contours.size() - 1) << ": " << contours[m].size() << std::endl;
+    }
+  }
 
   js_color_read(ctx, argv[3], &color);
   if(argc > 4) {
     js_value_to(ctx, argv[4], thickness);
     if(argc > 5) {
-      js_value_to(ctx, argv[5], lineType);
+      js_value_to(ctx, argv[5], line_type);
       if(argc > 6) {
         js_array_to(ctx, argv[6], hier);
         if(argc > 7) {
@@ -234,12 +241,20 @@ js_draw_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* 
     }
   }
 
-  // std::cerr << "draw_contours() contours.length=" << contours.size() << " contourIdx=" <<
-  // contourIdx << " thickness="
+  cv::Scalar scalar = js_to_scalar(color);
+  // std::cerr << "draw_contours() contours.length=" << contours.size() << " index=" <<
+  // index << " thickness="
   // << thickness << std::endl;
 
-  cv::drawContours(dst, contours, contourIdx, js_to_scalar(color), thickness, lineType, argc > 6 ? JSInputOutputArray(hier) : cv::noArray(), maxLevel, offset);
-
+  if(dst.isMat()) {
+    cv::Mat& mref = dst.getMatRef();
+    cv::drawContours(mref, contours, index, scalar, thickness, line_type, argc > 6 ? JSInputOutputArray(hier) : cv::noArray(), maxLevel, offset);
+  } else if(dst.isUMat()) {
+    cv::UMat& umref = dst.getUMatRef();
+    cv::drawContours(umref, contours, index, scalar, thickness, line_type, argc > 6 ? JSInputOutputArray(hier) : cv::noArray(), maxLevel, offset);
+  } else {
+    cv::drawContours(dst, contours, index, scalar, thickness, line_type, argc > 6 ? JSInputOutputArray(hier) : cv::noArray(), maxLevel, offset);
+  }
   // std::cerr << "draw_contours() ret:" << ret << " color: " <<
   // js_to_scalar(color) << std::endl;
 
@@ -340,13 +355,13 @@ js_draw_polygon(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
 
   if(dptr != nullptr) {
     const int size = points.size();
-    int lineType = antialias ? cv::LINE_AA : cv::LINE_8;
+    int line_type = antialias ? cv::LINE_AA : cv::LINE_8;
     const JSPointData<int>* pts = points.data();
 
     std::cerr << "drawPolygon() points: " << (points) << " color: " << to_string(color) << std::endl;
 
     // cv::fillPoly(*dptr, points, color, antialias ? cv::LINE_AA : cv::LINE_8);
-    (thickness <= 0 ? cv::fillPoly(dst, &pts, &size, 1, color, lineType) : cv::polylines(dst, &pts, &size, 1, true, color, thickness, lineType));
+    (thickness <= 0 ? cv::fillPoly(dst, &pts, &size, 1, color, line_type) : cv::polylines(dst, &pts, &size, 1, true, color, thickness, line_type));
 
     return JS_UNDEFINED;
   }
@@ -359,8 +374,8 @@ js_draw_polylines(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
   int i = 0, ret = -1;
   JSContoursData<int> points;
   JSColorData<double> color = {0, 0, 0};
-  bool isClosed = false;
-  int32_t thickness = -1, lineType = cv::LINE_AA;
+  bool is_closed = false;
+  int32_t thickness = -1, line_type = cv::LINE_AA;
 
   if(argc > i) {
     if(!js_is_noarray((dst = js_umat_or_mat(ctx, argv[i]))))
@@ -372,26 +387,25 @@ js_draw_polylines(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
     js_array_to(ctx, argv[i++], points);
 
   if(argc > i)
-    isClosed = JS_ToBool(ctx, argv[i++]);
+    is_closed = JS_ToBool(ctx, argv[i++]);
 
   if(argc > i)
     js_array_to(ctx, argv[i++], color.arr);
-  //    js_color_read(ctx, argv[i++], &color);
 
   if(argc > i)
     JS_ToInt32(ctx, &thickness, argv[i++]);
 
   if(argc > i) {
     if(JS_IsBool(argv[i]))
-      lineType = JS_ToBool(ctx, argv[i++]) ? cv::LINE_AA : cv::LINE_8;
+      line_type = JS_ToBool(ctx, argv[i++]) ? cv::LINE_AA : cv::LINE_8;
     else
-      JS_ToInt32(ctx, &lineType, argv[i++]);
+      JS_ToInt32(ctx, &line_type, argv[i++]);
   }
 
-  std::cerr << "polylines()" /* << " points: " << points*/
-            << " isClosed: " << isClosed << " color: " << /*to_string*/ (color) << " thickness: " << thickness << " lineType: " << lineType << std::endl;
+  // std::cerr << "polylines()" << " is_closed: " << is_closed << " color: " <<  (color) << " thickness: " << thickness << " line_type: " << line_type <<
+  // std::endl;
 
-  cv::polylines(dst, /*&pts, &size, 1,*/ points, isClosed, *reinterpret_cast<cv::Scalar const*>(&color), thickness, lineType);
+  cv::polylines(dst, points, is_closed, *reinterpret_cast<cv::Scalar const*>(&color), thickness, line_type);
 
   return JS_UNDEFINED;
 }
@@ -404,7 +418,7 @@ js_draw_rectangle(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
   JSPointData<double> points[2];
   JSColorData<uint8_t> color;
   cv::Scalar scalar;
-  int32_t thickness = 1, lineType = cv::LINE_AA;
+  int32_t thickness = 1, line_type = cv::LINE_AA;
 
   if(argc > i) {
     if(!js_is_noarray((dst = js_umat_or_mat(ctx, argv[i]))))
@@ -443,9 +457,9 @@ js_draw_rectangle(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
 
   if(argc > i) {
     if(JS_IsBool(argv[i]))
-      lineType = JS_ToBool(ctx, argv[i++]) ? cv::LINE_AA : cv::LINE_8;
+      line_type = JS_ToBool(ctx, argv[i++]) ? cv::LINE_AA : cv::LINE_8;
     else
-      JS_ToInt32(ctx, &lineType, argv[i++]);
+      JS_ToInt32(ctx, &line_type, argv[i++]);
   }
 
   points[0].x = rect.x;
@@ -454,7 +468,7 @@ js_draw_rectangle(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
   points[1].y = rect.y + rect.height;
 
   // printf("cv::rectangle %lf,%lf %lfx%lf [%.0lf,%.0lf,%.0lf,%.0lf]\n", rect.x, rect.y, rect.width, rect.height, scalar[0], scalar[1], scalar[2], scalar[3]);
-  cv::rectangle(dst, points[0], points[1], scalar, thickness, lineType);
+  cv::rectangle(dst, points[0], points[1], scalar, thickness, line_type);
 
   return JS_UNDEFINED;
 }
@@ -463,19 +477,19 @@ static JSValue
 js_draw_keypoints(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   int i = 0, ret = -1;
   std::vector<JSKeyPointData> keypoints;
-  JSInputOutputArray image, outImage;
+  JSInputOutputArray image, dst;
   JSColorData<double> color = {-1, -1, -1, -1};
   cv::Scalar scalar = cv::Scalar::all(-1);
 
   image = js_umat_or_mat(ctx, argv[0]);
-  outImage = js_umat_or_mat(ctx, argv[2]);
+  dst = js_umat_or_mat(ctx, argv[2]);
 
   js_array_to(ctx, argv[1], keypoints);
 
   if(argc)
     js_color_read(ctx, argv[3], &color);
 
-  cv::drawKeypoints(image, keypoints, outImage, *(cv::Scalar*)&color, cv::DrawMatchesFlags(0));
+  cv::drawKeypoints(image, keypoints, dst, *(cv::Scalar*)&color, cv::DrawMatchesFlags(0));
 
   return JS_UNDEFINED;
 }
@@ -486,9 +500,9 @@ js_put_text(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv)
   int i = 0, ret = -1;
   JSColorData<double> color;
   JSPointData<double> point;
-  std::string text, fontName;
-  int32_t fontFace = cv::FONT_HERSHEY_SIMPLEX, thickness = 1, lineType = cv::LINE_AA;
-  double fontScale = 1;
+  std::string text, font_name;
+  int32_t font_face = cv::FONT_HERSHEY_SIMPLEX, thickness = 1, line_type = cv::LINE_AA;
+  double font_scale = 1;
   bool bottomLeftOrigin = false;
 
   if(argc > i && (dst = js_mat_data2(ctx, argv[i])))
@@ -515,12 +529,12 @@ js_put_text(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv)
 
   if(i < argc) {
     if(JS_IsNumber(argv[i]))
-      JS_ToInt32(ctx, &fontFace, argv[i]);
+      JS_ToInt32(ctx, &font_face, argv[i]);
     else
-      js_value_to(ctx, argv[i], fontName);
+      js_value_to(ctx, argv[i], font_name);
 
     if(++i < argc) {
-      JS_ToFloat64(ctx, &fontScale, argv[i]);
+      JS_ToFloat64(ctx, &font_scale, argv[i]);
 
       if(++i < argc) {
         js_color_read(ctx, argv[i], &color);
@@ -529,7 +543,7 @@ js_put_text(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv)
           JS_ToInt32(ctx, &thickness, argv[i]);
 
           if(++i < argc) {
-            JS_ToInt32(ctx, &lineType, argv[i]);
+            JS_ToInt32(ctx, &line_type, argv[i]);
 
             if(++i < argc)
               bottomLeftOrigin = JS_ToBool(ctx, argv[i]);
@@ -543,9 +557,9 @@ js_put_text(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv)
   if(freetype2 == nullptr)
     freetype2 = cv::freetype::createFreeType2();
 
-  if(!fontName.empty() && fontName != freetype2_face) {
+  if(!font_name.empty() && font_name != freetype2_face) {
     try {
-      freetype2->loadFontData(fontName, 0);
+      freetype2->loadFontData(font_name, 0);
     } catch(const cv::Exception& e) {
       const char *errstr = e.what(), *err2;
 
@@ -554,14 +568,14 @@ js_put_text(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv)
 
       return JS_ThrowInternalError(ctx, "freetype2 exception: %s\n", errstr);
     }
-    freetype2_face = fontName;
+    freetype2_face = font_name;
   }
 
-  if(!fontName.empty())
-    freetype2->putText(*dst, text, point, fontScale, js_to_scalar(color), thickness, lineType, bottomLeftOrigin);
+  if(!font_name.empty())
+    freetype2->putText(*dst, text, point, font_scale, js_to_scalar(color), thickness, line_type, bottomLeftOrigin);
   else
 #endif
-    cv::putText(*dst, text, point, fontFace, fontScale, js_to_scalar(color), thickness, lineType, bottomLeftOrigin);
+    cv::putText(*dst, text, point, font_face, font_scale, js_to_scalar(color), thickness, line_type, bottomLeftOrigin);
 
   return JS_UNDEFINED;
 }
@@ -571,24 +585,24 @@ js_get_text_size(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* 
   int i = 0, baseline = 0;
   JSSizeData<double> size;
   const char* text;
-  int32_t fontFace = cv::FONT_HERSHEY_SIMPLEX, thickness = 1;
-  std::string fontName;
-  double fontScale = 1;
-  JSValue baselineVal;
+  int32_t font_face = cv::FONT_HERSHEY_SIMPLEX, thickness = 1;
+  std::string font_name;
+  double font_scale = 1;
+  JSValue baseline_value;
   std::array<int32_t, 2> dim;
 
   text = JS_ToCString(ctx, argv[i++]);
 
   if(argc > i) {
     if(JS_IsNumber(argv[i]))
-      JS_ToInt32(ctx, &fontFace, argv[i]);
+      JS_ToInt32(ctx, &font_face, argv[i]);
     else
-      js_value_to(ctx, argv[i], fontName);
+      js_value_to(ctx, argv[i], font_name);
     i++;
   }
 
   if(argc > i)
-    JS_ToFloat64(ctx, &fontScale, argv[i++]);
+    JS_ToFloat64(ctx, &font_scale, argv[i++]);
 
   if(argc > i)
     JS_ToInt32(ctx, &thickness, argv[i++]);
@@ -597,25 +611,25 @@ js_get_text_size(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* 
   if(freetype2 == nullptr)
     freetype2 = cv::freetype::createFreeType2();
 
-  if(!fontName.empty() && fontName != freetype2_face) {
-    freetype2->loadFontData(fontName, 0);
-    freetype2_face = fontName;
+  if(!font_name.empty() && font_name != freetype2_face) {
+    freetype2->loadFontData(font_name, 0);
+    freetype2_face = font_name;
   }
 
-  if(!fontName.empty())
-    size = freetype2->getTextSize(text, fontScale, thickness, &baseline);
+  if(!font_name.empty())
+    size = freetype2->getTextSize(text, font_scale, thickness, &baseline);
   else
 #endif
-    size = cv::getTextSize(text, fontFace, fontScale, thickness, &baseline);
+    size = cv::getTextSize(text, font_face, font_scale, thickness, &baseline);
 
-  baselineVal = JS_NewInt32(ctx, baseline);
+  baseline_value = JS_NewInt32(ctx, baseline);
 
   if(JS_IsFunction(ctx, argv[i])) {
-    JS_Call(ctx, argv[i], JS_UNDEFINED, 1, const_cast<JSValueConst*>(&baselineVal));
+    JS_Call(ctx, argv[i], JS_UNDEFINED, 1, const_cast<JSValueConst*>(&baseline_value));
   } else if(js_is_array(ctx, argv[i])) {
-    JS_SetPropertyUint32(ctx, argv[i], 0, baselineVal);
+    JS_SetPropertyUint32(ctx, argv[i], 0, baseline_value);
   } else if(JS_IsObject(argv[i])) {
-    JS_SetPropertyStr(ctx, argv[i], "y", baselineVal);
+    JS_SetPropertyStr(ctx, argv[i], "y", baseline_value);
   }
   dim[0] = size.width;
   dim[1] = size.height;
@@ -625,43 +639,43 @@ js_get_text_size(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* 
 
 static JSValue
 js_get_font_scale_from_height(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  int32_t fontFace, pixelHeight, thickness = 1;
-  double fontScale;
+  int32_t font_face, pixel_height, thickness = 1;
+  double font_scale;
 
-  JS_ToInt32(ctx, &fontFace, argv[0]);
-  JS_ToInt32(ctx, &pixelHeight, argv[1]);
+  JS_ToInt32(ctx, &font_face, argv[0]);
+  JS_ToInt32(ctx, &pixel_height, argv[1]);
   if(argc > 2)
     JS_ToInt32(ctx, &thickness, argv[2]);
 
-  fontScale = cv::getFontScaleFromHeight(fontFace, pixelHeight, thickness);
+  font_scale = cv::getFontScaleFromHeight(font_face, pixel_height, thickness);
 
-  return JS_NewFloat64(ctx, fontScale);
+  return JS_NewFloat64(ctx, font_scale);
 }
 
 static JSValue
 js_load_font(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   int32_t id = 0;
-  std::string fontName;
+  std::string font_name;
 
 #ifdef HAVE_OPENCV_FREETYPE
   if(freetype2 == nullptr)
     freetype2 = cv::freetype::createFreeType2();
 #endif
 
-  js_value_to(ctx, argv[0], fontName);
+  js_value_to(ctx, argv[0], font_name);
   if(argc > 1)
     js_value_to(ctx, argv[1], id);
 
 #ifdef HAVE_OPENCV_FREETYPE
-  freetype2->loadFontData(fontName, id);
+  freetype2->loadFontData(font_name, id);
 #endif
   return JS_UNDEFINED;
 }
 
 static JSValue
 js_clip_line(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
-  JSSizeData<int> imgSize;
-  JSRectData<int> imgRect;
+  JSSizeData<int> img_size;
+  JSRectData<int> img_rect;
   JSLineData<double>* l;
   JSPointData<double>*a, *b;
   JSLineData<int> line = {0, 0, 0, 0};
@@ -677,10 +691,10 @@ js_clip_line(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv
     return JS_ThrowTypeError(ctx, "argument 2,3: expecting Point,Point or Line");
   }
 
-  if(js_rect_read(ctx, argv[0], &imgRect)) {
-    result = cv::clipLine(imgRect, line.a, line.b);
-  } else if(js_size_read(ctx, argv[0], &imgSize)) {
-    result = cv::clipLine(imgSize, line.a, line.b);
+  if(js_rect_read(ctx, argv[0], &img_rect)) {
+    result = cv::clipLine(img_rect, line.a, line.b);
+  } else if(js_size_read(ctx, argv[0], &img_size)) {
+    result = cv::clipLine(img_size, line.a, line.b);
   }
 
   if(a && b) {
@@ -727,6 +741,7 @@ const JSCFunctionListEntry js_draw_global_funcs[] = {
     JS_CFUNC_DEF("drawCircle", 1, &js_draw_circle),
     JS_CFUNC_DEF("drawEllipse", 2, &js_draw_ellipse),
     JS_CFUNC_DEF("drawContour", 1, &js_draw_contour),
+    JS_CFUNC_DEF("drawContours", 4, &js_draw_contours),
     JS_CFUNC_DEF("drawLine", 1, &js_draw_line),
     JS_CFUNC_DEF("drawPolygon", 1, &js_draw_polygon),
     JS_CFUNC_DEF("drawPolylines", 1, &js_draw_polylines),
@@ -779,7 +794,7 @@ js_draw_init(JSContext* ctx, JSModuleDef* m) {
   }
 
   if(m) {
-    JS_SetModuleExportList(ctx, m, js_draw_static_funcs, countof(js_draw_static_funcs));
+    JS_SetModuleExportList(ctx, m, js_draw_global_funcs, countof(js_draw_global_funcs));
     JS_SetModuleExport(ctx, m, "Draw", draw_class);
   }
   /*  else
@@ -790,7 +805,7 @@ js_draw_init(JSContext* ctx, JSModuleDef* m) {
 extern "C" VISIBLE void
 js_draw_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "Draw");
-  JS_AddModuleExportList(ctx, m, js_draw_static_funcs, countof(js_draw_static_funcs));
+  JS_AddModuleExportList(ctx, m, js_draw_global_funcs, countof(js_draw_global_funcs));
 }
 
 #if defined(JS_DRAW_MODULE)

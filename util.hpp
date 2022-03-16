@@ -150,14 +150,8 @@ mattype_signed(int type) {
   }
 }
 
-template<class T>
-static inline JSMatDimensions
-mat_dimensions(const T& mat) {
-  JSMatDimensions ret;
-  ret.rows = mat.rows;
-  ret.cols = mat.cols;
-  return ret;
-}
+JSMatDimensions mat_dimensions(const cv::Mat& mat);
+JSMatDimensions mat_dimensions(const cv::UMat& mat);
 
 static inline uint8_t*
 mat_ptr(cv::Mat& mat) {
@@ -208,29 +202,14 @@ mat_bytesize(const cv::Mat& mat) {
   // return mat.elemSize() * mat.total();
 }
 
-template<class T>
-static inline int
-mat_depth(const T& mat) {
-  return mattype_depth(mat.type());
-}
-
-template<class T>
-static inline int
-mat_channels(const T& mat) {
-  return mattype_channels(mat.type());
-}
-
-template<class T>
-static inline bool
-mat_signed(const T& mat) {
-  return mattype_signed(mat.type());
-}
-
-template<class T>
-static inline bool
-mat_floating(const T& mat) {
-  return mattype_floating(mat.type());
-}
+int mat_depth(const cv::Mat& mat);
+int mat_channels(const cv::Mat& mat);
+bool mat_signed(const cv::Mat& mat);
+bool mat_floating(const cv::Mat& mat);
+int mat_depth(const cv::UMat& mat);
+int mat_channels(const cv::UMat& mat);
+bool mat_signed(const cv::UMat& mat);
+bool mat_floating(const cv::UMat& mat);
 
 template<typename T = int>
 static inline T
