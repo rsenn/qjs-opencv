@@ -1038,7 +1038,11 @@ js_contour_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
   if(!(contour = js_contour_data2(ctx, this_val)))
     return JS_EXCEPTION;
   assert(js_contour_class_id);
-  JSValue obj = JS_NewObjectClass(ctx, js_contour_class_id);
+
+  JSValue array_proto = js_global_prototype(ctx, "Array");
+
+  JSValue obj = JS_NewObjectProtoClass(ctx, contour_proto, js_contour_class_id);
+  JS_FreeValue(ctx, array_proto);
 
   JS_DefinePropertyValueStr(ctx, obj, "length", JS_NewUint32(ctx, contour->size()), JS_PROP_ENUMERABLE);
   return obj;

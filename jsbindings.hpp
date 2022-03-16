@@ -444,6 +444,15 @@ js_global_get(JSContext* ctx, const char* prop) {
 }
 
 static inline JSValue
+js_global_prototype(JSContext* ctx, const char* class_name) {
+  JSValue ctor, ret;
+  ctor = js_global_get(ctx, class_name);
+  ret = JS_GetPropertyStr(ctx, ctor, "prototype");
+  JS_FreeValue(ctx, ctor);
+  return ret;
+}
+
+static inline JSValue
 js_symbol_ctor(JSContext* ctx) {
   return js_global_get(ctx, "Symbol");
 }

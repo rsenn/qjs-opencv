@@ -90,7 +90,7 @@ include(CheckIncludeFileCXX)
 set(CMAKE_REQUIRED_INCLUDES "${OPENCV_INCLUDE_DIRS}")
 check_include_file_cxx(opencv2/freetype.hpp HAVE_OPENCV2_FREETYPE_HPP)
 if(HAVE_OPENCV2_FREETYPE_HPP)
-  add_definitions(-DHAVE_OPENCV_FREETYPE)
+  #add_definitions(-DHAVE_OPENCV_FREETYPE)
   set(OPENCV_FREETYPE_LIBRARY opencv_freetype)
 endif(HAVE_OPENCV2_FREETYPE_HPP)
 
