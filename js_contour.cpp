@@ -467,10 +467,11 @@ static JSValue
 js_contour_length(JSContext* ctx, JSValueConst this_val) {
   JSContourData<double>* v;
   JSValue ret;
-  if(!(v = static_cast<JSContourData<double>*>(JS_GetOpaque(this_val, js_contour_class_id))))
+
+  if(!(v = js_contour_data(this_val)))
     return JS_UNDEFINED;
 
-  ret = JS_NewInt64(ctx, v->size());
+  ret = JS_NewUint32(ctx, v->size());
   return ret;
 }
 
@@ -973,7 +974,7 @@ js_contour_get(JSContext* ctx, JSValueConst this_val, int magic) {
   JSContourData<double>* contour;
   JSValue ret = JS_UNDEFINED;
 
-  if(!(contour = static_cast<JSContourData<double>*>(JS_GetOpaque(this_val, js_contour_class_id)))) {
+  if(!(contour = js_contour_data(this_val))) {
     // printf("js_contour_get   cid=%i this_val=%p contour=%p\n", JS_GetClassID(this_val), JS_VALUE_GET_OBJ(this_val), contour);
     return JS_UNDEFINED;
   }
@@ -1053,7 +1054,7 @@ js_contour_finalizer(JSRuntime* rt, JSValue this_val) {
   JSContourData<double>* contour;
 
   assert(js_contour_class_id);
-  contour = static_cast<JSContourData<double>*>(JS_GetOpaque(this_val, js_contour_class_id));
+  contour = js_contour_data(this_val);
 
   if(contour) {
     // printf("js_contour_finalizer  cid=%i this_val=%p contour=%p\n", JS_GetClassID(this_val), JS_VALUE_GET_OBJ(this_val), contour);
@@ -1086,6 +1087,16 @@ js_contour_get_own_property(JSContext* ctx, JSPropertyDescriptor* pdesc, JSValue
       }
       return TRUE;
     }
+  }else if(js_atom_is_length(ctx, prop)) {
+    value = JS_NewUint32(ctx, contour->size());
+
+       if(pdesc) {
+        pdesc->flags = JS_PROP_CONFIGURABLE;
+        pdesc->value = value;
+        pdesc->getter = JS_UNDEFINED;
+        pdesc->setter = JS_UNDEFINED;
+      }
+      return TRUE;
   }
 
   return FALSE;

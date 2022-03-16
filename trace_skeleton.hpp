@@ -59,12 +59,12 @@ pixel_get_neighbours(
   result.clear();
 
   if(!pixel_check(pt.y - 1, pt.x, result, mat, already_taken))
-    if(!pixel_check(pt.y - 1, pt.x + 1, result, mat, already_taken))
-      if(!pixel_check(pt.y, pt.x + 1, result, mat, already_taken))
-        if(!pixel_check(pt.y + 1, pt.x + 1, result, mat, already_taken))
-          if(!pixel_check(pt.y + 1, pt.x, result, mat, already_taken))
-            if(!pixel_check(pt.y + 1, pt.x - 1, result, mat, already_taken))
-              if(!pixel_check(pt.y, pt.x - 1, result, mat, already_taken))
+    if(!pixel_check(pt.y, pt.x + 1, result, mat, already_taken))
+      if(!pixel_check(pt.y + 1, pt.x, result, mat, already_taken))
+        if(!pixel_check(pt.y, pt.x - 1, result, mat, already_taken))
+          if(!pixel_check(pt.y - 1, pt.x + 1, result, mat, already_taken))
+            if(!pixel_check(pt.y + 1, pt.x + 1, result, mat, already_taken))
+              if(!pixel_check(pt.y + 1, pt.x - 1, result, mat, already_taken))
                 pixel_check(pt.y - 1, pt.x - 1, result, mat, already_taken);
 
   return result.size();
