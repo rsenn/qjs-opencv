@@ -19,7 +19,7 @@ extern thread_local VISIBLE JSClassID js_contour_class_id;
 JSValue js_contour_create(JSContext* ctx, JSValueConst proto);
 void js_contour_finalizer(JSRuntime* rt, JSValue val);
 
-JSValue js_contour_to_string(JSContext*, JSValueConst this_val, int argc, JSValueConst* argv);
+JSValue js_contour_to_string(JSContext*, JSValueConst this_val, int argc, JSValueConst argv[]);
 int js_contour_init(JSContext*, JSModuleDef*);
 JSModuleDef* js_init_module_contour(JSContext*, const char*);
 void js_contour_constructor(JSContext* ctx, JSValue parent, const char* name);
@@ -78,6 +78,26 @@ contour_getmat(JSContourData<T>& contour) {
   size.cols = contour.size();
 
   return cv::Mat(cv::Size(size), t, static_cast<void*>(contour.data()));
+}
+
+template<typename T>
+static inline bool
+contour_adjacent(const JSContourData<T>& contour, const JSPointData<T>& point) {
+  for(const JSPointData<T>& pt : contour) {
+    if(point_adjacent<int>(pt, point))
+      return true;
+  }
+  return false;
+}
+
+template<typename T>
+static inline bool
+contour_adjacent(const JSContourData<T>& contour, const JSContourData<T>& other) {
+  for(const JSPointData<T>& pt : contour) {
+    if(contour_adjacent(other, pt))
+      return true;
+  }
+  return false;
 }
 
 static inline int

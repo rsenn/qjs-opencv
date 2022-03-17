@@ -59,7 +59,7 @@ js_rect_wrap(JSContext* ctx, const JSRectData<double>& rect) {
 }
 
 static JSValue
-js_rect_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_rect_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   double x = 0, y = 0, w = 0, h = 0;
   JSRectData<double> rect = {0, 0, 0, 0};
   int optind = 0;
@@ -274,7 +274,7 @@ js_rect_set(JSContext* ctx, JSValueConst this_val, JSValueConst val, int magic) 
 }
 
 static JSValue
-js_rect_to_string(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_rect_to_string(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSRectData<double> rect, *s;
   std::ostringstream os;
   std::array<const char*, 3> delims = {
@@ -295,7 +295,7 @@ js_rect_to_string(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
   return JS_NewString(ctx, os.str().c_str());
 }
 static JSValue
-js_rect_to_source(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_rect_to_source(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSRectData<double> rect, *s;
   std::ostringstream os;
 
@@ -313,7 +313,7 @@ js_rect_to_source(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
 enum { FUNC_EQUALS = 0, FUNC_ROUND, FUNC_TOOBJECT, FUNC_TOARRAY };
 
 static JSValue
-js_rect_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_rect_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSRectData<double> rect, other, *s, *a;
   JSValue ret = JS_EXCEPTION;
 
@@ -363,7 +363,7 @@ js_rect_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* arg
 }
 
 static JSValue
-js_rect_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_rect_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSRectData<double>* r = js_rect_data2(ctx, this_val);
   JSValue obj = JS_NewObjectClass(ctx, js_rect_class_id);
 
@@ -377,7 +377,7 @@ js_rect_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
 enum { METHOD_CONTAINS = 0, METHOD_BR, METHOD_TL, METHOD_SIZE, METHOD_INSET, METHOD_OUTSET, METHOD_HSPLIT, METHOD_VSPLIT, METHOD_MERGE, METHOD_CLONE };
 
 static JSValue
-js_rect_method(JSContext* ctx, JSValueConst rect, int argc, JSValueConst* argv, int magic) {
+js_rect_method(JSContext* ctx, JSValueConst rect, int argc, JSValueConst argv[], int magic) {
   JSRectData<double>* s = static_cast<JSRectData<double>*>(JS_GetOpaque2(ctx, rect, js_rect_class_id));
   JSValue ret = JS_UNDEFINED;
   JSPointData<double> point = js_point_get(ctx, argv[0]);
@@ -556,7 +556,7 @@ js_rect_method(JSContext* ctx, JSValueConst rect, int argc, JSValueConst* argv, 
 static JSAtom iterator_symbol;
 
 static JSValue
-js_rect_symbol_iterator(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_rect_symbol_iterator(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSValue arr, iter;
   arr = js_rect_funcs(ctx, this_val, argc, argv, 3);
 
@@ -569,7 +569,7 @@ js_rect_symbol_iterator(JSContext* ctx, JSValueConst this_val, int argc, JSValue
 }
 
 static JSValue
-js_rect_from(JSContext* ctx, JSValueConst rect, int argc, JSValueConst* argv) {
+js_rect_from(JSContext* ctx, JSValueConst rect, int argc, JSValueConst argv[]) {
   std::array<double, 4> array;
   JSValue ret = JS_EXCEPTION;
 

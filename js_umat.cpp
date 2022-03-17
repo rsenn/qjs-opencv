@@ -204,7 +204,7 @@ js_umat_new(JSContext* ctx, uint32_t rows, uint32_t cols, int type) {
 }
 
 static std::pair<JSSizeData<uint32_t>, int>
-js_umat_params(JSContext* ctx, int argc, JSValueConst* argv) {
+js_umat_params(JSContext* ctx, int argc, JSValueConst argv[]) {
   JSSizeData<uint32_t> size;
   int32_t type = 0;
   if(argc > 0) {
@@ -228,7 +228,7 @@ js_umat_params(JSContext* ctx, int argc, JSValueConst* argv) {
 }
 
 static JSValue
-js_umat_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_umat_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
 
   const auto& [size, type] = js_umat_params(ctx, argc, argv);
 
@@ -247,7 +247,7 @@ js_umat_finalizer(JSRuntime* rt, JSValue val) {
 }
 
 static JSValue
-js_umat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_umat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSValue ret = JS_UNDEFINED;
   int64_t i = -1, i2 = -1;
   JSPointData<double> pt;
@@ -332,7 +332,7 @@ js_umat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* arg
 }
 
 static JSValue
-js_umat_init(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_umat_init(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSValue ret = JS_UNDEFINED;
   JSUMatData* um;
 
@@ -450,7 +450,7 @@ js_umat_get_wh(JSContext* ctx, JSMatDimensions* size, JSValueConst obj) {
 }
 
 static JSValue
-js_umat_at(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_umat_at(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSUMatData* um = js_umat_data2(ctx, this_val);
   if(!um)
     return JS_EXCEPTION;
@@ -478,7 +478,7 @@ js_umat_at(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) 
 }
 
 static JSValue
-js_umat_set(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_umat_set(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   cv::UMat* um = js_umat_data2(ctx, this_val);
   uint32_t bytes;
   if(!um)
@@ -536,7 +536,7 @@ js_umat_set(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv)
 
 template<class T>
 typename std::enable_if<std::is_integral<T>::value, void>::type
-js_umat_vector_get(JSContext* ctx, int argc, JSValueConst* argv, std::vector<T>& output, std::vector<bool>& defined) {
+js_umat_vector_get(JSContext* ctx, int argc, JSValueConst argv[], std::vector<T>& output, std::vector<bool>& defined) {
   output.resize(static_cast<size_t>(argc));
   defined.resize(static_cast<size_t>(argc));
   for(int i = 0; i < argc; i++) {
@@ -550,7 +550,7 @@ js_umat_vector_get(JSContext* ctx, int argc, JSValueConst* argv, std::vector<T>&
 
 template<class T>
 typename std::enable_if<std::is_floating_point<T>::value, void>::type
-js_umat_vector_get(JSContext* ctx, int argc, JSValueConst* argv, std::vector<T>& output, std::vector<bool>& defined) {
+js_umat_vector_get(JSContext* ctx, int argc, JSValueConst argv[], std::vector<T>& output, std::vector<bool>& defined) {
   output.resize(static_cast<size_t>(argc));
   defined.resize(static_cast<size_t>(argc));
   for(int i = 0; i < argc; i++) {
@@ -564,7 +564,7 @@ js_umat_vector_get(JSContext* ctx, int argc, JSValueConst* argv, std::vector<T>&
 
 template<class T>
 typename std::enable_if<std::is_integral<typename T::value_type>::value, void>::type
-js_umat_vector_get(JSContext* ctx, int argc, JSValueConst* argv, std::vector<T>& output, std::vector<bool>& defined) {
+js_umat_vector_get(JSContext* ctx, int argc, JSValueConst argv[], std::vector<T>& output, std::vector<bool>& defined) {
   const size_t bits = (sizeof(typename T::value_type) * 8);
   const size_t n = T::channels;
   output.resize(static_cast<size_t>(argc));
@@ -586,7 +586,7 @@ js_umat_vector_get(JSContext* ctx, int argc, JSValueConst* argv, std::vector<T>&
 
 template<class T>
 static std::vector<T>
-js_umat_set_vector(JSContext* ctx, JSUMatData* um, int argc, JSValueConst* argv) {
+js_umat_set_vector(JSContext* ctx, JSUMatData* um, int argc, JSValueConst argv[]) {
   JSMatDimensions dim = {static_cast<uint32_t>(um->rows), static_cast<uint32_t>(um->cols)};
   uint32_t idx;
   std::vector<bool> defined;
@@ -600,7 +600,7 @@ js_umat_set_vector(JSContext* ctx, JSUMatData* um, int argc, JSValueConst* argv)
 }
 
 static JSValue
-js_umat_set_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_umat_set_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSUMatData* m = js_umat_data2(ctx, this_val);
   uint32_t bytes;
   std::vector<bool> defined;
@@ -653,7 +653,7 @@ js_umat_get_props(JSContext* ctx, JSValueConst this_val, int magic) {
 }
 
 static JSValue
-js_umat_tostring(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_umat_tostring(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   cv::UMat* um = js_umat_data2(ctx, this_val);
   int x, y;
 
@@ -715,7 +715,7 @@ js_umat_tostring(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* 
 }
 
 static JSValue
-js_umat_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_umat_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSUMatData* umat = js_umat_data2(ctx, this_val);
   JSValue obj = JS_NewObjectClass(ctx, js_umat_class_id);
 
@@ -726,7 +726,7 @@ js_umat_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
   return obj;
 }
 /*static JSValue
-js_umat_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_umat_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   cv::UMat* um = js_umat_data2(ctx, this_val);
   int x, y;
   std::ostringstream os;
@@ -757,7 +757,7 @@ js_umat_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
 }
 */
 static JSValue
-js_umat_convert_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_umat_convert_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSUMatData *um, *output;
   int32_t rtype;
   double alpha = 1, beta = 0;
@@ -782,7 +782,7 @@ js_umat_convert_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
 }
 
 static JSValue
-js_umat_copy_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_umat_copy_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSUMatData *um = nullptr, *output = nullptr, *mask = nullptr;
 
   um = js_umat_data2(ctx, this_val);
@@ -807,7 +807,7 @@ js_umat_copy_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
 }
 
 static JSValue
-js_umat_reshape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_umat_reshape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSUMatData *um, umat;
   int32_t cn, rows = 0;
   JSValue ret = JS_EXCEPTION;
@@ -849,7 +849,7 @@ js_umat_reshape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
 }
 
 static JSValue
-js_umat_getmat(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_umat_getmat(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSUMatData* um;
   JSMatData mat;
   int32_t accessFlags;
@@ -871,7 +871,7 @@ js_umat_getmat(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
 }
 
 static JSValue
-js_umat_fill(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_umat_fill(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSUMatData* um;
 
   um = js_umat_data2(ctx, this_val);
@@ -899,7 +899,7 @@ js_umat_fill(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv
 }
 
 static JSValue
-js_umat_class_create(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_umat_class_create(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSValue ret = JS_UNDEFINED;
 
   const auto& [size, type] = js_umat_params(ctx, argc, argv);
@@ -998,7 +998,7 @@ js_umat_array(JSContext* ctx, JSValueConst this_val) {
 }
 
 JSValue
-js_umat_call(JSContext* ctx, JSValueConst func_obj, JSValueConst this_val, int argc, JSValueConst* argv, int flags) {
+js_umat_call(JSContext* ctx, JSValueConst func_obj, JSValueConst this_val, int argc, JSValueConst argv[], int flags) {
   cv::Rect rect = {0, 0, 0, 0};
   JSUMatData* src;
 

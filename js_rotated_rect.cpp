@@ -51,7 +51,7 @@ js_rotated_rect_new(JSContext* ctx, JSValueConst proto, const JSPointData<float>
 
 extern "C" {
 static JSValue
-js_rotated_rect_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_rotated_rect_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   JSRotatedRectData* rr;
   JSValue obj = JS_UNDEFINED;
   JSValue proto;
@@ -156,7 +156,7 @@ js_rotated_rect_set(JSContext* ctx, JSValueConst this_val, JSValueConst value, i
 }
 
 static JSValue
-js_rotated_rect_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_rotated_rect_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSRotatedRectData* rr;
   JSValue ret = JS_UNDEFINED;
 
@@ -194,7 +194,7 @@ js_rotated_rect_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
 }
 
 static JSValue
-js_rotated_rect_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_rotated_rect_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSRotatedRectData* rr = js_rotated_rect_data2(ctx, this_val);
   JSValue obj = JS_NewObjectClass(ctx, js_rotated_rect_class_id);
 
@@ -205,7 +205,7 @@ js_rotated_rect_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValue
 }
 
 static JSValue
-js_rotated_rect_from(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_rotated_rect_from(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSRotatedRectData rr;
   JSValue ret = JS_EXCEPTION;
 

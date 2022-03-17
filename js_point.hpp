@@ -83,7 +83,7 @@ js_point_argument(JSContext* ctx, int argc, JSValueConst argv[], JSPointData<T>*
 
 template<class T>
 static inline BOOL
-js_point_arg(JSContext* ctx, int argc, JSValueConst* argv, int& argind, JSPointData<T>& point) {
+js_point_arg(JSContext* ctx, int argc, JSValueConst argv[], int& argind, JSPointData<T>& point) {
   if(argind < argc && js_point_read(ctx, argv[argind], &point)) {
     ++argind;
     return TRUE;
@@ -139,6 +139,51 @@ js_is_point(JSContext* ctx, JSValueConst point) {
 }
 
 extern "C" int js_point_init(JSContext*, JSModuleDef*);
+
+template<typename T>
+static inline cv::Point_<T>
+point_difference(const cv::Point_<T>& a, const cv::Point_<T>& b) {
+  return cv::Point_<T>(b.x - a.x, b.y - a.y);
+}
+
+template<typename T>
+static inline cv::Point_<T>
+point_abs(const cv::Point_<T>& p) {
+  return cv::Point_<T>(p.x >= 0 ? p.x : -p.x, p.y >= 0 ? p.y : -p.y);
+}
+
+template<typename T>
+static inline bool
+point_adjacent(const cv::Point_<T>& a, const cv::Point_<T>& b) {
+  cv::Point_<T> diff = point_abs(point_difference(a, b));
+  T d = diff.x + diff.y;
+
+  return (d > 1 && diff.x <=  1 && diff.y <= 1) || d == 1;
+}
+
+template<typename T>
+static inline cv::Point_<T>
+point_sum(const cv::Point_<T>& a, const cv::Point_<T>& b) {
+  return cv::Point_<T>(a.x + b.x, a.y + b.y);
+}
+
+template<typename T>
+static inline bool
+point_equal(const cv::Point_<T>& a, const cv::Point_<T>& b) {
+  return a.x == b.x && a.y == b.y;
+}
+
+template<typename T, typename M = cv::Mat>
+static inline bool
+point_inside(const cv::Point_<T>& pt, const M& mat) {
+  return pt.x >= 0 && pt.x < mat.cols && pt.y >= 0 && pt.y < mat.rows;
+}
+
+template<typename T>
+static inline bool
+point_inside(const cv::Point_<T>& pt, const cv::Size& sz) {
+  return pt.x >= 0 && pt.x < sz.width && pt.y >= 0 && pt.y < sz.height;
+}
 
 template<class T>
 inline std::ostream&

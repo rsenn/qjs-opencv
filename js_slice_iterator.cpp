@@ -55,7 +55,7 @@ fail:
 }
 
 static JSValue
-js_slice_iterator_next(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, BOOL* pdone, int magic) {
+js_slice_iterator_next(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], BOOL* pdone, int magic) {
   JSSliceIteratorData* it;
   JSValue result = JS_UNDEFINED;
 
@@ -75,7 +75,7 @@ js_slice_iterator_next(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
 }
 
 static JSValue
-js_slice_iterator_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_slice_iterator_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   JSSliceIteratorData* s;
   JSContourData<double>* v;
   JSValue obj = JS_UNDEFINED;
@@ -119,7 +119,7 @@ fail:
 }
 
 static JSValue
-js_slice_iterator_dup(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_slice_iterator_dup(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   return JS_DupValue(ctx, this_val);
 }
 
@@ -196,7 +196,7 @@ JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
 }
 
 static JSValue
-js_slice_iterator_to_string(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_slice_iterator_to_string(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSSliceIteratorData* s = static_cast<JSSliceIteratorData*>(JS_GetOpaque2(ctx, this_val, js_slice_iterator_class_id));
   std::ostringstream os;
   if(!s)

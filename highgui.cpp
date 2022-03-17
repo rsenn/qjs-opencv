@@ -27,7 +27,7 @@ enum { DISPLAY_OVERLAY };
 static std::vector<cv::String> window_list;
 
 static JSValue
-js_cv_gui_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_cv_gui_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSValue ret = JS_UNDEFINED;
   switch(magic) {
     case DISPLAY_OVERLAY: {
@@ -46,7 +46,7 @@ js_cv_gui_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
 }
 
 static JSValue
-js_cv_named_window(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_named_window(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   const char* name;
   int32_t flags = cv::WINDOW_NORMAL;
   name = JS_ToCString(ctx, argv[0]);
@@ -63,7 +63,7 @@ js_cv_named_window(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
 }
 
 static JSValue
-js_cv_move_window(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_move_window(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   const char* name;
   int32_t x, y;
   JSPointData<double> point;
@@ -81,7 +81,7 @@ js_cv_move_window(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
 }
 
 static JSValue
-js_cv_resize_window(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_resize_window(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   const char* name;
   uint32_t w, h;
   JSSizeData<int> size;
@@ -100,7 +100,7 @@ js_cv_resize_window(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 }
 
 static JSValue
-js_cv_get_screen_resolution(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_get_screen_resolution(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   int width, height;
 #if _WIN32
   width = (int)GetSystemMetrics(SM_CXSCREEN);
@@ -115,7 +115,7 @@ js_cv_get_screen_resolution(JSContext* ctx, JSValueConst this_val, int argc, JSV
 }
 
 static JSValue
-js_cv_get_window_image_rect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_get_window_image_rect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   const char* name;
   JSRectData<int> rect;
   name = JS_ToCString(ctx, argv[0]);
@@ -125,7 +125,7 @@ js_cv_get_window_image_rect(JSContext* ctx, JSValueConst this_val, int argc, JSV
 }
 
 static JSValue
-js_cv_get_window_property(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_get_window_property(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   const char* name;
   int32_t propId;
   name = JS_ToCString(ctx, argv[0]);
@@ -135,7 +135,7 @@ js_cv_get_window_property(JSContext* ctx, JSValueConst this_val, int argc, JSVal
 }
 
 static JSValue
-js_cv_set_window_property(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_set_window_property(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   const char* name;
   int32_t propId;
   double value;
@@ -147,7 +147,7 @@ js_cv_set_window_property(JSContext* ctx, JSValueConst this_val, int argc, JSVal
 }
 
 static JSValue
-js_cv_set_window_title(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_set_window_title(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   const char *name, *title;
   name = JS_ToCString(ctx, argv[0]);
   title = JS_ToCString(ctx, argv[1]);
@@ -157,7 +157,7 @@ js_cv_set_window_title(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
 }
 
 static JSValue
-js_cv_destroy_window(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_destroy_window(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   const char* name;
   int32_t propId;
   name = JS_ToCString(ctx, argv[0]);
@@ -172,7 +172,7 @@ js_cv_destroy_window(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
 }
 
 static JSValue
-js_cv_create_trackbar(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_create_trackbar(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   const char *name, *window;
   int32_t ret, count;
   struct Trackbar {
@@ -223,7 +223,7 @@ js_cv_create_trackbar(JSContext* ctx, JSValueConst this_val, int argc, JSValueCo
 }
 
 static JSValue
-js_cv_create_button(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_create_button(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   const char* bar_name;
   int32_t ret, type;
   bool initial_button_state = false;
@@ -274,7 +274,7 @@ js_cv_create_button(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 }
 
 static JSValue
-js_cv_get_trackbar_pos(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_get_trackbar_pos(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   const char *name, *window;
 
   name = JS_ToCString(ctx, argv[0]);
@@ -287,7 +287,7 @@ js_cv_get_trackbar_pos(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
 }
 
 static JSValue
-js_cv_set_trackbar(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_cv_set_trackbar(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   const char *name, *window;
   int32_t val;
 
@@ -309,7 +309,7 @@ js_cv_set_trackbar(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
 }
 
 static JSValue
-js_cv_get_mouse_wheel_delta(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_get_mouse_wheel_delta(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   int32_t flags;
 
   JS_ToInt32(ctx, &flags, argv[0]);
@@ -318,7 +318,7 @@ js_cv_get_mouse_wheel_delta(JSContext* ctx, JSValueConst this_val, int argc, JSV
 }
 
 static JSValue
-js_cv_set_mouse_callback(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_set_mouse_callback(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   const char* name;
   struct MouseHandler {
     JSValue window;
@@ -355,7 +355,7 @@ js_cv_set_mouse_callback(JSContext* ctx, JSValueConst this_val, int argc, JSValu
 }
 
 static JSValue
-js_cv_wait_key(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_wait_key(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   int32_t delay = 0;
   union {
     int32_t i;
@@ -379,7 +379,7 @@ js_cv_wait_key(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
 }
 
 static JSValue
-js_cv_wait_key_ex(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_wait_key_ex(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   int32_t delay = 0;
   int keyCode;
   JSValue ret;
@@ -393,7 +393,7 @@ js_cv_wait_key_ex(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
 }
 
 static JSValue
-js_cv_imshow(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_imshow(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   const char* winname = JS_ToCString(ctx, argv[0]);
   JSInputOutputArray image = js_umat_or_mat(ctx, argv[1]);
 

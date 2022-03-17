@@ -17,7 +17,7 @@ JSClassID js_keypoint_class_id;
 extern "C" VISIBLE int js_keypoint_init(JSContext*, JSModuleDef*);
 
 static JSValue
-js_keypoint_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_keypoint_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   JSKeyPointData* kp;
   JSValue obj = JS_UNDEFINED;
   JSValue proto;
@@ -115,7 +115,7 @@ js_keypoint_finalizer(JSRuntime* rt, JSValue val) {
 }
 
 static JSValue
-js_keypoint_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_keypoint_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSKeyPointData* kp = js_keypoint_data2(ctx, this_val);
   JSValue obj = JS_NewObjectProto(ctx, keypoint_proto);
 
@@ -133,7 +133,7 @@ js_keypoint_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 enum { METHOD_HASH = 0 };
 
 static JSValue
-js_keypoint_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_keypoint_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSKeyPointData* kp = static_cast<JSKeyPointData*>(JS_GetOpaque2(ctx, this_val, js_keypoint_class_id));
   JSValue ret = JS_UNDEFINED;
 

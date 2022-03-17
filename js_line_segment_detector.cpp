@@ -49,7 +49,7 @@ js_line_segment_detector_new(JSContext* ctx,
 }
 
 static JSValue
-js_line_segment_detector_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_line_segment_detector_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
 
   JSValue proto;
   int32_t refine = cv::LSD_REFINE_STD, n_bins = 1024;
@@ -95,7 +95,7 @@ js_line_segment_detector_finalizer(JSRuntime* rt, JSValue val) {
 }
 
 static JSValue
-js_line_segment_detector_compare_segments(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_line_segment_detector_compare_segments(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSLineSegmentDetector* s;
   JSSizeData<int> size;
   std::vector<cv::Vec4i> lines1, lines2;
@@ -118,7 +118,7 @@ js_line_segment_detector_compare_segments(JSContext* ctx, JSValueConst this_val,
 }
 
 static JSValue
-js_line_segment_detector_detect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_line_segment_detector_detect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSLineSegmentDetector* s;
   JSInputArray image;
   std::vector<cv::Vec4f> lines;
@@ -161,7 +161,7 @@ js_line_segment_detector_detect(JSContext* ctx, JSValueConst this_val, int argc,
 }
 
 static JSValue
-js_line_segment_detector_draw_segments(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_line_segment_detector_draw_segments(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSLineSegmentDetector* s;
   JSInputOutputArray image;
   std::vector<cv::Vec4f> lines;

@@ -45,7 +45,7 @@ thread_local VISIBLE JSClassID js_cv_class_id = 0;
 }
 
 static JSValue
-js_cv_imdecode(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_imdecode(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSInputOutputArray buf = js_cv_inputoutputarray(ctx, argv[0]);
   int32_t flags = 0;
   cv::Mat image, *dst = nullptr;
@@ -62,7 +62,7 @@ js_cv_imdecode(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
 }
 
 static JSValue
-js_cv_imencode(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_imencode(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   const char* ext = JS_ToCString(ctx, argv[0]);
   JSInputOutputArray image = js_cv_inputoutputarray(ctx, argv[1]);
   JSValue ret = JS_UNDEFINED;
@@ -95,14 +95,14 @@ js_cv_imencode(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
 }
 
 static JSValue
-js_cv_imread(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_imread(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   const char* filename = JS_ToCString(ctx, argv[0]);
   cv::Mat mat = cv::imread(filename);
   return js_mat_wrap(ctx, mat);
 }
 
 static JSValue
-js_cv_imwrite(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_imwrite(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
 
   const char* filename = JS_ToCString(ctx, argv[0]);
   JSInputOutputArray image;
@@ -166,7 +166,7 @@ js_cv_imwrite(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* arg
 }
 
 static JSValue
-js_cv_split(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_split(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   cv::Mat* src;
   std::vector<cv::Mat> dst;
   int code, dstCn = 0;
@@ -189,7 +189,7 @@ js_cv_split(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv)
 }
 
 static JSValue
-js_cv_normalize(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_normalize(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
 
   JSInputOutputArray src, dst;
   double alpha = 1, beta = 0;
@@ -215,7 +215,7 @@ js_cv_normalize(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
 }
 
 static JSValue
-js_cv_add_weighted(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_add_weighted(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSInputOutputArray a1, a2, dst;
 
   double alpha, beta, gamma;
@@ -250,7 +250,7 @@ js_cv_add_weighted(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
 enum { MAT_COUNTNONZERO = 0, MAT_FINDNONZERO, MAT_HCONCAT, MAT_VCONCAT };
 
 static JSValue
-js_cv_mat_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_cv_mat_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSValue ret = JS_UNDEFINED;
   JSInputOutputArray mat;
   mat = js_umat_or_mat(ctx, argv[0]);
@@ -294,7 +294,7 @@ js_cv_mat_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 }
 
 static JSValue
-js_cv_merge(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_merge(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   std::vector<cv::Mat> mv;
   cv::Mat* dst;
 
@@ -312,7 +312,7 @@ js_cv_merge(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv)
 }
 
 static JSValue
-js_cv_mix_channels(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_mix_channels(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   std::vector<cv::Mat> srcs, dsts;
   std::vector<int> fromTo;
 
@@ -332,7 +332,7 @@ js_cv_mix_channels(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
 }
 
 /*static JSValue
-js_cv_min_max_loc(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_min_max_loc(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   cv::Mat *src, *mask = nullptr;
   double minVal, maxVal;
   cv::Point minLoc, maxLoc;
@@ -368,7 +368,7 @@ js_cv_min_max_loc(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
 }*/
 
 static JSValue
-js_cv_getticks(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_cv_getticks(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSValue ret = JS_UNDEFINED;
   switch(magic) {
     case 0: ret = JS_NewInt64(ctx, cv::getTickCount()); break;
@@ -380,7 +380,7 @@ js_cv_getticks(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
 }
 
 static JSValue
-js_cv_bitwise(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_cv_bitwise(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
 
   JSInputOutputArray src, dst;
   JSInputArray other, mask;
@@ -417,7 +417,7 @@ js_cv_bitwise(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* arg
 enum { MATH_ABSDIFF = 0, MATH_ADD, MATH_COMPARE, MATH_DIVIDE, MATH_GEMM, MATH_MAX, MATH_MIN, MATH_MULTIPLY, MATH_SOLVE, MATH_SUBTRACT };
 
 static JSValue
-js_cv_math(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_cv_math(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
 
   JSOutputArray dst;
   JSInputArray src1, src2;
@@ -532,7 +532,7 @@ enum {
 };
 
 static JSValue
-js_cv_core(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_cv_core(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
 
   JSOutputArray dst;
   JSInputArray src;
@@ -761,7 +761,7 @@ enum {
 };
 
 static JSValue
-js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSInputOutputArray src;
   JSValue ret = JS_UNDEFINED;
 

@@ -20,7 +20,7 @@ JSClassID js_line_iterator_class_id;
 extern "C" VISIBLE int js_line_iterator_init(JSContext*, JSModuleDef*);
 
 static JSValue
-js_line_iterator_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_line_iterator_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   JSLineIteratorData* li;
   JSValue obj = JS_UNDEFINED;
   JSValue proto;
@@ -126,7 +126,7 @@ enum {
 };
 
 static JSValue
-js_line_iterator_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_line_iterator_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSLineIteratorData* li = static_cast<JSLineIteratorData*>(JS_GetOpaque2(ctx, this_val, js_line_iterator_class_id));
   JSValue ret = JS_UNDEFINED;
 

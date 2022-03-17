@@ -262,7 +262,7 @@ js_mat_dump(JSMatData* const s) {
 #endif
 
 static std::pair<JSSizeData<uint32_t>, int>
-js_mat_params(JSContext* ctx, int argc, JSValueConst* argv) {
+js_mat_params(JSContext* ctx, int argc, JSValueConst argv[]) {
   JSSizeData<uint32_t> size;
   int32_t type = 0;
   if(argc > 0) {
@@ -286,7 +286,7 @@ js_mat_params(JSContext* ctx, int argc, JSValueConst* argv) {
 }
 
 static JSValue
-js_mat_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_mat_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
 
   const auto& [size, type] = js_mat_params(ctx, argc, argv);
 
@@ -294,7 +294,7 @@ js_mat_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* arg
 }
 
 static JSValue
-js_mat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_mat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSValue ret = JS_UNDEFINED;
   int64_t i = 0, i2 = -1;
   JSPointData<double> pt;
@@ -405,7 +405,7 @@ js_mat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv
 }
 
 static JSValue
-js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSValue ret = JS_UNDEFINED;
   JSColorData<double> color;
   double value = 0;
@@ -525,7 +525,7 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv,
 }
 
 static JSValue
-js_mat_init(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_mat_init(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSValue ret = JS_UNDEFINED;
   JSMatData* m;
 
@@ -649,7 +649,7 @@ js_mat_get_wh(JSContext* ctx, JSMatDimensions* size, JSValueConst obj) {
 }
 
 static JSValue
-js_mat_at(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_mat_at(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSMatData* m = js_mat_data2(ctx, this_val);
   if(!m)
     return JS_EXCEPTION;
@@ -676,7 +676,7 @@ js_mat_at(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
 }
 
 static JSValue
-js_mat_set(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_mat_set(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   cv::Mat* m = js_mat_data2(ctx, this_val);
   uint32_t bytes;
   if(!m)
@@ -739,7 +739,7 @@ js_mat_set(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) 
 /*
 template<class T>
 typename std::enable_if<std::is_integral<T>::value, void>::type
-js_mat_vector_get(JSContext* ctx, int argc, JSValueConst* argv, std::vector<T>& output,
+js_mat_vector_get(JSContext* ctx, int argc, JSValueConst argv[], std::vector<T>& output,
 std::vector<bool>& defined) { output.resize(static_cast<size_t>(argc));
   defined.resize(static_cast<size_t>(argc));
   for(int i = 0; i < argc; i++) {
@@ -753,7 +753,7 @@ std::vector<bool>& defined) { output.resize(static_cast<size_t>(argc));
 
 template<class T>
 typename std::enable_if<std::is_floating_point<T>::value, void>::type
-js_mat_vector_get(JSContext* ctx, int argc, JSValueConst* argv, std::vector<T>& output,
+js_mat_vector_get(JSContext* ctx, int argc, JSValueConst argv[], std::vector<T>& output,
 std::vector<bool>& defined) { output.resize(static_cast<size_t>(argc));
   defined.resize(static_cast<size_t>(argc));
   for(int i = 0; i < argc; i++) {
@@ -767,7 +767,7 @@ std::vector<bool>& defined) { output.resize(static_cast<size_t>(argc));
 
 template<class T>
 typename std::enable_if<std::is_integral<typename T::value_type>::value, void>::type
-js_mat_vector_get(JSContext* ctx, int argc, JSValueConst* argv, std::vector<T>& output,
+js_mat_vector_get(JSContext* ctx, int argc, JSValueConst argv[], std::vector<T>& output,
 std::vector<bool>& defined) { const size_t bits = (sizeof(typename T::value_type) * 8); const size_t
 n = T::channels; output.resize(static_cast<size_t>(argc));
   defined.resize(static_cast<size_t>(argc));
@@ -789,7 +789,7 @@ n = T::channels; output.resize(static_cast<size_t>(argc));
 /*
 template<class T>
 static std::vector<T>
-js_mat_set_vector(JSContext* ctx, JSMatData* m, int argc, JSValueConst* argv) {
+js_mat_set_vector(JSContext* ctx, JSMatData* m, int argc, JSValueConst argv[]) {
   JSMatDimensions dim = {static_cast<uint32_t>(m->rows), static_cast<uint32_t>(m->cols)};
   uint32_t idx;
   std::vector<bool> defined;
@@ -803,7 +803,7 @@ js_mat_set_vector(JSContext* ctx, JSMatData* m, int argc, JSValueConst* argv) {
 }
 */
 static JSValue
-js_mat_set_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_mat_set_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSMatData* m = js_mat_data2(ctx, this_val);
   uint32_t bytes;
   std::vector<bool> defined;
@@ -930,7 +930,7 @@ js_mat_get_props(JSContext* ctx, JSValueConst this_val, int magic) {
 }
 
 static JSValue
-js_mat_tostring(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_mat_tostring(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   cv::Mat* m = js_mat_data2(ctx, this_val);
   int x, y;
 
@@ -996,7 +996,7 @@ const JSCFunctionListEntry js_mat_tostring_tag[] = {
 };
 
 static JSValue
-js_mat_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_mat_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSMatData* mat = js_mat_data2(ctx, this_val);
   JSValue obj = JS_NewObject(ctx /*, js_mat_class_id*/);
 
@@ -1011,7 +1011,7 @@ js_mat_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
 }
 
 static JSValue
-js_mat_getrotationmatrix2d(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_mat_getrotationmatrix2d(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSPointData<double> s;
 
   double angle = 0, scale = 1;
@@ -1036,7 +1036,7 @@ js_mat_getrotationmatrix2d(JSContext* ctx, JSValueConst this_val, int argc, JSVa
   return ret;
 }
 static JSValue
-js_mat_convert_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_mat_convert_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSMatData *m, *output;
   int32_t rtype;
   double alpha = 1, beta = 0;
@@ -1061,7 +1061,7 @@ js_mat_convert_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
 }
 
 static JSValue
-js_mat_copy_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_mat_copy_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSMatData* m;
   JSOutputArray output;
   JSInputArray /*output,*/ mask = cv::noArray();
@@ -1088,7 +1088,7 @@ js_mat_copy_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
 }
 
 static JSValue
-js_mat_reshape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_mat_reshape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSMatData *m, mat;
   int32_t cn, rows = 0;
   JSValue ret = JS_EXCEPTION;
@@ -1130,7 +1130,7 @@ js_mat_reshape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
 }
 
 static JSValue
-js_mat_getumat(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_mat_getumat(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSMatData* m;
   JSUMatData umat;
   int32_t accessFlags, usageFlags = cv::USAGE_DEFAULT;
@@ -1155,7 +1155,7 @@ js_mat_getumat(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
 }
 
 static JSValue
-js_mat_class_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_mat_class_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSValueConst *v = argv, *e = &argv[argc];
   JSMatData result;
   JSMatData *prev = nullptr, *mat = nullptr;
@@ -1189,7 +1189,7 @@ js_mat_class_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
 }
 
 static JSValue
-js_mat_fill(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_mat_fill(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSMatData* m;
 
   m = js_mat_data2(ctx, this_val);
@@ -1217,7 +1217,7 @@ js_mat_fill(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv,
 }
 
 static JSValue
-js_mat_class_create(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_mat_class_create(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSValue ret = JS_UNDEFINED;
 
   const auto& [size, type] = js_mat_params(ctx, argc, argv);
@@ -1309,7 +1309,7 @@ js_mat_array(JSContext* ctx, JSValueConst this_val) {
 }
 
 JSValue
-js_mat_call(JSContext* ctx, JSValueConst func_obj, JSValueConst this_val, int argc, JSValueConst* argv, int flags) {
+js_mat_call(JSContext* ctx, JSValueConst func_obj, JSValueConst this_val, int argc, JSValueConst argv[], int flags) {
   cv::Rect rect = {0, 0, 0, 0};
   JSMatData* src;
 
@@ -1391,7 +1391,7 @@ js_mat_finalizer(JSRuntime* rt, JSValue val) {
 }
 
 JSValue
-js_mat_iterator_new(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_mat_iterator_new(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSValue enum_obj, mat;
   JSMatData* m;
   JSMatIteratorData* it;
@@ -1437,7 +1437,7 @@ js_mat_iterator_dump(JSMatIteratorData* it) {
 }
 
 JSValue
-js_mat_iterator_next(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, BOOL* pdone, int magic) {
+js_mat_iterator_next(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], BOOL* pdone, int magic) {
   JSMatIteratorData* it;
   JSValue ret = JS_UNDEFINED;
   *pdone = FALSE;
@@ -1509,7 +1509,7 @@ js_mat_iterator_finalizer(JSRuntime* rt, JSValue val) {
 }
 
 static JSValue
-js_mat_iterator_dup(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_mat_iterator_dup(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   return JS_DupValue(ctx, this_val);
 }
 

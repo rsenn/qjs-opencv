@@ -41,7 +41,7 @@
 enum { HIER_NEXT = 0, HIER_PREV, HIER_CHILD, HIER_PARENT };
 
 static JSValue
-js_cv_blur(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_blur(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   cv::Mat* image;
   JSSizeData<int> size;
   JSPointData<int> anchor = {-1, -1};
@@ -71,7 +71,7 @@ js_cv_blur(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) 
 }
 
 static JSValue
-js_cv_bounding_rect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_bounding_rect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSInputArray input;
   JSRectData<double> rect;
 
@@ -82,7 +82,7 @@ js_cv_bounding_rect(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 }
 
 static JSValue
-js_cv_gaussian_blur(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_gaussian_blur(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSSizeData<double> size;
   double sigmaX, sigmaY = 0;
   JSInputOutputArray input, output;
@@ -110,7 +110,7 @@ js_cv_gaussian_blur(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 }
 
 static JSValue
-js_cv_corner_harris(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_corner_harris(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   cv::Mat* image;
   double k;
   JSInputOutputArray input, output;
@@ -135,7 +135,7 @@ js_cv_corner_harris(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 }
 
 static JSValue
-js_cv_hough_lines(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_hough_lines(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSInputOutputArray image;
   JSValueConst array;
   double rho, theta;
@@ -188,7 +188,7 @@ js_cv_hough_lines(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
 }
 
 static JSValue
-js_cv_hough_lines_p(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_hough_lines_p(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSInputOutputArray src, dst;
   JSValueConst array;
   double rho, theta;
@@ -238,7 +238,7 @@ js_cv_hough_lines_p(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 }
 
 static JSValue
-js_cv_hough_circles(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_hough_circles(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSInputArray image;
   JSValueConst array;
   int32_t method, minRadius = 0, maxRadius = 0;
@@ -286,7 +286,7 @@ js_cv_hough_circles(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 }
 
 static JSValue
-js_cv_canny(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_canny(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSInputOutputArray image, edges;
   double threshold1, threshold2;
   int32_t apertureSize = 3;
@@ -316,7 +316,7 @@ js_cv_canny(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv)
 }
 
 static JSValue
-js_cv_good_features_to_track(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_good_features_to_track(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   cv::Mat *image, *corners, *mask = nullptr;
   int32_t maxCorners, blockSize = 3, gradientSize;
   double qualityLevel, minDistance, k = 0.04;
@@ -364,7 +364,7 @@ js_cv_good_features_to_track(JSContext* ctx, JSValueConst this_val, int argc, JS
 }
 
 static JSValue
-js_cv_cvt_color(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_cvt_color(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
 
   JSInputOutputArray src, dst;
   int code, dstCn = 0;
@@ -399,7 +399,7 @@ js_cv_cvt_color(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
 }
 
 static JSValue
-js_cv_equalize_hist(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_equalize_hist(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSInputOutputArray src, dst;
   src = js_umat_or_mat(ctx, argv[0]);
   dst = js_umat_or_mat(ctx, argv[1]);
@@ -412,7 +412,7 @@ js_cv_equalize_hist(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 }
 
 static JSValue
-js_cv_threshold(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_threshold(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSInputOutputArray src, dst;
   double thresh, maxval;
   int32_t type;
@@ -432,7 +432,7 @@ js_cv_threshold(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
 }
 
 static JSValue
-js_cv_bilateral_filter(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_bilateral_filter(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSInputOutputArray src, dst;
   double sigmaColor, sigmaSpace;
   int32_t d, borderType = cv::BORDER_DEFAULT;
@@ -456,7 +456,7 @@ js_cv_bilateral_filter(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
 }
 
 static JSValue
-js_cv_calc_hist(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_calc_hist(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   std::vector<cv::Mat> images;
   std::vector<int> channels, histSize;
   std::vector<std::vector<float>> ranges;
@@ -505,7 +505,7 @@ js_cv_calc_hist(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
 }
 
 static JSValue
-js_cv_morphology(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_cv_morphology(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSInputOutputArray src, dst, kernel;
   JSPointData<double> anchor = cv::Point(-1, -1);
   int32_t iterations = 1, borderType = cv::BORDER_CONSTANT;
@@ -545,7 +545,7 @@ js_cv_morphology(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* 
   return JS_UNDEFINED;
 }
 static JSValue
-js_cv_morphology_ex(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_morphology_ex(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
 
   JSInputOutputArray src, dst, kernel;
   JSPointData<double> anchor = cv::Point(-1, -1);
@@ -586,7 +586,7 @@ js_cv_morphology_ex(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 }
 
 static JSValue
-js_cv_median_blur(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_median_blur(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSInputOutputArray src, dst;
   int32_t ksize;
 
@@ -606,7 +606,7 @@ js_cv_median_blur(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
 }
 
 static JSValue
-js_cv_find_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_find_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   cv::Mat* m = js_mat_data2(ctx, argv[0]);
   JSValue array_buffer, ret = JS_UNDEFINED;
   int mode = cv::RETR_TREE;
@@ -678,7 +678,7 @@ js_cv_find_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 }
 
 static JSValue
-js_cv_draw_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_draw_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSInputOutputArray mat;
   JSContoursData<int> contours;
   JSColorData<double> color;
@@ -718,7 +718,7 @@ js_cv_draw_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 }
 
 static JSValue
-js_cv_point_polygon_test(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_point_polygon_test(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSContourData<double>* contour;
   JSPointData<float> point;
   bool measureDist = false;
@@ -736,7 +736,7 @@ js_cv_point_polygon_test(JSContext* ctx, JSValueConst this_val, int argc, JSValu
 }
 
 static JSValue
-js_cv_skeletonization(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_skeletonization(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSInputOutputArray src, dst;
   cv::Mat output;
   src = js_umat_or_mat(ctx, argv[0]);
@@ -752,7 +752,7 @@ js_cv_skeletonization(JSContext* ctx, JSValueConst this_val, int argc, JSValueCo
 }
 
 static JSValue
-js_cv_pixel_neighborhood(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_cv_pixel_neighborhood(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSMatData* src;
   JSOutputArray dst;
   cv::Mat output;
@@ -780,7 +780,7 @@ js_cv_pixel_neighborhood(JSContext* ctx, JSValueConst this_val, int argc, JSValu
 }
 
 static JSValue
-js_cv_pixel_find_value(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_pixel_find_value(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSMatData* src;
   std::vector<JSPointData<int>> output;
   uint32_t value;
@@ -797,7 +797,7 @@ js_cv_pixel_find_value(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
 }
 
 static JSValue
-js_cv_lsd(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_lsd(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   std::vector<cv::Vec4i> lines;
   // JSInputOutputArray lines;
   std::vector<double> width, prec, nfa;
@@ -839,7 +839,7 @@ js_cv_lsd(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
 }
 
 static JSValue
-js_cv_trace_skeleton(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_trace_skeleton(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSContoursData<double> contours;
   JSInputArray src = js_umat_or_mat(ctx, argv[0]);
 
@@ -892,7 +892,7 @@ js_cv_palette_generate(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
   return ret;
 }
 static JSValue
-js_cv_palette_apply(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_palette_apply(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSMatData* src;
   JSOutputArray dst;
   std::array<uint32_t, 256> palette32;
@@ -951,7 +951,7 @@ js_cv_palette_apply(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 }
 
 static JSValue
-js_cv_palette_match(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_cv_palette_match(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSMatData* src;
   JSOutputArray dst;
   std::vector<JSColorData<uint8_t>> palette;
@@ -983,7 +983,7 @@ enum {
 };
 
 static JSValue
-js_imgproc_motion(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_imgproc_motion(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSInputOutputArray src;
   JSValue ret = JS_UNDEFINED;
 
@@ -1061,7 +1061,7 @@ enum {
 };
 
 static JSValue
-js_imgproc_misc(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_imgproc_misc(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSInputOutputArray src;
   JSValue ret = JS_UNDEFINED;
 
@@ -1230,7 +1230,7 @@ enum {
 };
 
 static JSValue
-js_imgproc_transform(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_imgproc_transform(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSInputOutputArray src;
   JSValue ret = JS_UNDEFINED;
 
@@ -1431,7 +1431,7 @@ enum {
 };
 
 static JSValue
-js_imgproc_filter(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_imgproc_filter(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSInputOutputArray src;
   JSValue ret = JS_UNDEFINED;
 
@@ -1675,7 +1675,7 @@ enum {
 };
 
 static JSValue
-js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSInputOutputArray src;
   JSValue ret = JS_UNDEFINED;
   if(magic != SHAPE_BOX_POINTS && magic != SHAPE_HU_MOMENTS)

@@ -48,7 +48,7 @@ JSClassID js_feature2d_class_id;
 extern "C" VISIBLE int js_feature2d_init(JSContext*, JSModuleDef*);
 
 static JSValue
-js_feature2d_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_feature2d_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   JSFeature2DData feature2d, *s;
   JSValue obj = JS_UNDEFINED;
   JSValue proto;
@@ -117,7 +117,7 @@ js_feature2d_wrap(JSContext* ctx, const cv::Ptr<T>& f2d) {
 }
 
 static JSValue
-js_feature2d_affine(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_feature2d_affine(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   cv::Ptr<AffineFeature> affine;
   JSValue ret;
   cv::Ptr<cv::Feature2D> backend = *js_feature2d_data2(ctx, argv[0]);
@@ -141,7 +141,7 @@ js_feature2d_affine(JSContext* ctx, JSValueConst new_target, int argc, JSValueCo
 }
 
 static JSValue
-js_feature2d_agast(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_feature2d_agast(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   cv::Ptr<AgastFeatureDetector> agast;
   JSValue ret;
   int32_t threshold = 10;
@@ -163,7 +163,7 @@ js_feature2d_agast(JSContext* ctx, JSValueConst new_target, int argc, JSValueCon
 }
 
 static JSValue
-js_feature2d_akaze(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_feature2d_akaze(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   cv::Ptr<AKAZE> akaze;
   JSValue ret;
   int32_t descriptor_type = AKAZE::DESCRIPTOR_MLDB, descriptor_size = 0, descriptor_channels = 3;
@@ -195,7 +195,7 @@ js_feature2d_akaze(JSContext* ctx, JSValueConst new_target, int argc, JSValueCon
 }
 
 static JSValue
-js_feature2d_brisk(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_feature2d_brisk(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   cv::Ptr<BRISK> brisk;
   JSValue ret;
   int32_t thresh = 30, octaves = 3;
@@ -252,7 +252,7 @@ js_feature2d_brisk(JSContext* ctx, JSValueConst new_target, int argc, JSValueCon
 }
 
 static JSValue
-js_feature2d_fast(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_feature2d_fast(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   cv::Ptr<FastFeatureDetector> fast;
   JSValue ret;
   int32_t threshold = 10;
@@ -274,7 +274,7 @@ js_feature2d_fast(JSContext* ctx, JSValueConst new_target, int argc, JSValueCons
 }
 
 static JSValue
-js_feature2d_gftt(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_feature2d_gftt(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   cv::Ptr<GFTTDetector> gftt;
   JSValue ret;
 
@@ -306,7 +306,7 @@ js_feature2d_gftt(JSContext* ctx, JSValueConst new_target, int argc, JSValueCons
 }
 
 static JSValue
-js_feature2d_kaze(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_feature2d_kaze(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   cv::Ptr<KAZE> kaze;
   JSValue ret;
   BOOL extended = FALSE, upright = FALSE;
@@ -334,7 +334,7 @@ js_feature2d_kaze(JSContext* ctx, JSValueConst new_target, int argc, JSValueCons
 }
 
 static JSValue
-js_feature2d_mser(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_feature2d_mser(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   cv::Ptr<MSER> mser;
   JSValue ret;
   int32_t delta = 5, minArea = 60, maxArea = 14400;
@@ -369,7 +369,7 @@ js_feature2d_mser(JSContext* ctx, JSValueConst new_target, int argc, JSValueCons
 }
 
 static JSValue
-js_feature2d_orb(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_feature2d_orb(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   cv::Ptr<ORB> orb;
   JSValue ret;
   int32_t nfeatures = 500;
@@ -404,7 +404,7 @@ js_feature2d_orb(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst
 }
 
 static JSValue
-js_feature2d_sift(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_feature2d_sift(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   cv::Ptr<SIFT> sift;
   JSValue ret;
   int32_t nfeatures = 0, nOctaveLayers = 3;
@@ -437,7 +437,7 @@ js_feature2d_sift(JSContext* ctx, JSValueConst new_target, int argc, JSValueCons
 }
 
 static JSValue
-js_feature2d_simple_blob(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_feature2d_simple_blob(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   cv::Ptr<SimpleBlobDetector> simple_blob;
   JSValue ret;
   simple_blob = SimpleBlobDetector::create();
@@ -447,7 +447,7 @@ js_feature2d_simple_blob(JSContext* ctx, JSValueConst new_target, int argc, JSVa
 }
 
 static JSValue
-js_feature2d_affine2d(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_feature2d_affine2d(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   cv::Ptr<AffineFeature2D> affine2d;
   JSValue ret;
   cv::Ptr<cv::Feature2D> keypointDetector = *js_feature2d_data2(ctx, argv[0]);
@@ -465,7 +465,7 @@ js_feature2d_affine2d(JSContext* ctx, JSValueConst new_target, int argc, JSValue
 }
 
 static JSValue
-js_feature2d_boost(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_feature2d_boost(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   cv::Ptr<BoostDesc> boost;
   JSValue ret;
   int32_t desc = BoostDesc::BINBOOST_256;
@@ -486,7 +486,7 @@ js_feature2d_boost(JSContext* ctx, JSValueConst new_target, int argc, JSValueCon
 }
 
 static JSValue
-js_feature2d_brief(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_feature2d_brief(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   cv::Ptr<BriefDescriptorExtractor> brief;
   JSValue ret;
   int32_t bytes = 32;
@@ -504,7 +504,7 @@ js_feature2d_brief(JSContext* ctx, JSValueConst new_target, int argc, JSValueCon
 }
 
 static JSValue
-js_feature2d_daisy(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_feature2d_daisy(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   cv::Ptr<DAISY> daisy;
   JSValue ret;
   double radius = 15;
@@ -537,7 +537,7 @@ js_feature2d_daisy(JSContext* ctx, JSValueConst new_target, int argc, JSValueCon
 }
 
 static JSValue
-js_feature2d_freak(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_feature2d_freak(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   cv::Ptr<FREAK> freak;
   JSValue ret;
   BOOL orientationNormalized = TRUE, scaleNormalized = TRUE;
@@ -564,7 +564,7 @@ js_feature2d_freak(JSContext* ctx, JSValueConst new_target, int argc, JSValueCon
 }
 
 static JSValue
-js_feature2d_harris_laplace(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_feature2d_harris_laplace(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   cv::Ptr<HarrisLaplaceFeatureDetector> harris_laplace;
   JSValue ret;
   int32_t numOctaves = 6;
@@ -589,7 +589,7 @@ js_feature2d_harris_laplace(JSContext* ctx, JSValueConst new_target, int argc, J
 }
 
 static JSValue
-js_feature2d_latch(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_feature2d_latch(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   cv::Ptr<LATCH> latch;
   JSValue ret;
   int32_t bytes = 32;
@@ -613,7 +613,7 @@ js_feature2d_latch(JSContext* ctx, JSValueConst new_target, int argc, JSValueCon
 }
 
 static JSValue
-js_feature2d_lucid(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_feature2d_lucid(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   cv::Ptr<LUCID> lucid;
   JSValue ret;
   int32_t lucid_kernel = 1;
@@ -632,7 +632,7 @@ js_feature2d_lucid(JSContext* ctx, JSValueConst new_target, int argc, JSValueCon
 }
 
 static JSValue
-js_feature2d_msd(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_feature2d_msd(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   cv::Ptr<MSDDetector> msd;
   JSValue ret;
   int32_t m_patch_radius = 3, m_search_area_radius = 5, m_nms_radius = 5, m_nms_scale_radius = 0;
@@ -669,7 +669,7 @@ js_feature2d_msd(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst
 }
 
 static JSValue
-js_feature2d_star(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_feature2d_star(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   cv::Ptr<StarDetector> star;
   JSValue ret;
   int32_t maxSize = 45, responseThreshold = 30, lineThresholdProjected = 10, lineThresholdBinarized = 8, suppressNonmaxSize = 5;
@@ -692,7 +692,7 @@ js_feature2d_star(JSContext* ctx, JSValueConst new_target, int argc, JSValueCons
 }
 
 static JSValue
-js_feature2d_surf(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_feature2d_surf(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   cv::Ptr<SURF> surf;
   JSValue ret;
   double hessianThreshold = 100;
@@ -718,7 +718,7 @@ js_feature2d_surf(JSContext* ctx, JSValueConst new_target, int argc, JSValueCons
 }
 
 static JSValue
-js_feature2d_vgg(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_feature2d_vgg(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   cv::Ptr<VGG> vgg;
   JSValue ret;
   int32_t desc = VGG::VGG_120;
@@ -754,7 +754,7 @@ js_feature2d_finalizer(JSRuntime* rt, JSValue val) {
 }
 
 static JSValue
-js_feature2d_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_feature2d_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSFeature2DData* s = js_feature2d_data2(ctx, this_val);
   JSValue obj = JS_NewObject(ctx);
   cv::Feature2D* f2d = s->get();
@@ -773,7 +773,7 @@ js_feature2d_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
 enum { METHOD_CLEAR = 0, METHOD_COMPUTE, METHOD_DETECT, METHOD_WRITE, METHOD_READ };
 
 static JSValue
-js_feature2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_feature2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSFeature2DData* s = static_cast<JSFeature2DData*>(JS_GetOpaque2(ctx, this_val, js_feature2d_class_id));
   JSValue ret = JS_UNDEFINED;
   cv::Feature2D* ptr = s->get();

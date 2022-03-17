@@ -63,7 +63,7 @@ js_line_new(JSContext* ctx, double x1, double y1, double x2, double y2) {
 }
 
 static JSValue
-js_line_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_line_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   JSLineData<double>* ln;
   JSValue obj = JS_UNDEFINED;
   JSValue proto;
@@ -253,7 +253,7 @@ js_line_set_ab(JSContext* ctx, JSValueConst this_val, JSValueConst val, int magi
 }
 
 static JSValue
-js_line_points(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_line_points(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSLineData<double>* ln;
 
   if(!(ln = static_cast<JSLineData<double>*>(JS_GetOpaque2(ctx, this_val, js_line_class_id))))
@@ -263,7 +263,7 @@ js_line_points(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
 }
 
 static JSValue
-js_line_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_line_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSLineData<double>* ln = js_line_data2(ctx, this_val);
   JSValue obj = JS_NewObjectClass(ctx, js_line_class_id);
 
@@ -299,7 +299,7 @@ enum {
 };
 
 static JSValue
-js_line_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_line_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSLineData<double>* ln;
   JSValue ret = JS_UNDEFINED;
   if(!(ln = static_cast<JSLineData<double>*>(JS_GetOpaque2(ctx, this_val, js_line_class_id))))
@@ -498,7 +498,7 @@ js_line_toarray(JSContext* ctx, JSValueConst line, int argc, JSValueConst* arg) 
 }
 
 static JSValue
-js_call_method(JSContext* ctx, JSValue obj, const char* name, int argc, JSValueConst* argv) {
+js_call_method(JSContext* ctx, JSValue obj, const char* name, int argc, JSValueConst argv[]) {
   JSValue fn, ret = JS_UNDEFINED;
 
   fn = JS_GetPropertyStr(ctx, obj, name);
@@ -514,7 +514,7 @@ js_call_method(JSContext* ctx, JSValue obj, const char* name, int argc, JSValueC
 #define JS_LINE_TO_STRING 0x40
 
 static JSValue
-js_line_iterator(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_line_iterator(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSLineData<double>* ln = static_cast<JSLineData<double>*>(JS_GetOpaque2(ctx, this_val, js_line_class_id));
   JSValue method, ret = JS_UNDEFINED;
 
@@ -537,7 +537,7 @@ js_line_iterator(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* 
 }
 
 static JSValue
-js_line_from(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_line_from(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSLineData<double> line = {0, 0, 0, 0};
   JSValue ret = JS_EXCEPTION;
 

@@ -31,7 +31,7 @@ js_tick_meter_new(JSContext* ctx) {
 }
 
 static JSValue
-js_tick_meter_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_tick_meter_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   JSTickMeterData* s;
   JSValue obj = JS_UNDEFINED;
   JSValue proto;
@@ -98,7 +98,7 @@ js_tick_meter_get(JSContext* ctx, JSValueConst this_val, int magic) {
 }
 
 static JSValue
-js_tick_meter_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_tick_meter_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSValue ret = JS_UNDEFINED;
   JSTickMeterData* s = static_cast<JSTickMeterData*>(JS_GetOpaque2(ctx, this_val, js_tick_meter_class_id));
   if(!s)
@@ -114,7 +114,7 @@ js_tick_meter_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
 }
 
 static JSValue
-js_tick_meter_tostring(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_tick_meter_tostring(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSTickMeterData* s;
 
   if((s = static_cast<JSTickMeterData*>(JS_GetOpaque2(ctx, this_val, js_tick_meter_class_id)))) {

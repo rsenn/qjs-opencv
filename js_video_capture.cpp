@@ -27,7 +27,7 @@ is_numeric(const std::string& s) {
 }
 
 static bool
-js_video_capture_open(JSContext* ctx, JSVideoCaptureData* s, int argc, JSValueConst* argv) {
+js_video_capture_open(JSContext* ctx, JSVideoCaptureData* s, int argc, JSValueConst argv[]) {
   int32_t camID = -1, apiPreference = cv::CAP_ANY;
   cv::String filename;
 
@@ -50,7 +50,7 @@ js_video_capture_open(JSContext* ctx, JSVideoCaptureData* s, int argc, JSValueCo
 }
 
 static JSValue
-js_video_capture_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_video_capture_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   JSVideoCaptureData* s;
   JSValue obj = JS_UNDEFINED;
   JSValue proto, ret;
@@ -112,7 +112,7 @@ enum {
 };
 
 static JSValue
-js_video_capture_method(JSContext* ctx, JSValueConst video_capture, int argc, JSValueConst* argv, int magic) {
+js_video_capture_method(JSContext* ctx, JSValueConst video_capture, int argc, JSValueConst argv[], int magic) {
   JSVideoCaptureData* s = static_cast<JSVideoCaptureData*>(JS_GetOpaque2(ctx, video_capture, js_video_capture_class_id));
   JSValue ret = JS_UNDEFINED;
   int32_t propID;

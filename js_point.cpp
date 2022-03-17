@@ -122,7 +122,7 @@ js_point_clone(JSContext* ctx, const JSPointData<double>& point) {
 }
 
 static JSValue
-js_point_cross(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_point_cross(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSPointData<double>* s = js_point_data2(ctx, this_val);
   JSPointData<double>* other = js_point_data2(ctx, argv[0]);
   double retval;
@@ -133,7 +133,7 @@ js_point_cross(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
 }
 
 static JSValue
-js_point_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_point_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   double x, y;
   JSPointData<double> point;
   JSValue proto;
@@ -158,7 +158,7 @@ js_point_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* a
 }
 
 static JSValue
-js_point_ddot(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_point_ddot(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSPointData<double>* s = js_point_data2(ctx, this_val);
   JSPointData<double>* other = js_point_data2(ctx, argv[0]);
   double retval;
@@ -169,7 +169,7 @@ js_point_ddot(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* arg
 }
 
 static JSValue
-js_point_difference(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_point_difference(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSValue ret;
   int argind = 0;
   JSPointData<double>*s, arg, point;
@@ -187,6 +187,30 @@ js_point_difference(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   }
 
   ret = js_point_new(ctx, JS_GetPrototype(ctx, this_val), point.x, point.y);
+  return ret;
+}
+
+static JSValue
+js_point_adjacent(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+  JSValue ret = JS_UNDEFINED;
+  BOOL result = FALSE;
+  int argind = 0;
+  JSPointData<double>*s, arg, point;
+
+  if(!(s = js_point_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  point = *s;
+
+  while(argind < argc) {
+    if(!js_point_argument(ctx, argc, argv, argind, &arg))
+      break;
+
+    if((result = point_adjacent<int>(point, arg)))
+      break;
+  }
+
+  ret = JS_NewBool(ctx, result);
   return ret;
 }
 
@@ -223,7 +247,7 @@ js_point_set_xy(JSContext* ctx, JSValueConst this_val, JSValueConst val, int mag
 }
 
 static JSValue
-js_point_inside(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_point_inside(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSPointData<double>* s = js_point_data2(ctx, this_val);
   JSRectData<double> r = js_rect_get(ctx, argv[0]);
   bool retval;
@@ -238,7 +262,7 @@ js_point_inside(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
 enum { POINT_METHOD_MAG = 0, POINT_METHOD_NORM, POINT_METHOD_ABS, POINT_METHOD_ANGLE, POINT_METHOD_ROTATE, POINT_METHOD_MOD, POINT_METHOD_CLONE };
 
 static JSValue
-js_point_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_point_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSPointData<double>* s;
   JSValue ret = JS_UNDEFINED;
 
@@ -334,7 +358,7 @@ enum {
 };
 
 static JSValue
-js_point_arith(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_point_arith(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSPointData<double> other, point, *s;
   int argind = 0;
   BOOL method = TRUE;
@@ -386,7 +410,7 @@ js_point_arith(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
 }
 
 static JSValue
-js_point_to_string(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_point_to_string(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSPointData<double>* s = js_point_data2(ctx, this_val);
   std::ostringstream os;
   JSValue xv, yv;
@@ -427,7 +451,7 @@ js_point_to_string(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
 }
 
 static JSValue
-js_point_to_array(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_point_to_array(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSPointData<double>* s = js_point_data2(ctx, this_val);
   std::array<double, 2> arr;
 
@@ -438,7 +462,7 @@ js_point_to_array(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
 }
 
 static JSValue
-js_point_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_point_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSPointData<double>* s = js_point_data2(ctx, this_val);
   JSValue obj = JS_NewObjectClass(ctx, js_point_class_id);
 
@@ -451,7 +475,7 @@ js_point_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* 
 static JSAtom iterator_symbol;
 
 static JSValue
-js_point_symbol_iterator(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_point_symbol_iterator(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSValue arr, iter;
   arr = js_point_to_array(ctx, this_val, argc, argv);
 
@@ -464,7 +488,7 @@ js_point_symbol_iterator(JSContext* ctx, JSValueConst this_val, int argc, JSValu
 }
 
 static JSValue
-js_point_round(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_point_round(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSPointData<double> point, *s = js_point_data2(ctx, this_val);
   double x, y;
   double prec = 1;
@@ -501,7 +525,7 @@ js_point_round(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
 }
 
 static JSValue
-js_point_from(JSContext* ctx, JSValueConst point, int argc, JSValueConst* argv) {
+js_point_from(JSContext* ctx, JSValueConst point, int argc, JSValueConst argv[]) {
   std::array<double, 2> array;
   JSValue ret = JS_EXCEPTION;
 
@@ -621,6 +645,7 @@ const JSCFunctionListEntry js_point_proto_funcs[] = {
     JS_CFUNC_DEF("dot", 1, js_point_ddot),
     JS_CFUNC_DEF("inside", 1, js_point_inside),
     JS_CFUNC_DEF("difference", 1, js_point_difference),
+    JS_CFUNC_DEF("adjacent", 1, js_point_adjacent),
     JS_CFUNC_MAGIC_DEF("add", 1, js_point_arith, POINT_ARITH_ADD),
     JS_CFUNC_MAGIC_DEF("sub", 1, js_point_arith, POINT_ARITH_SUB),
     JS_CFUNC_MAGIC_DEF("mul", 1, js_point_arith, POINT_ARITH_MUL),

@@ -84,7 +84,7 @@ extern "C" int js_size_init(JSContext*, JSModuleDef*);
 
 template<class T>
 static inline BOOL
-js_size_arg(JSContext* ctx, int argc, JSValueConst* argv, int& argind, JSSizeData<T>& size) {
+js_size_arg(JSContext* ctx, int argc, JSValueConst argv[], int& argind, JSSizeData<T>& size) {
   if(argind < argc && js_size_read(ctx, argv[argind], &size)) {
     ++argind;
     return TRUE;

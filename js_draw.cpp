@@ -41,7 +41,7 @@ extern "C" {
 cv::Mat* dptr = 0;
 
 static JSValue
-js_draw_circle(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_draw_circle(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSInputOutputArray dst;
   int i = 0, ret = -1;
   JSPointData<double> point;
@@ -94,7 +94,7 @@ js_draw_circle(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* ar
 }
 
 static JSValue
-js_draw_ellipse(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_draw_ellipse(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSInputOutputArray dst;
   int i = 0, ret = -1;
   JSPointData<double> center;
@@ -160,7 +160,7 @@ js_draw_ellipse(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
 }
 
 static JSValue
-js_draw_contour(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_draw_contour(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSInputOutputArray dst;
   int i = 0, ret = -1;
   JSContoursData<int> contours;
@@ -200,7 +200,7 @@ js_draw_contour(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
 }
 
 static JSValue
-js_draw_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_draw_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSInputOutputArray dst;
   int i = 0, ret = -1;
   JSContoursData<int> contours;
@@ -262,7 +262,7 @@ js_draw_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* 
 }
 
 static JSValue
-js_draw_line(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_draw_line(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSInputOutputArray dst;
   int i = 0, ret = -1;
   JSPointData<int> points[2];
@@ -327,7 +327,7 @@ js_draw_line(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv
 }
 
 static JSValue
-js_draw_polygon(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_draw_polygon(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSInputOutputArray dst;
   int i = 0, ret = -1;
   point_vector<int> points;
@@ -369,7 +369,7 @@ js_draw_polygon(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
 }
 
 static JSValue
-js_draw_polylines(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_draw_polylines(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSInputOutputArray dst;
   int i = 0, ret = -1;
   JSContoursData<int> points;
@@ -411,7 +411,7 @@ js_draw_polylines(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
 }
 
 static JSValue
-js_draw_rectangle(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_draw_rectangle(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSInputOutputArray dst;
   int i = 0, ret = -1;
   JSRectData<double> rect;
@@ -474,7 +474,7 @@ js_draw_rectangle(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
 }
 
 static JSValue
-js_draw_keypoints(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_draw_keypoints(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   int i = 0, ret = -1;
   std::vector<JSKeyPointData> keypoints;
   JSInputOutputArray image, dst;
@@ -495,7 +495,7 @@ js_draw_keypoints(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
 }
 
 static JSValue
-js_put_text(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_put_text(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   cv::Mat* dst;
   int i = 0, ret = -1;
   JSColorData<double> color;
@@ -581,7 +581,7 @@ js_put_text(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv)
 }
 
 static JSValue
-js_get_text_size(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_get_text_size(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   int i = 0, baseline = 0;
   JSSizeData<double> size;
   const char* text;
@@ -638,7 +638,7 @@ js_get_text_size(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* 
 }
 
 static JSValue
-js_get_font_scale_from_height(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_get_font_scale_from_height(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   int32_t font_face, pixel_height, thickness = 1;
   double font_scale;
 
@@ -653,7 +653,7 @@ js_get_font_scale_from_height(JSContext* ctx, JSValueConst this_val, int argc, J
 }
 
 static JSValue
-js_load_font(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_load_font(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   int32_t id = 0;
   std::string font_name;
 
@@ -673,7 +673,7 @@ js_load_font(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv
 }
 
 static JSValue
-js_clip_line(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_clip_line(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSSizeData<int> img_size;
   JSRectData<int> img_rect;
   JSLineData<double>* l;
@@ -755,7 +755,7 @@ const JSCFunctionListEntry js_draw_global_funcs[] = {
 };
 
 static JSValue
-js_draw_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_draw_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   JSValue obj = JS_UNDEFINED;
   JSValue proto;
 

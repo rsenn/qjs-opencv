@@ -59,7 +59,7 @@ js_size_fit(const JSSizeData<T>& size, const JSSizeData<T>& to, js_size_fit_t mo
 }
 
 static JSValue
-js_size_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_size_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   JSSizeData<double> size, *s;
   JSValue obj = JS_UNDEFINED;
   JSValue proto;
@@ -182,7 +182,7 @@ js_size_set(JSContext* ctx, JSValueConst this_val, JSValueConst val, int magic) 
 }
 
 static JSValue
-js_size_to_string(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_size_to_string(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSSizeData<double> size, *s;
   std::ostringstream os;
   const char* delim = "×";
@@ -200,7 +200,7 @@ js_size_to_string(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
   return JS_NewString(ctx, os.str().c_str());
 }
 static JSValue
-js_size_to_source(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_size_to_source(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSSizeData<double> size, *s;
   std::ostringstream os;
   if((s = js_size_data(this_val)) == nullptr) {
@@ -214,7 +214,7 @@ js_size_to_source(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst*
 }
 
 static JSValue
-js_size_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_size_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSSizeData<double>* s = js_size_data2(ctx, this_val);
   JSValue obj = JS_NewObjectClass(ctx, js_size_class_id);
 
@@ -238,7 +238,7 @@ enum {
 };
 
 static JSValue
-js_size_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_size_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSSizeData<double> size, *s;
   JSValue ret = JS_UNDEFINED;
 
@@ -396,7 +396,7 @@ js_size_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* arg
 }
 
 static JSValue
-js_size_add(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_size_add(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSSizeData<double>*s, size;
 
   if((s = js_size_data2(ctx, this_val)) == nullptr)
@@ -418,7 +418,7 @@ js_size_add(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv)
 }
 
 static JSValue
-js_size_sub(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_size_sub(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSSizeData<double>*s, size;
 
   if((s = js_size_data2(ctx, this_val)) == nullptr)
@@ -440,7 +440,7 @@ js_size_sub(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv)
 }
 
 static JSValue
-js_size_mul(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_size_mul(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSSizeData<double> size, *s = js_size_data2(ctx, this_val);
   double factor;
   JS_ToFloat64(ctx, &factor, argv[0]);
@@ -453,7 +453,7 @@ js_size_mul(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv)
 }
 
 static JSValue
-js_size_div(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_size_div(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSSizeData<double> size, other, *s, *a = nullptr;
   JSValue ret = JS_EXCEPTION;
   if((s = js_size_data2(ctx, this_val)) != nullptr) {
@@ -485,7 +485,7 @@ js_size_div(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv)
 static JSAtom iterator_symbol;
 
 static JSValue
-js_size_symbol_iterator(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_size_symbol_iterator(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSValue arr, iter;
   arr = js_size_funcs(ctx, this_val, argc, argv, SIZE_METHOD_TOARRAY);
 
@@ -498,7 +498,7 @@ js_size_symbol_iterator(JSContext* ctx, JSValueConst this_val, int argc, JSValue
 }
 
 static JSValue
-js_size_from(JSContext* ctx, JSValueConst size, int argc, JSValueConst* argv) {
+js_size_from(JSContext* ctx, JSValueConst size, int argc, JSValueConst argv[]) {
   std::array<double, 2> array;
   JSValue ret = JS_EXCEPTION;
 

@@ -36,7 +36,7 @@ js_subdiv2d_new(JSContext* ctx, JSRectData<int>* rect = nullptr) {
 }
 
 static JSValue
-js_subdiv2d_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_subdiv2d_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   JSRectData<int> rect;
 
   if(argc > 0)
@@ -60,7 +60,7 @@ js_subdiv2d_finalizer(JSRuntime* rt, JSValue val) {
 }
 
 static JSValue
-js_subdiv2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+js_subdiv2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   cv::Subdiv2D* s;
   JSValue ret = JS_UNDEFINED;
 

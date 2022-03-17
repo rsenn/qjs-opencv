@@ -46,7 +46,7 @@ js_fast_line_detector_new(JSContext* ctx,
 }
 
 static JSValue
-js_fast_line_detector_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_fast_line_detector_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
 
   JSValue proto;
   int32_t length_threshold = 10;
@@ -92,7 +92,7 @@ js_fast_line_detector_finalizer(JSRuntime* rt, JSValue val) {
 }
 
 static JSValue
-js_fast_line_detector_detect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_fast_line_detector_detect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSFastLineDetector* s;
   JSInputArray image;
   std::vector<cv::Vec4f> lines;
@@ -118,7 +118,7 @@ js_fast_line_detector_detect(JSContext* ctx, JSValueConst this_val, int argc, JS
 }
 
 static JSValue
-js_fast_line_detector_draw_segments(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_fast_line_detector_draw_segments(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSFastLineDetector* s;
   JSInputOutputArray image;
   std::vector<cv::Vec4f> lines;

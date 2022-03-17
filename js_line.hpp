@@ -93,7 +93,7 @@ js_line_read(JSContext* ctx, JSValueConst value, JSPointData<T>* a, JSPointData<
 
 template<class T>
 static inline BOOL
-js_line_arg(JSContext* ctx, int argc, JSValueConst* argv, int& argind, JSLineData<T>& line) {
+js_line_arg(JSContext* ctx, int argc, JSValueConst argv[], int& argind, JSLineData<T>& line) {
   if(argind < argc && js_line_read(ctx, argv[argind], &line)) {
     ++argind;
     return TRUE;

@@ -22,7 +22,7 @@ thread_local VISIBLE JSClassID js_video_writer_class_id = 0;
 }
 
 static bool
-js_video_writer_open(JSContext* ctx, JSVideoWriterData* vw, int argc, JSValueConst* argv) {
+js_video_writer_open(JSContext* ctx, JSVideoWriterData* vw, int argc, JSValueConst argv[]) {
   int32_t apiPreference = cv::CAP_ANY;
   cv::String filename;
   JSSizeData<int> frameSize;
@@ -50,7 +50,7 @@ js_video_writer_open(JSContext* ctx, JSVideoWriterData* vw, int argc, JSValueCon
 }
 
 static JSValue
-js_video_writer_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst* argv) {
+js_video_writer_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   JSVideoWriterData* vw;
   JSValue obj = JS_UNDEFINED;
   JSValue proto, ret;
@@ -113,7 +113,7 @@ enum {
 };
 
 static JSValue
-js_video_writer_method(JSContext* ctx, JSValueConst video_writer, int argc, JSValueConst* argv, int magic) {
+js_video_writer_method(JSContext* ctx, JSValueConst video_writer, int argc, JSValueConst argv[], int magic) {
   JSVideoWriterData* vw = static_cast<JSVideoWriterData*>(JS_GetOpaque2(ctx, video_writer, js_video_writer_class_id));
   JSValue ret = JS_UNDEFINED;
   int32_t propID;
@@ -167,7 +167,7 @@ js_video_writer_method(JSContext* ctx, JSValueConst video_writer, int argc, JSVa
 }
 
 static JSValue
-js_video_writer_fourcc(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+js_video_writer_fourcc(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   char chars[4];
   size_t i;
   if(argc >= 4) {
