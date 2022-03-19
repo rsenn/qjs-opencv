@@ -177,7 +177,7 @@ set_target_properties(qjs-opencv PROPERTIES PREFIX lib OUTPUT_NAME "qjs-opencv" 
 target_compile_definitions(qjs-opencv PRIVATE CONFIG_PREFIX="${CMAKE_INSTALL_PREFIX}")
 #dump(PNG_INCLUDE_DIRS PNG_LIBRARIES PNG_LIBRARY OPENCV_FREETYPE_LIBRARY)
 target_include_directories(qjs-opencv PUBLIC "${PNG_INCLUDE_DIRS}")
-target_link_libraries(qjs-opencv PUBLIC ${PNG_LIBRARIES} ${OPENCV_FREETYPE_LIBRARY} ${OPENCV_LIBRARIES})
+target_link_libraries(qjs-opencv PUBLIC ${QUICKJS_LIBRARY} ${PNG_LIBRARIES} ${OPENCV_FREETYPE_LIBRARY} ${OPENCV_LIBRARIES})
 
 install(TARGETS qjs-opencv DESTINATION "${QUICKJS_C_MODULE_DIR}")
 set(jsbindings_LIBRARIES qjs-opencv)
