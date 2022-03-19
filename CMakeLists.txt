@@ -1,12 +1,13 @@
 cmake_minimum_required(VERSION 3.0)
 project(qjs-opencv)
 
+message("Building project [1;31m${PROJECT_NAME}[0m")
+
 set(DISABLE_WERROR TRUE CACHE BOOL "Disable -Werror flag" FORCE)
 
 set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "build type")
 
-set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release MinSizeRel
-                                             RelWithDebInfo)
+set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release MinSizeRel RelWithDebInfo)
 
 set(QUICKJS_SOURCES_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/quickjs)
 
@@ -21,7 +22,9 @@ else(WIN32)
 endif(WIN32)
 
 include(FindThreads)
-include(FindPkgConfig)
+if(NOT PKG_CONFIG_FOUND)
+  include(FindPkgConfig)
+endif(NOT PKG_CONFIG_FOUND)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Functions.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CheckFlags.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/UseMultiArch.cmake)
@@ -33,8 +36,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/JSBindings.cmake)
 if(UNIX AND NOT APPLE)
   include(GNUInstallDirs)
 elseif(NOT DEFINED CMAKE_INSTALL_LIBDIR)
-  set(CMAKE_INSTALL_LIBDIR ""
-      CACHE PATH "Specify the output directory for libraries (default is lib)")
+  set(CMAKE_INSTALL_LIBDIR "" CACHE PATH "Specify the output directory for libraries (default is lib)")
 endif()
 
 message(STATUS "Finding QuickJS...")
@@ -77,8 +79,7 @@ if(HAVE_LIBDL)
   # message("Found dlfcn library: ${LIBDL}")
 endif(HAVE_LIBDL)
 
-check_library_exists(json-cpp ZN4YAML6detail9node_data9reset_mapEv /usr
-                     JSON_CPP)
+check_library_exists(json-cpp ZN4YAML6detail9node_data9reset_mapEv /usr JSON_CPP)
 
 find_quickjs()
 find_opencv()
@@ -86,8 +87,7 @@ find_opencv()
 #set(CMAKE_INSTALL_RPATH "${OPENCV_LIB_DIR}" CACHE PATH "Build with install rpath" FORCE)
 set(CMAKE_INSTALL_RPATH "${OPENCV_LIBDIR}")
 
-include_directories(${OPENCV_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}
-                    lsd/include)
+include_directories(${OPENCV_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR} lsd/include)
 
 include(CheckIncludeFileCXX)
 
@@ -104,8 +104,7 @@ if(HAVE_OPENCV2_XFEATURES2D_HPP)
 endif(HAVE_OPENCV2_XFEATURES2D_HPP)
 
 include(CheckCXXSymbolExists)
-check_cxx_symbol_exists(cv::AffineFeature opencv2/features2d.hpp
-                        HAVE_OPENCV_AFFINE_FEATURE)
+check_cxx_symbol_exists(cv::AffineFeature opencv2/features2d.hpp HAVE_OPENCV_AFFINE_FEATURE)
 
 #dump(HAVE_OPENCV2_FREETYPE_HPP OPENCV_FREETYPE_LIBRARY HAVE_OPENCV2_XFEATURES2D_HPP HAVE_OPENCV_AFFINE_FEATURE)
 if(HAVE_OPENCV_AFFINE_FEATURE)
@@ -160,8 +159,7 @@ option(QUICKJS_MODULES "Build .so modules for quickjs" ON)
 
 option(BUILD_QUICKJS "Build QuickJS" ON)
 
-file(GLOB OPENCV_SOURCES *.hpp *.cpp gifenc/gifenc.c
-     dominant_colors_grabber.cpp lsd/src/*.cpp)
+file(GLOB OPENCV_SOURCES *.hpp *.cpp gifenc/gifenc.c dominant_colors_grabber.cpp lsd/src/*.cpp)
 # dump(OPENCV_SOURCES)
 
 #dump(QUICKJS_MODULE_CFLAGS F_PIC)
@@ -170,20 +168,14 @@ file(GLOB OPENCV_SOURCES *.hpp *.cpp gifenc/gifenc.c
 list(REMOVE_ITEM OPENCV_SOURCES init_module.cpp)
 list(REMOVE_ITEM OPENCV_SOURCES js.hpp js.cpp)
 
-set(CMAKE_CXX11_EXTENSION_COMPILE_OPTION "${CXX_STANDARD_FLAG}" CACHE STRING ""
-                                                                      FORCE)
+set(CMAKE_CXX11_EXTENSION_COMPILE_OPTION "${CXX_STANDARD_FLAG}" CACHE STRING "" FORCE)
 
 add_library(qjs-opencv STATIC ${OPENCV_SOURCES})
-set_target_properties(
-  qjs-opencv PROPERTIES PREFIX lib OUTPUT_NAME "qjs-opencv"
-                        COMPILE_FLAGS "${QUICKJS_MODULE_CFLAGS} ${F_PIC}")
-target_compile_definitions(qjs-opencv
-                           PRIVATE CONFIG_PREFIX="${CMAKE_INSTALL_PREFIX}")
+set_target_properties(qjs-opencv PROPERTIES PREFIX lib OUTPUT_NAME "qjs-opencv" COMPILE_FLAGS "${QUICKJS_MODULE_CFLAGS} ${F_PIC}")
+target_compile_definitions(qjs-opencv PRIVATE CONFIG_PREFIX="${CMAKE_INSTALL_PREFIX}")
 #dump(PNG_INCLUDE_DIRS PNG_LIBRARIES PNG_LIBRARY OPENCV_FREETYPE_LIBRARY)
 target_include_directories(qjs-opencv PUBLIC "${PNG_INCLUDE_DIRS}")
-target_link_libraries(
-  qjs-opencv PUBLIC ${PNG_LIBRARIES} ${OPENCV_FREETYPE_LIBRARY}
-                    ${OPENCV_LIBRARIES})
+target_link_libraries(qjs-opencv PUBLIC ${PNG_LIBRARIES} ${OPENCV_FREETYPE_LIBRARY} ${OPENCV_LIBRARIES})
 
 install(TARGETS qjs-opencv DESTINATION "${QUICKJS_C_MODULE_DIR}")
 set(jsbindings_LIBRARIES qjs-opencv)
