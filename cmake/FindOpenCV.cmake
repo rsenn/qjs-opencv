@@ -114,15 +114,22 @@ macro(find_opencv)
     # dump(CMAKE_PREFIX_PATH CMAKE_MODULE_PATH)
 
     if(NOT OPENCV_FOUND)
-      find_package(OpenCV PATHS "${OPENCV_PREFIX}/lib/cmake/opencv4;${OPENCV_PREFIX}/lib/cmake;${OPENCV_PREFIX}")
+      find_package(
+        OpenCV
+        PATHS
+        "${OPENCV_PREFIX}/lib/cmake/opencv4;${OPENCV_PREFIX}/lib/cmake;${OPENCV_PREFIX}"
+      )
       # message(STATUS "OpenCV_VERSION = ${OpenCV_VERSION}")
       if(OpenCV_VERSION)
 
         set(OPENCV_VERSION "${OpenCV_VERSION}" CACHE PATH "OpenCV version")
-        set(OPENCV_LIBDIR "${OpenCV_INSTALL_PATH}/lib" CACHE PATH "OpenCV library directory")
+        set(OPENCV_LIBDIR "${OpenCV_INSTALL_PATH}/lib"
+            CACHE PATH "OpenCV library directory")
         #set(OPENCV_LINK_FLAGS "-Wl,-rpath,${OPENCV_LIBDIR} -L${OPENCV_LIBDIR}" CACHE STRING "OpenCV link flags")
-        set(OPENCV_PREFIX "${OpenCV_INSTALL_PATH}" CACHE PATH "OpenCV install directory")
-        set(OPENCV_INCLUDE_DIRS "${OpenCV_INCLUDE_DIRS}" CACHE PATH "OpenCV include directories")
+        set(OPENCV_PREFIX "${OpenCV_INSTALL_PATH}"
+            CACHE PATH "OpenCV install directory")
+        set(OPENCV_INCLUDE_DIRS "${OpenCV_INCLUDE_DIRS}"
+            CACHE PATH "OpenCV include directories")
         set(OPENCV_LIBRARIES "${OpenCV_LIBS}" CACHE PATH "OpenCV libraries")
 
         # dump(OpenCV_LIBS OpenCV_INCLUDE_DIRS OpenCV_VERSION OpenCV_SHARED OpenCV_INSTALL_PATH
@@ -147,8 +154,10 @@ macro(find_opencv)
       include_directories(${OPENCV_INCLUDE_DIRS})
 
       if(OPENCV_LINK_FLAGS)
-        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OPENCV_LINK_FLAGS}")
-        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${OPENCV_LINK_FLAGS}")
+        set(CMAKE_EXE_LINKER_FLAGS
+            "${CMAKE_EXE_LINKER_FLAGS} ${OPENCV_LINK_FLAGS}")
+        set(CMAKE_SHARED_LINKER_FLAGS
+            "${CMAKE_SHARED_LINKER_FLAGS} ${OPENCV_LINK_FLAGS}")
       endif(OPENCV_LINK_FLAGS)
 
       set(CMAKE_INSTALL_RPATH "${OPENCV_LIB_DIR}:${CMAKE_INSTALL_RPATH}")
