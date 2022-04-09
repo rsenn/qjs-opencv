@@ -30,7 +30,8 @@ macro(check_size TYPE VAR)
 endmacro(check_size TYPE VAR)
 
 macro(find_static_library VAR NAME)
-  find_library(${VAR} NAMES lib${NAME}.a PATHS "${CMAKE_INSTALL_PREFIX}/lib" NO_DEFAULT_PATH)
+  find_library(${VAR} NAMES lib${NAME}.a PATHS "${CMAKE_INSTALL_PREFIX}/lib"
+               NO_DEFAULT_PATH)
 endmacro()
 
 function(ADD_UNIQUE LIST)
