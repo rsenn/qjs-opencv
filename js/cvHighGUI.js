@@ -1,4 +1,4 @@
-import { selectROI, Size, Point, Draw, FILLED, FONT_HERSHEY_PLAIN, getScreenResolution, getWindowImageRect, getWindowProperty, imshow, LINE_AA, moveWindow, namedWindow, resizeWindow, setMouseCallback, setWindowProperty, setWindowTitle, WINDOW_NORMAL, EVENT_MOUSEMOVE, EVENT_LBUTTONDOWN, EVENT_RBUTTONDOWN, EVENT_MBUTTONDOWN, EVENT_LBUTTONUP, EVENT_RBUTTONUP, EVENT_MBUTTONUP, EVENT_LBUTTONDBLCLK, EVENT_RBUTTONDBLCLK, EVENT_MBUTTONDBLCLK, EVENT_MOUSEWHEEL, EVENT_MOUSEHWHEEL, EVENT_FLAG_LBUTTON, EVENT_FLAG_RBUTTON, EVENT_FLAG_MBUTTON, EVENT_FLAG_CTRLKEY, EVENT_FLAG_SHIFTKEY, EVENT_FLAG_ALTKEY } from 'opencv';
+import { waitKey, selectROI, Size, Point, Draw, FILLED, FONT_HERSHEY_PLAIN, getScreenResolution, getWindowImageRect, getWindowProperty, imshow, LINE_AA, moveWindow, namedWindow, resizeWindow, destroyWindow, setMouseCallback, setWindowProperty, setWindowTitle, WINDOW_NORMAL, EVENT_MOUSEMOVE, EVENT_LBUTTONDOWN, EVENT_RBUTTONDOWN, EVENT_MBUTTONDOWN, EVENT_LBUTTONUP, EVENT_RBUTTONUP, EVENT_MBUTTONUP, EVENT_LBUTTONDBLCLK, EVENT_RBUTTONDBLCLK, EVENT_MBUTTONDBLCLK, EVENT_MOUSEWHEEL, EVENT_MOUSEHWHEEL, EVENT_FLAG_LBUTTON, EVENT_FLAG_RBUTTON, EVENT_FLAG_MBUTTON, EVENT_FLAG_CTRLKEY, EVENT_FLAG_SHIFTKEY, EVENT_FLAG_ALTKEY } from 'opencv';
 import { BitsToNames } from './cvUtils.js';
 
 export const MouseEvents = {
@@ -43,21 +43,36 @@ export class Screen {
 
 export class Window {
   constructor(name, flags = WINDOW_NORMAL) {
-    this.name = name;
     this.flags = flags;
+    if(typeof name == 'string') this.#create(name);
+  }
 
-    namedWindow(this.name, this.flags);
+  #create(name = 'default') {
+    if(!this.name) {
+      this.name = name;
+
+      namedWindow(this.name, this.flags);
+    }
+  }
+
+  #update(waitFor = 10) {
+    if(!this.name) this.#create();
+    waitKey(waitFor);
   }
 
   move(...args) {
     let pos = new Point(...args);
     moveWindow(this.name, pos.x, pos.y);
+
+    this.#update();
   }
 
   resize(...args) {
     //console.log("Window.resize", ...args);
     let size = new Size(...args);
     resizeWindow(this.name, ...size);
+
+    this.#update();
     return size;
   }
 
@@ -66,7 +81,8 @@ export class Window {
     let rect = this.imageRect;
     let dim = new Size(rect);
     let { x, y } = dim.align(s, n);
-    console.log('pos', { x, y });
+
+    this.#update();
     return this.move(x, y);
   }
 
@@ -79,11 +95,15 @@ export class Window {
   }
   set(propId, value) {
     setWindowProperty(this.name, propId, value);
+
+    this.#update();
   }
 
   setTitle(title) {
     this.title = title;
     setWindowTitle(this.name, title);
+
+    this.#update();
   }
 
   setMouseCallback(fn) {
@@ -92,11 +112,24 @@ export class Window {
       //console.log("MouseCallback", {event,x,y,flags});
       fn.call(this, event, x, y, flags);
     });
+
+    this.#update();
   }
 
   show(mat) {
+    this.#create();
     this.mat = mat;
     imshow(this.name, mat);
+
+    this.#update(50);
+  }
+
+  close() {
+    if(this.name) {
+      destroyWindow(this.name);
+      this.name = undefined;
+    }
+    this.#update();
   }
 
   valueOf() {
