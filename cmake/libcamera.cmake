@@ -16,6 +16,7 @@ include_directories(${LIBCAMERA_INCLUDE_DIRS})
 
 file(GLOB LIBCAMERA_OPENCV_SOURCES CONFIGURE_DEPENDS libcamera-opencv/*.h libcamera-opencv/*.cpp)
 list(FILTER LIBCAMERA_OPENCV_SOURCES EXCLUDE REGEX main.cpp)
+list(FILTER LIBCAMERA_OPENCV_SOURCES EXCLUDE REGEX Simple)
 
 
 add_library(camera-opencv STATIC ${LIBCAMERA_OPENCV_SOURCES})
