@@ -165,6 +165,12 @@ link_directories(${CMAKE_CURRENT_BINARY_DIR}/quickjs)
 option(QUICKJS_MODULES "Build .so modules for quickjs" ON)
 
 option(BUILD_QUICKJS "Build QuickJS" ON)
+option(USE_LIBCAMERA "Use libcamera-opencv" ON)
+
+if(USE_LIBCAMERA)
+  include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/libcamera.cmake)
+endif(USE_LIBCAMERA)
+
 
 file(GLOB OPENCV_SOURCES *.hpp *.cpp gifenc/gifenc.c
      dominant_colors_grabber.cpp lsd/src/*.cpp)

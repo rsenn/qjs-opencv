@@ -8,3 +8,6 @@
 [submodule "gifenc"]
 	path = gifenc
 	url = https://github.com/lecram/gifenc
+[submodule "libcamera-opencv"]
+	path = libcamera-opencv
+	url = git@github.com:rsenn/libcamera-opencv.git
