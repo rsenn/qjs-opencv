@@ -609,8 +609,8 @@ static JSValue
 js_cv_find_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   cv::Mat* m = js_mat_data2(ctx, argv[0]);
   JSValue array_buffer, ret = JS_UNDEFINED;
-  int mode = cv::RETR_TREE;
-  int approx = cv::CHAIN_APPROX_SIMPLE;
+  int32_t mode = cv::RETR_TREE;
+  int32_t approx = cv::CHAIN_APPROX_SIMPLE;
   bool hier_callback, contours_array, hier_array, hier_mat;
   cv::Point offset(0, 0);
 
@@ -628,6 +628,11 @@ js_cv_find_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
     hier = js_umat_or_mat(ctx, argv[2]);
   /*else
     hier = JSInputOutputArray(vec4i);*/
+
+  if(argc > 3)
+    JS_ToInt32(ctx, &mode, argv[3]);
+  if(argc > 4)
+    JS_ToInt32(ctx, &approx, argv[4]);
 
   cv::findContours(*m, contours, hier, mode, approx, offset);
 
@@ -1710,12 +1715,22 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
         double epsilon;
         BOOL closed = argc > 2 ? JS_ToBool(ctx, argv[3]) : FALSE;
         JS_ToFloat64(ctx, &epsilon, argv[2]);
-        JSContourData<double>* pContour;
-        std::cerr << "epsilon = " << epsilon << std::endl;
+        JSContourData<double>*srcContour, *pContour;
+        // std::cerr << "epsilon = " << epsilon << std::endl;
 
-        if((pContour = js_contour_data(argv[1]))) {
+        if((srcContour = js_contour_data(argv[0])) && (pContour = js_contour_data(argv[1]))) {
+          JSContourData<float> src, dst;
 
-          cv::approxPolyDP(src, *pContour, epsilon, closed);
+          src.resize(srcContour->size());
+
+          std::copy(srcContour->begin(), srcContour->end(), src.begin());
+
+          cv::approxPolyDP(src, dst, epsilon, closed);
+
+          pContour->resize(dst.size());
+
+          std::copy(dst.begin(), dst.end(), pContour->begin());
+
         } else {
           JSOutputArray approxCurve = js_umat_or_mat(ctx, argv[1]);
 
