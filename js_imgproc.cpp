@@ -1257,12 +1257,25 @@ js_imgproc_transform(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
       break;
     }
     case TRANSFORM_GET_PERSPECTIVE_TRANSFORM: {
-      JSInputArray dst = js_umat_or_mat(ctx, argv[1]);
       int32_t solveMethod = cv::DECOMP_LU;
+      JSMatData mat;
 
       if(argc >= 3)
         JS_ToInt32(ctx, &solveMethod, argv[2]);
-      JSMatData mat = cv::getPerspectiveTransform(src, dst, solveMethod);
+
+      if(JS_IsArray(ctx, argv[0])) {
+        std::vector<JSPointData<float>> src, dst;
+
+        js_array_to(ctx, argv[0], src);
+        js_array_to(ctx, argv[1], dst);
+
+        mat = cv::getPerspectiveTransform(src, dst, solveMethod);
+
+      } else {
+
+        JSInputArray dst = js_umat_or_mat(ctx, argv[1]);
+        mat = cv::getPerspectiveTransform(src, dst, solveMethod);
+      }
       ret = js_mat_wrap(ctx, mat);
       break;
     }
