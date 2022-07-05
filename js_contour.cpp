@@ -1038,6 +1038,27 @@ js_contour_fromstr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
   return ret;
 }
 
+static JSValue
+js_contour_from(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+  JSValue ret = JS_UNDEFINED;
+  JSContourData<double> points;
+  int64_t i, len = js_array_length(ctx, argv[0]);
+
+  for(i = 0; i < len; i++) {
+    JSValue item = JS_GetPropertyUint32(ctx, argv[0], i);
+    JSPointData<double> point;
+
+    if(!js_point_read(ctx, item, &point))
+      return JS_ThrowTypeError(ctx, "item %" PRId64 " is not a cv::Point", i);
+
+    points.push_back(point);
+  }
+  if(points.size())
+    ret = js_contour_new(ctx, points);
+
+  return ret;
+}
+
 enum { PROP_ASPECT_RATIO = 0, PROP_EXTENT, PROP_SOLIDITY, PROP_EQUIVALENT_DIAMETER, PROP_ORIENTATION, PROP_BOUNDING_RECT };
 
 static JSValue
@@ -1348,6 +1369,7 @@ const JSCFunctionListEntry js_contour_proto_funcs[] = {
 const JSCFunctionListEntry js_contour_static_funcs[] = {
     JS_CFUNC_DEF("fromRect", 1, js_contour_rect),
     JS_CFUNC_DEF("fromString", 1, js_contour_fromstr),
+    JS_CFUNC_DEF("from", 1, js_contour_from),
     JS_PROP_INT32_DEF("FORMAT_XY", 0x00, 0),
     JS_PROP_INT32_DEF("FORMAT_01", 0x02, 0),
     JS_PROP_INT32_DEF("FORMAT_SPACE", 0x10, 0),

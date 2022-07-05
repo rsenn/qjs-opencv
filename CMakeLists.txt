@@ -194,7 +194,7 @@ target_compile_definitions(qjs-opencv
 #dump(PNG_INCLUDE_DIRS PNG_LIBRARIES PNG_LIBRARY OPENCV_FREETYPE_LIBRARY)
 target_include_directories(qjs-opencv PUBLIC "${PNG_INCLUDE_DIRS}")
 target_link_libraries(
-  qjs-opencv PUBLIC ${CAMERA_OPENCV_LIBRARY} ${QUICKJS_LIBRARY} ${PNG_LIBRARIES}
+  qjs-opencv PUBLIC ${CAMERA_OPENCV_LIBRARIES} ${QUICKJS_LIBRARY} ${PNG_LIBRARIES}
                     ${OPENCV_FREETYPE_LIBRARY} ${OPENCV_LIBRARIES})
 
 install(TARGETS qjs-opencv DESTINATION "${QUICKJS_C_MODULE_DIR}")

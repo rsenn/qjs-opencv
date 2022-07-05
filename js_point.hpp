@@ -158,7 +158,7 @@ point_adjacent(const cv::Point_<T>& a, const cv::Point_<T>& b) {
   cv::Point_<T> diff = point_abs(point_difference(a, b));
   T d = diff.x + diff.y;
 
-  return (d > 1 && diff.x <=  1 && diff.y <= 1) || d == 1;
+  return (d > 1 && diff.x <= 1 && diff.y <= 1) || d == 1;
 }
 
 template<typename T>

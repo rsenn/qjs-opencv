@@ -1678,168 +1678,216 @@ static JSValue
 js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSInputOutputArray src;
   JSValue ret = JS_UNDEFINED;
-  if(magic != SHAPE_BOX_POINTS && magic != SHAPE_HU_MOMENTS)
+  JSContourData<double>* contour;
+  cv::Mat mat;
+
+  if((contour = js_contour_data(argv[0]))) {
+    JSContourData<float> fcontour;
+    fcontour.resize(contour->size());
+    std::copy(contour->begin(), contour->end(), fcontour.begin());
+
+    mat = contour_getmat(fcontour);
+    src = mat;
+
+  } else if(magic != SHAPE_BOX_POINTS && magic != SHAPE_HU_MOMENTS)
     src = argc >= 1 ? js_umat_or_mat(ctx, argv[0]) : cv::noArray();
+  try {
+    switch(magic) {
+      case SHAPE_APPROX_POLY_DP: {
+        double epsilon;
+        BOOL closed = argc > 2 ? JS_ToBool(ctx, argv[3]) : FALSE;
+        JS_ToFloat64(ctx, &epsilon, argv[2]);
+        JSContourData<double>* pContour;
+        std::cerr << "epsilon = " << epsilon << std::endl;
 
-  switch(magic) {
-    case SHAPE_APPROX_POLY_DP: {
-      JSOutputArray approxCurve = js_umat_or_mat(ctx, argv[1]);
-      double epsilon;
-      BOOL closed;
-      JS_ToFloat64(ctx, &epsilon, argv[2]);
-      closed = JS_ToBool(ctx, argv[3]);
-      cv::approxPolyDP(src, approxCurve, epsilon, closed);
-      break;
-    }
-    case SHAPE_ARC_LENGTH: {
-      BOOL closed;
-      closed = JS_ToBool(ctx, argv[1]);
-      ret = JS_NewFloat64(ctx, cv::arcLength(src, closed));
-      break;
-    }
-    case SHAPE_BOX_POINTS: {
-      JSRotatedRectData* rr = js_rotated_rect_data2(ctx, argv[0]);
-      JSContourData<double>* points = js_contour_data2(ctx, argv[1]);
+        if((pContour = js_contour_data(argv[1]))) {
 
-      cv::boxPoints(*rr, *points);
-      break;
-    }
-    case SHAPE_CONNECTED_COMPONENTS: {
-      JSOutputArray labels = js_umat_or_mat(ctx, argv[1]);
-      int32_t connectivity, ltype, ccltype;
-      JS_ToInt32(ctx, &connectivity, argv[2]);
-      JS_ToInt32(ctx, &ltype, argv[3]);
-      JS_ToInt32(ctx, &ccltype, argv[4]);
-      // XXX: overload
-      ret = JS_NewInt32(ctx, cv::connectedComponents(src, labels, connectivity, ltype, ccltype));
-      break;
-    }
-    case SHAPE_CONNECTED_COMPONENTS_WITH_STATS: {
-      JSOutputArray labels = js_umat_or_mat(ctx, argv[1]);
-      JSOutputArray stats = js_umat_or_mat(ctx, argv[2]);
-      JSOutputArray centroids = js_umat_or_mat(ctx, argv[3]);
-      int32_t connectivity, ltype, ccltype;
-      JS_ToInt32(ctx, &connectivity, argv[4]);
-      JS_ToInt32(ctx, &ltype, argv[5]);
-      JS_ToInt32(ctx, &ccltype, argv[6]);
-      // XXX: overload
-      ret = JS_NewInt32(ctx, cv::connectedComponentsWithStats(src, labels, stats, centroids, connectivity, ltype, ccltype));
-      break;
-      break;
-    }
-    case SHAPE_CONTOUR_AREA: {
-      BOOL oriented;
-      oriented = JS_ToBool(ctx, argv[1]);
-      ret = JS_NewFloat64(ctx, cv::contourArea(src, oriented));
-      break;
-    }
-    case SHAPE_CONVEX_HULL: {
-      JSOutputArray hull = js_umat_or_mat(ctx, argv[1]);
-      BOOL clockwise = FALSE, returnPoints = TRUE;
-      if(argc >= 3)
-        clockwise = JS_ToBool(ctx, argv[2]);
-      if(argc >= 4)
-        returnPoints = JS_ToBool(ctx, argv[3]);
-      cv::convexHull(src, hull, clockwise, returnPoints);
-      break;
-    }
-    case SHAPE_CONVEXITY_DEFECTS: {
-      JSInputArray convexhull = js_umat_or_mat(ctx, argv[1]);
-      JSOutputArray convexityDefects = js_umat_or_mat(ctx, argv[2]);
-      cv::convexityDefects(src, convexhull, convexityDefects);
-      break;
-    }
-    case SHAPE_CREATE_GENERALIZED_HOUGH_BALLARD: {
-      break;
-    }
-    case SHAPE_CREATE_GENERALIZED_HOUGH_GUIL: {
-      break;
-    }
-    case SHAPE_FIT_ELLIPSE: {
-      JSRotatedRectData rr = cv::fitEllipse(src);
-      ret = js_rotated_rect_new(ctx, rr);
-      break;
-    }
-    case SHAPE_FIT_ELLIPSE_AMS: {
-      break;
-    }
-    case SHAPE_FIT_ELLIPSE_DIRECT: {
-      break;
-    }
-    case SHAPE_FIT_LINE: {
-      JSOutputArray line = js_umat_or_mat(ctx, argv[1]);
-      int32_t dist_type;
-      double param, reps, aeps;
-      JS_ToInt32(ctx, &dist_type, argv[2]);
-      JS_ToFloat64(ctx, &param, argv[3]);
-      JS_ToFloat64(ctx, &reps, argv[4]);
-      JS_ToFloat64(ctx, &aeps, argv[5]);
-      cv::fitLine(src, line, dist_type, param, reps, aeps);
-      break;
-    }
-    case SHAPE_HU_MOMENTS: {
-      std::map<std::string, double> moments_map;
-      std::array<double, 7> hu;
-      js_object_to(ctx, argv[0], moments_map);
+          cv::approxPolyDP(src, *pContour, epsilon, closed);
+        } else {
+          JSOutputArray approxCurve = js_umat_or_mat(ctx, argv[1]);
 
-      cv::Moments moments(moments_map["m00"],
-                          moments_map["m10"],
-                          moments_map["m01"],
-                          moments_map["m20"],
-                          moments_map["m11"],
-                          moments_map["m02"],
-                          moments_map["m30"],
-                          moments_map["m21"],
-                          moments_map["m12"],
-                          moments_map["m03"]);
-
-      cv::HuMoments(moments, &hu[0]);
-
-      if(JS_IsArray(ctx, argv[1])) {
-        js_array_copy(ctx, argv[1], hu.begin(), hu.end());
+          cv::approxPolyDP(src, approxCurve, epsilon, closed);
+        }
+        break;
       }
+      case SHAPE_ARC_LENGTH: {
+        BOOL closed = JS_ToBool(ctx, argv[1]);
+        double length = cv::arcLength(src, closed);
+        ret = JS_NewFloat64(ctx, length);
 
-      break;
-    }
-    case SHAPE_INTERSECT_CONVEX_CONVEX: {
-      break;
-    }
-    case SHAPE_IS_CONTOUR_CONVEX: {
-      ret = JS_NewBool(ctx, cv::isContourConvex(src));
-      break;
-    }
-    case SHAPE_MATCH_SHAPES: {
-      break;
-    }
-    case SHAPE_MIN_AREA_RECT: {
-      ret = js_rotated_rect_new(ctx, cv::minAreaRect(src));
-      break;
-    }
-    case SHAPE_MIN_ENCLOSING_CIRCLE: {
-      JSPointData<float> center;
-      float radius;
-      cv::minEnclosingCircle(src, center, radius);
-
-      if(JS_IsFunction(ctx, argv[1])) {
-        JSValue point = js_point_new(ctx, center);
-        JS_Call(ctx, argv[1], JS_NULL, 1, &point);
-        JS_FreeValue(ctx, point);
+        break;
       }
-      if(JS_IsFunction(ctx, argv[2])) {
-        JSValue r = JS_NewFloat64(ctx, radius);
-        JS_Call(ctx, argv[2], JS_NULL, 1, &r);
-        JS_FreeValue(ctx, r);
-      }
+      case SHAPE_BOX_POINTS: {
+        JSRotatedRectData* rr = js_rotated_rect_data2(ctx, argv[0]);
+        JSContourData<double>* points = js_contour_data2(ctx, argv[1]);
 
-      break;
+        cv::boxPoints(*rr, *points);
+        break;
+      }
+      case SHAPE_CONNECTED_COMPONENTS: {
+        JSOutputArray labels = js_umat_or_mat(ctx, argv[1]);
+        int32_t connectivity, ltype, ccltype;
+        JS_ToInt32(ctx, &connectivity, argv[2]);
+        JS_ToInt32(ctx, &ltype, argv[3]);
+        JS_ToInt32(ctx, &ccltype, argv[4]);
+        // XXX: overload
+        ret = JS_NewInt32(ctx, cv::connectedComponents(src, labels, connectivity, ltype, ccltype));
+        break;
+      }
+      case SHAPE_CONNECTED_COMPONENTS_WITH_STATS: {
+        JSOutputArray labels = js_umat_or_mat(ctx, argv[1]);
+        JSOutputArray stats = js_umat_or_mat(ctx, argv[2]);
+        JSOutputArray centroids = js_umat_or_mat(ctx, argv[3]);
+        int32_t connectivity, ltype, ccltype;
+        JS_ToInt32(ctx, &connectivity, argv[4]);
+        JS_ToInt32(ctx, &ltype, argv[5]);
+        JS_ToInt32(ctx, &ccltype, argv[6]);
+        // XXX: overload
+        ret = JS_NewInt32(ctx, cv::connectedComponentsWithStats(src, labels, stats, centroids, connectivity, ltype, ccltype));
+        break;
+        break;
+      }
+      case SHAPE_CONTOUR_AREA: {
+        BOOL oriented;
+        oriented = argc > 1 ? JS_ToBool(ctx, argv[1]) : FALSE;
+        cv::Mat mat = src.getMat(0);
+        double area = 0;
+        JSContourData<double>* contour;
+
+        if((contour = js_contour_data(argv[0]))) {
+          JSContourData<float> fcontour;
+          fcontour.resize(contour->size());
+          std::copy(contour->begin(), contour->end(), fcontour.begin());
+
+          mat = contour_getmat(fcontour);
+          area = cv::contourArea(mat, oriented);
+
+        } else if(mat.rows > 0 && mat.cols > 0) {
+          area = cv::contourArea(src, oriented);
+        } else {
+          JSInputArray in = js_input_array(ctx, argv[0]);
+
+          area = cv::contourArea(in, oriented);
+        }
+
+        ret = JS_NewFloat64(ctx, area);
+        break;
+      }
+      case SHAPE_CONVEX_HULL: {
+        JSOutputArray hull = js_umat_or_mat(ctx, argv[1]);
+        BOOL clockwise = FALSE, returnPoints = TRUE;
+        if(argc >= 3)
+          clockwise = JS_ToBool(ctx, argv[2]);
+        if(argc >= 4)
+          returnPoints = JS_ToBool(ctx, argv[3]);
+        cv::convexHull(src, hull, clockwise, returnPoints);
+        break;
+      }
+      case SHAPE_CONVEXITY_DEFECTS: {
+        JSInputArray convexhull = js_umat_or_mat(ctx, argv[1]);
+        JSOutputArray convexityDefects = js_umat_or_mat(ctx, argv[2]);
+        cv::convexityDefects(src, convexhull, convexityDefects);
+        break;
+      }
+      case SHAPE_CREATE_GENERALIZED_HOUGH_BALLARD: {
+        break;
+      }
+      case SHAPE_CREATE_GENERALIZED_HOUGH_GUIL: {
+        break;
+      }
+      case SHAPE_FIT_ELLIPSE: {
+        JSRotatedRectData rr = cv::fitEllipse(src);
+        ret = js_rotated_rect_new(ctx, rr);
+        break;
+      }
+      case SHAPE_FIT_ELLIPSE_AMS: {
+        break;
+      }
+      case SHAPE_FIT_ELLIPSE_DIRECT: {
+        break;
+      }
+      case SHAPE_FIT_LINE: {
+        JSOutputArray line = js_umat_or_mat(ctx, argv[1]);
+        int32_t dist_type;
+        double param, reps, aeps;
+        JS_ToInt32(ctx, &dist_type, argv[2]);
+        JS_ToFloat64(ctx, &param, argv[3]);
+        JS_ToFloat64(ctx, &reps, argv[4]);
+        JS_ToFloat64(ctx, &aeps, argv[5]);
+        cv::fitLine(src, line, dist_type, param, reps, aeps);
+        break;
+      }
+      case SHAPE_HU_MOMENTS: {
+        std::map<std::string, double> moments_map;
+        std::array<double, 7> hu;
+        js_object_to(ctx, argv[0], moments_map);
+
+        cv::Moments moments(moments_map["m00"],
+                            moments_map["m10"],
+                            moments_map["m01"],
+                            moments_map["m20"],
+                            moments_map["m11"],
+                            moments_map["m02"],
+                            moments_map["m30"],
+                            moments_map["m21"],
+                            moments_map["m12"],
+                            moments_map["m03"]);
+
+        cv::HuMoments(moments, &hu[0]);
+
+        if(JS_IsArray(ctx, argv[1])) {
+          js_array_copy(ctx, argv[1], hu.begin(), hu.end());
+        }
+
+        break;
+      }
+      case SHAPE_INTERSECT_CONVEX_CONVEX: {
+        break;
+      }
+      case SHAPE_IS_CONTOUR_CONVEX: {
+        ret = JS_NewBool(ctx, cv::isContourConvex(src));
+        break;
+      }
+      case SHAPE_MATCH_SHAPES: {
+        break;
+      }
+      case SHAPE_MIN_AREA_RECT: {
+        ret = js_rotated_rect_new(ctx, cv::minAreaRect(src));
+        break;
+      }
+      case SHAPE_MIN_ENCLOSING_CIRCLE: {
+        JSPointData<float> center;
+        float radius;
+        cv::minEnclosingCircle(src, center, radius);
+
+        if(JS_IsFunction(ctx, argv[1])) {
+          JSValue point = js_point_new(ctx, center);
+          JS_Call(ctx, argv[1], JS_NULL, 1, &point);
+          JS_FreeValue(ctx, point);
+        }
+        if(JS_IsFunction(ctx, argv[2])) {
+          JSValue r = JS_NewFloat64(ctx, radius);
+          JS_Call(ctx, argv[2], JS_NULL, 1, &r);
+          JS_FreeValue(ctx, r);
+        }
+
+        break;
+      }
+      case SHAPE_MIN_ENCLOSING_TRIANGLE: {
+        break;
+      }
+      case SHAPE_ROTATED_RECTANGLE_INTERSECTION: {
+        break;
+      }
     }
-    case SHAPE_MIN_ENCLOSING_TRIANGLE: {
-      break;
-    }
-    case SHAPE_ROTATED_RECTANGLE_INTERSECTION: {
-      break;
-    }
+  } catch(const cv::Exception& e) {
+    std::string msg(e.what());
+
+    const auto pos = msg.find_last_of("/\\");
+
+    ret = JS_ThrowInternalError(ctx, "cv::Exception %s", msg.c_str() + pos + 1);
   }
+
   return ret;
 }
 thread_local VISIBLE JSClassID js_imgproc_class_id = 0;

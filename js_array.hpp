@@ -24,12 +24,15 @@
 static inline int64_t
 js_array_length(JSContext* ctx, const JSValueConst& arr) {
   int64_t ret = -1;
-  if(js_is_array(ctx, arr)) {
+  /*if(js_is_array(ctx, arr))*/ {
     uint32_t len;
     JSValue v = JS_GetPropertyStr(ctx, arr, "length");
-    JS_ToUint32(ctx, &len, v);
-    JS_FreeValue(ctx, v);
-    ret = len;
+
+    if(JS_IsNumber(v)) {
+      JS_ToUint32(ctx, &len, v);
+      JS_FreeValue(ctx, v);
+      ret = len;
+    }
   }
   return ret;
 }
