@@ -377,69 +377,75 @@ js_libcamera_app_method(JSContext* ctx, JSValueConst this_val, int argc, JSValue
   int32_t propID;
   double value = 0;
 
-  switch(magic) {
-    case METHOD_CAMERA_ID: {
-      break;
+  try {
+    switch(magic) {
+      case METHOD_CAMERA_ID: {
+        break;
+      }
+      case METHOD_OPEN_CAMERA: {
+        cam->OpenCamera();
+        break;
+      }
+      case METHOD_CLOSE_CAMERA: {
+        cam->CloseCamera();
+        break;
+      }
+      case METHOD_CONFIGURE_STILL: {
+        break;
+      }
+      case METHOD_CONFIGURE_VIEWFINDER: {
+        break;
+      }
+      case METHOD_TEARDOWN: {
+        break;
+      }
+      case METHOD_START_CAMERA: {
+        break;
+      }
+      case METHOD_STOP_CAMERA: {
+        break;
+      }
+      case METHOD_WAIT: {
+        break;
+      }
+      case METHOD_POST_MESSAGE: {
+        break;
+      }
+      case METHOD_GET_STREAM: {
+        break;
+      }
+      case METHOD_VIEWFINDER_STREAM: {
+        break;
+      }
+      case METHOD_STILL_STREAM: {
+        break;
+      }
+      case METHOD_RAW_STREAM: {
+        break;
+      }
+      case METHOD_VIDEO_STREAM: {
+        break;
+      }
+      case METHOD_LORES_STREAM: {
+        break;
+      }
+      case METHOD_GET_MAIN_STREAM: {
+        break;
+      }
+      case METHOD_MMAP: {
+        break;
+      }
+      case METHOD_SET_CONTROLS: {
+        break;
+      }
+      case METHOD_STREAM_DIMENSIONS: {
+        break;
+      }
     }
-    case METHOD_OPEN_CAMERA: {
-      cam->OpenCamera();
-      break;
-    }
-    case METHOD_CLOSE_CAMERA: {
-      cam->CloseCamera();
-      break;
-    }
-    case METHOD_CONFIGURE_STILL: {
-      break;
-    }
-    case METHOD_CONFIGURE_VIEWFINDER: {
-      break;
-    }
-    case METHOD_TEARDOWN: {
-      break;
-    }
-    case METHOD_START_CAMERA: {
-      break;
-    }
-    case METHOD_STOP_CAMERA: {
-      break;
-    }
-    case METHOD_WAIT: {
-      break;
-    }
-    case METHOD_POST_MESSAGE: {
-      break;
-    }
-    case METHOD_GET_STREAM: {
-      break;
-    }
-    case METHOD_VIEWFINDER_STREAM: {
-      break;
-    }
-    case METHOD_STILL_STREAM: {
-      break;
-    }
-    case METHOD_RAW_STREAM: {
-      break;
-    }
-    case METHOD_VIDEO_STREAM: {
-      break;
-    }
-    case METHOD_LORES_STREAM: {
-      break;
-    }
-    case METHOD_GET_MAIN_STREAM: {
-      break;
-    }
-    case METHOD_MMAP: {
-      break;
-    }
-    case METHOD_SET_CONTROLS: {
-      break;
-    }
-    case METHOD_STREAM_DIMENSIONS: {
-      break;
-    }
+  } catch(const std::exception& e) {
+    std::string msg(e.what());
+
+    ret = JS_ThrowInternalError(ctx, "Exception %s", msg.c_str());
   }
 
   return ret;
@@ -513,17 +519,15 @@ js_libcamera_app_init(JSContext* ctx, JSModuleDef* m) {
     JS_SetClassProto(ctx, js_libcamera_app_class_id, libcamera_app_proto);
 
     libcamera_app_class = JS_NewCFunction2(ctx, js_libcamera_app_ctor, "LibcameraApp", 2, JS_CFUNC_constructor, 0);
-    /* set proto.c    JS_SetConstructor(ctx, libcamera_app_class, libcamera_app_proto);
-onstructor and ctor.prototype */
 
+    /* set proto.constructor and ctor.prototype */
+    JS_SetConstructor(ctx, libcamera_app_class, libcamera_app_proto);
     JS_NewClassID(&js_libcamera_app_options_class_id);
     JS_NewClass(JS_GetRuntime(ctx), js_libcamera_app_options_class_id, &js_libcamera_app_options_class);
 
     libcamera_app_options_proto = JS_NewObject(ctx);
     JS_SetPropertyFunctionList(ctx, libcamera_app_options_proto, js_libcamera_app_options_proto_funcs, countof(js_libcamera_app_options_proto_funcs));
     JS_SetClassProto(ctx, js_libcamera_app_options_class_id, libcamera_app_options_proto);
-
-    //libcamera_app_options_class = JS_NewCFunction2(ctx, js_libcamera_app_options_ctor, "LibcameraAppOptions", 2, JS_CFUNC_constructor, 0);
   }
 
   if(m) {

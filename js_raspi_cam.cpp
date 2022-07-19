@@ -91,37 +91,43 @@ js_raspi_cam_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   int32_t propID;
   double value = 0;
 
-  switch(magic) {
-    case RASPI_CAM_START_PHOTO: {
-      cam->startPhoto();
-      break;
-    }
-    case RASPI_CAM_CAPTURE_PHOTO: {
-      JSInputOutputArray mat = js_umat_or_mat(ctx, argv[0]);
-      cam->capturePhoto(mat.getMatRef());
-      break;
-    }
-    case RASPI_CAM_STOP_PHOTO: {
-      cam->stopPhoto();
-      break;
-    }
-    case RASPI_CAM_START_VIDEO: {
-      cam->startVideo();
-      break;
-    }
-    case RASPI_CAM_GET_VIDEO_FRAME: {
-      JSInputOutputArray mat = js_umat_or_mat(ctx, argv[0]);
-      uint32_t timeout = 1000;
-      if(argc > 1)
-        JS_ToUint32(ctx, &timeout, argv[1]);
+  try {
+    switch(magic) {
+      case RASPI_CAM_START_PHOTO: {
+        cam->startPhoto();
+        break;
+      }
+      case RASPI_CAM_CAPTURE_PHOTO: {
+        JSInputOutputArray mat = js_umat_or_mat(ctx, argv[0]);
+        cam->capturePhoto(mat.getMatRef());
+        break;
+      }
+      case RASPI_CAM_STOP_PHOTO: {
+        cam->stopPhoto();
+        break;
+      }
+      case RASPI_CAM_START_VIDEO: {
+        cam->startVideo();
+        break;
+      }
+      case RASPI_CAM_GET_VIDEO_FRAME: {
+        JSInputOutputArray mat = js_umat_or_mat(ctx, argv[0]);
+        uint32_t timeout = 1000;
+        if(argc > 1)
+          JS_ToUint32(ctx, &timeout, argv[1]);
 
-      cam->getVideoFrame(mat.getMatRef(), timeout);
-      break;
+        cam->getVideoFrame(mat.getMatRef(), timeout);
+        break;
+      }
+      case RASPI_CAM_STOP_VIDEO: {
+        cam->stopVideo();
+        break;
+      }
     }
-    case RASPI_CAM_STOP_VIDEO: {
-      cam->stopVideo();
-      break;
-    }
+  } catch(const std::exception& e) {
+    std::string msg(e.what());
+
+    ret = JS_ThrowInternalError(ctx, "Exception %s", msg.c_str());
   }
 
   return ret;
@@ -146,7 +152,7 @@ JSClassDef js_raspi_cam_class = {
 };
 
 const JSCFunctionListEntry js_raspi_cam_proto_funcs[] = {
-    JS_CFUNC_MAGIC_DEF("startPhoto", 0, js_raspi_cam_method, RASPI_CAM_CAPTURE_PHOTO),
+    JS_CFUNC_MAGIC_DEF("startPhoto", 0, js_raspi_cam_method, RASPI_CAM_START_PHOTO),
     JS_CFUNC_MAGIC_DEF("capturePhoto", 1, js_raspi_cam_method, RASPI_CAM_CAPTURE_PHOTO),
     JS_CFUNC_MAGIC_DEF("stopPhoto", 0, js_raspi_cam_method, RASPI_CAM_STOP_PHOTO),
     JS_CFUNC_MAGIC_DEF("startVideo", 0, js_raspi_cam_method, RASPI_CAM_START_VIDEO),
@@ -171,8 +177,9 @@ js_raspi_cam_init(JSContext* ctx, JSModuleDef* m) {
     JS_SetClassProto(ctx, js_raspi_cam_class_id, raspi_cam_proto);
 
     raspi_cam_class = JS_NewCFunction2(ctx, js_raspi_cam_ctor, "RaspiCam", 2, JS_CFUNC_constructor, 0);
-    /* set proto.c    JS_SetConstructor(ctx, raspi_cam_class, raspi_cam_proto);
-onstructor and ctor.prototype */
+
+    /* set proto.constructor and ctor.prototype */
+    JS_SetConstructor(ctx, raspi_cam_class, raspi_cam_proto);
   }
 
   if(m) {

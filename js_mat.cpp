@@ -868,8 +868,8 @@ js_mat_get_props(JSContext* ctx, JSValueConst this_val, int magic) {
   if(!(m = js_mat_data2(ctx, this_val)))
     return JS_EXCEPTION;
 
-  if(m->empty())
-    return JS_NULL;
+  /* if(m->empty())
+     return JS_NULL;*/
 
   switch(magic) {
     case PROP_COLS: {
