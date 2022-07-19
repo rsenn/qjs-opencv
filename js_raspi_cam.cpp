@@ -12,34 +12,13 @@
 #include <new>
 #include <string>*/
 
+typedef lccv::PiCamera JSRaspiCamData;
+
 extern "C" VISIBLE int js_raspi_cam_init(JSContext*, JSModuleDef*);
 
 extern "C" {
 JSValue raspi_cam_proto = JS_UNDEFINED, raspi_cam_class = JS_UNDEFINED;
 thread_local VISIBLE JSClassID js_raspi_cam_class_id = 0;
-}
-
-static bool
-js_raspi_cam_open(JSContext* ctx, JSRaspiCamData* s, int argc, JSValueConst argv[]) {
-  int32_t camID = -1, apiPreference = cv::CAP_ANY;
-  cv::String filename;
-
-  filename = JS_ToCString(ctx, argv[0]);
-
-  if(argc > 1)
-    JS_ToInt32(ctx, &apiPreference, argv[1]);
-
-  if(is_numeric(filename)) {
-    JS_ToInt32(ctx, &camID, argv[0]);
-    filename = "";
-  }
-
-  std::cerr << "RaspiCam.open filename='" << filename << "', camID=" << camID << ", apiPreference=" << apiPreference << std::endl;
-
-  if(filename.empty())
-    return s->open(camID, apiPreference);
-
-  return s->open(filename, apiPreference);
 }
 
 static JSValue
@@ -53,13 +32,6 @@ js_raspi_cam_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueCons
     return JS_ThrowOutOfMemory(ctx);
 
   new(s) JSRaspiCamData();
-
-  if(argc > 0) {
-    if(!js_raspi_cam_open(ctx, s, argc, argv)) {
-      delete s;
-      return JS_ThrowInternalError(ctx, "RaspiCam.open error");
-    }
-  }
 
   /* using new_target to get the prototype is necessary when the
      class is extended. */
@@ -93,96 +65,44 @@ js_raspi_cam_finalizer(JSRuntime* rt, JSValue val) {
 
   JS_FreeValueRT(rt, val);
 }
+
 enum {
-  RASPI_CAM_CAMERA_ID = 0,
-  RASPI_CAM_OPEN_CAMERA,
-  RASPI_CAM_CLOSE_CAMERA,
-  RASPI_CAM_CONFIGURE_STILL,
-  RASPI_CAM_CONFIGURE_VIEWFINDER,
-  RASPI_CAM_TEARDOWN,
-  RASPI_CAM_START_CAMERA,
-  RASPI_CAM_STOP_CAMERA,
-  RASPI_CAM_WAIT,
-  RASPI_CAM_POST_MESSAGE,
-  RASPI_CAM_GET_STREAM,
-  RASPI_CAM_VIEWFINDER_STREAM,
-  RASPI_CAM_STILL_STREAM,
-  RASPI_CAM_RAW_STREAM,
-  RASPI_CAM_VIDEO_STREAM,
-  RASPI_CAM_LORES_STREAM,
-  RASPI_CAM_GET_MAIN_STREAM,
-  RASPI_CAM_MMAP,
-  RASPI_CAM_SET_CONTROLS,
-  RASPI_CAM_STREAM_DIMENSIONS,
+  RASPI_CAM_CAPTURE_PHOTO = 0,
+  RASPI_CAM_STOP_PHOTO,
+  RASPI_CAM_START_VIDEO,
+  RASPI_CAM_GET_VIDEO_FRAME,
+  RASPI_CAM_STOP_VIDEO,
 
 };
 
 static JSValue
-js_raspi_cam_method(JSContext* ctx, JSValueConst raspi_cam, int argc, JSValueConst argv[], int magic) {
-  JSRaspiCamData* s = static_cast<JSRaspiCamData*>(JS_GetOpaque2(ctx, raspi_cam, js_raspi_cam_class_id));
+js_raspi_cam_options(JSContext* ctx, JSValueConst this_val, int magic) {
+  JSRaspiCamData* cam = static_cast<JSRaspiCamData*>(JS_GetOpaque2(ctx, this_val, js_raspi_cam_class_id));
+
+  return js_raspi_cam_options_wrap(ctx, cam->GetOptions());
+}
+
+static JSValue
+js_raspi_cam_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  JSRaspiCamData* cam = static_cast<JSRaspiCamData*>(JS_GetOpaque2(ctx, this_val, js_raspi_cam_class_id));
   JSValue ret = JS_UNDEFINED;
   int32_t propID;
   double value = 0;
-  
+
   switch(magic) {
-    case RASPI_CAM_CAMERA_ID: {
+    case RASPI_CAM_CAPTURE_PHOTO: {
       break;
     }
-    case RASPI_CAM_OPEN_CAMERA: {
+    case RASPI_CAM_STOP_PHOTO: {
       break;
     }
-    case RASPI_CAM_CLOSE_CAMERA: {
+    case RASPI_CAM_START_VIDEO: {
       break;
     }
-    case RASPI_CAM_CONFIGURE_STILL: {
+    case RASPI_CAM_GET_VIDEO_FRAME: {
       break;
     }
-    case RASPI_CAM_CONFIGURE_VIEWFINDER: {
-      break;
-    }
-    case RASPI_CAM_TEARDOWN: {
-      break;
-    }
-    case RASPI_CAM_START_CAMERA: {
-      break;
-    }
-    case RASPI_CAM_STOP_CAMERA: {
-      break;
-    }
-    case RASPI_CAM_WAIT: {
-      break;
-    }
-    case RASPI_CAM_POST_MESSAGE: {
-      break;
-    }
-    case RASPI_CAM_GET_STREAM: {
-      break;
-    }
-    case RASPI_CAM_VIEWFINDER_STREAM: {
-      break;
-    }
-    case RASPI_CAM_STILL_STREAM: {
-      break;
-    }
-    case RASPI_CAM_RAW_STREAM: {
-      break;
-    }
-    case RASPI_CAM_VIDEO_STREAM: {
-      break;
-    }
-    case RASPI_CAM_LORES_STREAM: {
-      break;
-    }
-    case RASPI_CAM_GET_MAIN_STREAM: {
-      break;
-    }
-    case RASPI_CAM_MMAP: {
-      break;
-    }
-    case RASPI_CAM_SET_CONTROLS: {
-      break;
-    }
-    case RASPI_CAM_STREAM_DIMENSIONS: {
+    case RASPI_CAM_STOP_VIDEO: {
       break;
     }
   }
@@ -191,14 +111,14 @@ js_raspi_cam_method(JSContext* ctx, JSValueConst raspi_cam, int argc, JSValueCon
 }
 
 VISIBLE JSValue
-js_raspi_cam_wrap(JSContext* ctx, cv::RaspiCam* cap) {
+js_raspi_cam_wrap(JSContext* ctx, RaspiCamData* cam) {
   JSValue ret;
 
   ret = JS_NewObjectProtoClass(ctx, raspi_cam_proto, js_raspi_cam_class_id);
 
   // cap->addref();
 
-  JS_SetOpaque(ret, cap);
+  JS_SetOpaque(ret, cam);
 
   return ret;
 }
@@ -209,26 +129,12 @@ JSClassDef js_raspi_cam_class = {
 };
 
 const JSCFunctionListEntry js_raspi_cam_proto_funcs[] = {
-    JS_CFUNC_MAGIC_DEF("cameraId", 0, js_raspi_cam_method, RASPI_CAM_CAMERA_ID),
-    JS_CFUNC_MAGIC_DEF("openCamera", 0, js_raspi_cam_method, RASPI_CAM_OPEN_CAMERA),
-    JS_CFUNC_MAGIC_DEF("closeCamera", 0, js_raspi_cam_method, RASPI_CAM_CLOSE_CAMERA),
-    JS_CFUNC_MAGIC_DEF("configureStill", 0, js_raspi_cam_method, RASPI_CAM_CONFIGURE_STILL),
-    JS_CFUNC_MAGIC_DEF("configureViewfinder", 0, js_raspi_cam_method, RASPI_CAM_CONFIGURE_VIEWFINDER),
-    JS_CFUNC_MAGIC_DEF("teardown", 0, js_raspi_cam_method, RASPI_CAM_TEARDOWN),
-    JS_CFUNC_MAGIC_DEF("startCamera", 0, js_raspi_cam_method, RASPI_CAM_START_CAMERA),
-    JS_CFUNC_MAGIC_DEF("stopCamera", 0, js_raspi_cam_method, RASPI_CAM_STOP_CAMERA),
-    JS_CFUNC_MAGIC_DEF("wait", 0, js_raspi_cam_method, RASPI_CAM_WAIT),
-    JS_CFUNC_MAGIC_DEF("postMessage", 0, js_raspi_cam_method, RASPI_CAM_POST_MESSAGE),
-    JS_CFUNC_MAGIC_DEF("getStream", 0, js_raspi_cam_method, RASPI_CAM_GET_STREAM),
-    JS_CFUNC_MAGIC_DEF("viewfinderStream", 0, js_raspi_cam_method, RASPI_CAM_VIEWFINDER_STREAM),
-    JS_CFUNC_MAGIC_DEF("stillStream", 0, js_raspi_cam_method, RASPI_CAM_STILL_STREAM),
-    JS_CFUNC_MAGIC_DEF("rawStream", 0, js_raspi_cam_method, RASPI_CAM_RAW_STREAM),
-    JS_CFUNC_MAGIC_DEF("videoStream", 0, js_raspi_cam_method, RASPI_CAM_VIDEO_STREAM),
-    JS_CFUNC_MAGIC_DEF("loresStream", 0, js_raspi_cam_method, RASPI_CAM_LORES_STREAM),
-    JS_CFUNC_MAGIC_DEF("getMainStream", 0, js_raspi_cam_method, RASPI_CAM_GET_MAIN_STREAM),
-    JS_CFUNC_MAGIC_DEF("mmap", 0, js_raspi_cam_method, RASPI_CAM_MMAP),
-    JS_CFUNC_MAGIC_DEF("setControls", 0, js_raspi_cam_method, RASPI_CAM_SET_CONTROLS),
-    JS_CFUNC_MAGIC_DEF("streamDimensions", 0, js_raspi_cam_method, RASPI_CAM_STREAM_DIMENSIONS),
+    JS_CFUNC_MAGIC_DEF("capturePhoto", 0, js_raspi_cam_method, RASPI_CAM_CAPTURE_PHOTO),
+    JS_CFUNC_MAGIC_DEF("stopPhoto", 0, js_raspi_cam_method, RASPI_CAM_STOP_PHOTO),
+    JS_CFUNC_MAGIC_DEF("startVideo", 0, js_raspi_cam_method, RASPI_CAM_START_VIDEO),
+    JS_CFUNC_MAGIC_DEF("getVideoFrame", 0, js_raspi_cam_method, RASPI_CAM_GET_VIDEO_FRAME),
+    JS_CFUNC_MAGIC_DEF("stopVideo", 0, js_raspi_cam_method, RASPI_CAM_STOP_VIDEO),
+    JS_CGETSET_DEF("options", js_raspi_cam_options, 0),
 
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "RaspiCam", JS_PROP_CONFIGURABLE),
 
@@ -247,12 +153,22 @@ js_raspi_cam_init(JSContext* ctx, JSModuleDef* m) {
     JS_SetClassProto(ctx, js_raspi_cam_class_id, raspi_cam_proto);
 
     raspi_cam_class = JS_NewCFunction2(ctx, js_raspi_cam_ctor, "RaspiCam", 2, JS_CFUNC_constructor, 0);
-    /* set proto.constructor and ctor.prototype */
-    JS_SetConstructor(ctx, raspi_cam_class, raspi_cam_proto);
+    /* set proto.c    JS_SetConstructor(ctx, raspi_cam_class, raspi_cam_proto);
+onstructor and ctor.prototype */
+
+    JS_NewClassID(&js_raspi_cam_options_class_id);
+    JS_NewClass(JS_GetRuntime(ctx), js_raspi_cam_options_class_id, &js_raspi_cam_options_class);
+
+    raspi_cam_options_proto = JS_NewObject(ctx);
+    JS_SetPropertyFunctionList(ctx, raspi_cam_options_proto, js_raspi_cam_options_proto_funcs, countof(js_raspi_cam_options_proto_funcs));
+    JS_SetClassProto(ctx, js_raspi_cam_options_class_id, raspi_cam_options_proto);
+
+    raspi_cam_options_class = JS_NewCFunction2(ctx, js_raspi_cam_options_ctor, "RaspiCamOptions", 2, JS_CFUNC_constructor, 0);
   }
 
-  if(m)
+  if(m) {
     JS_SetModuleExport(ctx, m, "RaspiCam", raspi_cam_class);
+  }
 
   return 0;
 }
@@ -270,7 +186,7 @@ js_raspi_cam_constructor(JSContext* ctx, JSValue parent, const char* name) {
   JS_SetPropertyStr(ctx, parent, name ? name : "RaspiCam", raspi_cam_class);
 }
 
-#ifdef JS_RASPI_CAM_MODULE
+#ifdef JS_METHOD_MODULE
 #define JS_INIT_MODULE VISIBLE js_init_module
 #else
 #define JS_INIT_MODULE js_init_module_raspi_cam

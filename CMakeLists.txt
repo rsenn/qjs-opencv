@@ -166,10 +166,11 @@ option(QUICKJS_MODULES "Build .so modules for quickjs" ON)
 
 option(BUILD_QUICKJS "Build QuickJS" ON)
 option(USE_LIBCAMERA "Use libcamera-opencv" OFF)
+option(USE_LCCV "Use LCCV" ON)
 
-if(USE_LIBCAMERA)
+if(USE_LIBCAMERA OR USE_LCCV)
   include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/libcamera.cmake)
-endif(USE_LIBCAMERA)
+endif(USE_LIBCAMERA OR USE_LCCV)
 
 
 file(GLOB OPENCV_SOURCES *.hpp *.cpp gifenc/gifenc.c
@@ -199,7 +200,7 @@ set_target_properties(
 target_compile_definitions(qjs-opencv
                            PRIVATE CONFIG_PREFIX="${CMAKE_INSTALL_PREFIX}")
 #dump(PNG_INCLUDE_DIRS PNG_LIBRARIES PNG_LIBRARY OPENCV_FREETYPE_LIBRARY)
-target_include_directories(qjs-opencv PUBLIC "${PNG_INCLUDE_DIRS}")
+target_include_directories(qjs-opencv PUBLIC ${PNG_INCLUDE_DIRS} ${LIBCAMERA_INCLUDE_DIRS})
 target_link_libraries(
   qjs-opencv PUBLIC ${LCCV_LIBRARIES} ${QUICKJS_LIBRARY} ${PNG_LIBRARIES}
                     ${OPENCV_FREETYPE_LIBRARY} ${OPENCV_LIBRARIES})
