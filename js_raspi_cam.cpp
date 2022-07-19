@@ -1,3 +1,4 @@
+#include "js_libcamera_app.hpp"
 #include "js_alloc.hpp"
 #include "js_mat.hpp"
 #include "jsbindings.hpp"
@@ -76,10 +77,10 @@ enum {
 };
 
 static JSValue
-js_raspi_cam_options(JSContext* ctx, JSValueConst this_val, int magic) {
+js_raspi_cam_options(JSContext* ctx, JSValueConst this_val) {
   JSRaspiCamData* cam = static_cast<JSRaspiCamData*>(JS_GetOpaque2(ctx, this_val, js_raspi_cam_class_id));
 
-  return js_raspi_cam_options_wrap(ctx, cam->GetOptions());
+  return js_libcamera_app_options_wrap(ctx, cam->options);
 }
 
 static JSValue
@@ -111,7 +112,7 @@ js_raspi_cam_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 }
 
 VISIBLE JSValue
-js_raspi_cam_wrap(JSContext* ctx, RaspiCamData* cam) {
+js_raspi_cam_wrap(JSContext* ctx, JSRaspiCamData* cam) {
   JSValue ret;
 
   ret = JS_NewObjectProtoClass(ctx, raspi_cam_proto, js_raspi_cam_class_id);
@@ -155,15 +156,6 @@ js_raspi_cam_init(JSContext* ctx, JSModuleDef* m) {
     raspi_cam_class = JS_NewCFunction2(ctx, js_raspi_cam_ctor, "RaspiCam", 2, JS_CFUNC_constructor, 0);
     /* set proto.c    JS_SetConstructor(ctx, raspi_cam_class, raspi_cam_proto);
 onstructor and ctor.prototype */
-
-    JS_NewClassID(&js_raspi_cam_options_class_id);
-    JS_NewClass(JS_GetRuntime(ctx), js_raspi_cam_options_class_id, &js_raspi_cam_options_class);
-
-    raspi_cam_options_proto = JS_NewObject(ctx);
-    JS_SetPropertyFunctionList(ctx, raspi_cam_options_proto, js_raspi_cam_options_proto_funcs, countof(js_raspi_cam_options_proto_funcs));
-    JS_SetClassProto(ctx, js_raspi_cam_options_class_id, raspi_cam_options_proto);
-
-    raspi_cam_options_class = JS_NewCFunction2(ctx, js_raspi_cam_options_ctor, "RaspiCamOptions", 2, JS_CFUNC_constructor, 0);
   }
 
   if(m) {

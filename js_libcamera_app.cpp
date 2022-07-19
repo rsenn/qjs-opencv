@@ -1,8 +1,8 @@
+#include "js_libcamera_app.hpp"
 #include "js_alloc.hpp"
 #include "js_mat.hpp"
 #include "jsbindings.hpp"
 #include <opencv2/core.hpp>
-#include <lccv.hpp>
 #include <quickjs.h>
 /*#include <cctype>
 #include <stddef.h>
@@ -11,9 +11,6 @@
 #include <iostream>
 #include <new>
 #include <string>*/
-
-typedef lccv::PiCamera JSLibcameraAppData;
-typedef Options JSLibcameraAppOptionsData;
 
 extern "C" VISIBLE int js_libcamera_app_init(JSContext*, JSModuleDef*);
 
@@ -79,7 +76,6 @@ js_libcamera_app_options_wrap(JSContext* ctx, JSLibcameraAppOptionsData* opt) {
 
 static JSValue
 js_libcamera_app_options_get(JSContext* ctx, JSValueConst this_val, int magic) {
-
   JSLibcameraAppOptionsData* o = static_cast<JSLibcameraAppOptionsData*>(JS_GetOpaque2(ctx, this_val, js_libcamera_app_options_class_id));
 
   switch(magic) {
