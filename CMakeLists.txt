@@ -165,7 +165,7 @@ link_directories(${CMAKE_CURRENT_BINARY_DIR}/quickjs)
 option(QUICKJS_MODULES "Build .so modules for quickjs" ON)
 
 option(BUILD_QUICKJS "Build QuickJS" ON)
-option(USE_LIBCAMERA "Use libcamera-opencv" ON)
+option(USE_LIBCAMERA "Use libcamera-opencv" OFF)
 
 if(USE_LIBCAMERA)
   include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/libcamera.cmake)
@@ -185,6 +185,13 @@ list(REMOVE_ITEM OPENCV_SOURCES js.hpp js.cpp)
 set(CMAKE_CXX11_EXTENSION_COMPILE_OPTION "${CXX_STANDARD_FLAG}" CACHE STRING ""
                                                                       FORCE)
 
+
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/LCCV")
+  set(BUILD_SHARED_LIBS OFF)
+  add_subdirectory(LCCV)
+  set(LCCV_LIBRARIES "${CMAKE_CURRENT_BINARY_DIR}/LCCV/liblccv.a" camera camera-base event event_pthreads Threads::Threads)
+endif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/LCCV")
+
 add_library(qjs-opencv STATIC ${OPENCV_SOURCES})
 set_target_properties(
   qjs-opencv PROPERTIES PREFIX lib OUTPUT_NAME "qjs-opencv"
@@ -194,7 +201,7 @@ target_compile_definitions(qjs-opencv
 #dump(PNG_INCLUDE_DIRS PNG_LIBRARIES PNG_LIBRARY OPENCV_FREETYPE_LIBRARY)
 target_include_directories(qjs-opencv PUBLIC "${PNG_INCLUDE_DIRS}")
 target_link_libraries(
-  qjs-opencv PUBLIC ${CAMERA_OPENCV_LIBRARIES} ${QUICKJS_LIBRARY} ${PNG_LIBRARIES}
+  qjs-opencv PUBLIC ${LCCV_LIBRARIES} ${QUICKJS_LIBRARY} ${PNG_LIBRARIES}
                     ${OPENCV_FREETYPE_LIBRARY} ${OPENCV_LIBRARIES})
 
 install(TARGETS qjs-opencv DESTINATION "${QUICKJS_C_MODULE_DIR}")
