@@ -1,6 +1,6 @@
 #include "js_libcamera_app.hpp"
 #include "js_alloc.hpp"
-#include "js_mat.hpp"
+#include "js_umat.hpp"
 #include "jsbindings.hpp"
 #include <opencv2/core.hpp>
 #include <lccv.hpp>
@@ -68,7 +68,8 @@ js_raspi_cam_finalizer(JSRuntime* rt, JSValue val) {
 }
 
 enum {
-  RASPI_CAM_CAPTURE_PHOTO = 0,
+  RASPI_CAM_START_PHOTO = 0,
+  RASPI_CAM_CAPTURE_PHOTO,
   RASPI_CAM_STOP_PHOTO,
   RASPI_CAM_START_VIDEO,
   RASPI_CAM_GET_VIDEO_FRAME,
@@ -91,19 +92,34 @@ js_raspi_cam_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   double value = 0;
 
   switch(magic) {
+    case RASPI_CAM_START_PHOTO: {
+      cam->startPhoto();
+      break;
+    }
     case RASPI_CAM_CAPTURE_PHOTO: {
+      JSInputOutputArray mat = js_umat_or_mat(ctx, argv[0]);
+      cam->capturePhoto(mat.getMatRef());
       break;
     }
     case RASPI_CAM_STOP_PHOTO: {
+      cam->stopPhoto();
       break;
     }
     case RASPI_CAM_START_VIDEO: {
+      cam->startVideo();
       break;
     }
     case RASPI_CAM_GET_VIDEO_FRAME: {
+      JSInputOutputArray mat = js_umat_or_mat(ctx, argv[0]);
+      uint32_t timeout = 1000;
+      if(argc > 1)
+        JS_ToUint32(ctx, &timeout, argv[1]);
+
+      cam->getVideoFrame(mat.getMatRef(), timeout);
       break;
     }
     case RASPI_CAM_STOP_VIDEO: {
+      cam->stopVideo();
       break;
     }
   }
@@ -130,10 +146,11 @@ JSClassDef js_raspi_cam_class = {
 };
 
 const JSCFunctionListEntry js_raspi_cam_proto_funcs[] = {
-    JS_CFUNC_MAGIC_DEF("capturePhoto", 0, js_raspi_cam_method, RASPI_CAM_CAPTURE_PHOTO),
+    JS_CFUNC_MAGIC_DEF("startPhoto", 0, js_raspi_cam_method, RASPI_CAM_CAPTURE_PHOTO),
+    JS_CFUNC_MAGIC_DEF("capturePhoto", 1, js_raspi_cam_method, RASPI_CAM_CAPTURE_PHOTO),
     JS_CFUNC_MAGIC_DEF("stopPhoto", 0, js_raspi_cam_method, RASPI_CAM_STOP_PHOTO),
     JS_CFUNC_MAGIC_DEF("startVideo", 0, js_raspi_cam_method, RASPI_CAM_START_VIDEO),
-    JS_CFUNC_MAGIC_DEF("getVideoFrame", 0, js_raspi_cam_method, RASPI_CAM_GET_VIDEO_FRAME),
+    JS_CFUNC_MAGIC_DEF("getVideoFrame", 1, js_raspi_cam_method, RASPI_CAM_GET_VIDEO_FRAME),
     JS_CFUNC_MAGIC_DEF("stopVideo", 0, js_raspi_cam_method, RASPI_CAM_STOP_VIDEO),
     JS_CGETSET_DEF("options", js_raspi_cam_options, 0),
 

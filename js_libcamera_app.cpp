@@ -4,19 +4,14 @@
 #include "jsbindings.hpp"
 #include <opencv2/core.hpp>
 #include <quickjs.h>
-/*#include <cctype>
-#include <stddef.h>
-#include <cstdint>
-#include <algorithm>
-#include <iostream>
-#include <new>
-#include <string>*/
+
+//#include "LCCV/include/libcamera_app.hpp"
+#include <lccv.hpp>
 
 extern "C" VISIBLE int js_libcamera_app_init(JSContext*, JSModuleDef*);
 
 extern "C" {
-JSValue libcamera_app_proto = JS_UNDEFINED, libcamera_app_class = JS_UNDEFINED, libcamera_app_options_proto = JS_UNDEFINED,
-        libcamera_app_options_class = JS_UNDEFINED;
+JSValue libcamera_app_proto = JS_UNDEFINED, libcamera_app_class = JS_UNDEFINED, libcamera_app_options_proto = JS_UNDEFINED;
 thread_local VISIBLE JSClassID js_libcamera_app_class_id = 0, js_libcamera_app_options_class_id = 0;
 }
 enum {
@@ -328,7 +323,7 @@ fail:
   return JS_EXCEPTION;
 }
 
-extern "C" VISIBLE JSLibcameraAppData*
+VISIBLE JSLibcameraAppData*
 js_libcamera_app_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSLibcameraAppData*>(JS_GetOpaque2(ctx, val, js_libcamera_app_class_id));
 }
@@ -369,7 +364,7 @@ enum {
 };
 
 static JSValue
-js_libcamera_app_options(JSContext* ctx, JSValueConst this_val, int magic) {
+js_libcamera_app_options(JSContext* ctx, JSValueConst this_val) {
   JSLibcameraAppData* cam = static_cast<JSLibcameraAppData*>(JS_GetOpaque2(ctx, this_val, js_libcamera_app_class_id));
 
   return js_libcamera_app_options_wrap(ctx, cam->GetOptions());
@@ -451,7 +446,7 @@ js_libcamera_app_method(JSContext* ctx, JSValueConst this_val, int argc, JSValue
 }
 
 VISIBLE JSValue
-js_libcamera_app_wrap(JSContext* ctx, LibcameraAppData* cam) {
+js_libcamera_app_wrap(JSContext* ctx, JSLibcameraAppData* cam) {
   JSValue ret;
 
   ret = JS_NewObjectProtoClass(ctx, libcamera_app_proto, js_libcamera_app_class_id);
@@ -490,16 +485,16 @@ const JSCFunctionListEntry js_libcamera_app_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("setControls", 0, js_libcamera_app_method, METHOD_SET_CONTROLS),
     JS_CFUNC_MAGIC_DEF("streamDimensions", 0, js_libcamera_app_method, METHOD_STREAM_DIMENSIONS),
     JS_CGETSET_DEF("options", js_libcamera_app_options, 0),
-    JS_CV_CONSTANT(LibcameraApp::FLAG_STILL_NONE),
-    JS_CV_CONSTANT(LibcameraApp::FLAG_STILL_BGR),
-    JS_CV_CONSTANT(LibcameraApp::FLAG_STILL_RGB),
-    JS_CV_CONSTANT(LibcameraApp::FLAG_STILL_RAW),
-    JS_CV_CONSTANT(LibcameraApp::FLAG_STILL_DOUBLE_BUFFER),
-    JS_CV_CONSTANT(LibcameraApp::FLAG_STILL_TRIPLE_BUFFER),
-    JS_CV_CONSTANT(LibcameraApp::FLAG_STILL_BUFFER_MASK),
-    JS_CV_CONSTANT(LibcameraApp::FLAG_VIDEO_NONE),
-    JS_CV_CONSTANT(LibcameraApp::FLAG_VIDEO_RAW),
-    JS_CV_CONSTANT(LibcameraApp::FLAG_VIDEO_JPEG_COLOURSPACE),
+    JS_PROP_INT32_DEF("FLAG_STILL_NONE", LibcameraApp::FLAG_STILL_NONE, 0),
+    JS_PROP_INT32_DEF("FLAG_STILL_BGR", LibcameraApp::FLAG_STILL_BGR, 0),
+    JS_PROP_INT32_DEF("FLAG_STILL_RGB", LibcameraApp::FLAG_STILL_RGB, 0),
+    JS_PROP_INT32_DEF("FLAG_STILL_RAW", LibcameraApp::FLAG_STILL_RAW, 0),
+    JS_PROP_INT32_DEF("FLAG_STILL_DOUBLE_BUFFER", LibcameraApp::FLAG_STILL_DOUBLE_BUFFER, 0),
+    JS_PROP_INT32_DEF("FLAG_STILL_TRIPLE_BUFFER", LibcameraApp::FLAG_STILL_TRIPLE_BUFFER, 0),
+    JS_PROP_INT32_DEF("FLAG_STILL_BUFFER_MASK", LibcameraApp::FLAG_STILL_BUFFER_MASK, 0),
+    JS_PROP_INT32_DEF("FLAG_VIDEO_NONE", LibcameraApp::FLAG_VIDEO_NONE, 0),
+    JS_PROP_INT32_DEF("FLAG_VIDEO_RAW", LibcameraApp::FLAG_VIDEO_RAW, 0),
+    JS_PROP_INT32_DEF("FLAG_VIDEO_JPEG_COLOURSPACE", LibcameraApp::FLAG_VIDEO_JPEG_COLOURSPACE, 0),
 
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "LibcameraApp", JS_PROP_CONFIGURABLE),
 
@@ -528,7 +523,7 @@ onstructor and ctor.prototype */
     JS_SetPropertyFunctionList(ctx, libcamera_app_options_proto, js_libcamera_app_options_proto_funcs, countof(js_libcamera_app_options_proto_funcs));
     JS_SetClassProto(ctx, js_libcamera_app_options_class_id, libcamera_app_options_proto);
 
-    libcamera_app_options_class = JS_NewCFunction2(ctx, js_libcamera_app_options_ctor, "LibcameraAppOptions", 2, JS_CFUNC_constructor, 0);
+    //libcamera_app_options_class = JS_NewCFunction2(ctx, js_libcamera_app_options_ctor, "LibcameraAppOptions", 2, JS_CFUNC_constructor, 0);
   }
 
   if(m) {

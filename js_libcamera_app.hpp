@@ -1,9 +1,8 @@
 #ifndef JS_LIBCAMERA_APP_HPP
-#define JS_LIBCAMERA_APP_HPP
+#define JS_LIBCAMERA_APP_HPP 1
 
 #include "jsbindings.hpp"
 #include <quickjs.h>
-#include <lccv.hpp>
 
 extern "C" {
 extern JSValue libcamera_app_proto, libcamera_app_class, libcamera_app_options_proto, libcamera_app_options_class;
