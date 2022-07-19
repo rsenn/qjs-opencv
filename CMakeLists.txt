@@ -191,7 +191,7 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/LCCV")
   if(USE_LCCV)
     set(BUILD_SHARED_LIBS OFF)
     add_subdirectory(LCCV)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
     set(LCCV_LIBRARIES "${CMAKE_CURRENT_BINARY_DIR}/LCCV/liblccv.a" camera camera-base event event_pthreads Threads::Threads)
   endif(USE_LCCV)
 endif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/LCCV")
@@ -210,7 +210,7 @@ target_link_libraries(
 if(USE_LCCV)
   add_dependencies( qjs-opencv liblccv)
 
-  
+
 endif(USE_LCCV)
 install(TARGETS qjs-opencv DESTINATION "${QUICKJS_C_MODULE_DIR}")
 set(jsbindings_LIBRARIES qjs-opencv)
