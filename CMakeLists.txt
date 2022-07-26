@@ -137,8 +137,8 @@ endif("${CMAKE_CXX_COMPILER_ID}" MATCHES ".*Clang.*")
 
 check_pic_flag(QUICKJS_MODULE_CFLAGS)
 
-set(DEBUG_OUTPUT TRUE CACHE BOOL "Debug output" FORCE)
-set(DEBUG_MAT FALSE CACHE BOOL "Debug cv::Mat" FORCE)
+#set(DEBUG_OUTPUT TRUE CACHE BOOL "Debug output" FORCE)
+#set(DEBUG_MAT FALSE CACHE BOOL "Debug cv::Mat" FORCE)
 
 check_opt_none_flag()
 
