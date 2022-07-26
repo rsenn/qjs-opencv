@@ -185,12 +185,12 @@ point_inside(const cv::Point_<T>& pt, const cv::Size& sz) {
   return pt.x >= 0 && pt.x < sz.width && pt.y >= 0 && pt.y < sz.height;
 }
 
-template<class T>
+/*template<class T>
 inline std::ostream&
 operator<<(std::ostream& os, const cv::Point_<T>& p) {
   os << p.x << "," << p.y;
   return os;
-}
+}*/
 
 template<class T>
 inline bool
