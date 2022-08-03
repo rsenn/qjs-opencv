@@ -19,7 +19,7 @@ enum {
   OPTION_VERSION,
   OPTION_LIST_CAMERAS,
   OPTION_VERBOSE,
-  OPTION_MS,
+  OPTION_TIMEOUT,
   OPTION_PHOTO_WIDTH,
   OPTION_PHOTO_HEIGHT,
   OPTION_VIDEO_WIDTH,
@@ -72,94 +72,124 @@ js_libcamera_app_options_wrap(JSContext* ctx, JSLibcameraAppOptionsData* opt) {
 static JSValue
 js_libcamera_app_options_get(JSContext* ctx, JSValueConst this_val, int magic) {
   JSLibcameraAppOptionsData* o = static_cast<JSLibcameraAppOptionsData*>(JS_GetOpaque2(ctx, this_val, js_libcamera_app_options_class_id));
+  JSValue ret = JS_UNDEFINED;
 
   switch(magic) {
     case OPTION_HELP: {
+      ret = JS_NewBool(ctx, o->help);
       break;
     }
     case OPTION_VERSION: {
+      ret = JS_NewBool(ctx, o->version);
       break;
     }
     case OPTION_LIST_CAMERAS: {
+      ret = JS_NewBool(ctx, o->list_cameras);
       break;
     }
     case OPTION_VERBOSE: {
+      ret = JS_NewBool(ctx, o->verbose);
       break;
     }
-    case OPTION_MS: {
+    case OPTION_TIMEOUT: {
+      ret = JS_NewInt64(ctx, o->timeout);
       break;
     }
     case OPTION_PHOTO_WIDTH: {
+      ret = JS_NewUint32(ctx, o->photo_width);
       break;
     }
     case OPTION_PHOTO_HEIGHT: {
+      ret = JS_NewUint32(ctx, o->photo_height);
       break;
     }
     case OPTION_VIDEO_WIDTH: {
+      ret = JS_NewUint32(ctx, o->video_width);
       break;
     }
     case OPTION_VIDEO_HEIGHT: {
+      ret = JS_NewUint32(ctx, o->video_height);
       break;
     }
     case OPTION_RAWFULL: {
+      ret = JS_NewBool(ctx, o->rawfull);
       break;
     }
     case OPTION_TRANSFORM: {
+      ret = JS_NewInt32(ctx, int32_t(o->transform));
       break;
     }
     case OPTION_ROI_X: {
+      ret = JS_NewFloat64(ctx, o->roi_x);
       break;
     }
     case OPTION_ROI_Y: {
+      ret = JS_NewFloat64(ctx, o->roi_y);
       break;
     }
     case OPTION_ROI_WIDTH: {
+      ret = JS_NewFloat64(ctx, o->roi_width);
       break;
     }
     case OPTION_ROI_HEIGHT: {
+      ret = JS_NewFloat64(ctx, o->roi_height);
       break;
     }
     case OPTION_SHUTTER: {
+      ret = JS_NewFloat64(ctx, o->shutter);
       break;
     }
     case OPTION_GAIN: {
+      ret = JS_NewFloat64(ctx, o->gain);
       break;
     }
     case OPTION_EV: {
+      ret = JS_NewFloat64(ctx, o->ev);
       break;
     }
     case OPTION_AWB_GAIN_R: {
+      ret = JS_NewFloat64(ctx, o->awb_gain_r);
       break;
     }
     case OPTION_AWB_GAIN_B: {
+      ret = JS_NewFloat64(ctx, o->awb_gain_b);
       break;
     }
     case OPTION_BRIGHTNESS: {
+      ret = JS_NewFloat64(ctx, o->brightness);
       break;
     }
     case OPTION_CONTRAST: {
+      ret = JS_NewFloat64(ctx, o->contrast);
       break;
     }
     case OPTION_SATURATION: {
+      ret = JS_NewFloat64(ctx, o->saturation);
       break;
     }
     case OPTION_SHARPNESS: {
+      ret = JS_NewFloat64(ctx, o->sharpness);
       break;
     }
     case OPTION_FRAMERATE: {
+      ret = JS_NewFloat64(ctx, o->framerate);
       break;
     }
     case OPTION_DENOISE: {
+      ret = JS_NewString(ctx, o->denoise.c_str());
       break;
     }
     case OPTION_INFO_TEXT: {
+      ret = JS_NewString(ctx, o->info_text.c_str());
       break;
     }
     case OPTION_CAMERA: {
+      ret = JS_NewUint32(ctx, o->camera);
       break;
     }
   }
-  return JS_UNDEFINED;
+
+  return ret;
 }
 
 static JSValue
@@ -168,87 +198,168 @@ js_libcamera_app_options_set(JSContext* ctx, JSValueConst this_val, JSValueConst
 
   switch(magic) {
     case OPTION_HELP: {
+      o->help = JS_ToBool(ctx, value);
       break;
     }
     case OPTION_VERSION: {
+      o->version = JS_ToBool(ctx, value);
       break;
     }
     case OPTION_LIST_CAMERAS: {
+      o->list_cameras = JS_ToBool(ctx, value);
       break;
     }
     case OPTION_VERBOSE: {
+      o->verbose = JS_ToBool(ctx, value);
       break;
     }
-    case OPTION_MS: {
+    case OPTION_TIMEOUT: {
+      uint64_t ms;
+      JS_ToIndex(ctx, &ms, value);
+      o->timeout = ms;
       break;
     }
     case OPTION_PHOTO_WIDTH: {
+      uint32_t w;
+      JS_ToUint32(ctx, &w, value);
+      o->photo_width = w;
       break;
     }
     case OPTION_PHOTO_HEIGHT: {
+      uint32_t h;
+      JS_ToUint32(ctx, &h, value);
+      o->photo_height = h;
+      break;
       break;
     }
     case OPTION_VIDEO_WIDTH: {
+      uint32_t w;
+      JS_ToUint32(ctx, &w, value);
+      o->video_width = w;
       break;
     }
     case OPTION_VIDEO_HEIGHT: {
+      uint32_t h;
+      JS_ToUint32(ctx, &h, value);
+      o->video_height = h;
       break;
     }
     case OPTION_RAWFULL: {
+      o->rawfull = JS_ToBool(ctx, value);
       break;
     }
     case OPTION_TRANSFORM: {
+      int32_t t;
+      JS_ToInt32(ctx, &t, value);
+      o->transform = libcamera::Transform(t);
       break;
     }
     case OPTION_ROI_X: {
+      double x;
+      JS_ToFloat64(ctx, &x, value);
+      o->roi_x = x;
       break;
     }
     case OPTION_ROI_Y: {
+      double y;
+      JS_ToFloat64(ctx, &y, value);
+      o->roi_x = y;
       break;
     }
     case OPTION_ROI_WIDTH: {
+      double w;
+      JS_ToFloat64(ctx, &w, value);
+      o->roi_width = w;
       break;
     }
     case OPTION_ROI_HEIGHT: {
+      double h;
+      JS_ToFloat64(ctx, &h, value);
+      o->roi_height = h;
       break;
     }
     case OPTION_SHUTTER: {
+      double s;
+      JS_ToFloat64(ctx, &s, value);
+      o->shutter = s;
       break;
     }
     case OPTION_GAIN: {
+      double g;
+      JS_ToFloat64(ctx, &g, value);
+      o->gain = g;
       break;
     }
     case OPTION_EV: {
+      double ev;
+      JS_ToFloat64(ctx, &ev, value);
+      o->ev = ev;
       break;
     }
     case OPTION_AWB_GAIN_R: {
+      double gr;
+      JS_ToFloat64(ctx, &gr, value);
+      o->awb_gain_r = gr;
       break;
     }
     case OPTION_AWB_GAIN_B: {
+      double gb;
+      JS_ToFloat64(ctx, &gb, value);
+      o->awb_gain_b = gb;
       break;
     }
     case OPTION_BRIGHTNESS: {
+      double br;
+      JS_ToFloat64(ctx, &br, value);
+      o->brightness = br;
       break;
     }
     case OPTION_CONTRAST: {
+      double ct;
+      JS_ToFloat64(ctx, &ct, value);
+      o->contrast = ct;
       break;
     }
     case OPTION_SATURATION: {
+      double st;
+      JS_ToFloat64(ctx, &st, value);
+      o->saturation = st;
       break;
     }
     case OPTION_SHARPNESS: {
+      double sh;
+      JS_ToFloat64(ctx, &sh, value);
+      o->sharpness = sh;
       break;
     }
     case OPTION_FRAMERATE: {
+      double fr;
+      JS_ToFloat64(ctx, &fr, value);
+      o->framerate = fr;
       break;
     }
     case OPTION_DENOISE: {
+      const char* dn;
+
+      if((dn = JS_ToCString(ctx, value))) {
+        o->denoise = dn;
+        JS_FreeCString(ctx, dn);
+      }
       break;
     }
     case OPTION_INFO_TEXT: {
+      const char* in;
+
+      if((in = JS_ToCString(ctx, value))) {
+        o->info_text = in;
+        JS_FreeCString(ctx, in);
+      }
       break;
     }
     case OPTION_CAMERA: {
+      uint32_t c;
+      JS_ToUint32(ctx, &c, value);
+      o->camera = c;
       break;
     }
   }
@@ -265,7 +376,7 @@ const JSCFunctionListEntry js_libcamera_app_options_proto_funcs[] = {
     JS_CGETSET_MAGIC_DEF("version", js_libcamera_app_options_get, js_libcamera_app_options_set, OPTION_VERSION),
     JS_CGETSET_MAGIC_DEF("listCameras", js_libcamera_app_options_get, js_libcamera_app_options_set, OPTION_LIST_CAMERAS),
     JS_CGETSET_MAGIC_DEF("verbose", js_libcamera_app_options_get, js_libcamera_app_options_set, OPTION_VERBOSE),
-    JS_CGETSET_MAGIC_DEF("ms", js_libcamera_app_options_get, js_libcamera_app_options_set, OPTION_MS),
+    JS_CGETSET_MAGIC_DEF("ms", js_libcamera_app_options_get, js_libcamera_app_options_set, OPTION_TIMEOUT),
     JS_CGETSET_MAGIC_DEF("photoWidth", js_libcamera_app_options_get, js_libcamera_app_options_set, OPTION_PHOTO_WIDTH),
     JS_CGETSET_MAGIC_DEF("photoHeight", js_libcamera_app_options_get, js_libcamera_app_options_set, OPTION_PHOTO_HEIGHT),
     JS_CGETSET_MAGIC_DEF("videoWidth", js_libcamera_app_options_get, js_libcamera_app_options_set, OPTION_VIDEO_WIDTH),
@@ -491,6 +602,10 @@ const JSCFunctionListEntry js_libcamera_app_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("setControls", 0, js_libcamera_app_method, METHOD_SET_CONTROLS),
     JS_CFUNC_MAGIC_DEF("streamDimensions", 0, js_libcamera_app_method, METHOD_STREAM_DIMENSIONS),
     JS_CGETSET_DEF("options", js_libcamera_app_options, 0),
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "LibcameraApp", JS_PROP_CONFIGURABLE),
+};
+
+const JSCFunctionListEntry js_libcamera_app_static_funcs[] = {
     JS_PROP_INT32_DEF("FLAG_STILL_NONE", LibcameraApp::FLAG_STILL_NONE, 0),
     JS_PROP_INT32_DEF("FLAG_STILL_BGR", LibcameraApp::FLAG_STILL_BGR, 0),
     JS_PROP_INT32_DEF("FLAG_STILL_RGB", LibcameraApp::FLAG_STILL_RGB, 0),
@@ -501,9 +616,16 @@ const JSCFunctionListEntry js_libcamera_app_proto_funcs[] = {
     JS_PROP_INT32_DEF("FLAG_VIDEO_NONE", LibcameraApp::FLAG_VIDEO_NONE, 0),
     JS_PROP_INT32_DEF("FLAG_VIDEO_RAW", LibcameraApp::FLAG_VIDEO_RAW, 0),
     JS_PROP_INT32_DEF("FLAG_VIDEO_JPEG_COLOURSPACE", LibcameraApp::FLAG_VIDEO_JPEG_COLOURSPACE, 0),
-
-    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "LibcameraApp", JS_PROP_CONFIGURABLE),
-
+    JS_PROP_INT32_DEF("TRANSFORM_IDENTITY", int32_t(libcamera::Transform::Identity), 0),
+    JS_PROP_INT32_DEF("TRANSFORM_ROT0", int32_t(libcamera::Transform::Rot0), 0),
+    JS_PROP_INT32_DEF("TRANSFORM_HFLIP", int32_t(libcamera::Transform::HFlip), 0),
+    JS_PROP_INT32_DEF("TRANSFORM_VFLIP", int32_t(libcamera::Transform::VFlip), 0),
+    JS_PROP_INT32_DEF("TRANSFORM_HVFLIP", int32_t(libcamera::Transform::HVFlip), 0),
+    JS_PROP_INT32_DEF("TRANSFORM_ROT180", int32_t(libcamera::Transform::Rot180), 0),
+    JS_PROP_INT32_DEF("TRANSFORM_TRANSPOSE", int32_t(libcamera::Transform::Transpose), 0),
+    JS_PROP_INT32_DEF("TRANSFORM_ROT270", int32_t(libcamera::Transform::Rot270), 0),
+    JS_PROP_INT32_DEF("TRANSFORM_ROT90", int32_t(libcamera::Transform::Rot90), 0),
+    JS_PROP_INT32_DEF("TRANSFORM_ROT180TRANSPOSE", int32_t(libcamera::Transform::Rot180Transpose), 0),
 };
 
 int
@@ -519,6 +641,7 @@ js_libcamera_app_init(JSContext* ctx, JSModuleDef* m) {
     JS_SetClassProto(ctx, js_libcamera_app_class_id, libcamera_app_proto);
 
     libcamera_app_class = JS_NewCFunction2(ctx, js_libcamera_app_ctor, "LibcameraApp", 2, JS_CFUNC_constructor, 0);
+    JS_SetPropertyFunctionList(ctx, libcamera_app_class, js_libcamera_app_static_funcs, countof(js_libcamera_app_static_funcs));
 
     /* set proto.constructor and ctor.prototype */
     JS_SetConstructor(ctx, libcamera_app_class, libcamera_app_proto);
