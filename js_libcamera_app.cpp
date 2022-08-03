@@ -444,8 +444,8 @@ js_libcamera_app_finalizer(JSRuntime* rt, JSValue val) {
   JSLibcameraAppData* s = static_cast<JSLibcameraAppData*>(JS_GetOpaque(val, js_libcamera_app_class_id));
   /* Note: 's' can be NULL in case JS_SetOpaque() was not called */
 
-  s->~JSLibcameraAppData();
-  js_deallocate(rt, s);
+/*  s->~JSLibcameraAppData();
+  js_deallocate(rt, s);*/
 
   JS_FreeValueRT(rt, val);
 }
