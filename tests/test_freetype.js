@@ -1,4 +1,4 @@
-import * as cv from 'opencv';
+import { COLOR_BGR2GRAY, CV_8UC3, Contour, FILLED, LINE_8, LINE_AA, Mat, Point, Rect, Size, THRESH_BINARY_INV, WINDOW_NORMAL, cvtColor, drawRect, imshow, imwrite, namedWindow, resizeWindow, threshold, waitKey } from 'opencv';
 import * as util from 'util';
 import * as path from 'path';
 import { Window, MouseFlags, MouseEvents, Mouse, TextStyle, DrawText } from '../js/cvHighGUI.js';
@@ -15,15 +15,15 @@ function main(...argv) {
     }
   });
 
-  /* cv.namedWindow('out');
-  cv.resizeWindow('out', 640, 480);*/
+  /* namedWindow('out');
+  resizeWindow('out', 640, 480);*/
   let mat;
   let colors = [
     [0, 0, 0],
     [255, 255, 255]
   ];
 
-  cv.rectangle(mat, [0, 0], [639, 479], colors[1], cv.FILLED);
+  // drawRect(mat, [0, 0], [639, 479], colors[1], FILLED);
 
   let [fontFile = 'MiscFixedSC613.ttf', fontSize = 12] = args;
 
@@ -35,14 +35,14 @@ function main(...argv) {
   let str = util.range(0x20, 0x80).reduce((s, n) => s + String.fromCodePoint(n), '');
 
   let size = style.size(str);
-  let rect = new cv.Rect(1, 1, size.width, size.height + 2);
+  let rect = new Rect(1, 1, size.width, size.height + 2);
 
   let powerOf2 = n => Math.pow(2, Math.ceil(Math.log2(n)));
 
-  let dim = new cv.Size(powerOf2(rect.width), powerOf2(Math.round(Math.min(rect.width / 1.7777), rect.height)));
+  let dim = new Size(powerOf2(rect.width), powerOf2(Math.round(Math.min(rect.width / 1.7777), rect.height)));
   console.log('dim', dim);
-  mat = new cv.Mat(dim, cv.CV_8UC3);
-  cv.rectangle(mat, [0, 0], [mat.cols - 1, mat.rows - 1], colors[1], cv.FILLED);
+  mat = new Mat(dim, CV_8UC3);
+  drawRect(mat, [0, 0], [mat.cols - 1, mat.rows - 1], colors[1], FILLED);
 
   let step = Math.round(rect.width / str.length);
   console.log('step', step);
@@ -50,28 +50,28 @@ function main(...argv) {
   let boxes = rect.hsplit(...util.range(0, rect.width, step));
   // console.log('boxes', boxes);
 
-  style.draw(mat, str, new cv.Point(1, 0), colors[0], -1, cv.LINE_AA);
+  style.draw(mat, str, new Point(1, 0), colors[0], -1, LINE_AA);
 
-  let gray = new cv.Mat();
-  cv.cvtColor(mat, gray, cv.COLOR_BGR2GRAY);
+  let gray = new Mat();
+  cvtColor(mat, gray, COLOR_BGR2GRAY);
 
   let roi = gray(rect);
-  let rect2 = new cv.Rect(0, 0, roi.cols, roi.rows);
+  let rect2 = new Rect(0, 0, roi.cols, roi.rows);
 
   console.log('gray', gray);
   console.log('roi', roi);
-  console.log('cv.threshold', cv.threshold);
+  console.log('threshold', threshold);
   let boxes2 = rect2.hsplit(...util.range(0, rect2.width, step));
 
-  let binary = new cv.Mat();
-  cv.threshold(roi, binary, 50, 255, cv.THRESH_BINARY_INV);
+  let binary = new Mat();
+  threshold(roi, binary, 50, 255, THRESH_BINARY_INV);
 
-  cv.namedWindow('out', cv.WINDOW_NORMAL);
-  let winsize = new cv.Size(rect.width, Math.max(mat.cols / 1.77777, rect.height));
+  namedWindow('out', WINDOW_NORMAL);
+  let winsize = new Size(rect.width, Math.max(mat.cols / 1.77777, rect.height));
   console.log('winsize', winsize);
-  cv.resizeWindow('out', ...mat.size);
-  cv.imshow('out', mat);
-  cv.waitKey(-1);
+  resizeWindow('out', ...mat.size);
+  imshow('out', mat);
+  waitKey(-1);
 
   console.log('binary', binary);
   //  console.log('binary.colRange()', binary.colRange());
@@ -82,7 +82,7 @@ function main(...argv) {
 
   function dumpChar(code) {
     const index = code < 32 ? 0 : code - 32;
-    let box = new cv.Rect(boxes2[index]);
+    let box = new Rect(boxes2[index]);
 
     console.log('box', box);
     box.y1 += 1;
@@ -97,7 +97,7 @@ function main(...argv) {
     console.log('bits', bytes << 3);
 
     const RectReducer = list => {
-      let first = new cv.Rect(...list.shift());
+      let first = new Rect(...list.shift());
       console.log('first', first);
       return list.reduce((a, o) => {
         if('x' in o && 'width' in o) {
@@ -113,8 +113,8 @@ function main(...argv) {
     };
 
     const PointReducer = list => {
-      let first = new cv.Point(...list.shift());
-      let rect = new cv.Rect(first.x, first.y, 0, 0);
+      let first = new Point(...list.shift());
+      let rect = new Rect(first.x, first.y, 0, 0);
       console.log('rect', rect);
       return list.reduce((a, o) => {
         if(a.x1 > o.x) a.x1 = o.x;
@@ -127,8 +127,8 @@ function main(...argv) {
 
     let a = [...binary(box)].map(n => !!n);
 
-    let contour = new cv.Contour(
-      [...binary(box).entries()].filter(([coord, entry]) => entry != 0).map(p => new cv.Point(...p))
+    let contour = new Contour(
+      [...binary(box).entries()].filter(([coord, entry]) => entry != 0).map(p => new Point(...p))
     );
 
     console.log('contour.boundingRect', contour.boundingRect);
@@ -136,22 +136,22 @@ function main(...argv) {
 
     let pointList = [...binary(box).entries()]
       .filter(([coord, entry]) => entry != 0)
-      .map(([coord, entry]) => new cv.Point(...coord));
+      .map(([coord, entry]) => new Point(...coord));
     //console.log('pointList',  (pointList));
     console.log('PointReducer(pointList)', PointReducer(pointList));
 
     let bf = util.arrayToBitfield(a);
-    console.log('bits', bf);
+    console.log('bits', console.config({ numberBase: 2}), new Uint8Array(bf));
     console.log(
       `bits for '${String.fromCodePoint(code)}'`,
-      '\n' +
+      '\n\x1b[48;5;232m' +
         util
           .chunkArray(
             util.bitfieldToArray(bf).map(v => (v ? '\u2588\u2588' : '  ')),
             box.width
           )
           .map(row => row.join(''))
-          .join('\n')
+          .join('\n')+'\x1b[0m'
     );
   }
 
@@ -161,16 +161,20 @@ function main(...argv) {
     let roi = mat(rect);
     let id = '0x' + (i + 0x20).toString(16).padStart(2, '0');
     let filename = fontName + '-' + id + '.png';
-    cv.imwrite(filename, roi);
-    console.log('write roi to', filename);
+    imwrite(filename, roi);
+    //console.log('write roi to', filename);
   }
 
-  //  boxes.forEach((box, i) => writeROI(i, box));
+  //boxes.forEach((box, i) => writeROI(i, box));
+  let i = 0;
 
-  for(let box of boxes) cv.rectangle(mat, box.tl, box.br.sub(1, 1), [255, 0, 0], 1, cv.LINE_8);
+  for(let box of boxes) {
+    drawRect(mat, box.tl, box.br.sub(1, 1), [255, 0, 0], 1, LINE_8);
+    writeROI(i++, box);
+  }
 
-  cv.imshow('out', mat);
-  cv.waitKey(-1);
+  imshow('out', mat);
+  waitKey(-1);
 }
 
 main(...process.argv.slice(1));
