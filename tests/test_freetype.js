@@ -141,7 +141,7 @@ function main(...argv) {
     console.log('PointReducer(pointList)', PointReducer(pointList));
 
     let bf = util.arrayToBitfield(a);
-    console.log('bits', console.config({ numberBase: 2}), new Uint8Array(bf));
+    console.log('bits', console.config({ numberBase: 2 }), new Uint8Array(bf));
     console.log(
       `bits for '${String.fromCodePoint(code)}'`,
       '\n\x1b[48;5;232m' +
@@ -151,7 +151,8 @@ function main(...argv) {
             box.width
           )
           .map(row => row.join(''))
-          .join('\n')+'\x1b[0m'
+          .join('\n') +
+        '\x1b[0m'
     );
   }
 
