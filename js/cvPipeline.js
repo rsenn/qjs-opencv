@@ -18,12 +18,12 @@ export class Pipeline extends Function {
         let args = [mat ?? self.images[i - 1], self.images[i]];
 
         self.invokeCallback('before', ...args);
-        console.log(`Pipeline \x1b[38;5;112m#${i} \x1b[38;5;32m'${processor.name}'\x1b[m`);
+        //console.log(`Pipeline \x1b[38;5;112m#${i} \x1b[38;5;32m'${processor.name}'\x1b[m`);
 
         mat = processor.call(self, ...args);
 
         self.invokeCallback('after', ...args);
-        console.log(`Pipeline`, { i, mat, isObj: isObject(mat) });
+        //console.log(`Pipeline`, { i, mat, isObj: isObject(mat) });
 
         if(isObject(mat) && mat instanceof Mat) self.images[i] = mat;
         mat = self.images[i];
