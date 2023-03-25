@@ -79,9 +79,12 @@ js_opencv_init(JSContext* ctx, JSModuleDef* m) {
   js_fast_line_detector_init(ctx, m);
   js_keypoint_init(ctx, m);
   js_feature2d_init(ctx, m);
+#ifdef USE_LIBCAMERA
   js_libcamera_app_init(ctx, m);
+#endif
+#ifdef USE_LCCV
   js_raspi_cam_init(ctx, m);
-
+#endif
   return 0;
 }
 
@@ -121,8 +124,12 @@ JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   js_fast_line_detector_export(ctx, m);
   js_keypoint_export(ctx, m);
   js_feature2d_export(ctx, m);
+#ifdef USE_LIBCAMERA
   js_libcamera_app_export(ctx, m);
+#endif
+#ifdef USE_LCCV
   js_raspi_cam_export(ctx, m);
+#endif
 
   return m;
 }
