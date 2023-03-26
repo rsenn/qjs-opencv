@@ -1,4 +1,3 @@
-#ifdef USE_LIBCAMERA
 #include "js_libcamera_app.hpp"
 #include "js_alloc.hpp"
 #include "js_mat.hpp"
@@ -689,4 +688,3 @@ JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   js_libcamera_app_export(ctx, m);
   return m;
 }
-#endif

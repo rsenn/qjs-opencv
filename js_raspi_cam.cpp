@@ -1,4 +1,3 @@
-#ifdef USE_LCCV
 #include "js_libcamera_app.hpp"
 #include "js_alloc.hpp"
 #include "js_umat.hpp"
@@ -218,4 +217,3 @@ JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   js_raspi_cam_export(ctx, m);
   return m;
 }
-#endif
