@@ -39,7 +39,7 @@ function main(...args) {
       /* console.log('coords', coords.map(({ x, y }) => x + ',' + y).join(' -> '));
       console.log('color', color);
       console.log('j', j);*/
-      cv.line(images[i], ...coords, [...color.slice(0, 3), 255], 3, false);
+      cv.drawLine(images[i], ...coords, [...color.slice(0, 3), 255], 3, false);
     }
     images2[i] = cv.Mat.zeros(size, cv.CV_8UC1);
 

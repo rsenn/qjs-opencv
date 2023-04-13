@@ -25,7 +25,7 @@ function main(...argv) {
 
   // drawRect(mat, [0, 0], [639, 479], colors[1], FILLED);
 
-  let [fontFile = 'MiscFixedSC613.ttf', fontSize = 12] = args;
+  let [fontFile = 'MiscFixedSC613.ttf', fontSize = 11] = args;
 
   console.log('fontFile', fontFile);
   let ext = path.extname(fontFile);
@@ -157,6 +157,15 @@ function main(...argv) {
   }
 
   //  console.log('bits',util.bitfieldToArray(bf).reduce((s,v) => s+(v|0).toString(), ''));
+  function Grayscale(src) {
+    let m = new Mat();
+    cvtColor(src, m, COLOR_BGR2GRAY);
+    return m;
+  }
+
+  /*  let hist = new Mat();
+    calcHist([dst], 1, 0, new Mat(), hist, 1,  [255],[0,256]);
+    console.log('hist', hist);*/
 
   function writeROI(i, rect) {
     let roi = mat(rect);
@@ -166,13 +175,48 @@ function main(...argv) {
     //console.log('write roi to', filename);
   }
 
+  function writeFile(filename,s) {
+    let f=std.open(filename,'w+');
+    f.puts(s);
+    f.close();
+  }
+
+  function getRow(mat, r) {
+    return mat.row(r).array;
+  }
+
+  function* rowIterator(mat) {
+    for(let i = 0; i < mat.rows; i++) yield getRow(mat,i);
+  }
+function outputBytes(mat) {
+  return [...rowIterator(mat)].map(a => [...a.values()]);
+}
+function toSource(obj) {
+  return inspect(obj, { reparseable: 1,  colors:false ,compact: 3, numberBase: 16});
+}
+
   //boxes.forEach((box, i) => writeROI(i, box));
   let i = 0;
-
+  gray = Grayscale(mat);
+let font=[];
   for(let box of boxes) {
-    drawRect(mat, box.tl, box.br.sub(1, 1), [255, 0, 0], 1, LINE_8);
+    let m = gray(box);
+    m.xor(0xff);
+
+    const { rows, cols, type, channels, depth } = m;
+    console.log('m', { rows, cols, type, channels, depth });
+    font.push([i+0x20, outputBytes(m)]);
+    
+    let r = [...rowIterator(m)];
+    //   console.log(i, console.config({maxArrayLength:10}), rows);
+
     writeROI(i++, box);
+    drawRect(mat, box.tl, box.br.sub(1, 1), [255, 0, 0], 1, LINE_8);
   }
+
+writeFile('output.js', toSource(font));
+
+
 
   imshow('out', mat);
   waitKey(-1);
