@@ -215,6 +215,7 @@ let font=[];
   }
 
 writeFile('output.js', toSource(font));
+writeFile('output.json', JSON.stringify(Object.fromEntries(font)));
 
 
 
