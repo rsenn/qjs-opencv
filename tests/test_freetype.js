@@ -127,16 +127,12 @@ function main(...argv) {
 
     let a = [...binary(box)].map(n => !!n);
 
-    let contour = new Contour(
-      [...binary(box).entries()].filter(([coord, entry]) => entry != 0).map(p => new Point(...p))
-    );
+    let contour = new Contour([...binary(box).entries()].filter(([coord, entry]) => entry != 0).map(p => new Point(...p)));
 
     console.log('contour.boundingRect', contour.boundingRect);
     //console.log('contour',[...contour]);
 
-    let pointList = [...binary(box).entries()]
-      .filter(([coord, entry]) => entry != 0)
-      .map(([coord, entry]) => new Point(...coord));
+    let pointList = [...binary(box).entries()].filter(([coord, entry]) => entry != 0).map(([coord, entry]) => new Point(...coord));
     //console.log('pointList',  (pointList));
     console.log('PointReducer(pointList)', PointReducer(pointList));
 
@@ -170,13 +166,13 @@ function main(...argv) {
   function writeROI(i, rect) {
     let roi = mat(rect);
     let id = '0x' + (i + 0x20).toString(16).padStart(2, '0');
-    let filename = fontName + '-' + id + '.png';
+    let filename = fontName+ '@' + fontSize + '-' + id + '.png';
     imwrite(filename, roi);
     //console.log('write roi to', filename);
   }
 
-  function writeFile(filename,s) {
-    let f=std.open(filename,'w+');
+  function writeFile(filename, s) {
+    let f = std.open(filename, 'w+');
     f.puts(s);
     f.close();
   }
@@ -186,27 +182,27 @@ function main(...argv) {
   }
 
   function* rowIterator(mat) {
-    for(let i = 0; i < mat.rows; i++) yield getRow(mat,i);
+    for(let i = 0; i < mat.rows; i++) yield getRow(mat, i);
   }
-function outputBytes(mat) {
-  return [...rowIterator(mat)].map(a => [...a.values()]);
-}
-function toSource(obj) {
-  return inspect(obj, { reparseable: 1,  colors:false ,compact: 3, numberBase: 16});
-}
+
+  function outputBytes(mat) {
+    return [...rowIterator(mat)].map(a => [...a.values()]);
+  }
+
+  function toSource(obj) {
+    return inspect(obj, { reparseable: 1, colors: false, compact: 3, numberBase: 16 });
+  }
 
   //boxes.forEach((box, i) => writeROI(i, box));
-  let i = 0;
+  let b,i = 0;
   gray = Grayscale(mat);
-let font=[];
+  let font = [];
   for(let box of boxes) {
     let m = gray(box);
     m.xor(0xff);
 
-    const { rows, cols, type, channels, depth } = m;
-    console.log('m', { rows, cols, type, channels, depth });
-    font.push([i+0x20, outputBytes(m)]);
-    
+    font.push([String.fromCodePoint(i + 0x20), outputBytes(m)]);
+
     let r = [...rowIterator(m)];
     //   console.log(i, console.config({maxArrayLength:10}), rows);
 
@@ -214,13 +210,13 @@ let font=[];
     drawRect(mat, box.tl, box.br.sub(1, 1), [255, 0, 0], 1, LINE_8);
   }
 
-writeFile('output.js', toSource(font));
-writeFile('output.json', JSON.stringify(Object.fromEntries(font)));
+  writeFile(fontName+ '@' + fontSize + '.js', toSource(font));
+  writeFile(fontName+ '@' + fontSize + '.json', JSON.stringify(Object.fromEntries(font)));
 
+console.log(boxes[0].size);
 
-
-  imshow('out', mat);
-  waitKey(-1);
+  //imshow('out', mat);
+//  waitKey(-1);
 }
 
 main(...process.argv.slice(1));

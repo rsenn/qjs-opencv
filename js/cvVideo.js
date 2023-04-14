@@ -161,10 +161,7 @@ export class ImageSequence {
       let { size: frameSize } = frame;
       let doResize = !frameSize.equals(targetSize);
       //console.debug(`ImageSequence.retrieve[${framePos}]`, { frame, frameSize, mat, targetSize, doResize });
-      if(doResize)
-        ImageSize(frame, mat, targetSize, (name, arg1, arg2) =>
-          console.debug(`ImageSize[${this.framePos}] ${name} ${arg1.toString()} -> ${arg2.toString()}`)
-        );
+      if(doResize) ImageSize(frame, mat, targetSize, (name, arg1, arg2) => console.debug(`ImageSize[${this.framePos}] ${name} ${arg1.toString()} -> ${arg2.toString()}`));
       else frame.copyTo(mat);
       //console.debug(`ImageSequence.retrieve[${framePos}]`, { mat });
       return !mat.emtpy;
@@ -351,19 +348,7 @@ export class VideoSource {
     return this.get('fps');
   }
 
-  dump(
-    props = [
-      'frame_count',
-      'frame_width',
-      'frame_height',
-      'fps',
-      'format',
-      'fourcc',
-      'backend',
-      'pos_frames',
-      'pos_msec'
-    ]
-  ) {
+  dump(props = ['frame_count', 'frame_width', 'frame_height', 'fps', 'format', 'fourcc', 'backend', 'pos_frames', 'pos_msec']) {
     return new Map(props.map(propName => [propName, this.get(propName)]).filter(([k, v]) => v !== undefined));
   }
 

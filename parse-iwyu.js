@@ -69,13 +69,7 @@ function main(...args) {
       .replace(/-\s#include/g, '#include')
       .split(/\n/g)
       .filter(line => typeof line == 'string' && !/^(-+$|\+ )/.test(line))
-      .map(line =>
-        fs.existsSync(IncludeName(line))
-          ? AngleBracketsToQuotes(line)
-          : /opencv2|quickjs|cutils/.test(line)
-          ? QuotesToAngleBrackets(line)
-          : line
-      )
+      .map(line => (fs.existsSync(IncludeName(line)) ? AngleBracketsToQuotes(line) : /opencv2|quickjs|cutils/.test(line) ? QuotesToAngleBrackets(line) : line))
       .map(ReplaceStd);
 
     if(lines.length == 0) continue;
