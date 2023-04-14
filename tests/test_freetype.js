@@ -25,7 +25,7 @@ function main(...argv) {
 
   // drawRect(mat, [0, 0], [639, 479], colors[1], FILLED);
 
-  let [fontFile = 'MiscFixedSC613.ttf', fontSize = 11] = args;
+  let [fontFile = 'MiscFixedSC613.ttf', fontSize = 12] = args;
 
   console.log('fontFile', fontFile);
   let ext = path.extname(fontFile);
