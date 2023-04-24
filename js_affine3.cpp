@@ -1,18 +1,15 @@
 #include "js_affine3.hpp"
-#include "js_size.hpp"
 #include "js_alloc.hpp"
 #include "js_array.hpp"
-#include "js_point.hpp"
 #include "js_typed_array.hpp"
 #include "jsbindings.hpp"
-#include "affine3.hpp"
+#include "util.hpp"
 #include <quickjs.h>
-#include <algorithm>
+/*#include <algorithm>
 #include <cctype>
 #include <cmath>
 #include <cstdlib>
-#include <opencv2/core/types.hpp>
-#include <utility>
+#include <utility>*/
 
 enum { PROP_A = 0, PROP_B, PROP_SLOPE, PROP_PIVOT, PROP_TO, PROP_ANGLE, PROP_ASPECT, PROP_LENGTH };
 
@@ -30,48 +27,50 @@ js_affine3_data(JSValueConst val) {
 }
 }
 
-VISIBLE JSValue
+JSValue
 js_affine3_wrap(JSContext* ctx, const cv::Affine3<double>& affine3) {
-  return js_affine3_new(ctx, affine3.x1, affine3.y1, affine3.x2, affine3.y2);
-}
+  JSValue ret;
+  cv::Affine3<double>* aff;
 
-VISIBLE JSValue
-js_affine3_wrap(JSContext* ctx, const cv::Affine3<int>& affine3) {
-  return js_affine3_new(ctx, affine3.x1, affine3.y1, affine3.x2, affine3.y2);
+  ret = JS_NewObjectProtoClass(ctx, affine3_proto, js_affine3_class_id);
+  aff = js_allocate<cv::Affine3<double>>(ctx);
+  *aff = affine3;
+
+  JS_SetOpaque(ret, aff);
+  return ret;
 }
 
 extern "C" {
 VISIBLE JSValue
-js_affine3_new(JSContext* ctx, double x1, double y1, double x2, double y2) {
+js_affine3_new(JSContext* ctx) {
   JSValue ret;
-  cv::Affine3<double>* ln;
+  cv::Affine3<double>* aff;
 
   if(JS_IsUndefined(affine3_proto))
     js_affine3_init(ctx, NULL);
 
   ret = JS_NewObjectProtoClass(ctx, affine3_proto, js_affine3_class_id);
 
-  ln = js_allocate<cv::Affine3<double>>(ctx);
-/*
-  ln->array[0] = x1;
-  ln->array[1] = y1;
-  ln->array[2] = x2;
-  ln->array[3] = y2;
-*/
-  JS_SetOpaque(ret, ln);
+  aff = js_allocate<cv::Affine3<double>>(ctx);
+
+  new(aff) cv::Affine3<double>();
+
+  JS_SetOpaque(ret, aff);
   return ret;
 }
 
 static JSValue
-js_affine3_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
-  cv::Affine3<double>* ln;
+js_affine3_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
+  cv::Affine3<double>* aff;
   JSValue obj = JS_UNDEFINED;
   JSValue proto;
 
-  ln = js_allocate<cv::Affine3<double>>(ctx);
-  if(!ln)
+  aff = js_allocate<cv::Affine3<double>>(ctx);
+  if(!aff)
     return JS_EXCEPTION;
- 
+
+  new(aff) cv::Affine3<double>();
+
   /* using new_target to get the prototype is necessary when the class is extended. */
   proto = JS_GetPropertyStr(ctx, new_target, "prototype");
   if(JS_IsException(proto))
@@ -80,76 +79,171 @@ js_affine3_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst 
   JS_FreeValue(ctx, proto);
   if(JS_IsException(obj))
     goto fail;
-  JS_SetOpaque(obj, ln);
+  JS_SetOpaque(obj, aff);
   return obj;
 fail:
-  js_deallocate(ctx, ln);
+  js_deallocate(ctx, aff);
   JS_FreeValue(ctx, obj);
   return JS_EXCEPTION;
 }
- 
+
 static JSValue
 js_affine3_get(JSContext* ctx, JSValueConst this_val, int magic) {
-  cv::Affine3<double>* ln;
+  cv::Affine3<double>* aff;
 
-  if(!(ln = static_cast<cv::Affine3<double>*>(JS_GetOpaque /*2*/ (/*ctx,*/ this_val, js_affine3_class_id))))
+  if(!(aff = static_cast<cv::Affine3<double>*>(JS_GetOpaque /*2*/ (/*ctx,*/ this_val, js_affine3_class_id))))
     return JS_UNDEFINED;
 
-  switch(magic) {
-    
-  }
+  switch(magic) {}
   return JS_UNDEFINED;
 }
 
 static JSValue
 js_affine3_set(JSContext* ctx, JSValueConst this_val, JSValueConst val, int magic) {
-  cv::Affine3<double>* ln;
+  cv::Affine3<double>* aff;
   double v;
-  if(!(ln = static_cast<cv::Affine3<double>*>(JS_GetOpaque2(ctx, this_val, js_affine3_class_id))))
+  if(!(aff = static_cast<cv::Affine3<double>*>(JS_GetOpaque2(ctx, this_val, js_affine3_class_id))))
     return JS_EXCEPTION;
-  switch(magic) {
-     
-  }
+  switch(magic) {}
 
   return JS_UNDEFINED;
 }
- 
- 
+
 enum {
-  METHOD_SWAP = 0,
-  METHOD_AT,
-  METHOD_INTERSECT,
-  METHOD_ENDPOINT_DISTANCES,
-  METHOD_DISTANCE,
-  METHOD_XINTERCEPT,
-  METHOD_YINTERCEPT,
-  METHOD_ADD,
-  METHOD_SUB,
-  METHOD_MUL,
-  METHOD_DIV
+  METHOD_CONCATENATE,
+  METHOD_INV,
+  METHOD_LINEAR,
+  METHOD_ROTATE,
+  METHOD_ROTATION,
+  METHOD_TRANSLATE,
+  METHOD_TRANSLATION,
+  METHOD_RVEC,
 };
 
 static JSValue
 js_affine3_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
-  cv::Affine3<double>* ln;
+  cv::Affine3<double>* aff;
   JSValue ret = JS_UNDEFINED;
-  if(!(ln = static_cast<cv::Affine3<double>*>(JS_GetOpaque2(ctx, this_val, js_affine3_class_id))))
+  typedef cv::Affine3<double>::Vec3 vector_type;
+  typedef cv::Affine3<double>::Mat3 mat3_type;
+
+  if(!(aff = js_affine3_data2(ctx, this_val)))
     return JS_EXCEPTION;
 
   switch(magic) {
-  
+    case METHOD_CONCATENATE: {
+      cv::Affine3<double> result, *other;
+
+      if(!(other = js_affine3_data2(ctx, argv[0])))
+        return JS_EXCEPTION;
+
+      result = aff->concatenate(*other);
+      ret = js_affine3_wrap(ctx, result);
+      break;
+    }
+    case METHOD_INV: {
+      cv::Affine3<double> result;
+      int32_t method = cv::DECOMP_SVD;
+
+      if(argc > 0)
+        JS_ToInt32(ctx, &method, argv[0]);
+      result = aff->inv(method);
+      ret = js_affine3_wrap(ctx, result);
+      break;
+    }
+    case METHOD_LINEAR: {
+      mat3_type matx;
+
+      if(argc > 0) {
+        if(js_array_to(ctx, argv[0], matx) < 3) {
+          ret = JS_ThrowTypeError(ctx, "argument 1 must be a 3x3 matrix");
+          break;
+        }
+        aff->linear(matx);
+      } else {
+        matx = aff->linear();
+        ret = js_array_from(ctx, matx);
+      }
+      break;
+    }
+    case METHOD_ROTATE: {
+      cv::Affine3<double> result;
+      mat3_type matx;
+
+      if(js_array_to(ctx, argv[0], matx) == 3) {
+        result = aff->rotate(matx);
+      } else {
+        vector_type vec;
+        js_array_to(ctx, argv[0], vec);
+
+        result = aff->rotate(vec);
+      }
+
+      ret = js_affine3_wrap(ctx, result);
+      break;
+    }
+    case METHOD_ROTATION: {
+      if(argc > 0) {
+        cv::Mat* mat;
+        mat3_type matx;
+
+        if((mat = js_mat_data_nothrow(argv[0]))) {
+          aff->rotation(*mat);
+        } else if(js_array_to(ctx, argv[0], matx) == 3) {
+          aff->rotation(matx);
+        } else {
+          vector_type vec;
+          js_array_to(ctx, argv[0], vec);
+
+          aff->rotation(vec);
+        }
+      } else {
+        mat3_type mat = aff->rotation();
+        ret = js_array_from(ctx, mat);
+      }
+
+      break;
+    }
+    case METHOD_TRANSLATE: {
+      cv::Affine3<double> result;
+      vector_type vec;
+      js_array_to(ctx, argv[0], vec);
+
+      result = aff->translate(vec);
+      ret = js_affine3_wrap(ctx, result);
+      break;
+    }
+    case METHOD_TRANSLATION: {
+      vector_type vec;
+      if(argc > 0) {
+        js_array_to(ctx, argv[0], vec);
+
+        aff->translation(vec);
+      } else {
+        vec = aff->translation();
+        ret = js_array_from(ctx, vec);
+      }
+      break;
+    }
+    case METHOD_RVEC: {
+      vector_type vec = aff->rvec();
+      ret = js_array_from(ctx, vec);
+      break;
+    }
   }
   return ret;
 }
 
 static JSValue
 js_affine3_toarray(JSContext* ctx, JSValueConst affine3, int argc, JSValueConst* arg) {
-  cv::Affine3<double>* ln;
+  cv::Affine3<double>* aff;
 
-  if(!(ln = static_cast<cv::Affine3<double>*>(JS_GetOpaque2(ctx, affine3, js_affine3_class_id))))
+  if(!(aff = static_cast<cv::Affine3<double>*>(JS_GetOpaque2(ctx, affine3, js_affine3_class_id))))
     return JS_EXCEPTION;
 
-  return js_typedarray_from(ctx, ln->array);
+  auto array = mat_array(aff->matrix);
+
+  return js_typedarray_from(ctx, array.begin(), array.end());
 }
 
 static JSValue
@@ -160,40 +254,23 @@ js_call_method(JSContext* ctx, JSValue obj, const char* name, int argc, JSValueC
   if(!JS_IsUndefined(fn))
     ret = JS_Call(ctx, fn, obj, argc, argv);
   return ret;
-} 
-
-static JSValue
-js_affine3_from(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  cv::Affine3<double> affine3 ;
-  JSValue ret = JS_EXCEPTION;
- 
-  return ret;
 }
 
 static JSValue
-js_affine3_sum(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+js_affine3_from(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   cv::Affine3<double> affine3;
+  JSValue ret = JS_EXCEPTION;
 
-  for(int i = 0; i < argc; i++) {
-    cv::Affine3<double> tmp;
-    if(js_affine3_read(ctx, argv[i], &tmp)) {
-      affine3.x1 += tmp.x1;
-      affine3.y1 += tmp.y1;
-      affine3.x2 += tmp.x2;
-      affine3.y2 += tmp.y2;
-    }
-  }
-
-  return js_affine3_new(ctx, affine3.array[0], affine3.array[1], affine3.array[2], affine3.array[3]);
+  return ret;
 }
 
 void
 js_affine3_finalizer(JSRuntime* rt, JSValue val) {
-  cv::Affine3<double>* ln;
+  cv::Affine3<double>* aff;
 
-  if((ln = static_cast<cv::Affine3<double>*>(JS_GetOpaque(val, js_affine3_class_id))))
-    /* Note: 'ln' can be NULL in case JS_SetOpaque() was not called */
-    js_deallocate(rt, ln);
+  if((aff = static_cast<cv::Affine3<double>*>(JS_GetOpaque(val, js_affine3_class_id))))
+    /* Note: 'aff' can be NULL in case JS_SetOpaque() was not called */
+    js_deallocate(rt, aff);
 }
 
 JSClassDef js_affine3_class = {
@@ -202,29 +279,26 @@ JSClassDef js_affine3_class = {
 };
 
 const JSCFunctionListEntry js_affine3_proto_funcs[] = {
-      JS_CGETSET_MAGIC_DEF("a", js_affine3_get, js_affine3_set_ab, PROP_A),
-    JS_CGETSET_MAGIC_DEF("b", js_affine3_get, js_affine3_set_ab, PROP_B),
-    JS_CGETSET_MAGIC_DEF("0", js_affine3_get, js_affine3_set_ab, PROP_A),
-    JS_CGETSET_MAGIC_DEF("1", js_affine3_get, js_affine3_set_ab, PROP_B),
-  
-    JS_CFUNC_MAGIC_DEF("xIntercept", 0, js_affine3_methods, METHOD_XINTERCEPT),
-    JS_CFUNC_MAGIC_DEF("yIntercept", 0, js_affine3_methods, METHOD_YINTERCEPT),
-    JS_CFUNC_MAGIC_DEF("swap", 0, js_affine3_methods, METHOD_SWAP),
-    JS_CFUNC_MAGIC_DEF("at", 1, js_affine3_methods, METHOD_AT),
-    JS_CFUNC_MAGIC_DEF("intersect", 1, js_affine3_methods, METHOD_INTERSECT),
-    JS_CFUNC_MAGIC_DEF("endpointDistances", 1, js_affine3_methods, METHOD_ENDPOINT_DISTANCES),
-    JS_CFUNC_MAGIC_DEF("distance", 1, js_affine3_methods, METHOD_DISTANCE),
-    JS_CFUNC_MAGIC_DEF("add", 1, js_affine3_methods, METHOD_ADD),
-    JS_CFUNC_MAGIC_DEF("sub", 1, js_affine3_methods, METHOD_SUB),
-    JS_CFUNC_MAGIC_DEF("mul", 1, js_affine3_methods, METHOD_MUL),
-    JS_CFUNC_MAGIC_DEF("div", 1, js_affine3_methods, METHOD_DIV),
+    JS_CGETSET_MAGIC_DEF("a", js_affine3_get, js_affine3_set, PROP_A),
+    JS_CGETSET_MAGIC_DEF("b", js_affine3_get, js_affine3_set, PROP_B),
+    JS_CGETSET_MAGIC_DEF("0", js_affine3_get, js_affine3_set, PROP_A),
+    JS_CGETSET_MAGIC_DEF("1", js_affine3_get, js_affine3_set, PROP_B),
+
+    JS_CFUNC_MAGIC_DEF("concatenate", 1, js_affine3_methods, METHOD_CONCATENATE),
+    JS_CFUNC_MAGIC_DEF("inv", 0, js_affine3_methods, METHOD_INV),
+    JS_CFUNC_MAGIC_DEF("linear", 0, js_affine3_methods, METHOD_LINEAR),
+    JS_CFUNC_MAGIC_DEF("rotate", 1, js_affine3_methods, METHOD_ROTATE),
+    JS_CFUNC_MAGIC_DEF("rotation", 0, js_affine3_methods, METHOD_ROTATION),
+    JS_CFUNC_MAGIC_DEF("translate", 1, js_affine3_methods, METHOD_TRANSLATE),
+    JS_CFUNC_MAGIC_DEF("translation", 0, js_affine3_methods, METHOD_TRANSLATION),
+    JS_CFUNC_MAGIC_DEF("rvec", 0, js_affine3_methods, METHOD_RVEC),
+
     JS_CFUNC_DEF("toArray", 0, js_affine3_toarray),
-      JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Affine3", JS_PROP_CONFIGURABLE),
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Affine3", JS_PROP_CONFIGURABLE),
 };
 
 const JSCFunctionListEntry js_affine3_static_funcs[] = {
     JS_CFUNC_DEF("from", 1, js_affine3_from),
-    JS_CFUNC_DEF("sum", 1, js_affine3_sum),
 };
 
 int
@@ -239,12 +313,12 @@ js_affine3_init(JSContext* ctx, JSModuleDef* m) {
     JS_SetPropertyFunctionList(ctx, affine3_proto, js_affine3_proto_funcs, countof(js_affine3_proto_funcs));
     JS_SetClassProto(ctx, js_affine3_class_id, affine3_proto);
 
-    affine3_class = JS_NewCFunction2(ctx, js_affine3_ctor, "Affine3", 2, JS_CFUNC_constructor, 0);
+    affine3_class = JS_NewCFunction2(ctx, js_affine3_constructor, "Affine3", 2, JS_CFUNC_constructor, 0);
     /* set proto.constructor and ctor.prototype */
     JS_SetConstructor(ctx, affine3_class, affine3_proto);
     JS_SetPropertyFunctionList(ctx, affine3_class, js_affine3_static_funcs, countof(js_affine3_static_funcs));
 
-    js_set_inspect_method(ctx, affine3_proto, js_affine3_inspect);
+    // js_set_inspect_method(ctx, affine3_proto, js_affine3_inspect);
   }
 
   if(m)
@@ -256,14 +330,6 @@ js_affine3_init(JSContext* ctx, JSModuleDef* m) {
 extern "C" VISIBLE void
 js_affine3_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "Affine3");
-}
-
-void
-js_affine3_constructor(JSContext* ctx, JSValue parent, const char* name) {
-  if(JS_IsUndefined(affine3_class))
-    js_affine3_init(ctx, 0);
-
-  JS_SetPropertyStr(ctx, parent, name ? name : "Affine3", affine3_class);
 }
 
 #ifdef JS_AFFINE3_MODULE

@@ -168,6 +168,12 @@ mat_ptr(cv::UMat& mat) {
   return nullptr;
 }
 
+template<class T, int rows, int cols>
+static inline T*
+mat_ptr(cv::Matx<T, rows, cols>& mat) {
+  return &static_cast<T&>(mat(0, 0));
+}
+
 static inline size_t
 mat_offset(const cv::Mat& mat, uint32_t row, uint32_t col) {
   const uchar *base, *ptr;
@@ -196,6 +202,35 @@ mat_at(cv::UMat& mat, uint32_t row, uint32_t col) {
   return *reinterpret_cast<T*>(mat_ptr(mat) + offs);
 }
 
+template<class T, int rows, int cols>
+static inline T&
+mat_at(const cv::Matx<T, rows, cols>& mat, uint32_t row, uint32_t col) {
+  return mat(row, col);
+}
+
+static inline cv::Size
+mat_size(const cv::Mat& mat) {
+  return cv::Size(mat.cols, mat.rows);
+}
+
+template<class T, int rows, int cols>
+static inline cv::Size
+mat_size(const cv::Matx<T, rows, cols>& mat) {
+  return cv::Size(cols, rows);
+}
+
+template<class T, int rows, int cols>
+static inline std::array<T, rows * cols>&
+mat_array(cv::Matx<T, rows, cols>& mat) {
+  return *reinterpret_cast<std::array<T, rows * cols>*>(mat_ptr(mat));
+}
+/*
+template<class T, int rows, int cols>
+static inline std::array<T, rows * cols> const&
+mat_array(cv::Matx<T, rows, cols> const& mat) {
+  return *reinterpret_cast<std::array<T, rows * cols> const*>(mat_ptr(mat));
+}
+*/
 static inline size_t
 mat_bytesize(const cv::Mat& mat) {
   return mat.ptr<uchar>(mat.rows - 1, mat.cols - 1) - mat.ptr<uchar>() + mat.elemSize();
