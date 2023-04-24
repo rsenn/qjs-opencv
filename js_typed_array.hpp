@@ -373,6 +373,20 @@ public:
     return js_typedarray_new(ctx, buf, 0, count, TypedArrayTraits<T>::getProps());
   }
 
+  static JSValue
+  from_buffer(JSContext* ctx, JSValueConst buf, uint32_t byteOffset = 0, uint32_t length = UINT32_MAX) {
+    size_t buflen;
+    uint8_t* bufptr;
+    uint32_t end;
+
+    if(!(bufptr = JS_GetArrayBuffer(ctx, &buflen, buf)))
+      return JS_ThrowTypeError(ctx, "invalid ArrayBuffer");
+
+    end = std::min<uint32_t>(byteOffset + length * sizeof(T), buflen);
+
+    return js_typedarray_new(ctx, buf, byteOffset, (end - byteOffset) / sizeof(T), TypedArrayTraits<T>::getProps());
+  }
+
   static int64_t
   to_vector(JSContext* ctx, JSValueConst arr, std::vector<T>& out) {
     JSValue length = JS_GetPropertyStr(ctx, arr, "length");

@@ -433,6 +433,30 @@ js_arraybuffer_from(JSContext* ctx, const Ptr& begin, const Ptr& end, JSFreeArra
   return JS_NewArrayBuffer(ctx, const_cast<uint8_t*>(ptr), len, &free_func, opaque, is_shared);
 }
 
+static void
+js_arraybuffer_free(JSRuntime* rt, void* opaque, void* ptr) {
+  JS_FreeValueRT(rt, JS_MKPTR(JS_TAG_OBJECT, opaque));
+}
+
+template<class Ptr>
+static inline JSValue
+js_arraybuffer_from(JSContext* ctx, const Ptr& begin, const Ptr& end, JSValueConst value) {
+  JSObject* obj;
+
+  assert(JS_VALUE_GET_TAG(value) == JS_TAG_OBJECT);
+
+  obj = JS_VALUE_GET_OBJ(value);
+  JS_DupValue(ctx, value);
+
+  return js_arraybuffer_from(ctx, begin, end, js_arraybuffer_free, obj);
+}
+
+template<class T, size_t N>
+static inline JSValue
+js_arraybuffer_from(JSContext* ctx, std::array<T, N>& arr, JSValueConst value) {
+  return js_arraybuffer_from(ctx, arr.begin(), arr.end(), value);
+}
+
 static inline JSValue
 js_global_get(JSContext* ctx, const char* prop) {
   JSValue global_obj, ret;

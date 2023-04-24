@@ -25,6 +25,8 @@ VISIBLE cv::Affine3<double>*
 js_affine3_data(JSValueConst val) {
   return static_cast<cv::Affine3<double>*>(JS_GetOpaque(val, js_affine3_class_id));
 }
+
+static JSValue js_affine3_buffer(JSContext* ctx, JSValueConst this_val);
 }
 
 JSValue
@@ -91,22 +93,12 @@ static JSValue
 js_affine3_get(JSContext* ctx, JSValueConst this_val, int magic) {
   cv::Affine3<double>* aff;
 
-  if(!(aff = static_cast<cv::Affine3<double>*>(JS_GetOpaque /*2*/ (/*ctx,*/ this_val, js_affine3_class_id))))
+  if(!(aff = js_affine3_data2(ctx, this_val)))
     return JS_UNDEFINED;
 
-  switch(magic) {}
-  return JS_UNDEFINED;
-}
+  JSValue buffer = js_affine3_buffer(ctx, this_val);
 
-static JSValue
-js_affine3_set(JSContext* ctx, JSValueConst this_val, JSValueConst val, int magic) {
-  cv::Affine3<double>* aff;
-  double v;
-  if(!(aff = static_cast<cv::Affine3<double>*>(JS_GetOpaque2(ctx, this_val, js_affine3_class_id))))
-    return JS_EXCEPTION;
-  switch(magic) {}
-
-  return JS_UNDEFINED;
+  return js_typedarray<double>::from_buffer(ctx, buffer, magic * 4 * sizeof(double), 4);
 }
 
 enum {
@@ -235,15 +227,32 @@ js_affine3_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
 }
 
 static JSValue
-js_affine3_toarray(JSContext* ctx, JSValueConst affine3, int argc, JSValueConst* arg) {
+js_affine3_array(JSContext* ctx, JSValueConst this_val) {
   cv::Affine3<double>* aff;
 
-  if(!(aff = static_cast<cv::Affine3<double>*>(JS_GetOpaque2(ctx, affine3, js_affine3_class_id))))
+  if(!(aff = js_affine3_data2(ctx, this_val)))
     return JS_EXCEPTION;
 
-  auto array = mat_array(aff->matrix);
+  JSValue buffer = js_affine3_buffer(ctx, this_val);
 
-  return js_typedarray_from(ctx, array.begin(), array.end());
+  return js_typedarray<double>::from_buffer(ctx, buffer, 0, 4 * 4);
+}
+
+static JSValue
+js_affine3_identity(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+  return js_affine3_wrap(ctx, cv::Affine3<double>::Identity());
+}
+
+static JSValue
+js_affine3_buffer(JSContext* ctx, JSValueConst this_val) {
+  cv::Affine3<double>* aff;
+
+  if(!(aff = js_affine3_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  auto& array = mat_array(aff->matrix);
+
+  return js_arraybuffer_from(ctx, array.begin(), array.end(), this_val);
 }
 
 static JSValue
@@ -268,7 +277,7 @@ void
 js_affine3_finalizer(JSRuntime* rt, JSValue val) {
   cv::Affine3<double>* aff;
 
-  if((aff = static_cast<cv::Affine3<double>*>(JS_GetOpaque(val, js_affine3_class_id))))
+  if((aff = js_affine3_data(val)))
     /* Note: 'aff' can be NULL in case JS_SetOpaque() was not called */
     js_deallocate(rt, aff);
 }
@@ -279,10 +288,12 @@ JSClassDef js_affine3_class = {
 };
 
 const JSCFunctionListEntry js_affine3_proto_funcs[] = {
-    JS_CGETSET_MAGIC_DEF("a", js_affine3_get, js_affine3_set, PROP_A),
-    JS_CGETSET_MAGIC_DEF("b", js_affine3_get, js_affine3_set, PROP_B),
-    JS_CGETSET_MAGIC_DEF("0", js_affine3_get, js_affine3_set, PROP_A),
-    JS_CGETSET_MAGIC_DEF("1", js_affine3_get, js_affine3_set, PROP_B),
+    JS_CGETSET_MAGIC_DEF("0", js_affine3_get, 0, 0),
+    JS_CGETSET_MAGIC_DEF("1", js_affine3_get, 0, 1),
+    JS_CGETSET_MAGIC_DEF("2", js_affine3_get, 0, 2),
+    JS_CGETSET_MAGIC_DEF("3", js_affine3_get, 0, 3),
+    JS_CGETSET_DEF("buffer", js_affine3_buffer, 0),
+    JS_CGETSET_DEF("array", js_affine3_array, 0),
 
     JS_CFUNC_MAGIC_DEF("concatenate", 1, js_affine3_methods, METHOD_CONCATENATE),
     JS_CFUNC_MAGIC_DEF("inv", 0, js_affine3_methods, METHOD_INV),
@@ -293,12 +304,12 @@ const JSCFunctionListEntry js_affine3_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("translation", 0, js_affine3_methods, METHOD_TRANSLATION),
     JS_CFUNC_MAGIC_DEF("rvec", 0, js_affine3_methods, METHOD_RVEC),
 
-    JS_CFUNC_DEF("toArray", 0, js_affine3_toarray),
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Affine3", JS_PROP_CONFIGURABLE),
+    JS_PROP_INT32_DEF("length", 4, 0),
 };
 
 const JSCFunctionListEntry js_affine3_static_funcs[] = {
-    JS_CFUNC_DEF("from", 1, js_affine3_from),
+    JS_CFUNC_DEF("Identity", 0, js_affine3_identity),
 };
 
 int

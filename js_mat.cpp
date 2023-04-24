@@ -1225,16 +1225,13 @@ js_mat_class_create(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   if(size.width == 0 || size.height == 0)
     return JS_EXCEPTION;
 
-  ret = js_mat_new(ctx, uint32_t(0), uint32_t(0), int(0));
-  JSMatData& mat = *js_mat_data2(ctx, ret);
-
   switch(magic) {
     case 0: {
-      mat = cv::Scalar::all(0);
+      ret = js_mat_wrap(ctx, cv::Mat::zeros(size.height, size.width, type));
       break;
     }
     case 1: {
-      mat = cv::Scalar::all(1);
+      ret = js_mat_wrap(ctx, cv::Mat::ones(size.height, size.width, type));
       break;
     }
   }
@@ -1292,20 +1289,23 @@ static JSValue
 js_mat_array(JSContext* ctx, JSValueConst this_val) {
   JSMatData* m;
   const char* ctor;
+  JSValue buffer, typed_array, ret;
 
-  if((m = js_mat_data2(ctx, this_val))) {
-    JSValue buffer, typed_array;
-    TypedArrayType type(*m);
-    buffer = js_mat_buffer(ctx, this_val);
+  if(!(m = js_mat_data2(ctx, this_val)))
+    return JS_EXCEPTION;
 
-    /*printf("m->rows=%i m->cols=%i m->step=%zu m->total()=%zu range.size()=%zu type.byte_size=%u
-       size=%zu\n", m->rows, m->cols, size_t(m->step), range.size() / type.byte_size, range.size(),
-           type.byte_size,
-           range.size() / type.byte_size);*/
+  TypedArrayType type(*m);
 
-    return js_typedarray_new(ctx, buffer, 0, mat_bytesize(*m) / type.byte_size, type);
+  buffer = js_mat_buffer(ctx, this_val);
+  ret = JS_NewArray(ctx);
+
+  for(uint32_t y = 0; y < m->rows; ++y) {
+    typed_array = js_typedarray_new(ctx, buffer, y * m->step, m->channels() * m->cols, type);
+
+    JS_SetPropertyUint32(ctx, ret, y, typed_array);
   }
-  return JS_EXCEPTION;
+
+  return ret;
 }
 
 JSValue
@@ -1483,14 +1483,14 @@ js_mat_iterator_next(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
       case MAT_ITERATOR_VALUES: {
         TypedArrayType type(*m);
 
-        if(channels == 1)
-          return js_mat_get(ctx, it->obj, row, col);
+        /* if(channels == 1)
+           return js_mat_get(ctx, it->obj, row, col);*/
 
         ret = js_typedarray_new(ctx, it->buf, offset, channels, type);
         break;
       }
       case MAT_ITERATOR_ENTRIES: {
-        JSValue value = channels == 1 ? js_mat_get(ctx, it->obj, row, col) : js_typedarray_new(ctx, it->buf, offset, channels, TypedArrayType(*m));
+        JSValue value = /*channels == 1 ? js_mat_get(ctx, it->obj, row, col) :*/ js_typedarray_new(ctx, it->buf, offset, channels, TypedArrayType(*m));
 
         std::array<uint32_t, 2> pos = {row, col};
         std::array<JSValue, 2> entry = {js_array_from(ctx, pos), value};
