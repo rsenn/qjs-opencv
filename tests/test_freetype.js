@@ -166,7 +166,7 @@ function main(...argv) {
   function writeROI(i, rect) {
     let roi = mat(rect);
     let id = '0x' + (i + 0x20).toString(16).padStart(2, '0');
-    let filename = fontName+ '@' + fontSize + '-' + id + '.png';
+    let filename = fontName + '@' + fontSize + '-' + id + '.png';
     imwrite(filename, roi);
     //console.log('write roi to', filename);
   }
@@ -194,7 +194,8 @@ function main(...argv) {
   }
 
   //boxes.forEach((box, i) => writeROI(i, box));
-  let b,i = 0;
+  let b,
+    i = 0;
   gray = Grayscale(mat);
   let font = [];
   for(let box of boxes) {
@@ -210,13 +211,13 @@ function main(...argv) {
     drawRect(mat, box.tl, box.br.sub(1, 1), [255, 0, 0], 1, LINE_8);
   }
 
-  writeFile(fontName+ '@' + fontSize + '.js', toSource(font));
-  writeFile(fontName+ '@' + fontSize + '.json', JSON.stringify(Object.fromEntries(font)));
+  writeFile(fontName + '@' + fontSize + '.js', toSource(font));
+  writeFile(fontName + '@' + fontSize + '.json', JSON.stringify(Object.fromEntries(font)));
 
-console.log(boxes[0].size);
+  console.log(boxes[0].size);
 
   //imshow('out', mat);
-//  waitKey(-1);
+  //  waitKey(-1);
 }
 
 main(...process.argv.slice(1));

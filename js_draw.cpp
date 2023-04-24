@@ -479,7 +479,7 @@ js_draw_keypoints(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
   std::vector<JSKeyPointData> keypoints;
   JSInputOutputArray image, dst;
   JSColorData<double> color = {-1, -1, -1, -1};
-  
+
   image = js_umat_or_mat(ctx, argv[0]);
   dst = js_umat_or_mat(ctx, argv[2]);
 

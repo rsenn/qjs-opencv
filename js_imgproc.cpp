@@ -847,11 +847,12 @@ static JSValue
 js_cv_trace_skeleton(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSContoursData<double> contours;
   JSInputArray src = js_umat_or_mat(ctx, argv[0]);
+  uint32_t count;
 
   if(src.empty())
     return JS_ThrowInternalError(ctx, "argument 1 must be Mat or UMat");
 
-  trace_skeleton(src.getMat(), contours);
+  count = trace_skeleton(src.getMat(), contours);
 
   if(argc >= 2) {
     if(!js_is_array(ctx, argv[1]))
@@ -859,7 +860,7 @@ js_cv_trace_skeleton(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
 
     js_array_copy(ctx, argv[1], contours);
 
-    return JS_UNDEFINED;
+    return JS_NewUint32(ctx, count);
   }
 
   return js_array_from(ctx, contours);

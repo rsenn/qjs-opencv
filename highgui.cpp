@@ -341,11 +341,12 @@ js_cv_set_mouse_callback(JSContext* ctx, JSValueConst this_val, int argc, JSValu
         MouseHandler const& data = *static_cast<MouseHandler*>(ptr);
 
         if(JS_IsFunction(data.ctx, data.handler)) {
-          JSValueConst argv[] = {JS_NewInt32(data.ctx, event),
-                                 JS_NewInt32(data.ctx, x),
-                                 JS_NewInt32(data.ctx, y),
-
-                                 JS_NewInt32(data.ctx, flags)};
+          JSValueConst argv[] = {
+              JS_NewInt32(data.ctx, event),
+              JS_NewInt32(data.ctx, x),
+              JS_NewInt32(data.ctx, y),
+              JS_NewInt32(data.ctx, flags),
+          };
 
           JS_Call(data.ctx, data.handler, JS_UNDEFINED, 4, argv);
         }

@@ -190,6 +190,7 @@ file(
   js_line_iterator.cpp
   js_line_segment_detector.cpp
   js_mat.cpp
+  js_affine3.cpp
   js_point.cpp
   js_point_iterator.cpp
   js_rect.cpp

@@ -22,7 +22,7 @@
  * Perform one thinning iteration.
  * Normally you wouldn't call this function directly from your code.
  */
-void
+static inline void
 thinning_iteration(cv::Mat& im, int iter) {
   cv::Mat marker = cv::Mat::zeros(im.size(), CV_8UC1);
 
@@ -54,19 +54,21 @@ thinning_iteration(cv::Mat& im, int iter) {
 /**
  * Function for thinning the given binary image
  */
-void
+static void
 thinning(cv::Mat& im) {
+  int nonZero = -1;
   im /= 255;
 
   cv::Mat prev = cv::Mat::zeros(im.size(), CV_8UC1);
   cv::Mat diff;
 
   do {
+    std::cout << "thinning (nonZero = " << nonZero << ")" << std::endl;
     thinning_iteration(im, 0);
     thinning_iteration(im, 1);
     cv::absdiff(im, prev, diff);
     im.copyTo(prev);
-  } while(cv::countNonZero(diff) > 0);
+  } while((nonZero = cv::countNonZero(diff)) > 0);
 
   im *= 255;
 }
@@ -75,7 +77,7 @@ thinning(cv::Mat& im) {
  * This is the function that acts as the input/output system of this header file.
  */
 template<class InputArray>
-cv::Mat
+static cv::Mat
 skeletonization(InputArray inputImage) {
   if(inputImage.empty())
     std::cout << "Inside skeletonization, Source empty" << std::endl;
