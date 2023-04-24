@@ -262,35 +262,74 @@ js_mat_dump(JSMatData* const s) {
 #endif
 
 static std::pair<JSSizeData<uint32_t>, int>
-js_mat_params(JSContext* ctx, int argc, JSValueConst argv[]) {
+js_mat_params(JSContext* ctx, int& index, int argc, JSValueConst argv[]) {
   JSSizeData<uint32_t> size;
   int32_t type = 0;
-  if(argc > 0) {
-    if(js_size_read(ctx, argv[0], &size)) {
-      argv++;
-      argc--;
-    } else {
-      JS_ToUint32(ctx, &size.height, argv[0]);
-      JS_ToUint32(ctx, &size.width, argv[1]);
-      argv += 2;
-      argc -= 2;
+  if(index < argc) {
+    if(js_size_read(ctx, argv[index], &size)) {
+      index++;
+    } else if(index + 1 < argc && !JS_ToUint32(ctx, &size.height, argv[0]) && !JS_ToUint32(ctx, &size.width, argv[1])) {
+      index += 2;
     }
-    if(argc > 0) {
-      if(!JS_ToInt32(ctx, &type, argv[0])) {
-        argv++;
-        argc--;
-      }
-    }
+    if(index < argc)
+      if(!JS_ToInt32(ctx, &type, argv[index]))
+        index++;
   }
   return std::make_pair(size, type);
 }
 
 static JSValue
-js_mat_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
+js_mat_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
+  JSValue obj = JS_UNDEFINED;
+  JSValue proto;
+  JSMatData* m;
+  uint8_t* buf = 0;
 
-  const auto& [size, type] = js_mat_params(ctx, argc, argv);
+  if(!(m = js_mat_track(ctx, js_allocate<cv::Mat>(ctx))))
+    return JS_EXCEPTION;
 
-  return js_mat_new(ctx, size.height, size.width, type);
+  /* using new_target to get the prototype is necessary when the class is extended. */
+  proto = JS_GetPropertyStr(ctx, new_target, "prototype");
+  if(JS_IsException(proto))
+    goto fail;
+  obj = JS_NewObjectProtoClass(ctx, proto, js_mat_class_id);
+  JS_FreeValue(ctx, proto);
+  if(JS_IsException(obj))
+    goto fail;
+
+  if(argc == 0)
+    new(m) cv::Mat();
+
+  if(argc > 0) {
+    int index = 0;
+    const auto& [size, type] = js_mat_params(ctx, index, argc, argv);
+
+    if(index < argc) {
+      size_t len;
+      if(!(buf = JS_GetArrayBuffer(ctx, &len, argv[index]))) {
+        JS_ThrowTypeError(ctx, "argument %d must be an ArrayBuffer", index + 1);
+      }
+    }
+
+    if(buf) {
+      new(m) cv::Mat(size.height, size.width, type, buf);
+
+      JSAtom prop = JS_NewAtom(ctx, "buffer");
+      JS_DeleteProperty(ctx, obj, prop, 0);
+      JS_DefinePropertyValue(ctx, obj, prop, JS_DupValue(ctx, argv[index]), JS_PROP_CONFIGURABLE);
+      JS_FreeAtom(ctx, prop);
+    } else {
+      new(m) cv::Mat(size.height, size.width, type);
+    }
+  }
+
+  JS_SetOpaque(obj, m);
+
+  return obj;
+fail:
+  js_deallocate(ctx, m);
+  JS_FreeValue(ctx, obj);
+  return JS_EXCEPTION;
 }
 
 static JSValue
@@ -528,8 +567,8 @@ static JSValue
 js_mat_init(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSValue ret = JS_UNDEFINED;
   JSMatData* m;
-
-  auto [size, type] = js_mat_params(ctx, argc, argv);
+  int index = 0;
+  auto [size, type] = js_mat_params(ctx, index, argc, argv);
 
   if((m = js_mat_data2(ctx, this_val))) {
     if(size.width == 0 || size.height == 0) {
@@ -1219,8 +1258,8 @@ js_mat_fill(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
 static JSValue
 js_mat_class_create(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSValue ret = JS_UNDEFINED;
-
-  const auto& [size, type] = js_mat_params(ctx, argc, argv);
+  int index = 0;
+  const auto& [size, type] = js_mat_params(ctx, index, argc, argv);
 
   if(size.width == 0 || size.height == 0)
     return JS_EXCEPTION;
@@ -1619,7 +1658,7 @@ js_mat_init(JSContext* ctx, JSModuleDef* m) {
     JS_SetPropertyFunctionList(ctx, mat_iterator_proto, js_mat_iterator_proto_funcs, countof(js_mat_iterator_proto_funcs));
     JS_SetClassProto(ctx, js_mat_iterator_class_id, mat_iterator_proto);
 
-    mat_class = JS_NewCFunction2(ctx, js_mat_ctor, "Mat", 2, JS_CFUNC_constructor, 0);
+    mat_class = JS_NewCFunction2(ctx, js_mat_constructor, "Mat", 2, JS_CFUNC_constructor, 0);
     /* set proto.constructor and ctor.prototype */
     JS_SetConstructor(ctx, mat_class, mat_proto);
 

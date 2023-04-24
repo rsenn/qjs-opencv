@@ -12,6 +12,8 @@
 #include <utility>*/
 
 enum { PROP_A = 0, PROP_B, PROP_SLOPE, PROP_PIVOT, PROP_TO, PROP_ANGLE, PROP_ASPECT, PROP_LENGTH };
+typedef cv::Affine3<double>::Vec3 vector_type;
+typedef cv::Affine3<double>::Mat3 mat3_type;
 
 extern "C" {
 JSValue affine3_proto = JS_UNDEFINED, affine3_class = JS_UNDEFINED;
@@ -63,15 +65,13 @@ js_affine3_new(JSContext* ctx) {
 
 static JSValue
 js_affine3_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
-  cv::Affine3<double>* aff;
+  cv::Affine3<double>*aff, *other;
   JSValue obj = JS_UNDEFINED;
   JSValue proto;
 
   aff = js_allocate<cv::Affine3<double>>(ctx);
   if(!aff)
     return JS_EXCEPTION;
-
-  new(aff) cv::Affine3<double>();
 
   /* using new_target to get the prototype is necessary when the class is extended. */
   proto = JS_GetPropertyStr(ctx, new_target, "prototype");
@@ -81,7 +81,34 @@ js_affine3_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValu
   JS_FreeValue(ctx, proto);
   if(JS_IsException(obj))
     goto fail;
+
+  if(argc > 0) {
+    cv::Mat* mat;
+    mat3_type matx;
+    vector_type rvec, t = vector_type::all(0);
+
+    if(argc > 1)
+      if(js_array_to(ctx, argv[1], t) < 3)
+        t = vector_type::all(0);
+
+    if((other = js_affine3_data(argv[0]))) {
+      new(aff) cv::Affine3<double>(*other);
+    } else if(js_array_to(ctx, argv[0], matx) >= 3) {
+      new(aff) cv::Affine3<double>(matx, t);
+    } else if((mat = js_mat_data_nothrow(argv[0]))) {
+      new(aff) cv::Affine3<double>(*mat);
+    } else if(js_array_to(ctx, argv[0], rvec) >= 3) {
+      new(aff) cv::Affine3<double>(rvec, t);
+    } else {
+      JS_ThrowTypeError(ctx, "argument 1 must be one of: Affine3, Array, Mat");
+      goto fail;
+    }
+  } else {
+    new(aff) cv::Affine3<double>();
+  }
+
   JS_SetOpaque(obj, aff);
+
   return obj;
 fail:
   js_deallocate(ctx, aff);
@@ -110,14 +137,13 @@ enum {
   METHOD_TRANSLATE,
   METHOD_TRANSLATION,
   METHOD_RVEC,
+  METHOD_GETMAT,
 };
 
 static JSValue
 js_affine3_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   cv::Affine3<double>* aff;
   JSValue ret = JS_UNDEFINED;
-  typedef cv::Affine3<double>::Vec3 vector_type;
-  typedef cv::Affine3<double>::Mat3 mat3_type;
 
   if(!(aff = js_affine3_data2(ctx, this_val)))
     return JS_EXCEPTION;
@@ -162,7 +188,7 @@ js_affine3_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
       cv::Affine3<double> result;
       mat3_type matx;
 
-      if(js_array_to(ctx, argv[0], matx) == 3) {
+      if(js_array_to(ctx, argv[0], matx) >= 3) {
         result = aff->rotate(matx);
       } else {
         vector_type vec;
@@ -181,7 +207,7 @@ js_affine3_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
 
         if((mat = js_mat_data_nothrow(argv[0]))) {
           aff->rotation(*mat);
-        } else if(js_array_to(ctx, argv[0], matx) == 3) {
+        } else if(js_array_to(ctx, argv[0], matx) >= 3) {
           aff->rotation(matx);
         } else {
           vector_type vec;
@@ -218,6 +244,11 @@ js_affine3_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
       break;
     }
     case METHOD_RVEC: {
+      vector_type vec = aff->rvec();
+      ret = js_array_from(ctx, vec);
+      break;
+    }
+    case METHOD_GETMAT: {
       vector_type vec = aff->rvec();
       ret = js_array_from(ctx, vec);
       break;
@@ -303,6 +334,7 @@ const JSCFunctionListEntry js_affine3_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("translate", 1, js_affine3_methods, METHOD_TRANSLATE),
     JS_CFUNC_MAGIC_DEF("translation", 0, js_affine3_methods, METHOD_TRANSLATION),
     JS_CFUNC_MAGIC_DEF("rvec", 0, js_affine3_methods, METHOD_RVEC),
+    JS_CFUNC_MAGIC_DEF("getMat", 0, js_affine3_methods, METHOD_GETMAT),
 
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Affine3", JS_PROP_CONFIGURABLE),
     JS_PROP_INT32_DEF("length", 4, 0),
