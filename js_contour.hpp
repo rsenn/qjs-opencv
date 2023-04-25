@@ -62,10 +62,20 @@ contour_deallocate(JSRuntime* rt, JSContourData<T>* contour) {
 }
 
 template<typename T, typename U>
-static inline void
+static inline size_t
 contour_copy(const JSContourData<T>& src, JSContourData<U>& dst) {
   dst.resize(src.size());
   std::copy(src.begin(), src.end(), dst.begin());
+  return src.size();
+}
+
+template<typename T, typename U = double>
+static inline JSContourData<T>
+contour_convert(const JSContourData<U>& src) {
+  JSContourData<T> dst;
+  dst.resize(src.size());
+  std::copy(src.begin(), src.end(), dst.begin());
+  return dst;
 }
 
 template<typename T>
@@ -100,9 +110,38 @@ contour_adjacent(const JSContourData<T>& contour, const JSContourData<T>& other)
   return false;
 }
 
+template<typename T = double>
 static inline int
-js_contour_read(JSContext* ctx, JSValueConst contour, JSContourData<double>* out) {
+js_contour_read(JSContext* ctx, JSValueConst contour, JSContourData<T>* out) {
   int ret = 0;
+  JSContourData<double>* c;
+
+  if((c = js_contour_data(contour))) {
+    ret = contour_copy(*c, *out);
+  } else if(js_is_iterable(ctx, contour)) {
+    JSValue iter = js_iterator_new(ctx, contour);
+    IteratorValue result;
+    JSPointData<double> pt;
+    uint32_t i;
+
+    for(i = 0;; ++i) {
+      result = js_iterator_next(ctx, iter);
+
+      if(result.done)
+        break;
+
+      if(js_point_read(ctx, result.value, &pt)) {
+        out->push_back(pt);
+      } else {
+        JS_FreeValue(ctx, result.value);
+        break;
+      }
+      JS_FreeValue(ctx, result.value);
+    }
+    JS_FreeValue(ctx, iter);
+    ret = out->size();
+  }
+
   return ret;
 }
 

@@ -317,6 +317,16 @@ js_number_new<int64_t>(JSContext* ctx, int64_t num) {
   return JS_NewInt64(ctx, num);
 }
 
+template<class T>
+static inline T
+js_property_get(JSContext* ctx, JSValue this_val, const char* prop) {
+  JSValue value = JS_GetPropertyStr(ctx, this_val, prop);
+  T ret;
+  js_value_to(ctx, value, ret);
+  JS_FreeValue(ctx, value);
+  return ret;
+}
+
 int js_color_read(JSContext* ctx, JSValueConst color, JSColorData<double>* out);
 int js_color_read(JSContext* ctx, JSValueConst value, JSColorData<uint8_t>* out);
 
@@ -449,6 +459,17 @@ js_arraybuffer_from(JSContext* ctx, const Ptr& begin, const Ptr& end, JSValueCon
   JS_DupValue(ctx, value);
 
   return js_arraybuffer_from(ctx, begin, end, js_arraybuffer_free, obj);
+}
+
+static inline JSValue
+js_arraybuffer_slice(JSContext* ctx, JSValueConst value, size_t from, size_t to) {
+  uint8_t* buf;
+  size_t len;
+
+  if(!(buf = JS_GetArrayBuffer(ctx, &len, value)))
+    return JS_ThrowTypeError(ctx, "value must be an ArrayBuffer");
+
+  return js_arraybuffer_from(ctx, buf + std::min(from, len), buf + std::min(to, len), value);
 }
 
 template<class T, size_t N>

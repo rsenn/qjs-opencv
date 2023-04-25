@@ -195,7 +195,7 @@ struct TypedArrayType {
     switch(byte_size) {
       case 1: return int32_t(is_signed ? CV_8S : CV_8U);
       case 2: return int32_t(is_signed ? CV_16S : CV_16U);
-      case 4: return int32_t(is_signed ? CV_32S : CV_32F);
+      case 4: return int32_t(CV_32S);
     }
     return -1;
   }

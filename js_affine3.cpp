@@ -93,10 +93,10 @@ js_affine3_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValu
 
     if((other = js_affine3_data(argv[0]))) {
       new(aff) cv::Affine3<double>(*other);
-    } else if(js_array_to(ctx, argv[0], matx) >= 3) {
-      new(aff) cv::Affine3<double>(matx, t);
     } else if((mat = js_mat_data_nothrow(argv[0]))) {
       new(aff) cv::Affine3<double>(*mat);
+    } else if(js_array_to(ctx, argv[0], matx) >= 3) {
+      new(aff) cv::Affine3<double>(matx, t);
     } else if(js_array_to(ctx, argv[0], rvec) >= 3) {
       new(aff) cv::Affine3<double>(rvec, t);
     } else {

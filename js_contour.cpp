@@ -85,36 +85,23 @@ js_contour_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValu
   JSContourData<double>*other, *contour = static_cast<JSContourData<double>*>(JS_GetOpaque(obj, js_contour_class_id));
 
   if(argc > 0) {
-    if((other = static_cast<JSContourData<double>*>(JS_GetOpaque(argv[0], js_contour_class_id)))) {
-      new(contour) JSContourData<double>(*other);
-    } else if(js_is_array_like(ctx, argv[0])) {
-      JSContourData<double> tmp;
-      js_array_to(ctx, argv[0], tmp);
-      new(contour) JSContourData<double>(std::move(tmp));
-    }
-  } else
-    new(contour) JSContourData<double>();
-
-  if(argc > 0) {
-    int i;
-    for(i = 0; i < argc; i++) {
+    for(int i = 0; i < argc; i++) {
       JSPointData<double> p;
-      if(js_is_array(ctx, argv[i])) {
-        if(js_array_length(ctx, argv[i]) > 0) {
-          JSValue pt = JS_GetPropertyUint32(ctx, argv[i], 0);
-          if(js_is_point(ctx, pt)) {
-            js_array_to(ctx, argv[i], *contour);
-            JS_FreeValue(ctx, pt);
-            continue;
-          }
-          JS_FreeValue(ctx, pt);
-        }
+
+      if(i == 0 && (other = js_contour_data(argv[0]))) {
+        *contour = *other;
+        break;
+      } else if(i == 0 && js_is_array(ctx, argv[i])) {
+        js_array_to(ctx, argv[i], *contour);
+        break;
       }
+
       if(js_point_read(ctx, argv[i], &p)) {
         contour->push_back(p);
-        continue;
+      } else {
+        JS_ThrowTypeError(ctx, "argument %d must be one of: Contour, Array, Point", i + 1);
+        goto fail;
       }
-      goto fail;
     }
   }
 
@@ -135,18 +122,15 @@ js_contour_buffer(JSContext* ctx, JSValueConst this_val) {
   if((contour = js_contour_data2(ctx, this_val)) == nullptr)
     return ret;
 
-  JSValue* valptr = static_cast<JSValue*>(js_malloc(ctx, sizeof(JSValue)));
-  *valptr = JS_DupValue(ctx, this_val);
+  JSObject* obj = JS_VALUE_GET_OBJ(this_val);
+  JS_DupValue(ctx, this_val);
 
   ret = JS_NewArrayBuffer(
       ctx,
       reinterpret_cast<uint8_t*>(contour->data()),
       contour->size() * sizeof(JSPointData<double>),
-      [](JSRuntime* rt, void* opaque, void* ptr) {
-        JS_FreeValueRT(rt, *(JSValue*)opaque);
-        js_free_rt(rt, opaque);
-      },
-      valptr,
+      [](JSRuntime* rt, void* opaque, void* ptr) { JS_FreeValueRT(rt, JS_MKPTR(JS_TAG_OBJECT, opaque)); },
+      obj,
       false);
 
   return ret;
@@ -397,20 +381,23 @@ js_contour_fitline(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
 static JSValue
 js_contour_getmat(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSContourData<double>* v;
-  /*  JSMatDimensions size;
-    int32_t type;
-    cv::Mat mat;
-  */
+  int32_t type = CV_64FC2;
+
   if(!(v = js_contour_data2(ctx, this_val)))
     return JS_EXCEPTION;
 
-  /*  size.rows = 1;
-    size.cols = v->size();
-    type = CV_64FC2;
+  JSMatData mat = contour_getmat(*v);
 
-    mat = cv::Mat(cv::Size(size), type, static_cast<void*>(v->data()));
-  */
-  return js_mat_wrap(ctx, contour_getmat(*v));
+  if(argc > 0)
+    JS_ToInt32(ctx, &type, argv[0]);
+
+  type &= ~CV_MAT_CN_MASK;
+  type |= mat.type() & CV_MAT_CN_MASK;
+
+  if(mat.depth() != CV_MAT_DEPTH(type))
+    mat.convertTo(mat, type);
+
+  return js_mat_wrap(ctx, mat);
 }
 
 static JSValue

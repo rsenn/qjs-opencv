@@ -36,11 +36,11 @@
 enum {
   PROP_COLS = 0,
   PROP_ROWS,
+  PROP_DIMS,
   PROP_CHANNELS,
   PROP_TYPE,
   PROP_DEPTH,
   PROP_EMPTY,
-  PROP_TOTAL,
   PROP_SIZE,
   PROP_CONTINUOUS,
   PROP_SUBMATRIX,
@@ -62,7 +62,8 @@ enum {
   METHOD_RESIZE,
   METHOD_STEP1,
   METHOD_LOCATE_ROI,
-  METHOD_PTR
+  METHOD_PTR,
+  METHOD_TOTAL,
 };
 enum { MAT_EXPR_AND = 0, MAT_EXPR_OR, MAT_EXPR_XOR, MAT_EXPR_MUL, MAT_EXPR_DIV, MAT_EXPR_SHL, MAT_EXPR_SHR };
 enum { MAT_ITERATOR_KEYS, MAT_ITERATOR_VALUES, MAT_ITERATOR_ENTRIES };
@@ -278,6 +279,37 @@ js_mat_params(JSContext* ctx, int& index, int argc, JSValueConst argv[]) {
   return std::make_pair(size, type);
 }
 
+static std::pair<std::vector<int>, int>
+js_mat_params2(JSContext* ctx, int& index, int argc, JSValueConst argv[]) {
+  JSSizeData<uint32_t> size;
+  std::vector<int> sizes;
+  int32_t type = 0;
+
+  if(index < argc) {
+    if(js_is_array(ctx, argv[index])) {
+      js_array_to(ctx, argv[index], sizes);
+      ++index;
+    } else if(js_size_read(ctx, argv[index], &size)) {
+      sizes.push_back(size.height);
+      sizes.push_back(size.width);
+      ++index;
+    } else if(index + 1 < argc) {
+      uint32_t rows, cols;
+
+      if(!JS_ToUint32(ctx, &rows, argv[index]) && !JS_ToUint32(ctx, &cols, argv[index + 1])) {
+        sizes.push_back(rows);
+        sizes.push_back(cols);
+        index += 2;
+      }
+    }
+
+    if(index < argc)
+      if(!JS_ToInt32(ctx, &type, argv[index]))
+        index++;
+  }
+  return std::make_pair(sizes, type);
+}
+
 static BOOL
 js_mat_init(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSMatData* m = js_mat_data(this_val);
@@ -292,10 +324,33 @@ js_mat_init(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
     JSSizeData<double>* size;
     std::vector<int> sizes;
     std::vector<size_t> steps;
+    cv::Scalar scalar = {0, 0, 0, 0};
+    JSValue abuf = JS_NULL;
 
-    if(js_is_array(ctx, argv[0])) {
-      if(js_array_to(ctx, argv[0], sizes) > 0)
-        ++index;
+    if(js_is_typedarray(ctx, argv[0])) {
+      const auto typed = js_typedarray_type(ctx, argv[0]);
+      type = typed.cv_type();
+      JSValue tmp = JS_GetPropertyStr(ctx, argv[0], "buffer");
+      uint32_t offset = js_property_get<uint32_t>(ctx, argv[0], "byteOffset");
+      uint32_t length = js_property_get<uint32_t>(ctx, argv[0], "length");
+      size_t dummy;
+
+      sizes.push_back(length);
+
+      abuf = js_arraybuffer_slice(ctx, tmp, offset, offset + length * typed.byte_size);
+      JS_FreeValue(ctx, tmp);
+
+      if(!(buf = JS_GetArrayBuffer(ctx, &dummy, abuf))) {
+        JS_ThrowTypeError(ctx, "argument %d failed tot get .buffer", index + 1);
+        return FALSE;
+      }
+
+    } else if(js_is_array(ctx, argv[0])) {
+      if(js_array_to(ctx, argv[0], sizes) <= 0) {
+        JS_ThrowTypeError(ctx, "argument %d must be an Array that contains 1 or more sizes", index + 1);
+        return FALSE;
+      }
+      ++index;
     } else if((size = js_size_data(argv[0]))) {
       sizes.push_back(size->height);
       sizes.push_back(size->width);
@@ -307,48 +362,55 @@ js_mat_init(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       sizes.push_back(rows);
       sizes.push_back(cols);
       index += 2;
+    } else {
+      JS_ThrowTypeError(ctx, "argument %d must one of: Array, cv.Size, Number, TypedArray", index + 1);
+      return FALSE;
     }
 
-    if(index > 0) {
+    if(!buf) {
       if(index == argc || JS_ToInt32(ctx, &type, argv[index])) {
         JS_ThrowTypeError(ctx, "argument %d must be a numeric type", index + 1);
         return FALSE;
       }
-      ++index;
+
+      if(++index < argc) {
+
+        if(js_is_arraybuffer(ctx, argv[index])) {
+          size_t len;
+
+          if(!(buf = JS_GetArrayBuffer(ctx, &len, argv[index]))) {
+            JS_ThrowTypeError(ctx, "argument %d must be an ArrayBuffer", index + 1);
+            return FALSE;
+          }
+
+          abuf = JS_DupValue(ctx, argv[index]);
+
+          if(++index < argc) {
+            if(js_is_array(ctx, argv[index])) {
+              js_array_to(ctx, argv[index], steps);
+            } else {
+              uint32_t step;
+              JS_ToUint32(ctx, &step, argv[index]);
+              steps.push_back(step);
+            }
+            assert(steps.size() + 1 >= sizes.size());
+            ++index;
+          }
+        } else {
+          js_array_to(ctx, argv[index], scalar);
+        }
+      }
     }
 
-    if(index > 0 && index < argc) {
+    if(buf) {
+      new(m) cv::Mat(sizes, type, buf, steps.size() ? steps.data() : nullptr);
 
-      if(js_is_arraybuffer(ctx, argv[index])) {
-        size_t len;
-
-        if(!(buf = JS_GetArrayBuffer(ctx, &len, argv[index]))) {
-          JS_ThrowTypeError(ctx, "argument %d must be an ArrayBuffer", index + 1);
-        return FALSE;
-        }
-
-        if(++index < argc) {
-          if(js_is_array(ctx, argv[index])) {
-            js_array_to(ctx, argv[index], steps);
-           } else {
-            uint32_t step;
-            JS_ToUint32(ctx, &step, argv[index]);
-            steps.push_back(step);
-          }
-          assert(steps.size() >= sizes.size());
-       }
-      }
-
-      if(buf) {
-        new(m) cv::Mat(sizes, type, buf, steps.data());
-
-        JSAtom prop = JS_NewAtom(ctx, "buffer");
-        JS_DeleteProperty(ctx, this_val, prop, 0);
-        JS_DefinePropertyValue(ctx, this_val, prop, JS_DupValue(ctx, argv[index]), JS_PROP_CONFIGURABLE);
-        JS_FreeAtom(ctx, prop);
-      } else {
-        new(m) cv::Mat(sizes, type);
-      }
+      JSAtom prop = JS_NewAtom(ctx, "buffer");
+      JS_DeleteProperty(ctx, this_val, prop, 0);
+      JS_DefinePropertyValue(ctx, this_val, prop, abuf, JS_PROP_CONFIGURABLE);
+      JS_FreeAtom(ctx, prop);
+    } else {
+      new(m) cv::Mat(sizes, type, scalar);
     }
   }
   return TRUE;
@@ -400,6 +462,19 @@ js_mat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
   }
 
   switch(magic) {
+    case METHOD_TOTAL: {
+      if(argc == 0) {
+        ret = JS_NewInt64(ctx, m->total());
+      } else {
+        int32_t start, end = INT_MAX;
+        JS_ToInt32(ctx, &start, argv[0]);
+        if(argc > 1)
+          JS_ToInt32(ctx, &end, argv[1]);
+
+        ret = JS_NewInt64(ctx, m->total(start, end));
+      }
+      break;
+    }
     case METHOD_COL: {
       ret = js_mat_wrap(ctx, m->col(i));
       break;
@@ -971,6 +1046,10 @@ js_mat_get_props(JSContext* ctx, JSValueConst this_val, int magic) {
       ret = JS_NewUint32(ctx, m->rows);
       break;
     }
+    case PROP_DIMS: {
+      ret = JS_NewUint32(ctx, m->dims);
+      break;
+    }
     case PROP_CHANNELS: {
       ret = JS_NewUint32(ctx, m->channels());
       break;
@@ -987,10 +1066,10 @@ js_mat_get_props(JSContext* ctx, JSValueConst this_val, int magic) {
       ret = JS_NewBool(ctx, m->empty());
       break;
     }
-    case PROP_TOTAL: {
-      ret = JS_NewFloat64(ctx, m->total());
-      break;
-    }
+      /* case PROP_TOTAL: {
+         ret = JS_NewFloat64(ctx, m->total());
+         break;
+       }*/
     case PROP_SIZE: {
       ret = js_size_new(ctx, m->cols, m->rows);
       break;
@@ -1311,18 +1390,18 @@ static JSValue
 js_mat_class_create(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSValue ret = JS_UNDEFINED;
   int index = 0;
-  const auto& [size, type] = js_mat_params(ctx, index, argc, argv);
+  const auto& [sizes, type] = js_mat_params2(ctx, index, argc, argv);
 
-  if(size.width == 0 || size.height == 0)
+  if(sizes.empty())
     return JS_EXCEPTION;
 
   switch(magic) {
     case 0: {
-      ret = js_mat_wrap(ctx, cv::Mat::zeros(size.height, size.width, type));
+      ret = js_mat_wrap(ctx, cv::Mat::zeros(sizes.size(), sizes.data(), type));
       break;
     }
     case 1: {
-      ret = js_mat_wrap(ctx, cv::Mat::ones(size.height, size.width, type));
+      ret = js_mat_wrap(ctx, cv::Mat::ones(sizes.size(), sizes.data(), type));
       break;
     }
   }
@@ -1618,11 +1697,11 @@ JSClassDef js_mat_iterator_class = {
 const JSCFunctionListEntry js_mat_proto_funcs[] = {
     JS_CGETSET_MAGIC_DEF("cols", js_mat_get_props, NULL, PROP_COLS),
     JS_CGETSET_MAGIC_DEF("rows", js_mat_get_props, NULL, PROP_ROWS),
+    JS_CGETSET_MAGIC_DEF("dims", js_mat_get_props, NULL, PROP_DIMS),
     JS_CGETSET_MAGIC_DEF("channels", js_mat_get_props, NULL, PROP_CHANNELS),
     JS_CGETSET_MAGIC_DEF("type", js_mat_get_props, NULL, PROP_TYPE),
     JS_CGETSET_MAGIC_DEF("depth", js_mat_get_props, NULL, PROP_DEPTH),
     JS_CGETSET_MAGIC_DEF("empty", js_mat_get_props, NULL, PROP_EMPTY),
-    JS_CGETSET_MAGIC_DEF("total", js_mat_get_props, NULL, PROP_TOTAL),
     JS_CGETSET_MAGIC_DEF("size", js_mat_get_props, NULL, PROP_SIZE),
     JS_CGETSET_MAGIC_DEF("continuous", js_mat_get_props, NULL, PROP_CONTINUOUS),
     JS_CGETSET_MAGIC_DEF("submatrix", js_mat_get_props, NULL, PROP_SUBMATRIX),
@@ -1631,6 +1710,7 @@ const JSCFunctionListEntry js_mat_proto_funcs[] = {
     JS_CGETSET_MAGIC_DEF("elemSize1", js_mat_get_props, NULL, PROP_ELEMSIZE1),
     JS_CGETSET_DEF("buffer", js_mat_buffer, NULL),
     JS_CGETSET_DEF("array", js_mat_array, NULL),
+    JS_CFUNC_MAGIC_DEF("total", 0, js_mat_funcs, METHOD_TOTAL),
     JS_CFUNC_MAGIC_DEF("col", 1, js_mat_funcs, METHOD_COL),
     JS_CFUNC_MAGIC_DEF("row", 1, js_mat_funcs, METHOD_ROW),
     JS_CFUNC_MAGIC_DEF("colRange", 2, js_mat_funcs, METHOD_COL_RANGE),

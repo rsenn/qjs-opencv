@@ -1237,11 +1237,11 @@ enum {
 
 static JSValue
 js_imgproc_transform(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
-  JSInputOutputArray src;
+  JSInputArray src;
   JSValue ret = JS_UNDEFINED;
 
   if(magic != TRANSFORM_GET_ROTATION_MATRIX2_D && magic != TRANSFORM_GET_ROTATION_MATRIX2D_)
-    src = argc >= 1 ? js_umat_or_mat(ctx, argv[0]) : cv::noArray();
+    src = argc >= 1 ? js_input_array(ctx, argv[0]) : JSInputArray();
 
   switch(magic) {
     case TRANSFORM_CONVERT_MAPS: {
@@ -1257,7 +1257,15 @@ js_imgproc_transform(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
       break;
     }
     case TRANSFORM_GET_AFFINE_TRANSFORM: {
-      JSInputArray dst = js_umat_or_mat(ctx, argv[1]);
+      JSInputArray dst = js_input_array(ctx, argv[1]);
+      JSContourData<float> sc, dc;
+
+      if(js_contour_read(ctx, argv[0], &sc))
+        src = JSInputArray(sc);
+
+      if(js_contour_read(ctx, argv[1], &dc))
+        dst = JSInputArray(dc);
+
       JSMatData mat = cv::getAffineTransform(src, dst);
       ret = js_mat_wrap(ctx, mat);
       break;
