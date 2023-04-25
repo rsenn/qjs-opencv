@@ -278,12 +278,86 @@ js_mat_params(JSContext* ctx, int& index, int argc, JSValueConst argv[]) {
   return std::make_pair(size, type);
 }
 
+static BOOL
+js_mat_init(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+  JSMatData* m = js_mat_data(this_val);
+
+  if(argc == 0)
+    new(m) cv::Mat();
+
+  if(argc > 0) {
+    int32_t type = 0;
+    int index = 0;
+    uint8_t* buf = 0;
+    JSSizeData<double>* size;
+    std::vector<int> sizes;
+    std::vector<size_t> steps;
+
+    if(js_is_array(ctx, argv[0])) {
+      if(js_array_to(ctx, argv[0], sizes) > 0)
+        ++index;
+    } else if((size = js_size_data(argv[0]))) {
+      sizes.push_back(size->height);
+      sizes.push_back(size->width);
+      ++index;
+    } else if(argc > 1 && JS_IsNumber(argv[0]) && JS_IsNumber(argv[1])) {
+      uint32_t rows, cols;
+      JS_ToUint32(ctx, &rows, argv[0]);
+      JS_ToUint32(ctx, &cols, argv[1]);
+      sizes.push_back(rows);
+      sizes.push_back(cols);
+      index += 2;
+    }
+
+    if(index > 0) {
+      if(index == argc || JS_ToInt32(ctx, &type, argv[index])) {
+        JS_ThrowTypeError(ctx, "argument %d must be a numeric type", index + 1);
+        return FALSE;
+      }
+      ++index;
+    }
+
+    if(index > 0 && index < argc) {
+
+      if(js_is_arraybuffer(ctx, argv[index])) {
+        size_t len;
+
+        if(!(buf = JS_GetArrayBuffer(ctx, &len, argv[index]))) {
+          JS_ThrowTypeError(ctx, "argument %d must be an ArrayBuffer", index + 1);
+        return FALSE;
+        }
+
+        if(++index < argc) {
+          if(js_is_array(ctx, argv[index])) {
+            js_array_to(ctx, argv[index], steps);
+           } else {
+            uint32_t step;
+            JS_ToUint32(ctx, &step, argv[index]);
+            steps.push_back(step);
+          }
+          assert(steps.size() >= sizes.size());
+       }
+      }
+
+      if(buf) {
+        new(m) cv::Mat(sizes, type, buf, steps.data());
+
+        JSAtom prop = JS_NewAtom(ctx, "buffer");
+        JS_DeleteProperty(ctx, this_val, prop, 0);
+        JS_DefinePropertyValue(ctx, this_val, prop, JS_DupValue(ctx, argv[index]), JS_PROP_CONFIGURABLE);
+        JS_FreeAtom(ctx, prop);
+      } else {
+        new(m) cv::Mat(sizes, type);
+      }
+    }
+  }
+  return TRUE;
+}
+
 static JSValue
 js_mat_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
-  JSValue obj = JS_UNDEFINED;
-  JSValue proto;
+  JSValue proto, obj = JS_UNDEFINED;
   JSMatData* m;
-  uint8_t* buf = 0;
 
   if(!(m = js_mat_track(ctx, js_allocate<cv::Mat>(ctx))))
     return JS_EXCEPTION;
@@ -294,36 +368,14 @@ js_mat_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueCon
     goto fail;
   obj = JS_NewObjectProtoClass(ctx, proto, js_mat_class_id);
   JS_FreeValue(ctx, proto);
-  if(JS_IsException(obj))
+  if(JS_IsException(obj)) {
     goto fail;
-
-  if(argc == 0)
-    new(m) cv::Mat();
-
-  if(argc > 0) {
-    int index = 0;
-    const auto& [size, type] = js_mat_params(ctx, index, argc, argv);
-
-    if(index < argc) {
-      size_t len;
-      if(!(buf = JS_GetArrayBuffer(ctx, &len, argv[index]))) {
-        JS_ThrowTypeError(ctx, "argument %d must be an ArrayBuffer", index + 1);
-      }
-    }
-
-    if(buf) {
-      new(m) cv::Mat(size.height, size.width, type, buf);
-
-      JSAtom prop = JS_NewAtom(ctx, "buffer");
-      JS_DeleteProperty(ctx, obj, prop, 0);
-      JS_DefinePropertyValue(ctx, obj, prop, JS_DupValue(ctx, argv[index]), JS_PROP_CONFIGURABLE);
-      JS_FreeAtom(ctx, prop);
-    } else {
-      new(m) cv::Mat(size.height, size.width, type);
-    }
   }
 
   JS_SetOpaque(obj, m);
+
+  if(!js_mat_init(ctx, obj, argc, argv))
+    goto fail;
 
   return obj;
 fail:
