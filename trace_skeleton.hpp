@@ -67,11 +67,11 @@ pixel_neighbour(const Point& pt, const Mat& mat, Mat& taken, int32_t index, Pred
       Point(-1, -1),
       Point(-1, 0),
       Point(-1, 1),
-      Point(0, -1),
       Point(0, 1),
-      Point(1, -1),
-      Point(1, 0),
       Point(1, 1),
+      Point(1, 0),
+      Point(1, -1),
+      Point(0, -1),
   };
 
   for(const auto& offs : points)
@@ -104,7 +104,7 @@ run(const Mat& mat, JSContoursData<double>& contours, bool simplify = false) {
 
       if(!(n > 0 && pixel_check(point_sum(pt, pdiff), mat, mapping, index, pred, next)))
         if(!(n > 1 && pixel_check(point_sum(pt, ppdiff), mat, mapping, index, pred, next)))
-          if(!pixel_neighbour(pt, mat, mapping, index, pred, next))
+           if(/*n != 0 ||*/ !pixel_neighbour(pt, mat, mapping, index, pred, next))
             break;
 
       diff = point_difference(pt, next);
