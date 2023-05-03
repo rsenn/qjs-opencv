@@ -12,10 +12,10 @@ extern JSValue mat_proto, mat_class;
 extern thread_local VISIBLE JSClassID js_mat_class_id;
 
 VISIBLE JSValue js_mat_new(JSContext*, uint32_t, uint32_t, int);
-int js_mat_init(JSContext*, JSModuleDef*);
 JSModuleDef* js_init_module_mat(JSContext*, const char*);
-void js_mat_constructor(JSContext* ctx, JSValue parent, const char* name);
 VISIBLE JSValue js_mat_wrap(JSContext*, const cv::Mat& mat);
+void js_mat_constructor(JSContext* ctx, JSValue parent, const char* name);
+int js_mat_init(JSContext*, JSModuleDef*);
 }
 
 static inline JSMatData*

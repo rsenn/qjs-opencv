@@ -57,23 +57,6 @@ public:
   }
 };
 
-/*extern "C" {}
-
-JSValue int32array_proto, int32array_ctor;
-JSClassID int32array_class_id;*/
-
-/*JSValue
-js_vector_vec4i_to_array(JSContext* ctx, const std::vector<cv::Vec4i>& vec) {
-  JSValue ret = JS_NewArray(ctx);
-  uint32_t i, j, n = vec.size();
-  for(i = 0; i < n; i++) {
-    JSValue item = JS_NewObjectProto(ctx, int32array_proto);
-    for(j = 0; j < 4; j++) { JS_SetPropertyUint32(ctx, item, j, JS_NewInt32(ctx, vec[i][j])); }
-    JS_SetPropertyUint32(ctx, ret, i, item);
-  }
-  return ret;
-}*/
-
 int
 js_color_read(JSContext* ctx, JSValueConst color, JSColorData<double>* out) {
   int ret = 1;

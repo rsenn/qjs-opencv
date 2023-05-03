@@ -23,6 +23,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include <map>
 
 namespace cv {
 class CLAHE;
@@ -130,15 +131,6 @@ extern "C" {
 JSModuleDef* js_init_module_draw(JSContext*, const char*);
 JSModuleDef* js_init_module_video_capture(JSContext*, const char*);
 JSModuleDef* js_init_module_cv(JSContext*, const char*);
-
-/*
-int js_draw_functions(JSContext* ctx, JSValue parent);
-int js_draw_init(JSContext*, JSModuleDef*);
-
-VISIBLE JSValue js_video_capture_wrap(JSContext*, cv::VideoCapture* cap);
-
-VISIBLE JSValue js_mat_wrap(JSContext*, const cv::Mat& mat);
-*/
 }
 
 template<class Stream>
@@ -236,35 +228,10 @@ static inline JSAtom js_symbol_atom(JSContext* ctx, const char* name);
 static inline JSValue js_symbol_ctor(JSContext* ctx);
 static inline JSValue js_symbol_get_static(JSContext* ctx, const char* name);
 }
-/*
-template<class Type> JSValue js_contour_new(JSContext* ctx, const JSContourData<Type>& points);
 
-template<> JSValue js_contour_new<double>(JSContext* ctx, const JSContourData<double>& points);
-
-template<> JSValue js_contour_new<float>(JSContext* ctx, const JSContourData<float>& points);
-
-template<> JSValue js_contour_new<int>(JSContext* ctx, const JSContourData<int>& points);
-*/
 #define countof(x) (sizeof(x) / sizeof((x)[0]))
 
 JSValue js_vector_vec4i_to_array(JSContext*, const std::vector<cv::Vec4i>& vec);
-
-/*inline JSValueConst
-js_ctor(JSContext* ctx, const char* name) {
-  JSValue global = JS_GetGlobalObject(ctx);
-  JSValueConst ctor = JS_GetPropertyStr(ctx, global, name);
-  return ctor;
-}
-
-inline JSValueConst
-js_proto(JSContext* ctx, const char* name) {
-  return JS_GetPrototype(ctx, js_ctor(ctx, name));
-}
-
-inline JSValue
-js_new(JSContext* ctx, const char* name) {
-  return JS_NewObjectProto(ctx, js_proto(ctx, name));
-}*/
 
 template<class T>
 static inline int
@@ -877,6 +844,54 @@ template<class T>
 static inline JSValue
 js_value_from(JSContext* ctx, const std::vector<T>& in) {
   return js_array_from(ctx, begin(in), end(in));
+}
+
+class js_object {
+public:
+  template<class T>
+  static int64_t
+  to_map(JSContext* ctx, JSValueConst obj, std::map<std::string, T>& out, int flags = JS_GPN_STRING_MASK | JS_GPN_SYMBOL_MASK) {
+    int64_t i = 0;
+    JSPropertyEnum* names = 0;
+    uint32_t plen = 0;
+    JS_GetOwnPropertyNames(ctx, &names, &plen, obj, flags);
+    for(auto penum : range_view<JSPropertyEnum>(names, plen)) {
+      JSValue value = JS_GetProperty(ctx, obj, penum.atom);
+      const char* name = JS_AtomToCString(ctx, penum.atom);
+      T prop;
+      js_value_to(ctx, value, prop);
+      out[name] = prop;
+      JS_FreeCString(ctx, name);
+      ++i;
+    }
+    return i;
+  }
+
+  template<class T>
+  static JSValue
+  from_map(JSContext* ctx, const std::map<std::string, T>& in) {
+    typedef std::pair<std::string, T> entry_type;
+    JSValue obj = JS_NewObject(ctx);
+
+    for(entry_type entry : in) {
+      T prop = entry.second;
+      JS_DefinePropertyValueStr(ctx, obj, entry.first.c_str(), js_value_from(ctx, prop), JS_PROP_C_W_E);
+    }
+
+    return obj;
+  }
+};
+
+template<class T>
+static inline int64_t
+js_object_to(JSContext* ctx, JSValueConst obj, std::map<std::string, T>& map) {
+  return js_object::to_map<T>(ctx, obj, map);
+}
+
+template<class Container>
+static inline JSValue
+js_object_from(JSContext* ctx, const Container& v) {
+  return js_object::from_map(ctx, v);
 }
 
 template<class T> class js_iterable {

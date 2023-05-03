@@ -193,7 +193,11 @@ public:
   uint32_t
   run(JSContoursData<double>& contours, bool simplify = false) {
 
-    while(trace(contours, simplify, [](unsigned p) -> bool { return p > 0; })) { std::cout << index << ": [" << contours.back().size() << "]" << std::endl; }
+    while(trace(contours, simplify, [](unsigned p) -> bool { return p > 0; })) {
+#ifdef DEBUG_OUTPUT
+      std::cout << index << ": [" << contours.back().size() << "]" << std::endl;
+#endif
+    }
 
     return index;
   }
@@ -214,10 +218,7 @@ trace_skeleton(cv::Mat& mat, JSContoursData<double>& out, cv::Mat* neighborhood,
 
   if(neighborhood)
     tracer.neighborhood.copyTo(*neighborhood);
-  
-  //*neighborhood = tracer.neighborhood;
 
-  //
   ret = tracer.run(out, simplify);
 
   if(mapping)

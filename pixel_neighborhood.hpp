@@ -23,7 +23,7 @@ pixel_offset_pred(const cv::Mat& src, std::array<int32_t, N> const& offsets, Cal
       std::array<uchar, 8> p;
       std::transform(offsets.begin(), offsets.end(), p.begin(), [pixel](int32_t offset) -> uchar { return pixel[offset]; });
 
-      dst.at<uchar>(y, x) = pred(src.at<uchar>(y, x), std::count_if(p.begin(), p.end(), [](uchar value) -> bool { return value > 0; }));
+      *dst.ptr<uchar>(y, x) = pred(src.at<uchar>(y, x), std::count_if(p.begin(), p.end(), [](uchar value) -> bool { return value > 0; }));
     }
 
     row += step;

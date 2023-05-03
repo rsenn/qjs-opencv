@@ -921,16 +921,20 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
     case OTHER_MIN_MAX_IDX: {
       JSInputArray mask = cv::noArray();
       double minVal, maxVal;
-      int32_t minIdx, maxIdx;
+      std::vector<int> minIdx(src.dims()), maxIdx(src.dims());
+
       JSValueConst results[4];
       // std::array<JSValue, 4> results;
+
       if(argc >= 6)
         mask = js_umat_or_mat(ctx, argv[5]);
-      cv::minMaxIdx(src, &minVal, &maxVal, &minIdx, &maxIdx, mask);
+
+      cv::minMaxIdx(src, &minVal, &maxVal, minIdx.data(), maxIdx.data(), mask);
+
       results[0] = JS_NewFloat64(ctx, minVal);
       results[1] = JS_NewFloat64(ctx, maxVal);
-      results[2] = JS_NewInt32(ctx, minIdx);
-      results[3] = JS_NewInt32(ctx, maxIdx);
+      results[2] = js_array_from(ctx, minIdx);
+      results[3] = js_array_from(ctx, maxIdx);
       for(size_t i = 0; i < 4; i++)
         if(JS_IsFunction(ctx, argv[i + 1]))
           JS_Call(ctx, argv[i + 1], JS_NULL, 1, results + i);
