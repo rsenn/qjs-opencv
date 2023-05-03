@@ -160,4 +160,68 @@ js_cv_inputoutputarray(JSContext* ctx, JSValueConst value) {
 
   return cv::noArray();
 }
+
+static inline JSOutputArray
+js_cv_outputarray(JSContext* ctx, JSValueConst value) {
+  cv::Mat* mat;
+  cv::UMat* umat;
+
+  if((mat = js_mat_data_nothrow(value)))
+    return JSOutputArray(*mat);
+  if((umat = js_umat_data(value)))
+    return JSOutputArray(*umat);
+
+  if(js_contour_class_id) {
+    JSContourData<double>* contour;
+    JSContoursData<double>* contours;
+    if((contour = js_contour_data(value)))
+      return JSOutputArray(*contour);
+  }
+
+  if(js_line_class_id) {
+    JSLineData<double>* line;
+    if((line = js_line_data(value)))
+      return JSOutputArray(line->array);
+  }
+
+  if(js_is_arraybuffer(ctx, value)) {
+    uint8_t* ptr;
+    size_t size;
+    ptr = JS_GetArrayBuffer(ctx, &size, value);
+
+    return JSOutputArray(ptr, size);
+  }
+
+  if(js_is_typedarray(ctx, value))
+    return js_typedarray_inputoutputarray(ctx, value);
+
+  return cv::noArray();
+}
+
+/*template<typename  A =JSInputOutputArray>
+ class JSOutputArg   {
+public:
+  JSOutputArg() : array() {}
+
+template<typename T>
+  JSOutputArray(const T& arg) : array(arg) {}
+template<typename T>
+  JSOutputArray( T* ptr, size_t size) : array(ptr,size) {}
+
+  A array;
+
+};*/
+
+class JSInputArg {
+public:
+  JSInputArray m_array;
+
+  JSInputArg(JSContext* ctx, JSValueConst arg) : m_array(js_input_array(ctx, arg)) {}
+  /* JSInputArg() : array() {}
+
+ template<typename T>
+   JSInputArg(const T& arg) : array(arg) {}
+ template<typename T>
+   JSInputArg( T* ptr, size_t size) : array(ptr,size) {}*/
+};
 #endif /* defined(JS_UMAT_HPP) */

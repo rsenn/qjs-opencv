@@ -846,13 +846,25 @@ js_cv_lsd(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) 
 static JSValue
 js_cv_trace_skeleton(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSContoursData<double> contours;
-  JSInputArray src = js_umat_or_mat(ctx, argv[0]);
   uint32_t count;
+  JSInputOutputArray src = js_umat_or_mat(ctx, argv[0]);
+  cv::Mat* mat;
 
-  if(src.empty())
-    return JS_ThrowInternalError(ctx, "argument 1 must be Mat or UMat");
+  if(!(mat = js_mat_data2(ctx, argv[0])))
+    return JS_EXCEPTION;
 
-  count = trace_skeleton(src.getMat(), contours);
+  /*  if(src.empty())
+      return JS_ThrowInternalError(ctx, "argument 1 must be Mat or UMat");
+  */
+
+  cv::Mat *neighborhood = 0, *mapping = 0;
+
+  if(argc > 2)
+    neighborhood = js_mat_data(argv[2]);
+  if(argc > 3)
+    mapping = js_mat_data(argv[3]);
+
+  count = trace_skeleton(*mat, contours, neighborhood, mapping);
 
   if(argc >= 2) {
     if(!js_is_array(ctx, argv[1]))

@@ -265,7 +265,7 @@ static JSValue
 js_draw_line(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSInputOutputArray dst;
   int i = 0, ret = -1;
-  JSPointData<int> points[2];
+  JSLineData<int> line(0, 0, 0, 0);
   JSColorData<uint8_t> color;
   cv::Scalar scalar;
   int thickness = 1;
@@ -280,11 +280,9 @@ js_draw_line(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
   if(js_is_noarray(dst))
     return JS_EXCEPTION;
 
-  if(argc > i && js_point_read(ctx, argv[i], &points[0]))
-    i++;
-
-  if(argc > i && js_point_read(ctx, argv[i], &points[1]))
-    i++;
+  if(!js_line_arg(ctx, argc, argv, i, line)) {
+    return JS_ThrowTypeError(ctx, "argument 2 must be a line");
+  }
 
   if(argc > i) {
     js_color_read(ctx, argv[i], &color);
@@ -322,7 +320,7 @@ js_draw_line(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
          antialias ? "true" : "false");
 #endif
 
-  cv::line(dst, points[0], points[1], scalar, thickness, antialias ? cv::LINE_AA : cv::LINE_8);
+  cv::line(dst, line.a, line.b, scalar, thickness, antialias ? cv::LINE_AA : cv::LINE_8);
   return JS_UNDEFINED;
 }
 

@@ -124,16 +124,25 @@ js_line_segment_detector_detect(JSContext* ctx, JSValueConst this_val, int argc,
   std::vector<cv::Vec4f> lines;
   std::vector<float> width, prec;
   std::vector<int32_t> nfa;
+  JSOutputArray linearr = js_cv_outputarray(ctx, argv[1]);
+  bool copyArray = !linearr.isVector() && !linearr.isMat();
 
   if((s = js_line_segment_detector_data2(ctx, this_val)) == nullptr)
     return JS_EXCEPTION;
 
+  if(copyArray)
+    linearr = JSOutputArray(lines);
+
   image = js_umat_or_mat(ctx, argv[0]);
 
-  (*s)->detect(image, lines, width, prec, nfa);
+  try {
+    (*s)->detect(image, linearr, width, prec, nfa);
+  } catch(const cv::Exception& e) { return JS_ThrowInternalError(ctx, "cv::Exception: %s", e.what()); }
 
-  if(argc >= 2 && js_is_array(ctx, argv[1])) {
+  if(copyArray) {
     size_t i, length = lines.size();
+
+    js_array_clear(ctx, argv[1]);
 
     for(i = 0; i < length; i++) {
       JSLineData<float> line(js_line_from(lines[i]));
@@ -141,20 +150,18 @@ js_line_segment_detector_detect(JSContext* ctx, JSValueConst this_val, int argc,
       JS_SetPropertyUint32(ctx, argv[1], i, js_line_new(ctx, line));
     }
   }
-  if(argc >= 3 && js_is_array(ctx, argv[2])) {
-    size_t i, length = width.size();
 
-    for(i = 0; i < length; i++) JS_SetPropertyUint32(ctx, argv[1], i, JS_NewFloat64(ctx, width[i]));
+  if(argc >= 3 && js_is_array(ctx, argv[2])) {
+    js_array_clear(ctx, argv[2]);
+    js_array_copy(ctx, argv[2], width);
   }
   if(argc >= 4 && js_is_array(ctx, argv[3])) {
-    size_t i, length = prec.size();
-
-    for(i = 0; i < length; i++) JS_SetPropertyUint32(ctx, argv[1], i, JS_NewFloat64(ctx, prec[i]));
+    js_array_clear(ctx, argv[3]);
+    js_array_copy(ctx, argv[3], prec);
   }
   if(argc >= 5 && js_is_array(ctx, argv[4])) {
-    size_t i, length = nfa.size();
-
-    for(i = 0; i < length; i++) JS_SetPropertyUint32(ctx, argv[1], i, JS_NewInt32(ctx, nfa[i]));
+    js_array_clear(ctx, argv[4]);
+    js_array_copy(ctx, argv[4], nfa);
   }
 
   return JS_UNDEFINED;
@@ -164,16 +171,21 @@ static JSValue
 js_line_segment_detector_draw_segments(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSLineSegmentDetector* s;
   JSInputOutputArray image;
+  JSInputArray linearr;
   std::vector<cv::Vec4f> lines;
 
   if((s = js_line_segment_detector_data2(ctx, this_val)) == nullptr)
     return JS_EXCEPTION;
 
   image = js_umat_or_mat(ctx, argv[0]);
+  linearr = js_input_array(ctx, argv[1]);
 
-  js_array_to(ctx, argv[1], lines);
+  if(!linearr.isMat() && !linearr.isVector()) {
+    linearr = JSInputArray(lines);
+    js_array_to(ctx, argv[1], lines);
+  }
 
-  (*s)->drawSegments(image, lines);
+  (*s)->drawSegments(image, linearr);
 
   return JS_UNDEFINED;
 }

@@ -58,8 +58,8 @@ typedef cv::TickMeter JSTickMeterData;
 typedef cv::Ptr<cv::CLAHE> JSCLAHEData;
 
 typedef cv::_InputArray JSInputArray;
-typedef cv::_OutputArray JSOutputArray;
 typedef cv::_InputOutputArray JSInputOutputArray;
+typedef cv::_OutputArray JSOutputArray;
 
 template<class T> union JSLineData {
   typedef std::array<T, 4> array_type;
@@ -985,6 +985,16 @@ js_atom_is_length(JSContext* ctx, JSAtom atom) {
   const char* str = JS_AtomToCString(ctx, atom);
   BOOL ret = !strcmp(str, "length");
   JS_FreeCString(ctx, str);
+  return ret;
+}
+
+static JSValue
+js_invoke(JSContext* ctx, JSValueConst this_obj, const char* method, int argc, JSValueConst argv[]) {
+  JSAtom atom;
+  JSValue ret;
+  atom = JS_NewAtom(ctx, method);
+  ret = JS_Invoke(ctx, this_obj, atom, argc, argv);
+  JS_FreeAtom(ctx, atom);
   return ret;
 }
 

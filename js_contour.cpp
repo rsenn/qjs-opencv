@@ -1269,7 +1269,6 @@ static JSValue
 js_contour_match(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSValue ret = JS_UNDEFINED;
   JSContourData<double>*a, *b;
-  std::array<int64_t, 2> indexes = {-1, -1};
 
   if(!(a = js_contour_data2(ctx, argv[0])))
     return JS_EXCEPTION;
@@ -1277,22 +1276,46 @@ js_contour_match(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
   if(!(b = js_contour_data2(ctx, argv[1])))
     return JS_EXCEPTION;
 
-  auto it = std::find_first_of(a->begin(), a->end(), b->begin(), b->end(), [](const JSPointData<double>& p0, const JSPointData<double>& p1) -> bool {
-    return p0.x == p1.x && p0.y == p1.y;
-  });
+  const auto it = std::find_first_of(a->begin(), a->end(), b->begin(), b->end(), &point_equal<double>);
 
   if(it != a->end()) {
-    JSPointData<double> other(*it);
+    const auto it2 = std::find_if(b->begin(), b->end(), point_compare(*it));
 
-    indexes[0] = it - a->begin();
-
-    auto it2 = std::find_if(b->begin(), b->end(), [&other](const JSPointData<double>& pt) -> bool { return pt.x == other.x && pt.y == other.y; });
-
-    if(it2 != b->end())
-      indexes[1] = it2 - a->begin();
+    if(it2 != b->end()) {
+      std::array<int64_t, 2> indexes = {it - a->begin(), it2 - b->begin()};
+      return js_array_from(ctx, indexes);
+    }
   }
 
-  return js_array_from(ctx, indexes);
+  return JS_NULL;
+}
+
+static JSValue
+js_contour_intersect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+  JSValue ret = JS_UNDEFINED;
+  JSContourData<double>*a, *b;
+  JSPointData<double> pt;
+  std::array<ssize_t, 2> indexes = {-1, -1};
+
+  if(!(a = js_contour_data2(ctx, argv[0])))
+    return JS_EXCEPTION;
+
+  if(!(b = js_contour_data2(ctx, argv[1])))
+    return JS_EXCEPTION;
+
+  bool result = contour_intersect(*a, *b, &indexes, &pt);
+
+  ret = JS_NewBool(ctx, result);
+
+  if(result) {
+    if(argc > 2)
+      js_array_copy(ctx, argv[2], indexes.begin(), indexes.end());
+
+    if(argc > 3)
+      js_point_write(ctx, argv[3], pt);
+  }
+
+  return ret;
 }
 
 enum { PROP_ASPECT_RATIO = 0, PROP_EXTENT, PROP_SOLIDITY, PROP_EQUIVALENT_DIAMETER, PROP_ORIENTATION, PROP_BOUNDING_RECT };
@@ -1616,6 +1639,7 @@ const JSCFunctionListEntry js_contour_static_funcs[] = {
     JS_CFUNC_DEF("fromString", 1, js_contour_fromstr),
     JS_CFUNC_DEF("from", 1, js_contour_from),
     JS_CFUNC_DEF("match", 2, js_contour_match),
+    JS_CFUNC_DEF("intersect", 2, js_contour_intersect),
     JS_PROP_INT32_DEF("FORMAT_XY", 0x00, 0),
     JS_PROP_INT32_DEF("FORMAT_01", 0x02, 0),
     JS_PROP_INT32_DEF("FORMAT_SPACE", 0x10, 0),

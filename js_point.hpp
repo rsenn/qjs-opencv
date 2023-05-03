@@ -181,6 +181,21 @@ point_equal(const cv::Point_<T>& a, const cv::Point_<T>& b) {
   return a.x == b.x && a.y == b.y;
 }
 
+template<typename T> struct point_compare {
+
+  typedef cv::Point_<T> point_type;
+
+  point_compare(const point_type& point) : m_pt(point) {}
+
+  bool
+  operator()(const point_type& other) const {
+    return point_equal(m_pt, other);
+  }
+
+private:
+  cv::Point_<T> m_pt;
+};
+
 template<typename T, typename M = cv::Mat>
 static inline bool
 point_inside(const cv::Point_<T>& pt, const M& mat) {

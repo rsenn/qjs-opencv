@@ -51,6 +51,22 @@ js_array_truncate(JSContext* ctx, const JSValueConst& arr, int64_t len) {
   return newlen;
 }
 
+static inline BOOL
+js_array_clear(JSContext* ctx, const JSValueConst& arr) {
+  int64_t newlen = -1;
+
+  if(js_is_array(ctx, arr)) {
+    int64_t top = js_array_length(ctx, arr);
+    JSValueConst args[] = {JS_NewInt64(ctx, 0), JS_NewInt64(ctx, top)};
+
+    JSValue ret = js_invoke(ctx, arr, "splice", countof(args), args);
+    JS_FreeValue(ctx, ret);
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
 class js_array_iterator : public std::iterator<std::input_iterator_tag, JSValue> {
 public:
   js_array_iterator(JSContext* c, const JSValueConst& a, const size_t i = 0) : ctx(c), array(&a), pos(i) {}

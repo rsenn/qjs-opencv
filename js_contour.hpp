@@ -110,6 +110,72 @@ contour_adjacent(const JSContourData<T>& contour, const JSContourData<T>& other)
   return false;
 }
 
+template<typename T> struct contour_line_iterator : JSContourData<T>::const_iterator {
+  typedef typename JSContourData<T>::const_iterator point_iterator;
+  typedef const JSPointData<T>* point_pointer;
+
+  contour_line_iterator(const point_iterator& it) : point_iterator(it) {}
+
+  const Line<T>&
+  operator*() const {
+    return reinterpret_cast<const Line<T>&>(*reinterpret_cast<const point_iterator&>(*this));
+  }
+
+  const Line<T>*
+  operator->() const {
+    return &reinterpret_cast<const Line<T>&>(*reinterpret_cast<const point_iterator&>(*this));
+  }
+
+  bool
+  operator==(const point_iterator& other) const {
+    if(point_iterator(*this) == other)
+      return true;
+    if(point_iterator(*this) + 1 == other)
+      return true;
+    return false;
+  }
+
+  bool
+  operator!=(const point_iterator& other) const {
+    return !this->operator==(other);
+  }
+};
+
+template<typename T>
+static inline bool
+contour_intersect(const JSContourData<T>& a, const JSContourData<T>& b, std::array<ssize_t, 2>* indexes, JSPointData<T>* intersection) {
+  const auto *ita = a.data(), *itb = b.data();
+  const auto *aend = ita + a.size() - 1, *bend = itb + b.size() - 1;
+
+  /*while(ita != aend) {
+    while(itb != bend) {
+
+      if(reinterpret_cast<const Line<T>*>(ita)->intersect(*reinterpret_cast<const Line<T>*>(itb), intersection)) {
+        if(indexes)
+          (*indexes) = std::array<ssize_t, 2>{ita - a.data(), itb - b.data()};
+        return true;
+      }
+
+      ++itb;
+    }
+    ++ita;
+  }*/
+  const auto it = std::find_first_of(ita, aend, itb, bend, [intersection](const JSPointData<T>& a, const JSPointData<T>& b) -> bool {
+    const auto& la = *reinterpret_cast<const Line<T>*>(&a);
+    const auto& lb = *reinterpret_cast<const Line<T>*>(&b);
+    return la.intersect(lb, intersection);
+  });
+
+  if(it != aend) {
+    if(indexes)
+      (*indexes)[0] = it - a.data();
+
+    return true;
+  }
+
+  return false;
+}
+
 template<typename T = double>
 static inline int
 js_contour_read(JSContext* ctx, JSValueConst contour, JSContourData<T>* out) {
