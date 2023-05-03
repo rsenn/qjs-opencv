@@ -203,4 +203,28 @@ transform_contours(InputIterator s, InputIterator e, OutputIterator o) {
   return o;
 }
 
+template<class T, class U>
+void
+bresenham(cv::Point_<T> p0, cv::Point_<T> p1, std::vector<cv::Point_<U>>& out) {
+  T dx = std::abs(p1.x - p0.x);
+  T dy = std::abs(p1.y - p0.y);
+  T sx = p0.x < p1.x ? 1 : -1;
+  T sy = p0.y < p1.y ? 1 : -1;
+  T err = dx - dy;
+
+  while(p0.x != p1.x || p0.y != p1.y) {
+    T e2 = 2 * err;
+    if(e2 > dy * -1) {
+      err -= dy;
+      p0.x += sx;
+    }
+    if(e2 < dx) {
+      err += dx;
+      p0.y += sy;
+    }
+
+    out.push_back(p0);
+  }
+}
+
 #endif // defined GEOMETRY_HPP

@@ -27,6 +27,7 @@
 #include <opencv2/core/types.hpp>
 #include <opencv2/imgproc.hpp>
 #include <ostream>
+#include <iostream>
 #include <string>
 #include <utility>
 
@@ -672,6 +673,56 @@ js_contour_psimpl(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
   return ret;
 }
 
+static JSValue
+js_contour_collapse(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+  JSContourData<double>*v, c;
+
+  if(!(v = js_contour_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  JSPointData<double> prev(0, 0), prevdiff(0, 0);
+
+  c.push_back(v->front());
+
+  for(int i = 1; i < v->size() - 1; ++i) {
+    const JSPointData<double> diffs[2] = {
+        point_normalize(point_difference(v->at(i), v->at(i - 1))),
+        point_normalize(point_difference(v->at(i + 1), v->at(i))),
+    };
+
+    bool skip = point_equal(diffs[0], diffs[1]);
+
+    if(skip)
+      continue;
+
+    c.push_back(v->at(i));
+  }
+
+  c.push_back(v->back());
+
+  return js_contour_new(ctx, c);
+}
+
+static JSValue
+js_contour_fill(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+  JSContourData<double>*v, c;
+
+  if(!(v = js_contour_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  JSPointData<double> prev = v->front();
+
+  c.push_back(prev);
+
+  for(int i = 1; i < v->size(); ++i) {
+    bresenham<int, double>(prev, v->at(i), c);
+
+    prev = v->at(i);
+  }
+
+  return js_contour_new(ctx, c);
+}
+
 /**
  * @brief      cv.Contour.prototype.push
  * @param      value     Pushed value
@@ -793,6 +844,174 @@ js_contour_shift(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
   }
 
   ret = js_point_new(ctx, point_proto, point.x, point.y);
+
+  return ret;
+}
+
+/**
+ * @brief      cv.Contour.prototype.splice
+ * @return     Head value
+ */
+static JSValue
+js_contour_splice(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+  JSContourData<double>*v, removed, add;
+  JSValue ret;
+  JSValue x, y;
+  JSPointData<double>*ptr, point;
+  int64_t i, start = -1, end, num = -1, n = 0;
+
+  if(!(v = js_contour_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  start = 0;
+  num = 0;
+
+  if(argc > 0)
+    JS_ToInt64(ctx, &start, argv[0]);
+  if(argc > 1)
+    JS_ToInt64(ctx, &num, argv[1]);
+
+  end = start + num;
+
+  if(start < 0)
+    start = ((start % v->size()) + v->size());
+  start %= v->size();
+
+  if(end < 0)
+    end = ((end % v->size()) + v->size());
+  end %= v->size();
+
+  if(start > end)
+    start = end;
+
+  num = end - start;
+
+  auto first = v->begin() + start;
+  auto last = v->begin() + end;
+
+  if(first != last) {
+    for(auto it = first; it != last; ++it) removed.push_back(*it);
+
+    v->erase(first, last);
+  }
+
+  auto args = argument_range(argc - 2, argv + 2);
+
+  for(const JSValueConst& arg : args) {
+    JSPointData<double> pt;
+    js_point_read(ctx, arg, &pt);
+    add.push_back(pt);
+  }
+
+  v->insert(v->begin() + start, add.begin(), add.end());
+
+  return js_contour_new(ctx, removed);
+}
+
+enum {
+  INDEX_OF,
+  LAST_INDEX_OF,
+  FIND_ITEM,
+  FIND_INDEX,
+  FIND_LAST_ITEM,
+  FIND_LAST_INDEX,
+};
+
+/**
+ * @brief      cv.Contour.prototype.find
+ * @return     Head value
+ */
+static JSValue
+js_contour_find(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  JSContourData<double>* v;
+  int64_t i = 0, index = -1;
+  JSValue ret = JS_UNDEFINED;
+
+  if(!(v = js_contour_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  switch(magic) {
+    case INDEX_OF: {
+      JSPointData<double> needle;
+      js_point_read(ctx, argv[0], &needle);
+
+      for(const auto& pt : *v) {
+        if(point_equal(pt, needle)) {
+          index = i;
+          break;
+        }
+        ++i;
+      }
+      ret = JS_NewInt64(ctx, index);
+      break;
+    }
+    case LAST_INDEX_OF: {
+      JSPointData<double> needle;
+      js_point_read(ctx, argv[0], &needle);
+      i = v->size() - 1;
+
+      for(JSContourData<double>::reverse_iterator it = v->rbegin(); it != v->rend(); ++it) {
+        if(point_equal(*it, needle)) {
+          index = i;
+          break;
+        }
+        --i;
+      }
+      ret = JS_NewInt64(ctx, index);
+      break;
+    }
+    case FIND_ITEM:
+    case FIND_INDEX: {
+      for(const auto& pt : *v) {
+        JSValueConst args[3] = {
+            js_point_new(ctx, pt),
+            JS_NewInt64(ctx, i),
+            this_val,
+        };
+        JSValue ret = JS_Call(ctx, argv[0], argc > 1 ? argv[1] : JS_UNDEFINED, 3, args);
+        BOOL result = JS_ToBool(ctx, ret);
+        JS_FreeValue(ctx, args[0]);
+        JS_FreeValue(ctx, args[1]);
+        JS_FreeValue(ctx, ret);
+
+        if(result) {
+          index = i;
+          break;
+        }
+        ++i;
+      }
+
+      ret = magic == FIND_INDEX ? JS_NewInt64(ctx, index) : index == -1 ? JS_NULL : js_point_new(ctx, v->at(index));
+      break;
+    }
+    case FIND_LAST_ITEM:
+    case FIND_LAST_INDEX: {
+      i = v->size() - 1;
+
+      for(JSContourData<double>::reverse_iterator it = v->rbegin(); it != v->rend(); ++it) {
+        JSValueConst args[3] = {
+            js_point_new(ctx, *it),
+            JS_NewInt64(ctx, i),
+            this_val,
+        };
+        JSValue ret = JS_Call(ctx, argv[0], argc > 1 ? argv[1] : JS_UNDEFINED, 3, args);
+        BOOL result = JS_ToBool(ctx, ret);
+        JS_FreeValue(ctx, args[0]);
+        JS_FreeValue(ctx, args[1]);
+        JS_FreeValue(ctx, ret);
+
+        if(result) {
+          index = i;
+          break;
+        }
+        --i;
+      }
+
+      ret = magic == FIND_LAST_INDEX ? JS_NewInt64(ctx, index) : index == -1 ? JS_NULL : js_point_new(ctx, v->at(index));
+
+      break;
+    }
+  }
 
   return ret;
 }
@@ -1044,6 +1263,36 @@ js_contour_from(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
     ret = js_contour_new(ctx, points);
 
   return ret;
+}
+
+static JSValue
+js_contour_match(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+  JSValue ret = JS_UNDEFINED;
+  JSContourData<double>*a, *b;
+  std::array<int64_t, 2> indexes = {-1, -1};
+
+  if(!(a = js_contour_data2(ctx, argv[0])))
+    return JS_EXCEPTION;
+
+  if(!(b = js_contour_data2(ctx, argv[1])))
+    return JS_EXCEPTION;
+
+  auto it = std::find_first_of(a->begin(), a->end(), b->begin(), b->end(), [](const JSPointData<double>& p0, const JSPointData<double>& p1) -> bool {
+    return p0.x == p1.x && p0.y == p1.y;
+  });
+
+  if(it != a->end()) {
+    JSPointData<double> other(*it);
+
+    indexes[0] = it - a->begin();
+
+    auto it2 = std::find_if(b->begin(), b->end(), [&other](const JSPointData<double>& pt) -> bool { return pt.x == other.x && pt.y == other.y; });
+
+    if(it2 != b->end())
+      indexes[1] = it2 - a->begin();
+  }
+
+  return js_array_from(ctx, indexes);
 }
 
 enum { PROP_ASPECT_RATIO = 0, PROP_EXTENT, PROP_SOLIDITY, PROP_EQUIVALENT_DIAMETER, PROP_ORIENTATION, PROP_BOUNDING_RECT };
@@ -1303,10 +1552,19 @@ js_contour_iterator(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 }
 
 const JSCFunctionListEntry js_contour_proto_funcs[] = {
+    JS_CFUNC_DEF("collapse", 0, js_contour_collapse),
+    JS_CFUNC_DEF("fill", 0, js_contour_fill),
     JS_CFUNC_DEF("push", 1, js_contour_push),
     JS_CFUNC_DEF("pop", 0, js_contour_pop),
     JS_CFUNC_DEF("unshift", 1, js_contour_unshift),
     JS_CFUNC_DEF("shift", 0, js_contour_shift),
+    JS_CFUNC_DEF("splice", 0, js_contour_splice),
+    JS_CFUNC_MAGIC_DEF("indexOf", 1, js_contour_find, INDEX_OF),
+    JS_CFUNC_MAGIC_DEF("lastIndexOf", 1, js_contour_find, LAST_INDEX_OF),
+    JS_CFUNC_MAGIC_DEF("find", 1, js_contour_find, FIND_ITEM),
+    JS_CFUNC_MAGIC_DEF("findIndex", 1, js_contour_find, FIND_INDEX),
+    JS_CFUNC_MAGIC_DEF("findLast", 1, js_contour_find, FIND_LAST_ITEM),
+    JS_CFUNC_MAGIC_DEF("findLastIndex", 1, js_contour_find, FIND_LAST_INDEX),
     JS_CFUNC_DEF("concat", 1, js_contour_concat),
     JS_CFUNC_DEF("getMat", 0, js_contour_getmat),
     JS_CFUNC_DEF("adjacent", 1, js_contour_adjacent),
@@ -1357,6 +1615,7 @@ const JSCFunctionListEntry js_contour_static_funcs[] = {
     JS_CFUNC_DEF("fromRect", 1, js_contour_rect),
     JS_CFUNC_DEF("fromString", 1, js_contour_fromstr),
     JS_CFUNC_DEF("from", 1, js_contour_from),
+    JS_CFUNC_DEF("match", 2, js_contour_match),
     JS_PROP_INT32_DEF("FORMAT_XY", 0x00, 0),
     JS_PROP_INT32_DEF("FORMAT_01", 0x02, 0),
     JS_PROP_INT32_DEF("FORMAT_SPACE", 0x10, 0),

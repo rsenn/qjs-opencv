@@ -104,7 +104,7 @@ run(const Mat& mat, JSContoursData<double>& contours, bool simplify = false) {
 
       if(!(n > 0 && pixel_check(point_sum(pt, pdiff), mat, mapping, index, pred, next)))
         if(!(n > 1 && pixel_check(point_sum(pt, ppdiff), mat, mapping, index, pred, next)))
-           if(/*n != 0 ||*/ !pixel_neighbour(pt, mat, mapping, index, pred, next))
+          if(/*n != 0 ||*/ !pixel_neighbour(pt, mat, mapping, index, pred, next))
             break;
 
       diff = point_difference(pt, next);

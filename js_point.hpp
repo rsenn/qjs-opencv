@@ -168,6 +168,14 @@ point_sum(const cv::Point_<T>& a, const cv::Point_<T>& b) {
 }
 
 template<typename T>
+static inline cv::Point_<T>
+point_normalize(const cv::Point_<T>& a) {
+  T q = std::max(std::abs(a.x), std::abs(a.y));
+
+  return cv::Point_<T>(a.x / q, a.y / q);
+}
+
+template<typename T>
 static inline bool
 point_equal(const cv::Point_<T>& a, const cv::Point_<T>& b) {
   return a.x == b.x && a.y == b.y;
