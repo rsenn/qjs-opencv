@@ -437,11 +437,13 @@ js_mat_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueCon
   JS_SetOpaque(obj, m);
 
   if(!js_mat_init(ctx, obj, argc, argv))
-    goto fail;
+    goto fail2;
 
   return obj;
+
 fail:
   js_deallocate(ctx, m);
+fail2:
   JS_FreeValue(ctx, obj);
   return JS_EXCEPTION;
 }

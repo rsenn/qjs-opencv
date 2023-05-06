@@ -1,6 +1,6 @@
 import { Mat, VideoCapture, Size, Rect } from 'opencv';
 import * as cv from 'opencv';
-import { WeakMapper, Modulo, WeakAssign, BindMethods, BindMethodsTo, FindKey } from './cvUtils.js';
+import { WeakMapper, Modulo, WeakAssign, BindMethods, BindMethodsTo, FindKey, Define } from './cvUtils.js';
 //import { DirIterator, RecursiveDirIterator, ReadDirRecursive, Filter, FilterImages, SortFiles, StatFiles } from '../../io-helpers.js';
 
 const Crop = (() => {
@@ -369,11 +369,25 @@ export class VideoSource {
     return +(this.get('frame_count') * msec_per_frame).toFixed(3);
   }
 
-  position(type = 'frames') {
-    if(type.startsWith('frame')) return [this.get('pos_frames'), this.get('frame_count')];
-    if(type.startsWith('percent') || type == '%') return (this.get('pos_frames') * 100) / this.get('frame_count');
+  get tellMsecs() {
+    const msec_per_frame = 1000 / this.fps;
+    return +(this.get('pos_frames') * msec_per_frame).toFixed(3);
+  }
 
-    return [(+this.get('pos_msec')).toFixed(3), this.durationMsecs];
+  position(type = 'Frames') {
+    if(type.indexOf('rame') != -1)
+      return Define([this.get('pos_frames'), this.get('frame_count')], {
+        toString() {
+          return '#' + this[0] + '/' + this[1];
+        }
+      });
+    if(type.indexOf('ercent') != -1 || type == '%') return (this.get('pos_frames') * 100) / this.get('frame_count');
+
+    return Define([ this.tellMsecs, this.durationMsecs], {
+      toString() {
+        return FormatTime(this[0]) + '/' + FormatTime(this[1]);
+      }
+    });
   }
 
   get size() {
@@ -391,24 +405,28 @@ export class VideoSource {
   get time() {
     let [pos, duration] = this.position('msec');
 
-    let ms, s, m, h;
-
-    ms = Modulo(pos, 1000);
-    s = pos / 1000;
-    m = Math.floor(s / 60);
-    s = Modulo(s, 60);
-    h = Math.floor(m / 60);
-    m = Modulo(m, 60);
-    h = Math.floor(h);
-
-    const pad = (i, n, frac) => {
-      const s = (frac !== undefined ? i.toFixed(frac) : i) + '';
-      const a = s.split('.');
-      return '0'.repeat(Math.max(0, n - a[0].length)) + s;
-    };
-
-    return pad(h, 2) + ':' + pad(m, 2) + ':' + pad(s, 2, 3); //+ '.' + pad(ms, 3);
+    return FormatTime(pos);
   }
+}
+
+function FormatTime(pos) {
+  let ms, s, m, h;
+
+  ms = Modulo(pos, 1000);
+  s = pos / 1000;
+  m = Math.floor(s / 60);
+  s = Modulo(s, 60);
+  h = Math.floor(m / 60);
+  m = Modulo(m, 60);
+  h = Math.floor(h);
+
+  const pad = (i, n, frac) => {
+    const s = (frac !== undefined ? i.toFixed(frac) : i) + '';
+    const a = s.split('.');
+    return '0'.repeat(Math.max(0, n - a[0].length)) + s;
+  };
+
+  return pad(h, 2) + ':' + pad(m, 2) + ':' + pad(s, 2, 3); //+ '.' + pad(ms, 3);
 }
 
 export default VideoSource;
