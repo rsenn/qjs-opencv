@@ -1,4 +1,4 @@
-# include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Functions.cmake)
+# include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/MoreFunctions.cmake)
 
 macro(find_opencv)
   function(OPENCV_CHANGE_DIR VAR ACCESS VALUE LIST_FILE STACK)
