@@ -472,6 +472,14 @@ js_global_prototype_func(JSContext* ctx, const char* class_name, const char* fun
   return func;
 }
 
+static inline BOOL
+js_global_instanceof(JSContext* ctx, JSValueConst obj, const char* prop) {
+  JSValue ctor = js_global_get(ctx, prop);
+  BOOL ret = JS_IsInstanceOf(ctx, obj, ctor);
+  JS_FreeValue(ctx, ctor);
+  return ret;
+}
+
 static inline const char*
 js_object_tostring2(JSContext* ctx, JSValueConst method, JSValueConst value) {
   JSValue str = JS_Call(ctx, method, value, 0, 0);
@@ -668,14 +676,8 @@ dump(const ArrayBufferProps& abp) {
 }
 
 static inline BOOL
-js_is_arraybuffer(JSContext* ctx, JSValueConst obj) {
-  JSValue arraybuffer_ctor;
-  BOOL ret = FALSE;
-  arraybuffer_ctor = js_global_get(ctx, "ArrayBuffer");
-  if(JS_IsInstanceOf(ctx, obj, arraybuffer_ctor))
-    ret = TRUE;
-  JS_FreeValue(ctx, arraybuffer_ctor);
-  return ret;
+js_is_arraybuffer(JSContext* ctx, JSValueConst value) {
+  return JS_IsObject(value) && (js_global_instanceof(ctx, value, "ArrayBuffer") || js_object_is(ctx, value, "[object ArrayBuffer]"));
 }
 
 static inline ArrayBufferProps
@@ -727,56 +729,26 @@ js_class_name(JSContext* ctx, JSValueConst value) {
 
 static inline JSValue
 js_typedarray_prototype(JSContext* ctx) {
-  JSValue global_obj, u32_ctor, u32_proto, typedarray_proto;
-  global_obj = JS_GetGlobalObject(ctx);
-  u32_ctor = JS_GetPropertyStr(ctx, global_obj, "Uint32Array");
-  u32_proto = JS_GetPropertyStr(ctx, u32_ctor, "prototype");
-  typedarray_proto = JS_GetPrototype(ctx, u32_proto);
-  JS_FreeValue(ctx, global_obj);
-  JS_FreeValue(ctx, u32_ctor);
-  JS_FreeValue(ctx, u32_proto);
-  return typedarray_proto;
+  JSValue u8arr_proto = js_global_prototype(ctx, "Uint8Array");
+  JSValue typedarr_proto = JS_GetPrototype(ctx, u8arr_proto);
+  JS_FreeValue(ctx, u8arr_proto);
+  return typedarr_proto;
 }
 
 static inline JSValue
 js_typedarray_constructor(JSContext* ctx) {
-
-  JSValue typedarray_proto, typedarray_ctor;
-  typedarray_proto = js_typedarray_prototype(ctx);
-
-  typedarray_ctor = JS_GetPropertyStr(ctx, typedarray_proto, "constructor");
-  JS_FreeValue(ctx, typedarray_proto);
-  return typedarray_ctor;
+  JSValue typedarr_proto = js_typedarray_prototype(ctx);
+  JSValue typedarr_ctor = JS_GetPropertyStr(ctx, typedarr_proto, "constructor");
+  JS_FreeValue(ctx, typedarr_proto);
+  return typedarr_ctor;
 }
 
-static inline bool
-js_is_typedarray(JSContext* ctx, JSValueConst obj) {
-  JSValue typedarray_ctor;
-  BOOL ret;
-  typedarray_ctor = js_typedarray_constructor(ctx);
-  ret = JS_IsInstanceOf(ctx, obj, typedarray_ctor);
-  JS_FreeValue(ctx, typedarray_ctor);
+static inline BOOL
+js_is_typedarray(JSContext* ctx, JSValueConst value) {
+  JSValue ctor = js_typedarray_constructor(ctx);
+  BOOL ret = JS_IsInstanceOf(ctx, value, js_typedarray_constructor(ctx));
+  JS_FreeValue(ctx, ctor);
   return ret;
-
-  /*  std::string class_name = js_class_name(ctx, obj);
-    char* start = &class_name[0];
-    char* end = &class_name[class_name.size()];
-    bool is_signed = true;
-
-    if(start < end && *start == 'U') {
-      start++;
-      is_signed = false;
-      *start = toupper(*start);
-    }
-
-    char* num_start = std::find_if(start, end, &::isdigit);
-    char* num_end = std::find_if_not(num_start, end, &::isdigit);
-    char* next;
-    const auto bits = strtoul(num_start, &next, 10);
-
-    assert(next == num_end);
-    return (!strncmp(start, "Int", 3) || !strncmp(start, "Float", 5)) && !strncmp(num_end, "Array",
-    5) && (bits == 64 || bits == 32 || bits == 16 || bits == 8);*/
 }
 
 static inline BOOL
