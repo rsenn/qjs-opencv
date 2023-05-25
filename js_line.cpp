@@ -279,7 +279,8 @@ js_line_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
   JS_DefinePropertyValue(ctx, obj, props[2], JS_NewFloat64(ctx, ln->x2), JS_PROP_ENUMERABLE);
   JS_DefinePropertyValue(ctx, obj, props[3], JS_NewFloat64(ctx, ln->y2), JS_PROP_ENUMERABLE);
 
-  for(auto const& prop : props) JS_FreeAtom(ctx, prop);
+  for(auto const& prop : props)
+    JS_FreeAtom(ctx, prop);
 
   return obj;
 }
@@ -545,7 +546,8 @@ js_line_from(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
     const char* str = JS_ToCString(ctx, argv[0]);
     char* endptr = nullptr;
     for(size_t i = 0; i < 4; i++) {
-      while(!isdigit(*str) && *str != '-' && *str != '+' && !(*str == '.' && isdigit(str[1]))) str++;
+      while(!isdigit(*str) && *str != '-' && *str != '+' && !(*str == '.' && isdigit(str[1])))
+        str++;
       if(*str == '\0')
         break;
       line.array[i] = strtod(str, &endptr);

@@ -890,7 +890,8 @@ js_contour_splice(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
   auto last = v->begin() + end;
 
   if(first != last) {
-    for(auto it = first; it != last; ++it) removed.push_back(*it);
+    for(auto it = first; it != last; ++it)
+      removed.push_back(*it);
 
     v->erase(first, last);
   }

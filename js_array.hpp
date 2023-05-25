@@ -45,7 +45,8 @@ js_array_truncate(JSContext* ctx, const JSValueConst& arr, int64_t len) {
   if(js_is_array(ctx, arr)) {
     int64_t top = js_array_length(ctx, arr);
     newlen = std::min(top, len < 0 ? top + len : len);
-    while(--top >= newlen) JS_DeletePropertyInt64(ctx, arr, top, 0);
+    while(--top >= newlen)
+      JS_DeletePropertyInt64(ctx, arr, top, 0);
     JS_SetPropertyStr(ctx, arr, "length", JS_NewInt64(ctx, newlen));
   }
   return newlen;
@@ -189,7 +190,8 @@ js_array<T>::to_array(JSContext* ctx, JSValueConst arr, std::array<T, N>& out) {
   to_vector(ctx, arr, tmp);
   if(tmp.size() < N)
     return -1;
-  for(size_t i = 0; i < N; i++) out[i] = tmp[i];
+  for(size_t i = 0; i < N; i++)
+    out[i] = tmp[i];
   return N;
 }
 
@@ -201,7 +203,8 @@ js_array<T>::to_scalar(JSContext* ctx, JSValueConst arr, cv::Scalar_<T>& out) {
   to_vector(ctx, arr, tmp);
   if((n = tmp.size()) < 4)
     tmp.resize(4);
-  for(size_t i = 0; i < 4; i++) out[i] = tmp[i];
+  for(size_t i = 0; i < 4; i++)
+    out[i] = tmp[i];
   return n;
 }
 
@@ -605,7 +608,8 @@ public:
     to_vector(ctx, arr, tmp);
     n = tmp.size();
 
-    for(size_t i = 0; i < 4; i++) out[i] = tmp[i];
+    for(size_t i = 0; i < 4; i++)
+      out[i] = tmp[i];
     return n;
   }
 
@@ -615,7 +619,8 @@ public:
     std::vector<double> tmp;
     to_vector(ctx, arr, tmp);
 
-    for(size_t i = 0; i < N; i++) out[i] = tmp[i];
+    for(size_t i = 0; i < N; i++)
+      out[i] = tmp[i];
     return N;
   }
 };
@@ -672,7 +677,8 @@ public:
     to_vector(ctx, arr, tmp);
     n = tmp.size();
 
-    for(size_t i = 0; i < 4; i++) out[i] = tmp[i];
+    for(size_t i = 0; i < 4; i++)
+      out[i] = tmp[i];
     return n;
   }
 
@@ -682,7 +688,8 @@ public:
     std::vector<uint8_t> tmp;
     to_vector(ctx, arr, tmp);
 
-    for(size_t i = 0; i < N; i++) out[i] = tmp[i];
+    for(size_t i = 0; i < N; i++)
+      out[i] = tmp[i];
     return N;
   }
 };
@@ -735,7 +742,8 @@ public:
       contour_type contour;
       JSValue item = JS_GetPropertyUint32(ctx, arr, (uint32_t)i);
       if((ptr = js_contour_data(item))) {
-        for(const auto& point : *ptr) contour.emplace_back(point.x, point.y);
+        for(const auto& point : *ptr)
+          contour.emplace_back(point.x, point.y);
       } else {
         // js_array<JSPointData<T>>::to_vector(ctx, item, contour);
         js_array_to(ctx, item, contour);
@@ -872,7 +880,9 @@ template<class T, int N>
 static inline JSValue
 js_array_from(JSContext* ctx, const cv::Vec<T, N>& v) {
   JSValue ret = JS_NewArray(ctx);
-  for(size_t i = 0; i < N; i++) { JS_SetPropertyUint32(ctx, ret, i, js_value_from(ctx, v[i])); }
+  for(size_t i = 0; i < N; i++) {
+    JS_SetPropertyUint32(ctx, ret, i, js_value_from(ctx, v[i]));
+  }
   return ret;
 }
 
@@ -884,7 +894,9 @@ js_array_from(JSContext* ctx, const cv::Matx<T, rows, cols>& mat) {
     JSValue row = JS_NewArray(ctx);
     JS_SetPropertyUint32(ctx, ret, y, row);
 
-    for(size_t x = 0; x < cols; x++) { JS_SetPropertyUint32(ctx, row, x, js_value_from(ctx, mat(y, x))); }
+    for(size_t x = 0; x < cols; x++) {
+      JS_SetPropertyUint32(ctx, row, x, js_value_from(ctx, mat(y, x)));
+    }
   }
   return ret;
 }

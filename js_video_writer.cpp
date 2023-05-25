@@ -187,7 +187,8 @@ js_video_writer_fourcc(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
     const char* s = JS_ToCStringLen(ctx, &len, argv[0]);
 
     if(len >= 4) {
-      for(i = 0; i < 4; i++) chars[i] = s[i];
+      for(i = 0; i < 4; i++)
+        chars[i] = s[i];
     }
     JS_FreeCString(ctx, s);
   }

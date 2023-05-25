@@ -138,7 +138,8 @@ js_mat_track(JSContext* ctx, JSMatData* s) {
 
   mat_list.push_back(s);
 
-  for(const auto& ptr : deallocate) js_deallocate(ctx, ptr);
+  for(const auto& ptr : deallocate)
+    js_deallocate(ctx, ptr);
   return s;
 }
 
@@ -311,7 +312,7 @@ js_mat_params2(JSContext* ctx, int& index, int argc, JSValueConst argv[]) {
 }
 
 static BOOL
-js_mat_init(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+js_mat_initialize(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSMatData* m = js_mat_data(this_val);
 
   if(argc == 0)
@@ -375,7 +376,7 @@ js_mat_init(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
 
       if(++index < argc) {
 
-        if(js_is_arraybuffer(ctx, argv[index])) {
+        if(js_is_arraybuffer(ctx, argv[index]) || js_object_is(ctx, argv[index], "[object SharedArrayBuffer]")) {
           size_t len;
 
           if(!(buf = JS_GetArrayBuffer(ctx, &len, argv[index]))) {
@@ -436,7 +437,7 @@ js_mat_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueCon
 
   JS_SetOpaque(obj, m);
 
-  if(!js_mat_init(ctx, obj, argc, argv))
+  if(!js_mat_initialize(ctx, obj, argc, argv))
     goto fail2;
 
   return obj;

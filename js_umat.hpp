@@ -100,7 +100,8 @@ js_input_array(JSContext* ctx, JSValueConst value) {
     js_array_to(ctx, value, arr);
 
     if(arr.size() >= 2 && arr.size() <= 4) {
-      for(size_t i = 0; i < arr.size(); i++) scalar[i] = arr[i];
+      for(size_t i = 0; i < arr.size(); i++)
+        scalar[i] = arr[i];
       return JSInputArray(scalar);
     } else {
       return JSInputArray(arr);

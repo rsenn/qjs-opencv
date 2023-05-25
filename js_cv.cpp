@@ -177,11 +177,15 @@ js_cv_split(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
 
   length = js_array_length(ctx, argv[1]);
 
-  for(int32_t i = 0; i < src->channels(); i++) { dst.push_back(cv::Mat(src->size(), src->type() & 0x7)); }
+  for(int32_t i = 0; i < src->channels(); i++) {
+    dst.push_back(cv::Mat(src->size(), src->type() & 0x7));
+  }
 
   if(dst.size() >= src->channels()) {
     cv::split(*src, dst.data());
-    for(int32_t i = 0; i < src->channels(); i++) { JS_SetPropertyUint32(ctx, argv[1], i, js_mat_wrap(ctx, dst[i])); }
+    for(int32_t i = 0; i < src->channels(); i++) {
+      JS_SetPropertyUint32(ctx, argv[1], i, js_mat_wrap(ctx, dst[i]));
+    }
     return JS_UNDEFINED;
   }
 

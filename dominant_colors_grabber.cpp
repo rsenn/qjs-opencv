@@ -34,7 +34,9 @@ dominant_colors_grabber::GetDomColors(cv::Mat img, color_space cs, dist_type dt,
     cv::kmeans(img_samples, colors_count, labels, term_crit, 5, cv::KMEANS_PP_CENTERS, colors_mat);
     colors_mat = colors_mat.reshape(3);
     res.resize(colors_mat.rows);
-    for(unsigned i = 0; i < colors_mat.rows; i++) { res[i] = colors_mat.at<cv::Vec3f>(i, 0); }
+    for(unsigned i = 0; i < colors_mat.rows; i++) {
+      res[i] = colors_mat.at<cv::Vec3f>(i, 0);
+    }
   } else {
     cv::Mat hist = GetHist(img, cs);
     cv::Scalar full_w = sum(hist);
@@ -297,7 +299,8 @@ CycleRange(val_type val, val_type val1, val_type val2) {
 
 void
 CyclePoint3d(cv::Vec3i& p, cv::MatSize size) {
-  for(unsigned i = 0; i < 3; i++) p[i] = CycleRange(p[i], 0, size[i]);
+  for(unsigned i = 0; i < 3; i++)
+    p[i] = CycleRange(p[i], 0, size[i]);
 }
 
 cv::Mat

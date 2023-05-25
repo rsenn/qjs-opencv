@@ -522,7 +522,9 @@ public:
     copy_key(key, result);
 
     // copy each nth point
-    while(Forward(key, n, remaining)) { copy_key(key, result); }
+    while(Forward(key, n, remaining)) {
+      copy_key(key, result);
+    }
 
     return result;
   }

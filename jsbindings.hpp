@@ -227,11 +227,10 @@ static inline JSAtom js_symbol_atom(JSContext* ctx, const char* name);
 static inline JSValue js_symbol_ctor(JSContext* ctx);
 static inline JSValue js_symbol_get_static(JSContext* ctx, const char* name);
 }
-  
+
 #define countof(x) (sizeof(x) / sizeof((x)[0]))
 
 JSValue js_vector_vec4i_to_array(JSContext*, const std::vector<cv::Vec4i>& vec);
- 
 
 template<class T>
 static inline int
@@ -461,6 +460,44 @@ js_global_prototype(JSContext* ctx, const char* class_name) {
   ctor = js_global_get(ctx, class_name);
   ret = JS_GetPropertyStr(ctx, ctor, "prototype");
   JS_FreeValue(ctx, ctor);
+  return ret;
+}
+
+static inline JSValue
+js_global_prototype_func(JSContext* ctx, const char* class_name, const char* func_name) {
+  JSValue proto, func;
+  proto = js_global_prototype(ctx, class_name);
+  func = JS_GetPropertyStr(ctx, proto, func_name);
+  JS_FreeValue(ctx, proto);
+  return func;
+}
+
+static inline const char*
+js_object_tostring2(JSContext* ctx, JSValueConst method, JSValueConst value) {
+  JSValue str = JS_Call(ctx, method, value, 0, 0);
+  const char* s = JS_ToCString(ctx, str);
+  JS_FreeValue(ctx, str);
+  return s;
+}
+
+static inline const char*
+js_object_tostring(JSContext* ctx, JSValueConst value) {
+  static thread_local JSValue method;
+
+  if(JS_VALUE_GET_TAG(method) == 0)
+    method = js_global_prototype_func(ctx, "Object", "toString");
+
+  return js_object_tostring2(ctx, method, value);
+}
+
+static inline int
+js_object_is(JSContext* ctx, JSValueConst value, const char* cmp) {
+  BOOL ret = FALSE;
+  const char* str;
+  if((str = js_object_tostring(ctx, value))) {
+    ret = strcmp(str, cmp) == 0;
+    JS_FreeCString(ctx, str);
+  }
   return ret;
 }
 

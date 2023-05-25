@@ -184,7 +184,8 @@ js_rotated_rect_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
         ret = JS_NewArray(ctx);
         result = JS_DupValue(ctx, ret);
       }
-      for(size_t i = 0; i < 4; i++) JS_SetPropertyUint32(ctx, result, i, js_point_new(ctx, pts[i]));
+      for(size_t i = 0; i < 4; i++)
+        JS_SetPropertyUint32(ctx, result, i, js_point_new(ctx, pts[i]));
       JS_FreeValue(ctx, result);
       break;
     }

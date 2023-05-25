@@ -506,7 +506,8 @@ js_size_from(JSContext* ctx, JSValueConst size, int argc, JSValueConst argv[]) {
     const char* str = JS_ToCString(ctx, argv[0]);
     char* endptr = nullptr;
     for(size_t i = 0; i < 2; i++) {
-      while(!isdigit(*str) && *str != '-' && *str != '+' && !(*str == '.' && isdigit(str[1]))) str++;
+      while(!isdigit(*str) && *str != '-' && *str != '+' && !(*str == '.' && isdigit(str[1])))
+        str++;
       if(*str == '\0')
         break;
       array[i] = strtod(str, &endptr);

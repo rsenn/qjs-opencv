@@ -986,10 +986,12 @@ js_feature2d_init(JSContext* ctx, JSModuleDef* m) {
   // feature2d_class = JS_NewCFunction2(ctx, js_feature2d_ctor, "Feature2D", 2, JS_CFUNC_constructor, 0);
   // JS_SetConstructor(ctx, feature2d_class, feature2d_proto);
 
-  for(auto& cl : js_feature2d_classes) cl.create(ctx);
+  for(auto& cl : js_feature2d_classes)
+    cl.create(ctx);
 
   if(m) {
-    for(const auto& cl : js_feature2d_classes) cl.set_export(ctx, m);
+    for(const auto& cl : js_feature2d_classes)
+      cl.set_export(ctx, m);
   }
 
   return 0;
@@ -1003,7 +1005,8 @@ js_feature2d_init(JSContext* ctx, JSModuleDef* m) {
 
 extern "C" VISIBLE void
 js_feature2d_export(JSContext* ctx, JSModuleDef* m) {
-  for(const auto& cl : js_feature2d_classes) cl.add_export(ctx, m);
+  for(const auto& cl : js_feature2d_classes)
+    cl.add_export(ctx, m);
 }
 
 extern "C" JSModuleDef*

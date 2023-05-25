@@ -282,7 +282,9 @@ js_rect_to_string(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
       "∣" /*｜⧸⦁⎮∥∣⸾⼁❘❙⟊⍿⎸⏐｜│￨︲︱❘|｜*/,
       "×" /*"𝅃🅧𝚡🅧🅇𝘹𝚡𝘹𝐱ꭗ𝐗𝑿𝅃𝅃xˣₓ⒳Ⓧⓧ✕✘✗⨉⨯⨂✖⨻⦁⋅⊗⊠∗×⨯×"*/};
 
-  for(size_t i = 0; i < argc; i++) { delims[i] = JS_ToCString(ctx, argv[i]); }
+  for(size_t i = 0; i < argc; i++) {
+    delims[i] = JS_ToCString(ctx, argv[i]);
+  }
 
   if((s = static_cast<JSRectData<double>*>(JS_GetOpaque2(ctx, this_val, js_rect_class_id))) != nullptr) {
     rect = *s;
@@ -577,7 +579,8 @@ js_rect_from(JSContext* ctx, JSValueConst rect, int argc, JSValueConst argv[]) {
     const char* str = JS_ToCString(ctx, argv[0]);
     char* endptr = nullptr;
     for(size_t i = 0; i < 4; i++) {
-      while(!isdigit(*str) && *str != '-' && *str != '+' && !(*str == '.' && isdigit(str[1]))) str++;
+      while(!isdigit(*str) && *str != '-' && *str != '+' && !(*str == '.' && isdigit(str[1])))
+        str++;
       if(*str == '\0')
         break;
       array[i] = strtod(str, &endptr);
