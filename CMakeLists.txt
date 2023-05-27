@@ -64,6 +64,10 @@ check_size("size_t" SIZEOF_SIZE_T)
 include(CheckFunctionExists)
 
 check_function_def(strerror_s)
+if(HAVE_STRERROR_S)
+  add_definitions(-D__STDC_LIB_EXT1__)
+endif(HAVE_STRERROR_S)
+
 
 if(NOT POSITION_INDEPENDENT_CODE)
   set(POSITION_INDEPENDENT_CODE ON)

@@ -221,7 +221,7 @@ dump(TypedArrayValue type) {
   std::ostringstream os;
   os << "CV_";
   os << ((unsigned(type) & unsigned(TYPEDARRAY_BITS_FIELD)) * 8);
-  os << (type & TYPEDARRAY_FLOATING_POINT) ? 'F' : (type & TYPEDARRAY_SIGNED) ? 'S' : 'U';
+  os << (unsigned(type) & unsigned(TYPEDARRAY_FLOATING_POINT)) ? 'F' : (unsigned(type) & unsigned(TYPEDARRAY_SIGNED)) ? 'S' : 'U';
   return os.str();
 }
 
