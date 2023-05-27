@@ -15,13 +15,13 @@ extern "C" {
 extern JSValue keypoint_proto, keypoint_class;
 extern JSClassID js_keypoint_class_id;
 
-VISIBLE JSKeyPointData* js_keypoint_data2(JSContext*, JSValueConst val);
-VISIBLE JSKeyPointData* js_keypoint_data(JSValueConst val);
+JSKeyPointData* js_keypoint_data2(JSContext*, JSValueConst val);
+JSKeyPointData* js_keypoint_data(JSValueConst val);
 }
 
-extern "C" VISIBLE int js_keypoint_init(JSContext*, JSModuleDef*);
+extern "C" int js_keypoint_init(JSContext*, JSModuleDef*);
 
-VISIBLE JSValue js_keypoint_new(JSContext* ctx, const JSKeyPointData& keypoint);
+JSValue js_keypoint_new(JSContext* ctx, const JSKeyPointData& keypoint);
 
 extern "C" int js_keypoint_init(JSContext*, JSModuleDef*);
 

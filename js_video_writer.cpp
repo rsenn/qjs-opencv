@@ -14,11 +14,11 @@
 
 typedef cv::VideoWriter JSVideoWriterData;
 
-extern "C" VISIBLE int js_video_writer_init(JSContext*, JSModuleDef*);
+extern "C" int js_video_writer_init(JSContext*, JSModuleDef*);
 
 extern "C" {
 JSValue video_writer_proto = JS_UNDEFINED, video_writer_class = JS_UNDEFINED;
-thread_local VISIBLE JSClassID js_video_writer_class_id = 0;
+thread_local JSClassID js_video_writer_class_id = 0;
 }
 
 static bool
@@ -83,13 +83,11 @@ fail:
   return JS_EXCEPTION;
 }
 
-VISIBLE JSVideoWriterData*
-js_video_writer_data2(JSContext* ctx, JSValueConst val) {
+JSVideoWriterData* js_video_writer_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSVideoWriterData*>(JS_GetOpaque2(ctx, val, js_video_writer_class_id));
 }
 
-VISIBLE JSVideoWriterData*
-js_video_writer_data(JSValueConst val) {
+JSVideoWriterData* js_video_writer_data(JSValueConst val) {
   return static_cast<JSVideoWriterData*>(JS_GetOpaque(val, js_video_writer_class_id));
 }
 
@@ -195,8 +193,7 @@ js_video_writer_fourcc(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
   return JS_NewInt32(ctx, cv::VideoWriter::fourcc(chars[0], chars[1], chars[2], chars[3]));
 }
 
-VISIBLE JSValue
-js_video_writer_wrap(JSContext* ctx, cv::VideoWriter* cap) {
+JSValue js_video_writer_wrap(JSContext* ctx, cv::VideoWriter* cap) {
   JSValue ret;
 
   ret = JS_NewObjectProtoClass(ctx, video_writer_proto, js_video_writer_class_id);
@@ -253,8 +250,7 @@ js_video_writer_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
-extern "C" VISIBLE void
-js_video_writer_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void js_video_writer_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "VideoWriter");
 }
 

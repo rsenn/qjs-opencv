@@ -28,7 +28,7 @@
 #include <string>
 #include <vector>
 
-extern "C" VISIBLE int js_draw_init(JSContext*, JSModuleDef*);
+extern "C" int js_draw_init(JSContext*, JSModuleDef*);
 
 #ifdef HAVE_OPENCV_FREETYPE
 #include <opencv2/freetype.hpp>
@@ -706,7 +706,7 @@ js_clip_line(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
 }
 
 JSValue draw_proto = JS_UNDEFINED, draw_class = JS_UNDEFINED;
-thread_local VISIBLE JSClassID js_draw_class_id = 0;
+thread_local JSClassID js_draw_class_id = 0;
 
 JSClassDef js_draw_class = {
     .class_name = "Draw",
@@ -799,8 +799,7 @@ js_draw_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
-extern "C" VISIBLE void
-js_draw_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void js_draw_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "Draw");
   JS_AddModuleExportList(ctx, m, js_draw_global_funcs, countof(js_draw_global_funcs));
 }

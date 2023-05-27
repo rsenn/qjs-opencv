@@ -6,12 +6,12 @@
 
 extern "C" {
 extern JSValue rotated_rect_proto, rotated_rect_class;
-extern thread_local VISIBLE JSClassID js_rotated_rect_class_id;
+extern thread_local JSClassID js_rotated_rect_class_id;
 }
 
-extern "C" VISIBLE int js_rotated_rect_init(JSContext*, JSModuleDef*);
+extern "C" int js_rotated_rect_init(JSContext*, JSModuleDef*);
 
-VISIBLE JSValue js_rotated_rect_new(JSContext* ctx, JSValueConst proto, const JSPointData<float>& center, const JSSizeData<float>& size, float angle);
+JSValue js_rotated_rect_new(JSContext* ctx, JSValueConst proto, const JSPointData<float>& center, const JSSizeData<float>& size, float angle);
 
 static inline JSValue
 js_rotated_rect_new(JSContext* ctx, const JSPointData<float>& center, const JSSizeData<float>& size, float angle) {
@@ -28,7 +28,7 @@ js_rotated_rect_new(JSContext* ctx, const JSRotatedRectData& rrect) {
   return js_rotated_rect_new(ctx, rotated_rect_proto, rrect);
 }
 
-VISIBLE JSRotatedRectData* js_rotated_rect_data2(JSContext*, JSValueConst val);
-VISIBLE JSRotatedRectData* js_rotated_rect_data(JSValueConst val);
+JSRotatedRectData* js_rotated_rect_data2(JSContext*, JSValueConst val);
+JSRotatedRectData* js_rotated_rect_data(JSValueConst val);
 
 #endif /* defined(JS_ROTATED_RECT_HPP) */

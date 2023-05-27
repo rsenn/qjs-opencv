@@ -165,7 +165,8 @@ struct TypedArrayType {
   explicit TypedArrayType(int32_t cvId)
       : byte_size(1 << (mattype_depth(cvId) >> 1)), is_signed(mattype_signed(cvId)), is_floating_point(mattype_floating(cvId)) {}
   explicit TypedArrayType(enum TypedArrayValue i)
-      : byte_size(int(i) & int(TYPEDARRAY_BITS_FIELD)), is_signed(!!(int(i) & int(TYPEDARRAY_SIGNED))), is_floating_point(!!(int(i) & int(TYPEDARRAY_FLOATING_POINT))) {}
+      : byte_size(int(i) & int(TYPEDARRAY_BITS_FIELD)), is_signed(!!(int(i) & int(TYPEDARRAY_SIGNED))),
+        is_floating_point(!!(int(i) & int(TYPEDARRAY_FLOATING_POINT))) {}
 
   template<class T> TypedArrayType(JSContext* ctx, const T& ctor_name) { *this = js_typedarray_type(ctx, ctor_name); }
 

@@ -33,7 +33,7 @@
 
 extern "C" {
 JSValue contour_proto = JS_UNDEFINED, contour_class = JS_UNDEFINED;
-thread_local VISIBLE JSClassID js_contour_class_id = 0;
+thread_local JSClassID js_contour_class_id = 0;
 }
 
 static JSValue float64_array;
@@ -51,14 +51,12 @@ js_contour_create(JSContext* ctx, JSValueConst proto) {
 }
 
 extern "C" {
-VISIBLE JSContourData<double>*
-js_contour_data2(JSContext* ctx, JSValueConst val) {
+JSContourData<double>* js_contour_data2(JSContext* ctx, JSValueConst val) {
   assert(js_contour_class_id);
   return static_cast<JSContourData<double>*>(JS_GetOpaque2(ctx, val, js_contour_class_id));
 }
 
-VISIBLE JSContourData<double>*
-js_contour_data(JSValueConst val) {
+JSContourData<double>* js_contour_data(JSValueConst val) {
   assert(js_contour_class_id);
   return static_cast<JSContourData<double>*>(JS_GetOpaque(val, js_contour_class_id));
 }
@@ -1681,8 +1679,7 @@ js_contour_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
-extern "C" VISIBLE void
-js_contour_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void js_contour_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "Contour");
 }
 

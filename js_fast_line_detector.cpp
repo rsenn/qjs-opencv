@@ -15,11 +15,11 @@
 
 typedef cv::Ptr<cv::ximgproc::FastLineDetector> JSFastLineDetector;
 
-extern "C" VISIBLE int js_fast_line_detector_init(JSContext*, JSModuleDef*);
+extern "C" int js_fast_line_detector_init(JSContext*, JSModuleDef*);
 
 extern "C" {
 JSValue fast_line_detector_proto = JS_UNDEFINED, fast_line_detector_class = JS_UNDEFINED;
-thread_local VISIBLE JSClassID js_fast_line_detector_class_id = 0;
+thread_local JSClassID js_fast_line_detector_class_id = 0;
 }
 
 JSValue
@@ -172,8 +172,7 @@ js_fast_line_detector_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
-extern "C" VISIBLE void
-js_fast_line_detector_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void js_fast_line_detector_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "FastLineDetector");
 }
 

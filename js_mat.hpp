@@ -5,15 +5,15 @@
 #include <quickjs.h>
 #include <cstdint>
 
-extern "C" VISIBLE int js_mat_init(JSContext*, JSModuleDef*);
+extern "C" int js_mat_init(JSContext*, JSModuleDef*);
 
 extern "C" {
 extern JSValue mat_proto, mat_class;
-extern thread_local VISIBLE JSClassID js_mat_class_id;
+extern thread_local JSClassID js_mat_class_id;
 
-VISIBLE JSValue js_mat_new(JSContext*, uint32_t, uint32_t, int);
+JSValue js_mat_new(JSContext*, uint32_t, uint32_t, int);
 JSModuleDef* js_init_module_mat(JSContext*, const char*);
-VISIBLE JSValue js_mat_wrap(JSContext*, const cv::Mat& mat);
+JSValue js_mat_wrap(JSContext*, const cv::Mat& mat);
 void js_mat_constructor(JSContext* ctx, JSValue parent, const char* name);
 int js_mat_init(JSContext*, JSModuleDef*);
 }

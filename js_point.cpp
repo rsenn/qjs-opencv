@@ -25,7 +25,7 @@ std::vector<JSPointData<double>*> points;
 extern "C" {
 
 JSValue point_proto = JS_UNDEFINED;
-thread_local VISIBLE JSClassID js_point_class_id = 0;
+thread_local JSClassID js_point_class_id = 0;
 }
 
 template<class T>
@@ -75,8 +75,7 @@ js_point_argument(JSContext* ctx, int argc, JSValueConst argv[], int& argind, JS
   return FALSE;
 }
 
-VISIBLE JSValue
-js_point_new(JSContext* ctx, JSValueConst proto, double x, double y) {
+JSValue js_point_new(JSContext* ctx, JSValueConst proto, double x, double y) {
   JSValue ret;
   JSPointData<double>* s;
 
@@ -100,21 +99,17 @@ js_point_new(JSContext* ctx, JSValueConst proto, double x, double y) {
   return ret;
 }
 
-VISIBLE JSValue
-js_point_new(JSContext* ctx, JSValueConst proto, JSPointData<double> point) {
+JSValue js_point_new(JSContext* ctx, JSValueConst proto, JSPointData<double> point) {
   return js_point_new(ctx, proto, point.x, point.y);
 }
 
-VISIBLE JSPointData<double>*
-js_point_data2(JSContext* ctx, JSValueConst val) {
+JSPointData<double>* js_point_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSPointData<double>*>(JS_GetOpaque2(ctx, val, js_point_class_id));
 }
-VISIBLE JSPointData<double>*
-js_point_data(JSValueConst val) {
+JSPointData<double>* js_point_data(JSValueConst val) {
   return static_cast<JSPointData<double>*>(JS_GetOpaque(val, js_point_class_id));
 }
-VISIBLE JSValue
-js_point_new(JSContext* ctx, const JSPointData<double>& point) {
+JSValue js_point_new(JSContext* ctx, const JSPointData<double>& point) {
   return js_point_new(ctx, point_proto, point.x, point.y);
 }
 
@@ -629,8 +624,7 @@ js_point_finalizer(JSRuntime* rt, JSValue val) {
 }
 }
 
-VISIBLE JSValue
-js_point_new(JSContext* ctx, double x, double y) {
+JSValue js_point_new(JSContext* ctx, double x, double y) {
   return js_point_new(ctx, point_proto, x, y);
 }
 
@@ -722,8 +716,7 @@ js_point_constructor(JSContext* ctx, JSValue parent, const char* name) {
   JS_SetPropertyStr(ctx, parent, name ? name : "Point", point_class);
 }
 
-extern "C" VISIBLE void
-js_point_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void js_point_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "Point");
 }
 

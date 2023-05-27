@@ -28,6 +28,7 @@
 #include <opencv2/core/version.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
+#include <opencv2/ximgproc.hpp>
 #include <opencv2/videoio.hpp>
 #include <string>
 #include <vector>
@@ -41,7 +42,7 @@ enum { DISPLAY_OVERLAY };
 
 extern "C" {
 JSValue cv_proto = JS_UNDEFINED, cv_class = JS_UNDEFINED;
-thread_local VISIBLE JSClassID js_cv_class_id = 0;
+thread_local JSClassID js_cv_class_id = 0;
 }
 
 static JSValue
@@ -1745,7 +1746,6 @@ js_function_list_t js_cv_constants{
     JS_CONSTANT(ALIGN_BOTTOM),
     JS_CONSTANT(ALIGN_VERTICAL),
 
-    // JS_CV_CONSTANT(COLORMAP_DEEPGREEN),
 };
 
 extern "C" int
@@ -1783,8 +1783,7 @@ js_cv_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
-extern "C" VISIBLE void
-js_cv_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void js_cv_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExportList(ctx, m, js_cv_static_funcs.data(), js_cv_static_funcs.size());
   JS_AddModuleExportList(ctx, m, js_cv_constants.data(), js_cv_constants.size());
   JS_AddModuleExport(ctx, m, "default");

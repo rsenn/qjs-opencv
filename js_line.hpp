@@ -8,15 +8,15 @@
 extern "C" {
 
 extern JSValue line_proto, line_class;
-extern thread_local VISIBLE JSClassID js_line_class_id;
+extern thread_local JSClassID js_line_class_id;
 
-VISIBLE JSValue js_line_new(JSContext* ctx, double x1, double y1, double x2, double y2);
+JSValue js_line_new(JSContext* ctx, double x1, double y1, double x2, double y2);
 JSModuleDef* js_init_module_line(JSContext*, const char*);
 
-VISIBLE JSLineData<double>* js_line_data2(JSContext*, JSValueConst val);
-VISIBLE JSLineData<double>* js_line_data(JSValueConst val);
+JSLineData<double>* js_line_data2(JSContext*, JSValueConst val);
+JSLineData<double>* js_line_data(JSValueConst val);
 
-VISIBLE int js_line_init(JSContext*, JSModuleDef*);
+int js_line_init(JSContext*, JSModuleDef*);
 }
 
 template<class T>
@@ -159,10 +159,10 @@ js_line_set(JSContext* ctx, JSValue out, T x1, T y1, T x2, T y2) {
 
 extern "C" int js_line_init(JSContext*, JSModuleDef*);
 
-VISIBLE JSValue js_line_wrap(JSContext* ctx, const JSLineData<double>& line);
-VISIBLE JSValue js_line_wrap(JSContext* ctx, const JSLineData<int>& line);
+JSValue js_line_wrap(JSContext* ctx, const JSLineData<double>& line);
+JSValue js_line_wrap(JSContext* ctx, const JSLineData<int>& line);
 
-VISIBLE JSLineData<double>* js_line_data(JSValueConst val);
-VISIBLE JSLineData<double>* js_line_data2(JSContext*, JSValueConst val);
+JSLineData<double>* js_line_data(JSValueConst val);
+JSLineData<double>* js_line_data2(JSContext*, JSValueConst val);
 
 #endif /* defined(JS_LINE_HPP) */

@@ -17,7 +17,7 @@ typedef cv::LineIterator JSLineIteratorData;
 JSValue line_iterator_proto = JS_UNDEFINED, line_iterator_class = JS_UNDEFINED;
 JSClassID js_line_iterator_class_id;
 
-extern "C" VISIBLE int js_line_iterator_init(JSContext*, JSModuleDef*);
+extern "C" int js_line_iterator_init(JSContext*, JSModuleDef*);
 
 static JSValue
 js_line_iterator_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
@@ -81,18 +81,15 @@ fail:
   return JS_EXCEPTION;
 }
 
-VISIBLE JSLineIteratorData*
-js_line_iterator_data2(JSContext* ctx, JSValueConst val) {
+JSLineIteratorData* js_line_iterator_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSLineIteratorData*>(JS_GetOpaque2(ctx, val, js_line_iterator_class_id));
 }
 
-VISIBLE JSLineIteratorData*
-js_line_iterator_data(JSValueConst val) {
+JSLineIteratorData* js_line_iterator_data(JSValueConst val) {
   return static_cast<JSLineIteratorData*>(JS_GetOpaque(val, js_line_iterator_class_id));
 }
 
-VISIBLE JSValue
-js_line_iterator_wrap(JSContext* ctx, const cv::LineIterator& line_iterator) {
+JSValue js_line_iterator_wrap(JSContext* ctx, const cv::LineIterator& line_iterator) {
   JSValue ret;
   JSLineIteratorData* li;
 
@@ -442,8 +439,7 @@ js_line_iterator_init(JSContext* ctx, JSModuleDef* m) {
 #define JS_INIT_MODULE js_init_module_line_iterator
 #endif
 
-extern "C" VISIBLE void
-js_line_iterator_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void js_line_iterator_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "LineIterator");
 }
 

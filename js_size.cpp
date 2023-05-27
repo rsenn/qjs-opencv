@@ -18,7 +18,7 @@ enum { SIZE_PROP_WIDTH, SIZE_PROP_HEIGHT, SIZE_PROP_ASPECT, SIZE_PROP_EMPTY, SIZ
 
 extern "C" {
 JSValue size_proto = JS_UNDEFINED, size_class = JS_UNDEFINED;
-thread_local VISIBLE JSClassID js_size_class_id = 0;
+thread_local JSClassID js_size_class_id = 0;
 }
 
 template<class T>
@@ -99,13 +99,11 @@ fail:
   return JS_EXCEPTION;
 }
 
-VISIBLE JSSizeData<double>*
-js_size_data(JSValueConst val) {
+JSSizeData<double>* js_size_data(JSValueConst val) {
   return static_cast<JSSizeData<double>*>(JS_GetOpaque(val, js_size_class_id));
 }
 
-VISIBLE JSSizeData<double>*
-js_size_data2(JSContext* ctx, JSValueConst val) {
+JSSizeData<double>* js_size_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSSizeData<double>*>(JS_GetOpaque2(ctx, val, js_size_class_id));
 }
 
@@ -143,8 +141,7 @@ js_size_get(JSContext* ctx, JSValueConst this_val, int magic) {
   return ret;
 }
 
-VISIBLE JSValue
-js_size_new(JSContext* ctx, double w, double h) {
+JSValue js_size_new(JSContext* ctx, double w, double h) {
   JSValue ret;
   JSSizeData<double>* s;
 
@@ -161,8 +158,7 @@ js_size_new(JSContext* ctx, double w, double h) {
   return ret;
 }
 
-VISIBLE JSValue
-js_size_wrap(JSContext* ctx, const JSSizeData<double>& sz) {
+JSValue js_size_wrap(JSContext* ctx, const JSSizeData<double>& sz) {
   return js_size_new(ctx, sz.width, sz.height);
 }
 
@@ -592,8 +588,7 @@ js_size_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
-extern "C" VISIBLE void
-js_size_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void js_size_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "Size");
 }
 

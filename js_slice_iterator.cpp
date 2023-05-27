@@ -10,10 +10,9 @@
 extern "C" {
 
 JSValue slice_iterator_proto = JS_UNDEFINED, slice_iterator_class = JS_UNDEFINED;
-thread_local VISIBLE JSClassID js_slice_iterator_class_id = 0;
+thread_local JSClassID js_slice_iterator_class_id = 0;
 
-VISIBLE JSSliceIteratorData*
-js_slice_iterator_create(JSContext* ctx, JSValueConst buffer, const TypedArrayType& type, int num_elems) {
+JSSliceIteratorData* js_slice_iterator_create(JSContext* ctx, JSValueConst buffer, const TypedArrayType& type, int num_elems) {
   JSSliceIteratorData* it;
 
   if((it = js_allocate<JSSliceIteratorData>(ctx))) {
@@ -29,8 +28,7 @@ js_slice_iterator_create(JSContext* ctx, JSValueConst buffer, const TypedArrayTy
   return it;
 }
 
-VISIBLE JSValue
-js_slice_iterator_new(JSContext* ctx, JSValueConst buffer, const TypedArrayType& type, int num_elems) {
+JSValue js_slice_iterator_new(JSContext* ctx, JSValueConst buffer, const TypedArrayType& type, int num_elems) {
   JSSliceIteratorData* it;
   JSValue iterator;
 
@@ -174,8 +172,7 @@ js_slice_iterator_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
-extern "C" VISIBLE void
-js_slice_iterator_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void js_slice_iterator_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "SliceIterator");
 }
 

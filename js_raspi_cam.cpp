@@ -3,23 +3,18 @@
 #include "js_umat.hpp"
 #include "jsbindings.hpp"
 #include <opencv2/core.hpp>
-#include <lccv.hpp>
 #include <quickjs.h>
-/*#include <cctype>
-#include <stddef.h>
-#include <cstdint>
-#include <algorithm>
-#include <iostream>
-#include <new>
-#include <string>*/
+
+#ifdef USE_LCCV
+#include <lccv.hpp>
 
 typedef lccv::PiCamera JSRaspiCamData;
 
-extern "C" VISIBLE int js_raspi_cam_init(JSContext*, JSModuleDef*);
+extern "C" int js_raspi_cam_init(JSContext*, JSModuleDef*);
 
 extern "C" {
 JSValue raspi_cam_proto = JS_UNDEFINED, raspi_cam_class = JS_UNDEFINED;
-thread_local VISIBLE JSClassID js_raspi_cam_class_id = 0;
+thread_local JSClassID js_raspi_cam_class_id = 0;
 }
 
 static JSValue
@@ -51,8 +46,7 @@ fail:
   return JS_EXCEPTION;
 }
 
-extern "C" VISIBLE JSRaspiCamData*
-js_raspi_cam_data2(JSContext* ctx, JSValueConst val) {
+extern "C" JSRaspiCamData* js_raspi_cam_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSRaspiCamData*>(JS_GetOpaque2(ctx, val, js_raspi_cam_class_id));
 }
 
@@ -133,8 +127,7 @@ js_raspi_cam_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   return ret;
 }
 
-VISIBLE JSValue
-js_raspi_cam_wrap(JSContext* ctx, JSRaspiCamData* cam) {
+JSValue js_raspi_cam_wrap(JSContext* ctx, JSRaspiCamData* cam) {
   JSValue ret;
 
   ret = JS_NewObjectProtoClass(ctx, raspi_cam_proto, js_raspi_cam_class_id);
@@ -189,8 +182,7 @@ js_raspi_cam_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
-extern "C" VISIBLE void
-js_raspi_cam_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void js_raspi_cam_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "RaspiCam");
 }
 
@@ -217,3 +209,4 @@ JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   js_raspi_cam_export(ctx, m);
   return m;
 }
+#endif

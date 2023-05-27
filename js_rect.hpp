@@ -4,22 +4,22 @@
 #include "jsbindings.hpp"
 #include <quickjs.h>
 
-extern "C" VISIBLE int js_rect_init(JSContext*, JSModuleDef*);
+extern "C" int js_rect_init(JSContext*, JSModuleDef*);
 
 extern "C" {
-extern thread_local VISIBLE JSValue rect_proto, rect_class;
-extern thread_local VISIBLE JSClassID js_rect_class_id;
+extern thread_local JSValue rect_proto, rect_class;
+extern thread_local JSClassID js_rect_class_id;
 
-VISIBLE JSRectData<double>* js_rect_data(JSValueConst val);
-VISIBLE JSRectData<double>* js_rect_data2(JSContext*, JSValueConst val);
-VISIBLE JSValue js_rect_wrap(JSContext*, const JSRectData<double>&);
+JSRectData<double>* js_rect_data(JSValueConst val);
+JSRectData<double>* js_rect_data2(JSContext*, JSValueConst val);
+JSValue js_rect_wrap(JSContext*, const JSRectData<double>&);
 int js_rect_init(JSContext*, JSModuleDef*);
 JSModuleDef* js_init_module_rect(JSContext*, const char*);
 
 void js_rect_constructor(JSContext* ctx, JSValue parent, const char* name);
 }
 
-VISIBLE JSValue js_rect_new(JSContext* ctx, double x, double y, double w, double h);
+JSValue js_rect_new(JSContext* ctx, double x, double y, double w, double h);
 
 template<class T>
 static inline JSValue

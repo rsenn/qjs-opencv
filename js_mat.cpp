@@ -69,10 +69,10 @@ enum { MAT_EXPR_AND = 0, MAT_EXPR_OR, MAT_EXPR_XOR, MAT_EXPR_MUL, MAT_EXPR_DIV, 
 enum { MAT_ITERATOR_KEYS, MAT_ITERATOR_VALUES, MAT_ITERATOR_ENTRIES };
 extern "C" {
 JSValue mat_proto = JS_UNDEFINED, mat_class = JS_UNDEFINED, mat_iterator_proto = JS_UNDEFINED, mat_iterator_class = JS_UNDEFINED;
-thread_local VISIBLE JSClassID js_mat_class_id = 0, js_mat_iterator_class_id = 0;
+thread_local JSClassID js_mat_class_id = 0, js_mat_iterator_class_id = 0;
 
 JSValue umat_proto = JS_UNDEFINED, umat_class = JS_UNDEFINED;
-thread_local VISIBLE JSClassID js_umat_class_id = 0;
+thread_local JSClassID js_umat_class_id = 0;
 
 typedef struct JSMatIteratorData {
   JSValue obj, buf;
@@ -143,8 +143,7 @@ js_mat_track(JSContext* ctx, JSMatData* s) {
   return s;
 }
 
-VISIBLE JSValue
-js_mat_new(JSContext* ctx, uint32_t rows, uint32_t cols, int type) {
+JSValue js_mat_new(JSContext* ctx, uint32_t rows, uint32_t cols, int type) {
   JSValue ret;
   JSMatData* s;
   if(JS_IsUndefined(mat_proto))
@@ -165,8 +164,7 @@ js_mat_new(JSContext* ctx, uint32_t rows, uint32_t cols, int type) {
   return ret;
 }
 
-VISIBLE JSValue
-js_mat_wrap(JSContext* ctx, const cv::Mat& mat) {
+JSValue js_mat_wrap(JSContext* ctx, const cv::Mat& mat) {
   JSValue ret;
   JSMatData* s;
   ret = JS_NewObjectProtoClass(ctx, mat_proto, js_mat_class_id);
@@ -819,12 +817,15 @@ js_mat_get_wh(JSContext* ctx, JSMatDimensions* size, JSValueConst obj) {
 
 static JSValue
 js_mat_at(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  JSMatData* m = js_mat_data2(ctx, this_val);
-  if(!m)
+  JSMatData* m;
+
+  if(!(m = js_mat_data2(ctx, this_val)))
     return JS_EXCEPTION;
+
   JSPointData<double> pt;
   JSValue ret;
   uint32_t row = 0, col = 0;
+
   if(js_point_read(ctx, argv[0], &pt)) {
     col = pt.x;
     row = pt.y;
@@ -841,6 +842,7 @@ js_mat_at(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) 
     row = idx / dim.cols;
     col = idx % dim.cols;
   }
+
   return js_mat_get(ctx, this_val, row, col);
 }
 
@@ -1812,8 +1814,7 @@ js_mat_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
-extern "C" VISIBLE void
-js_mat_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void js_mat_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "Mat");
 }
 

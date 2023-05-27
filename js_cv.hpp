@@ -6,6 +6,6 @@
 
 extern "C" JSValue cv_class;
 
-extern "C" VISIBLE int js_cv_init(JSContext*, JSModuleDef*);
+extern "C" int js_cv_init(JSContext*, JSModuleDef*);
 
 #endif /* defined(JS_CV_HPP) */

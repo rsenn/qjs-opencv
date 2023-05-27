@@ -11,11 +11,11 @@
 #include <opencv2/imgproc.hpp>
 #include <vector>
 
-extern "C" VISIBLE int js_subdiv2d_init(JSContext*, JSModuleDef*);
+extern "C" int js_subdiv2d_init(JSContext*, JSModuleDef*);
 
 extern "C" {
 JSValue subdiv2d_proto = JS_UNDEFINED, subdiv2d_class = JS_UNDEFINED;
-thread_local VISIBLE JSClassID js_subdiv2d_class_id = 0;
+thread_local JSClassID js_subdiv2d_class_id = 0;
 }
 
 JSValue
@@ -280,8 +280,7 @@ js_subdiv2d_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
-extern "C" VISIBLE void
-js_subdiv2d_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void js_subdiv2d_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "Subdiv2D");
 }
 

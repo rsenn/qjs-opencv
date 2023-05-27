@@ -18,31 +18,26 @@ enum { PROP_A = 0, PROP_B, PROP_SLOPE, PROP_PIVOT, PROP_TO, PROP_ANGLE, PROP_ASP
 
 extern "C" {
 JSValue line_proto = JS_UNDEFINED, line_class = JS_UNDEFINED;
-thread_local VISIBLE JSClassID js_line_class_id = 0;
+thread_local JSClassID js_line_class_id = 0;
 
-VISIBLE JSLineData<double>*
-js_line_data2(JSContext* ctx, JSValueConst val) {
+JSLineData<double>* js_line_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSLineData<double>*>(JS_GetOpaque2(ctx, val, js_line_class_id));
 }
-VISIBLE JSLineData<double>*
-js_line_data(JSValueConst val) {
+JSLineData<double>* js_line_data(JSValueConst val) {
   return static_cast<JSLineData<double>*>(JS_GetOpaque(val, js_line_class_id));
 }
 }
 
-VISIBLE JSValue
-js_line_wrap(JSContext* ctx, const JSLineData<double>& line) {
+JSValue js_line_wrap(JSContext* ctx, const JSLineData<double>& line) {
   return js_line_new(ctx, line.x1, line.y1, line.x2, line.y2);
 }
 
-VISIBLE JSValue
-js_line_wrap(JSContext* ctx, const JSLineData<int>& line) {
+JSValue js_line_wrap(JSContext* ctx, const JSLineData<int>& line) {
   return js_line_new(ctx, line.x1, line.y1, line.x2, line.y2);
 }
 
 extern "C" {
-VISIBLE JSValue
-js_line_new(JSContext* ctx, double x1, double y1, double x2, double y2) {
+JSValue js_line_new(JSContext* ctx, double x1, double y1, double x2, double y2) {
   JSValue ret;
   JSLineData<double>* ln;
 
@@ -659,8 +654,7 @@ js_line_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
-extern "C" VISIBLE void
-js_line_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void js_line_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "Line");
 }
 

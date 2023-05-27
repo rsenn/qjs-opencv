@@ -22,12 +22,11 @@
 #include <vector>
 
 extern "C" {
-thread_local VISIBLE JSValue rect_proto = JS_UNDEFINED, rect_class = JS_UNDEFINED;
-thread_local VISIBLE JSClassID js_rect_class_id = 0;
+thread_local JSValue rect_proto = JS_UNDEFINED, rect_class = JS_UNDEFINED;
+thread_local JSClassID js_rect_class_id = 0;
 }
 
-extern "C" VISIBLE JSValue
-js_rect_new(JSContext* ctx, JSValueConst proto, double x, double y, double w, double h) {
+extern "C" JSValue js_rect_new(JSContext* ctx, JSValueConst proto, double x, double y, double w, double h) {
   JSValue ret;
   JSRectData<double>* s;
 
@@ -48,13 +47,11 @@ js_rect_new(JSContext* ctx, JSValueConst proto, double x, double y, double w, do
   return ret;
 }
 
-VISIBLE JSValue
-js_rect_new(JSContext* ctx, double x, double y, double w, double h) {
+JSValue js_rect_new(JSContext* ctx, double x, double y, double w, double h) {
   return js_rect_new(ctx, rect_proto, x, y, w, h);
 }
 
-VISIBLE JSValue
-js_rect_wrap(JSContext* ctx, const JSRectData<double>& rect) {
+JSValue js_rect_wrap(JSContext* ctx, const JSRectData<double>& rect) {
   return js_rect_new(ctx, rect.x, rect.y, rect.width, rect.height);
 }
 
@@ -115,13 +112,11 @@ js_rect_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst arg
   return js_rect_new(ctx, proto, x, y, w, h);
 }
 
-VISIBLE JSRectData<double>*
-js_rect_data(JSValueConst val) {
+JSRectData<double>* js_rect_data(JSValueConst val) {
   return static_cast<JSRectData<double>*>(JS_GetOpaque(val, js_rect_class_id));
 }
 
-VISIBLE JSRectData<double>*
-js_rect_data2(JSContext* ctx, JSValueConst val) {
+JSRectData<double>* js_rect_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSRectData<double>*>(JS_GetOpaque2(ctx, val, js_rect_class_id));
 }
 
@@ -645,8 +640,7 @@ const JSCFunctionListEntry js_rect_static_funcs[] = {
     JS_CFUNC_DEF("from", 1, js_rect_from),
 };
 
-extern "C" VISIBLE int
-js_rect_init(JSContext* ctx, JSModuleDef* m) {
+extern "C" int js_rect_init(JSContext* ctx, JSModuleDef* m) {
 
   if(js_rect_class_id == 0) {
     /* create the Rect class */
@@ -671,8 +665,7 @@ js_rect_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
-extern "C" VISIBLE void
-js_rect_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void js_rect_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "Rect");
 }
 

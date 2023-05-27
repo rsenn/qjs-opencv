@@ -14,7 +14,7 @@ typedef cv::KeyPoint JSKeyPointData;
 JSValue keypoint_proto = JS_UNDEFINED, keypoint_class = JS_UNDEFINED;
 JSClassID js_keypoint_class_id;
 
-extern "C" VISIBLE int js_keypoint_init(JSContext*, JSModuleDef*);
+extern "C" int js_keypoint_init(JSContext*, JSModuleDef*);
 
 static JSValue
 js_keypoint_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
@@ -72,18 +72,15 @@ fail:
   return JS_EXCEPTION;
 }
 
-VISIBLE JSKeyPointData*
-js_keypoint_data2(JSContext* ctx, JSValueConst val) {
+JSKeyPointData* js_keypoint_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSKeyPointData*>(JS_GetOpaque2(ctx, val, js_keypoint_class_id));
 }
 
-VISIBLE JSKeyPointData*
-js_keypoint_data(JSValueConst val) {
+JSKeyPointData* js_keypoint_data(JSValueConst val) {
   return static_cast<JSKeyPointData*>(JS_GetOpaque(val, js_keypoint_class_id));
 }
 
-VISIBLE JSValue
-js_keypoint_new(JSContext* ctx, const JSKeyPointData& kp) {
+JSValue js_keypoint_new(JSContext* ctx, const JSKeyPointData& kp) {
   JSValue ret;
   JSKeyPointData* ptr;
 
@@ -100,8 +97,7 @@ js_keypoint_new(JSContext* ctx, const JSKeyPointData& kp) {
   return ret;
 }
 
-VISIBLE JSValue
-js_keypoint_wrap(JSContext* ctx, const JSKeyPointData& kp) {
+JSValue js_keypoint_wrap(JSContext* ctx, const JSKeyPointData& kp) {
   return js_keypoint_new(ctx, kp);
 }
 
@@ -229,8 +225,7 @@ js_keypoint_init(JSContext* ctx, JSModuleDef* m) {
 #define JS_INIT_MODULE js_init_module_keypoint
 #endif
 
-extern "C" VISIBLE void
-js_keypoint_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void js_keypoint_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "KeyPoint");
 }
 

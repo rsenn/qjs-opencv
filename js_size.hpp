@@ -4,21 +4,21 @@
 #include "jsbindings.hpp"
 #include <quickjs.h>
 
-extern "C" VISIBLE int js_size_init(JSContext*, JSModuleDef*);
+extern "C" int js_size_init(JSContext*, JSModuleDef*);
 
 extern "C" {
 extern JSValue size_proto, size_class;
-extern thread_local VISIBLE JSClassID js_size_class_id;
+extern thread_local JSClassID js_size_class_id;
 
-VISIBLE JSValue js_size_wrap(JSContext* ctx, const JSSizeData<double>& size);
-VISIBLE JSSizeData<double>* js_size_data(JSValueConst val);
-VISIBLE JSSizeData<double>* js_size_data2(JSContext*, JSValueConst val);
+JSValue js_size_wrap(JSContext* ctx, const JSSizeData<double>& size);
+JSSizeData<double>* js_size_data(JSValueConst val);
+JSSizeData<double>* js_size_data2(JSContext*, JSValueConst val);
 
 int js_size_init(JSContext*, JSModuleDef* m);
 JSModuleDef* js_init_module_size(JSContext*, const char*);
 void js_size_constructor(JSContext* ctx, JSValue parent, const char* name);
 }
-VISIBLE JSValue js_size_new(JSContext* ctx, double w, double h);
+JSValue js_size_new(JSContext* ctx, double w, double h);
 
 template<class T>
 static inline JSValue

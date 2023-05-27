@@ -5,15 +5,15 @@
 #include <quickjs.h>
 #include <utility>
 
-extern "C" VISIBLE int js_point_iterator_init(JSContext*, JSModuleDef*);
+extern "C" int js_point_iterator_init(JSContext*, JSModuleDef*);
 
 extern "C" {
 enum JSPointIteratorMagic { NEXT_POINT = 0, NEXT_LINE };
 
 extern JSValue point_iterator_proto, point_iterator_class;
-extern thread_local VISIBLE JSClassID js_point_iterator_class_id;
+extern thread_local JSClassID js_point_iterator_class_id;
 
-VISIBLE JSValue js_point_iterator_new(JSContext* ctx, JSPointData<double>* first, JSPointData<double>* last, int magic);
+JSValue js_point_iterator_new(JSContext* ctx, JSPointData<double>* first, JSPointData<double>* last, int magic);
 
 int js_point_iterator_init(JSContext*, JSModuleDef* m);
 

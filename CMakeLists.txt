@@ -176,9 +176,9 @@ option(BUILD_QUICKJS "Build QuickJS" ON)
 option(USE_LIBCAMERA "Use libcamera-opencv" OFF)
 option(USE_LCCV "Use LCCV" ON)
 
-#if(USE_LIBCAMERA OR USE_LCCV)
-#  include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/libcamera.cmake)
-#endif(USE_LIBCAMERA OR USE_LCCV)
+if(USE_LIBCAMERA OR USE_LCCV)
+  include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/libcamera.cmake)
+endif(USE_LIBCAMERA OR USE_LCCV)
 
 file(
   GLOB
@@ -232,14 +232,14 @@ set(CMAKE_CXX11_EXTENSION_COMPILE_OPTION "${CXX_STANDARD_FLAG}" CACHE STRING ""
                                                                       FORCE)
 
 #if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/LCCV")
-#  if(USE_LCCV)
-#    set(BUILD_SHARED_LIBS OFF)
-#    add_subdirectory(LCCV)
-#    include_directories(LCCV/include)
-#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
-#    set(LCCV_LIBRARIES "${CMAKE_CURRENT_BINARY_DIR}/LCCV/liblccv.a" camera
-#                       camera-base event event_pthreads Threads::Threads)
-#  endif(USE_LCCV)
+  if(USE_LCCV)
+    set(BUILD_SHARED_LIBS OFF)
+    add_subdirectory(LCCV)
+    include_directories(LCCV/include)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -fvisibility=hidden")
+    set(LCCV_LIBRARIES "${CMAKE_CURRENT_BINARY_DIR}/LCCV/liblccv.a" camera
+                       camera-base event event_pthreads Threads::Threads)
+  endif(USE_LCCV)
 #endif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/LCCV")
 
 add_library(qjs-opencv STATIC ${OPENCV_SOURCES})
@@ -254,9 +254,9 @@ target_include_directories(qjs-opencv PUBLIC ${PNG_INCLUDE_DIRS}
 target_link_libraries(
   qjs-opencv PUBLIC ${LCCV_LIBRARIES} ${QUICKJS_LIBRARY} ${PNG_LIBRARIES}
                     ${OPENCV_FREETYPE_LIBRARY} ${OPENCV_LIBRARIES})
-#if(USE_LCCV)
-#  add_dependencies(qjs-opencv liblccv)
-#endif(USE_LCCV)
+if(USE_LCCV)
+  add_dependencies(qjs-opencv liblccv)
+endif(USE_LCCV)
 
 install(TARGETS qjs-opencv DESTINATION "${QUICKJS_C_MODULE_DIR}")
 set(jsbindings_LIBRARIES qjs-opencv)

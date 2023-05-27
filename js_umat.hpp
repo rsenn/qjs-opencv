@@ -18,21 +18,21 @@
 #include <new>
 #include <vector>
 
-extern "C" VISIBLE int js_umat_init(JSContext*, JSModuleDef*);
+extern "C" int js_umat_init(JSContext*, JSModuleDef*);
 
 extern "C" {
 
 extern JSValue umat_proto, umat_class;
-extern thread_local VISIBLE JSClassID js_umat_class_id;
+extern thread_local JSClassID js_umat_class_id;
 }
 
-VISIBLE JSValue js_umat_new(JSContext*, uint32_t, uint32_t, int);
+JSValue js_umat_new(JSContext*, uint32_t, uint32_t, int);
 int js_umat_init(JSContext*, JSModuleDef*);
 JSModuleDef* js_init_umat_module(JSContext* ctx, const char* module_name);
 void js_umat_constructor(JSContext* ctx, JSValue parent, const char* name);
 
-VISIBLE JSUMatData* js_umat_data2(JSContext* ctx, JSValueConst val);
-VISIBLE JSUMatData* js_umat_data(JSValueConst val);
+JSUMatData* js_umat_data2(JSContext* ctx, JSValueConst val);
+JSUMatData* js_umat_data(JSValueConst val);
 
 static inline JSInputOutputArray
 js_umat_or_mat(JSContext* ctx, JSValueConst value) {

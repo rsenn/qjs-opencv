@@ -45,7 +45,7 @@ static SimpleBlobDetector::Params simple_blob_params;
 JSValue feature2d_proto = JS_UNDEFINED, feature2d_class = JS_UNDEFINED;
 JSClassID js_feature2d_class_id;
 
-extern "C" VISIBLE int js_feature2d_init(JSContext*, JSModuleDef*);
+extern "C" int js_feature2d_init(JSContext*, JSModuleDef*);
 
 static JSValue
 js_feature2d_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
@@ -74,19 +74,16 @@ fail:
   return JS_EXCEPTION;
 }
 
-VISIBLE JSFeature2DData*
-js_feature2d_data2(JSContext* ctx, JSValueConst val) {
+JSFeature2DData* js_feature2d_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSFeature2DData*>(JS_GetOpaque2(ctx, val, js_feature2d_class_id));
 }
 
-VISIBLE JSFeature2DData*
-js_feature2d_data(JSValueConst val) {
+JSFeature2DData* js_feature2d_data(JSValueConst val) {
   return static_cast<JSFeature2DData*>(JS_GetOpaque(val, js_feature2d_class_id));
 }
 
 template<class T>
-VISIBLE T*
-js_feature2d_get(JSValueConst val) {
+T* js_feature2d_get(JSValueConst val) {
   JSFeature2DData* f2d;
 
   if((f2d = static_cast<JSFeature2DData*>(JS_GetOpaque(val, js_feature2d_class_id)))) {
@@ -98,8 +95,7 @@ js_feature2d_get(JSValueConst val) {
 }
 
 template<class T>
-VISIBLE JSValue
-js_feature2d_wrap(JSContext* ctx, const cv::Ptr<T>& f2d) {
+JSValue js_feature2d_wrap(JSContext* ctx, const cv::Ptr<T>& f2d) {
   JSValue ret;
   cv::Ptr<T>* s;
 
@@ -1003,8 +999,7 @@ js_feature2d_init(JSContext* ctx, JSModuleDef* m) {
 #define JS_INIT_MODULE js_init_module_feature2d
 #endif
 
-extern "C" VISIBLE void
-js_feature2d_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void js_feature2d_export(JSContext* ctx, JSModuleDef* m) {
   for(const auto& cl : js_feature2d_classes)
     cl.add_export(ctx, m);
 }

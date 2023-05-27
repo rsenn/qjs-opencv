@@ -33,11 +33,13 @@
 #include <map>
 #include <memory>
 #include <opencv2/imgproc.hpp>
+#include <opencv2/ximgproc.hpp>
 #include <string>
 #include <vector>
 #include "lsd_opencv.hpp"
 #include "trace_skeleton.hpp"
 
+ 
 enum { HIER_NEXT = 0, HIER_PREV, HIER_CHILD, HIER_PARENT };
 
 static JSValue
@@ -1939,7 +1941,68 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
 
   return ret;
 }
-thread_local VISIBLE JSClassID js_imgproc_class_id = 0;
+
+enum {
+  THINNING,
+  NI_BLACK_THRESHOLD,
+  ANISOTROPIC_DIFFUSION,
+};
+
+static JSValue
+js_ximgproc_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  JSInputArray src;
+  JSInputOutputArray dst;
+  JSValue ret = JS_UNDEFINED;
+
+  src = js_umat_or_mat(ctx, argv[0]);
+  dst = js_umat_or_mat(ctx, argv[1]);
+
+  try {
+    switch(magic) {
+      case THINNING: {
+        int32_t flags = cv::ximgproc::THINNING_ZHANGSUEN;
+        if(argc > 2)
+          JS_ToInt32(ctx, &flags, argv[2]);
+        cv::ximgproc::thinning(src, dst, flags);
+        break;
+      }
+      case NI_BLACK_THRESHOLD: {
+        int32_t type = -1, blockSize = -1, binarizationMethod = cv::ximgproc::BINARIZATION_NIBLACK;
+        double maxValue, k, r = 128;
+        JS_ToFloat64(ctx, &maxValue, argv[2]);
+        JS_ToInt32(ctx, &type, argv[3]);
+        JS_ToInt32(ctx, &blockSize, argv[4]);
+        JS_ToFloat64(ctx, &k, argv[5]);
+        if(argc > 6)
+          JS_ToInt32(ctx, &binarizationMethod, argv[6]);
+        if(argc > 7)
+          JS_ToFloat64(ctx, &r, argv[7]);
+        cv::ximgproc::niBlackThreshold(src, dst, maxValue, type, blockSize, k, binarizationMethod, r);
+        break;
+      }
+      case ANISOTROPIC_DIFFUSION: {
+        double alpha = 0, K = 0;
+        int32_t niters = -1;
+        JS_ToFloat64(ctx, &alpha, argv[2]);
+        JS_ToFloat64(ctx, &K, argv[3]);
+        JS_ToInt32(ctx, &niters, argv[3]);
+
+        cv::ximgproc::anisotropicDiffusion(src, dst, alpha, K, niters);
+        break;
+      }
+    }
+  } catch(const cv::Exception& e) {
+    std::string msg(e.what());
+
+    const auto pos = msg.find_last_of("/\\");
+
+    ret = JS_ThrowInternalError(ctx, "cv::Exception %s", msg.c_str() + pos + 1);
+  }
+
+  return ret;
+}
+
+thread_local JSClassID js_imgproc_class_id = 0;
 
 void
 js_imgproc_finalizer(JSRuntime* rt, JSValue val) {
@@ -1954,6 +2017,18 @@ JSClassDef js_imgproc_class = {
 };
 
 typedef std::vector<JSCFunctionListEntry> js_function_list_t;
+
+js_function_list_t js_ximgproc_static_funcs{
+    JS_CFUNC_MAGIC_DEF("thinning", 2, js_ximgproc_func, THINNING),
+    JS_CFUNC_MAGIC_DEF("niBlackThreshold", 6, js_ximgproc_func, NI_BLACK_THRESHOLD),
+    JS_CFUNC_MAGIC_DEF("anisotropicDiffusion", 5, js_ximgproc_func, ANISOTROPIC_DIFFUSION),
+    JS_PROP_INT32_DEF("THINNING_ZHANGSUEN", cv::ximgproc::THINNING_ZHANGSUEN, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("THINNING_GUOHALL", cv::ximgproc::THINNING_GUOHALL, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("BINARIZATION_NIBLACK", cv::ximgproc::BINARIZATION_NIBLACK, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("BINARIZATION_SAUVOLA", cv::ximgproc::BINARIZATION_SAUVOLA, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("BINARIZATION_WOLF", cv::ximgproc::BINARIZATION_WOLF, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("BINARIZATION_NICK", cv::ximgproc::BINARIZATION_NICK, JS_PROP_ENUMERABLE),
+};
 
 js_function_list_t js_imgproc_static_funcs{
     JS_CFUNC_DEF("blur", 3, js_cv_blur),
@@ -2066,7 +2141,7 @@ js_function_list_t js_imgproc_static_funcs{
     JS_CFUNC_MAGIC_DEF("minEnclosingCircle", 1, js_imgproc_shape, SHAPE_MIN_ENCLOSING_CIRCLE),
     JS_CFUNC_MAGIC_DEF("minEnclosingTriangle", 1, js_imgproc_shape, SHAPE_MIN_ENCLOSING_TRIANGLE),
     JS_CFUNC_MAGIC_DEF("rotatedRectangleIntersection", 1, js_imgproc_shape, SHAPE_ROTATED_RECTANGLE_INTERSECTION),
-
+    JS_OBJECT_DEF("ximgproc", js_ximgproc_static_funcs.data(), int(js_ximgproc_static_funcs.size()), JS_PROP_C_W_E),
 };
 
 extern "C" int
@@ -2084,8 +2159,7 @@ js_imgproc_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
-extern "C" VISIBLE void
-js_imgproc_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void js_imgproc_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExportList(ctx, m, js_imgproc_static_funcs.data(), js_imgproc_static_funcs.size());
 }
 

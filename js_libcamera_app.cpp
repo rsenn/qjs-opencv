@@ -8,11 +8,11 @@
 //#include "LCCV/include/libcamera_app.hpp"
 #include <lccv.hpp>
 
-extern "C" VISIBLE int js_libcamera_app_init(JSContext*, JSModuleDef*);
+extern "C" int js_libcamera_app_init(JSContext*, JSModuleDef*);
 
 extern "C" {
 JSValue libcamera_app_proto = JS_UNDEFINED, libcamera_app_class = JS_UNDEFINED, libcamera_app_options_proto = JS_UNDEFINED;
-thread_local VISIBLE JSClassID js_libcamera_app_class_id = 0, js_libcamera_app_options_class_id = 0;
+thread_local JSClassID js_libcamera_app_class_id = 0, js_libcamera_app_options_class_id = 0;
 }
 enum {
   OPTION_HELP = 0,
@@ -56,8 +56,7 @@ js_libcamera_app_options_finalizer(JSRuntime* rt, JSValue val) {
   JS_FreeValueRT(rt, val);
 }
 
-VISIBLE JSValue
-js_libcamera_app_options_wrap(JSContext* ctx, JSLibcameraAppOptionsData* opt) {
+JSValue js_libcamera_app_options_wrap(JSContext* ctx, JSLibcameraAppOptionsData* opt) {
   JSValue ret;
 
   ret = JS_NewObjectProtoClass(ctx, libcamera_app_options_proto, js_libcamera_app_options_class_id);
@@ -434,8 +433,7 @@ fail:
   return JS_EXCEPTION;
 }
 
-VISIBLE JSLibcameraAppData*
-js_libcamera_app_data2(JSContext* ctx, JSValueConst val) {
+JSLibcameraAppData* js_libcamera_app_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSLibcameraAppData*>(JS_GetOpaque2(ctx, val, js_libcamera_app_class_id));
 }
 
@@ -562,8 +560,7 @@ js_libcamera_app_method(JSContext* ctx, JSValueConst this_val, int argc, JSValue
   return ret;
 }
 
-VISIBLE JSValue
-js_libcamera_app_wrap(JSContext* ctx, JSLibcameraAppData* cam) {
+JSValue js_libcamera_app_wrap(JSContext* ctx, JSLibcameraAppData* cam) {
   JSValue ret;
 
   ret = JS_NewObjectProtoClass(ctx, libcamera_app_proto, js_libcamera_app_class_id);
@@ -660,8 +657,7 @@ js_libcamera_app_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
-extern "C" VISIBLE void
-js_libcamera_app_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void js_libcamera_app_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "LibcameraApp");
 }
 

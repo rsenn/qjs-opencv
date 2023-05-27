@@ -14,11 +14,11 @@
 #include <new>
 #include <string>
 
-extern "C" VISIBLE int js_video_capture_init(JSContext*, JSModuleDef*);
+extern "C" int js_video_capture_init(JSContext*, JSModuleDef*);
 
 extern "C" {
 JSValue video_capture_proto = JS_UNDEFINED, video_capture_class = JS_UNDEFINED;
-thread_local VISIBLE JSClassID js_video_capture_class_id = 0;
+thread_local JSClassID js_video_capture_class_id = 0;
 }
 
 static inline int
@@ -85,8 +85,7 @@ fail:
   return JS_EXCEPTION;
 }
 
-extern "C" VISIBLE JSVideoCaptureData*
-js_video_capture_data2(JSContext* ctx, JSValueConst val) {
+extern "C" JSVideoCaptureData* js_video_capture_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSVideoCaptureData*>(JS_GetOpaque2(ctx, val, js_video_capture_class_id));
 }
 
@@ -182,8 +181,7 @@ js_video_capture_method(JSContext* ctx, JSValueConst video_capture, int argc, JS
   return ret;
 }
 
-VISIBLE JSValue
-js_video_capture_wrap(JSContext* ctx, cv::VideoCapture* cap) {
+JSValue js_video_capture_wrap(JSContext* ctx, cv::VideoCapture* cap) {
   JSValue ret;
 
   ret = JS_NewObjectProtoClass(ctx, video_capture_proto, js_video_capture_class_id);
@@ -237,8 +235,7 @@ js_video_capture_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
-extern "C" VISIBLE void
-js_video_capture_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void js_video_capture_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "VideoCapture");
 }
 

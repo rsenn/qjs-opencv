@@ -12,22 +12,19 @@ enum { ROTATED_RECT_PROP_CENTER = 0, ROTATED_RECT_PROP_SIZE, ROTATED_RECT_PROP_A
 enum { ROTATED_RECT_METHOD_BOUNDING_RECT = 0, ROTATED_RECT_METHOD_BOUNDING_RECT2F, ROTATED_RECT_METHOD_POINTS };
 extern "C" {
 JSValue rotated_rect_proto = JS_UNDEFINED, rotated_rect_class = JS_UNDEFINED;
-thread_local VISIBLE JSClassID js_rotated_rect_class_id = 0;
+thread_local JSClassID js_rotated_rect_class_id = 0;
 }
 
-VISIBLE JSRotatedRectData*
-js_rotated_rect_data2(JSContext* ctx, JSValueConst val) {
+JSRotatedRectData* js_rotated_rect_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSRotatedRectData*>(JS_GetOpaque2(ctx, val, js_rotated_rect_class_id));
 }
-VISIBLE JSRotatedRectData*
-js_rotated_rect_data(JSValueConst val) {
+JSRotatedRectData* js_rotated_rect_data(JSValueConst val) {
   return static_cast<JSRotatedRectData*>(JS_GetOpaque(val, js_rotated_rect_class_id));
 }
 
 extern "C" int js_rotated_rect_init(JSContext* ctx, JSModuleDef* m);
 
-VISIBLE JSValue
-js_rotated_rect_new(JSContext* ctx, JSValueConst proto, const JSPointData<float>& center, const JSSizeData<float>& size, float angle) {
+JSValue js_rotated_rect_new(JSContext* ctx, JSValueConst proto, const JSPointData<float>& center, const JSSizeData<float>& size, float angle) {
   JSValue ret;
   JSRotatedRectData* rr;
 
@@ -268,8 +265,7 @@ js_rotated_rect_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
-extern "C" VISIBLE void
-js_rotated_rect_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void js_rotated_rect_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "RotatedRect");
 }
 

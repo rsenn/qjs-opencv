@@ -14,7 +14,7 @@
 extern "C" {
 extern JSValue contour_class, contour_proto;
 extern JSClassDef js_contour_class;
-extern thread_local VISIBLE JSClassID js_contour_class_id;
+extern thread_local JSClassID js_contour_class_id;
 
 JSValue js_contour_create(JSContext* ctx, JSValueConst proto);
 void js_contour_finalizer(JSRuntime* rt, JSValue val);
@@ -24,8 +24,8 @@ int js_contour_init(JSContext*, JSModuleDef*);
 JSModuleDef* js_init_module_contour(JSContext*, const char*);
 void js_contour_constructor(JSContext* ctx, JSValue parent, const char* name);
 
-VISIBLE JSContourData<double>* js_contour_data2(JSContext* ctx, JSValueConst val);
-VISIBLE JSContourData<double>* js_contour_data(JSValueConst val);
+JSContourData<double>* js_contour_data2(JSContext* ctx, JSValueConst val);
+JSContourData<double>* js_contour_data(JSValueConst val);
 };
 
 JSValue js_contour_move(JSContext* ctx, JSContourData<double>&& points);
