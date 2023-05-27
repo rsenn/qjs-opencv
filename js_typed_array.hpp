@@ -164,8 +164,8 @@ struct TypedArrayType {
   explicit TypedArrayType(const cv::UMat& mat) : byte_size(1 << (mat_depth(mat) >> 1)), is_signed(mat_signed(mat)), is_floating_point(mat_floating(mat)) {}
   explicit TypedArrayType(int32_t cvId)
       : byte_size(1 << (mattype_depth(cvId) >> 1)), is_signed(mattype_signed(cvId)), is_floating_point(mattype_floating(cvId)) {}
-  explicit TypedArrayType(TypedArrayValue i)
-      : byte_size(i & TYPEDARRAY_BITS_FIELD), is_signed(!!(i & TYPEDARRAY_SIGNED)), is_floating_point(!!(i & TYPEDARRAY_FLOATING_POINT)) {}
+  explicit TypedArrayType(enum TypedArrayValue i)
+      : byte_size(int(i) & int(TYPEDARRAY_BITS_FIELD)), is_signed(!!(int(i) & int(TYPEDARRAY_SIGNED))), is_floating_point(!!(int(i) & int(TYPEDARRAY_FLOATING_POINT))) {}
 
   template<class T> TypedArrayType(JSContext* ctx, const T& ctor_name) { *this = js_typedarray_type(ctx, ctor_name); }
 
@@ -220,7 +220,7 @@ static inline std::string
 dump(TypedArrayValue type) {
   std::ostringstream os;
   os << "CV_";
-  os << ((type & TYPEDARRAY_BITS_FIELD) * 8);
+  os << ((unsigned(type) & unsigned(TYPEDARRAY_BITS_FIELD)) * 8);
   os << (type & TYPEDARRAY_FLOATING_POINT) ? 'F' : (type & TYPEDARRAY_SIGNED) ? 'S' : 'U';
   return os.str();
 }
