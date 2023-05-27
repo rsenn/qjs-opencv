@@ -19,9 +19,9 @@ enum dist_type { DT_UNDEFINED = -1, DT_CUBE = 0, DT_CIE76, DT_CIE94, DT_KMEANS }
 class dominant_colors_grabber {
 public:
   explicit dominant_colors_grabber(color_space cs = DOM_COLORS_COLOR_SPACE_DEFAULT,
-                          dist_type dt = DOM_COLORS_DIST_TYPE_DEFAULT,
-                          unsigned colors_count = DOM_COLORS_COUNT_DEFAULT,
-                          double colors_part = DOM_COLORS_PART_DEFAULT);
+                                   dist_type dt = DOM_COLORS_DIST_TYPE_DEFAULT,
+                                   unsigned colors_count = DOM_COLORS_COUNT_DEFAULT,
+                                   double colors_part = DOM_COLORS_PART_DEFAULT);
   std::vector<cv::Scalar>
   GetDomColors(cv::Mat img, color_space cs = CS_UNDEFINED, dist_type dt = DT_UNDEFINED, unsigned colors_count = 0, double colors_part = 0);
 

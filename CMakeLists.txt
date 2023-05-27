@@ -61,6 +61,8 @@ check_size("long" SIZEOF_LONG)
 check_size("long long" SIZEOF_LONG_LONG)
 check_size("size_t" SIZEOF_SIZE_T)
 
+check_function_def(strerror_s)
+
 if(NOT POSITION_INDEPENDENT_CODE)
   set(POSITION_INDEPENDENT_CODE ON)
 endif(NOT POSITION_INDEPENDENT_CODE)

@@ -355,42 +355,40 @@ js_cv_set_mouse_callback(JSContext* ctx, JSValueConst this_val, int argc, JSValu
   return JS_UNDEFINED;
 }
 
+enum {
+  POLL_KEY,
+  WAIT_KEY,
+  WAIT_KEY_EX,
+};
+
 static JSValue
-js_cv_wait_key(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+js_cv_wait_key(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   int32_t delay = 0;
   union {
     int32_t i;
     char c;
   } key;
-  JSValue ret;
 
-  if(argc > 0)
+  if(argc > 0 && magic != POLL_KEY)
     JS_ToInt32(ctx, &delay, argv[0]);
 
-  key.i = cv::waitKey(delay);
+  switch(magic) {
 
-  if(0 && isalnum(key.c)) {
-    char ch[2] = {key.c, 0};
-
-    ret = JS_NewString(ctx, ch);
-  } else {
-    ret = JS_NewInt32(ctx, key.i);
+    case WAIT_KEY: {
+      key.i = cv::waitKey(delay);
+      break;
+    }
+    case WAIT_KEY_EX: {
+      key.i = cv::waitKeyEx(delay);
+      break;
+    }
+    case POLL_KEY: {
+      key.i = cv::pollKey();
+      break;
+    }
   }
-  return ret;
-}
 
-static JSValue
-js_cv_wait_key_ex(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  int32_t delay = 0;
-  int keyCode;
-  JSValue ret;
-
-  if(argc > 0)
-    JS_ToInt32(ctx, &delay, argv[0]);
-
-  keyCode = cv::waitKeyEx(delay);
-
-  return JS_NewInt32(ctx, keyCode);
+  return JS_NewInt32(ctx, key.i);
 }
 
 static JSValue
@@ -484,8 +482,9 @@ js_function_list_t js_highgui_static_funcs{
     JS_CFUNC_MAGIC_DEF("setTrackbarMax", 3, js_cv_set_trackbar, 2),
     JS_CFUNC_DEF("getMouseWheelDelta", 1, js_cv_get_mouse_wheel_delta),
     JS_CFUNC_DEF("setMouseCallback", 2, js_cv_set_mouse_callback),
-    JS_CFUNC_DEF("waitKey", 0, js_cv_wait_key),
-    JS_CFUNC_DEF("waitKeyEx", 0, js_cv_wait_key_ex),
+    JS_CFUNC_MAGIC_DEF("pollKey", 0, js_cv_wait_key, POLL_KEY),
+    JS_CFUNC_MAGIC_DEF("waitKey", 0, js_cv_wait_key, WAIT_KEY),
+    JS_CFUNC_MAGIC_DEF("waitKeyEx", 0, js_cv_wait_key, WAIT_KEY_EX),
     JS_CFUNC_DEF("getScreenResolution", 0, js_cv_get_screen_resolution),
     JS_CFUNC_DEF("selectROI", 1, js_cv_select_roi),
     JS_CFUNC_DEF("selectROIs", 2, js_cv_select_rois),
