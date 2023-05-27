@@ -160,10 +160,11 @@ enum TypedArrayValue {
 
 struct TypedArrayType {
   TypedArrayType(int bsize, bool sig, bool flt) : byte_size(bsize), is_signed(sig), is_floating_point(flt) {}
-  TypedArrayType(const cv::Mat& mat) : byte_size(1 << (mat_depth(mat) >> 1)), is_signed(mat_signed(mat)), is_floating_point(mat_floating(mat)) {}
-  TypedArrayType(const cv::UMat& mat) : byte_size(1 << (mat_depth(mat) >> 1)), is_signed(mat_signed(mat)), is_floating_point(mat_floating(mat)) {}
-  TypedArrayType(int32_t cvId) : byte_size(1 << (mattype_depth(cvId) >> 1)), is_signed(mattype_signed(cvId)), is_floating_point(mattype_floating(cvId)) {}
-  TypedArrayType(TypedArrayValue i)
+  explicit TypedArrayType(const cv::Mat& mat) : byte_size(1 << (mat_depth(mat) >> 1)), is_signed(mat_signed(mat)), is_floating_point(mat_floating(mat)) {}
+  explicit TypedArrayType(const cv::UMat& mat) : byte_size(1 << (mat_depth(mat) >> 1)), is_signed(mat_signed(mat)), is_floating_point(mat_floating(mat)) {}
+  explicit TypedArrayType(int32_t cvId)
+      : byte_size(1 << (mattype_depth(cvId) >> 1)), is_signed(mattype_signed(cvId)), is_floating_point(mattype_floating(cvId)) {}
+  explicit TypedArrayType(TypedArrayValue i)
       : byte_size(i & TYPEDARRAY_BITS_FIELD), is_signed(!!(i & TYPEDARRAY_SIGNED)), is_floating_point(!!(i & TYPEDARRAY_FLOATING_POINT)) {}
 
   template<class T> TypedArrayType(JSContext* ctx, const T& ctor_name) { *this = js_typedarray_type(ctx, ctor_name); }
@@ -225,7 +226,7 @@ dump(TypedArrayValue type) {
 }
 
 struct TypedArrayProps {
-  explicit TypedArrayProps(size_t offset, size_t length, size_t elem_size, ArrayBufferProps const& props)
+  TypedArrayProps(size_t offset, size_t length, size_t elem_size, ArrayBufferProps const& props)
       : byte_offset(offset), byte_length(length), bytes_per_element(elem_size), buffer(props) {}
 
   size_t byte_offset, byte_length, bytes_per_element;

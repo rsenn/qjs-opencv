@@ -74,7 +74,7 @@ points_direction(int dir, int range, std::vector<cv::Point>& points) {
 
 class skeleton_tracer {
 public:
-  skeleton_tracer(Mat& _m) : mat(_m), mapping(_m.rows, _m.cols, CV_32SC1), neighborhood(pixel_neighborhood(_m)), index(0) { mapping.setTo(-1); }
+  explicit skeleton_tracer(Mat& _m) : mat(_m), mapping(_m.rows, _m.cols, CV_32SC1), neighborhood(pixel_neighborhood(_m)), index(0) { mapping.setTo(-1); }
 
   void
   decrement_neighborhood(const Point& pt) {

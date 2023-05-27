@@ -70,7 +70,7 @@ export class Window {
 
       this.#handleKey(key);
     } while((t = Date.now()) < deadline);
-    console.log('Window.update', { waitFor, key, t: deadline - t });
+    //console.log('Window.update', { waitFor, key, t: deadline - t });
   }
 
   move(...args) {
