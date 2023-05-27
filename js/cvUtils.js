@@ -46,7 +46,8 @@ export function BindMethodsTo(dest, obj, methods) {
   }
   let names = [...GetMethodNames(methods)];
 
-  for(let name of names) if(typeof methods[name] == 'function') dest[name] = methods[name].bind(obj);
+  for(let name of names)
+    if(typeof methods[name] == 'function') dest[name] = methods[name].bind(obj);
   return dest;
 }
 
@@ -107,7 +108,11 @@ export const GetOpt = (options = {}, args) => {
   let result = {};
   let positional = (result['@'] = []);
   if(!(options instanceof Array)) options = Object.entries(options);
-  const findOpt = arg => options.find(([optname, option]) => (Array.isArray(option) ? option.indexOf(arg) != -1 : false) || arg == optname);
+  const findOpt = arg =>
+    options.find(
+      ([optname, option]) =>
+        (Array.isArray(option) ? option.indexOf(arg) != -1 : false) || arg == optname
+    );
   let [, params] = options.find(opt => opt[0] == '@') || [];
   if(typeof params == 'string') params = params.split(',');
   for(let i = 0; i < args.length; i++) {
@@ -185,6 +190,31 @@ export const BitsToNames = (flags, map = (name, flag) => name) => {
   const entries = [...Object.entries(flags)];
 
   return function* (value) {
-    for(let [name, flag] of entries) if(value & flag && (value & flag) == flag) yield map(name, flag);
+    for(let [name, flag] of entries)
+      if(value & flag && (value & flag) == flag) yield map(name, flag);
   };
 };
+
+export function Lookup(getter, setter, keys) {
+  return new Proxy(
+    {},
+    {
+      get(target, prop) {
+        return getter(prop);
+      },
+      getOwnPropertyDescriptor(target, prop) {
+        return { configurable: true, enumerable: true, value: getter(prop) };
+      },
+      ...(setter
+        ? {
+            set(target, prop, value) {
+              setter(prop, value);
+            }
+          }
+        : {}),
+      ownKeys(target) {
+        return keys ? keys() : [];
+      }
+    }
+  );
+}
