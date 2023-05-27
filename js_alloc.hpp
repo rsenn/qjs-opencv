@@ -2,9 +2,10 @@
 #define JS_ALLOC_HPP
 
 #include <quickjs.h>
-#include <sys/mman.h>
 #include <unistd.h>
 #include <cstdlib>
+#ifndef _WIN32
+#include <sys/mman.h>
 
 template<class T> struct js_alloc_mmap {
   static size_t page_size;
@@ -31,6 +32,7 @@ template<class T> struct js_alloc_mmap {
 };
 
 template<class T> size_t js_alloc_mmap<T>::page_size = ::getpagesize();
+#endif
 
 template<class T> struct js_alloc_libc {
   static constexpr size_t size = ((sizeof(T) + 7) >> 3) << 3;
