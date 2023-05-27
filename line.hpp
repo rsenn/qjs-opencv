@@ -535,9 +535,9 @@ Line<T>::endpointDistances(const cv::Point_<T>& p) const {
   return std::make_pair<T, T>(point_distance(a, p), point_distance(b, p));
 }
 
-#if SIZEOF_SIZE_T == SIZEOF_LONG
+#if 1 //SIZEOF_SIZE_T == SIZEOF_LONG
 template<class T>
-inline std::pair<T, unsigned long int>
+inline std::pair<T, size_t>
 Line<T>::endpointDistances(const Line<T>& l) const {
   size_t offs1, offs2;
   std::pair<T, T> dist(endpointDistance(l.a, &offs1), endpointDistance(l.b, &offs2));
