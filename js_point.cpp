@@ -7,14 +7,18 @@
 #include "jsbindings.hpp"
 #include "util.hpp"
 #include <quickjs.h>
+#include <math.h>
 #include <cctype>
-#include <cmath>
 #include <cstdlib>
 #include <array>
 #include <new>
 #include <ostream>
 #include <string>
 #include <vector>
+
+#ifndef M_PI
+#define M_PI 3.1415926535897932384626433832795029
+#endif
 
 std::vector<JSPointData<double>*> points;
 
