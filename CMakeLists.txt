@@ -8,8 +8,7 @@ set(DISABLE_WERROR TRUE CACHE BOOL "Disable -Werror flag" FORCE)
 set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "build type")
 
 if(CACHE{CMAKE_BUILD_TYPE})
-  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release MinSizeRel
-                                               RelWithDebInfo)
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release MinSizeRel RelWithDebInfo)
 endif(CACHE{CMAKE_BUILD_TYPE})
 
 set(QUICKJS_SOURCES_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/quickjs)
@@ -33,14 +32,13 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CheckFlags.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/UseMultiArch.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindQuickJS.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindOpenCV.cmake)
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/QuickJSModule.cmake)
+#include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/QuickJSModule.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/JSBindings.cmake)
 
 if(UNIX AND NOT APPLE)
   include(GNUInstallDirs)
 elseif(NOT DEFINED CMAKE_INSTALL_LIBDIR)
-  set(CMAKE_INSTALL_LIBDIR ""
-      CACHE PATH "Specify the output directory for libraries (default is lib)")
+  set(CMAKE_INSTALL_LIBDIR "" CACHE PATH "Specify the output directory for libraries (default is lib)")
 endif()
 
 message(STATUS "Finding QuickJS...")
@@ -68,7 +66,6 @@ if(HAVE_STRERROR_S)
   add_definitions(-D__STDC_LIB_EXT1__)
 endif(HAVE_STRERROR_S)
 
-
 if(NOT POSITION_INDEPENDENT_CODE)
   set(POSITION_INDEPENDENT_CODE ON)
 endif(NOT POSITION_INDEPENDENT_CODE)
@@ -91,8 +88,7 @@ if(HAVE_LIBDL)
   # message("Found dlfcn library: ${LIBDL}")
 endif(HAVE_LIBDL)
 
-check_library_exists(json-cpp ZN4YAML6detail9node_data9reset_mapEv /usr
-                     JSON_CPP)
+check_library_exists(json-cpp ZN4YAML6detail9node_data9reset_mapEv /usr JSON_CPP)
 
 find_quickjs()
 find_opencv()
@@ -100,8 +96,7 @@ find_opencv()
 #set(CMAKE_INSTALL_RPATH "${OPENCV_LIB_DIR}" CACHE PATH "Build with install rpath" FORCE)
 set(CMAKE_INSTALL_RPATH "${OPENCV_LIBDIR}")
 
-include_directories(${OPENCV_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}
-                    lsd/include)
+include_directories(${OPENCV_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR} lsd/include)
 
 include(CheckIncludeFileCXX)
 
@@ -118,8 +113,7 @@ if(HAVE_OPENCV2_XFEATURES2D_HPP)
 endif(HAVE_OPENCV2_XFEATURES2D_HPP)
 
 include(CheckCXXSymbolExists)
-check_cxx_symbol_exists(cv::AffineFeature opencv2/features2d.hpp
-                        HAVE_OPENCV_AFFINE_FEATURE)
+check_cxx_symbol_exists(cv::AffineFeature opencv2/features2d.hpp HAVE_OPENCV_AFFINE_FEATURE)
 
 #dump(HAVE_OPENCV2_FREETYPE_HPP OPENCV_FREETYPE_LIBRARY HAVE_OPENCV2_XFEATURES2D_HPP HAVE_OPENCV_AFFINE_FEATURE)
 if(HAVE_OPENCV_AFFINE_FEATURE)
@@ -180,41 +174,9 @@ if(USE_LIBCAMERA OR USE_LCCV)
   include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/libcamera.cmake)
 endif(USE_LIBCAMERA OR USE_LCCV)
 
-file(
-  GLOB
-  OPENCV_SOURCES
-  geometry.cpp
-  highgui.cpp
-  jsbindings.cpp
-  js_clahe.cpp
-  js_contour.cpp
-  js_cv.cpp
-  js_draw.cpp
-  js_fast_line_detector.cpp
-  js_feature2d.cpp
-  js_imgproc.cpp
-  js_keypoint.cpp
-  js_line.cpp
-  js_line_iterator.cpp
-  js_line_segment_detector.cpp
-  js_mat.cpp
-  js_affine3.cpp
-  js_point.cpp
-  js_point_iterator.cpp
-  js_rect.cpp
-  js_rotated_rect.cpp
-  js_size.cpp
-  js_slice_iterator.cpp
-  js_subdiv2d.cpp
-  js_umat.cpp
-  js_utility.cpp
-  js_video_capture.cpp
-  js_video_writer.cpp
-  line.cpp
-  util.cpp
-  gifenc/gifenc.c
-  dominant_colors_grabber.cpp
-  lsd/src/*.cpp)
+file(GLOB OPENCV_SOURCES geometry.cpp highgui.cpp jsbindings.cpp js_clahe.cpp js_contour.cpp js_cv.cpp js_draw.cpp js_fast_line_detector.cpp js_feature2d.cpp js_imgproc.cpp js_keypoint.cpp
+     js_line.cpp js_line_iterator.cpp js_line_segment_detector.cpp js_mat.cpp js_affine3.cpp js_point.cpp js_point_iterator.cpp js_rect.cpp js_rotated_rect.cpp js_size.cpp js_slice_iterator.cpp
+     js_subdiv2d.cpp js_umat.cpp js_utility.cpp js_video_capture.cpp js_video_writer.cpp line.cpp util.cpp gifenc/gifenc.c dominant_colors_grabber.cpp lsd/src/*.cpp)
 # dump(OPENCV_SOURCES)
 
 #dump(QUICKJS_MODULE_CFLAGS F_PIC)
@@ -228,37 +190,29 @@ endif(USE_LCCV)
 list(REMOVE_ITEM OPENCV_SOURCES init_module.cpp)
 list(REMOVE_ITEM OPENCV_SOURCES js.hpp js.cpp)
 
-set(CMAKE_CXX11_EXTENSION_COMPILE_OPTION "${CXX_STANDARD_FLAG}" CACHE STRING ""
-                                                                      FORCE)
+set(CMAKE_CXX11_EXTENSION_COMPILE_OPTION "${CXX_STANDARD_FLAG}" CACHE STRING "" FORCE)
 
 #if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/LCCV")
-  if(USE_LCCV)
-    set(BUILD_SHARED_LIBS OFF)
-    add_subdirectory(LCCV)
-    include_directories(LCCV/include)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -fvisibility=hidden")
-    set(LCCV_LIBRARIES "${CMAKE_CURRENT_BINARY_DIR}/LCCV/liblccv.a" camera
-                       camera-base event event_pthreads Threads::Threads)
-  endif(USE_LCCV)
+if(USE_LCCV)
+  set(BUILD_SHARED_LIBS OFF)
+  set(LCCV_NO_INSTALL TRUE CACHE BOOL "Don't install liblccv")
+  add_subdirectory(LCCV)
+  include_directories(LCCV/include)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -fvisibility=hidden")
+  set(LCCV_LIBRARIES "${CMAKE_CURRENT_BINARY_DIR}/LCCV/liblccv.a" camera camera-base event event_pthreads Threads::Threads)
+endif(USE_LCCV)
 #endif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/LCCV")
 
-add_library(qjs-opencv STATIC ${OPENCV_SOURCES})
-set_target_properties(
-  qjs-opencv PROPERTIES PREFIX lib OUTPUT_NAME "qjs-opencv"
-                        COMPILE_FLAGS "${QUICKJS_MODULE_CFLAGS} ${F_PIC}")
-target_compile_definitions(qjs-opencv
-                           PRIVATE CONFIG_PREFIX="${CMAKE_INSTALL_PREFIX}")
-#dump(PNG_INCLUDE_DIRS PNG_LIBRARIES PNG_LIBRARY OPENCV_FREETYPE_LIBRARY)
-target_include_directories(qjs-opencv PUBLIC ${PNG_INCLUDE_DIRS}
-                                             ${LIBCAMERA_INCLUDE_DIRS})
-target_link_libraries(
-  qjs-opencv PUBLIC ${LCCV_LIBRARIES} ${QUICKJS_LIBRARY} ${PNG_LIBRARIES}
-                    ${OPENCV_FREETYPE_LIBRARY} ${OPENCV_LIBRARIES})
-if(USE_LCCV)
-  add_dependencies(qjs-opencv liblccv)
-endif(USE_LCCV)
-
-install(TARGETS qjs-opencv DESTINATION "${QUICKJS_C_MODULE_DIR}")
+#add_library(qjs-opencv STATIC ${OPENCV_SOURCES})
+#set_target_properties(qjs-opencv PROPERTIES PREFIX lib OUTPUT_NAME "qjs-opencv" COMPILE_FLAGS "${QUICKJS_MODULE_CFLAGS} ${F_PIC}")
+#target_compile_definitions(qjs-opencv PRIVATE CONFIG_PREFIX="${CMAKE_INSTALL_PREFIX}")
+#target_include_directories(qjs-opencv PUBLIC ${PNG_INCLUDE_DIRS} ${LIBCAMERA_INCLUDE_DIRS})
+#target_link_libraries(qjs-opencv PUBLIC ${LCCV_LIBRARIES} ${QUICKJS_LIBRARY} ${PNG_LIBRARIES} ${OPENCV_FREETYPE_LIBRARY} ${OPENCV_LIBRARIES})
+#if(USE_LCCV)
+#  add_dependencies(qjs-opencv liblccv)
+#endif(USE_LCCV)
+#
+#install(TARGETS qjs-opencv RUNTIME DESTINATION "${QUICKJS_C_MODULE_DIR}")
 set(jsbindings_LIBRARIES qjs-opencv)
 
 # make_static_module(opencv init_module.cpp)
