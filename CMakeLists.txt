@@ -244,13 +244,16 @@ endif(USE_LCCV)
 #  add_dependencies(qjs-opencv liblccv)
 #endif(USE_LCCV)
 #
-#install(TARGETS qjs-opencv RUNTIME DESTINATION "${QUICKJS_C_MODULE_DIR}")
-make_module(opencv ${OPENCV_SOURCES})
+#make_module(opencv init_module.cpp)
 
 set(jsbindings_LIBRARIES qjs-opencv)
 
 # make_static_module(opencv init_module.cpp)
 make_shared_module(opencv init_module.cpp)
+
+dump(QUICKJS_C_MODULE_DIR)
+
+#install(TARGETS quickjs-opencv DESTINATION "${QUICKJS_C_MODULE_DIR}")
 
 if(OPENCV_FREETYPE_LIBRARY)
   message(STATUS "OpenCV freetype: ${OPENCV_FREETYPE_LIBRARY}")
