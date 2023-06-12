@@ -246,10 +246,12 @@ endif(USE_LCCV)
 #
 #make_module(opencv init_module.cpp)
 
-set(jsbindings_LIBRARIES qjs-opencv lccv)
+set(jsbindings_LIBRARIES qjs-opencv ${LCCV_LIBRARIES})
+make_shared_module(opencv init_module.cpp)
+
+add_dependencies(quickjs-opencv liblccv)
 
 # make_static_module(opencv init_module.cpp)
-make_shared_module(opencv init_module.cpp)
 
 dump(QUICKJS_C_MODULE_DIR)
 
