@@ -232,6 +232,11 @@ if(USE_LCCV)
   include_directories(LCCV/include)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -fvisibility=hidden")
   set(LCCV_LIBRARIES "${CMAKE_CURRENT_BINARY_DIR}/LCCV/liblccv.a" camera camera-base event event_pthreads Threads::Threads)
+  set(LCCV_LIBRARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/LCCV" CACHE PATH "liblccv library directory")
+
+  link_directories(${LCCV_LIBRARY_DIR})
+  set(jsbindings_LINK_DIRECTORIES ${LCCV_LIBRARY_DIR})
+  set(jsbindings_LIBRARIES ${LCCV_LIBRARIES})
 endif(USE_LCCV)
 #endif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/LCCV")
 
@@ -246,7 +251,9 @@ endif(USE_LCCV)
 #
 #make_module(opencv init_module.cpp)
 
-set(jsbindings_LIBRARIES ${LCCV_LIBRARIES})
+dump(LCCV_LIBRARY_DIR)
+dump(jsbindings_LIBRARIES)
+
 make_shared_module(opencv init_module.cpp)
 
 add_dependencies(quickjs-opencv liblccv)
