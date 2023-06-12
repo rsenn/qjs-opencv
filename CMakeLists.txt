@@ -254,7 +254,7 @@ endif(USE_LCCV)
 dump(LCCV_LIBRARY_DIR)
 dump(jsbindings_LIBRARIES)
 
-make_shared_module(opencv init_module.cpp)
+make_shared_module(opencv ${OPENCV_SOURCES})
 
 add_dependencies(quickjs-opencv liblccv)
 
