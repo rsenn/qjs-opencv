@@ -17,7 +17,8 @@ function(config_shared_module TARGET_NAME)
   endif(QUICKJS_MODULE_CFLAGS)
 endfunction(config_shared_module TARGET_NAME)
 
-set(JS_BINDINGS_COMMON color.hpp geometry.hpp js.hpp js_alloc.hpp js_array.hpp js_contour.hpp js_line.hpp js_point.hpp js_rect.hpp js_size.hpp js_typed_array.hpp jsbindings.hpp psimpl.hpp util.hpp)
+set(JS_BINDINGS_COMMON color.hpp geometry.hpp js.hpp js_alloc.hpp js_array.hpp js_contour.hpp js_line.hpp js_point.hpp js_rect.hpp js_size.hpp js_typed_array.hpp jsbindings.hpp
+                       psimpl.hpp util.hpp)
 set(js_line_SOURCES line.cpp line.hpp)
 
 function(make_shared_module FNAME)

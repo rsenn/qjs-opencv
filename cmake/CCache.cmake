@@ -30,16 +30,12 @@ function(target_enable_ccache target)
 
   if(CMAKE_VERSION VERSION_GREATER 3.3)
     # CMake 3.4 introduced 'COMPILER_LAUNCHER'
-    set_property(TARGET "${target}" PROPERTY C_COMPILER_LAUNCHER
-                                             "${CCACHE_EXECUTABLE}")
-    set_property(TARGET "${target}" PROPERTY CXX_COMPILER_LAUNCHER
-                                             "${CCACHE_EXECUTABLE}")
+    set_property(TARGET "${target}" PROPERTY C_COMPILER_LAUNCHER "${CCACHE_EXECUTABLE}")
+    set_property(TARGET "${target}" PROPERTY CXX_COMPILER_LAUNCHER "${CCACHE_EXECUTABLE}")
   else()
     # Prior to 3.4, had to use these properties Note: These may conflict with CTest
-    set_property(TARGET "${target}" PROPERTY RULE_LAUNCH_COMPILE
-                                             "${CCACHE_EXECUTABLE}")
-    set_property(TARGET "${target}" PROPERTY RULE_LAUNCH_LINK
-                                             "${CCACHE_EXECUTABLE}")
+    set_property(TARGET "${target}" PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_EXECUTABLE}")
+    set_property(TARGET "${target}" PROPERTY RULE_LAUNCH_LINK "${CCACHE_EXECUTABLE}")
   endif()
 endfunction()
 

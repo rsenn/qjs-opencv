@@ -32,7 +32,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CheckFlags.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/UseMultiArch.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindQuickJS.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindOpenCV.cmake)
-#include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/QuickJSModule.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/QuickJSModule.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/JSBindings.cmake)
 
 if(UNIX AND NOT APPLE)
@@ -174,9 +174,41 @@ if(USE_LIBCAMERA OR USE_LCCV)
   include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/libcamera.cmake)
 endif(USE_LIBCAMERA OR USE_LCCV)
 
-file(GLOB OPENCV_SOURCES geometry.cpp highgui.cpp jsbindings.cpp js_clahe.cpp js_contour.cpp js_cv.cpp js_draw.cpp js_fast_line_detector.cpp js_feature2d.cpp js_imgproc.cpp js_keypoint.cpp
-     js_line.cpp js_line_iterator.cpp js_line_segment_detector.cpp js_mat.cpp js_affine3.cpp js_point.cpp js_point_iterator.cpp js_rect.cpp js_rotated_rect.cpp js_size.cpp js_slice_iterator.cpp
-     js_subdiv2d.cpp js_umat.cpp js_utility.cpp js_video_capture.cpp js_video_writer.cpp line.cpp util.cpp gifenc/gifenc.c dominant_colors_grabber.cpp lsd/src/*.cpp)
+file(
+  GLOB
+  OPENCV_SOURCES
+  geometry.cpp
+  highgui.cpp
+  jsbindings.cpp
+  js_clahe.cpp
+  js_contour.cpp
+  js_cv.cpp
+  js_draw.cpp
+  js_fast_line_detector.cpp
+  js_feature2d.cpp
+  js_imgproc.cpp
+  js_keypoint.cpp
+  js_line.cpp
+  js_line_iterator.cpp
+  js_line_segment_detector.cpp
+  js_mat.cpp
+  js_affine3.cpp
+  js_point.cpp
+  js_point_iterator.cpp
+  js_rect.cpp
+  js_rotated_rect.cpp
+  js_size.cpp
+  js_slice_iterator.cpp
+  js_subdiv2d.cpp
+  js_umat.cpp
+  js_utility.cpp
+  js_video_capture.cpp
+  js_video_writer.cpp
+  line.cpp
+  util.cpp
+  gifenc/gifenc.c
+  dominant_colors_grabber.cpp
+  lsd/src/*.cpp)
 # dump(OPENCV_SOURCES)
 
 #dump(QUICKJS_MODULE_CFLAGS F_PIC)
@@ -213,6 +245,8 @@ endif(USE_LCCV)
 #endif(USE_LCCV)
 #
 #install(TARGETS qjs-opencv RUNTIME DESTINATION "${QUICKJS_C_MODULE_DIR}")
+make_module(opencv ${OPENCV_SOURCES})
+
 set(jsbindings_LIBRARIES qjs-opencv)
 
 # make_static_module(opencv init_module.cpp)
