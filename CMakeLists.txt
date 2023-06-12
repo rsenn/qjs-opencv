@@ -251,7 +251,11 @@ endif(USE_LCCV)
 #
 #make_module(opencv init_module.cpp)
 
-list(APPEND jsbindings_LIBRARIES ${pkgcfg_lib_LIBCAMERA_camera} ${QUICKJS_LIBRARY} ${PNG_LIBRARIES} ${OPENCV_FREETYPE_LIBRARY} ${OPENCV_LIBRARIES})
+list(APPEND jsbindings_LIBRARIES  ${QUICKJS_LIBRARY} ${PNG_LIBRARIES} ${OPENCV_FREETYPE_LIBRARY} ${OPENCV_LIBRARIES})
+
+if(USE_LIBCAMERA OR USE_LCCV)
+  list(APPEND jsbindings_LIBRARIES ${pkgcfg_lib_LIBCAMERA_camera})
+endif(USE_LIBCAMERA OR USE_LCCV)
 
 dump(LCCV_LIBRARY_DIR)
 dump(jsbindings_LIBRARIES)
