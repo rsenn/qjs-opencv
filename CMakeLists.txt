@@ -186,6 +186,7 @@ endif(USE_LIBCAMERA OR USE_LCCV)
 file(
   GLOB
   OPENCV_SOURCES
+  init_module.cpp
   geometry.cpp
   highgui.cpp
   jsbindings.cpp
