@@ -144,7 +144,7 @@ if("${CMAKE_CXX_COMPILER_ID}" MATCHES ".*Clang.*")
   check_nowarn_flag(-Wno-deprecated-enum-enum-conversion)
 endif("${CMAKE_CXX_COMPILER_ID}" MATCHES ".*Clang.*")
 
-# dump(CMAKE_C_FLAGS CMAKE_CXX_FLAGS) dump(CMAKE_CXX_FLAGS_DEBUG)
+ #dump(CMAKE_C_FLAGS CMAKE_CXX_FLAGS) dump(CMAKE_CXX_FLAGS_DEBUG)
 
 check_pic_flag(QUICKJS_MODULE_CFLAGS)
 
@@ -219,7 +219,7 @@ file(
   gifenc/gifenc.c
   dominant_colors_grabber.cpp
   lsd/src/*.cpp)
-# dump(OPENCV_SOURCES)
+ #dump(OPENCV_SOURCES)
 
 #dump(QUICKJS_MODULE_CFLAGS F_PIC)
 #dump(QUICKJS_C_MODULE_DIR)
