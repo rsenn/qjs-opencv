@@ -221,8 +221,6 @@ file(
   lsd/src/*.cpp)
  #dump(OPENCV_SOURCES)
 
-#dump(QUICKJS_MODULE_CFLAGS F_PIC)
-#dump(QUICKJS_C_MODULE_DIR)
 
 if(USE_LCCV)
   list(APPEND OPENCV_SOURCES js_raspi_cam.cpp js_libcamera_app.cpp)
@@ -251,10 +249,8 @@ endif(USE_LCCV)
 #endif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/LCCV")
 
 #add_library(qjs-opencv STATIC ${OPENCV_SOURCES})
-#set_target_properties(qjs-opencv PROPERTIES PREFIX lib OUTPUT_NAME "qjs-opencv" COMPILE_FLAGS "${QUICKJS_MODULE_CFLAGS} ${F_PIC}")
 #target_compile_definitions(qjs-opencv PRIVATE CONFIG_PREFIX="${CMAKE_INSTALL_PREFIX}")
 #target_include_directories(qjs-opencv PUBLIC ${PNG_INCLUDE_DIRS} ${LIBCAMERA_INCLUDE_DIRS})
-#target_link_libraries(qjs-opencv PUBLIC ${LCCV_LIBRARIES} ${QUICKJS_LIBRARY} ${PNG_LIBRARIES} ${OPENCV_FREETYPE_LIBRARY} ${OPENCV_LIBRARIES})
 #if(USE_LCCV)
 #  add_dependencies(qjs-opencv liblccv)
 #endif(USE_LCCV)
@@ -276,9 +272,7 @@ add_dependencies(quickjs-opencv liblccv)
 
 # make_static_module(opencv init_module.cpp)
 
-#dump(QUICKJS_C_MODULE_DIR)
 
-#install(TARGETS quickjs-opencv DESTINATION "${QUICKJS_C_MODULE_DIR}")
 
 if(OPENCV_FREETYPE_LIBRARY)
   message(STATUS "OpenCV freetype: ${OPENCV_FREETYPE_LIBRARY}")
