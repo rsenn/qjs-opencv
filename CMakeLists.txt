@@ -108,14 +108,14 @@ if(HAVE_OPENCV2_FREETYPE_HPP)
 endif(HAVE_OPENCV2_FREETYPE_HPP)
 
 check_include_file_cxx(opencv2/xfeatures2d.hpp HAVE_OPENCV2_XFEATURES2D_HPP)
-dump(HAVE_OPENCV2_XFEATURES2D_HPP)
+#dump(HAVE_OPENCV2_XFEATURES2D_HPP)
 if(HAVE_OPENCV2_XFEATURES2D_HPP)
   add_definitions(-DHAVE_OPENCV2_XFEATURES2D_HPP)
   set(OPENCV_XFEATURES2D_LIBRARY opencv_xfeatures2d)
 endif(HAVE_OPENCV2_XFEATURES2D_HPP)
 
 check_include_file_cxx(opencv2/ximgproc.hpp HAVE_OPENCV2_XIMGPROC_HPP)
-dump(HAVE_OPENCV2_XIMGPROC_HPP)
+#dump(HAVE_OPENCV2_XIMGPROC_HPP)
 if(HAVE_OPENCV2_XIMGPROC_HPP)
   add_definitions(-DHAVE_OPENCV2_XIMGPROC_HPP)
   set(OPENCV_XIMGPROC_LIBRARY opencv_ximgproc)
@@ -267,8 +267,8 @@ if(USE_LIBCAMERA OR USE_LCCV)
   list(APPEND jsbindings_LIBRARIES ${pkgcfg_lib_LIBCAMERA_camera})
 endif(USE_LIBCAMERA OR USE_LCCV)
 
-dump(LCCV_LIBRARY_DIR)
-dump(jsbindings_LIBRARIES)
+#dump(LCCV_LIBRARY_DIR)
+#dump(jsbindings_LIBRARIES)
 
 make_shared_module(opencv ${OPENCV_SOURCES})
 
@@ -276,7 +276,7 @@ add_dependencies(quickjs-opencv liblccv)
 
 # make_static_module(opencv init_module.cpp)
 
-dump(QUICKJS_C_MODULE_DIR)
+#dump(QUICKJS_C_MODULE_DIR)
 
 #install(TARGETS quickjs-opencv DESTINATION "${QUICKJS_C_MODULE_DIR}")
 
