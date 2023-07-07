@@ -256,7 +256,7 @@ js_rotated_rect_init(JSContext* ctx, JSModuleDef* m) {
     JS_SetConstructor(ctx, rotated_rect_class, rotated_rect_proto);
     JS_SetPropertyFunctionList(ctx, rotated_rect_class, js_rotated_rect_static_funcs, countof(js_rotated_rect_static_funcs));
 
-    js_set_inspect_method(ctx, rotated_rect_proto, js_rotated_rect_inspect);
+    //js_set_inspect_method(ctx, rotated_rect_proto, js_rotated_rect_inspect);
   }
 
   if(m)

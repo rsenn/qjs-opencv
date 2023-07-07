@@ -977,7 +977,7 @@ js_feature2d_init(JSContext* ctx, JSModuleDef* m) {
   feature2d_proto = JS_NewObject(ctx);
   JS_SetPropertyFunctionList(ctx, feature2d_proto, js_feature2d_proto_funcs, countof(js_feature2d_proto_funcs));
   JS_SetClassProto(ctx, js_feature2d_class_id, feature2d_proto);
-  js_set_inspect_method(ctx, feature2d_proto, js_feature2d_inspect);
+  //js_set_inspect_method(ctx, feature2d_proto, js_feature2d_inspect);
 
   // feature2d_class = JS_NewCFunction2(ctx, js_feature2d_ctor, "Feature2D", 2, JS_CFUNC_constructor, 0);
   // JS_SetConstructor(ctx, feature2d_class, feature2d_proto);

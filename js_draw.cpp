@@ -530,6 +530,11 @@ js_put_text(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
     else
       js_value_to(ctx, argv[i], font_name);
 
+#ifndef HAVE_OPENCV_FREETYPE
+  if(!font_name.empty())
+    return JS_ThrowInternalError(ctx, "Got a font name, but not FreeType support");   
+#endif
+
     if(++i < argc) {
       JS_ToFloat64(ctx, &font_scale, argv[i]);
 
@@ -572,7 +577,7 @@ js_put_text(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
     freetype2->putText(*dst, text, point, font_scale, js_to_scalar(color), thickness, line_type, bottomLeftOrigin);
   else
 #endif
-    cv::putText(*dst, text, point, font_face, font_scale, js_to_scalar(color), thickness, line_type, bottomLeftOrigin);
+    cv::putText(*dst, text, point, font_face, font_scale, js_to_scalar(color), thickness < 0 ? 0 : thickness, line_type, bottomLeftOrigin);
 
   return JS_UNDEFINED;
 }

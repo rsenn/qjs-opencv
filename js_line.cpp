@@ -260,9 +260,9 @@ js_line_points(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
 static JSValue
 js_line_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSLineData<double>* ln = js_line_data2(ctx, this_val);
-  JSValue obj = JS_NewObjectClass(ctx, js_line_class_id);
+  JSValue obj = JS_NewObjectProto(ctx, line_proto); //JS_NewObjectClass(ctx, js_line_class_id);
 
-  std::array<JSAtom, 4> props{JS_NewAtom(ctx, "x1"), JS_NewAtom(ctx, "y1"), JS_NewAtom(ctx, "x2"), JS_NewAtom(ctx, "y2")};
+  std::array<JSAtom, 4> props{JS_NewAtom(ctx, "x1"), JS_NewAtom(ctx, "y1"), JS_NewAtom(ctx, "x2"), JS_NewAtom(ctx, "y2"),};
 
   /* JS_DefineProperty(ctx, obj, props[0], JS_NewFloat64(ctx, ln->x1), JS_UNDEFINED, JS_UNDEFINED, JS_PROP_ENUMERABLE);
    JS_DefineProperty(ctx, obj, props[1], JS_NewFloat64(ctx, ln->y1), JS_UNDEFINED, JS_UNDEFINED, JS_PROP_ENUMERABLE);
@@ -645,7 +645,7 @@ js_line_init(JSContext* ctx, JSModuleDef* m) {
     JS_SetConstructor(ctx, line_class, line_proto);
     JS_SetPropertyFunctionList(ctx, line_class, js_line_static_funcs, countof(js_line_static_funcs));
 
-    js_set_inspect_method(ctx, line_proto, js_line_inspect);
+   // js_set_inspect_method(ctx, line_proto, js_line_inspect);
   }
 
   if(m)

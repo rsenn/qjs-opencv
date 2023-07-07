@@ -698,7 +698,7 @@ js_point_init(JSContext* ctx, JSModuleDef* m) {
     JS_SetConstructor(ctx, point_class, point_proto);
     JS_SetPropertyFunctionList(ctx, point_class, js_point_static_funcs, countof(js_point_static_funcs));
 
-    js_set_inspect_method(ctx, point_proto, js_point_inspect);
+    //js_set_inspect_method(ctx, point_proto, js_point_inspect);
   }
 
   if(m)
