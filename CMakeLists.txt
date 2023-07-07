@@ -267,7 +267,9 @@ endif(USE_LIBCAMERA OR USE_LCCV)
 
 make_shared_module(opencv ${OPENCV_SOURCES})
 
-add_dependencies(quickjs-opencv liblccv)
+if(USE_LCCV)
+  add_dependencies(quickjs-opencv liblccv)
+endif(USE_LCCV)
 
 # make_static_module(opencv init_module.cpp)
 
