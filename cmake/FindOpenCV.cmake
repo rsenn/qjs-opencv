@@ -99,7 +99,7 @@ macro(find_opencv)
     endif(OpenCV_DIR)
   endif(NOT OPENCV_PREFIX)
 
-   #dump(OPENCV_PREFIX)
+  #dump(OPENCV_PREFIX)
 
   if(NOT OPENCV_CHECKED)
     message(STATUS "Finding opencv library")
@@ -111,7 +111,7 @@ macro(find_opencv)
       list(APPEND CMAKE_MODULE_PATH "${OPENCV_PREFIX}/lib/cmake/opencv4")
     endif(OPENCV_PREFIX)
 
-     #dump(CMAKE_PREFIX_PATH CMAKE_MODULE_PATH)
+    #dump(CMAKE_PREFIX_PATH CMAKE_MODULE_PATH)
 
     if(NOT OPENCV_FOUND)
       find_package(OpenCV PATHS "${OPENCV_PREFIX}/lib/cmake/opencv4;${OPENCV_PREFIX}/lib/cmake;${OPENCV_PREFIX}")
@@ -125,7 +125,7 @@ macro(find_opencv)
         set(OPENCV_INCLUDE_DIRS "${OpenCV_INCLUDE_DIRS}" CACHE PATH "OpenCV include directories")
         set(OPENCV_LIBRARIES "${OpenCV_LIBS}" CACHE PATH "OpenCV libraries")
 
-         #dump(OpenCV_LIBS OpenCV_INCLUDE_DIRS OpenCV_VERSION OpenCV_SHARED OpenCV_INSTALL_PATH
+        #dump(OpenCV_LIBS OpenCV_INCLUDE_DIRS OpenCV_VERSION OpenCV_SHARED OpenCV_INSTALL_PATH
         # OpenCV_LIB_COMPONENTS) dump(OPENCV_PREFIX OPENCV_LIBDIR OPENCV_LINK_FLAGS
         # OPENCV_INCLUDE_DIRS OPENCV_LIBRARIES)
         set(OPENCV_FOUND TRUE)
@@ -166,6 +166,6 @@ macro(find_opencv)
     endif(OPENCV_FOUND)
     set(OPENCV_CHECKED TRUE)
 
-     #dump(OPENCV_FOUND OPENCV_INCLUDE_DIRS OPENCV_LIBDIR OPENCV_LINK_FLAGS OPENCV_LIBRARIES)
+    #dump(OPENCV_FOUND OPENCV_INCLUDE_DIRS OPENCV_LIBDIR OPENCV_LINK_FLAGS OPENCV_LIBRARIES)
   endif(NOT OPENCV_CHECKED)
 endmacro(find_opencv)
