@@ -1,5 +1,4 @@
 import * as cv from 'opencv';
-
 function main(...args) {
   let images = [],
     images2 = [];

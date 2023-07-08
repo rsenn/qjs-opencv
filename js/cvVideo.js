@@ -1,6 +1,16 @@
-import { Mat, VideoCapture, Size, Rect } from 'opencv';
+import { BindMethods } from './cvUtils.js';
+import { BindMethodsTo } from './cvUtils.js';
+import { Define } from './cvUtils.js';
+import { FindKey } from './cvUtils.js';
+import { Lookup } from './cvUtils.js';
+import { Modulo } from './cvUtils.js';
+import { WeakAssign } from './cvUtils.js';
+import { WeakMapper } from './cvUtils.js';
+import { Mat } from 'opencv';
+import { Rect } from 'opencv';
+import { Size } from 'opencv';
+import { VideoCapture } from 'opencv';
 import * as cv from 'opencv';
-import { Lookup, WeakMapper, Modulo, WeakAssign, BindMethods, BindMethodsTo, FindKey, Define } from './cvUtils.js';
 
 const Crop = (() => {
   const mapper = WeakMapper(() => new Mat());

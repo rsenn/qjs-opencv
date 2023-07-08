@@ -1,9 +1,28 @@
-import { COLOR_BGR2GRAY, CV_8UC3, Contour, FILLED, LINE_8, LINE_AA, Mat, Point, Rect, Size, THRESH_BINARY_INV, WINDOW_NORMAL, cvtColor, drawRect, imshow, imwrite, namedWindow, resizeWindow, threshold, waitKey } from 'opencv';
-import * as util from 'util';
 import * as path from 'path';
-import { Window, MouseFlags, MouseEvents, Mouse, TextStyle, DrawText } from '../js/cvHighGUI.js';
+import * as util from 'util';
+import { TextStyle } from '../js/cvHighGUI.js';
+import { Window } from '../js/cvHighGUI.js';
 import { Console } from 'console';
-
+import { COLOR_BGR2GRAY } from 'opencv';
+import { Contour } from 'opencv';
+import { CV_8UC3 } from 'opencv';
+import { cvtColor } from 'opencv';
+import { drawRect } from 'opencv';
+import { FILLED } from 'opencv';
+import { imshow } from 'opencv';
+import { imwrite } from 'opencv';
+import { LINE_8 } from 'opencv';
+import { LINE_AA } from 'opencv';
+import { Mat } from 'opencv';
+import { namedWindow } from 'opencv';
+import { Point } from 'opencv';
+import { Rect } from 'opencv';
+import { resizeWindow } from 'opencv';
+import { Size } from 'opencv';
+import { THRESH_BINARY_INV } from 'opencv';
+import { threshold } from 'opencv';
+import { waitKey } from 'opencv';
+import { WINDOW_NORMAL } from 'opencv';
 function main(...argv) {
   const args = argv.slice(1);
   globalThis.console = new Console({

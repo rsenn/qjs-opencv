@@ -1,7 +1,8 @@
-import { Point, Size, Rect, Mat, UMat, Line, Contour, SliceIterator } from 'opencv';
+import { Contour } from 'opencv';
+import { Mat } from 'opencv';
+import { Point } from 'opencv';
+import { Size } from 'opencv';
 import * as cv from 'opencv';
-import { Pipeline, Processor } from '../js/cvPipeline.js';
-
 function main(...args) {
   let filename = args[0] ?? 'tests/test_linesegmentdetector.jpg';
   console.log('filename', filename);

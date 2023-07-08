@@ -1,5 +1,4 @@
 import * as cv from 'opencv';
-
 function main(...args) {
   let lsd = new cv.LineSegmentDetector(cv.LSD_REFINE_ADV, 1, 2, 2.0, 45, 2, 0.9, 1024);
   console.log('cv.LSD_REFINE_ADV', cv.LSD_REFINE_ADV);

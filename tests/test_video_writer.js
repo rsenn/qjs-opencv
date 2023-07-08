@@ -1,6 +1,8 @@
+import { Mat } from 'opencv';
+import { Point } from 'opencv';
+import { Size } from 'opencv';
+import { VideoWriter } from 'opencv';
 import * as cv from 'opencv';
-import { VideoWriter, Point, Size, Contour, Rect, Line, TickMeter, Mat, CLAHE, Draw } from 'opencv';
-
 function repeat(n, fn, ...args) {
   for(let i = 0; i < n; i++) fn(...args);
 }

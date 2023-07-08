@@ -1,6 +1,7 @@
-import { Mat } from 'opencv';
 import { isObject } from 'util';
-import { WeakMapper, Modulo } from './cvUtils.js';
+import { Modulo } from './cvUtils.js';
+import { WeakMapper } from './cvUtils.js';
+import { Mat } from 'opencv';
 
 export class Pipeline extends Function {
   constructor(processors = [], callback) {

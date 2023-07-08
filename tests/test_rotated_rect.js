@@ -1,5 +1,4 @@
 import * as cv from 'opencv';
-
 function main() {
   const DEG2RAD = Math.PI / 180;
 

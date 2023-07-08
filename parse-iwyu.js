@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 import Console from 'console';
-
 function IsInclude(line) {
   return /^\s*#\s*include/i.test(line);
 }
