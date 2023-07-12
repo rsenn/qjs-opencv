@@ -531,8 +531,8 @@ js_put_text(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       js_value_to(ctx, argv[i], font_name);
 
 #ifndef HAVE_OPENCV_FREETYPE
-  if(!font_name.empty())
-    return JS_ThrowInternalError(ctx, "Got a font name, but not FreeType support");   
+    if(!font_name.empty())
+      return JS_ThrowInternalError(ctx, "Got a font name, but not FreeType support");
 #endif
 
     if(++i < argc) {
@@ -804,7 +804,8 @@ js_draw_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
-extern "C" void js_draw_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void
+js_draw_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "Draw");
   JS_AddModuleExportList(ctx, m, js_draw_global_funcs, countof(js_draw_global_funcs));
 }

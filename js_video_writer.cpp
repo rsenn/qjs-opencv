@@ -83,11 +83,13 @@ fail:
   return JS_EXCEPTION;
 }
 
-JSVideoWriterData* js_video_writer_data2(JSContext* ctx, JSValueConst val) {
+JSVideoWriterData*
+js_video_writer_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSVideoWriterData*>(JS_GetOpaque2(ctx, val, js_video_writer_class_id));
 }
 
-JSVideoWriterData* js_video_writer_data(JSValueConst val) {
+JSVideoWriterData*
+js_video_writer_data(JSValueConst val) {
   return static_cast<JSVideoWriterData*>(JS_GetOpaque(val, js_video_writer_class_id));
 }
 
@@ -193,7 +195,8 @@ js_video_writer_fourcc(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
   return JS_NewInt32(ctx, cv::VideoWriter::fourcc(chars[0], chars[1], chars[2], chars[3]));
 }
 
-JSValue js_video_writer_wrap(JSContext* ctx, cv::VideoWriter* cap) {
+JSValue
+js_video_writer_wrap(JSContext* ctx, cv::VideoWriter* cap) {
   JSValue ret;
 
   ret = JS_NewObjectProtoClass(ctx, video_writer_proto, js_video_writer_class_id);
@@ -250,7 +253,8 @@ js_video_writer_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
-extern "C" void js_video_writer_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void
+js_video_writer_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "VideoWriter");
 }
 

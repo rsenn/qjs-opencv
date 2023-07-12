@@ -518,7 +518,8 @@ js_highgui_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
-extern "C" void js_highgui_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void
+js_highgui_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExportList(ctx, m, js_highgui_static_funcs.data(), js_highgui_static_funcs.size());
   JS_AddModuleExportList(ctx, m, js_highgui_constants.data(), js_highgui_constants.size());
 }

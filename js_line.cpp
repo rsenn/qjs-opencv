@@ -20,24 +20,29 @@ extern "C" {
 JSValue line_proto = JS_UNDEFINED, line_class = JS_UNDEFINED;
 thread_local JSClassID js_line_class_id = 0;
 
-JSLineData<double>* js_line_data2(JSContext* ctx, JSValueConst val) {
+JSLineData<double>*
+js_line_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSLineData<double>*>(JS_GetOpaque2(ctx, val, js_line_class_id));
 }
-JSLineData<double>* js_line_data(JSValueConst val) {
+JSLineData<double>*
+js_line_data(JSValueConst val) {
   return static_cast<JSLineData<double>*>(JS_GetOpaque(val, js_line_class_id));
 }
 }
 
-JSValue js_line_wrap(JSContext* ctx, const JSLineData<double>& line) {
+JSValue
+js_line_wrap(JSContext* ctx, const JSLineData<double>& line) {
   return js_line_new(ctx, line.x1, line.y1, line.x2, line.y2);
 }
 
-JSValue js_line_wrap(JSContext* ctx, const JSLineData<int>& line) {
+JSValue
+js_line_wrap(JSContext* ctx, const JSLineData<int>& line) {
   return js_line_new(ctx, line.x1, line.y1, line.x2, line.y2);
 }
 
 extern "C" {
-JSValue js_line_new(JSContext* ctx, double x1, double y1, double x2, double y2) {
+JSValue
+js_line_new(JSContext* ctx, double x1, double y1, double x2, double y2) {
   JSValue ret;
   JSLineData<double>* ln;
 
@@ -260,9 +265,14 @@ js_line_points(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
 static JSValue
 js_line_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSLineData<double>* ln = js_line_data2(ctx, this_val);
-  JSValue obj = JS_NewObjectProto(ctx, line_proto); //JS_NewObjectClass(ctx, js_line_class_id);
+  JSValue obj = JS_NewObjectProto(ctx, line_proto); // JS_NewObjectClass(ctx, js_line_class_id);
 
-  std::array<JSAtom, 4> props{JS_NewAtom(ctx, "x1"), JS_NewAtom(ctx, "y1"), JS_NewAtom(ctx, "x2"), JS_NewAtom(ctx, "y2"),};
+  std::array<JSAtom, 4> props{
+      JS_NewAtom(ctx, "x1"),
+      JS_NewAtom(ctx, "y1"),
+      JS_NewAtom(ctx, "x2"),
+      JS_NewAtom(ctx, "y2"),
+  };
 
   /* JS_DefineProperty(ctx, obj, props[0], JS_NewFloat64(ctx, ln->x1), JS_UNDEFINED, JS_UNDEFINED, JS_PROP_ENUMERABLE);
    JS_DefineProperty(ctx, obj, props[1], JS_NewFloat64(ctx, ln->y1), JS_UNDEFINED, JS_UNDEFINED, JS_PROP_ENUMERABLE);
@@ -645,7 +655,7 @@ js_line_init(JSContext* ctx, JSModuleDef* m) {
     JS_SetConstructor(ctx, line_class, line_proto);
     JS_SetPropertyFunctionList(ctx, line_class, js_line_static_funcs, countof(js_line_static_funcs));
 
-   // js_set_inspect_method(ctx, line_proto, js_line_inspect);
+    // js_set_inspect_method(ctx, line_proto, js_line_inspect);
   }
 
   if(m)
@@ -654,7 +664,8 @@ js_line_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
-extern "C" void js_line_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void
+js_line_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "Line");
 }
 

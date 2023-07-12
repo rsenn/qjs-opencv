@@ -46,7 +46,8 @@ fail:
   return JS_EXCEPTION;
 }
 
-extern "C" JSRaspiCamData* js_raspi_cam_data2(JSContext* ctx, JSValueConst val) {
+extern "C" JSRaspiCamData*
+js_raspi_cam_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSRaspiCamData*>(JS_GetOpaque2(ctx, val, js_raspi_cam_class_id));
 }
 
@@ -127,7 +128,8 @@ js_raspi_cam_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   return ret;
 }
 
-JSValue js_raspi_cam_wrap(JSContext* ctx, JSRaspiCamData* cam) {
+JSValue
+js_raspi_cam_wrap(JSContext* ctx, JSRaspiCamData* cam) {
   JSValue ret;
 
   ret = JS_NewObjectProtoClass(ctx, raspi_cam_proto, js_raspi_cam_class_id);
@@ -182,7 +184,8 @@ js_raspi_cam_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
-extern "C" void js_raspi_cam_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void
+js_raspi_cam_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "RaspiCam");
 }
 

@@ -72,10 +72,12 @@ typedef struct JSUMatIteratorData {
   int magic;
 } JSUMatIteratorData;
 
-JSUMatData* js_umat_data2(JSContext* ctx, JSValueConst val) {
+JSUMatData*
+js_umat_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSUMatData*>(JS_GetOpaque2(ctx, val, js_umat_class_id));
 }
-JSUMatData* js_umat_data(JSValueConst val) {
+JSUMatData*
+js_umat_data(JSValueConst val) {
   return static_cast<JSUMatData*>(JS_GetOpaque(val, js_umat_class_id));
 }
 
@@ -172,7 +174,8 @@ js_umat_dump(JSUMatData* const s) {
 }
 #endif
 
-JSValue js_umat_new(JSContext* ctx, uint32_t rows, uint32_t cols, int type) {
+JSValue
+js_umat_new(JSContext* ctx, uint32_t rows, uint32_t cols, int type) {
   JSValue ret;
   JSUMatData* um;
 
@@ -1097,7 +1100,8 @@ js_umat_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
-extern "C" void js_umat_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void
+js_umat_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "UMat");
 }
 

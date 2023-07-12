@@ -228,7 +228,8 @@ js_line_segment_detector_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
-extern "C" void js_line_segment_detector_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void
+js_line_segment_detector_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "LineSegmentDetector");
 }
 

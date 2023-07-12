@@ -7,6 +7,7 @@
 #include "jsbindings.hpp"
 #include "palette.hpp"
 #include "png_write.hpp"
+#include "png_read.hpp"
 #include "gif_write.hpp"
 #include <quickjs.h>
 #include "util.hpp"
@@ -97,8 +98,20 @@ js_cv_imencode(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
 
 static JSValue
 js_cv_imread(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  const char* filename = JS_ToCString(ctx, argv[0]);
-  cv::Mat mat = cv::imread(filename);
+  const char* filename;
+  size_t len;
+  cv::Mat mat;
+
+  if(!(filename = JS_ToCStringLen(ctx, &len, argv[0])))
+    return JS_ThrowTypeError(ctx, "argument 1 must be a filename");
+
+  if(!strcasecmp(".png", (filename + len - 4)))
+    mat = png_read(filename);
+  else
+    mat = cv::imread(filename);
+
+  JS_FreeCString(ctx, filename);
+
   return js_mat_wrap(ctx, mat);
 }
 
@@ -1783,7 +1796,8 @@ js_cv_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
-extern "C" void js_cv_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void
+js_cv_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExportList(ctx, m, js_cv_static_funcs.data(), js_cv_static_funcs.size());
   JS_AddModuleExportList(ctx, m, js_cv_constants.data(), js_cv_constants.size());
   JS_AddModuleExport(ctx, m, "default");

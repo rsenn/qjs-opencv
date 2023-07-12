@@ -75,7 +75,8 @@ js_point_argument(JSContext* ctx, int argc, JSValueConst argv[], int& argind, JS
   return FALSE;
 }
 
-JSValue js_point_new(JSContext* ctx, JSValueConst proto, double x, double y) {
+JSValue
+js_point_new(JSContext* ctx, JSValueConst proto, double x, double y) {
   JSValue ret;
   JSPointData<double>* s;
 
@@ -99,17 +100,21 @@ JSValue js_point_new(JSContext* ctx, JSValueConst proto, double x, double y) {
   return ret;
 }
 
-JSValue js_point_new(JSContext* ctx, JSValueConst proto, JSPointData<double> point) {
+JSValue
+js_point_new(JSContext* ctx, JSValueConst proto, JSPointData<double> point) {
   return js_point_new(ctx, proto, point.x, point.y);
 }
 
-JSPointData<double>* js_point_data2(JSContext* ctx, JSValueConst val) {
+JSPointData<double>*
+js_point_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSPointData<double>*>(JS_GetOpaque2(ctx, val, js_point_class_id));
 }
-JSPointData<double>* js_point_data(JSValueConst val) {
+JSPointData<double>*
+js_point_data(JSValueConst val) {
   return static_cast<JSPointData<double>*>(JS_GetOpaque(val, js_point_class_id));
 }
-JSValue js_point_new(JSContext* ctx, const JSPointData<double>& point) {
+JSValue
+js_point_new(JSContext* ctx, const JSPointData<double>& point) {
   return js_point_new(ctx, point_proto, point.x, point.y);
 }
 
@@ -624,7 +629,8 @@ js_point_finalizer(JSRuntime* rt, JSValue val) {
 }
 }
 
-JSValue js_point_new(JSContext* ctx, double x, double y) {
+JSValue
+js_point_new(JSContext* ctx, double x, double y) {
   return js_point_new(ctx, point_proto, x, y);
 }
 
@@ -698,7 +704,7 @@ js_point_init(JSContext* ctx, JSModuleDef* m) {
     JS_SetConstructor(ctx, point_class, point_proto);
     JS_SetPropertyFunctionList(ctx, point_class, js_point_static_funcs, countof(js_point_static_funcs));
 
-    //js_set_inspect_method(ctx, point_proto, js_point_inspect);
+    // js_set_inspect_method(ctx, point_proto, js_point_inspect);
   }
 
   if(m)
@@ -716,7 +722,8 @@ js_point_constructor(JSContext* ctx, JSValue parent, const char* name) {
   JS_SetPropertyStr(ctx, parent, name ? name : "Point", point_class);
 }
 
-extern "C" void js_point_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void
+js_point_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "Point");
 }
 

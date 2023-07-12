@@ -19,10 +19,12 @@ extern "C" {
 JSValue affine3_proto = JS_UNDEFINED, affine3_class = JS_UNDEFINED;
 thread_local JSClassID js_affine3_class_id = 0;
 
-cv::Affine3<double>* js_affine3_data2(JSContext* ctx, JSValueConst val) {
+cv::Affine3<double>*
+js_affine3_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<cv::Affine3<double>*>(JS_GetOpaque2(ctx, val, js_affine3_class_id));
 }
-cv::Affine3<double>* js_affine3_data(JSValueConst val) {
+cv::Affine3<double>*
+js_affine3_data(JSValueConst val) {
   return static_cast<cv::Affine3<double>*>(JS_GetOpaque(val, js_affine3_class_id));
 }
 
@@ -43,7 +45,8 @@ js_affine3_wrap(JSContext* ctx, const cv::Affine3<double>& affine3) {
 }
 
 extern "C" {
-JSValue js_affine3_new(JSContext* ctx) {
+JSValue
+js_affine3_new(JSContext* ctx) {
   JSValue ret;
   cv::Affine3<double>* aff;
 
@@ -367,7 +370,8 @@ js_affine3_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
-extern "C" void js_affine3_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void
+js_affine3_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "Affine3");
 }
 

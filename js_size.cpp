@@ -99,11 +99,13 @@ fail:
   return JS_EXCEPTION;
 }
 
-JSSizeData<double>* js_size_data(JSValueConst val) {
+JSSizeData<double>*
+js_size_data(JSValueConst val) {
   return static_cast<JSSizeData<double>*>(JS_GetOpaque(val, js_size_class_id));
 }
 
-JSSizeData<double>* js_size_data2(JSContext* ctx, JSValueConst val) {
+JSSizeData<double>*
+js_size_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSSizeData<double>*>(JS_GetOpaque2(ctx, val, js_size_class_id));
 }
 
@@ -141,7 +143,8 @@ js_size_get(JSContext* ctx, JSValueConst this_val, int magic) {
   return ret;
 }
 
-JSValue js_size_new(JSContext* ctx, double w, double h) {
+JSValue
+js_size_new(JSContext* ctx, double w, double h) {
   JSValue ret;
   JSSizeData<double>* s;
 
@@ -158,7 +161,8 @@ JSValue js_size_new(JSContext* ctx, double w, double h) {
   return ret;
 }
 
-JSValue js_size_wrap(JSContext* ctx, const JSSizeData<double>& sz) {
+JSValue
+js_size_wrap(JSContext* ctx, const JSSizeData<double>& sz) {
   return js_size_new(ctx, sz.width, sz.height);
 }
 
@@ -578,7 +582,7 @@ js_size_init(JSContext* ctx, JSModuleDef* m) {
     JS_SetConstructor(ctx, size_class, size_proto);
     JS_SetPropertyFunctionList(ctx, size_class, js_size_static_funcs, countof(js_size_static_funcs));
 
-    //js_set_inspect_method(ctx, size_proto, js_size_inspect);
+    // js_set_inspect_method(ctx, size_proto, js_size_inspect);
   }
 
   if(m)
@@ -588,7 +592,8 @@ js_size_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
-extern "C" void js_size_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void
+js_size_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "Size");
 }
 

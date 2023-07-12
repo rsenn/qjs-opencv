@@ -143,7 +143,8 @@ js_mat_track(JSContext* ctx, JSMatData* s) {
   return s;
 }
 
-JSValue js_mat_new(JSContext* ctx, uint32_t rows, uint32_t cols, int type) {
+JSValue
+js_mat_new(JSContext* ctx, uint32_t rows, uint32_t cols, int type) {
   JSValue ret;
   JSMatData* s;
   if(JS_IsUndefined(mat_proto))
@@ -164,7 +165,8 @@ JSValue js_mat_new(JSContext* ctx, uint32_t rows, uint32_t cols, int type) {
   return ret;
 }
 
-JSValue js_mat_wrap(JSContext* ctx, const cv::Mat& mat) {
+JSValue
+js_mat_wrap(JSContext* ctx, const cv::Mat& mat) {
   JSValue ret;
   JSMatData* s;
   ret = JS_NewObjectProtoClass(ctx, mat_proto, js_mat_class_id);
@@ -1801,7 +1803,7 @@ js_mat_init(JSContext* ctx, JSModuleDef* m) {
 
     JS_SetPropertyFunctionList(ctx, mat_class, js_mat_static_funcs, countof(js_mat_static_funcs));
 
-    //js_set_inspect_method(ctx, mat_proto, js_mat_inspect);
+    // js_set_inspect_method(ctx, mat_proto, js_mat_inspect);
     /*   JSValue g = JS_GetGlobalObject(ctx);
        int32array_ctor = JS_GetProperty(ctx, g, JS_ATOM_Int32Array);
        int32array_proto = JS_GetPrototype(ctx, int32array_ctor);
@@ -1814,7 +1816,8 @@ js_mat_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
-extern "C" void js_mat_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void
+js_mat_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "Mat");
 }
 

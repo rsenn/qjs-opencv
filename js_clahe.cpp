@@ -16,7 +16,8 @@ JSClassID js_clahe_class_id;
 
 extern "C" int js_clahe_init(JSContext*, JSModuleDef*);
 
-extern "C" JSValue js_clahe_new(JSContext* ctx, double clipLimit = 40.0, cv::Size tileGridSize = cv::Size(8, 8)) {
+extern "C" JSValue
+js_clahe_new(JSContext* ctx, double clipLimit = 40.0, cv::Size tileGridSize = cv::Size(8, 8)) {
   JSValue ret;
   JSCLAHEData* s;
   ret = JS_NewObjectProtoClass(ctx, clahe_proto, js_clahe_class_id);
@@ -165,7 +166,7 @@ js_clahe_init(JSContext* ctx, JSModuleDef* m) {
   /* set proto.constructor and ctor.prototype */
   JS_SetConstructor(ctx, clahe_class, clahe_proto);
 
-  //js_set_inspect_method(ctx, clahe_proto, js_clahe_inspect);
+  // js_set_inspect_method(ctx, clahe_proto, js_clahe_inspect);
 
   if(m)
     JS_SetModuleExport(ctx, m, "CLAHE", clahe_class);
@@ -187,7 +188,8 @@ js_clahe_constructor(JSContext* ctx, JSValue parent, const char* name) {
 #define JS_INIT_MODULE js_init_module_clahe
 #endif
 
-extern "C" void js_clahe_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void
+js_clahe_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "CLAHE");
 }
 

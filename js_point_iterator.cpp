@@ -17,7 +17,8 @@ extern "C" {
 JSValue point_iterator_proto = JS_UNDEFINED, point_iterator_class = JS_UNDEFINED;
 thread_local JSClassID js_point_iterator_class_id = 0;
 
-JSValue js_point_iterator_new(JSContext* ctx, JSPointData<double>* first, JSPointData<double>* last, int magic) {
+JSValue
+js_point_iterator_new(JSContext* ctx, JSPointData<double>* first, JSPointData<double>* last, int magic) {
   JSPointIteratorData* it;
   JSValue iterator;
 
@@ -165,7 +166,8 @@ js_point_iterator_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
-extern "C" void js_point_iterator_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void
+js_point_iterator_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "PointIterator");
 }
 

@@ -280,7 +280,8 @@ js_subdiv2d_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
-extern "C" void js_subdiv2d_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void
+js_subdiv2d_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "Subdiv2D");
 }
 

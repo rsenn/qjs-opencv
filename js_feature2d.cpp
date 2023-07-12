@@ -74,16 +74,19 @@ fail:
   return JS_EXCEPTION;
 }
 
-JSFeature2DData* js_feature2d_data2(JSContext* ctx, JSValueConst val) {
+JSFeature2DData*
+js_feature2d_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSFeature2DData*>(JS_GetOpaque2(ctx, val, js_feature2d_class_id));
 }
 
-JSFeature2DData* js_feature2d_data(JSValueConst val) {
+JSFeature2DData*
+js_feature2d_data(JSValueConst val) {
   return static_cast<JSFeature2DData*>(JS_GetOpaque(val, js_feature2d_class_id));
 }
 
 template<class T>
-T* js_feature2d_get(JSValueConst val) {
+T*
+js_feature2d_get(JSValueConst val) {
   JSFeature2DData* f2d;
 
   if((f2d = static_cast<JSFeature2DData*>(JS_GetOpaque(val, js_feature2d_class_id)))) {
@@ -95,7 +98,8 @@ T* js_feature2d_get(JSValueConst val) {
 }
 
 template<class T>
-JSValue js_feature2d_wrap(JSContext* ctx, const cv::Ptr<T>& f2d) {
+JSValue
+js_feature2d_wrap(JSContext* ctx, const cv::Ptr<T>& f2d) {
   JSValue ret;
   cv::Ptr<T>* s;
 
@@ -977,7 +981,7 @@ js_feature2d_init(JSContext* ctx, JSModuleDef* m) {
   feature2d_proto = JS_NewObject(ctx);
   JS_SetPropertyFunctionList(ctx, feature2d_proto, js_feature2d_proto_funcs, countof(js_feature2d_proto_funcs));
   JS_SetClassProto(ctx, js_feature2d_class_id, feature2d_proto);
-  //js_set_inspect_method(ctx, feature2d_proto, js_feature2d_inspect);
+  // js_set_inspect_method(ctx, feature2d_proto, js_feature2d_inspect);
 
   // feature2d_class = JS_NewCFunction2(ctx, js_feature2d_ctor, "Feature2D", 2, JS_CFUNC_constructor, 0);
   // JS_SetConstructor(ctx, feature2d_class, feature2d_proto);
@@ -999,7 +1003,8 @@ js_feature2d_init(JSContext* ctx, JSModuleDef* m) {
 #define JS_INIT_MODULE js_init_module_feature2d
 #endif
 
-extern "C" void js_feature2d_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void
+js_feature2d_export(JSContext* ctx, JSModuleDef* m) {
   for(const auto& cl : js_feature2d_classes)
     cl.add_export(ctx, m);
 }

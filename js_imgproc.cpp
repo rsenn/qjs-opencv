@@ -39,7 +39,6 @@
 #include "lsd_opencv.hpp"
 #include "trace_skeleton.hpp"
 
- 
 enum { HIER_NEXT = 0, HIER_PREV, HIER_CHILD, HIER_PARENT };
 
 static JSValue
@@ -2159,7 +2158,8 @@ js_imgproc_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
-extern "C" void js_imgproc_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void
+js_imgproc_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExportList(ctx, m, js_imgproc_static_funcs.data(), js_imgproc_static_funcs.size());
 }
 

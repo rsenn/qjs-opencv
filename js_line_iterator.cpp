@@ -81,15 +81,18 @@ fail:
   return JS_EXCEPTION;
 }
 
-JSLineIteratorData* js_line_iterator_data2(JSContext* ctx, JSValueConst val) {
+JSLineIteratorData*
+js_line_iterator_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSLineIteratorData*>(JS_GetOpaque2(ctx, val, js_line_iterator_class_id));
 }
 
-JSLineIteratorData* js_line_iterator_data(JSValueConst val) {
+JSLineIteratorData*
+js_line_iterator_data(JSValueConst val) {
   return static_cast<JSLineIteratorData*>(JS_GetOpaque(val, js_line_iterator_class_id));
 }
 
-JSValue js_line_iterator_wrap(JSContext* ctx, const cv::LineIterator& line_iterator) {
+JSValue
+js_line_iterator_wrap(JSContext* ctx, const cv::LineIterator& line_iterator) {
   JSValue ret;
   JSLineIteratorData* li;
 
@@ -439,7 +442,8 @@ js_line_iterator_init(JSContext* ctx, JSModuleDef* m) {
 #define JS_INIT_MODULE js_init_module_line_iterator
 #endif
 
-extern "C" void js_line_iterator_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void
+js_line_iterator_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "LineIterator");
 }
 

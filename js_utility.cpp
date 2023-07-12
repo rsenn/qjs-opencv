@@ -15,7 +15,8 @@ extern "C" {
 JSValue tick_meter_proto = JS_UNDEFINED, tick_meter_class = JS_UNDEFINED;
 thread_local JSClassID js_tick_meter_class_id = 0;
 
-JSValue js_tick_meter_new(JSContext* ctx) {
+JSValue
+js_tick_meter_new(JSContext* ctx) {
   JSValue ret;
   JSTickMeterData* s;
 
@@ -173,7 +174,8 @@ js_utility_init(JSContext* ctx, JSModuleDef* m) {
   return 0;
 }
 
-extern "C" void js_utility_export(JSContext* ctx, JSModuleDef* m) {
+extern "C" void
+js_utility_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "TickMeter");
 }
 
