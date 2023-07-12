@@ -11,7 +11,7 @@ png_read(const std::string& filename) {
 
   cv::Size s(image.get_width(), image.get_height());
 
-  //std::cout << "width: " << s.width << " height: " << s.height << std::endl;
+  // std::cout << "width: " << s.width << " height: " << s.height << std::endl;
 
   cv::Mat ret(s, CV_8UC4);
 
