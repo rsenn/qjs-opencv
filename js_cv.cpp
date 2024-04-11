@@ -29,7 +29,9 @@
 #include <opencv2/core/version.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
+#ifdef HAVE_OPENCV2_XIMGPROC_HPP
 #include <opencv2/ximgproc.hpp>
+#endif
 #include <opencv2/videoio.hpp>
 #include <string>
 #include <vector>

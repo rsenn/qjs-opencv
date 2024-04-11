@@ -90,6 +90,13 @@ endif(HAVE_LIBDL)
 
 check_library_exists(json-cpp ZN4YAML6detail9node_data9reset_mapEv /usr JSON_CPP)
 
+CHECK_INCLUDE_DEF(X11/X.h)
+check_library_exists(X11 XOpenDisplay /usr/lib HAVE_LIBX11)
+
+if(HAVE_LIBX11 AND HAVE_X11_X_H)
+	set(HAVE_X11 TRUE)
+endif(HAVE_LIBX11 AND HAVE_X11_X_H)
+
 find_quickjs()
 find_opencv()
 
@@ -102,22 +109,26 @@ include(CheckIncludeFileCXX)
 
 set(CMAKE_REQUIRED_INCLUDES "${OPENCV_INCLUDE_DIRS}")
 check_include_file_cxx(opencv2/freetype.hpp HAVE_OPENCV2_FREETYPE_HPP)
-if(HAVE_OPENCV2_FREETYPE_HPP)
+check_library_exists(opencv_freetype _ZN2cv8freetype13FreeType2ImplC1Ev /usr OPENCV_FREETYPE)
+if(HAVE_OPENCV2_FREETYPE_HPP AND OPENCV_FREETYPE)
   add_definitions(-DHAVE_OPENCV_FREETYPE)
   set(OPENCV_FREETYPE_LIBRARY opencv_freetype)
-endif(HAVE_OPENCV2_FREETYPE_HPP)
+else(HAVE_OPENCV2_FREETYPE_HPP AND OPENCV_FREETYPE)
+  set(OPENCV_FREETYPE_LIBRARY )
+endif(HAVE_OPENCV2_FREETYPE_HPP AND OPENCV_FREETYPE)
 
 check_include_file_cxx(opencv2/xfeatures2d.hpp HAVE_OPENCV2_XFEATURES2D_HPP)
 #dump(HAVE_OPENCV2_XFEATURES2D_HPP)
 if(HAVE_OPENCV2_XFEATURES2D_HPP)
-  add_definitions(-DHAVE_OPENCV2_XFEATURES2D_HPP)
+  add_definitions(-DHAVE_OPENCV2_XFEATURES2D_HPP=1)
   set(OPENCV_XFEATURES2D_LIBRARY opencv_xfeatures2d)
+  set(FEATURE2D_SOURCE js_feature2d.cpp)
 endif(HAVE_OPENCV2_XFEATURES2D_HPP)
 
 check_include_file_cxx(opencv2/ximgproc.hpp HAVE_OPENCV2_XIMGPROC_HPP)
 #dump(HAVE_OPENCV2_XIMGPROC_HPP)
 if(HAVE_OPENCV2_XIMGPROC_HPP)
-  add_definitions(-DHAVE_OPENCV2_XIMGPROC_HPP)
+  add_definitions(-DHAVE_OPENCV2_XIMGPROC_HPP=1)
   set(OPENCV_XIMGPROC_LIBRARY opencv_ximgproc)
 endif(HAVE_OPENCV2_XIMGPROC_HPP)
 
@@ -195,7 +206,7 @@ file(
   js_cv.cpp
   js_draw.cpp
   js_fast_line_detector.cpp
-  js_feature2d.cpp
+  ${FEATURE2D_SOURCE}  
   js_imgproc.cpp
   js_keypoint.cpp
   js_line.cpp
