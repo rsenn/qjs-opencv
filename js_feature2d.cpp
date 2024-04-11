@@ -24,6 +24,7 @@ typedef cv::Ptr<cv::Feature2D> JSFeature2DData;
 #include <opencv2/xfeatures2d.hpp>
 #include <opencv2/xfeatures2d/nonfree.hpp>
 
+using namespace cv::xfeatures2d;
 using cv::SIFT;
 #else
 #warning No xfeatures2d
@@ -38,7 +39,6 @@ using cv::KAZE;
 using cv::MSER;
 using cv::ORB;
 using cv::SimpleBlobDetector;
-using namespace cv::xfeatures2d;
 
 static SimpleBlobDetector::Params simple_blob_params;
 
@@ -404,6 +404,17 @@ js_feature2d_orb(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst
 }
 
 static JSValue
+js_feature2d_simple_blob(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
+  cv::Ptr<SimpleBlobDetector> simple_blob;
+  JSValue ret;
+  simple_blob = SimpleBlobDetector::create();
+  ret = js_feature2d_wrap(ctx, simple_blob);
+  js_set_tostringtag(ctx, ret, "SimpleBlobDetector");
+  return ret;
+}
+
+#ifdef HAVE_OPENCV2_XFEATURES2D_HPP
+static JSValue
 js_feature2d_sift(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   cv::Ptr<SIFT> sift;
   JSValue ret;
@@ -433,16 +444,6 @@ js_feature2d_sift(JSContext* ctx, JSValueConst new_target, int argc, JSValueCons
 
   ret = js_feature2d_wrap(ctx, sift);
   js_set_tostringtag(ctx, ret, "SIFT");
-  return ret;
-}
-
-static JSValue
-js_feature2d_simple_blob(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
-  cv::Ptr<SimpleBlobDetector> simple_blob;
-  JSValue ret;
-  simple_blob = SimpleBlobDetector::create();
-  ret = js_feature2d_wrap(ctx, simple_blob);
-  js_set_tostringtag(ctx, ret, "SimpleBlobDetector");
   return ret;
 }
 
@@ -484,6 +485,7 @@ js_feature2d_boost(JSContext* ctx, JSValueConst new_target, int argc, JSValueCon
   js_set_tostringtag(ctx, ret, "BoostDesc");
   return ret;
 }
+#endif
 
 static JSValue
 js_feature2d_brief(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {

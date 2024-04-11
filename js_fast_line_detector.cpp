@@ -9,8 +9,10 @@
 #include <opencv2/core/matx.hpp>
 #include <quickjs.h>
 #include <stddef.h>
-#include <cstdint>
+#ifdef HAVE_OPENCV2_XIMGPROC_HPP
+#include <opencv2/ximgproc.hpp>
 #include <opencv2/ximgproc/fast_line_detector.hpp>
+#include <cstdint>
 #include <vector>
 
 typedef cv::Ptr<cv::ximgproc::FastLineDetector> JSFastLineDetector;
@@ -200,3 +202,4 @@ JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   js_fast_line_detector_export(ctx, m);
   return m;
 }
+#endif

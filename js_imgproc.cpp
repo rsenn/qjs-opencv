@@ -33,7 +33,9 @@
 #include <map>
 #include <memory>
 #include <opencv2/imgproc.hpp>
+#ifdef HAVE_OPENCV2_XIMGPROC_HPP
 #include <opencv2/ximgproc.hpp>
+#endif
 #include <string>
 #include <vector>
 #include "lsd_opencv.hpp"
@@ -1947,6 +1949,8 @@ enum {
   ANISOTROPIC_DIFFUSION,
 };
 
+#ifdef HAVE_OPENCV2_XIMGPROC_HPP
+
 static JSValue
 js_ximgproc_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSInputArray src;
@@ -2000,6 +2004,7 @@ js_ximgproc_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
 
   return ret;
 }
+#endif
 
 thread_local JSClassID js_imgproc_class_id = 0;
 
@@ -2018,6 +2023,7 @@ JSClassDef js_imgproc_class = {
 typedef std::vector<JSCFunctionListEntry> js_function_list_t;
 
 js_function_list_t js_ximgproc_static_funcs{
+#ifdef HAVE_OPENCV2_XIMGPROC_HPP
     JS_CFUNC_MAGIC_DEF("thinning", 2, js_ximgproc_func, THINNING),
     JS_CFUNC_MAGIC_DEF("niBlackThreshold", 6, js_ximgproc_func, NI_BLACK_THRESHOLD),
     JS_CFUNC_MAGIC_DEF("anisotropicDiffusion", 5, js_ximgproc_func, ANISOTROPIC_DIFFUSION),
@@ -2027,6 +2033,7 @@ js_function_list_t js_ximgproc_static_funcs{
     JS_PROP_INT32_DEF("BINARIZATION_SAUVOLA", cv::ximgproc::BINARIZATION_SAUVOLA, JS_PROP_ENUMERABLE),
     JS_PROP_INT32_DEF("BINARIZATION_WOLF", cv::ximgproc::BINARIZATION_WOLF, JS_PROP_ENUMERABLE),
     JS_PROP_INT32_DEF("BINARIZATION_NICK", cv::ximgproc::BINARIZATION_NICK, JS_PROP_ENUMERABLE),
+#endif
 };
 
 js_function_list_t js_imgproc_static_funcs{

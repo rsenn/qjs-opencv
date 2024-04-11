@@ -18,7 +18,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
-#else
+#elif defined(HAVE_X11) 
 #include <X11/Xlib.h>
 #endif
 
@@ -102,10 +102,11 @@ js_cv_resize_window(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 static JSValue
 js_cv_get_screen_resolution(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   int width, height;
+
 #if _WIN32
   width = (int)GetSystemMetrics(SM_CXSCREEN);
   height = (int)GetSystemMetrics(SM_CYSCREEN);
-#else
+#elif defined(HAVE_X11)
   Display* disp = XOpenDisplay(NULL);
   Screen* scrn = DefaultScreenOfDisplay(disp);
   width = scrn->width;
