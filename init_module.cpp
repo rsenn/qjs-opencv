@@ -28,7 +28,7 @@ extern "C" int js_keypoint_init(JSContext*, JSModuleDef*);
 extern "C" int js_feature2d_init(JSContext*, JSModuleDef*);
 extern "C" int js_libcamera_app_init(JSContext*, JSModuleDef*);
 extern "C" int js_raspi_cam_init(JSContext*, JSModuleDef*);
-extern "C" int js_bgsubtractor_init(JSContext*, JSModuleDef*);
+extern "C" int js_bg_subtractor_init(JSContext*, JSModuleDef*);
 
 extern "C" void js_clahe_export(JSContext*, JSModuleDef*);
 extern "C" void js_contour_export(JSContext*, JSModuleDef*);
@@ -56,7 +56,7 @@ extern "C" void js_keypoint_export(JSContext*, JSModuleDef*);
 extern "C" void js_feature2d_export(JSContext*, JSModuleDef*);
 extern "C" void js_libcamera_app_export(JSContext*, JSModuleDef*);
 extern "C" void js_raspi_cam_export(JSContext*, JSModuleDef*);
-extern "C" void js_bgsubtractor_export(JSContext*, JSModuleDef*);
+extern "C" void js_bg_subtractor_export(JSContext*, JSModuleDef*);
 
 int
 js_opencv_init(JSContext* ctx, JSModuleDef* m) {
@@ -90,7 +90,7 @@ js_opencv_init(JSContext* ctx, JSModuleDef* m) {
 #ifdef USE_LCCV
   js_raspi_cam_init(ctx, m);
 #endif
-  js_bgsubtractor_init(ctx, m);
+  js_bg_subtractor_init(ctx, m);
   return 0;
 }
 
@@ -137,7 +137,7 @@ JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
 #ifdef USE_LCCV
   js_raspi_cam_export(ctx, m);
 #endif
-  js_bgsubtractor_export(ctx, m);
+  js_bg_subtractor_export(ctx, m);
 
   return m;
 }

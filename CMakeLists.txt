@@ -38,7 +38,8 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/JSBindings.cmake)
 if(UNIX AND NOT APPLE)
   include(GNUInstallDirs)
 elseif(NOT DEFINED CMAKE_INSTALL_LIBDIR)
-  set(CMAKE_INSTALL_LIBDIR "" CACHE PATH "Specify the output directory for libraries (default is lib)")
+  set(CMAKE_INSTALL_LIBDIR "" CACHE PATH
+                                    "Specify the output directory for libraries (default is lib)")
 endif()
 
 message(STATUS "Finding QuickJS...")
@@ -90,11 +91,11 @@ endif(HAVE_LIBDL)
 
 check_library_exists(json-cpp ZN4YAML6detail9node_data9reset_mapEv /usr JSON_CPP)
 
-CHECK_INCLUDE_DEF(X11/X.h)
+check_include_def(X11/X.h)
 check_library_exists(X11 XOpenDisplay /usr/lib HAVE_LIBX11)
 
 if(HAVE_LIBX11 AND HAVE_X11_X_H)
-	set(HAVE_X11 TRUE)
+  set(HAVE_X11 TRUE)
 endif(HAVE_LIBX11 AND HAVE_X11_X_H)
 
 find_quickjs()
@@ -114,7 +115,7 @@ if(HAVE_OPENCV2_FREETYPE_HPP AND OPENCV_FREETYPE)
   add_definitions(-DHAVE_OPENCV_FREETYPE)
   set(OPENCV_FREETYPE_LIBRARY opencv_freetype)
 else(HAVE_OPENCV2_FREETYPE_HPP AND OPENCV_FREETYPE)
-  set(OPENCV_FREETYPE_LIBRARY )
+  set(OPENCV_FREETYPE_LIBRARY)
 endif(HAVE_OPENCV2_FREETYPE_HPP AND OPENCV_FREETYPE)
 
 check_include_file_cxx(opencv2/xfeatures2d.hpp HAVE_OPENCV2_XFEATURES2D_HPP)
@@ -139,6 +140,17 @@ check_cxx_symbol_exists(cv::AffineFeature opencv2/features2d.hpp HAVE_OPENCV_AFF
 if(HAVE_OPENCV_AFFINE_FEATURE)
   add_definitions(-DHAVE_OPENCV_AFFINE_FEATURE)
 endif(HAVE_OPENCV_AFFINE_FEATURE)
+
+#[[check_include_file_cxx(opencv2/bgsegm.hpp HAVE_OPENCV2_BGSEGM_HPP)
+check_library_exists(opencv_bgsegm _ZN2cv6bgsegm30createBackgroundSubtractorLSBPEiiiffffffffii /usr
+                     OPENCV_BGSEGM)
+if(HAVE_OPENCV2_BGSEGM_HPP AND OPENCV_BGSEGM)
+  add_definitions(-DHAVE_OPENCV_BGSEGM)
+  set(OPENCV_BGSEGM_LIBRARY opencv_bgsegm)
+else(HAVE_OPENCV2_BGSEGM_HPP AND OPENCV_BGSEGM)
+  set(OPENCV_BGSEGM_LIBRARY)
+endif(HAVE_OPENCV2_BGSEGM_HPP AND OPENCV_BGSEGM)]]
+set(OPENCV_BGSEGM_LIBRARY opencv_bgsegm)
 
 check_cxx_standard_flag()
 
@@ -206,7 +218,7 @@ file(
   js_cv.cpp
   js_draw.cpp
   js_fast_line_detector.cpp
-  ${FEATURE2D_SOURCE}  
+  ${FEATURE2D_SOURCE}
   js_imgproc.cpp
   js_keypoint.cpp
   js_line.cpp
@@ -223,7 +235,7 @@ file(
   js_subdiv2d.cpp
   js_umat.cpp
   js_utility.cpp
-  js_bgsubtractor.cpp
+  js_bg_subtractor.cpp
   js_video_capture.cpp
   js_video_writer.cpp
   line.cpp
@@ -250,7 +262,8 @@ if(USE_LCCV)
   add_subdirectory(LCCV)
   include_directories(LCCV/include)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -fvisibility=hidden")
-  set(LCCV_LIBRARIES "${CMAKE_CURRENT_BINARY_DIR}/LCCV/liblccv.a" camera camera-base event event_pthreads Threads::Threads)
+  set(LCCV_LIBRARIES "${CMAKE_CURRENT_BINARY_DIR}/LCCV/liblccv.a" camera camera-base event
+                     event_pthreads Threads::Threads)
   set(LCCV_LIBRARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/LCCV" CACHE PATH "liblccv library directory")
 
   link_directories(${LCCV_LIBRARY_DIR})
@@ -268,7 +281,9 @@ endif(USE_LCCV)
 #
 #make_module(opencv init_module.cpp)
 
-list(APPEND jsbindings_LIBRARIES ${QUICKJS_LIBRARY} ${PNG_LIBRARIES} ${OPENCV_XIMGPROC_LIBRARY} ${OPENCV_XFEATURES2D_LIBRARY} ${OPENCV_FREETYPE_LIBRARY} ${OPENCV_LIBRARIES})
+list(APPEND jsbindings_LIBRARIES ${QUICKJS_LIBRARY} ${PNG_LIBRARIES} ${OPENCV_XIMGPROC_LIBRARY}
+     ${OPENCV_XFEATURES2D_LIBRARY} ${OPENCV_FREETYPE_LIBRARY} ${OPENCV_BGSEGM_LIBRARY}
+     ${OPENCV_LIBRARIES})
 
 if(USE_LIBCAMERA OR USE_LCCV)
   list(APPEND jsbindings_LIBRARIES ${pkgcfg_lib_LIBCAMERA_camera})
