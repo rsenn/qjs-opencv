@@ -223,6 +223,7 @@ file(
   js_subdiv2d.cpp
   js_umat.cpp
   js_utility.cpp
+  js_bgsubtractor.cpp
   js_video_capture.cpp
   js_video_writer.cpp
   line.cpp

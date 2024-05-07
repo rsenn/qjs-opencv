@@ -18,7 +18,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
-#elif defined(HAVE_X11) 
+#elif defined(HAVE_X11)
 #include <X11/Xlib.h>
 #endif
 
