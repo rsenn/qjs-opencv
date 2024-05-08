@@ -94,6 +94,8 @@ js_opencv_init(JSContext* ctx, JSModuleDef* m) {
 #endif
   js_bg_subtractor_init(ctx, m);
   js_white_balancer_init(ctx, m);
+  js_barcode_detector_init(ctx, m);
+
   return 0;
 }
 
@@ -142,6 +144,7 @@ JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
 #endif
   js_bg_subtractor_export(ctx, m);
   js_white_balancer_export(ctx, m);
+  js_barcode_detector_export(ctx, m);
 
   return m;
 }
