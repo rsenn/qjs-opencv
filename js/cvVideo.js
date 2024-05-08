@@ -21,12 +21,7 @@ const Crop = (() => {
   };
 })();
 
-function ImageSize(
-  src,
-  dst,
-  dsize,
-  action = (name, arg1, arg2) => console.debug(`${name} ${arg1} -> ${arg2}`)
-) {
+function ImageSize(src, dst, dsize, action = (name, arg1, arg2) => console.debug(`${name} ${arg1} -> ${arg2}`)) {
   let s,
     roi,
     f,
@@ -151,12 +146,7 @@ export class ImageSequence {
     if(mat) {
       let { size: frameSize } = frame;
       let doResize = !frameSize.equals(targetSize);
-      if(doResize)
-        ImageSize(frame, mat, targetSize, (name, arg1, arg2) =>
-          console.debug(
-            `ImageSize[${this.framePos}] ${name} ${arg1.toString()} -> ${arg2.toString()}`
-          )
-        );
+      if(doResize) ImageSize(frame, mat, targetSize, (name, arg1, arg2) => console.debug(`ImageSize[${this.framePos}] ${name} ${arg1.toString()} -> ${arg2.toString()}`));
       else frame.copyTo(mat);
       return !mat.emtpy;
     }
@@ -174,8 +164,7 @@ export class ImageSequence {
   }
 }
 
-const isVideoPath = arg =>
-  /\.(3gp|avi|f4v|flv|m4v|m2v|mkv|mov|mp4|mpeg|mpg|ogm|vob|webm|wmv)$/i.test(arg);
+const isVideoPath = arg => /\.(3gp|avi|f4v|flv|m4v|m2v|mkv|mov|mp4|mpeg|mpg|ogm|vob|webm|wmv)$/i.test(arg);
 
 export class VideoSource {
   static backends = Object.fromEntries(
@@ -239,55 +228,58 @@ export class VideoSource {
   props = new Lookup(
     prop => this.cap.get(this.propId(prop)),
     (prop, value) => this.cap.set(this.propId(prop), value),
-    () => [
-      'pos_msec',
-      'pos_frames',
-      'pos_avi_ratio',
-      'frame_width',
-      'frame_height',
-      'fps',
-      'fourcc',
-      'frame_count',
-      'format',
-      'mode',
-      'brightness',
-      'contrast',
-      'saturation',
-      'hue',
-      'gain',
-      'exposure',
-      'convert_rgb',
-      'white_balance_blue_u',
-      'rectification',
-      'monochrome',
-      'sharpness',
-      'auto_exposure',
-      'gamma',
-      'temperature',
-      'trigger',
-      'trigger_delay',
-      'white_balance_red_v',
-      'zoom',
-      'focus',
-      'guid',
-      'iso_speed',
-      ,
-      'backlight',
-      'pan',
-      'tilt',
-      'roll',
-      'iris',
-      'settings',
-      'buffersize',
-      'autofocus',
-      'sar_num',
-      'sar_den',
-      'backend',
-      'channel',
-      'auto_wb',
-      'wb_temperature',
-      'codec_pixel_format'
-    ].filter(s => typeof s == 'string').filter(s => /pos_/.test(s) || this.cap.get(this.propId(s)) !== 0)
+    () =>
+      [
+        'pos_msec',
+        'pos_frames',
+        'pos_avi_ratio',
+        'frame_width',
+        'frame_height',
+        'fps',
+        'fourcc',
+        'frame_count',
+        'format',
+        'mode',
+        'brightness',
+        'contrast',
+        'saturation',
+        'hue',
+        'gain',
+        'exposure',
+        'convert_rgb',
+        'white_balance_blue_u',
+        'rectification',
+        'monochrome',
+        'sharpness',
+        'auto_exposure',
+        'gamma',
+        'temperature',
+        'trigger',
+        'trigger_delay',
+        'white_balance_red_v',
+        'zoom',
+        'focus',
+        'guid',
+        'iso_speed',
+        ,
+        'backlight',
+        'pan',
+        'tilt',
+        'roll',
+        'iris',
+        'settings',
+        'buffersize',
+        'autofocus',
+        'sar_num',
+        'sar_den',
+        'backend',
+        'channel',
+        'auto_wb',
+        'wb_temperature',
+        'codec_pixel_format'
+      ]
+        .filter(s => typeof s == 'string')
+        .filter(s => /pos_/.test(s) || this.cap.get(this.propId(s)) !== 0)
   );
 
   capture(device, driverId) {
@@ -374,22 +366,8 @@ export class VideoSource {
     return this.get('fps');
   }
 
-  dump(
-    props = [
-      'frame_count',
-      'frame_width',
-      'frame_height',
-      'fps',
-      'format',
-      'fourcc',
-      'backend',
-      'pos_frames',
-      'pos_msec'
-    ]
-  ) {
-    return new Map(
-      props.map(propName => [propName, this.get(propName)]).filter(([k, v]) => v !== undefined)
-    );
+  dump(props = ['frame_count', 'frame_width', 'frame_height', 'fps', 'format', 'fourcc', 'backend', 'pos_frames', 'pos_msec']) {
+    return new Map(props.map(propName => [propName, this.get(propName)]).filter(([k, v]) => v !== undefined));
   }
 
   seekFrames(relative) {
@@ -421,8 +399,7 @@ export class VideoSource {
           return '#' + this[0] + '/' + this[1];
         }
       });
-    if(type.indexOf('ercent') != -1 || type == '%')
-      return (this.get('pos_frames') * 100) / this.get('frame_count');
+    if(type.indexOf('ercent') != -1 || type == '%') return (this.get('pos_frames') * 100) / this.get('frame_count');
     return Define([this.tellMsecs, this.durationMsecs], {
       toString() {
         return FormatTime(this[0]) + '/' + FormatTime(this[1]);

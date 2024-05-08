@@ -16,12 +16,12 @@ extern "C" int js_bg_subtractor_init(JSContext*, JSModuleDef*);
 
 static JSValue
 js_bg_subtractor_wrap(JSContext* ctx, JSBackgroundSubtractorData& s) {
-   JSBackgroundSubtractorData* ptr;
+  JSBackgroundSubtractorData* ptr;
 
   if(!(ptr = js_allocate<JSBackgroundSubtractorData>(ctx)))
     return JS_ThrowOutOfMemory(ctx);
 
- JSValue ret = JS_NewObjectProtoClass(ctx, bg_subtractor_proto, js_bg_subtractor_class_id);
+  JSValue ret = JS_NewObjectProtoClass(ctx, bg_subtractor_proto, js_bg_subtractor_class_id);
 
   *ptr = s;
   JS_SetOpaque(ret, ptr);
@@ -136,8 +136,7 @@ js_bg_subtractor_function(JSContext* ctx, JSValueConst this_val, int argc, JSVal
     case BGSEGM_LSBP: {
       int32_t mc = cv::bgsegm::LSBP_CAMERA_MOTION_COMPENSATION_NONE, n_samples = 20, radius = 16, LSBPthreshold = 8, min_count = 2;
 
-      double t_lower = 2.0, t_upper = 32.0, t_inc = 1.0, t_dec = 0.05, r_scale = 10.0, r_incdec = 0.005, nrtf_bg = 0.0004,
-             nrtf_fg = 0.0008;
+      double t_lower = 2.0, t_upper = 32.0, t_inc = 1.0, t_dec = 0.05, r_scale = 10.0, r_incdec = 0.005, nrtf_bg = 0.0004, nrtf_fg = 0.0008;
 
       if(argc > 0)
         JS_ToInt32(ctx, &mc, argv[0]);
@@ -162,8 +161,7 @@ js_bg_subtractor_function(JSContext* ctx, JSValueConst this_val, int argc, JSVal
       if(argc > 10)
         JS_ToFloat64(ctx, &nrtf_fg, argv[10]);
 
-      s = cv::bgsegm::createBackgroundSubtractorLSBP(
-          mc, n_samples, radius, t_lower, t_upper, t_inc, t_dec, r_scale, r_incdec, nrtf_bg, nrtf_fg);
+      s = cv::bgsegm::createBackgroundSubtractorLSBP(mc, n_samples, radius, t_lower, t_upper, t_inc, t_dec, r_scale, r_incdec, nrtf_bg, nrtf_fg);
       break;
     }
 
@@ -251,7 +249,7 @@ js_bg_subtractor_method(JSContext* ctx, JSValueConst this_val, int argc, JSValue
   }
 
   return JS_UNDEFINED;
-} 
+}
 
 JSClassDef js_bg_subtractor_class = {
     .class_name = "BackgroundSubtractor",

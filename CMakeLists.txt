@@ -236,6 +236,7 @@ file(
   js_umat.cpp
   js_utility.cpp
   js_bg_subtractor.cpp
+  js_white_balancer.cpp
   js_video_capture.cpp
   js_video_writer.cpp
   line.cpp
