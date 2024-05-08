@@ -30,6 +30,7 @@ extern "C" int js_libcamera_app_init(JSContext*, JSModuleDef*);
 extern "C" int js_raspi_cam_init(JSContext*, JSModuleDef*);
 extern "C" int js_bg_subtractor_init(JSContext*, JSModuleDef*);
 extern "C" int js_white_balancer_init(JSContext*, JSModuleDef*);
+extern "C" int js_barcode_detector_init(JSContext*, JSModuleDef*);
 
 extern "C" void js_clahe_export(JSContext*, JSModuleDef*);
 extern "C" void js_contour_export(JSContext*, JSModuleDef*);
@@ -59,6 +60,7 @@ extern "C" void js_libcamera_app_export(JSContext*, JSModuleDef*);
 extern "C" void js_raspi_cam_export(JSContext*, JSModuleDef*);
 extern "C" void js_bg_subtractor_export(JSContext*, JSModuleDef*);
 extern "C" void js_white_balancer_export(JSContext*, JSModuleDef*);
+extern "C" void js_barcode_detector_export(JSContext*, JSModuleDef*);
 
 int
 js_opencv_init(JSContext* ctx, JSModuleDef* m) {

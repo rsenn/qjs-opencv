@@ -6,7 +6,7 @@
 #include <opencv2/barcode.hpp>
 
 typedef cv::barcode::BarcodeDetector JSBarcodeDetectorClass;
-typedef cv::Ptr<JSBarcodeDetectorClass> JSBarcodeDetectorData;
+typedef JSBarcodeDetectorClass JSBarcodeDetectorData;
 
 JSValue barcode_detector_proto = JS_UNDEFINED, barcode_detector_class = JS_UNDEFINED;
 JSClassID js_barcode_detector_class_id;
@@ -27,58 +27,48 @@ js_barcode_detector_wrap(JSContext* ctx, JSBarcodeDetectorData& wb) {
 
   return ret;
 }
-
-enum {
-  WB_SIMPLE,
-  WB_GRAYWORLD,
-  WB_LEARNING,
-  APPLY_CHANNEL_GAINS,
-};
-
 static JSValue
-js_barcode_detector_function(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
-  JSBarcodeDetectorData wb;
+js_barcode_detector_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
+  JSValue proto, obj = JS_UNDEFINED;
+  JSBarcodeDetectorData* bd;
+  const char *prototxt_path = nullptr, *model_path = nullptr;
 
-  switch(magic) {
+  if(!(bd = js_allocate<cv::barcode::BarcodeDetector>(ctx)))
+    return JS_EXCEPTION;
 
-    case WB_SIMPLE: {
-      wb = cv::xphoto::createSimpleWB();
-      break;
-    }
+  if(argc > 0)
+    prototxt_path = JS_ToCString(ctx, argv[0]);
+  if(argc > 1)
+    model_path = JS_ToCString(ctx, argv[1]);
 
-    case WB_GRAYWORLD: {
-      wb = cv::xphoto::createGrayworldWB();
-      break;
-    }
+  new(bd) cv::barcode::BarcodeDetector(prototxt_path ? prototxt_path : "", model_path ? model_path : "");
 
-    case WB_LEARNING: {
-      const char* s = nullptr;
+  if(prototxt_path)
+    JS_FreeCString(ctx, prototxt_path);
+  if(model_path)
+    JS_FreeCString(ctx, model_path);
 
-      if(argc > 0)
-        s = JS_ToCString(ctx, argv[0]);
+  /* using new_target to get the prototype is necessary when the class is extended. */
+  proto = JS_GetPropertyStr(ctx, new_target, "prototype");
+  if(JS_IsException(proto))
+    goto fail;
 
-      wb = cv::xphoto::createLearningBasedWB(s ? s : cv::String());
+  obj = JS_NewObjectProtoClass(ctx, proto, js_barcode_detector_class_id);
 
-      if(s)
-        JS_FreeCString(ctx, s);
-      break;
-    }
+  JS_FreeValue(ctx, proto);
 
-    case APPLY_CHANNEL_GAINS: {
-      JSInputArray src = js_input_array(ctx, argv[0]);
-      JSOutputArray dst = js_cv_outputarray(ctx, argv[1]);
-      double gain_r = 1, gain_g = 1, gain_b = 1;
+  if(JS_IsException(obj))
+    goto fail;
 
-      JS_ToFloat64(ctx, &gain_b, argv[2]);
-      JS_ToFloat64(ctx, &gain_g, argv[3]);
-      JS_ToFloat64(ctx, &gain_r, argv[4]);
+  JS_SetOpaque(obj, bd);
 
-      cv::xphoto::applyChannelGains(src, dst, gain_b, gain_g, gain_r);
-      return JS_UNDEFINED;
-    }
-  }
+  return obj;
 
-  return wb ? js_barcode_detector_wrap(ctx, wb) : JS_NULL;
+fail:
+  js_deallocate(ctx, bd);
+fail2:
+  JS_FreeValue(ctx, obj);
+  return JS_EXCEPTION;
 }
 
 JSBarcodeDetectorData*
@@ -91,28 +81,65 @@ js_barcode_detector_finalizer(JSRuntime* rt, JSValue val) {
   JSBarcodeDetectorData* wb = static_cast<JSBarcodeDetectorData*>(JS_GetOpaque(val, js_barcode_detector_class_id));
   /* Note: 'wb' can be NULL in case JS_SetOpaque() was not called */
 
-  (*wb)->~JSBarcodeDetectorClass();
+  wb->~JSBarcodeDetectorClass();
 
   js_deallocate<JSBarcodeDetectorData>(rt, wb);
 }
 
-enum { BALANCE_WHITE = 0 };
+enum {
+  METHOD_DETECT,
+  METHOD_DECODE,
+  METHOD_DETECT_AND_DECODE,
+};
 
 static JSValue
 js_barcode_detector_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSBarcodeDetectorData* wb = static_cast<JSBarcodeDetectorData*>(JS_GetOpaque2(ctx, this_val, js_barcode_detector_class_id));
+  JSValue ret = JS_UNDEFINED;
 
   switch(magic) {
-    case BALANCE_WHITE: {
-      JSInputArray src = js_input_array(ctx, argv[0]);
-      JSOutputArray dst = js_cv_outputarray(ctx, argv[1]);
 
-      (*wb)->balanceWhite(src, dst);
+    case METHOD_DETECT: {
+      JSInputArray img = js_input_array(ctx, argv[0]);
+      JSOutputArray points = js_cv_outputarray(ctx, argv[1]);
+
+      BOOL result = wb->detect(img, points);
+      ret = JS_NewBool(ctx, result);
+      break;
+    }
+
+    case METHOD_DECODE: {
+      JSInputArray img = js_input_array(ctx, argv[0]);
+      JSInputArray points = js_input_array(ctx, argv[1]);
+      std::vector<std::string> decoded_info;
+      std::vector<cv::barcode::BarcodeType> decoded_type;
+
+      BOOL result = wb->decode(img, points, decoded_info, decoded_type);
+      ret = JS_NewBool(ctx, result);
+
+      js_array_copy(ctx, argv[2], decoded_info);
+      js_array_copy(ctx, argv[3], decoded_type);
+
+      break;
+    }
+
+    case METHOD_DETECT_AND_DECODE: {
+      JSInputArray img = js_input_array(ctx, argv[0]);
+      std::vector<std::string> decoded_info;
+      std::vector<cv::barcode::BarcodeType> decoded_type;
+      JSOutputArray points = js_cv_outputarray(ctx, argv[3]);
+
+      BOOL result = wb->detectAndDecode(img, decoded_info, decoded_type, points);
+      ret = JS_NewBool(ctx, result);
+
+      js_array_copy(ctx, argv[1], decoded_info);
+      js_array_copy(ctx, argv[2], decoded_type);
+
       break;
     }
   }
 
-  return JS_UNDEFINED;
+  return ret;
 }
 
 JSClassDef js_barcode_detector_class = {
@@ -121,19 +148,14 @@ JSClassDef js_barcode_detector_class = {
 };
 
 const JSCFunctionListEntry js_barcode_detector_proto_funcs[] = {
-    JS_CFUNC_MAGIC_DEF("balanceWhite", 2, js_barcode_detector_method, BALANCE_WHITE),
+    JS_CFUNC_MAGIC_DEF("detect", 2, js_barcode_detector_method, METHOD_DETECT),
+    JS_CFUNC_MAGIC_DEF("decode", 4, js_barcode_detector_method, METHOD_DECODE),
+    JS_CFUNC_MAGIC_DEF("detectAndDecode", 4, js_barcode_detector_method, METHOD_DETECT_AND_DECODE),
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "BarcodeDetector", JS_PROP_CONFIGURABLE),
 };
 
-const JSCFunctionListEntry js_barcode_detector_create_funcs[] = {
-    JS_CFUNC_MAGIC_DEF("createSimpleWB", 0, js_barcode_detector_function, WB_SIMPLE),
-    JS_CFUNC_MAGIC_DEF("createGrayworldWB", 0, js_barcode_detector_function, WB_GRAYWORLD),
-    JS_CFUNC_MAGIC_DEF("createLearningBasedWB", 0, js_barcode_detector_function, WB_LEARNING),
-    JS_CFUNC_MAGIC_DEF("applyChannelGains", 0, js_barcode_detector_function, APPLY_CHANNEL_GAINS),
-};
-
 extern "C" int
-js_barcode_detector_init(JSContext* ctx, JSModuleDef* m) {
+js_barcode_detector_init(JSContext* ctx, JSModuleDef* bd) {
 
   /* create the BarcodeDetector class */
   JS_NewClassID(&js_barcode_detector_class_id);
@@ -143,14 +165,13 @@ js_barcode_detector_init(JSContext* ctx, JSModuleDef* m) {
   JS_SetPropertyFunctionList(ctx, barcode_detector_proto, js_barcode_detector_proto_funcs, countof(js_barcode_detector_proto_funcs));
   JS_SetClassProto(ctx, js_barcode_detector_class_id, barcode_detector_proto);
 
-  barcode_detector_class = JS_NewObject(ctx);
+  barcode_detector_class = JS_NewCFunction2(ctx, js_barcode_detector_constructor, "BarcodeDetector", 0, JS_CFUNC_constructor, 0);
 
   /* set proto.constructor and ctor.prototype */
   JS_SetConstructor(ctx, barcode_detector_class, barcode_detector_proto);
 
-  if(m) {
-    JS_SetModuleExport(ctx, m, "BarcodeDetector", barcode_detector_class);
-    JS_SetModuleExportList(ctx, m, js_barcode_detector_create_funcs, countof(js_barcode_detector_create_funcs));
+  if(bd) {
+    JS_SetModuleExport(ctx, bd, "BarcodeDetector", barcode_detector_class);
   }
 
   return 0;
@@ -171,19 +192,18 @@ js_barcode_detector_constructor(JSContext* ctx, JSValue parent, const char* name
 #endif
 
 extern "C" void
-js_barcode_detector_export(JSContext* ctx, JSModuleDef* m) {
-  JS_AddModuleExport(ctx, m, "BarcodeDetector");
-  JS_AddModuleExportList(ctx, m, js_barcode_detector_create_funcs, countof(js_barcode_detector_create_funcs));
+js_barcode_detector_export(JSContext* ctx, JSModuleDef* bd) {
+  JS_AddModuleExport(ctx, bd, "BarcodeDetector");
 }
 
 extern "C" JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
-  JSModuleDef* m;
-  m = JS_NewCModule(ctx, module_name, &js_barcode_detector_init);
+  JSModuleDef* bd;
+  bd = JS_NewCModule(ctx, module_name, &js_barcode_detector_init);
 
-  if(!m)
+  if(!bd)
     return NULL;
 
-  js_barcode_detector_export(ctx, m);
-  return m;
+  js_barcode_detector_export(ctx, bd);
+  return bd;
 }
