@@ -1,15 +1,13 @@
 #include "js_alloc.hpp"
 #include "js_size.hpp"
-#include "js_point.hpp"
 #include "js_mat.hpp"
 #include "js_umat.hpp"
-#include <opencv2/barcode.hpp>
- 
+#include <opencv2/calib3d.hpp>
+
 extern "C" int js_calib3d_init(JSContext*, JSModuleDef*);
- 
 
 enum {
- FIND_CHESSBOARD_CORNERS,
+  FIND_CHESSBOARD_CORNERS,
 };
 
 static JSValue
@@ -18,53 +16,42 @@ js_calib3d_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
 
   switch(magic) {
     case FIND_CHESSBOARD_CORNERS: {
+      JSInputOutputArray image = js_umat_or_mat(ctx, argv[0]);
+      cv::Size pattern_size = js_size_get(ctx, argv[1]);
+      std::vector<cv::Point2f> corners;
+      int32_t flags = cv::CALIB_CB_ADAPTIVE_THRESH | cv::CALIB_CB_NORMALIZE_IMAGE;
+
+      if(argc > 3)
+        JS_ToInt32(ctx, &flags, argv[3]);
+
+      BOOL result = cv::findChessboardCorners(image, pattern_size, corners, flags);
+
+      js_array_copy(ctx, argv[2], corners);
+
+      ret = JS_NewBool(ctx, result);
       break;
     }
- 
   }
 
   return ret;
 }
 
-JSClassDef js_calib3d_class = {
-    .class_name = "Calib3D",
-    .finalizer = js_calib3d_finalizer,
-};
- 
 const JSCFunctionListEntry js_calib3d_static_funcs[] = {
-  JS_CFUNC_MAGIC_DEF("findChessboardCorners", 3, js_calib3d_functions, FIND_CHESSBOARD_CORNERS),
+    JS_CFUNC_MAGIC_DEF("findChessboardCorners", 3, js_calib3d_functions, FIND_CHESSBOARD_CORNERS),
+    JS_PROP_INT32_DEF("CALIB_CB_ADAPTIVE_THRESH", cv::CALIB_CB_ADAPTIVE_THRESH, 0),
+    JS_PROP_INT32_DEF("CALIB_CB_NORMALIZE_IMAGE", cv::CALIB_CB_NORMALIZE_IMAGE, 0),
+    JS_PROP_INT32_DEF("CALIB_CB_FILTER_QUADS", cv::CALIB_CB_FILTER_QUADS, 0),
+    JS_PROP_INT32_DEF("CALIB_CB_FAST_CHECK", cv::CALIB_CB_FAST_CHECK, 0),
 };
 
 extern "C" int
 js_calib3d_init(JSContext* ctx, JSModuleDef* bd) {
 
-  /* create the Calib3D class */
-  JS_NewClassID(&js_calib3d_class_id);
-  JS_NewClass(JS_GetRuntime(ctx), js_calib3d_class_id, &js_calib3d_class);
-
-  calib3d_proto = JS_NewObject(ctx);
-  JS_SetPropertyFunctionList(ctx, calib3d_proto, js_calib3d_proto_funcs, countof(js_calib3d_proto_funcs));
-  JS_SetClassProto(ctx, js_calib3d_class_id, calib3d_proto);
-
-  calib3d_class = JS_NewCFunction2(ctx, js_calib3d_constructor, "Calib3D", 0, JS_CFUNC_constructor, 0);
-
-  /* set proto.constructor and ctor.prototype */
-  JS_SetConstructor(ctx, calib3d_class, calib3d_proto);
-
   if(bd) {
-    JS_SetModuleExport(ctx, bd, "Calib3D", calib3d_class);
     JS_SetModuleExportList(ctx, bd, js_calib3d_static_funcs, countof(js_calib3d_static_funcs));
   }
 
   return 0;
-}
-
-void
-js_calib3d_constructor(JSContext* ctx, JSValue parent, const char* name) {
-  if(JS_IsUndefined(calib3d_class))
-    js_calib3d_init(ctx, 0);
-
-  JS_SetPropertyStr(ctx, parent, name ? name : "Calib3D", calib3d_class);
 }
 
 #ifdef JS_Calib3D_MODULE
@@ -75,7 +62,6 @@ js_calib3d_constructor(JSContext* ctx, JSValue parent, const char* name) {
 
 extern "C" void
 js_calib3d_export(JSContext* ctx, JSModuleDef* bd) {
-  JS_AddModuleExport(ctx, bd, "Calib3D");
   JS_AddModuleExportList(ctx, bd, js_calib3d_static_funcs, countof(js_calib3d_static_funcs));
 }
 
