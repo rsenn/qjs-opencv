@@ -283,12 +283,14 @@ js_cv_mat_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
       ret = JS_NewInt64(ctx, cv::countNonZero(mat));
       break;
     }
+
     case MAT_FINDNONZERO: {
       std::vector<JSPointData<int>> output;
       cv::findNonZero(mat, output);
       ret = js_array_from(ctx, output);
       break;
     }
+
     case MAT_HCONCAT: {
       std::vector<cv::Mat> a;
       JSInputOutputArray dst;
@@ -299,6 +301,7 @@ js_cv_mat_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
       cv::hconcat(a.data(), a.size(), dst);
       break;
     }
+
     case MAT_VCONCAT: {
       std::vector<cv::Mat> a;
       JSInputOutputArray dst;
@@ -568,6 +571,7 @@ js_cv_core(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[],
       cv::convertFp16(src, dst);
       break;
     }
+
     case CORE_CONVERTSCALEABS: {
       double alpha = 1, beta = 0;
       if(argc >= 3)
@@ -577,6 +581,7 @@ js_cv_core(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[],
       cv::convertScaleAbs(src, dst, alpha, beta);
       break;
     }
+
     case CORE_COPYMAKEBORDER: {
       int32_t top, bottom, left, right, borderType;
       cv::Scalar value = cv::Scalar();
@@ -597,6 +602,7 @@ js_cv_core(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[],
 
       break;
     }
+
     case CORE_COPYTO: {
       JSInputArray mask = cv::noArray();
       if(argc >= 3)
@@ -604,6 +610,7 @@ js_cv_core(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[],
       cv::copyTo(src, dst, mask);
       break;
     }
+
     case CORE_DCT: {
       int32_t flags = 0;
       if(argc >= 3)
@@ -611,6 +618,7 @@ js_cv_core(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[],
       cv::dct(src, dst, flags);
       break;
     }
+
     case CORE_DFT: {
       int32_t flags = 0, nonZeroRows = 0;
       if(argc >= 3)
@@ -620,10 +628,12 @@ js_cv_core(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[],
       cv::dft(src, dst, flags, nonZeroRows);
       break;
     }
+
     case CORE_EXP: {
       cv::exp(src, dst);
       break;
     }
+
     case CORE_EXTRACTCHANNEL: {
       int32_t coi = 0;
       if(argc >= 3)
@@ -631,6 +641,7 @@ js_cv_core(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[],
       cv::extractChannel(src, dst, coi);
       break;
     }
+
     case CORE_FLIP: {
       int32_t flipCode = 0;
       if(argc >= 3)
@@ -638,6 +649,7 @@ js_cv_core(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[],
       cv::flip(src, dst, flipCode);
       break;
     }
+
     case CORE_IDCT: {
       int32_t flags = 0;
       if(argc >= 3)
@@ -645,6 +657,7 @@ js_cv_core(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[],
       cv::idct(src, dst, flags);
       break;
     }
+
     case CORE_IDFT: {
       int32_t flags = 0, nonZeroRows = 0;
       if(argc >= 3)
@@ -654,6 +667,7 @@ js_cv_core(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[],
       cv::idft(src, dst, flags, nonZeroRows);
       break;
     }
+
     case CORE_INVERT: {
       int flags = cv::DECOMP_LU;
       if(argc >= 3)
@@ -661,10 +675,12 @@ js_cv_core(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[],
       cv::invert(src, dst, flags);
       break;
     }
+
     case CORE_LOG: {
       cv::log(src, dst);
       break;
     }
+
     case CORE_MULTRANSPOSED: {
       BOOL aTa;
       JSInputArray delta = cv::noArray();
@@ -683,6 +699,7 @@ js_cv_core(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[],
 
       break;
     }
+
     case CORE_PERSPECTIVETRANSFORM: {
       JSInputArray m = cv::noArray();
       if(argc >= 3)
@@ -691,6 +708,7 @@ js_cv_core(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[],
       cv::perspectiveTransform(src, dst, m);
       break;
     }
+
     case CORE_REDUCE: {
       int32_t dim, rtype, dtype = -1;
       if(argc >= 3)
@@ -702,6 +720,7 @@ js_cv_core(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[],
       cv::reduce(src, dst, dim, rtype, dtype);
       break;
     }
+
     case CORE_ROTATE: {
       int32_t rotateCode = 0;
       if(argc >= 3)
@@ -709,6 +728,7 @@ js_cv_core(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[],
       cv::rotate(src, dst, rotateCode);
       break;
     }
+
     case CORE_SORT: {
       int32_t flags;
       if(argc >= 3)
@@ -716,6 +736,7 @@ js_cv_core(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[],
       cv::sort(src, dst, flags);
       break;
     }
+
     case CORE_SORTIDX: {
       int32_t flags;
       if(argc >= 3)
@@ -724,10 +745,12 @@ js_cv_core(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[],
       break;
       break;
     }
+
     case CORE_SQRT: {
       cv::sqrt(src, dst);
       break;
     }
+
     case CORE_TRANSFORM: {
       JSInputArray m = cv::noArray();
       if(argc >= 3)
@@ -736,6 +759,7 @@ js_cv_core(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[],
       cv::transform(src, dst, m);
       break;
     }
+
     case CORE_TRANSPOSE: {
       cv::transpose(src, dst);
       break;
@@ -798,6 +822,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       ret = js_color_new(ctx, mean);
       break;
     }
+
     case OTHER_CALC_COVAR_MATRIX: {
       JSOutputArray covar = cv::noArray();
       JSInputOutputArray mean = cv::noArray();
@@ -814,6 +839,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       cv::calcCovarMatrix(src, covar, mean, flags, ctype);
       break;
     }
+
     case OTHER_CART_TO_POLAR: {
       JSInputArray y = cv::noArray();
       JSOutputArray magnitude = cv::noArray(), angle = cv::noArray();
@@ -830,12 +856,14 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       cv::cartToPolar(src, y, magnitude, angle, angleInDegrees);
       break;
     }
+
     case OTHER_DETERMINANT: {
       double d;
       d = cv::determinant(src);
       ret = JS_NewFloat64(ctx, d);
       break;
     }
+
     case OTHER_EIGEN: {
       JSOutputArray eigenvalues = cv::noArray(), eigenvectors = cv::noArray();
       if(argc >= 2)
@@ -845,6 +873,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       ret = JS_NewBool(ctx, cv::eigen(src, eigenvalues, eigenvectors));
       break;
     }
+
     case OTHER_EIGEN_NON_SYMMETRIC: {
       JSOutputArray eigenvalues = cv::noArray(), eigenvectors = cv::noArray();
       if(argc >= 2)
@@ -855,6 +884,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
 
       break;
     }
+
     case OTHER_CHECK_RANGE: {
       BOOL result, quiet = TRUE;
       JSPointData<int> position, *pos = 0;
@@ -873,6 +903,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       ret = JS_NewBool(ctx, result);
       break;
     }
+
     case OTHER_IN_RANGE: {
       JSInputArray lowerb = cv::noArray(), upperb = cv::noArray();
       JSOutputArray dst = cv::noArray();
@@ -886,6 +917,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       cv::inRange(src, lowerb, upperb, dst);
       break;
     }
+
     case OTHER_INSERT_CHANNEL: {
       JSInputOutputArray dst = cv::noArray();
       int32_t coi;
@@ -896,6 +928,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       cv::insertChannel(src, dst, coi);
       break;
     }
+
     case OTHER_LUT: {
       JSInputArray lut = cv::noArray();
       JSOutputArray dst = cv::noArray();
@@ -906,6 +939,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       cv::LUT(src, lut, dst);
       break;
     }
+
     case OTHER_MAGNITUDE: {
       JSInputArray y = cv::noArray();
       JSOutputArray magnitude = cv::noArray();
@@ -916,6 +950,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       cv::magnitude(src, y, magnitude);
       break;
     }
+
     case OTHER_MAHALANOBIS: {
       JSInputArray v2 = cv::noArray(), icovar = cv::noArray();
       if(argc >= 2)
@@ -925,6 +960,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       ret = JS_NewFloat64(ctx, cv::Mahalanobis(src, v2, icovar));
       break;
     }
+
     case OTHER_MEAN_STD_DEV: {
       JSOutputArray mean = cv::noArray(), stdDev = cv::noArray();
       JSInputArray mask = cv::noArray();
@@ -938,6 +974,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
 
       break;
     }
+
     case OTHER_MIN_MAX_IDX: {
       JSInputArray mask = cv::noArray();
       double minVal, maxVal;
@@ -961,6 +998,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       ret = js_array<JSValue>::from_sequence(ctx, const_cast<JSValue*>(&results[0]), const_cast<JSValue*>(&results[4]));
       break;
     }
+
     case OTHER_MIN_MAX_LOC: {
       JSInputArray mask = cv::noArray();
       double minVal, maxVal;
@@ -979,6 +1017,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       ret = js_array<JSValue>::from_sequence(ctx, const_cast<JSValue*>(&results[0]), const_cast<JSValue*>(&results[4]));
       break;
     }
+
     case OTHER_MUL_SPECTRUMS: {
       JSInputArray b = cv::noArray();
       JSOutputArray c = cv::noArray();
@@ -996,6 +1035,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       cv::mulSpectrums(src, b, c, flags, conjB);
       break;
     }
+
     case OTHER_NORM: {
       int32_t normType = cv::NORM_L2;
       JSInputArray mask = cv::noArray();
@@ -1007,6 +1047,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       ret = JS_NewFloat64(ctx, cv::norm(src, normType, mask));
       break;
     }
+
     case OTHER_PATCH_NANS: {
       double val = 0;
 
@@ -1015,6 +1056,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       cv::patchNaNs(src, val);
       break;
     }
+
     case OTHER_PHASE: {
       JSInputArray y = cv::noArray();
       JSOutputArray angle = cv::noArray();
@@ -1029,6 +1071,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       cv::phase(src, y, angle, angleInDegrees);
       break;
     }
+
     case OTHER_POLAR_TO_CART: {
       JSInputArray angle = cv::noArray();
       JSOutputArray x = cv::noArray(), y = cv::noArray();
@@ -1045,6 +1088,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       cv::polarToCart(src, angle, x, y, angleInDegrees);
       break;
     }
+
     case OTHER_POW: {
       double power;
       JSOutputArray dst = cv::noArray();
@@ -1056,6 +1100,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       cv::pow(src, power, dst);
       break;
     }
+
     case OTHER_RANDN: {
       JSInputArray mean = cv::noArray(), stddev = cv::noArray();
       if(argc >= 2)
@@ -1065,6 +1110,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       cv::randn(src, mean, stddev);
       break;
     }
+
     case OTHER_RAND_SHUFFLE: {
       double iterFactor = 1;
       if(argc >= 2)
@@ -1073,6 +1119,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       cv::randShuffle(src, iterFactor);
       break;
     }
+
     case OTHER_RANDU: {
       JSInputArray low = cv::noArray(), high = cv::noArray();
       if(argc >= 2)
@@ -1082,6 +1129,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       cv::randu(src, low, high);
       break;
     }
+
     case OTHER_REPEAT: {
       int32_t nx, ny;
       JSOutputArray dst = cv::noArray();
@@ -1095,6 +1143,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       cv::repeat(src, nx, ny, dst);
       break;
     }
+
     case OTHER_SCALE_ADD: {
       double alpha;
       JSInputArray src2 = cv::noArray();
@@ -1111,6 +1160,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       cv::scaleAdd(src, alpha, src2, dst);
       break;
     }
+
     case OTHER_SET_IDENTITY: {
       cv::Scalar s = cv::Scalar(1);
 
@@ -1120,6 +1170,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       cv::setIdentity(src, s);
       break;
     }
+
     case OTHER_SOLVE_CUBIC: {
       JSOutputArray dst = cv::noArray();
       if(argc >= 2)
@@ -1127,6 +1178,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       ret = JS_NewInt32(ctx, cv::solveCubic(src, dst));
       break;
     }
+
     case OTHER_SOLVE_POLY: {
       JSOutputArray dst = cv::noArray();
       int32_t maxIters = 300;
@@ -1138,16 +1190,19 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       ret = JS_NewFloat64(ctx, cv::solvePoly(src, dst, maxIters));
       break;
     }
+
     case OTHER_SUM: {
       cv::Scalar r = cv::sum(src);
       ret = js_color_new(ctx, r);
       break;
     }
+
     case OTHER_TRACE: {
       cv::Scalar r = cv::trace(src);
       ret = js_color_new(ctx, r);
       break;
     }
+
     case OTHER_RGB: {
       cv::Scalar color;
       JS_ToFloat64(ctx, &color[2], argv[0]);
