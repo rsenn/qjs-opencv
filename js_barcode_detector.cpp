@@ -101,10 +101,13 @@ js_barcode_detector_method(JSContext* ctx, JSValueConst this_val, int argc, JSVa
 
     case METHOD_DETECT: {
       JSInputArray img = js_input_array(ctx, argv[0]);
-      JSOutputArray points = js_cv_outputarray(ctx, argv[1]);
+      std::vector<cv::Point2f> points;
+      // JSOutputArray points = js_cv_outputarray(ctx, argv[1]);
 
       BOOL result = wb->detect(img, points);
       ret = JS_NewBool(ctx, result);
+
+      js_array_copy(ctx, argv[1], points);
       break;
     }
 
@@ -118,7 +121,12 @@ js_barcode_detector_method(JSContext* ctx, JSValueConst this_val, int argc, JSVa
       ret = JS_NewBool(ctx, result);
 
       js_array_copy(ctx, argv[2], decoded_info);
-      js_array_copy(ctx, argv[3], decoded_type);
+
+      std::vector<int32_t> decoded(decoded_type.size());
+
+      std::copy(decoded_type.begin(), decoded_type.end(), decoded.begin());
+
+      js_array_copy(ctx, argv[3], decoded);
 
       break;
     }
@@ -127,13 +135,19 @@ js_barcode_detector_method(JSContext* ctx, JSValueConst this_val, int argc, JSVa
       JSInputArray img = js_input_array(ctx, argv[0]);
       std::vector<std::string> decoded_info;
       std::vector<cv::barcode::BarcodeType> decoded_type;
-      JSOutputArray points = js_cv_outputarray(ctx, argv[3]);
+      std::vector<cv::Point2f> points;
 
       BOOL result = wb->detectAndDecode(img, decoded_info, decoded_type, points);
       ret = JS_NewBool(ctx, result);
 
       js_array_copy(ctx, argv[1], decoded_info);
-      js_array_copy(ctx, argv[2], decoded_type);
+
+      std::vector<int32_t> decoded(decoded_type.size());
+
+      std::copy(decoded_type.begin(), decoded_type.end(), decoded.begin());
+
+      js_array_copy(ctx, argv[2], decoded);
+      js_array_copy(ctx, argv[3], points);
 
       break;
     }
@@ -154,6 +168,19 @@ const JSCFunctionListEntry js_barcode_detector_proto_funcs[] = {
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "BarcodeDetector", JS_PROP_CONFIGURABLE),
 };
 
+const JSCFunctionListEntry js_barcode_detector_barcode_funcs[] = {
+    JS_PROP_INT32_DEF("NONE", cv::barcode::NONE, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("EAN_8", cv::barcode::EAN_8, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("EAN_13", cv::barcode::EAN_13, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("UPC_A", cv::barcode::UPC_A, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("UPC_E", cv::barcode::UPC_E, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("UPC_EAN_EXTENSION", cv::barcode::UPC_EAN_EXTENSION, JS_PROP_ENUMERABLE),
+};
+
+const JSCFunctionListEntry js_barcode_detector_static_funcs[] = {
+    JS_OBJECT_DEF("barcode", js_barcode_detector_barcode_funcs, countof(js_barcode_detector_barcode_funcs), JS_PROP_C_W_E),
+};
+
 extern "C" int
 js_barcode_detector_init(JSContext* ctx, JSModuleDef* bd) {
 
@@ -172,6 +199,7 @@ js_barcode_detector_init(JSContext* ctx, JSModuleDef* bd) {
 
   if(bd) {
     JS_SetModuleExport(ctx, bd, "BarcodeDetector", barcode_detector_class);
+    JS_SetModuleExportList(ctx, bd, js_barcode_detector_static_funcs, countof(js_barcode_detector_static_funcs));
   }
 
   return 0;
@@ -194,6 +222,7 @@ js_barcode_detector_constructor(JSContext* ctx, JSValue parent, const char* name
 extern "C" void
 js_barcode_detector_export(JSContext* ctx, JSModuleDef* bd) {
   JS_AddModuleExport(ctx, bd, "BarcodeDetector");
+  JS_AddModuleExportList(ctx, bd, js_barcode_detector_static_funcs, countof(js_barcode_detector_static_funcs));
 }
 
 extern "C" JSModuleDef*

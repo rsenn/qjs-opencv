@@ -195,9 +195,9 @@ const JSCFunctionListEntry js_keypoint_proto_funcs[] = {
     JS_CGETSET_MAGIC_DEF("angle", js_keypoint_getter, 0, PROP_ANGLE),
     JS_CGETSET_MAGIC_DEF("class_id", js_keypoint_getter, 0, PROP_CLASS_ID),
     JS_CGETSET_MAGIC_DEF("octave", js_keypoint_getter, 0, PROP_OCTAVE),
-    JS_CGETSET_MAGIC_DEF("pt", js_keypoint_getter, 0, PROP_PT),
+    JS_CGETSET_ENUMERABLE_DEF("pt", js_keypoint_getter, 0, PROP_PT),
     JS_CGETSET_MAGIC_DEF("response", js_keypoint_getter, 0, PROP_RESPONSE),
-    JS_CGETSET_MAGIC_DEF("size", js_keypoint_getter, 0, PROP_SIZE),
+    JS_CGETSET_ENUMERABLE_DEF("size", js_keypoint_getter, 0, PROP_SIZE),
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "KeyPoint", JS_PROP_CONFIGURABLE),
 };
 

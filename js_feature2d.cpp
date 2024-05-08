@@ -786,35 +786,38 @@ js_feature2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
         (*s)->clear();
         break;
       }
+
       case METHOD_COMPUTE: {
-        JSInputArray image = js_umat_or_mat(ctx, argv[0]);
-        cv::Mat descriptors;
+        JSInputOutputArray image = js_umat_or_mat(ctx, argv[0]);
+        JSOutputArray descriptors = js_cv_outputarray(ctx, argv[2]);
         std::vector<JSKeyPointData> keypoints;
 
-        ptr->compute(image, keypoints, JSOutputArray(descriptors));
+        ptr->compute(image, keypoints, descriptors);
 
         js_array_copy(ctx, argv[1], keypoints.data(), keypoints.data() + keypoints.size());
-
         break;
       }
+
       case METHOD_DETECT: {
-        JSInputArray image = js_umat_or_mat(ctx, argv[0]);
+        JSInputOutputArray image = js_umat_or_mat(ctx, argv[0]);
         JSInputArray mask = cv::noArray();
         std::vector<JSKeyPointData> keypoints;
 
         if(argc >= 3)
-          mask = js_umat_or_mat(ctx, argv[2]);
+          mask = js_input_array(ctx, argv[2]);
 
         ptr->detect(image, keypoints, mask);
 
         js_array_copy(ctx, argv[1], keypoints.data(), keypoints.data() + keypoints.size());
         break;
       }
+
       case METHOD_WRITE: {
         std::string str;
         js_value_to(ctx, argv[0], str);
         ptr->write(str);
       }
+
       case METHOD_READ: {
         std::string str;
         js_value_to(ctx, argv[0], str);
@@ -829,6 +832,11 @@ js_feature2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   }
 
   return ret;
+}
+
+static JSValue
+js_feature2d_hasinstance(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+  return static_cast<JSFeature2DData*>(JS_GetOpaque2(ctx, argv[0], js_feature2d_class_id)) ? JS_TRUE : JS_FALSE;
 }
 
 enum {
@@ -855,14 +863,17 @@ js_feature2d_getter(JSContext* ctx, JSValueConst this_val, int magic) {
         ret = JS_NewStringLen(ctx, name.data(), name.size());
         break;
       }
+
       case PROP_DEFAULT_NORM: {
         ret = JS_NewInt32(ctx, (*s)->defaultNorm());
         break;
       }
+
       case PROP_DESCRIPTOR_SIZE: {
         ret = JS_NewInt32(ctx, (*s)->descriptorSize());
         break;
       }
+
       case PROP_DESCRIPTOR_TYPE: {
         ret = JS_NewInt32(ctx, (*s)->descriptorType());
         break;
@@ -874,6 +885,7 @@ js_feature2d_getter(JSContext* ctx, JSValueConst this_val, int magic) {
       what = msg + 2;
     ret = JS_ThrowInternalError(ctx, "cv::Exception %s", what);
   }
+
   return ret;
 }
 
@@ -944,34 +956,38 @@ const JSCFunctionListEntry js_feature2d_proto_funcs[] = {
     JS_CGETSET_MAGIC_DEF("defaultNorm", js_feature2d_getter, 0, PROP_DEFAULT_NORM),
     JS_CGETSET_MAGIC_DEF("descriptorSize", js_feature2d_getter, 0, PROP_DESCRIPTOR_SIZE),
     JS_CGETSET_MAGIC_DEF("descriptorType", js_feature2d_getter, 0, PROP_DESCRIPTOR_TYPE),
-
-    // JS_ALIAS_DEF("[Symbol.toStringTag]", "defaultName"),
-    // JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Feature2D", JS_PROP_CONFIGURABLE),
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Feature2D", JS_PROP_CONFIGURABLE),
 };
 
-static JSConstructor js_feature2d_classes[] = {JSConstructor(js_feature2d_affine, "AffineFeature"),
-                                               JSConstructor(js_feature2d_agast, "AgastFeatureDetector", js_feature2d_agast_static_funcs),
-                                               JSConstructor(js_feature2d_akaze, "AKAZE", js_feature2d_akaze_static_funcs),
-                                               JSConstructor(js_feature2d_brisk, "BRISK"),
-                                               JSConstructor(js_feature2d_fast, "FastFeatureDetector", js_feature2d_fast_static_funcs),
-                                               JSConstructor(js_feature2d_gftt, "GFTTDetector"),
-                                               JSConstructor(js_feature2d_kaze, "KAZE", js_feature2d_kaze_static_funcs),
-                                               JSConstructor(js_feature2d_mser, "MSER"),
-                                               JSConstructor(js_feature2d_orb, "ORB", js_feature2d_orb_static_funcs),
-                                               JSConstructor(js_feature2d_sift, "SIFT"),
-                                               JSConstructor(js_feature2d_simple_blob, "SimpleBlobDetector"),
-                                               JSConstructor(js_feature2d_affine, "AffineFeature2D"),
-                                               JSConstructor(js_feature2d_boost, "BoostDesc", js_feature2d_boost_static_funcs),
-                                               JSConstructor(js_feature2d_brief, "BriefDescriptorExtractor"),
-                                               JSConstructor(js_feature2d_daisy, "DAISY", js_feature2d_daisy_static_funcs),
-                                               JSConstructor(js_feature2d_freak, "FREAK"),
-                                               JSConstructor(js_feature2d_harris_laplace, "HarrisLaplaceFeatureDetector"),
-                                               JSConstructor(js_feature2d_latch, "LATCH"),
-                                               JSConstructor(js_feature2d_lucid, "LUCID"),
-                                               JSConstructor(js_feature2d_msd, "MSDDetector"),
-                                               JSConstructor(js_feature2d_star, "StarDetector"),
-                                               JSConstructor(js_feature2d_surf, "SURF"),
-                                               JSConstructor(js_feature2d_vgg, "VGG", js_feature2d_vgg_static_funcs)};
+const JSCFunctionListEntry js_feature2d_static_funcs[] = {
+    JS_CFUNC_DEF("[Symbol.hasInstance]", 1, js_feature2d_hasinstance),
+};
+
+static JSConstructor js_feature2d_classes[] = {
+    JSConstructor(js_feature2d_affine, "AffineFeature"),
+    JSConstructor(js_feature2d_agast, "AgastFeatureDetector", js_feature2d_agast_static_funcs),
+    JSConstructor(js_feature2d_akaze, "AKAZE", js_feature2d_akaze_static_funcs),
+    JSConstructor(js_feature2d_brisk, "BRISK"),
+    JSConstructor(js_feature2d_fast, "FastFeatureDetector", js_feature2d_fast_static_funcs),
+    JSConstructor(js_feature2d_gftt, "GFTTDetector"),
+    JSConstructor(js_feature2d_kaze, "KAZE", js_feature2d_kaze_static_funcs),
+    JSConstructor(js_feature2d_mser, "MSER"),
+    JSConstructor(js_feature2d_orb, "ORB", js_feature2d_orb_static_funcs),
+    JSConstructor(js_feature2d_sift, "SIFT"),
+    JSConstructor(js_feature2d_simple_blob, "SimpleBlobDetector"),
+    JSConstructor(js_feature2d_affine, "AffineFeature2D"),
+    JSConstructor(js_feature2d_boost, "BoostDesc", js_feature2d_boost_static_funcs),
+    JSConstructor(js_feature2d_brief, "BriefDescriptorExtractor"),
+    JSConstructor(js_feature2d_daisy, "DAISY", js_feature2d_daisy_static_funcs),
+    JSConstructor(js_feature2d_freak, "FREAK"),
+    JSConstructor(js_feature2d_harris_laplace, "HarrisLaplaceFeatureDetector"),
+    JSConstructor(js_feature2d_latch, "LATCH"),
+    JSConstructor(js_feature2d_lucid, "LUCID"),
+    JSConstructor(js_feature2d_msd, "MSDDetector"),
+    JSConstructor(js_feature2d_star, "StarDetector"),
+    JSConstructor(js_feature2d_surf, "SURF"),
+    JSConstructor(js_feature2d_vgg, "VGG", js_feature2d_vgg_static_funcs),
+};
 
 extern "C" int
 js_feature2d_init(JSContext* ctx, JSModuleDef* m) {
@@ -983,15 +999,17 @@ js_feature2d_init(JSContext* ctx, JSModuleDef* m) {
   feature2d_proto = JS_NewObject(ctx);
   JS_SetPropertyFunctionList(ctx, feature2d_proto, js_feature2d_proto_funcs, countof(js_feature2d_proto_funcs));
   JS_SetClassProto(ctx, js_feature2d_class_id, feature2d_proto);
-  // js_set_inspect_method(ctx, feature2d_proto, js_feature2d_inspect);
 
-  // feature2d_class = JS_NewCFunction2(ctx, js_feature2d_ctor, "Feature2D", 2, JS_CFUNC_constructor, 0);
-  // JS_SetConstructor(ctx, feature2d_class, feature2d_proto);
+  feature2d_class = JS_NewObject(ctx);
+  JS_SetPropertyFunctionList(ctx, feature2d_class, js_feature2d_static_funcs, countof(js_feature2d_static_funcs));
+  JS_SetConstructor(ctx, feature2d_class, feature2d_proto);
 
   for(auto& cl : js_feature2d_classes)
     cl.create(ctx);
 
   if(m) {
+    JS_SetModuleExport(ctx, m, "Feature2D", feature2d_class);
+
     for(const auto& cl : js_feature2d_classes)
       cl.set_export(ctx, m);
   }
@@ -1007,6 +1025,8 @@ js_feature2d_init(JSContext* ctx, JSModuleDef* m) {
 
 extern "C" void
 js_feature2d_export(JSContext* ctx, JSModuleDef* m) {
+  JS_AddModuleExport(ctx, m, "Feature2D");
+
   for(const auto& cl : js_feature2d_classes)
     cl.add_export(ctx, m);
 }
@@ -1014,9 +1034,10 @@ js_feature2d_export(JSContext* ctx, JSModuleDef* m) {
 extern "C" JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   JSModuleDef* m;
-  m = JS_NewCModule(ctx, module_name, &js_feature2d_init);
-  if(!m)
+
+  if(!(m = JS_NewCModule(ctx, module_name, &js_feature2d_init)))
     return NULL;
+
   js_feature2d_export(ctx, m);
   return m;
 }
