@@ -89,7 +89,9 @@ js_opencv_init(JSContext* ctx, JSModuleDef* m) {
   js_line_segment_detector_init(ctx, m);
   js_fast_line_detector_init(ctx, m);
   js_keypoint_init(ctx, m);
+#ifdef USE_FEATURE2D
   js_feature2d_init(ctx, m);
+#endif
 #ifdef USE_LIBCAMERA
   js_libcamera_app_init(ctx, m);
 #endif
@@ -140,7 +142,9 @@ JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   js_line_segment_detector_export(ctx, m);
   js_fast_line_detector_export(ctx, m);
   js_keypoint_export(ctx, m);
+#ifdef USE_FEATURE2D
   js_feature2d_export(ctx, m);
+#endif
 #ifdef USE_LIBCAMERA
   js_libcamera_app_export(ctx, m);
 #endif

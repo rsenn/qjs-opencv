@@ -20,7 +20,7 @@
 
 typedef cv::Ptr<cv::Feature2D> JSFeature2DData;
 
-#ifdef HAVE_OPENCV2_XFEATURES2D_HPP
+#ifdef USE_FEATURE2D
 #include <opencv2/xfeatures2d.hpp>
 #include <opencv2/xfeatures2d/nonfree.hpp>
 
