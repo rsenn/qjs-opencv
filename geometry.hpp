@@ -93,6 +93,7 @@ to_string(const Container<cv::Point_<ValueT>>& points) {
       ret += ",";
     ret += to_string<ValueT, Char>(*it);
   }
+
   return "[" + ret + "]";
 }
 

@@ -202,6 +202,7 @@ js_rect_get(JSContext* ctx, JSValueConst this_val, int magic) {
       break;
     }
   }
+
   return ret;
 }
 

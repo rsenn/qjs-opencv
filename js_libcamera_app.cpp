@@ -417,6 +417,7 @@ js_libcamera_app_options_set(JSContext* ctx, JSValueConst this_val, JSValueConst
       break;
     }
   }
+
   return JS_UNDEFINED;
 }
 

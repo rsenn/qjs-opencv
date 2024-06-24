@@ -101,6 +101,7 @@ js_calib3d_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
       ret = JS_NewInt32(ctx, result);
       break;
     }
+
     case ESTIMATE_AFFINE_PARTIAL_2D: {
       JSInputArray from = js_input_array(ctx, argv[0]), to = js_input_array(ctx, argv[1]);
       JSOutputArray inliers = cv::noArray();

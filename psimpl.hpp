@@ -231,6 +231,7 @@ equal(InputIterator p1, InputIterator p2) {
     ++p1;
     ++p2;
   }
+
   return true;
 }
 
@@ -251,6 +252,7 @@ make_vector(InputIterator p1, InputIterator p2, OutputIterator result) {
     ++p1;
     ++p2;
   }
+
   return result;
 }
 
@@ -270,6 +272,7 @@ dot(InputIterator v1, InputIterator v2) {
     ++v1;
     ++v2;
   }
+
   return result;
 }
 
@@ -294,6 +297,7 @@ interpolate(InputIterator p1, InputIterator p2, float fraction, OutputIterator r
     ++p1;
     ++p2;
   }
+
   return result;
 }
 
@@ -313,6 +317,7 @@ point_distance2(InputIterator1 p1, InputIterator2 p2) {
     ++p1;
     ++p2;
   }
+
   return result;
 }
 
@@ -746,6 +751,7 @@ public:
     if(p1 != last) {
       copy_key(p1, result);
     }
+
     return result;
   }
 
@@ -1016,6 +1022,7 @@ public:
         Backward(next, remaining);
       }
     }
+
     return result;
   }
 
@@ -1094,6 +1101,7 @@ public:
         }
       }
     }
+
     return result;
   }
 
@@ -1171,6 +1179,7 @@ public:
         }
       }
     }
+
     return result;
   }
 
@@ -1238,6 +1247,7 @@ public:
       if(valid) {
         *valid = false;
       }
+
       return result;
     }
 
@@ -1266,6 +1276,7 @@ public:
     if(valid) {
       *valid = original_first != original_last;
     }
+
     return result;
   }
 
@@ -1569,6 +1580,7 @@ private:
         keyInfo.index = current;
         keyInfo.dist2 = d2;
       }
+
       return keyInfo;
     }
   };

@@ -94,6 +94,7 @@ js_size_arg(JSContext* ctx, int argc, JSValueConst argv[], int& argind, JSSizeDa
     argind += 2;
     return TRUE;
   }
+
   return FALSE;
 }
 

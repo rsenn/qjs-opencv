@@ -159,6 +159,7 @@ js_affine3_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
       ret = js_affine3_wrap(ctx, result);
       break;
     }
+
     case METHOD_INV: {
       cv::Affine3<double> result;
       int32_t method = cv::DECOMP_SVD;
@@ -169,6 +170,7 @@ js_affine3_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
       ret = js_affine3_wrap(ctx, result);
       break;
     }
+
     case METHOD_LINEAR: {
       mat3_type matx;
 
@@ -184,6 +186,7 @@ js_affine3_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
       }
       break;
     }
+
     case METHOD_ROTATE: {
       cv::Affine3<double> result;
       mat3_type matx;
@@ -200,6 +203,7 @@ js_affine3_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
       ret = js_affine3_wrap(ctx, result);
       break;
     }
+
     case METHOD_ROTATION: {
       if(argc > 0) {
         cv::Mat* mat;
@@ -222,6 +226,7 @@ js_affine3_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
 
       break;
     }
+
     case METHOD_TRANSLATE: {
       cv::Affine3<double> result;
       vector_type vec;
@@ -231,6 +236,7 @@ js_affine3_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
       ret = js_affine3_wrap(ctx, result);
       break;
     }
+
     case METHOD_TRANSLATION: {
       vector_type vec;
       if(argc > 0) {
@@ -243,17 +249,20 @@ js_affine3_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
       }
       break;
     }
+
     case METHOD_RVEC: {
       vector_type vec = aff->rvec();
       ret = js_array_from(ctx, vec);
       break;
     }
+
     case METHOD_GETMAT: {
       vector_type vec = aff->rvec();
       ret = js_array_from(ctx, vec);
       break;
     }
   }
+
   return ret;
 }
 

@@ -127,6 +127,7 @@ js_color_read(JSContext* ctx, JSValueConst value, JSColorData<uint8_t>* out) {
     out->arr[3] = color.arr[3];
     return 1;
   }
+
   return 0;
 }
 
@@ -142,6 +143,7 @@ js_ref(JSContext* ctx, const char* name, JSValueConst arg, JSValue value) {
   } else {
     return 0;
   }
+
   return 1;
 }
 

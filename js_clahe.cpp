@@ -89,6 +89,7 @@ js_clahe_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
       break;
     }
   }
+
   return ret;
 }
 
@@ -110,6 +111,7 @@ js_clahe_getter(JSContext* ctx, JSValueConst this_val, int magic) {
       break;
     }
   }
+
   return ret;
 }
 
@@ -135,6 +137,7 @@ js_clahe_setter(JSContext* ctx, JSValueConst this_val, JSValueConst value, int m
       break;
     }
   }
+
   return ret;
 }
 

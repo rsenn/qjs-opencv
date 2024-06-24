@@ -179,6 +179,7 @@ js_line_get(JSContext* ctx, JSValueConst this_val, int magic) {
       return JS_NewFloat64(ctx, line.length());
     }
   }
+
   return JS_UNDEFINED;
 }
 
@@ -490,6 +491,7 @@ js_line_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
       break;
     }
   }
+
   return ret;
 }
 

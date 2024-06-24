@@ -38,7 +38,7 @@ pixel_offset_pred(const cv::Mat& src, array<int32_t, N> const& offsets, Callable
   return dst;
 }
 
-template<class Callable>
+/*template<class Callable>
 static inline cv::Mat
 pixel_neighborhood_pred(const cv::Mat& src, Callable pred) {
   int32_t step = src.step;
@@ -68,7 +68,7 @@ pixel_neighborhood_cross_pred(const cv::Mat& src, Callable pred) {
   };
 
   return pixel_offset_pred(src, offsets, pred);
-}
+}*/
 
 static vector<cv::Point>
 pixel_find_value(const cv::Mat& mat, uchar value) {
@@ -82,26 +82,27 @@ pixel_find_value(const cv::Mat& mat, uchar value) {
   return result;
 }
 
-template<class Callable, size_t N>
+template<size_t N, class Callable>
 static cv::Mat
 pixel_neighborhood_pred2(const cv::Mat& src, array<int32_t, N> const& offsets, Callable pred) {
   cv::Mat dst(src.size(), CV_8UC1);
-  /*int32_t step = src.step;
-  uchar const* row = src.ptr<uchar>(1, 1);*/
 
-  for(int y = 1; y < src.rows - 2; y++) {
-    for(int x = 1; x < src.cols - 2; x++) {
-      /*uchar const* pixel = row + x;*/
-      array<uchar, 8> p;
+  for(int y = 1; y < (src.rows - 2); y++) {
+    for(int x = 1; x < (src.cols - 2); x++) {
+      array<uchar, N> p;
+      auto ptr = src.ptr<uchar>(y, x);
 
-      transform(offsets.begin(), offsets.end(), p.begin(), [src, y, x](int32_t offset) -> uchar { return *(src.ptr<uchar>(y, x) + offset); });
+      if(!*ptr)
+        continue;
 
-      std::cout << p <<std::endl;
+      transform(offsets.begin(), offsets.end(), p.begin(), [ptr, y, x](int32_t offset) -> uchar { return ptr[offset]; });
 
-      *dst.ptr<uchar>(y, x) = pred(src.at<uchar>(y, x), count_if(p.begin(), p.end(), [](uchar value) -> bool { return value > 0; }));
+      std::cout << p << std::endl;
+
+      const auto c = count_if(p.begin(), p.end(), pred);
+
+      *dst.ptr<uchar>(y, x) = c;
     }
-
-    // row += step;
   }
 
   return dst;
@@ -109,33 +110,44 @@ pixel_neighborhood_pred2(const cv::Mat& src, array<int32_t, N> const& offsets, C
 
 static inline cv::Mat
 pixel_neighborhood(const cv::Mat& mat) {
+  const auto s = mat.step;
+
   return pixel_neighborhood_pred2(mat,
                                   (array<int32_t, 8> const){
-                                      -mat.step - 1,
-                                      -mat.step,
-                                      -mat.step + 1,
+                                      -s - 1,
+                                      -s,
+                                      -s + 1,
                                       -1,
-                                      +1,
-                                      mat.step - 1,
-                                      mat.step,
-                                      mat.step + 1,
+                                      1,
+                                      s - 1,
+                                      s,
+                                      s + 1,
                                   },
-                                  [](uchar value, uchar count) -> uchar { return value ? count : 0; });
+                                  [](uchar value) -> bool { return value > 0; });
 }
 
-static inline cv::Mat
+/*static inline cv::Mat
 pixel_neighborhood_if(const cv::Mat& mat, uchar match_count) {
   return pixel_neighborhood_pred(mat, [match_count](uchar value, uchar count) -> uchar { return count == match_count ? 0xff : 0; });
-}
+}*/
 
 static inline cv::Mat
 pixel_neighborhood_cross(const cv::Mat& mat) {
-  return pixel_neighborhood_cross_pred(mat, [](uchar value, uchar count) -> uchar { return value ? count : 0; });
+  const auto s = mat.step;
+
+  return pixel_neighborhood_pred2(mat,
+                                  (array<int32_t, 4> const){
+                                      -s,
+                                      -1,
+                                      1,
+                                      s,
+                                  },
+                                  [](uchar value) -> bool { return value > 0; });
 }
 
-static inline cv::Mat
+/*static inline cv::Mat
 pixel_neighborhood_cross_if(const cv::Mat& mat, uchar match_count) {
   return pixel_neighborhood_cross_pred(mat, [match_count](uchar value, uchar count) -> uchar { return count == match_count ? 0xff : 0; });
 }
-
+*/
 #endif /* PIXEL_NEIGHBORHOOD_HPP */

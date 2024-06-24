@@ -110,6 +110,7 @@ public:
         }
       }
     }
+
     return false;
   }
 
@@ -127,6 +128,7 @@ public:
       decrement_neighborhood(pt);
       return true;
     }
+
     return false;
   }
 

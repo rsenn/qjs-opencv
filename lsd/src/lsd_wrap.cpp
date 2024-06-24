@@ -121,6 +121,7 @@ LsdWrap::lsd_subdivided(cv::Mat& I, std::vector<seg>& segments, int div_factor) 
       segments.insert(segments.end(), segs.begin(), segs.end());
     }
   }
+
   return N;
 }
 
@@ -310,5 +311,6 @@ LsdWrap::segments_to_image8UC1(std::vector<seg>& seg1, cv::Size size) {
     cv::Point p2((int)((*it).x2 + 0.5), (int)((*it).y2 + 0.5));
     line(I1, p1, p2, cv::Scalar::all(255), 1);
   }
+
   return I1;
 }

@@ -127,6 +127,7 @@ js_video_capture_method(JSContext* ctx, JSValueConst video_capture, int argc, JS
       }
       break;
     }
+
     case VIDEO_CAPTURE_METHOD_SET: {
       if(!JS_ToInt32(ctx, &propID, argv[0])) {
         JS_ToFloat64(ctx, &value, argv[1]);
@@ -139,6 +140,7 @@ js_video_capture_method(JSContext* ctx, JSValueConst video_capture, int argc, JS
       }
       break;
     }
+
     case VIDEO_CAPTURE_METHOD_GET_BACKEND_NAME: {
       std::string backend;
       try {
@@ -147,18 +149,22 @@ js_video_capture_method(JSContext* ctx, JSValueConst video_capture, int argc, JS
       ret = JS_NewString(ctx, backend.c_str());
       break;
     }
+
     case VIDEO_CAPTURE_METHOD_GRAB: {
       ret = JS_NewBool(ctx, s->grab());
       break;
     }
+
     case VIDEO_CAPTURE_METHOD_IS_OPENED: {
       ret = JS_NewBool(ctx, s->isOpened());
       break;
     }
+
     case VIDEO_CAPTURE_METHOD_OPEN: {
       ret = JS_NewBool(ctx, js_video_capture_open(ctx, s, argc, argv));
       break;
     }
+
     case VIDEO_CAPTURE_METHOD_READ: {
       JSMatData* m = js_mat_data2(ctx, argv[0]);
 
@@ -168,6 +174,7 @@ js_video_capture_method(JSContext* ctx, JSValueConst video_capture, int argc, JS
       ret = JS_NewBool(ctx, s->read(*m));
       break;
     }
+
     case VIDEO_CAPTURE_METHOD_RETRIEVE: {
       JSMatData* m = js_mat_data2(ctx, argv[0]);
 

@@ -30,6 +30,7 @@ get_heap_base() {
     infile >> heap_base;
     //  std::cerr << "heap_base: " << heap_base << std::endl;
   }
+
   return reinterpret_cast<void*>(heap_base);
 }
 

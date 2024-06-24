@@ -46,6 +46,7 @@ js_point_arg(JSContext* ctx, JSPointData<T>* out, int argc, JSValueConst argv[])
     out->x = x;
     out->y = y;
   }
+
   return ret;
 }
 
@@ -346,6 +347,7 @@ js_point_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
       break;
     }
   }
+
   return ret;
 }
 
@@ -441,16 +443,19 @@ js_point_to_string(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
       os << x << "," << y;
       break;
     }
+
     case 1: {
       os << "[" << x << "," << y << "]";
       break;
     }
+
     case 2: {
 
       os << "{x:" << x << ",y:" << y << "}";
       break;
     }
   }
+
   return JS_NewString(ctx, os.str().c_str());
 }
 
@@ -525,6 +530,7 @@ js_point_round(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
       ret = js_point_new(ctx, x * prec, y * prec);
       break;
   }
+
   return ret;
 }
 

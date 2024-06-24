@@ -26,6 +26,13 @@
 
 typedef std::vector<JSCFunctionListEntry> js_function_list_t;
 
+static inline JSValue
+js_handle_exception(JSContext* ctx, const cv::Exception& e) {
+  std::string msg(e.what());
+
+  return JS_ThrowInternalError(ctx, "cv::Exception %s", msg.c_str() + msg.find_last_of("/\\") + 1);
+}
+
 namespace cv {
 class CLAHE;
 }
@@ -308,6 +315,7 @@ js_color_read(JSContext* ctx, JSValueConst value, cv::Scalar* out) {
     (*out)[2] = color.arr[2];
     (*out)[3] = color.arr[3];
   }
+
   return ret;
 }
 
@@ -508,6 +516,7 @@ js_object_is(JSContext* ctx, JSValueConst value, const char* cmp) {
     ret = strcmp(str, cmp) == 0;
     JS_FreeCString(ctx, str);
   }
+
   return ret;
 }
 
@@ -601,6 +610,7 @@ js_iterator_method(JSContext* ctx, JSValueConst obj) {
       ret = JS_GetProperty(ctx, obj, atom);
     JS_FreeAtom(ctx, atom);
   }
+
   return ret;
 }
 
@@ -618,6 +628,7 @@ js_is_iterable(JSContext* ctx, JSValueConst obj) {
       ret = TRUE;
     JS_FreeAtom(ctx, atom);
   }
+
   return ret;
 }
 
@@ -650,6 +661,7 @@ js_is_scalar(JSContext* ctx, JSValueConst obj) {
         return FALSE;
     }
   }
+
   return ret;
 }
 

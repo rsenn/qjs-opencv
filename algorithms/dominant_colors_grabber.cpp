@@ -14,26 +14,35 @@ std::vector<cv::Scalar>
 dominant_colors_grabber::GetDomColors(cv::Mat img, color_space cs, dist_type dt, unsigned colors_count, double colors_part) {
   if(cs == CS_UNDEFINED)
     cs = _cs;
+
   if(dt == DT_UNDEFINED)
     dt = _dt;
+
   if(colors_count == 0)
     colors_count = _colors_count;
+
   if(colors_part == 0)
     colors_part = _colors_part;
+
   std::vector<cv::Scalar> res;
+
   if(dt == DT_KMEANS) {
     cv::Mat img_cs;
+
     switch(cs) {
       case CS_HSV: cv::cvtColor(img, img_cs, cv::COLOR_BGR2HSV); break;
       case CS_BGR: img.copyTo(img_cs);
     }
+
     cv::Mat img_samples = img_cs.reshape(1, img.cols * img.rows);
+
     img_samples.convertTo(img_samples, CV_32F);
     cv::TermCriteria term_crit(cv::TermCriteria::EPS | cv::TermCriteria::COUNT, 5, 1.0);
     cv::Mat labels, colors_mat;
     cv::kmeans(img_samples, colors_count, labels, term_crit, 5, cv::KMEANS_PP_CENTERS, colors_mat);
     colors_mat = colors_mat.reshape(3);
     res.resize(colors_mat.rows);
+
     for(unsigned i = 0; i < colors_mat.rows; i++) {
       res[i] = colors_mat.at<cv::Vec3f>(i, 0);
     }
@@ -46,6 +55,7 @@ dominant_colors_grabber::GetDomColors(cv::Mat img, color_space cs, dist_type dt,
     cv::Mat center_mask = hist_mask.clone();
 
     std::vector<float> koefs = {hist_ranges[cs][1] / hist_sizes[cs][0], hist_ranges[cs][3] / hist_sizes[cs][1], hist_ranges[cs][5] / hist_sizes[cs][2]};
+
     while((res.size() < colors_count) && (sum <= colors_part / 100.0)) {
       center_mask *= 0;
       int max_pos[3] = {0, 0, 0};
@@ -65,6 +75,7 @@ dominant_colors_grabber::GetDomColors(cv::Mat img, color_space cs, dist_type dt,
       bitwise_and(hist_mask, center_mask, hist_mask);
     }
   }
+
   return res;
 }
 
@@ -127,9 +138,11 @@ dominant_colors_grabber::GetParam() {
 void
 MarkNearColors(cv::Mat mask, cv::Point3i center, cv::Vec3f size, unsigned char value, color_space cs, dist_type dt) {
   std::vector<bool> cyclic_dims = {1, 0, 0}; // hue channel is cyclic
+
   switch(cs) {
     case CS_BGR: cyclic_dims[0] = false; break;
   }
+
   switch(dt) {
     case DT_CIE76:
     case DT_CIE94: MarkNearColorsCIE(mask, center, size[0], value, cs, dt); break;
@@ -170,13 +183,16 @@ GetCIE76Dist(cv::Vec3i c1, cv::Vec3i c2, color_space cs) {
   cv::Mat colors(1, 2, CV_8UC3);
   colors.at<cv::Vec3b>(0, 0) = c1;
   colors.at<cv::Vec3b>(0, 1) = c2;
+
   switch(cs) {
     case CS_HSV: cv::cvtColor(colors, colors, cv::COLOR_HSV2BGR); break;
   }
+
   cv::cvtColor(colors, colors, cv::COLOR_BGR2Lab);
   c1 = colors.at<cv::Vec3b>(0, 0);
   c2 = colors.at<cv::Vec3b>(0, 1);
   res = cv::norm(c1 - c2);
+
   return res;
 }
 
@@ -184,11 +200,14 @@ double
 GetCIE94Dist(cv::Vec3i c1, cv::Vec3i c2, color_space cs) {
   double res = 0;
   cv::Mat colors(1, 2, CV_8UC3);
+
   colors.at<cv::Vec3b>(0, 0) = c1;
   colors.at<cv::Vec3b>(0, 1) = c2;
+
   switch(cs) {
     case CS_HSV: cv::cvtColor(colors, colors, cv::COLOR_HSV2BGR); break;
   }
+
   double D76 = GetCIE76Dist(c1, c2, cs);
   cv::cvtColor(colors, colors, cv::COLOR_BGR2Lab);
   c1 = colors.at<cv::Vec3b>(0, 0);
@@ -203,6 +222,7 @@ GetCIE94Dist(cv::Vec3i c1, cv::Vec3i c2, color_space cs) {
   kC = kH = kL = 1;
   double SL = 1, SC = 1 + k1 * C1, SH = 1 + k2 * C1;
   res = sqrt(pow(dL / (kL * SL), 2) + pow(dC / (kC * SC), 2) + pow(dH / (kH * SH), 2));
+
   return res;
 }
 
@@ -210,18 +230,23 @@ cv::Mat
 GetHist(cv::Mat img, color_space cs) {
   cv::Mat img_colors;
   std::vector<int> channels = {0, 1, 2};
+
   switch(cs) {
     case CS_BGR: {
       img.copyTo(img_colors);
-    } break;
+      break;
+    }
     case CS_HSV: {
       cvtColor(img, img_colors, cv::COLOR_BGR2HSV);
-    } break;
+      break;
+    }
   }
+
   std::vector<cv::Mat> img_channels;
   cv::split(img_colors, img_channels);
   cv::Mat color_hist;
   cv::calcHist(img_channels, channels, cv::Mat(), color_hist, hist_sizes[cs], hist_ranges[cs]); // 3D histogram
+
   return color_hist;
 }
 
@@ -229,6 +254,7 @@ template<class val_type>
 void
 DrawCube(cv::Mat img, cv::Point3i center, cv::Vec3i size, val_type value, std::vector<bool> cyclic) {
   std::vector<cv::Vec3i> p = GetGabarits(center, size);
+
   return DrawCube<val_type>(img, p[0], p[1], value, cyclic);
 }
 
@@ -240,6 +266,7 @@ DrawCube(cv::Mat img, cv::Vec3i p1, cv::Vec3i p2, val_type value, std::vector<bo
       p1[i] = cv::max(0, p1[i]);
       p2[i] = cv::min(img.size[i] - 1, p2[i]);
     }
+
   for(int i1 = p1[0]; i1 <= p2[0]; i1++)
     for(int i2 = p1[1]; i2 <= p2[1]; i2++)
       for(int i3 = p1[2]; i3 <= p2[2]; i3++) {
@@ -254,6 +281,7 @@ GetCenter(cv::Mat img, cv::Mat w_mask, cv::Mat v_mask) {
   cv::Vec4f res(0, 0, 0, 0);
   cv::Vec3f center(0, 0, 0);
   float sum = 0;
+
   for(int i1 = 0; i1 < img.size[0]; i1++)
     for(int i2 = 0; i2 < img.size[1]; i2++)
       for(int i3 = 0; i3 < img.size[2]; i3++) {
@@ -269,22 +297,26 @@ GetCenter(cv::Mat img, cv::Mat w_mask, cv::Mat v_mask) {
         center += pf * val;
         sum += val;
       }
+
   center /= sum;
   res[0] = center[0];
   res[1] = center[1];
   res[2] = center[2];
+
   return res;
 }
 
 std::vector<cv::Vec3i>
 GetGabarits(cv::Point3i center, cv::Vec3i size) {
   std::vector<cv::Vec3i> res = {center, center};
+
   res[0][0] -= size[0];
   res[0][1] -= size[1];
   res[0][2] -= size[2];
   res[1][0] += size[0];
   res[1][1] += size[1];
   res[1][2] += size[2];
+
   return res;
 }
 
@@ -292,8 +324,10 @@ template<class val_type>
 val_type
 CycleRange(val_type val, val_type val1, val_type val2) {
   val_type ranged_val = (val - val1) % (val2 - val1);
+
   if(ranged_val < 0)
     ranged_val += (val2 - val1);
+
   return ranged_val + val1;
 }
 
@@ -308,10 +342,12 @@ ShowColors(cv::Mat img, std::vector<cv::Scalar> colors, unsigned color_height) {
   cv::Mat img_colors;
   cv::copyMakeBorder(img, img_colors, color_height, 0, 0, 0, cv::BORDER_CONSTANT, cv::Scalar::all(0));
   cv::Rect2d color_rect(cv::Point(0, 0), cv::Size((double)img_colors.cols / colors.size(), color_height));
+
   for(unsigned i = 0; i < colors.size(); i++) {
     cv::rectangle(img_colors, color_rect, colors[i], cv::FILLED);
     color_rect.x += color_rect.width;
   }
+
   return img_colors;
 }
 

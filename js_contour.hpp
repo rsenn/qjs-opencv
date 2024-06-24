@@ -97,6 +97,7 @@ contour_adjacent(const JSContourData<T>& contour, const JSPointData<T>& point) {
     if(point_adjacent<int>(pt, point))
       return true;
   }
+
   return false;
 }
 
@@ -107,6 +108,7 @@ contour_adjacent(const JSContourData<T>& contour, const JSContourData<T>& other)
     if(contour_adjacent(other, pt))
       return true;
   }
+
   return false;
 }
 

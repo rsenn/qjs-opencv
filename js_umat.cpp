@@ -91,6 +91,7 @@ js_umat_sizes(const JSUMatData& umat) {
   } else {
     std::copy(&size[0], &size[size.dims()], std::back_inserter(sizes));
   }
+
   return sizes;
 }
 
@@ -119,6 +120,7 @@ js_umat_data(void* data = nullptr) {
       }
     }
   }
+
   return ret;
 }
 
@@ -224,6 +226,7 @@ js_umat_params(JSContext* ctx, int argc, JSValueConst argv[]) {
       }
     }
   }
+
   return std::make_pair(size, type);
 }
 
@@ -260,6 +263,7 @@ js_umat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
       JS_ToInt64(ctx, &i2, argv[1]);
     }
   }
+
   switch(magic) {
     case METHOD_COL: {
       ret = js_umat_wrap(ctx, um->col(i));
@@ -434,6 +438,7 @@ js_umat_get(JSContext* ctx, JSValueConst this_val, uint32_t row, uint32_t col) {
       return ret;
     }
   }
+
   return JS_UNDEFINED;
 }
 
@@ -446,6 +451,7 @@ js_umat_get_wh(JSContext* ctx, JSMatDimensions* size, JSValueConst obj) {
     size->cols = um->cols;
     return 1;
   }
+
   return 0;
 }
 
@@ -940,6 +946,7 @@ js_umat_create_vec(JSContext* ctx, int len, JSValue* vec) {
       }
     }
   }
+
   return obj;
 }*/
 

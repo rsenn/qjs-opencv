@@ -165,6 +165,7 @@ log_gamma_lanczos(const double& x) {
     a -= log(x + double(n));
     b += q[n] * pow(x, double(n));
   }
+
   return a + log(b);
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1262,6 +1263,7 @@ cv::LSDImpl::nfa(const int& n, const int& k, const double& p) const {
         break;
     }
   }
+
   return -log10(bin_tail) - LOG_NT;
 }
 

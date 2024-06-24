@@ -93,6 +93,7 @@ find_nearest(const ColorType& color, const std::vector<ColorType>& palette, int 
       ret = index;
     }
   }
+
   return ret;
 }
 

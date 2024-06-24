@@ -42,6 +42,7 @@ js_cv_gui_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
       break;
     }
   }
+
   return ret;
 }
 
@@ -379,10 +380,12 @@ js_cv_wait_key(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
       key.i = cv::waitKey(delay);
       break;
     }
+
     case WAIT_KEY_EX: {
       key.i = cv::waitKeyEx(delay);
       break;
     }
+
     case POLL_KEY: {
       key.i = cv::pollKey();
       break;

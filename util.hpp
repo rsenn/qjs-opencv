@@ -96,6 +96,7 @@ operator<<(std::ostream& os, const std::vector<Value>& c) {
     os << ' ';
     os << to_string(*it);
   }
+
   return os;
 }
 
@@ -418,6 +419,7 @@ operator<<(Stream& s, const std::vector<Item>& vector) {
     s << entry;
     i++;
   }
+
   return s;
 }
 

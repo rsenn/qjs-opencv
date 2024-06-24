@@ -362,6 +362,7 @@ to_string(const typename line_list<T>::type& lines) {
       ret += " ";
     ret += to_string<T>(*it);
   }
+
   return ret;
 }
 
@@ -376,6 +377,7 @@ operator<<(std::ostream& os, const typename line_list<Value>::type& c) {
       os << " ";
     os << to_string(*it);
   }
+
   return os;
 }
 
@@ -399,6 +401,7 @@ find_nearest_line(typename ContainerT::value_type& line, ContainerT& lines) {
       ret = it;
     }
   }
+
   return ret;
 }
 
@@ -421,6 +424,7 @@ find_nearest_line(typename ContainerT::iterator& line, ContainerT& lines) {
       index = it;
     }
   }
+
   return index;
 }
 
@@ -442,6 +446,7 @@ index = to;
       index = it;
     }
   }
+
   return index;
 }
 
@@ -629,6 +634,7 @@ angle_diffs(Line<ValueT>& line, InputIterator from, InputIterator to) {
 
     ret.push_back((*it).angleDiff(line));
   }
+
   return ret;
 }
 
@@ -649,6 +655,7 @@ line_distances(typename std::iterator_traits<InputIterator>::value_type& line, I
        continue;*/
     ret.push_back(it->minDistance(line));
   }
+
   return ret;
 }
 
@@ -667,6 +674,7 @@ filter_lines(InputIterator from, InputIterator to, Pred predicate) {
       ret.push_back(index);
     }
   }
+
   return ret;
 }
 

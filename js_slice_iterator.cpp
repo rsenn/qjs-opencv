@@ -26,6 +26,7 @@ js_slice_iterator_create(JSContext* ctx, JSValueConst buffer, const TypedArrayTy
     it->num_elems = num_elems;
     it->increment = it->type.byte_size * num_elems;
   }
+
   return it;
 }
 

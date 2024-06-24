@@ -78,8 +78,10 @@ js_rect_read(JSContext* ctx, JSValueConst value, JSPointData<T>* pos, JSSizeData
       dim->width = rect.width;
       dim->height = rect.height;
     }
+
     return 1;
   }
+
   return 0;
 }
 

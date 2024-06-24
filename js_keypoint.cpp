@@ -146,6 +146,7 @@ js_keypoint_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
       break;
     }
   }
+
   return ret;
 }
 
@@ -161,27 +162,33 @@ js_keypoint_getter(JSContext* ctx, JSValueConst this_val, int magic) {
       ret = JS_NewFloat64(ctx, kp->angle);
       break;
     }
+
     case PROP_CLASS_ID: {
       ret = JS_NewInt32(ctx, kp->class_id);
       break;
     }
+
     case PROP_OCTAVE: {
       ret = JS_NewInt32(ctx, kp->octave);
       break;
     }
+
     case PROP_PT: {
       ret = js_point_new(ctx, kp->pt);
       break;
     }
+
     case PROP_RESPONSE: {
       ret = JS_NewFloat64(ctx, kp->response);
       break;
     }
+
     case PROP_SIZE: {
       ret = JS_NewFloat64(ctx, kp->size);
       break;
     }
   }
+
   return ret;
 }
 

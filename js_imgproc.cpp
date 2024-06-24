@@ -19,7 +19,7 @@
 #include <opencv2/core/mat.inl.hpp>
 #include <opencv2/core/matx.hpp>
 #include <opencv2/core/types.hpp>
- #include <quickjs.h>
+#include <quickjs.h>
 #include "util.hpp"
 #include <cassert>
 #include <stddef.h>
@@ -499,6 +499,7 @@ js_cv_calc_hist(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
     cv::calcHist(
         const_cast<const cv::Mat*>(images.data()), images.size(), channels.data(), *mask, *hist, dims, histSize.data(), rangePtr.data(), uniform, accumulate);
   }
+
   return JS_UNDEFINED;
 }
 
@@ -535,13 +536,16 @@ js_cv_morphology(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
     borderValue = cv::Scalar(value[0], value[1], value[2], value[3]);
   }
 
-  switch(magic) {
-    case 0: cv::dilate(src, dst, kernel, anchor, iterations, borderType, borderValue); break;
-    case 1: cv::erode(src, dst, kernel, anchor, iterations, borderType, borderValue); break;
-  }
+  try {
+    switch(magic) {
+      case 0: cv::dilate(src, dst, kernel, anchor, iterations, borderType, borderValue); break;
+      case 1: cv::erode(src, dst, kernel, anchor, iterations, borderType, borderValue); break;
+    }
+  } catch(const cv::Exception& e) { return js_handle_exception(ctx, e); }
 
   return JS_UNDEFINED;
 }
+
 static JSValue
 js_cv_morphology_ex(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
 
@@ -602,7 +606,6 @@ js_cv_median_blur(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
   cv::medianBlur(src, dst, ksize);
   return JS_UNDEFINED;
 }
-
 
 static JSValue
 js_cv_lsd(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
@@ -780,7 +783,7 @@ js_cv_point_polygon_test(JSContext* ctx, JSValueConst this_val, int argc, JSValu
 
   return JS_NewFloat64(ctx, cv::pointPolygonTest(*contour, point, measureDist));
 }
- 
+
 enum {
   MOTION_ACCUMULATE = 0,
   MOTION_ACCUMULATE_PRODUCT,
@@ -798,67 +801,70 @@ js_imgproc_motion(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
 
   src = argc >= 1 ? js_umat_or_mat(ctx, argv[0]) : cv::noArray();
 
-  switch(magic) {
-    case MOTION_ACCUMULATE: {
-      JSInputOutputArray dst = js_umat_or_mat(ctx, argv[1]);
-      JSInputArray mask = cv::noArray();
-      if(argc >= 3)
-        mask = js_umat_or_mat(ctx, argv[2]);
-      cv::accumulate(src, dst, mask);
-      break;
-    }
+  try {
+    switch(magic) {
+      case MOTION_ACCUMULATE: {
+        JSInputOutputArray dst = js_umat_or_mat(ctx, argv[1]);
+        JSInputArray mask = cv::noArray();
+        if(argc >= 3)
+          mask = js_umat_or_mat(ctx, argv[2]);
+        cv::accumulate(src, dst, mask);
+        break;
+      }
 
-    case MOTION_ACCUMULATE_PRODUCT: {
-      JSInputArray src2 = js_umat_or_mat(ctx, argv[1]);
-      JSInputOutputArray dst = js_umat_or_mat(ctx, argv[2]);
-      JSInputArray mask = cv::noArray();
-      if(argc >= 4)
-        mask = js_umat_or_mat(ctx, argv[3]);
-      cv::accumulateProduct(src, src2, dst, mask);
-      break;
-    }
+      case MOTION_ACCUMULATE_PRODUCT: {
+        JSInputArray src2 = js_umat_or_mat(ctx, argv[1]);
+        JSInputOutputArray dst = js_umat_or_mat(ctx, argv[2]);
+        JSInputArray mask = cv::noArray();
+        if(argc >= 4)
+          mask = js_umat_or_mat(ctx, argv[3]);
+        cv::accumulateProduct(src, src2, dst, mask);
+        break;
+      }
 
-    case MOTION_ACCUMULATE_SQUARE: {
-      JSInputOutputArray dst = js_umat_or_mat(ctx, argv[1]);
-      JSInputArray mask = cv::noArray();
-      if(argc >= 3)
-        mask = js_umat_or_mat(ctx, argv[2]);
-      cv::accumulateSquare(src, dst, mask);
-      break;
-    }
+      case MOTION_ACCUMULATE_SQUARE: {
+        JSInputOutputArray dst = js_umat_or_mat(ctx, argv[1]);
+        JSInputArray mask = cv::noArray();
+        if(argc >= 3)
+          mask = js_umat_or_mat(ctx, argv[2]);
+        cv::accumulateSquare(src, dst, mask);
+        break;
+      }
 
-    case MOTION_ACCUMULATE_WEIGHTED: {
-      JSInputOutputArray dst = js_umat_or_mat(ctx, argv[1]);
-      double alpha;
-      JSInputArray mask = cv::noArray();
-      JS_ToFloat64(ctx, &alpha, argv[2]);
-      if(argc >= 4)
-        mask = js_umat_or_mat(ctx, argv[3]);
-      cv::accumulateWeighted(src, dst, alpha, mask);
-      break;
-    }
+      case MOTION_ACCUMULATE_WEIGHTED: {
+        JSInputOutputArray dst = js_umat_or_mat(ctx, argv[1]);
+        double alpha;
+        JSInputArray mask = cv::noArray();
+        JS_ToFloat64(ctx, &alpha, argv[2]);
+        if(argc >= 4)
+          mask = js_umat_or_mat(ctx, argv[3]);
+        cv::accumulateWeighted(src, dst, alpha, mask);
+        break;
+      }
 
-    case MOTION_CREATE_HANNING_WINDOW: {
-      JSSizeData<int> winSize;
-      int32_t type;
-      js_size_read(ctx, argv[1], &winSize);
-      JS_ToInt32(ctx, &type, argv[2]);
-      cv::createHanningWindow(src, winSize, type);
-      break;
-    }
+      case MOTION_CREATE_HANNING_WINDOW: {
+        JSSizeData<int> winSize;
+        int32_t type;
+        js_size_read(ctx, argv[1], &winSize);
+        JS_ToInt32(ctx, &type, argv[2]);
+        cv::createHanningWindow(src, winSize, type);
+        break;
+      }
 
-    case MOTION_PHASE_CORRELATE: {
-      JSInputArray src2 = js_umat_or_mat(ctx, argv[1]), window = cv::noArray();
-      double response = 0;
-      JSPointData<double> result;
-      if(argc >= 3)
-        window = js_umat_or_mat(ctx, argv[2]);
+      case MOTION_PHASE_CORRELATE: {
+        JSInputArray src2 = js_umat_or_mat(ctx, argv[1]), window = cv::noArray();
+        double response = 0;
+        JSPointData<double> result;
+        if(argc >= 3)
+          window = js_umat_or_mat(ctx, argv[2]);
 
-      result = cv::phaseCorrelate(src, src2, window, &response);
-      ret = js_point_new(ctx, result);
-      break;
+        result = cv::phaseCorrelate(src, src2, window, &response);
+        ret = js_point_new(ctx, result);
+        break;
+      }
     }
-  }
+  } catch(const cv::Exception& e) { ret = js_handle_exception(ctx, e); }
+
   return ret;
 }
 
@@ -881,156 +887,164 @@ js_imgproc_misc(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
 
   src = argc >= 1 ? js_umat_or_mat(ctx, argv[0]) : cv::noArray();
 
-  switch(magic) {
+  try {
+    switch(magic) {
+      case MISC_ADAPTIVE_THRESHOLD: {
+        JSOutputArray dst = js_umat_or_mat(ctx, argv[1]);
+        double maxValue, C;
+        int32_t adaptiveMethod, thresholdType, blockSize;
+        JS_ToFloat64(ctx, &maxValue, argv[2]);
+        JS_ToInt32(ctx, &adaptiveMethod, argv[3]);
+        JS_ToInt32(ctx, &thresholdType, argv[4]);
+        JS_ToInt32(ctx, &blockSize, argv[5]);
+        JS_ToFloat64(ctx, &C, argv[6]);
 
-    case MISC_ADAPTIVE_THRESHOLD: {
-      JSOutputArray dst = js_umat_or_mat(ctx, argv[1]);
-      double maxValue, C;
-      int32_t adaptiveMethod, thresholdType, blockSize;
-      JS_ToFloat64(ctx, &maxValue, argv[2]);
-      JS_ToInt32(ctx, &adaptiveMethod, argv[3]);
-      JS_ToInt32(ctx, &thresholdType, argv[4]);
-      JS_ToInt32(ctx, &blockSize, argv[5]);
-      JS_ToFloat64(ctx, &C, argv[6]);
-
-      cv::adaptiveThreshold(src, dst, maxValue, adaptiveMethod, thresholdType, blockSize, C);
-      break;
-    }
-
-    case MISC_BLEND_LINEAR: {
-      JSInputArray src2 = js_umat_or_mat(ctx, argv[1]);
-      JSInputArray weights1 = js_umat_or_mat(ctx, argv[2]);
-      JSInputArray weights2 = js_umat_or_mat(ctx, argv[3]);
-      JSOutputArray dst = js_umat_or_mat(ctx, argv[4]);
-      cv::blendLinear(src, src2, weights1, weights2, dst);
-
-      break;
-    }
-
-    case MISC_DISTANCE_TRANSFORM: {
-      JSOutputArray dst = js_umat_or_mat(ctx, argv[1]);
-      JSOutputArray labels = js_umat_or_mat(ctx, argv[2]);
-      int32_t distanceType, maskSize, labelType = cv::DIST_LABEL_CCOMP;
-      JS_ToInt32(ctx, &distanceType, argv[3]);
-      JS_ToInt32(ctx, &maskSize, argv[4]);
-      if(argc >= 6)
-        JS_ToInt32(ctx, &labelType, argv[5]);
-      // XXX: overload
-      cv::distanceTransform(src, dst, labels, distanceType, maskSize, labelType);
-      break;
-    }
-
-    case MISC_FLOOD_FILL: {
-      JSPointData<int> seedPoint;
-      JSColorData<double> newVal;
-      JSRectData<int> rect, *rectPtr = 0;
-      cv::Scalar loDiff = cv::Scalar(), upDiff = cv::Scalar();
-      int32_t flags = 4;
-
-      js_point_read(ctx, argv[1], &seedPoint);
-      js_color_read(ctx, argv[2], &newVal);
-      if(js_rect_read(ctx, argv[3], &rect)) {
-        rectPtr = &rect;
-      }
-      js_array_to(ctx, argv[4], loDiff);
-      js_array_to(ctx, argv[5], upDiff);
-
-      if(argc >= 7)
-        JS_ToInt32(ctx, &flags, argv[6]);
-      // XXX: overload
-      ret = JS_NewInt32(ctx, cv::floodFill(src, seedPoint, js_to_scalar(newVal), rectPtr, loDiff, upDiff, flags));
-      break;
-    }
-
-    case MISC_GRAB_CUT: {
-      JSInputOutputArray mask = js_umat_or_mat(ctx, argv[1]);
-      JSRectData<int> rect;
-      JSInputOutputArray bgdModel, fgdModel;
-      int32_t iterCount, mode = cv::GC_EVAL;
-      js_rect_read(ctx, argv[2], &rect);
-      bgdModel = js_umat_or_mat(ctx, argv[3]);
-      fgdModel = js_umat_or_mat(ctx, argv[4]);
-      JS_ToInt32(ctx, &iterCount, argv[5]);
-      if(argc >= 7)
-        JS_ToInt32(ctx, &mode, argv[6]);
-      cv::grabCut(src, mask, rect, bgdModel, fgdModel, iterCount, mode);
-      break;
-    }
-
-    case MISC_INTEGRAL: {
-      JSOutputArray sum = js_umat_or_mat(ctx, argv[1]);
-      int32_t sdepth = -1;
-      if(argc >= 3)
-        JS_ToInt32(ctx, &sdepth, argv[2]);
-      // XXX: overload
-      cv::integral(src, sum, sdepth);
-      break;
-    }
-
-    case MISC_WATERSHED: {
-      JSInputOutputArray markers = js_umat_or_mat(ctx, argv[1]);
-      cv::watershed(src, markers);
-      break;
-    }
-
-    case MISC_APPLY_COLORMAP: {
-      JSOutputArray dst = js_umat_or_mat(ctx, argv[1]);
-
-      if(JS_IsNumber(argv[2])) {
-        int32_t colormap;
-        JS_ToInt32(ctx, &colormap, argv[2]);
-        cv::applyColorMap(src, dst, colormap);
-      } else {
-        JSInputArray colormap = js_umat_or_mat(ctx, argv[2]);
-        cv::applyColorMap(src, dst, colormap);
-      }
-      break;
-    }
-
-    case MISC_MOMENTS: {
-      BOOL binaryImage = false;
-      cv::Moments moments;
-      std::map<std::string, double> moments_map;
-      if(argc >= 2)
-        binaryImage = JS_ToBool(ctx, argv[1]);
-
-      if(!binaryImage) {
-        std::vector<JSPointData<float>> polygon;
-        js_array_to(ctx, argv[0], polygon);
-        moments = cv::moments(polygon, binaryImage);
-      } else {
-        moments = cv::moments(src, true);
+        cv::adaptiveThreshold(src, dst, maxValue, adaptiveMethod, thresholdType, blockSize, C);
+        break;
       }
 
-      moments_map["m00"] = moments.m00;
-      moments_map["m10"] = moments.m10;
-      moments_map["m01"] = moments.m01;
-      moments_map["m20"] = moments.m20;
-      moments_map["m11"] = moments.m11;
-      moments_map["m02"] = moments.m02;
-      moments_map["m30"] = moments.m30;
-      moments_map["m21"] = moments.m21;
-      moments_map["m12"] = moments.m12;
-      moments_map["m03"] = moments.m03;
-      moments_map["mu20"] = moments.mu20;
-      moments_map["mu11"] = moments.mu11;
-      moments_map["mu02"] = moments.mu02;
-      moments_map["mu30"] = moments.mu30;
-      moments_map["mu21"] = moments.mu21;
-      moments_map["mu12"] = moments.mu12;
-      moments_map["mu03"] = moments.mu03;
-      moments_map["nu20"] = moments.nu20;
-      moments_map["nu11"] = moments.nu11;
-      moments_map["nu02"] = moments.nu02;
-      moments_map["nu30"] = moments.nu30;
-      moments_map["nu21"] = moments.nu21;
-      moments_map["nu12"] = moments.nu12;
-      moments_map["nu03"] = moments.nu03;
+      case MISC_BLEND_LINEAR: {
+        JSInputArray src2 = js_umat_or_mat(ctx, argv[1]);
+        JSInputArray weights1 = js_umat_or_mat(ctx, argv[2]);
+        JSInputArray weights2 = js_umat_or_mat(ctx, argv[3]);
+        JSOutputArray dst = js_umat_or_mat(ctx, argv[4]);
+        cv::blendLinear(src, src2, weights1, weights2, dst);
 
-      ret = js_object_from(ctx, moments_map);
-      break;
+        break;
+      }
+
+      case MISC_DISTANCE_TRANSFORM: {
+        JSOutputArray dst = js_umat_or_mat(ctx, argv[1]);
+        JSOutputArray labels = js_umat_or_mat(ctx, argv[2]);
+        int32_t distanceType, maskSize, labelType = cv::DIST_LABEL_CCOMP;
+        JS_ToInt32(ctx, &distanceType, argv[3]);
+        JS_ToInt32(ctx, &maskSize, argv[4]);
+        if(argc >= 6)
+          JS_ToInt32(ctx, &labelType, argv[5]);
+        // XXX: overload
+        cv::distanceTransform(src, dst, labels, distanceType, maskSize, labelType);
+        break;
+      }
+
+      case MISC_FLOOD_FILL: {
+        JSPointData<int> seedPoint;
+        JSColorData<double> newVal;
+        JSRectData<int> rect, *rectPtr = 0;
+        cv::Scalar loDiff = cv::Scalar(), upDiff = cv::Scalar();
+        int32_t flags = 4;
+
+        js_point_read(ctx, argv[1], &seedPoint);
+        js_color_read(ctx, argv[2], &newVal);
+        if(js_rect_read(ctx, argv[3], &rect)) {
+          rectPtr = &rect;
+        }
+        js_array_to(ctx, argv[4], loDiff);
+        js_array_to(ctx, argv[5], upDiff);
+
+        if(argc >= 7)
+          JS_ToInt32(ctx, &flags, argv[6]);
+        // XXX: overload
+        ret = JS_NewInt32(ctx, cv::floodFill(src, seedPoint, js_to_scalar(newVal), rectPtr, loDiff, upDiff, flags));
+        break;
+      }
+
+      case MISC_GRAB_CUT: {
+        JSInputOutputArray mask = js_umat_or_mat(ctx, argv[1]);
+        JSRectData<int> rect;
+        JSInputOutputArray bgdModel, fgdModel;
+        int32_t iterCount, mode = cv::GC_EVAL;
+        js_rect_read(ctx, argv[2], &rect);
+        bgdModel = js_umat_or_mat(ctx, argv[3]);
+        fgdModel = js_umat_or_mat(ctx, argv[4]);
+        JS_ToInt32(ctx, &iterCount, argv[5]);
+        if(argc >= 7)
+          JS_ToInt32(ctx, &mode, argv[6]);
+        cv::grabCut(src, mask, rect, bgdModel, fgdModel, iterCount, mode);
+        break;
+      }
+
+      case MISC_INTEGRAL: {
+        JSOutputArray sum = js_umat_or_mat(ctx, argv[1]);
+        int32_t sdepth = -1;
+        if(argc >= 3)
+          JS_ToInt32(ctx, &sdepth, argv[2]);
+        // XXX: overload
+        cv::integral(src, sum, sdepth);
+        break;
+      }
+
+      case MISC_WATERSHED: {
+        JSInputOutputArray markers = js_umat_or_mat(ctx, argv[1]);
+        cv::watershed(src, markers);
+        break;
+      }
+
+      case MISC_APPLY_COLORMAP: {
+        JSOutputArray dst = js_umat_or_mat(ctx, argv[1]);
+
+        if(JS_IsNumber(argv[2])) {
+          int32_t colormap;
+          JS_ToInt32(ctx, &colormap, argv[2]);
+          cv::applyColorMap(src, dst, colormap);
+        } else {
+          JSInputArray colormap = js_umat_or_mat(ctx, argv[2]);
+          cv::applyColorMap(src, dst, colormap);
+        }
+        break;
+      }
+
+      case MISC_MOMENTS: {
+        BOOL binaryImage = false;
+        cv::Moments moments;
+        std::map<std::string, double> moments_map;
+        if(argc >= 2)
+          binaryImage = JS_ToBool(ctx, argv[1]);
+
+        if(!binaryImage) {
+          std::vector<JSPointData<float>> polygon;
+          js_array_to(ctx, argv[0], polygon);
+          moments = cv::moments(polygon, binaryImage);
+        } else {
+          moments = cv::moments(src, true);
+        }
+
+        moments_map["m00"] = moments.m00;
+        moments_map["m10"] = moments.m10;
+        moments_map["m01"] = moments.m01;
+        moments_map["m20"] = moments.m20;
+        moments_map["m11"] = moments.m11;
+        moments_map["m02"] = moments.m02;
+        moments_map["m30"] = moments.m30;
+        moments_map["m21"] = moments.m21;
+        moments_map["m12"] = moments.m12;
+        moments_map["m03"] = moments.m03;
+        moments_map["mu20"] = moments.mu20;
+        moments_map["mu11"] = moments.mu11;
+        moments_map["mu02"] = moments.mu02;
+        moments_map["mu30"] = moments.mu30;
+        moments_map["mu21"] = moments.mu21;
+        moments_map["mu12"] = moments.mu12;
+        moments_map["mu03"] = moments.mu03;
+        moments_map["nu20"] = moments.nu20;
+        moments_map["nu11"] = moments.nu11;
+        moments_map["nu02"] = moments.nu02;
+        moments_map["nu30"] = moments.nu30;
+        moments_map["nu21"] = moments.nu21;
+        moments_map["nu12"] = moments.nu12;
+        moments_map["nu03"] = moments.nu03;
+
+        ret = js_object_from(ctx, moments_map);
+        break;
+      }
     }
+  } catch(const cv::Exception& e) {
+    std::string msg(e.what());
+
+    const auto pos = msg.find_last_of("/\\");
+
+    ret = JS_ThrowInternalError(ctx, "cv::Exception %s", msg.c_str() + pos + 1);
   }
+
   return ret;
 }
 enum {
@@ -1059,203 +1073,206 @@ js_imgproc_transform(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
   if(magic != TRANSFORM_GET_ROTATION_MATRIX2_D && magic != TRANSFORM_GET_ROTATION_MATRIX2D_)
     src = argc >= 1 ? js_input_array(ctx, argv[0]) : JSInputArray();
 
-  switch(magic) {
-    case TRANSFORM_CONVERT_MAPS: {
-      JSInputArray map2 = js_umat_or_mat(ctx, argv[1]);
-      JSOutputArray dstmap1 = js_umat_or_mat(ctx, argv[2]);
-      JSOutputArray dstmap2 = js_umat_or_mat(ctx, argv[3]);
-      int32_t dstmap1type;
-      BOOL nninterpolation = FALSE;
-      JS_ToInt32(ctx, &dstmap1type, argv[4]);
-      if(argc >= 6)
-        nninterpolation = JS_ToBool(ctx, argv[5]);
-      cv::convertMaps(src, map2, dstmap1, dstmap2, dstmap1type, nninterpolation);
-      break;
-    }
-
-    case TRANSFORM_GET_AFFINE_TRANSFORM: {
-      JSInputArray dst = js_input_array(ctx, argv[1]);
-      JSContourData<float> sc, dc;
-
-      if(js_contour_read(ctx, argv[0], &sc))
-        src = JSInputArray(sc);
-
-      if(js_contour_read(ctx, argv[1], &dc))
-        dst = JSInputArray(dc);
-
-      JSMatData mat = cv::getAffineTransform(src, dst);
-      ret = js_mat_wrap(ctx, mat);
-      break;
-    }
-
-    case TRANSFORM_GET_PERSPECTIVE_TRANSFORM: {
-      int32_t solveMethod = cv::DECOMP_LU;
-      JSMatData mat;
-
-      if(argc >= 3)
-        JS_ToInt32(ctx, &solveMethod, argv[2]);
-
-      if(JS_IsArray(ctx, argv[0])) {
-        std::vector<JSPointData<float>> src, dst;
-
-        js_array_to(ctx, argv[0], src);
-        js_array_to(ctx, argv[1], dst);
-
-        mat = cv::getPerspectiveTransform(src, dst, solveMethod);
-
-      } else {
-
-        JSInputArray dst = js_umat_or_mat(ctx, argv[1]);
-        mat = cv::getPerspectiveTransform(src, dst, solveMethod);
+  try {
+    switch(magic) {
+      case TRANSFORM_CONVERT_MAPS: {
+        JSInputArray map2 = js_umat_or_mat(ctx, argv[1]);
+        JSOutputArray dstmap1 = js_umat_or_mat(ctx, argv[2]);
+        JSOutputArray dstmap2 = js_umat_or_mat(ctx, argv[3]);
+        int32_t dstmap1type;
+        BOOL nninterpolation = FALSE;
+        JS_ToInt32(ctx, &dstmap1type, argv[4]);
+        if(argc >= 6)
+          nninterpolation = JS_ToBool(ctx, argv[5]);
+        cv::convertMaps(src, map2, dstmap1, dstmap2, dstmap1type, nninterpolation);
+        break;
       }
-      ret = js_mat_wrap(ctx, mat);
-      break;
-    }
 
-    case TRANSFORM_GET_RECT_SUB_PIX: {
-      JSSizeData<int> patchSize;
-      JSPointData<float> center;
-      JSOutputArray patch;
-      int32_t patchType = -1;
+      case TRANSFORM_GET_AFFINE_TRANSFORM: {
+        JSInputArray dst = js_input_array(ctx, argv[1]);
+        JSContourData<float> sc, dc;
 
-      js_size_read(ctx, argv[1], &patchSize);
-      js_point_read(ctx, argv[2], &center);
-      patch = js_umat_or_mat(ctx, argv[3]);
+        if(js_contour_read(ctx, argv[0], &sc))
+          src = JSInputArray(sc);
 
-      if(argc >= 5)
-        JS_ToInt32(ctx, &patchType, argv[4]);
+        if(js_contour_read(ctx, argv[1], &dc))
+          dst = JSInputArray(dc);
 
-      cv::getRectSubPix(src, patchSize, center, patch, patchType);
-      break;
-    }
+        JSMatData mat = cv::getAffineTransform(src, dst);
+        ret = js_mat_wrap(ctx, mat);
+        break;
+      }
 
-    case TRANSFORM_GET_ROTATION_MATRIX2_D: {
-      JSPointData<float> center;
-      double angle, scale;
-      js_point_read(ctx, argv[0], &center);
-      JS_ToFloat64(ctx, &angle, argv[1]);
-      JS_ToFloat64(ctx, &scale, argv[2]);
-      JSMatData mat = cv::getRotationMatrix2D(center, angle, scale);
-      ret = js_mat_wrap(ctx, mat);
-      break;
-    }
+      case TRANSFORM_GET_PERSPECTIVE_TRANSFORM: {
+        int32_t solveMethod = cv::DECOMP_LU;
+        JSMatData mat;
 
-    case TRANSFORM_GET_ROTATION_MATRIX2D_: {
-      break;
-    }
+        if(argc >= 3)
+          JS_ToInt32(ctx, &solveMethod, argv[2]);
 
-    case TRANSFORM_INVERT_AFFINE_TRANSFORM: {
-      JSOutputArray dst = js_umat_or_mat(ctx, argv[1]);
-      cv::invertAffineTransform(src, dst);
-      break;
-    }
+        if(JS_IsArray(ctx, argv[0])) {
+          std::vector<JSPointData<float>> src, dst;
 
-    case TRANSFORM_LINEAR_POLAR: {
-      JSOutputArray dst = js_umat_or_mat(ctx, argv[1]);
-      JSPointData<float> center;
-      double maxRadius;
-      int32_t flags;
-      js_point_read(ctx, argv[2], &center);
-      JS_ToFloat64(ctx, &maxRadius, argv[3]);
-      JS_ToInt32(ctx, &flags, argv[4]);
-      cv::linearPolar(src, dst, center, maxRadius, flags);
-      break;
-    }
+          js_array_to(ctx, argv[0], src);
+          js_array_to(ctx, argv[1], dst);
 
-    case TRANSFORM_LOG_POLAR: {
-      JSOutputArray dst = js_umat_or_mat(ctx, argv[1]);
-      JSPointData<float> center;
-      double M;
-      int32_t flags;
-      js_point_read(ctx, argv[2], &center);
-      JS_ToFloat64(ctx, &M, argv[3]);
-      JS_ToInt32(ctx, &flags, argv[4]);
-      cv::logPolar(src, dst, center, M, flags);
-      break;
-    }
+          mat = cv::getPerspectiveTransform(src, dst, solveMethod);
 
-    case TRANSFORM_REMAP: {
-      JSOutputArray dst = js_umat_or_mat(ctx, argv[1]);
-      JSInputArray map1 = js_umat_or_mat(ctx, argv[2]);
-      JSInputArray map2 = js_umat_or_mat(ctx, argv[3]);
-      int32_t interpolation, borderMode = cv::BORDER_CONSTANT;
-      JSColorData<double> borderValue;
-      JS_ToInt32(ctx, &interpolation, argv[4]);
-      if(argc >= 6)
-        JS_ToInt32(ctx, &borderMode, argv[5]);
-      if(argc >= 7)
-        js_color_read(ctx, argv[6], &borderValue);
-      cv::remap(src, dst, map1, map2, interpolation, borderMode, js_to_scalar(borderValue));
-      break;
-    }
+        } else {
 
-    case TRANSFORM_RESIZE: {
-      JSOutputArray dst = js_umat_or_mat(ctx, argv[1]);
-      JSSizeData<int> dsize;
-      double fx = 0, fy = 0;
-      int32_t interpolation = cv::INTER_LINEAR;
-      js_size_read(ctx, argv[2], &dsize);
-      if(argc >= 4)
-        JS_ToFloat64(ctx, &fx, argv[3]);
-      if(argc >= 5)
-        JS_ToFloat64(ctx, &fx, argv[4]);
-      if(argc >= 6)
-        JS_ToInt32(ctx, &interpolation, argv[5]);
-      cv::resize(src, dst, dsize, fx, fy, interpolation);
-      break;
-    }
+          JSInputArray dst = js_umat_or_mat(ctx, argv[1]);
+          mat = cv::getPerspectiveTransform(src, dst, solveMethod);
+        }
+        ret = js_mat_wrap(ctx, mat);
+        break;
+      }
 
-    case TRANSFORM_WARP_AFFINE: {
-      JSOutputArray dst = js_umat_or_mat(ctx, argv[1]);
-      JSInputArray M = js_umat_or_mat(ctx, argv[2]);
-      JSSizeData<int> dsize;
-      int32_t flags = cv::INTER_LINEAR, borderMode = cv::BORDER_CONSTANT;
-      JSColorData<double> borderValue;
+      case TRANSFORM_GET_RECT_SUB_PIX: {
+        JSSizeData<int> patchSize;
+        JSPointData<float> center;
+        JSOutputArray patch;
+        int32_t patchType = -1;
 
-      js_size_read(ctx, argv[3], &dsize);
-      if(argc >= 5)
+        js_size_read(ctx, argv[1], &patchSize);
+        js_point_read(ctx, argv[2], &center);
+        patch = js_umat_or_mat(ctx, argv[3]);
+
+        if(argc >= 5)
+          JS_ToInt32(ctx, &patchType, argv[4]);
+
+        cv::getRectSubPix(src, patchSize, center, patch, patchType);
+        break;
+      }
+
+      case TRANSFORM_GET_ROTATION_MATRIX2_D: {
+        JSPointData<float> center;
+        double angle, scale;
+        js_point_read(ctx, argv[0], &center);
+        JS_ToFloat64(ctx, &angle, argv[1]);
+        JS_ToFloat64(ctx, &scale, argv[2]);
+        JSMatData mat = cv::getRotationMatrix2D(center, angle, scale);
+        ret = js_mat_wrap(ctx, mat);
+        break;
+      }
+
+      case TRANSFORM_GET_ROTATION_MATRIX2D_: {
+        break;
+      }
+
+      case TRANSFORM_INVERT_AFFINE_TRANSFORM: {
+        JSOutputArray dst = js_umat_or_mat(ctx, argv[1]);
+        cv::invertAffineTransform(src, dst);
+        break;
+      }
+
+      case TRANSFORM_LINEAR_POLAR: {
+        JSOutputArray dst = js_umat_or_mat(ctx, argv[1]);
+        JSPointData<float> center;
+        double maxRadius;
+        int32_t flags;
+        js_point_read(ctx, argv[2], &center);
+        JS_ToFloat64(ctx, &maxRadius, argv[3]);
         JS_ToInt32(ctx, &flags, argv[4]);
-      if(argc >= 6)
-        JS_ToInt32(ctx, &borderMode, argv[5]);
-      if(argc >= 7)
-        js_color_read(ctx, argv[6], &borderValue);
-      cv::warpAffine(src, dst, M, dsize, flags, borderMode, js_to_scalar(borderValue));
-      break;
-    }
+        cv::linearPolar(src, dst, center, maxRadius, flags);
+        break;
+      }
 
-    case TRANSFORM_WARP_PERSPECTIVE: {
-      JSOutputArray dst = js_umat_or_mat(ctx, argv[1]);
-      JSInputArray M = js_umat_or_mat(ctx, argv[2]);
-      JSSizeData<int> dsize;
-      int32_t flags = cv::INTER_LINEAR, borderMode = cv::BORDER_CONSTANT;
-      JSColorData<double> borderValue;
-
-      js_size_read(ctx, argv[3], &dsize);
-      if(argc >= 5)
+      case TRANSFORM_LOG_POLAR: {
+        JSOutputArray dst = js_umat_or_mat(ctx, argv[1]);
+        JSPointData<float> center;
+        double M;
+        int32_t flags;
+        js_point_read(ctx, argv[2], &center);
+        JS_ToFloat64(ctx, &M, argv[3]);
         JS_ToInt32(ctx, &flags, argv[4]);
-      if(argc >= 6)
-        JS_ToInt32(ctx, &borderMode, argv[5]);
-      if(argc >= 7)
-        js_color_read(ctx, argv[6], &borderValue);
-      cv::warpPerspective(src, dst, M, dsize, flags, borderMode, js_to_scalar(borderValue));
-      break;
-    }
+        cv::logPolar(src, dst, center, M, flags);
+        break;
+      }
 
-    case TRANSFORM_WARP_POLAR: {
-      JSOutputArray dst = js_umat_or_mat(ctx, argv[1]);
-      JSSizeData<int> dsize;
-      JSPointData<float> center;
-      double maxRadius;
-      int32_t flags;
+      case TRANSFORM_REMAP: {
+        JSOutputArray dst = js_umat_or_mat(ctx, argv[1]);
+        JSInputArray map1 = js_umat_or_mat(ctx, argv[2]);
+        JSInputArray map2 = js_umat_or_mat(ctx, argv[3]);
+        int32_t interpolation, borderMode = cv::BORDER_CONSTANT;
+        JSColorData<double> borderValue;
+        JS_ToInt32(ctx, &interpolation, argv[4]);
+        if(argc >= 6)
+          JS_ToInt32(ctx, &borderMode, argv[5]);
+        if(argc >= 7)
+          js_color_read(ctx, argv[6], &borderValue);
+        cv::remap(src, dst, map1, map2, interpolation, borderMode, js_to_scalar(borderValue));
+        break;
+      }
 
-      js_size_read(ctx, argv[2], &dsize);
-      js_point_read(ctx, argv[3], &center);
-      JS_ToFloat64(ctx, &maxRadius, argv[4]);
-      JS_ToInt32(ctx, &flags, argv[5]);
-      cv::warpPolar(src, dst, dsize, center, maxRadius, flags);
-      break;
+      case TRANSFORM_RESIZE: {
+        JSOutputArray dst = js_umat_or_mat(ctx, argv[1]);
+        JSSizeData<int> dsize;
+        double fx = 0, fy = 0;
+        int32_t interpolation = cv::INTER_LINEAR;
+        js_size_read(ctx, argv[2], &dsize);
+        if(argc >= 4)
+          JS_ToFloat64(ctx, &fx, argv[3]);
+        if(argc >= 5)
+          JS_ToFloat64(ctx, &fx, argv[4]);
+        if(argc >= 6)
+          JS_ToInt32(ctx, &interpolation, argv[5]);
+        cv::resize(src, dst, dsize, fx, fy, interpolation);
+        break;
+      }
+
+      case TRANSFORM_WARP_AFFINE: {
+        JSOutputArray dst = js_umat_or_mat(ctx, argv[1]);
+        JSInputArray M = js_umat_or_mat(ctx, argv[2]);
+        JSSizeData<int> dsize;
+        int32_t flags = cv::INTER_LINEAR, borderMode = cv::BORDER_CONSTANT;
+        JSColorData<double> borderValue;
+
+        js_size_read(ctx, argv[3], &dsize);
+        if(argc >= 5)
+          JS_ToInt32(ctx, &flags, argv[4]);
+        if(argc >= 6)
+          JS_ToInt32(ctx, &borderMode, argv[5]);
+        if(argc >= 7)
+          js_color_read(ctx, argv[6], &borderValue);
+        cv::warpAffine(src, dst, M, dsize, flags, borderMode, js_to_scalar(borderValue));
+        break;
+      }
+
+      case TRANSFORM_WARP_PERSPECTIVE: {
+        JSOutputArray dst = js_umat_or_mat(ctx, argv[1]);
+        JSInputArray M = js_umat_or_mat(ctx, argv[2]);
+        JSSizeData<int> dsize;
+        int32_t flags = cv::INTER_LINEAR, borderMode = cv::BORDER_CONSTANT;
+        JSColorData<double> borderValue;
+
+        js_size_read(ctx, argv[3], &dsize);
+        if(argc >= 5)
+          JS_ToInt32(ctx, &flags, argv[4]);
+        if(argc >= 6)
+          JS_ToInt32(ctx, &borderMode, argv[5]);
+        if(argc >= 7)
+          js_color_read(ctx, argv[6], &borderValue);
+        cv::warpPerspective(src, dst, M, dsize, flags, borderMode, js_to_scalar(borderValue));
+        break;
+      }
+
+      case TRANSFORM_WARP_POLAR: {
+        JSOutputArray dst = js_umat_or_mat(ctx, argv[1]);
+        JSSizeData<int> dsize;
+        JSPointData<float> center;
+        double maxRadius;
+        int32_t flags;
+
+        js_size_read(ctx, argv[2], &dsize);
+        js_point_read(ctx, argv[3], &center);
+        JS_ToFloat64(ctx, &maxRadius, argv[4]);
+        JS_ToInt32(ctx, &flags, argv[5]);
+        cv::warpPolar(src, dst, dsize, center, maxRadius, flags);
+        break;
+      }
     }
-  }
+  } catch(const cv::Exception& e) { ret = js_handle_exception(ctx, e); }
+
   return ret;
 }
 
@@ -1294,238 +1311,241 @@ js_imgproc_filter(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
   if(magic != FILTER_GET_GABOR_KERNEL && magic != FILTER_GET_GAUSSIAN_KERNEL && magic != FILTER_GET_STRUCTURING_ELEMENT)
     src = argc >= 1 ? js_umat_or_mat(ctx, argv[0]) : cv::noArray();
 
-  switch(magic) {
-    case FILTER_BILATERAL_FILTER: {
-      break;
+  try {
+    switch(magic) {
+      case FILTER_BILATERAL_FILTER: {
+        break;
+      }
+
+      case FILTER_BLUR: {
+        break;
+      }
+
+      case FILTER_BOX_FILTER: {
+        JSOutputArray dst = js_umat_or_mat(ctx, argv[1]);
+        int32_t ddepth;
+        JSSizeData<int> ksize;
+        JSPointData<int> anchor{-1, -1};
+        BOOL normalize = TRUE;
+        int32_t borderType = cv::BORDER_DEFAULT;
+
+        JS_ToInt32(ctx, &ddepth, argv[2]);
+        js_size_read(ctx, argv[3], &ksize);
+
+        if(!(argc >= 5 && js_point_read(ctx, argv[4], &anchor)))
+          anchor = JSPointData<int>(-1, -1);
+        if(argc >= 6)
+          normalize = JS_ToBool(ctx, argv[5]);
+        if(argc >= 7)
+          JS_ToInt32(ctx, &borderType, argv[6]);
+        cv::boxFilter(src, dst, ddepth, ksize, anchor, normalize, borderType);
+        break;
+      }
+
+      case FILTER_BUILD_PYRAMID: {
+        JSOutputArray dst = js_umat_or_mat(ctx, argv[1]);
+        int32_t maxlevel, borderType = cv::BORDER_DEFAULT;
+
+        JS_ToInt32(ctx, &maxlevel, argv[2]);
+        if(argc >= 4)
+          JS_ToInt32(ctx, &borderType, argv[3]);
+        cv::buildPyramid(src, dst, maxlevel, borderType);
+        break;
+      }
+
+      case FILTER_DILATE: {
+        JSOutputArray dst = js_umat_or_mat(ctx, argv[1]);
+        JSInputArray kernel = js_umat_or_mat(ctx, argv[2]);
+        JSPointData<int> anchor;
+        int32_t iterations = 1, borderType = cv::BORDER_CONSTANT;
+        JSColorData<double> borderValue;
+        if(!(argc >= 4 && js_point_read(ctx, argv[3], &anchor)))
+          anchor = JSPointData<int>(-1, -1);
+        if(argc >= 5)
+          JS_ToInt32(ctx, &iterations, argv[4]);
+        if(argc >= 6)
+          JS_ToInt32(ctx, &borderType, argv[5]);
+        if(argc >= 7)
+          js_color_read(ctx, argv[6], &borderValue);
+
+        cv::dilate(src, dst, kernel, anchor, iterations, borderType, js_to_scalar(borderValue));
+        break;
+      }
+
+      case FILTER_ERODE: {
+        JSOutputArray dst = js_umat_or_mat(ctx, argv[1]);
+        JSInputArray kernel = js_umat_or_mat(ctx, argv[2]);
+        JSPointData<int> anchor;
+        int32_t iterations = 1, borderType = cv::BORDER_CONSTANT;
+        JSColorData<double> borderValue;
+        if(!(argc >= 4 && js_point_read(ctx, argv[3], &anchor)))
+          anchor = JSPointData<int>(-1, -1);
+        if(argc >= 5)
+          JS_ToInt32(ctx, &iterations, argv[4]);
+        if(argc >= 6)
+          JS_ToInt32(ctx, &borderType, argv[5]);
+        if(argc >= 7)
+          js_color_read(ctx, argv[6], &borderValue);
+
+        cv::erode(src, dst, kernel, anchor, iterations, borderType, js_to_scalar(borderValue));
+        break;
+      }
+
+      case FILTER_FILTER2_D: {
+        JSOutputArray dst = js_umat_or_mat(ctx, argv[1]);
+        int32_t ddepth;
+        JSInputArray kernel = js_umat_or_mat(ctx, argv[3]);
+        JSPointData<int> anchor;
+        double delta = 0;
+        int32_t borderType = cv::BORDER_CONSTANT;
+        JS_ToInt32(ctx, &ddepth, argv[2]);
+        if(!(argc >= 5 && js_point_read(ctx, argv[4], &anchor)))
+          anchor = JSPointData<int>(-1, -1);
+        if(argc >= 6)
+          JS_ToFloat64(ctx, &delta, argv[5]);
+        if(argc >= 7)
+          JS_ToInt32(ctx, &borderType, argv[6]);
+        cv::filter2D(src, dst, ddepth, kernel, anchor, delta, borderType);
+        break;
+      }
+
+      case FILTER_GAUSSIAN_BLUR: {
+        JSOutputArray dst = js_umat_or_mat(ctx, argv[1]);
+        JSSizeData<int> ksize;
+        double sigmaX, sigmaY = 0;
+        int32_t borderType = cv::BORDER_DEFAULT;
+        js_size_read(ctx, argv[2], &ksize);
+        JS_ToFloat64(ctx, &sigmaX, argv[3]);
+        if(argc >= 5)
+          JS_ToFloat64(ctx, &sigmaY, argv[4]);
+        if(argc >= 6)
+          JS_ToInt32(ctx, &borderType, argv[5]);
+        cv::GaussianBlur(src, dst, ksize, sigmaX, sigmaY, borderType);
+        break;
+      }
+
+      case FILTER_GET_DERIV_KERNELS: {
+        JSOutputArray ky = js_umat_or_mat(ctx, argv[1]);
+        int32_t dx, dy, ksize, ktype = CV_32F;
+        BOOL normalize = FALSE;
+
+        JS_ToInt32(ctx, &dx, argv[2]);
+        JS_ToInt32(ctx, &dy, argv[3]);
+
+        JS_ToInt32(ctx, &ksize, argv[4]);
+        if(argc >= 6)
+          normalize = JS_ToBool(ctx, argv[5]);
+
+        if(argc >= 7)
+          JS_ToInt32(ctx, &ktype, argv[6]);
+        cv::getDerivKernels(src, ky, dx, dy, ksize, normalize, ktype);
+        break;
+      }
+
+      case FILTER_GET_GABOR_KERNEL: {
+        JSSizeData<int> ksize;
+        double sigma, theta, lambd, gamma, psi = CV_PI * 0.5;
+        int32_t ktype = CV_64F;
+        js_size_read(ctx, argv[0], &ksize);
+        JS_ToFloat64(ctx, &sigma, argv[1]);
+        JS_ToFloat64(ctx, &theta, argv[2]);
+        JS_ToFloat64(ctx, &lambd, argv[3]);
+        JS_ToFloat64(ctx, &gamma, argv[4]);
+        if(argc >= 6)
+          JS_ToFloat64(ctx, &psi, argv[5]);
+
+        if(argc >= 7)
+          JS_ToInt32(ctx, &ktype, argv[6]);
+        ret = js_mat_wrap(ctx, cv::getGaborKernel(ksize, sigma, theta, lambd, gamma, psi, ktype));
+        break;
+      }
+
+      case FILTER_GET_GAUSSIAN_KERNEL: {
+        int32_t ksize, ktype = CV_64F;
+        double sigma;
+        JS_ToInt32(ctx, &ksize, argv[0]);
+        JS_ToFloat64(ctx, &sigma, argv[1]);
+        if(argc >= 3)
+          JS_ToInt32(ctx, &ktype, argv[2]);
+        ret = js_mat_wrap(ctx, cv::getGaussianKernel(ksize, sigma, ktype));
+        break;
+      }
+
+      case FILTER_GET_STRUCTURING_ELEMENT: {
+        int32_t shape;
+        JSSizeData<int> ksize;
+        JSPointData<int> anchor;
+        JS_ToInt32(ctx, &shape, argv[0]);
+        js_size_read(ctx, argv[1], &ksize);
+        if(!(argc >= 3 && js_point_read(ctx, argv[2], &anchor)))
+          anchor = JSPointData<int>(-1, -1);
+        ret = js_mat_wrap(ctx, cv::getStructuringElement(shape, ksize, anchor));
+
+        break;
+      }
+
+      case FILTER_LAPLACIAN: {
+        break;
+      }
+
+      case FILTER_MEDIAN_BLUR: {
+        break;
+      }
+
+      case FILTER_MORPHOLOGY_DEFAULT_BORDER_VALUE: {
+        break;
+      }
+
+      case FILTER_MORPHOLOGY_EX: {
+        break;
+      }
+
+      case FILTER_PYR_DOWN: {
+        break;
+      }
+
+      case FILTER_PYR_MEAN_SHIFT_FILTERING: {
+        break;
+      }
+
+      case FILTER_PYR_UP: {
+        break;
+      }
+
+      case FILTER_SCHARR: {
+        break;
+      }
+
+      case FILTER_SEP_FILTER2_D: {
+        break;
+      }
+
+      case FILTER_SOBEL: {
+        JSOutputArray dst = js_umat_or_mat(ctx, argv[1]);
+        int32_t ddepth, dx, dy, ksize = 3, borderType = cv::BORDER_DEFAULT;
+
+        JS_ToInt32(ctx, &ddepth, argv[2]);
+        JS_ToInt32(ctx, &dx, argv[3]);
+        JS_ToInt32(ctx, &dy, argv[4]);
+
+        if(argc >= 6)
+          JS_ToInt32(ctx, &ksize, argv[5]);
+        if(argc >= 7)
+          JS_ToInt32(ctx, &borderType, argv[6]);
+        cv::Sobel(src, dst, ddepth, dx, dy, ksize, borderType);
+        break;
+      }
+
+      case FILTER_SPATIAL_GRADIENT: {
+        break;
+      }
+
+      case FILTER_SQR_BOX_FILTER: {
+        break;
+      }
     }
+  } catch(const cv::Exception& e) { ret = js_handle_exception(ctx, e); }
 
-    case FILTER_BLUR: {
-      break;
-    }
-
-    case FILTER_BOX_FILTER: {
-      JSOutputArray dst = js_umat_or_mat(ctx, argv[1]);
-      int32_t ddepth;
-      JSSizeData<int> ksize;
-      JSPointData<int> anchor{-1, -1};
-      BOOL normalize = TRUE;
-      int32_t borderType = cv::BORDER_DEFAULT;
-
-      JS_ToInt32(ctx, &ddepth, argv[2]);
-      js_size_read(ctx, argv[3], &ksize);
-
-      if(!(argc >= 5 && js_point_read(ctx, argv[4], &anchor)))
-        anchor = JSPointData<int>(-1, -1);
-      if(argc >= 6)
-        normalize = JS_ToBool(ctx, argv[5]);
-      if(argc >= 7)
-        JS_ToInt32(ctx, &borderType, argv[6]);
-      cv::boxFilter(src, dst, ddepth, ksize, anchor, normalize, borderType);
-      break;
-    }
-
-    case FILTER_BUILD_PYRAMID: {
-      JSOutputArray dst = js_umat_or_mat(ctx, argv[1]);
-      int32_t maxlevel, borderType = cv::BORDER_DEFAULT;
-
-      JS_ToInt32(ctx, &maxlevel, argv[2]);
-      if(argc >= 4)
-        JS_ToInt32(ctx, &borderType, argv[3]);
-      cv::buildPyramid(src, dst, maxlevel, borderType);
-      break;
-    }
-
-    case FILTER_DILATE: {
-      JSOutputArray dst = js_umat_or_mat(ctx, argv[1]);
-      JSInputArray kernel = js_umat_or_mat(ctx, argv[2]);
-      JSPointData<int> anchor;
-      int32_t iterations = 1, borderType = cv::BORDER_CONSTANT;
-      JSColorData<double> borderValue;
-      if(!(argc >= 4 && js_point_read(ctx, argv[3], &anchor)))
-        anchor = JSPointData<int>(-1, -1);
-      if(argc >= 5)
-        JS_ToInt32(ctx, &iterations, argv[4]);
-      if(argc >= 6)
-        JS_ToInt32(ctx, &borderType, argv[5]);
-      if(argc >= 7)
-        js_color_read(ctx, argv[6], &borderValue);
-
-      cv::dilate(src, dst, kernel, anchor, iterations, borderType, js_to_scalar(borderValue));
-      break;
-    }
-
-    case FILTER_ERODE: {
-      JSOutputArray dst = js_umat_or_mat(ctx, argv[1]);
-      JSInputArray kernel = js_umat_or_mat(ctx, argv[2]);
-      JSPointData<int> anchor;
-      int32_t iterations = 1, borderType = cv::BORDER_CONSTANT;
-      JSColorData<double> borderValue;
-      if(!(argc >= 4 && js_point_read(ctx, argv[3], &anchor)))
-        anchor = JSPointData<int>(-1, -1);
-      if(argc >= 5)
-        JS_ToInt32(ctx, &iterations, argv[4]);
-      if(argc >= 6)
-        JS_ToInt32(ctx, &borderType, argv[5]);
-      if(argc >= 7)
-        js_color_read(ctx, argv[6], &borderValue);
-
-      cv::erode(src, dst, kernel, anchor, iterations, borderType, js_to_scalar(borderValue));
-      break;
-    }
-
-    case FILTER_FILTER2_D: {
-      JSOutputArray dst = js_umat_or_mat(ctx, argv[1]);
-      int32_t ddepth;
-      JSInputArray kernel = js_umat_or_mat(ctx, argv[3]);
-      JSPointData<int> anchor;
-      double delta = 0;
-      int32_t borderType = cv::BORDER_CONSTANT;
-      JS_ToInt32(ctx, &ddepth, argv[2]);
-      if(!(argc >= 5 && js_point_read(ctx, argv[4], &anchor)))
-        anchor = JSPointData<int>(-1, -1);
-      if(argc >= 6)
-        JS_ToFloat64(ctx, &delta, argv[5]);
-      if(argc >= 7)
-        JS_ToInt32(ctx, &borderType, argv[6]);
-      cv::filter2D(src, dst, ddepth, kernel, anchor, delta, borderType);
-      break;
-    }
-
-    case FILTER_GAUSSIAN_BLUR: {
-      JSOutputArray dst = js_umat_or_mat(ctx, argv[1]);
-      JSSizeData<int> ksize;
-      double sigmaX, sigmaY = 0;
-      int32_t borderType = cv::BORDER_DEFAULT;
-      js_size_read(ctx, argv[2], &ksize);
-      JS_ToFloat64(ctx, &sigmaX, argv[3]);
-      if(argc >= 5)
-        JS_ToFloat64(ctx, &sigmaY, argv[4]);
-      if(argc >= 6)
-        JS_ToInt32(ctx, &borderType, argv[5]);
-      cv::GaussianBlur(src, dst, ksize, sigmaX, sigmaY, borderType);
-      break;
-    }
-
-    case FILTER_GET_DERIV_KERNELS: {
-      JSOutputArray ky = js_umat_or_mat(ctx, argv[1]);
-      int32_t dx, dy, ksize, ktype = CV_32F;
-      BOOL normalize = FALSE;
-
-      JS_ToInt32(ctx, &dx, argv[2]);
-      JS_ToInt32(ctx, &dy, argv[3]);
-
-      JS_ToInt32(ctx, &ksize, argv[4]);
-      if(argc >= 6)
-        normalize = JS_ToBool(ctx, argv[5]);
-
-      if(argc >= 7)
-        JS_ToInt32(ctx, &ktype, argv[6]);
-      cv::getDerivKernels(src, ky, dx, dy, ksize, normalize, ktype);
-      break;
-    }
-
-    case FILTER_GET_GABOR_KERNEL: {
-      JSSizeData<int> ksize;
-      double sigma, theta, lambd, gamma, psi = CV_PI * 0.5;
-      int32_t ktype = CV_64F;
-      js_size_read(ctx, argv[0], &ksize);
-      JS_ToFloat64(ctx, &sigma, argv[1]);
-      JS_ToFloat64(ctx, &theta, argv[2]);
-      JS_ToFloat64(ctx, &lambd, argv[3]);
-      JS_ToFloat64(ctx, &gamma, argv[4]);
-      if(argc >= 6)
-        JS_ToFloat64(ctx, &psi, argv[5]);
-
-      if(argc >= 7)
-        JS_ToInt32(ctx, &ktype, argv[6]);
-      ret = js_mat_wrap(ctx, cv::getGaborKernel(ksize, sigma, theta, lambd, gamma, psi, ktype));
-      break;
-    }
-
-    case FILTER_GET_GAUSSIAN_KERNEL: {
-      int32_t ksize, ktype = CV_64F;
-      double sigma;
-      JS_ToInt32(ctx, &ksize, argv[0]);
-      JS_ToFloat64(ctx, &sigma, argv[1]);
-      if(argc >= 3)
-        JS_ToInt32(ctx, &ktype, argv[2]);
-      ret = js_mat_wrap(ctx, cv::getGaussianKernel(ksize, sigma, ktype));
-      break;
-    }
-
-    case FILTER_GET_STRUCTURING_ELEMENT: {
-      int32_t shape;
-      JSSizeData<int> ksize;
-      JSPointData<int> anchor;
-      JS_ToInt32(ctx, &shape, argv[0]);
-      js_size_read(ctx, argv[1], &ksize);
-      if(!(argc >= 3 && js_point_read(ctx, argv[2], &anchor)))
-        anchor = JSPointData<int>(-1, -1);
-      ret = js_mat_wrap(ctx, cv::getStructuringElement(shape, ksize, anchor));
-
-      break;
-    }
-
-    case FILTER_LAPLACIAN: {
-      break;
-    }
-
-    case FILTER_MEDIAN_BLUR: {
-      break;
-    }
-
-    case FILTER_MORPHOLOGY_DEFAULT_BORDER_VALUE: {
-      break;
-    }
-
-    case FILTER_MORPHOLOGY_EX: {
-      break;
-    }
-
-    case FILTER_PYR_DOWN: {
-      break;
-    }
-
-    case FILTER_PYR_MEAN_SHIFT_FILTERING: {
-      break;
-    }
-
-    case FILTER_PYR_UP: {
-      break;
-    }
-
-    case FILTER_SCHARR: {
-      break;
-    }
-
-    case FILTER_SEP_FILTER2_D: {
-      break;
-    }
-
-    case FILTER_SOBEL: {
-      JSOutputArray dst = js_umat_or_mat(ctx, argv[1]);
-      int32_t ddepth, dx, dy, ksize = 3, borderType = cv::BORDER_DEFAULT;
-
-      JS_ToInt32(ctx, &ddepth, argv[2]);
-      JS_ToInt32(ctx, &dx, argv[3]);
-      JS_ToInt32(ctx, &dy, argv[4]);
-
-      if(argc >= 6)
-        JS_ToInt32(ctx, &ksize, argv[5]);
-      if(argc >= 7)
-        JS_ToInt32(ctx, &borderType, argv[6]);
-      cv::Sobel(src, dst, ddepth, dx, dy, ksize, borderType);
-      break;
-    }
-
-    case FILTER_SPATIAL_GRADIENT: {
-      break;
-    }
-
-    case FILTER_SQR_BOX_FILTER: {
-      break;
-    }
-  }
   return ret;
 }
 enum {
@@ -1570,6 +1590,7 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
 
   } else if(magic != SHAPE_BOX_POINTS && magic != SHAPE_HU_MOMENTS)
     src = argc >= 1 ? js_umat_or_mat(ctx, argv[0]) : cv::noArray();
+
   try {
     switch(magic) {
       case SHAPE_APPROX_POLY_DP: {
@@ -1599,6 +1620,7 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
         }
         break;
       }
+
       case SHAPE_ARC_LENGTH: {
         BOOL closed = JS_ToBool(ctx, argv[1]);
         double length = cv::arcLength(src, closed);
@@ -1606,6 +1628,7 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
 
         break;
       }
+
       case SHAPE_BOX_POINTS: {
         JSRotatedRectData* rr = js_rotated_rect_data2(ctx, argv[0]);
         JSContourData<double>* points = js_contour_data2(ctx, argv[1]);
@@ -1613,6 +1636,7 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
         cv::boxPoints(*rr, *points);
         break;
       }
+
       case SHAPE_CONNECTED_COMPONENTS: {
         JSOutputArray labels = js_umat_or_mat(ctx, argv[1]);
         int32_t connectivity, ltype, ccltype;
@@ -1623,6 +1647,7 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
         ret = JS_NewInt32(ctx, cv::connectedComponents(src, labels, connectivity, ltype, ccltype));
         break;
       }
+
       case SHAPE_CONNECTED_COMPONENTS_WITH_STATS: {
         JSOutputArray labels = js_umat_or_mat(ctx, argv[1]);
         JSOutputArray stats = js_umat_or_mat(ctx, argv[2]);
@@ -1636,6 +1661,7 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
         break;
         break;
       }
+
       case SHAPE_CONTOUR_AREA: {
         BOOL oriented;
         oriented = argc > 1 ? JS_ToBool(ctx, argv[1]) : FALSE;
@@ -1662,6 +1688,7 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
         ret = JS_NewFloat64(ctx, area);
         break;
       }
+
       case SHAPE_CONVEX_HULL: {
         JSOutputArray hull = js_umat_or_mat(ctx, argv[1]);
         BOOL clockwise = FALSE, returnPoints = TRUE;
@@ -1672,29 +1699,36 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
         cv::convexHull(src, hull, clockwise, returnPoints);
         break;
       }
+
       case SHAPE_CONVEXITY_DEFECTS: {
         JSInputArray convexhull = js_umat_or_mat(ctx, argv[1]);
         JSOutputArray convexityDefects = js_umat_or_mat(ctx, argv[2]);
         cv::convexityDefects(src, convexhull, convexityDefects);
         break;
       }
+
       case SHAPE_CREATE_GENERALIZED_HOUGH_BALLARD: {
         break;
       }
+
       case SHAPE_CREATE_GENERALIZED_HOUGH_GUIL: {
         break;
       }
+
       case SHAPE_FIT_ELLIPSE: {
         JSRotatedRectData rr = cv::fitEllipse(src);
         ret = js_rotated_rect_new(ctx, rr);
         break;
       }
+
       case SHAPE_FIT_ELLIPSE_AMS: {
         break;
       }
+
       case SHAPE_FIT_ELLIPSE_DIRECT: {
         break;
       }
+
       case SHAPE_FIT_LINE: {
         JSOutputArray line = js_umat_or_mat(ctx, argv[1]);
         int32_t dist_type;
@@ -1706,6 +1740,7 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
         cv::fitLine(src, line, dist_type, param, reps, aeps);
         break;
       }
+
       case SHAPE_HU_MOMENTS: {
         std::map<std::string, double> moments_map;
         std::array<double, 7> hu;
@@ -1730,20 +1765,25 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
 
         break;
       }
+
       case SHAPE_INTERSECT_CONVEX_CONVEX: {
         break;
       }
+
       case SHAPE_IS_CONTOUR_CONVEX: {
         ret = JS_NewBool(ctx, cv::isContourConvex(src));
         break;
       }
+
       case SHAPE_MATCH_SHAPES: {
         break;
       }
+
       case SHAPE_MIN_AREA_RECT: {
         ret = js_rotated_rect_new(ctx, cv::minAreaRect(src));
         break;
       }
+
       case SHAPE_MIN_ENCLOSING_CIRCLE: {
         JSPointData<float> center;
         float radius;
@@ -1754,6 +1794,7 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
           JS_Call(ctx, argv[1], JS_NULL, 1, &point);
           JS_FreeValue(ctx, point);
         }
+
         if(JS_IsFunction(ctx, argv[2])) {
           JSValue r = JS_NewFloat64(ctx, radius);
           JS_Call(ctx, argv[2], JS_NULL, 1, &r);
@@ -1762,19 +1803,19 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
 
         break;
       }
+
       case SHAPE_MIN_ENCLOSING_TRIANGLE: {
         break;
       }
+
       case SHAPE_ROTATED_RECTANGLE_INTERSECTION: {
         break;
       }
     }
-  } catch(const cv::Exception& e) {
-    std::string msg(e.what());
+  }
 
-    const auto pos = msg.find_last_of("/\\");
-
-    ret = JS_ThrowInternalError(ctx, "cv::Exception %s", msg.c_str() + pos + 1);
+  catch(const cv::Exception& e) {
+    ret = js_handle_exception(ctx, e);
   }
 
   return ret;
@@ -1806,6 +1847,7 @@ js_ximgproc_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
         cv::ximgproc::thinning(src, dst, flags);
         break;
       }
+
       case NI_BLACK_THRESHOLD: {
         int32_t type = -1, blockSize = -1, binarizationMethod = cv::ximgproc::BINARIZATION_NIBLACK;
         double maxValue, k, r = 128;
@@ -1813,13 +1855,17 @@ js_ximgproc_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
         JS_ToInt32(ctx, &type, argv[3]);
         JS_ToInt32(ctx, &blockSize, argv[4]);
         JS_ToFloat64(ctx, &k, argv[5]);
+
         if(argc > 6)
           JS_ToInt32(ctx, &binarizationMethod, argv[6]);
+
         if(argc > 7)
           JS_ToFloat64(ctx, &r, argv[7]);
+
         cv::ximgproc::niBlackThreshold(src, dst, maxValue, type, blockSize, k, binarizationMethod, r);
         break;
       }
+
       case ANISOTROPIC_DIFFUSION: {
         double alpha = 0, K = 0;
         int32_t niters = -1;
@@ -1831,13 +1877,7 @@ js_ximgproc_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
         break;
       }
     }
-  } catch(const cv::Exception& e) {
-    std::string msg(e.what());
-
-    const auto pos = msg.find_last_of("/\\");
-
-    ret = JS_ThrowInternalError(ctx, "cv::Exception %s", msg.c_str() + pos + 1);
-  }
+  } catch(const cv::Exception& e) { ret = js_handle_exception(ctx, e); }
 
   return ret;
 }
@@ -1893,8 +1933,8 @@ js_function_list_t js_imgproc_static_funcs{
     JS_CFUNC_MAGIC_DEF("erode", 3, js_cv_morphology, 1),
     JS_CFUNC_DEF("morphologyEx", 4, js_cv_morphology_ex),
     JS_CFUNC_DEF("medianBlur", 3, js_cv_median_blur),
-        JS_CFUNC_DEF("lineSegmentDetector", 2, js_cv_lsd),
-    
+    JS_CFUNC_DEF("lineSegmentDetector", 2, js_cv_lsd),
+
     JS_CFUNC_MAGIC_DEF("accumulate", 2, js_imgproc_motion, MOTION_ACCUMULATE),
     JS_CFUNC_MAGIC_DEF("accumulateProduct", 3, js_imgproc_motion, MOTION_ACCUMULATE_PRODUCT),
     JS_CFUNC_MAGIC_DEF("accumulateSquare", 2, js_imgproc_motion, MOTION_ACCUMULATE_SQUARE),

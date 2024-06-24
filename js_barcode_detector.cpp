@@ -27,6 +27,7 @@ js_barcode_detector_wrap(JSContext* ctx, JSBarcodeDetectorData& wb) {
 
   return ret;
 }
+
 static JSValue
 js_barcode_detector_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   JSValue proto, obj = JS_UNDEFINED;

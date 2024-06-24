@@ -214,6 +214,7 @@ js_subdiv2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
       break;
     }
   }
+
   return ret;
 }
 

@@ -199,6 +199,7 @@ struct TypedArrayType {
       case 2: return int32_t(is_signed ? CV_16S : CV_16U);
       case 4: return int32_t(CV_32S);
     }
+
     return -1;
   }
 
@@ -401,6 +402,7 @@ public:
       js_value_to(ctx, item, out[i]);
       JS_FreeValue(ctx, item);
     }
+
     return len;
   }
 
@@ -509,6 +511,7 @@ js_typedarray_inputoutputarray(JSContext* ctx, JSValueConst obj) {
       TypedArrayRange<uint64_t> range(props);
       return std::vector<uint64_t>(range.begin(), range.end());
     }
+
     case TYPEDARRAY_BIGINT64: {
       TypedArrayRange<int64_t> range(props);
       return std::vector<int64_t>(range.begin(), range.end());

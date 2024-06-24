@@ -363,6 +363,7 @@ js_draw_polygon(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
 
     return JS_UNDEFINED;
   }
+
   return JS_EXCEPTION;
 }
 

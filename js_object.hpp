@@ -25,6 +25,7 @@ public:
       JS_FreeCString(ctx, name);
       ++i;
     }
+
     return i;
   }
 

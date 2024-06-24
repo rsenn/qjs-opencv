@@ -994,6 +994,7 @@ log_gamma_lanczos(double x) {
     a -= log(x + (double)n);
     b += q[n] * pow(x, (double)n);
   }
+
   return a + log(b);
 }
 
@@ -1154,6 +1155,7 @@ nfa(int n, int k, double p, double logNT) {
         break;
     }
   }
+
   return -log10(bin_tail) - logNT;
 }
 

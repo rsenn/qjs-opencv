@@ -78,6 +78,7 @@ js_point_argument(JSContext* ctx, int argc, JSValueConst argv[], JSPointData<T>*
   } else if(js_point_read(ctx, argv[0], out)) {
     ret = 1;
   }
+
   return ret;
 }
 
@@ -93,6 +94,7 @@ js_point_arg(JSContext* ctx, int argc, JSValueConst argv[], int& argind, JSPoint
     argind += 2;
     return TRUE;
   }
+
   return FALSE;
 }
 
@@ -224,6 +226,7 @@ point_parse(std::istream& is, cv::Point_<T>& p) {
     is >> std::skipws >> p.y;
     return true;
   }
+
   return false;
 }
 

@@ -245,6 +245,7 @@ js_contour_boundingrect(JSContext* ctx, JSValueConst this_val, int argc, JSValue
     }
     ret = js_rect_new(ctx, tl.x, tl.y, br.x - tl.x, br.y - tl.y);
   }
+
   return ret;
 }
 
@@ -419,6 +420,7 @@ js_contour_adjacent(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
         return JS_TRUE;
     }
   }
+
   return JS_FALSE;
 }
 
@@ -623,6 +625,7 @@ js_contour_psimpl(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
       it = psimpl::simplify_reumann_witkam<2>((double*)start, (double*)end, arg1, it);
       break;
     }
+
     case SIMPLIFY_OPHEIM: {
       if(arg1 == 0)
         arg1 = 2;
@@ -631,6 +634,7 @@ js_contour_psimpl(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
       it = psimpl::simplify_opheim<2>((double*)start, (double*)end, arg1, arg2, it);
       break;
     }
+
     case SIMPLIFY_LANG: {
       if(arg1 == 0)
         arg1 = 2;
@@ -639,24 +643,28 @@ js_contour_psimpl(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
       it = psimpl::simplify_lang<2>((double*)start, (double*)end, arg1, arg2, it);
       break;
     }
+
     case SIMPLIFY_DOUGLAS_PEUCKER: {
       if(arg1 == 0)
         arg1 = 2;
       it = psimpl::simplify_douglas_peucker<2>((double*)start, (double*)end, arg1, it);
       break;
     }
+
     case SIMPLIFY_NTH_POINT: {
       if(arg1 == 0)
         arg1 = 2;
       it = psimpl::simplify_nth_point<2>((double*)start, (double*)end, arg1, it);
       break;
     }
+
     case SIMPLIFY_RADIAL_DISTANCE: {
       if(arg1 == 0)
         arg1 = 2;
       it = psimpl::simplify_radial_distance<2>((double*)start, (double*)end, arg1, it);
       break;
     }
+
     case SIMPLIFY_PERPENDICULAR_DISTANCE: {
       if(arg1 == 0)
         arg1 = 2;
@@ -755,6 +763,7 @@ js_contour_push(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
 
     v->push_back(point);
   }
+
   return JS_UNDEFINED;
 }
 
@@ -818,6 +827,7 @@ js_contour_unshift(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
 
     v->insert(v->begin(), point);
   }
+
   return JS_UNDEFINED;
 }
 
@@ -946,6 +956,7 @@ js_contour_find(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
       ret = JS_NewInt64(ctx, index);
       break;
     }
+
     case LAST_INDEX_OF: {
       JSPointData<double> needle;
       js_point_read(ctx, argv[0], &needle);
@@ -961,6 +972,7 @@ js_contour_find(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
       ret = JS_NewInt64(ctx, index);
       break;
     }
+
     case FIND_ITEM:
     case FIND_INDEX: {
       for(const auto& pt : *v) {
@@ -985,6 +997,7 @@ js_contour_find(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
       ret = magic == FIND_INDEX ? JS_NewInt64(ctx, index) : index == -1 ? JS_NULL : js_point_new(ctx, v->at(index));
       break;
     }
+
     case FIND_LAST_ITEM:
     case FIND_LAST_INDEX: {
       i = v->size() - 1;
@@ -1070,6 +1083,7 @@ js_contour_rotatedrectangleintersection(JSContext* ctx, JSValueConst this_val, i
 
     ret = js_contour_new(ctx, intersection);
   }
+
   return ret;
 }
 
@@ -1093,6 +1107,7 @@ js_contour_rotatepoints(JSContext* ctx, JSValueConst this_val, int argc, JSValue
   } else if(shift < 0) {
     std::rotate(s->rbegin(), s->rbegin() + (-shift), s->rend());
   }
+
   return JSValue(this_val);
 }
 
@@ -1340,6 +1355,7 @@ js_contour_get(JSContext* ctx, JSValueConst this_val, int magic) {
       ret = JS_NewFloat64(ctx, (double)rect.width / rect.height);
       break;
     }
+
     case PROP_EXTENT: {
       std::vector<cv::Point2f> points;
       contour_copy(*contour, points);
@@ -1349,6 +1365,7 @@ js_contour_get(JSContext* ctx, JSValueConst this_val, int magic) {
       ret = JS_NewFloat64(ctx, area / (rect.width * rect.height));
       break;
     }
+
     case PROP_SOLIDITY: {
       std::vector<cv::Point> points, hull;
       contour_copy(*contour, points);
@@ -1359,6 +1376,7 @@ js_contour_get(JSContext* ctx, JSValueConst this_val, int magic) {
       ret = JS_NewFloat64(ctx, area / cv::contourArea(hull));
       break;
     }
+
     case PROP_EQUIVALENT_DIAMETER: {
       std::vector<cv::Point2f> points;
       contour_copy(*contour, points);
@@ -1367,6 +1385,7 @@ js_contour_get(JSContext* ctx, JSValueConst this_val, int magic) {
       ret = JS_NewFloat64(ctx, std::sqrt(4 * area / 3.14159265358979323846));
       break;
     }
+
     case PROP_ORIENTATION: {
       std::vector<cv::Point2f> points;
       contour_copy(*contour, points);
@@ -1376,11 +1395,13 @@ js_contour_get(JSContext* ctx, JSValueConst this_val, int magic) {
       }
       break;
     }
+
     case PROP_BOUNDING_RECT: {
       ret = js_contour_boundingrect(ctx, this_val, 0, 0);
       break;
     }
   }
+
   return ret;
 }
 
@@ -1437,6 +1458,7 @@ js_contour_get_own_property(JSContext* ctx, JSPropertyDescriptor* pdesc, JSValue
         pdesc->getter = JS_UNDEFINED;
         pdesc->setter = JS_UNDEFINED;
       }
+
       return TRUE;
     }
   } else if(js_atom_is_length(ctx, prop)) {
@@ -1448,6 +1470,7 @@ js_contour_get_own_property(JSContext* ctx, JSPropertyDescriptor* pdesc, JSValue
       pdesc->getter = JS_UNDEFINED;
       pdesc->setter = JS_UNDEFINED;
     }
+
     return TRUE;
   }
 

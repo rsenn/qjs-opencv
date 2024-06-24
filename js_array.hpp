@@ -34,6 +34,7 @@ js_array_length(JSContext* ctx, const JSValueConst& arr) {
       ret = len;
     }
   }
+
   return ret;
 }
 
@@ -49,6 +50,7 @@ js_array_truncate(JSContext* ctx, const JSValueConst& arr, int64_t len) {
       JS_DeletePropertyInt64(ctx, arr, top, 0);
     JS_SetPropertyStr(ctx, arr, "length", JS_NewInt64(ctx, newlen));
   }
+
   return newlen;
 }
 
@@ -138,6 +140,7 @@ public:
       out.push_back(value);
       JS_FreeValue(ctx, item);
     }
+
     return n;
   }
 
@@ -167,6 +170,7 @@ public:
       JS_SetPropertyUint32(ctx, arr, i, item);
       ++i;
     }
+
     return i;
   }
 
@@ -225,6 +229,7 @@ public:
       JS_ToUint32(ctx, &u, value);
       out.push_back(u);
     }
+
     return n;
   }
 
@@ -237,6 +242,7 @@ public:
       JS_SetPropertyUint32(ctx, arr, i, JS_NewUint32(ctx, u));
       ++i;
     }
+
     return i;
   }
 
@@ -263,6 +269,7 @@ js_array<uint32_t>::to_array(JSContext* ctx, JSValueConst arr, std::array<uint32
     JS_ToUint32(ctx, &u, value);
     out[i] = u;
   }
+
   return i;
 }
 
@@ -281,6 +288,7 @@ public:
       JSValue value = JS_GetPropertyUint32(ctx, arr, (uint32_t)i);
       out.push_back(value);
     }
+
     return n;
   }
 
@@ -292,6 +300,7 @@ public:
       JS_SetPropertyUint32(ctx, arr, i, *it);
       ++i;
     }
+
     return i;
   }
 
@@ -316,6 +325,7 @@ js_array<JSValue>::to_array(JSContext* ctx, JSValueConst arr, std::array<JSValue
     JSValue value = JS_GetPropertyUint32(ctx, arr, (uint32_t)i);
     out[i] = value;
   }
+
   return i;
 }
 
@@ -341,6 +351,7 @@ public:
       out.push_back(value);
       JS_FreeValue(ctx, item);
     }
+
     return n;
   }
 
@@ -352,6 +363,7 @@ public:
       JS_SetPropertyUint32(ctx, arr, i, js_color_new(ctx, *it));
       ++i;
     }
+
     return i;
   }
   template<class Iterator>
@@ -376,6 +388,7 @@ js_array<JSColorData<T>>::to_array(JSContext* ctx, JSValueConst arr, std::array<
     JSValue value = JS_GetPropertyUint32(ctx, arr, i);
     js_color_read(ctx, value, &out[i]);
   }
+
   return i;
 }
 
@@ -401,6 +414,7 @@ public:
       out.push_back(value);
       JS_FreeValue(ctx, item);
     }
+
     return n;
   }
 
@@ -412,6 +426,7 @@ public:
       JS_SetPropertyUint32(ctx, arr, i, js_point_new(ctx, *it));
       ++i;
     }
+
     return i;
   }
   template<class Iterator>
@@ -447,6 +462,7 @@ public:
       out.push_back(value);
       JS_FreeValue(ctx, item);
     }
+
     return n;
   }
 
@@ -458,6 +474,7 @@ public:
       JS_SetPropertyUint32(ctx, arr, i, js_rect_wrap(ctx, *it));
       ++i;
     }
+
     return i;
   }
 
@@ -494,6 +511,7 @@ public:
       out.push_back(value);
       JS_FreeValue(ctx, item);
     }
+
     return n;
   }
 
@@ -505,6 +523,7 @@ public:
       JS_SetPropertyUint32(ctx, arr, i, js_line_wrap(ctx, *it));
       ++i;
     }
+
     return i;
   }
 
@@ -530,6 +549,7 @@ js_array<JSLineData<T>>::to_array(JSContext* ctx, JSValueConst arr, std::array<J
     JSValue value = JS_GetPropertyUint32(ctx, arr, i);
     js_line_read(ctx, value, &out[i]);
   }
+
   return i;
 }
 
@@ -555,6 +575,7 @@ public:
       out.push_back(value);
       JS_FreeValue(ctx, item);
     }
+
     return n;
   }
 
@@ -578,6 +599,7 @@ public:
 
       JS_FreeValue(ctx, item);
     }
+
     return N;
   }
 
@@ -590,6 +612,7 @@ public:
       JS_SetPropertyUint32(ctx, arr, i, item);
       ++i;
     }
+
     return i;
   }
 
@@ -647,6 +670,7 @@ public:
       out.push_back(value);
       JS_FreeValue(ctx, item);
     }
+
     return n;
   }
 
@@ -659,6 +683,7 @@ public:
       JS_SetPropertyUint32(ctx, arr, i, item);
       ++i;
     }
+
     return i;
   }
 
@@ -717,6 +742,7 @@ public:
       out.push_back(*value);
       JS_FreeValue(ctx, item);
     }
+
     return n;
   }
 
@@ -751,6 +777,7 @@ public:
       out.push_back(contour);
       JS_FreeValue(ctx, item);
     }
+
     return n;
   }
 
@@ -763,6 +790,7 @@ public:
       JS_SetPropertyUint32(ctx, arr, i, item);
       ++i;
     }
+
     return i;
   }
   template<class Iterator>
@@ -802,6 +830,7 @@ public:
       out.push_back(value);
       JS_FreeValue(ctx, item);
     }
+
     return n;
   }
 
@@ -814,6 +843,7 @@ public:
       JS_SetPropertyUint32(ctx, arr, i, item);
       ++i;
     }
+
     return i;
   }
 
@@ -883,6 +913,7 @@ js_array_from(JSContext* ctx, const cv::Vec<T, N>& v) {
   for(size_t i = 0; i < N; i++) {
     JS_SetPropertyUint32(ctx, ret, i, js_value_from(ctx, v[i]));
   }
+
   return ret;
 }
 
@@ -898,6 +929,7 @@ js_array_from(JSContext* ctx, const cv::Matx<T, rows, cols>& mat) {
       JS_SetPropertyUint32(ctx, row, x, js_value_from(ctx, mat(y, x)));
     }
   }
+
   return ret;
 }
 

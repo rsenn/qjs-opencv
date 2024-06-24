@@ -86,8 +86,10 @@ js_line_read(JSContext* ctx, JSValueConst value, JSPointData<T>* a, JSPointData<
       b->x = line.b.x;
       b->y = line.b.y;
     }
+
     return 1;
   }
+
   return 0;
 }
 
@@ -107,6 +109,7 @@ js_line_arg(JSContext* ctx, int argc, JSValueConst argv[], int& argind, JSLineDa
     argind += 4;
     return TRUE;
   }
+
   return FALSE;
 }
 

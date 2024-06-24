@@ -204,6 +204,7 @@ js_line_iterator_method(JSContext* ctx, JSValueConst this_val, int argc, JSValue
       break;
     }
   }
+
   return ret;
 }
 
@@ -293,6 +294,7 @@ js_line_iterator_getter(JSContext* ctx, JSValueConst this_val, int magic) {
       break;
     }
   }
+
   return ret;
 }
 

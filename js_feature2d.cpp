@@ -94,6 +94,7 @@ js_feature2d_get(JSValueConst val) {
 
     return dynamic_cast<T*>(ptr);
   }
+
   return 0;
 }
 

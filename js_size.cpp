@@ -31,12 +31,14 @@ js_size_fit(const JSSizeData<T>& size, T to, js_size_fit_t mode) {
       ret.height = size.height * (to / size.width);
       break;
     }
+
     case JS_SIZE_FIT_HEIGHT: {
       ret.width = size.width * (to / size.height);
       ret.height = to;
       break;
     }
   }
+
   return ret;
 }
 
@@ -55,6 +57,7 @@ js_size_fit(const JSSizeData<T>& size, const JSSizeData<T>& to, js_size_fit_t mo
     }
     default: ret = js_size_fit(size, mode == JS_SIZE_FIT_WIDTH ? to.width : to.height, mode); break;
   }
+
   return ret;
 }
 
@@ -122,18 +125,22 @@ js_size_get(JSContext* ctx, JSValueConst this_val, int magic) {
       ret = JS_NewFloat64(ctx, s->width);
       break;
     }
+
     case SIZE_PROP_HEIGHT: {
       ret = JS_NewFloat64(ctx, s->height);
       break;
     }
+
     case SIZE_PROP_ASPECT: {
       ret = JS_NewFloat64(ctx, s->aspectRatio());
       break;
     }
+
     case SIZE_PROP_EMPTY: {
       ret = JS_NewBool(ctx, s->empty());
       break;
     }
+
     case SIZE_PROP_AREA: {
       ret = JS_NewFloat64(ctx, s->area());
       break;
@@ -199,6 +206,7 @@ js_size_to_string(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
 
   return JS_NewString(ctx, os.str().c_str());
 }
+
 static JSValue
 js_size_to_source(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSSizeData<double> size, *s;
@@ -261,6 +269,7 @@ js_size_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
       }
       break;
     }
+
     case SIZE_METHOD_ROUND: {
       double width, height, f;
       int32_t precision = 0;
@@ -272,6 +281,7 @@ js_size_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
       ret = js_size_new(ctx, width, height);
       break;
     }
+
     case SIZE_METHOD_FLOOR: {
       double width, height, f;
       int32_t precision = 0;
@@ -283,6 +293,7 @@ js_size_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
       ret = js_size_new(ctx, width, height);
       break;
     }
+
     case SIZE_METHOD_CEIL: {
       double width, height, f;
       int32_t precision = 0;
@@ -294,6 +305,7 @@ js_size_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
       ret = js_size_new(ctx, width, height);
       break;
     }
+
     case SIZE_METHOD_TOOBJECT: {
       ret = JS_NewObject(ctx);
 
@@ -301,6 +313,7 @@ js_size_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
       JS_SetPropertyStr(ctx, ret, "height", JS_NewFloat64(ctx, size.height));
       break;
     }
+
     case SIZE_METHOD_TOARRAY: {
       ret = JS_NewArray(ctx);
 
@@ -308,6 +321,7 @@ js_size_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
       JS_SetPropertyUint32(ctx, ret, 1, JS_NewFloat64(ctx, size.height));
       break;
     }
+
     case SIZE_METHOD_FITWIDTH:
     case SIZE_METHOD_FITHEIGHT:
     case SIZE_METHOD_FITINSIDE:
@@ -362,10 +376,12 @@ js_size_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
 
           break;
         }
+
         case ALIGN_CENTER: {
           rect.x = other.x + (other.width - size.width) / 2;
           break;
         }
+
         case ALIGN_RIGHT: {
           rect.x = other.x + other.width - size.width;
           break;
@@ -377,10 +393,12 @@ js_size_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
           rect.y = other.y;
           break;
         }
+
         case ALIGN_MIDDLE: {
           rect.y = other.y + (other.height - size.height) / 2;
           break;
         }
+
         case ALIGN_BOTTOM: {
           rect.y = other.y + other.height - size.height;
           break;
@@ -479,6 +497,7 @@ js_size_div(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       JS_SetPropertyUint32(ctx, ret, 1, JS_NewFloat64(ctx, result[1]));
     }
   }
+
   return ret;
 }
 

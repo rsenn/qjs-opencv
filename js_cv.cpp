@@ -202,6 +202,7 @@ js_cv_split(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
     for(int32_t i = 0; i < src->channels(); i++) {
       JS_SetPropertyUint32(ctx, argv[1], i, js_mat_wrap(ctx, dst[i]));
     }
+
     return JS_UNDEFINED;
   }
 
@@ -313,6 +314,7 @@ js_cv_mat_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
       break;
     }
   }
+
   return ret;
 }
 
@@ -399,6 +401,7 @@ js_cv_getticks(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
     case 2: ret = JS_NewInt64(ctx, cv::getCPUTickCount());
     default: ret = JS_EXCEPTION;
   }
+
   return ret;
 }
 
@@ -434,6 +437,7 @@ js_cv_bitwise(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
     case 3: cv::bitwise_not(src, dst, mask); break;
     default: return JS_EXCEPTION;
   }
+
   return JS_UNDEFINED;
 }
 
@@ -526,6 +530,7 @@ js_cv_math(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[],
       break;
     }
   }
+
   return ret;
 }
 
@@ -1212,6 +1217,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       break;
     }
   }
+
   return ret;
 }
 

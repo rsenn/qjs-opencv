@@ -47,6 +47,7 @@ public:
       out.push_back(*kp);
       JS_FreeValue(ctx, item);
     }
+
     return n;
   }
 
@@ -58,6 +59,7 @@ public:
       JS_SetPropertyUint32(ctx, arr, i, js_keypoint_new(ctx, *it));
       ++i;
     }
+
     return i;
   }
   template<class Iterator>

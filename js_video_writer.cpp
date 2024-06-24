@@ -129,6 +129,7 @@ js_video_writer_method(JSContext* ctx, JSValueConst video_writer, int argc, JSVa
       }
       break;
     }
+
     case VIDEO_WRITER_METHOD_SET: {
       if(!JS_ToInt32(ctx, &propID, argv[0])) {
         JS_ToFloat64(ctx, &value, argv[1]);
@@ -138,6 +139,7 @@ js_video_writer_method(JSContext* ctx, JSValueConst video_writer, int argc, JSVa
         ret = JS_EXCEPTION;
       break;
     }
+
     case VIDEO_WRITER_METHOD_GET_BACKEND_NAME: {
       std::string backend;
       try {
@@ -151,10 +153,12 @@ js_video_writer_method(JSContext* ctx, JSValueConst video_writer, int argc, JSVa
       ret = JS_NewBool(ctx, vw->isOpened());
       break;
     }
+
     case VIDEO_WRITER_METHOD_OPEN: {
       ret = JS_NewBool(ctx, js_video_writer_open(ctx, vw, argc, argv));
       break;
     }
+
     case VIDEO_WRITER_METHOD_WRITE: {
       JSInputArray mat = js_umat_or_mat(ctx, argv[0]);
 
@@ -192,6 +196,7 @@ js_video_writer_fourcc(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
     }
     JS_FreeCString(ctx, s);
   }
+
   return JS_NewInt32(ctx, cv::VideoWriter::fourcc(chars[0], chars[1], chars[2], chars[3]));
 }
 

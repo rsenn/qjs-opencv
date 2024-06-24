@@ -103,6 +103,7 @@ js_mat_sizes(const JSMatData& mat) {
   } else {
     std::copy(&size[0], &size[size.dims()], std::back_inserter(sizes));
   }
+
   return sizes;
 }
 
@@ -208,6 +209,7 @@ js_mat_data(void* data = nullptr) {
       }
     }
   }
+
   return ret;
 }
 
@@ -277,6 +279,7 @@ js_mat_params(JSContext* ctx, int& index, int argc, JSValueConst argv[]) {
       if(!JS_ToInt32(ctx, &type, argv[index]))
         index++;
   }
+
   return std::make_pair(size, type);
 }
 
@@ -308,6 +311,7 @@ js_mat_params2(JSContext* ctx, int& index, int argc, JSValueConst argv[]) {
       if(!JS_ToInt32(ctx, &type, argv[index]))
         index++;
   }
+
   return std::make_pair(sizes, type);
 }
 
@@ -414,6 +418,7 @@ js_mat_initialize(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
       new(m) cv::Mat(sizes, type, scalar);
     }
   }
+
   return TRUE;
 }
 
@@ -800,8 +805,10 @@ js_mat_get(JSContext* ctx, JSValueConst this_val, uint32_t row, uint32_t col) {
 
       ret = js_typedarray_new(ctx, buffer, offset, channels, type);
     }
+
     return ret;
   }
+
   return JS_UNDEFINED;
 }
 
@@ -814,6 +821,7 @@ js_mat_get_wh(JSContext* ctx, JSMatDimensions* size, JSValueConst obj) {
     size->cols = m->cols;
     return 1;
   }
+
   return 0;
 }
 
@@ -1432,6 +1440,7 @@ js_mat_create_vec(JSContext* ctx, int len, JSValue* vec) {
       }
     }
   }
+
   return obj;
 }*/
 
@@ -1459,6 +1468,7 @@ js_mat_buffer(JSContext* ctx, JSValueConst this_val) {
 
     buf = js_arraybuffer_from(ctx, mat_ptr(*mat), mat_ptr(*mat) + byte_size, *(JSFreeArrayBufferDataFunc*)&js_mat_free_func, (void*)mat);
   }
+
   return buf;
 }
 
@@ -1515,6 +1525,7 @@ js_mat_finalizer(JSRuntime* rt, JSValue val) {
   if((s = static_cast<JSMatData*>(JS_GetOpaque(val, js_mat_class_id)))) {
     js_deallocate(rt, s);
   }
+
   return;
 
   /*auto it2 = std::find(mat_freed.cbegin(), mat_freed.cend(), s);
@@ -1676,6 +1687,7 @@ js_mat_iterator_next(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
       }
     }
   }
+
   return ret;
 }
 
