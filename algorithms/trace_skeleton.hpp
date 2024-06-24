@@ -62,7 +62,7 @@ point_direction(const Point& delta) {
 }
 
 static inline void
-points_direction(int dir, int range, std::vector<cv::Point>& points) {
+points_direction(int dir, int range, vector<Point>& points) {
 
   points.push_back(point_direction(dir));
 
@@ -132,7 +132,7 @@ public:
 
   template<typename Predicate = bool(unsigned)>
   bool
-  pixel_neighbour(const Point& pt, int32_t index, Predicate pred, Point& r, const std::vector<cv::Point>& points) {
+  pixel_neighbour(const Point& pt, int32_t index, Predicate pred, Point& r, const vector<Point>& points) {
     for(const auto& offs : points)
       if(pixel_check(point_sum(pt, offs), index, pred, r))
         return true;
@@ -145,7 +145,7 @@ public:
     Point pt, ppdiff, pdiff, diff, next;
     size_t n;
     int dir = -1;
-    std::vector<cv::Point> points;
+    vector<Point> points;
 
     if(!pixel_find_pred(pt, index, pred))
       return false;

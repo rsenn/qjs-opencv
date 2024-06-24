@@ -220,38 +220,13 @@ file(
   geometry.cpp
   highgui.cpp
   jsbindings.cpp
-  js_clahe.cpp
-  js_contour.cpp
-  js_cv.cpp
-  js_draw.cpp
-  js_fast_line_detector.cpp
+ js_*.cpp
   ${FEATURE2D_SOURCE}
-  js_imgproc.cpp
-  js_keypoint.cpp
-  js_line.cpp
-  js_line_iterator.cpp
-  js_line_segment_detector.cpp
-  js_mat.cpp
-  js_affine3.cpp
-  js_point.cpp
-  js_point_iterator.cpp
-  js_rect.cpp
-  js_rotated_rect.cpp
-  js_size.cpp
-  js_slice_iterator.cpp
-  js_subdiv2d.cpp
-  js_umat.cpp
-  js_utility.cpp
-  js_bg_subtractor.cpp
-  js_white_balancer.cpp
-  js_barcode_detector.cpp
-  js_calib3d.cpp
-  js_video_capture.cpp
-  js_video_writer.cpp
+ 
   line.cpp
   util.cpp
   gifenc/gifenc.c
-  dominant_colors_grabber.cpp
+  algorithms/*.cpp
   lsd/src/*.cpp)
 #dump(OPENCV_SOURCES)
 

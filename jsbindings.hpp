@@ -24,6 +24,8 @@
 #include <utility>
 #include <vector>
 
+typedef std::vector<JSCFunctionListEntry> js_function_list_t;
+
 namespace cv {
 class CLAHE;
 }

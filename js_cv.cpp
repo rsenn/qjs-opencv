@@ -5,7 +5,7 @@
 #include "js_point.hpp"
 #include "js_umat.hpp"
 #include "jsbindings.hpp"
-#include "palette.hpp"
+#include "algorithms/palette.hpp"
 #include "png_write.hpp"
 #include "png_read.hpp"
 #include "gif_write.hpp"

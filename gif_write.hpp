@@ -4,7 +4,7 @@
 #include "gifenc/gifenc.h"
 #include "util.hpp"
 #include "jsbindings.hpp"
-#include "palette.hpp"
+#include "algorithms/palette.hpp"
 #include <opencv2/core.hpp>
 #include <vector>
 #include <algorithm>
