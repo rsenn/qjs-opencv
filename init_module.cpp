@@ -33,6 +33,7 @@ extern "C" int js_white_balancer_init(JSContext*, JSModuleDef*);
 extern "C" int js_barcode_detector_init(JSContext*, JSModuleDef*);
 extern "C" int js_calib3d_init(JSContext*, JSModuleDef*);
 extern "C" int js_algorithms_init(JSContext*, JSModuleDef*);
+extern "C" int js_ximgproc_init(JSContext*, JSModuleDef*);
 
 extern "C" void js_clahe_export(JSContext*, JSModuleDef*);
 extern "C" void js_contour_export(JSContext*, JSModuleDef*);
@@ -65,6 +66,7 @@ extern "C" void js_white_balancer_export(JSContext*, JSModuleDef*);
 extern "C" void js_barcode_detector_export(JSContext*, JSModuleDef*);
 extern "C" void js_calib3d_export(JSContext*, JSModuleDef*);
 extern "C" void js_algorithms_export(JSContext*, JSModuleDef*);
+extern "C" void js_ximgproc_export(JSContext*, JSModuleDef*);
 
 int
 js_opencv_init(JSContext* ctx, JSModuleDef* m) {
@@ -105,6 +107,7 @@ js_opencv_init(JSContext* ctx, JSModuleDef* m) {
   js_barcode_detector_init(ctx, m);
   js_calib3d_init(ctx, m);
   js_algorithms_init(ctx, m);
+  js_ximgproc_init(ctx, m);
 
   return 0;
 }
@@ -159,6 +162,7 @@ JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   js_barcode_detector_export(ctx, m);
   js_calib3d_export(ctx, m);
   js_algorithms_export(ctx, m);
+  js_ximgproc_export(ctx, m);
 
   return m;
 }

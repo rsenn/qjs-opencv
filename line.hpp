@@ -229,8 +229,8 @@ template<class T>
 T
 Line<T>::yIntercept(T yintercept) const {
   point_type d = b - a;
-
   T deltay = yintercept - b.y;
+
   // dy very close to 0 will be numerically unstable, account for that
   if(d.y != 0)
     return b.x + (d.x / d.y) * deltay;
@@ -243,8 +243,8 @@ template<class T>
 T
 Line<T>::xIntercept(T xintercept) const {
   point_type d = b - a;
-
   T deltax = xintercept - b.x;
+
   // dx verx close to 0 will be numericallx unstable, account for that
   if(d.x != 0)
     return b.y + (d.y / d.x) * deltax;
@@ -501,8 +501,12 @@ template<class T>
 inline typename Line<T>::point_type
 Line<T>::at(double sigma) const {
   point_type ret;
-  ret.x = (a.x + b.x) / 2;
-  ret.y = (a.y + b.y) / 2;
+
+  sigma = fmin(fmax(sigma, 0), 1);
+
+  ret.x = a.x * (1.0 - sigma) + b.x * sigma;
+  ret.y = a.y * (1.0 - sigma) + b.y * sigma;
+
   return ret;
 }
 

@@ -31,8 +31,8 @@
 extern "C" int js_draw_init(JSContext*, JSModuleDef*);
 
 #ifdef HAVE_OPENCV_FREETYPE
-#include <opencv2/freetype.hpp>
-cv::Ptr<cv::freetype::FreeType2> freetype2 = nullptr;
+#include <opencv2/freetyp
+e.hpp > cv::Ptr<cv::freetype::FreeType2> freetype2 = nullptr;
 std::string freetype2_face;
 #endif
 
@@ -165,10 +165,11 @@ js_draw_contour(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
   int i = 0, ret = -1;
   JSContoursData<int> contours;
   int32_t index = -1, line_type = cv::LINE_8;
-
   JSColorData<double> color;
   int thickness = 1;
   bool antialias = true;
+
+  contours.resize(1);
 
   if(argc > i) {
     if(!js_is_noarray((dst = js_umat_or_mat(ctx, argv[i]))))
@@ -179,17 +180,20 @@ js_draw_contour(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
   if(js_is_noarray(dst))
     return JS_EXCEPTION;
 
-  if(i == argc || !js_is_array(ctx, argv[++i]))
-    return JS_EXCEPTION;
+  /*if(i == argc || !js_is_array(ctx, argv[i]))
+    return JS_EXCEPTION;*/
 
   if(argc > i)
-    JS_ToInt32(ctx, &index, argv[i]);
+    js_contour_read(ctx, argv[i++], &contours[0]);
+
+  /* if(argc > i)
+     JS_ToInt32(ctx, &index, argv[i++]);*/
   if(argc > i)
     js_color_read(ctx, argv[i++], &color);
   if(argc > i)
     js_value_to(ctx, argv[i++], thickness);
   if(argc > i)
-    JS_ToInt32(ctx, &line_type, argv[i]);
+    JS_ToInt32(ctx, &line_type, argv[i++]);
 
   std::cerr << "draw_contour() contours.length=" << contours.size() << " index=" << index << " thickness=" << thickness << std::endl;
 
@@ -226,20 +230,21 @@ js_draw_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
    }*/
 
   js_color_read(ctx, argv[3], &color);
-  if(argc > 4) {
+
+  if(argc > 4)
     js_value_to(ctx, argv[4], thickness);
-    if(argc > 5) {
-      js_value_to(ctx, argv[5], line_type);
-      if(argc > 6) {
-        js_array_to(ctx, argv[6], hier);
-        if(argc > 7) {
-          js_value_to(ctx, argv[7], maxLevel);
-          if(argc > 8)
-            js_point_read<int>(ctx, argv[8], &offset);
-        }
-      }
-    }
-  }
+
+  if(argc > 5)
+    js_value_to(ctx, argv[5], line_type);
+
+  if(argc > 6)
+    js_array_to(ctx, argv[6], hier);
+
+  if(argc > 7)
+    js_value_to(ctx, argv[7], maxLevel);
+
+  if(argc > 8)
+    js_point_read<int>(ctx, argv[8], &offset);
 
   cv::Scalar scalar = js_to_scalar(color);
   // std::cerr << "draw_contours() contours.length=" << contours.size() << " index=" <<
@@ -264,7 +269,7 @@ js_draw_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
 static JSValue
 js_draw_line(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSInputOutputArray dst;
-  int i = 0, ret = -1;
+  int i = 0, ret = -1, ia;
   JSLineData<int> line(0, 0, 0, 0);
   JSColorData<uint8_t> color;
   cv::Scalar scalar;
@@ -280,9 +285,10 @@ js_draw_line(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
   if(js_is_noarray(dst))
     return JS_EXCEPTION;
 
-  if(!js_line_arg(ctx, argc, argv, i, line)) {
+  if(!(ia = js_line_arg(ctx, argc, argv, line)))
     return JS_ThrowTypeError(ctx, "argument 2 must be a line");
-  }
+
+  i += ia;
 
   if(argc > i) {
     js_color_read(ctx, argv[i], &color);

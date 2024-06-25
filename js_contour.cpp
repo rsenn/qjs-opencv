@@ -813,7 +813,7 @@ js_contour_pop(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
     return JS_EXCEPTION;
 
   n = v->size();
-  
+
   if(n > 0) {
     point = (*v)[n - 1];
     v->pop_back();
@@ -1117,12 +1117,12 @@ js_contour_rotatedrectangleintersection(JSContext* ctx, JSValueConst this_val, i
   contour_copy(*v, a);
   contour_copy(*other, b);
 
-    cv::RotatedRect rra(a[0], a[1], a[2]);
-    cv::RotatedRect rrb(b[0], b[1], b[2]);
+  cv::RotatedRect rra(a[0], a[1], a[2]);
+  cv::RotatedRect rrb(b[0], b[1], b[2]);
 
-    cv::rotatedRectangleIntersection(rra, rrb, intersection);
+  cv::rotatedRectangleIntersection(rra, rrb, intersection);
 
-    ret = js_contour_new(ctx, contour_proto, intersection);
+  ret = js_contour_new(ctx, contour_proto, intersection);
 
   return ret;
 }
@@ -1541,18 +1541,20 @@ js_contour_get_own_property_names(JSContext* ctx, JSPropertyEnum** ptab, uint32_
     JS_FreeValue(ctx, length);
   }*/
 
-  props = js_allocate<JSPropertyEnum>(ctx, len + 1);
+  // if((props = static_cast<JSPropertyEnum*>(js_malloc(ctx, sizeof(JSPropertyEnum) * (len + 1))))) {
+  if((props = js_allocate<JSPropertyEnum>(ctx, len + 1))) {
+    for(i = 0; i < len; i++) {
+      props[i].is_enumerable = TRUE;
+      props[i].atom = i | (1U << 31);
+    }
 
-  for(i = 0; i < len; i++) {
-    props[i].is_enumerable = TRUE;
-    props[i].atom = i | (1U << 31);
+    props[len].is_enumerable = FALSE;
+    props[len].atom = JS_NewAtom(ctx, "length");
+
+    *ptab = props;
+    *plen = len + 1;
   }
 
-  props[len].is_enumerable = FALSE;
-  props[len].atom = JS_NewAtom(ctx, "length");
-
-  *ptab = props;
-  *plen = len + 1;
   return 0;
 }
 
@@ -1568,7 +1570,7 @@ js_contour_has_property(JSContext* ctx, JSValueConst obj, JSAtom prop) {
     return TRUE;
   } else {
     JSValue proto = JS_GetPrototype(ctx, obj);
-    
+
     if(JS_IsObject(proto) && JS_HasProperty(ctx, proto, prop))
       return TRUE;
   }
@@ -1635,7 +1637,7 @@ JSClassExoticMethods js_contour_exotic_methods = {
 };
 
 JSClassDef js_contour_class = {
-    .class_name = "Contour", 
+    .class_name = "Contour",
     .finalizer = js_contour_finalizer,
     .exotic = &js_contour_exotic_methods,
 };

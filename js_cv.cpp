@@ -804,6 +804,7 @@ enum {
   OTHER_SUM,
   OTHER_TRACE,
   OTHER_RGB,
+  OTHER_SWAP,
 };
 
 static JSValue
@@ -1213,6 +1214,29 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       ret = js_color_new(ctx, color);
       break;
     }
+
+    case OTHER_SWAP: {
+      cv::UMat *um1, *um2;
+      cv::Mat *m1, *m2;
+
+      if((um1 = js_umat_data(argv[0]))) {
+        if(!(um2 = js_umat_data(argv[1]))) {
+          ret = JS_ThrowInternalError(ctx, "argument 2 must be a cv.UMat");
+        } else {
+          cv::swap(*um1, *um2);
+        }
+      } else if((m1 = js_mat_data(argv[0]))) {
+        if(!(m2 = js_mat_data(argv[1]))) {
+          ret = JS_ThrowInternalError(ctx, "argument 2 must be a cv.Mat");
+        } else {
+          cv::swap(*m1, *m2);
+        }
+      } else {
+        ret = JS_ThrowInternalError(ctx, "argument 1 must be a Mat or UMat");
+      }
+
+      break;
+    }
   }
 
   return ret;
@@ -1321,6 +1345,7 @@ js_function_list_t js_cv_static_funcs{
     JS_CFUNC_MAGIC_DEF("sum", 1, js_cv_other, OTHER_SUM),
     JS_CFUNC_MAGIC_DEF("trace", 1, js_cv_other, OTHER_TRACE),
     JS_CFUNC_MAGIC_DEF("CV_RGB", 3, js_cv_other, OTHER_RGB),
+    JS_CFUNC_MAGIC_DEF("swap", 2, js_cv_other, OTHER_SWAP),
 };
 
 js_function_list_t js_cv_constants{
