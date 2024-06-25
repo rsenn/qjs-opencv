@@ -25,8 +25,29 @@ std::vector<JSPointData<double>*> points;
 
 extern "C" {
 
-JSValue point_proto = JS_UNDEFINED;
+thread_local JSValue point_proto = JS_UNDEFINED, point_class = JS_UNDEFINED;
 thread_local JSClassID js_point_class_id = 0;
+
+JSValue
+js_point_create(JSContext* ctx, JSValueConst proto) {
+  JSValue ret;
+  JSPointData<double>* s;
+
+  if(JS_IsUndefined(point_proto))
+    js_point_init(ctx, NULL);
+
+  if(JS_IsUndefined(proto))
+    proto = point_proto;
+
+  ret = JS_NewObjectProtoClass(ctx, proto, js_point_class_id);
+
+  s = js_allocate<JSPointData<double>>(ctx);
+
+  new(s) JSPointData<double>();
+
+  JS_SetOpaque(ret, s);
+  return ret;
+}
 }
 
 template<class T>
@@ -79,53 +100,31 @@ js_point_argument(JSContext* ctx, int argc, JSValueConst argv[], int& argind, JS
 
 JSValue
 js_point_new(JSContext* ctx, JSValueConst proto, double x, double y) {
-  JSValue ret;
-  JSPointData<double>* s;
+  JSValue ret = js_point_create(ctx, proto);
+  JSPointData<double>* s = js_point_data(ret);
 
-  if(JS_IsUndefined(point_proto))
-    js_point_init(ctx, NULL);
+  s->x = x;
+  s->y = y;
 
-  if(JS_IsUndefined(proto))
-    proto = point_proto;
-
-  ret = JS_NewObjectProtoClass(ctx, proto, js_point_class_id);
-
-  s = js_allocate<JSPointData<double>>(ctx);
-
-  new(s) JSPointData<double>();
-  s->x = /*x <= DBL_EPSILON ? 0 : */ x;
-  s->y = /*y <= DBL_EPSILON ? 0 :*/ y;
-
-  // points.push_back(s);
-
-  JS_SetOpaque(ret, s);
   return ret;
-}
-
-JSValue
-js_point_new(JSContext* ctx, JSValueConst proto, JSPointData<double> point) {
-  return js_point_new(ctx, proto, point.x, point.y);
 }
 
 JSPointData<double>*
 js_point_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSPointData<double>*>(JS_GetOpaque2(ctx, val, js_point_class_id));
 }
+
 JSPointData<double>*
 js_point_data(JSValueConst val) {
   return static_cast<JSPointData<double>*>(JS_GetOpaque(val, js_point_class_id));
 }
+
 JSValue
-js_point_new(JSContext* ctx, const JSPointData<double>& point) {
-  return js_point_new(ctx, point_proto, point.x, point.y);
+js_point_clone(JSContext* ctx, JSValueConst proto, const JSPointData<double>& point) {
+  return js_point_new(ctx, proto, point.x, point.y);
 }
 
 extern "C" {
-
-JSValue
-js_point_clone(JSContext* ctx, const JSPointData<double>& point) {
-  return js_point_new(ctx, point_proto, point.x, point.y);
-}
 
 static JSValue
 js_point_cross(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
@@ -140,7 +139,7 @@ js_point_cross(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
   return JS_NewFloat64(ctx, retval);
 }
 
-static JSValue
+/*static JSValue
 js_point_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   JSPointData<double> point = {0, 0};
   JSValue proto;
@@ -160,6 +159,47 @@ js_point_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueC
   }
 
   return js_point_new(ctx, proto, point);
+}*/
+
+static JSValue
+js_point_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
+  JSPointData<double>*pt, *other;
+  JSValue obj, proto;
+
+  if(!(pt = js_allocate<JSPointData<double>>(ctx)))
+    return JS_EXCEPTION;
+
+  new(pt) JSPointData<double>();
+
+  /* using new_target to get the prototype is necessary when the class is extended. */
+  proto = JS_GetPropertyStr(ctx, new_target, "prototype");
+  if(JS_IsException(proto))
+    goto fail;
+
+  obj = JS_NewObjectProtoClass(ctx, proto, js_point_class_id);
+  JS_FreeValue(ctx, proto);
+
+  if(JS_IsException(obj))
+    goto fail;
+
+  JS_SetOpaque(obj, pt);
+
+  if(argc > 0) {
+    if(!js_point_read(ctx, argv[0], pt)) {
+      if(JS_ToFloat64(ctx, &pt->x, argv[0]))
+        return JS_EXCEPTION;
+
+      if(argc < 2 || JS_ToFloat64(ctx, &pt->y, argv[1]))
+        return JS_EXCEPTION;
+    }
+  }
+
+  return obj;
+
+fail:
+  js_deallocate(ctx, pt);
+  JS_FreeValue(ctx, obj);
+  return JS_EXCEPTION;
 }
 
 static JSValue
@@ -167,9 +207,12 @@ js_point_ddot(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
   JSPointData<double>* s = js_point_data2(ctx, this_val);
   JSPointData<double>* other = js_point_data2(ctx, argv[0]);
   double retval;
+
   if(!s || !other)
     return JS_EXCEPTION;
+
   retval = s->ddot(*other);
+
   return JS_NewFloat64(ctx, retval);
 }
 
@@ -283,7 +326,8 @@ js_point_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
     case POINT_METHOD_NORM: {
       double magnitude = sqrt(s->x * s->x + s->y * s->y);
       JSPointData<double> normalized(s->x / magnitude, s->y / magnitude);
-      ret = js_point_new(ctx, JS_GetPrototype(ctx, this_val), normalized);
+
+      ret = js_point_clone(ctx, JS_GetPrototype(ctx, this_val), normalized);
       break;
     }
 
@@ -296,19 +340,25 @@ js_point_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
       JSPointData<double> point(*s), *arg = nullptr;
       BOOL deg = FALSE;
       int i = 0;
+
       if(i < argc && (arg = js_point_data(argv[i])))
         i++;
+
       while(i < argc) {
         if(JS_IsBool(argv[i]))
           deg = JS_ToBool(ctx, argv[i]);
+
         i++;
       }
+
       if(arg)
         point = sub(*arg, point);
 
       double phi = std::atan2(point.y, point.x);
+
       if(deg)
         phi = phi * 180 / M_PI;
+
       ret = JS_NewFloat64(ctx, phi);
       break;
     }
@@ -321,7 +371,7 @@ js_point_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
 
       point.x = s->x * cos(theta) - s->y * sin(theta);
       point.y = s->x * sin(theta) + s->y * cos(theta);
-      ret = js_point_new(ctx, JS_GetPrototype(ctx, this_val), point);
+      ret = js_point_clone(ctx, JS_GetPrototype(ctx, this_val), point);
       break;
     }
 
@@ -635,14 +685,7 @@ js_point_finalizer(JSRuntime* rt, JSValue val) {
 }
 }
 
-JSValue
-js_point_new(JSContext* ctx, double x, double y) {
-  return js_point_new(ctx, point_proto, x, y);
-}
-
 extern "C" {
-
-JSValue point_class = JS_UNDEFINED;
 
 JSClassDef js_point_class = {
     .class_name = "Point",
@@ -735,8 +778,10 @@ js_point_export(JSContext* ctx, JSModuleDef* m) {
 JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   JSModuleDef* m;
+
   if(!(m = JS_NewCModule(ctx, module_name, &js_point_init)))
     return NULL;
+  
   js_point_export(ctx, m);
   return m;
 }

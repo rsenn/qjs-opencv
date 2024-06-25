@@ -14,20 +14,31 @@ template<> struct point_traits<double> { static const int type = CV_64FC2; };
 
 extern "C" int js_point_init(JSContext*, JSModuleDef*);
 
-extern "C" JSValue js_point_clone(JSContext* ctx, const JSPointData<double>& point);
 extern "C" {
 
-extern JSValue point_proto, point_class;
+extern thread_local JSValue point_proto, point_class;
 extern thread_local JSClassID js_point_class_id;
 
 int js_point_init(JSContext*, JSModuleDef* m);
-
+JSValue js_point_create(JSContext* ctx, JSValueConst proto);
 JSModuleDef* js_init_module_point(JSContext*, const char*);
 }
 
-JSValue js_point_new(JSContext*, double x, double y);
-JSValue js_point_new(JSContext*, JSValueConst, JSPointData<double>);
-JSValue js_point_new(JSContext*, JSValueConst, double x, double y);
+// JSValue js_point_new(JSContext*, double x, double y);
+
+JSValue js_point_new(JSContext* ctx, JSValueConst proto, double x, double y);
+
+static inline JSValue
+js_point_new(JSContext* ctx, double x, double y) {
+  return js_point_new(ctx, point_proto, x, y);
+}
+
+JSValue js_point_clone(JSContext* ctx, JSValueConst proto, const JSPointData<double>& point);
+
+static inline JSValue
+js_point_clone(JSContext* ctx, const JSPointData<double>& point) {
+  return js_point_clone(ctx, point_proto, point);
+}
 
 JSPointData<double>* js_point_data2(JSContext*, JSValueConst val);
 JSPointData<double>* js_point_data(JSValueConst val);
@@ -35,7 +46,7 @@ JSPointData<double>* js_point_data(JSValueConst val);
 template<class T>
 static inline JSValue
 js_point_new(JSContext* ctx, const JSPointData<T>& point) {
-  return js_point_new(ctx, point.x, point.y);
+  return js_point_new(ctx, point_proto, point.x, point.y);
 }
 
 template<class T>

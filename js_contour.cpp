@@ -14,7 +14,6 @@
 #include "psimpl.hpp"
 #include <quickjs.h>
 #include "util.hpp"
-//#include <ext/alloc_traits.h>
 #include <opencv2/core/hal/interface.h>
 #include <stddef.h>
 #include <algorithm>
@@ -32,8 +31,8 @@
 #include <utility>
 
 extern "C" {
-JSValue contour_proto = JS_UNDEFINED, contour_class = JS_UNDEFINED;
-/*thread_local*/ JSClassID js_contour_class_id = 0;
+thread_local JSValue contour_proto = JS_UNDEFINED, contour_class = JS_UNDEFINED;
+thread_local JSClassID js_contour_class_id = 0;
 }
 
 static JSValue float64_array;
@@ -1433,6 +1432,7 @@ js_contour_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
 
   if(!(contour = js_contour_data2(ctx, this_val)))
     return JS_EXCEPTION;
+  
   assert(js_contour_class_id);
 
   JSValue array_proto = js_global_prototype(ctx, "Array");
@@ -1456,7 +1456,7 @@ js_contour_finalizer(JSRuntime* rt, JSValue this_val) {
 
     js_deallocate(rt, contour);
   }
- 
+
   JS_FreeValueRT(rt, this_val);
 }
 
@@ -1608,7 +1608,7 @@ JSClassExoticMethods js_contour_exotic_methods = {
 JSClassDef js_contour_class = {
     .class_name = "Contour",
     .finalizer = js_contour_finalizer,
-    .exotic = &js_contour_exotic_methods,
+   // .exotic = &js_contour_exotic_methods,
 };
 
 JSValue
@@ -1677,7 +1677,7 @@ const JSCFunctionListEntry js_contour_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("lines", 0, js_contour_iterator, NEXT_LINE),
     JS_CFUNC_MAGIC_DEF("points", 0, js_contour_iterator, NEXT_POINT),
     JS_ALIAS_DEF("[Symbol.iterator]", "points"),
-    JS_ALIAS_DEF("size", "length"),
+    //JS_ALIAS_DEF("size", "length"),
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Contour", JS_PROP_CONFIGURABLE),
 };
 
@@ -1698,7 +1698,7 @@ const JSCFunctionListEntry js_contour_static_funcs[] = {
 int
 js_contour_init(JSContext* ctx, JSModuleDef* m) {
 
-  /*if(js_contour_class_id == 0)*/ {
+  if(js_contour_class_id == 0) {
     /* create the Contour class */
     JS_NewClassID(&js_contour_class_id);
     JS_NewClass(JS_GetRuntime(ctx), js_contour_class_id, &js_contour_class);
@@ -1708,23 +1708,21 @@ js_contour_init(JSContext* ctx, JSModuleDef* m) {
     JS_SetClassProto(ctx, js_contour_class_id, contour_proto);
 
     contour_class = JS_NewCFunction2(ctx, js_contour_constructor, "Contour", 2, JS_CFUNC_constructor, 0);
+
     /* set proto.constructor and ctor.prototype */
     JS_SetPropertyFunctionList(ctx, contour_class, js_contour_static_funcs, countof(js_contour_static_funcs));
 
     JS_SetConstructor(ctx, contour_class, contour_proto);
+
+    js_set_inspect_method(ctx, contour_proto, js_contour_inspect);
   }
 
-  // js_set_inspect_method(ctx, contour_proto, js_contour_inspect);
-
-  {
-    JSValue global = JS_GetGlobalObject(ctx);
-    float64_array = JS_GetPropertyStr(ctx, global, "Float64Array");
-  }
+  JSValue global = JS_GetGlobalObject(ctx);
+  float64_array = JS_GetPropertyStr(ctx, global, "Float64Array");
 
   if(m)
     JS_SetModuleExport(ctx, m, "Contour", contour_class);
-  /*  else
-      JS_SetPropertyStr(ctx, *static_cast<JSValue*>(m), "Contour", contour_class);*/
+
   return 0;
 }
 

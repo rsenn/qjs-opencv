@@ -42,7 +42,7 @@ js_line_iterator_constructor(JSContext* ctx, JSValueConst new_target, int argc, 
 
   obj = JS_NewObjectProtoClass(ctx, proto, js_line_iterator_class_id);
   JS_FreeValue(ctx, proto);
-  
+
   if(JS_IsException(obj))
     goto fail;
 
@@ -56,7 +56,7 @@ js_line_iterator_constructor(JSContext* ctx, JSValueConst new_target, int argc, 
 
   js_point_read(ctx, argv[optind++], &pt1);
   js_point_read(ctx, argv[optind++], &pt2);
-  
+
   if(optind < argc) {
     js_value_to(ctx, argv[optind++], connectivity);
 
@@ -74,7 +74,7 @@ js_line_iterator_constructor(JSContext* ctx, JSValueConst new_target, int argc, 
     new(li) JSLineIteratorData(pt1, pt2, connectivity, left_to_right);
 
   JS_SetOpaque(obj, li);
-  
+
   return obj;
 
 fail:
@@ -488,7 +488,7 @@ js_line_iterator_export(JSContext* ctx, JSModuleDef* m) {
 extern "C" JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   JSModuleDef* m;
-  
+
   if(!(m = JS_NewCModule(ctx, module_name, &js_line_iterator_init)))
     return NULL;
 

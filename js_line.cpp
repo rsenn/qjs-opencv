@@ -93,14 +93,20 @@ js_line_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueCo
   /* using new_target to get the prototype is necessary when the
      class is extended. */
   proto = JS_GetPropertyStr(ctx, new_target, "prototype");
+  
   if(JS_IsException(proto))
     goto fail;
+  
   obj = JS_NewObjectProtoClass(ctx, proto, js_line_class_id);
   JS_FreeValue(ctx, proto);
+  
   if(JS_IsException(obj))
     goto fail;
+  
   JS_SetOpaque(obj, ln);
+  
   return obj;
+
 fail:
   js_deallocate(ctx, ln);
   JS_FreeValue(ctx, obj);

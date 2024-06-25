@@ -13,9 +13,8 @@
 #include <cassert>
 
 extern "C" {
-extern JSValue contour_class, contour_proto;
-extern JSClassDef js_contour_class;
-extern /*thread_local*/ JSClassID js_contour_class_id;
+extern thread_local JSValue contour_class, contour_proto;
+extern thread_local JSClassID js_contour_class_id;
 
 JSValue js_contour_create(JSContext* ctx, JSValueConst proto);
 void js_contour_finalizer(JSRuntime* rt, JSValue val);
@@ -30,24 +29,7 @@ JSContourData<double>* js_contour_data(JSValueConst val);
 };
 
 JSValue js_contour_move(JSContext* ctx, JSContourData<double>&& points);
-
-/*template<typename T>
-static inline JSContourData<T>*
-contour_allocate(JSContext* ctx) {
-  return js_allocate<JSContourData<T>>(ctx);
-}
-
-template<typename T>
-static inline void
-contour_deallocate(JSContext* ctx, JSContourData<T>* contour) {
-  return js_deallocate<JSContourData<T>>(ctx, contour);
-}
-
-template<typename T>
-static inline void
-contour_deallocate(JSRuntime* rt, JSContourData<T>* contour) {
-  return js_deallocate<JSContourData<T>>(rt, contour);
-}*/
+extern "C" int js_contour_init(JSContext*, JSModuleDef*);
 
 template<typename T, typename U>
 static inline size_t
@@ -100,39 +82,6 @@ contour_adjacent(const JSContourData<T>& contour, const JSContourData<T>& other)
   return false;
 }
 
-/*template<typename T> struct contour_line_iterator : JSContourData<T>::const_iterator {
-  typedef typename JSContourData<T>::const_iterator point_iterator;
-  typedef const JSPointData<T>* point_pointer;
-
-  contour_line_iterator(const point_iterator& it) : point_iterator(it) {}
-
-  const Line<T>&
-  operator*() const {
-    return reinterpret_cast<const Line<T>&>(*reinterpret_cast<const point_iterator&>(*this));
-  }
-
-  const Line<T>*
-  operator->() const {
-    return &reinterpret_cast<const Line<T>&>(*reinterpret_cast<const point_iterator&>(*this));
-  }
-
-  bool
-  operator==(const point_iterator& other) const {
-    if(point_iterator(*this) == other)
-      return true;
-
-    if(point_iterator(*this) + 1 == other)
-      return true;
-    
-    return false;
-  }
-
-  bool
-  operator!=(const point_iterator& other) const {
-    return !this->operator==(other);
-  }
-};*/
-
 template<typename T>
 static inline bool
 contour_intersect(const JSContourData<T>& a, const JSContourData<T>& b, std::array<ssize_t, 2>* indexes, JSPointData<T>* intersection) {
@@ -152,6 +101,7 @@ contour_intersect(const JSContourData<T>& a, const JSContourData<T>& b, std::arr
     }
     ++ita;
   }*/
+
   const auto it = std::find_first_of(ita, aend, itb, bend, [intersection](const JSPointData<T>& a, const JSPointData<T>& b) -> bool {
     const auto& la = *reinterpret_cast<const Line<T>*>(&a);
     const auto& lb = *reinterpret_cast<const Line<T>*>(&b);
@@ -207,6 +157,7 @@ js_contour_read(JSContext* ctx, JSValueConst contour, JSContourData<T>* out) {
       }
       JS_FreeValue(ctx, result.value);
     }
+
     JS_FreeValue(ctx, iter);
     ret = out->size();
   }
@@ -217,24 +168,11 @@ js_contour_read(JSContext* ctx, JSValueConst contour, JSContourData<T>* out) {
 static inline JSContourData<double>
 js_contour_get(JSContext* ctx, JSValueConst contour) {
   JSContourData<double> r = {};
+
   js_contour_read(ctx, contour, &r);
+
   return r;
 }
-
-/*template<typename T>
-JSValue
-js_contour_new(JSContext* ctx, const JSContourData<T>& points) {
-  JSValue ret = js_contour_create(ctx, contour_proto);
-  JSContourData<double>* contour = js_contour_data(ret);
-
-  // new(contour) JSContourData<double>();
-  // contour->resize(points.size());
-
-  contour_copy(points, *contour);
-  // transform_points(points.cbegin(), points.cend(), contour->begin());
-
-  return ret;
-}*/
 
 template<class T>
 void
@@ -259,9 +197,7 @@ js_contours_new(JSContext* ctx, const JSContoursData<T>& contours) {
   return ret;
 }
 
-extern "C" int js_contour_init(JSContext*, JSModuleDef*);
-
-template<class T> class js_array<JSContourData<T>> {
+/*template<class T> class js_array<JSContourData<T>> {
 public:
   typedef JSContoursData<T> contours_type;
   typedef JSContourData<T> contour_type;
@@ -283,13 +219,15 @@ public:
       JSContourData<double>* ptr;
       contour_type contour;
       JSValue item = JS_GetPropertyUint32(ctx, arr, (uint32_t)i);
+
       if((ptr = js_contour_data(item))) {
         for(const auto& point : *ptr)
           contour.emplace_back(point.x, point.y);
+
       } else {
-        // js_array<JSPointData<T>>::to_vector(ctx, item, contour);
         js_array_to(ctx, item, contour);
       }
+
       out.push_back(contour);
       JS_FreeValue(ctx, item);
     }
@@ -301,6 +239,7 @@ public:
   static size_t
   copy_sequence(JSContext* ctx, JSValueConst arr, const Iterator& start, const Iterator& end) {
     size_t i = 0;
+
     for(Iterator it = start; it != end; ++it) {
       JSValue item = js_contour_new(ctx, contour_proto, *it);
       JS_SetPropertyUint32(ctx, arr, i, item);
@@ -309,11 +248,14 @@ public:
 
     return i;
   }
+
   template<class Iterator>
   static JSValue
   from_sequence(JSContext* ctx, const Iterator& start, const Iterator& end) {
     JSValue arr = JS_NewArray(ctx);
+
     copy_sequence(ctx, arr, start, end);
+
     return arr;
   }
 
@@ -322,6 +264,38 @@ public:
   from(JSContext* ctx, const Container& in) {
     return from_sequence<typename Container::const_iterator>(ctx, in.begin(), in.end());
   }
-};
+};*/
 
+/*template<typename T> struct contour_line_iterator : JSContourData<T>::const_iterator {
+  typedef typename JSContourData<T>::const_iterator point_iterator;
+  typedef const JSPointData<T>* point_pointer;
+
+  contour_line_iterator(const point_iterator& it) : point_iterator(it) {}
+
+  const Line<T>&
+  operator*() const {
+    return reinterpret_cast<const Line<T>&>(*reinterpret_cast<const point_iterator&>(*this));
+  }
+
+  const Line<T>*
+  operator->() const {
+    return &reinterpret_cast<const Line<T>&>(*reinterpret_cast<const point_iterator&>(*this));
+  }
+
+  bool
+  operator==(const point_iterator& other) const {
+    if(point_iterator(*this) == other)
+      return true;
+
+    if(point_iterator(*this) + 1 == other)
+      return true;
+
+    return false;
+  }
+
+  bool
+  operator!=(const point_iterator& other) const {
+    return !this->operator==(other);
+  }
+};*/
 #endif /* defined(JS_CONTOUR_HPP) */
