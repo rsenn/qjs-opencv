@@ -7,7 +7,6 @@
 #include <opencv2/core/affine.hpp>
 
 extern "C" {
-
 extern thread_local JSValue affine3_proto, affine3_class;
 extern thread_local JSClassID js_affine3_class_id;
 
