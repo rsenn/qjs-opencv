@@ -8,7 +8,7 @@
 extern "C" int js_mat_init(JSContext*, JSModuleDef*);
 
 extern "C" {
-extern JSValue mat_proto, mat_class;
+extern thread_local JSValue mat_proto, mat_class;
 extern thread_local JSClassID js_mat_class_id;
 
 JSValue js_mat_new(JSContext*, uint32_t, uint32_t, int);

@@ -95,7 +95,7 @@ js_cv_trace_skeleton(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
   if(argc > 3)
     mapping = js_mat_data(argv[3]);
 
-  count = trace_skeleton(*mat, contours, neighborhood, mapping);
+  count = trace_skeleton(*mat, contours, neighborhood, mapping, true);
 
   if(argc >= 2) {
     if(!js_is_array(ctx, argv[1]))

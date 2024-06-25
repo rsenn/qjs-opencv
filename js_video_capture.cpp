@@ -17,7 +17,7 @@
 extern "C" int js_video_capture_init(JSContext*, JSModuleDef*);
 
 extern "C" {
-JSValue video_capture_proto = JS_UNDEFINED, video_capture_class = JS_UNDEFINED;
+thread_local JSValue video_capture_proto = JS_UNDEFINED, video_capture_class = JS_UNDEFINED;
 thread_local JSClassID js_video_capture_class_id = 0;
 }
 

@@ -937,7 +937,7 @@ js_atom_is_index(JSContext* ctx, uint32_t* pval, JSAtom atom) {
   return ret;
 }
 
-static BOOL
+static inline BOOL
 js_atom_is_length(JSContext* ctx, JSAtom atom) {
   const char* str = JS_AtomToCString(ctx, atom);
   BOOL ret = !strcmp(str, "length");
@@ -945,7 +945,15 @@ js_atom_is_length(JSContext* ctx, JSAtom atom) {
   return ret;
 }
 
-static JSValue
+static inline BOOL
+js_atom_is_symbol(JSContext* ctx, JSAtom atom) {
+  JSValue value = JS_AtomToValue(ctx, atom);
+  BOOL ret = JS_IsSymbol(value);
+  JS_FreeValue(ctx, value);
+  return ret;
+}
+
+static inline JSValue
 js_invoke(JSContext* ctx, JSValueConst this_obj, const char* method, int argc, JSValueConst argv[]) {
   JSAtom atom;
   JSValue ret;

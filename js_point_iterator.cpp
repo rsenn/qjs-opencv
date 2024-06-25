@@ -14,7 +14,7 @@
 
 extern "C" {
 
-JSValue point_iterator_proto = JS_UNDEFINED, point_iterator_class = JS_UNDEFINED;
+thread_local JSValue point_iterator_proto = JS_UNDEFINED, point_iterator_class = JS_UNDEFINED;
 thread_local JSClassID js_point_iterator_class_id = 0;
 
 JSValue
@@ -83,8 +83,8 @@ static JSValue
 js_point_iterator_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   JSPointIteratorData* s;
   JSContourData<double>* v;
-  JSValue obj = JS_UNDEFINED;
-  JSValue proto;
+  JSValue obj = JS_UNDEFINED,proto;
+  
   assert(0);
 
   if(js_point_iterator_class_id == 0)

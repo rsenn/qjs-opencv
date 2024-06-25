@@ -11,9 +11,10 @@
 extern "C" int js_libcamera_app_init(JSContext*, JSModuleDef*);
 
 extern "C" {
-JSValue libcamera_app_proto = JS_UNDEFINED, libcamera_app_class = JS_UNDEFINED, libcamera_app_options_proto = JS_UNDEFINED;
+thread_local JSValue libcamera_app_proto = JS_UNDEFINED, libcamera_app_class = JS_UNDEFINED, libcamera_app_options_proto = JS_UNDEFINED;
 thread_local JSClassID js_libcamera_app_class_id = 0, js_libcamera_app_options_class_id = 0;
 }
+
 enum {
   OPTION_HELP = 0,
   OPTION_VERSION,

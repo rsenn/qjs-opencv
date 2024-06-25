@@ -22,7 +22,7 @@ extern "C" int js_umat_init(JSContext*, JSModuleDef*);
 
 extern "C" {
 
-extern JSValue umat_proto, umat_class;
+extern thread_local  JSValue umat_proto, umat_class;
 extern thread_local JSClassID js_umat_class_id;
 }
 

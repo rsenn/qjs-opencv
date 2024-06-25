@@ -12,8 +12,8 @@ typedef cv::KeyPoint JSKeyPointData;
 
 extern "C" {
 
-extern JSValue keypoint_proto, keypoint_class;
-extern JSClassID js_keypoint_class_id;
+extern thread_local JSValue keypoint_proto, keypoint_class;
+extern thread_local JSClassID js_keypoint_class_id;
 
 JSKeyPointData* js_keypoint_data2(JSContext*, JSValueConst val);
 JSKeyPointData* js_keypoint_data(JSValueConst val);

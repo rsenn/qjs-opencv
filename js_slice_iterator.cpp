@@ -9,7 +9,7 @@
 
 extern "C" {
 
-JSValue slice_iterator_proto = JS_UNDEFINED, slice_iterator_class = JS_UNDEFINED;
+thread_local JSValue slice_iterator_proto = JS_UNDEFINED, slice_iterator_class = JS_UNDEFINED;
 thread_local JSClassID js_slice_iterator_class_id = 0;
 
 JSSliceIteratorData*

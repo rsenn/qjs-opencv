@@ -7,7 +7,7 @@
 
 extern "C" {
 
-extern JSValue line_proto, line_class;
+extern thread_local JSValue line_proto, line_class;
 extern thread_local JSClassID js_line_class_id;
 
 JSValue js_line_new(JSContext* ctx, double x1, double y1, double x2, double y2);

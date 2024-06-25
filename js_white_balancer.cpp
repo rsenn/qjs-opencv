@@ -8,8 +8,10 @@
 typedef cv::xphoto::WhiteBalancer JSWhiteBalancerClass;
 typedef cv::Ptr<JSWhiteBalancerClass> JSWhiteBalancerData;
 
-JSValue white_balancer_proto = JS_UNDEFINED, white_balancer_class = JS_UNDEFINED;
-JSClassID js_white_balancer_class_id;
+extern "C" {
+thread_local JSValue white_balancer_proto = JS_UNDEFINED, white_balancer_class = JS_UNDEFINED;
+thread_local JSClassID js_white_balancer_class_id;
+}
 
 extern "C" int js_white_balancer_init(JSContext*, JSModuleDef*);
 

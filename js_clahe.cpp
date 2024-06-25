@@ -11,8 +11,10 @@
 #include <opencv2/core/types.hpp>
 #include <opencv2/imgproc.hpp>
 
-JSValue clahe_proto = JS_UNDEFINED, clahe_class = JS_UNDEFINED;
-JSClassID js_clahe_class_id;
+extern "C" {
+thread_local JSValue clahe_proto = JS_UNDEFINED, clahe_class = JS_UNDEFINED;
+thread_local JSClassID js_clahe_class_id;
+}
 
 extern "C" int js_clahe_init(JSContext*, JSModuleDef*);
 

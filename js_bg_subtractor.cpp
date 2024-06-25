@@ -9,8 +9,10 @@
 typedef cv::BackgroundSubtractor JSBackgroundSubtractorClass;
 typedef cv::Ptr<JSBackgroundSubtractorClass> JSBackgroundSubtractorData;
 
-JSValue bg_subtractor_proto = JS_UNDEFINED, bg_subtractor_class = JS_UNDEFINED;
-JSClassID js_bg_subtractor_class_id;
+extern "C" {
+thread_local JSValue bg_subtractor_proto = JS_UNDEFINED, bg_subtractor_class = JS_UNDEFINED;
+thread_local JSClassID js_bg_subtractor_class_id;
+}
 
 extern "C" int js_bg_subtractor_init(JSContext*, JSModuleDef*);
 

@@ -7,7 +7,7 @@
 extern "C" int js_size_init(JSContext*, JSModuleDef*);
 
 extern "C" {
-extern JSValue size_proto, size_class;
+extern thread_local JSValue size_proto, size_class;
 extern thread_local JSClassID js_size_class_id;
 
 JSValue js_size_wrap(JSContext* ctx, const JSSizeData<double>& size);

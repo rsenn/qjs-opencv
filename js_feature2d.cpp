@@ -42,8 +42,10 @@ using cv::SimpleBlobDetector;
 
 static SimpleBlobDetector::Params simple_blob_params;
 
-JSValue feature2d_proto = JS_UNDEFINED, feature2d_class = JS_UNDEFINED;
-JSClassID js_feature2d_class_id;
+extern "C" {
+thread_local JSValue feature2d_proto = JS_UNDEFINED, feature2d_class = JS_UNDEFINED;
+thread_local JSClassID js_feature2d_class_id;
+}
 
 extern "C" int js_feature2d_init(JSContext*, JSModuleDef*);
 

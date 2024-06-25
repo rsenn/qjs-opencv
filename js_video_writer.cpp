@@ -17,7 +17,7 @@ typedef cv::VideoWriter JSVideoWriterData;
 extern "C" int js_video_writer_init(JSContext*, JSModuleDef*);
 
 extern "C" {
-JSValue video_writer_proto = JS_UNDEFINED, video_writer_class = JS_UNDEFINED;
+thread_local JSValue video_writer_proto = JS_UNDEFINED, video_writer_class = JS_UNDEFINED;
 thread_local JSClassID js_video_writer_class_id = 0;
 }
 

@@ -12,7 +12,7 @@ extern "C" int js_utility_init(JSContext*, JSModuleDef*);
 
 extern "C" {
 
-JSValue tick_meter_proto = JS_UNDEFINED, tick_meter_class = JS_UNDEFINED;
+thread_local JSValue tick_meter_proto = JS_UNDEFINED, tick_meter_class = JS_UNDEFINED;
 thread_local JSClassID js_tick_meter_class_id = 0;
 
 JSValue

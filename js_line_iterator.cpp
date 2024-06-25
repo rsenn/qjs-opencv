@@ -14,8 +14,8 @@
 
 typedef cv::LineIterator JSLineIteratorData;
 
-JSValue line_iterator_proto = JS_UNDEFINED, line_iterator_class = JS_UNDEFINED;
-JSClassID js_line_iterator_class_id;
+thread_local JSValue line_iterator_proto = JS_UNDEFINED, line_iterator_class = JS_UNDEFINED;
+thread_local JSClassID js_line_iterator_class_id;
 
 extern "C" int js_line_iterator_init(JSContext*, JSModuleDef*);
 

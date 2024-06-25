@@ -40,14 +40,14 @@ contour_copy(const JSContourData<T>& src, JSContourData<U>& dst) {
   return src.size();
 }
 
-template<typename T, typename U = double>
+/*template<typename T, typename U = double>
 static inline JSContourData<T>
 contour_convert(const JSContourData<U>& src) {
   JSContourData<T> dst;
   dst.resize(src.size());
   std::copy(src.begin(), src.end(), dst.begin());
   return dst;
-}
+}*/
 
 template<typename T>
 static inline cv::Mat
@@ -74,10 +74,9 @@ contour_adjacent(const JSContourData<T>& contour, const JSPointData<T>& point) {
 template<typename T>
 static inline bool
 contour_adjacent(const JSContourData<T>& contour, const JSContourData<T>& other) {
-  for(const JSPointData<T>& pt : contour) {
+  for(const JSPointData<T>& pt : contour)
     if(contour_adjacent(other, pt))
       return true;
-  }
 
   return false;
 }

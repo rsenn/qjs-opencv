@@ -8,8 +8,10 @@
 typedef cv::barcode::BarcodeDetector JSBarcodeDetectorClass;
 typedef JSBarcodeDetectorClass JSBarcodeDetectorData;
 
-JSValue barcode_detector_proto = JS_UNDEFINED, barcode_detector_class = JS_UNDEFINED;
-JSClassID js_barcode_detector_class_id;
+extern "C" {
+thread_local JSValue barcode_detector_proto = JS_UNDEFINED, barcode_detector_class = JS_UNDEFINED;
+thread_local JSClassID js_barcode_detector_class_id;
+}
 
 extern "C" int js_barcode_detector_init(JSContext*, JSModuleDef*);
 

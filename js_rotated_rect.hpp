@@ -5,7 +5,7 @@
 #include <quickjs.h>
 
 extern "C" {
-extern JSValue rotated_rect_proto, rotated_rect_class;
+extern thread_local JSValue rotated_rect_proto, rotated_rect_class;
 extern thread_local JSClassID js_rotated_rect_class_id;
 }
 

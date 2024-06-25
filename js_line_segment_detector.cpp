@@ -19,7 +19,7 @@ typedef cv::Ptr<cv::LineSegmentDetector> JSLineSegmentDetector;
 extern "C" int js_line_segment_detector_init(JSContext*, JSModuleDef*);
 
 extern "C" {
-JSValue line_segment_detector_proto = JS_UNDEFINED, line_segment_detector_class = JS_UNDEFINED;
+thread_local JSValue line_segment_detector_proto = JS_UNDEFINED, line_segment_detector_class = JS_UNDEFINED;
 thread_local JSClassID js_line_segment_detector_class_id = 0;
 }
 

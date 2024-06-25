@@ -11,8 +11,10 @@
 
 typedef cv::KeyPoint JSKeyPointData;
 
-JSValue keypoint_proto = JS_UNDEFINED, keypoint_class = JS_UNDEFINED;
-JSClassID js_keypoint_class_id;
+extern "C" {
+thread_local JSValue keypoint_proto = JS_UNDEFINED, keypoint_class = JS_UNDEFINED;
+thread_local JSClassID js_keypoint_class_id;
+}
 
 extern "C" int js_keypoint_init(JSContext*, JSModuleDef*);
 

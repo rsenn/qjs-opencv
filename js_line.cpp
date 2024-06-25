@@ -17,7 +17,7 @@
 enum { PROP_A = 0, PROP_B, PROP_SLOPE, PROP_PIVOT, PROP_TO, PROP_ANGLE, PROP_ASPECT, PROP_LENGTH };
 
 extern "C" {
-JSValue line_proto = JS_UNDEFINED, line_class = JS_UNDEFINED;
+thread_local JSValue line_proto = JS_UNDEFINED, line_class = JS_UNDEFINED;
 thread_local JSClassID js_line_class_id = 0;
 
 JSLineData<double>*
@@ -93,18 +93,18 @@ js_line_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueCo
   /* using new_target to get the prototype is necessary when the
      class is extended. */
   proto = JS_GetPropertyStr(ctx, new_target, "prototype");
-  
+
   if(JS_IsException(proto))
     goto fail;
-  
+
   obj = JS_NewObjectProtoClass(ctx, proto, js_line_class_id);
   JS_FreeValue(ctx, proto);
-  
+
   if(JS_IsException(obj))
     goto fail;
-  
+
   JS_SetOpaque(obj, ln);
-  
+
   return obj;
 
 fail:

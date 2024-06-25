@@ -13,7 +13,7 @@ typedef lccv::PiCamera JSRaspiCamData;
 extern "C" int js_raspi_cam_init(JSContext*, JSModuleDef*);
 
 extern "C" {
-JSValue raspi_cam_proto = JS_UNDEFINED, raspi_cam_class = JS_UNDEFINED;
+thread_local JSValue raspi_cam_proto = JS_UNDEFINED, raspi_cam_class = JS_UNDEFINED;
 thread_local JSClassID js_raspi_cam_class_id = 0;
 }
 

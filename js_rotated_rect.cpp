@@ -10,8 +10,9 @@
 
 enum { ROTATED_RECT_PROP_CENTER = 0, ROTATED_RECT_PROP_SIZE, ROTATED_RECT_PROP_ANGLE };
 enum { ROTATED_RECT_METHOD_BOUNDING_RECT = 0, ROTATED_RECT_METHOD_BOUNDING_RECT2F, ROTATED_RECT_METHOD_POINTS };
+
 extern "C" {
-JSValue rotated_rect_proto = JS_UNDEFINED, rotated_rect_class = JS_UNDEFINED;
+thread_local JSValue rotated_rect_proto = JS_UNDEFINED, rotated_rect_class = JS_UNDEFINED;
 thread_local JSClassID js_rotated_rect_class_id = 0;
 }
 

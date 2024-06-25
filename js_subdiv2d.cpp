@@ -15,7 +15,7 @@
 extern "C" int js_subdiv2d_init(JSContext*, JSModuleDef*);
 
 extern "C" {
-JSValue subdiv2d_proto = JS_UNDEFINED, subdiv2d_class = JS_UNDEFINED;
+thread_local JSValue subdiv2d_proto = JS_UNDEFINED, subdiv2d_class = JS_UNDEFINED;
 thread_local JSClassID js_subdiv2d_class_id = 0;
 }
 

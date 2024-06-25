@@ -16,7 +16,7 @@ typedef cv::Affine3<double>::Vec3 vector_type;
 typedef cv::Affine3<double>::Mat3 mat3_type;
 
 extern "C" {
-JSValue affine3_proto = JS_UNDEFINED, affine3_class = JS_UNDEFINED;
+thread_local JSValue affine3_proto = JS_UNDEFINED, affine3_class = JS_UNDEFINED;
 thread_local JSClassID js_affine3_class_id = 0;
 
 cv::Affine3<double>*

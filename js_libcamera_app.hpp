@@ -5,7 +5,7 @@
 #include <quickjs.h>
 
 extern "C" {
-extern JSValue libcamera_app_proto, libcamera_app_class, libcamera_app_options_proto, libcamera_app_options_class;
+extern thread_local JSValue libcamera_app_proto, libcamera_app_class, libcamera_app_options_proto, libcamera_app_options_class;
 extern thread_local JSClassID js_libcamera_app_class_id, js_libcamera_app_options_class_id;
 }
 

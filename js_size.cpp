@@ -17,7 +17,7 @@ enum js_size_fit_t { JS_SIZE_FIT_WIDTH = 1, JS_SIZE_FIT_HEIGHT = 2, JS_SIZE_FIT_
 enum { SIZE_PROP_WIDTH, SIZE_PROP_HEIGHT, SIZE_PROP_ASPECT, SIZE_PROP_EMPTY, SIZE_PROP_AREA };
 
 extern "C" {
-JSValue size_proto = JS_UNDEFINED, size_class = JS_UNDEFINED;
+thread_local JSValue size_proto = JS_UNDEFINED, size_class = JS_UNDEFINED;
 thread_local JSClassID js_size_class_id = 0;
 }
 
