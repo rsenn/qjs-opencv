@@ -3,8 +3,7 @@
 #include <quickjs.h>
 
 #ifdef HAVE_OPENCV2_XIMGPROC_HPP
-#include <opencv2/ximgproc.hpp> 
-
+#include <opencv2/ximgproc.hpp>
 
 enum {
   XIMGPROC_ANISOTROPIC_DIFFUSION,
@@ -14,7 +13,6 @@ enum {
   XIMGPROC_NI_BLACK_THRESHOLD,
   XIMGPROC_PEI_LIN_NORMALIZATION
 };
-
 
 static JSValue
 js_ximgproc_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
@@ -96,7 +94,7 @@ js_ximgproc_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
   } catch(const cv::Exception& e) { ret = js_handle_exception(ctx, e); }
 
   return ret;
-}  
+}
 
 js_function_list_t js_ximgproc_ximgproc_funcs{
     /* Extended Image Processing */
@@ -115,14 +113,15 @@ js_function_list_t js_ximgproc_ximgproc_funcs{
 };
 
 js_function_list_t js_ximgproc_static_funcs{
-        JS_OBJECT_DEF("ximgproc", js_ximgproc_ximgproc_funcs.data(), int(js_ximgproc_ximgproc_funcs.size()), JS_PROP_C_W_E),
+    JS_OBJECT_DEF("ximgproc", js_ximgproc_ximgproc_funcs.data(), int(js_ximgproc_ximgproc_funcs.size()), JS_PROP_C_W_E),
 };
 
 extern "C" int
 js_ximgproc_init(JSContext* ctx, JSModuleDef* m) {
 
-  if(m)
+  if(m) {
     JS_SetModuleExportList(ctx, m, js_ximgproc_static_funcs.data(), js_ximgproc_static_funcs.size());
+  }
 
   return 0;
 }

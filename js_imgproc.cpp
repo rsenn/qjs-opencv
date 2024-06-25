@@ -1927,7 +1927,7 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
 
   return ret;
 }
- 
+
 thread_local JSClassID js_imgproc_class_id = 0;
 
 void
@@ -1941,7 +1941,6 @@ JSClassDef js_imgproc_class = {
     .class_name = "cv",
     .finalizer = js_imgproc_finalizer,
 };
- 
 
 js_function_list_t js_imgproc_static_funcs{
     JS_CFUNC_DEF("HoughLines", 5, js_cv_hough_lines),

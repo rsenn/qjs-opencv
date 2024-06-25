@@ -69,7 +69,7 @@ js_array_clear(JSContext* ctx, const JSValueConst& arr) {
   return FALSE;
 }
 
-class js_array_iterator : public std::iterator<std::input_iterator_tag, JSValue> {
+/*class js_array_iterator : public std::iterator<std::input_iterator_tag, JSValue> {
 public:
   js_array_iterator(JSContext* c, const JSValueConst& a, const size_t i = 0) : ctx(c), array(&a), pos(i) {}
 
@@ -115,7 +115,7 @@ js_begin(JSContext* c, const JSValueConst& a) {
 static inline js_array_iterator
 js_end(JSContext* c, const JSValueConst& a) {
   return js_array_iterator(c, a, js_array_length(c, a));
-}
+}*/
 
 template<class T> class js_array {
 public:

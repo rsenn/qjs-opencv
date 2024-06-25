@@ -120,11 +120,9 @@ macro(find_opencv)
       if(OpenCV_VERSION)
 
         set(OPENCV_VERSION "${OpenCV_VERSION}" CACHE PATH "OpenCV version")
-        set(OPENCV_LIBDIR "${OpenCV_INSTALL_PATH}/lib" CACHE PATH "OpenCV library directory")
-        #set(OPENCV_LINK_FLAGS "-Wl,-rpath,${OPENCV_LIBDIR} -L${OPENCV_LIBDIR}" CACHE STRING "OpenCV link flags")
-        set(OPENCV_PREFIX "${OpenCV_INSTALL_PATH}" CACHE PATH "OpenCV install directory")
         set(OPENCV_INCLUDE_DIRS "${OpenCV_INCLUDE_DIRS}" CACHE PATH "OpenCV include directories")
         set(OPENCV_LIBRARIES "${OpenCV_LIBS}" CACHE PATH "OpenCV libraries")
+        #set(OPENCV_LINK_FLAGS "-Wl,-rpath,${OPENCV_LIBDIR} -L${OPENCV_LIBDIR}" CACHE STRING "OpenCV link flags")
 
         #dump(OpenCV_LIBS OpenCV_INCLUDE_DIRS OpenCV_VERSION OpenCV_SHARED OpenCV_INSTALL_PATH
         # OpenCV_LIB_COMPONENTS) dump(OPENCV_PREFIX OPENCV_LIBDIR OPENCV_LINK_FLAGS
@@ -143,7 +141,6 @@ macro(find_opencv)
     endif(NOT OPENCV_FOUND)
 
     if(OPENCV_FOUND OR OPENCV_LIBRARIES)
-
       link_directories(${OPENCV_LIB_DIR})
       include_directories(${OPENCV_INCLUDE_DIRS})
 
@@ -167,6 +164,14 @@ macro(find_opencv)
     endif(OPENCV_FOUND)
     set(OPENCV_CHECKED TRUE)
 
-    #dump(OPENCV_FOUND OPENCV_INCLUDE_DIRS OPENCV_LIBDIR OPENCV_LINK_FLAGS OPENCV_LIBRARIES)
+    if(NOT OPENCV_LIBDIR)
+      set(OPENCV_LIBDIR "${OpenCV_INSTALL_PATH}/lib" CACHE PATH "OpenCV library directory")
+    endif(NOT OPENCV_LIBDIR)
+    if(NOT OPENCV_PREFIX)
+      set(OPENCV_PREFIX "${OpenCV_INSTALL_PATH}" CACHE PATH "OpenCV install directory")
+    endif(NOT OPENCV_PREFIX)
+
+   # dump(OpenCV_INSTALL_PATH OPENCV_FOUND OPENCV_INCLUDE_DIRS OPENCV_LIBDIR OPENCV_LINK_FLAGS OPENCV_LIBRARIES)
+
   endif(NOT OPENCV_CHECKED)
 endmacro(find_opencv)

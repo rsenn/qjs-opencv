@@ -461,7 +461,6 @@ js_feature2d_boost(JSContext* ctx, JSValueConst new_target, int argc, JSValueCon
   js_set_tostringtag(ctx, ret, "BoostDesc");
   return ret;
 }
-#endif
 
 static JSValue
 js_feature2d_brief(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
@@ -721,6 +720,7 @@ js_feature2d_vgg(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst
   js_set_tostringtag(ctx, ret, "VGG");
   return ret;
 }
+#endif
 
 void
 js_feature2d_finalizer(JSRuntime* rt, JSValue val) {

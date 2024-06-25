@@ -3,6 +3,7 @@ project(qjs-opencv)
 
 message("Building project [1;31m${PROJECT_NAME}[0m")
 
+
 set(DISABLE_WERROR TRUE CACHE BOOL "Disable -Werror flag" FORCE)
 
 set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "build type")
@@ -70,7 +71,6 @@ endif(HAVE_STRERROR_S)
 if(NOT POSITION_INDEPENDENT_CODE)
   set(POSITION_INDEPENDENT_CODE ON)
 endif(NOT POSITION_INDEPENDENT_CODE)
-option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
 message("Thread library: ${CMAKE_THREAD_LIBS_INIT}")
 if(CMAKE_THREAD_LIBS_INIT)
@@ -101,6 +101,12 @@ endif(HAVE_LIBX11 AND HAVE_X11_X_H)
 find_quickjs()
 find_opencv()
 
+
+
+dump(OPENCV_LIBDIR OPENCV_INCLUDE_DIRS)
+
+link_directories(${OPENCV_LIBDIR})
+
 #set(CMAKE_INSTALL_RPATH "${OPENCV_LIB_DIR}" CACHE PATH "Build with install rpath" FORCE)
 set(CMAKE_INSTALL_RPATH "${OPENCV_LIBDIR}")
 
@@ -121,7 +127,7 @@ endif(HAVE_OPENCV2_FREETYPE_HPP AND OPENCV_FREETYPE)
 if(USE_FEATURE2D)
   add_definitions(-DUSE_FEATURE2D=1)
   set(OPENCV_XFEATURES2D_LIBRARY opencv_xfeatures2d CACHE STRING "x features 2d library")
-    set(FEATURE2D_SOURCE js_feature2d.cpp)
+  set(FEATURE2D_SOURCE js_feature2d.cpp)
 
   check_include_file_cxx(opencv2/xfeatures2d.hpp HAVE_OPENCV2_XFEATURES2D_HPP)
   #dump(HAVE_OPENCV2_XFEATURES2D_HPP)
@@ -190,44 +196,37 @@ if(HAS_F_LTO_FLAG)
   option(ENABLE_LTO "Enable link-time optimization" OFF)
 endif(HAS_F_LTO_FLAG)
 
-if(ENABLE_LTO)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -flto")
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -flto")
-endif(ENABLE_LTO)
-
-link_directories(BEFORE ${quickjs_BINARY_DIR})
-
-link_directories("${CMAKE_CURRENT_BINARY_DIR}/quickjs")
-
-set(QUICKJS_LIBRARY quickjs)
-link_directories(${CMAKE_CURRENT_BINARY_DIR}/quickjs)
 
 option(QUICKJS_MODULES "Build .so modules for quickjs" ON)
+
+option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
 option(BUILD_QUICKJS "Build QuickJS" ON)
 option(USE_LIBCAMERA "Use libcamera-opencv" OFF)
 option(USE_LCCV "Use LCCV" ON)
 option(USE_FEATURE2D "Use feature2d" ON)
 
+
+
+if(ENABLE_LTO)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -flto")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -flto")
+endif(ENABLE_LTO)
+
+link_directories(BEFORE ${quickjs_BINARY_DIR} ${OPENCV_LIB_DIR})
+
+link_directories("${CMAKE_CURRENT_BINARY_DIR}/quickjs")
+
+set(QUICKJS_LIBRARY quickjs)
+link_directories(${CMAKE_CURRENT_BINARY_DIR}/quickjs)
+
+
 if(USE_LIBCAMERA OR USE_LCCV)
   include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/libcamera.cmake)
 endif(USE_LIBCAMERA OR USE_LCCV)
 
-file(
-  GLOB
-  OPENCV_SOURCES
-  init_module.cpp
-  geometry.cpp
-  highgui.cpp
-  jsbindings.cpp
- js_*.cpp
-  ${FEATURE2D_SOURCE}
- 
-  line.cpp
-  util.cpp
-  gifenc/gifenc.c
-  algorithms/*.cpp
-  lsd/src/*.cpp)
+file(GLOB OPENCV_SOURCES init_module.cpp geometry.cpp highgui.cpp jsbindings.cpp js_*.cpp
+     ${FEATURE2D_SOURCE} line.cpp util.cpp gifenc/gifenc.c algorithms/*.cpp lsd/src/*.cpp)
 #dump(OPENCV_SOURCES)
 
 if(USE_LCCV)
@@ -252,7 +251,7 @@ if(USE_LCCV)
   set(LCCV_LIBRARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/LCCV" CACHE PATH "liblccv library directory")
 
   link_directories(${LCCV_LIBRARY_DIR})
-  set(jsbindings_LINK_DIRECTORIES ${LCCV_LIBRARY_DIR})
+  list(APPEND jsbindings_LINK_DIRECTORIES ${LCCV_LIBRARY_DIR})
   list(APPEND jsbindings_LIBRARIES lccv)
 endif(USE_LCCV)
 #endif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/LCCV")
@@ -266,9 +265,10 @@ endif(USE_LCCV)
 #
 #make_module(opencv init_module.cpp)
 
+list(APPEND jsbindings_LINK_DIRECTORIES ${OPENCV_LIBDIR})
 list(APPEND jsbindings_LIBRARIES ${QUICKJS_LIBRARY} ${PNG_LIBRARIES} ${OPENCV_XIMGPROC_LIBRARY}
-     ${OPENCV_XFEATURES2D_LIBRARY} ${OPENCV_FREETYPE_LIBRARY} ${OPENCV_BGSEGM_LIBRARY} ${OPENCV_EXTRA_LIBRARIES}
-     ${OPENCV_LIBRARIES})
+     ${OPENCV_XFEATURES2D_LIBRARY} ${OPENCV_FREETYPE_LIBRARY} ${OPENCV_BGSEGM_LIBRARY}
+     ${OPENCV_EXTRA_LIBRARIES} ${OPENCV_LIBRARIES})
 
 if(USE_LIBCAMERA OR USE_LCCV)
   list(APPEND jsbindings_LIBRARIES ${pkgcfg_lib_LIBCAMERA_camera})

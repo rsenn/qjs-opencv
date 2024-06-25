@@ -37,11 +37,12 @@ function(make_shared_module FNAME)
 
   add_library(${TARGET_NAME} SHARED ${SOURCES})
 
-  target_link_libraries(${TARGET_NAME} ${jsbindings_LIBRARIES} ${OpenCV_LIBS})
+  target_link_directories(${TARGET_NAME} PUBLIC ${jsbindings_LINK_DIRECTORIES})
+  target_link_libraries(${TARGET_NAME} ${jsbindings_LIBRARIES} )
   set_target_properties(
     ${TARGET_NAME}
     PROPERTIES
-      LINK_DIRECTORIES "${jsbindings_LINK_DIRECTORIES}"
+      #LINK_DIRECTORIES "${jsbindings_LINK_DIRECTORIES}"
       PREFIX "" # BUILD_RPATH "${OPENCV_LIBRARY_DIRS}:${CMAKE_CURRENT_BINARY_DIR}"
       RPATH "${OPENCV_LIBDIR}:${CMAKE_INSTALL_PREFIX}/lib:${QUICKJS_C_MODULE_DIR}"
       OUTPUT_NAME "${NAME}"

@@ -78,7 +78,7 @@ pixel_neighborhood_pred2(const cv::Mat& src, array<int32_t, N> const& offsets, C
 
 static inline cv::Mat
 pixel_neighborhood(const cv::Mat& mat) {
-  const auto s = mat.step;
+  const int32_t s = mat.step;
 
   return pixel_neighborhood_pred2(mat,
                                   (array<int32_t, 8> const){
