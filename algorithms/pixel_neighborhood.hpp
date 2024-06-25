@@ -65,7 +65,7 @@ pixel_neighborhood_pred2(const cv::Mat& src, array<int32_t, N> const& offsets, C
 
       transform(offsets.begin(), offsets.end(), p.begin(), [ptr, y, x](int32_t offset) -> uchar { return ptr[offset]; });
 
-      std::cout << p << std::endl;
+      //std::cout << p << std::endl;
 
       const auto c = count_if(p.begin(), p.end(), pred);
 

@@ -737,15 +737,7 @@ js_libcamera_app_init(JSContext* ctx, JSModuleDef* m) {
 extern "C" void
 js_libcamera_app_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "LibcameraApp");
-}
-
-void
-js_libcamera_app_constructor(JSContext* ctx, JSValue parent, const char* name) {
-  if(JS_IsUndefined(libcamera_app_class))
-    js_libcamera_app_init(ctx, 0);
-
-  JS_SetPropertyStr(ctx, parent, name ? name : "LibcameraApp", libcamera_app_class);
-}
+} 
 
 #ifdef JS_METHOD_MODULE
 #define JS_INIT_MODULE VISIBLE js_init_module

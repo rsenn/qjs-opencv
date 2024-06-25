@@ -16,8 +16,7 @@ JSSizeData<double>* js_size_data2(JSContext*, JSValueConst val);
 
 int js_size_init(JSContext*, JSModuleDef* m);
 JSModuleDef* js_init_module_size(JSContext*, const char*);
-void js_size_constructor(JSContext* ctx, JSValue parent, const char* name);
-}
+ }
 JSValue js_size_new(JSContext* ctx, double w, double h);
 
 template<class T>

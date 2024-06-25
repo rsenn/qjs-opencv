@@ -1,8 +1,8 @@
 #include "js_line.hpp"
 #include "js_size.hpp"
 #include "js_alloc.hpp"
-#include "js_array.hpp"
 #include "js_point.hpp"
+#include "js_array.hpp"
 #include "js_typed_array.hpp"
 #include "jsbindings.hpp"
 #include "line.hpp"
@@ -63,7 +63,7 @@ js_line_new(JSContext* ctx, double x1, double y1, double x2, double y2) {
 }
 
 static JSValue
-js_line_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
+js_line_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   JSLineData<double>* ln;
   JSValue obj = JS_UNDEFINED;
   JSValue proto;
@@ -669,7 +669,7 @@ js_line_init(JSContext* ctx, JSModuleDef* m) {
     JS_SetPropertyFunctionList(ctx, line_proto, js_line_proto_funcs, countof(js_line_proto_funcs));
     JS_SetClassProto(ctx, js_line_class_id, line_proto);
 
-    line_class = JS_NewCFunction2(ctx, js_line_ctor, "Line", 2, JS_CFUNC_constructor, 0);
+    line_class = JS_NewCFunction2(ctx, js_line_constructor, "Line", 2, JS_CFUNC_constructor, 0);
     /* set proto.constructor and ctor.prototype */
     JS_SetConstructor(ctx, line_class, line_proto);
     JS_SetPropertyFunctionList(ctx, line_class, js_line_static_funcs, countof(js_line_static_funcs));
@@ -688,14 +688,6 @@ js_line_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "Line");
 }
 
-void
-js_line_constructor(JSContext* ctx, JSValue parent, const char* name) {
-  if(JS_IsUndefined(line_class))
-    js_line_init(ctx, 0);
-
-  JS_SetPropertyStr(ctx, parent, name ? name : "Line", line_class);
-}
-
 #ifdef JS_LINE_MODULE
 #define JS_INIT_MODULE VISIBLE js_init_module
 #else
@@ -705,8 +697,10 @@ js_line_constructor(JSContext* ctx, JSValue parent, const char* name) {
 JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   JSModuleDef* m;
+
   if(!(m = JS_NewCModule(ctx, module_name, &js_line_init)))
     return NULL;
+  
   js_line_export(ctx, m);
   return m;
 }

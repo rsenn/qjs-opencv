@@ -47,32 +47,6 @@ JSClassID js_feature2d_class_id;
 
 extern "C" int js_feature2d_init(JSContext*, JSModuleDef*);
 
-static JSValue
-js_feature2d_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
-  JSFeature2DData feature2d, *s;
-  JSValue obj = JS_UNDEFINED;
-  JSValue proto;
-
-  if(!(s = js_allocate<JSFeature2DData>(ctx)))
-    return JS_EXCEPTION;
-  new(s) JSFeature2DData();
-
-  /* using new_target to get the prototype is necessary when the
-     class is extended. */
-  proto = JS_GetPropertyStr(ctx, new_target, "prototype");
-  if(JS_IsException(proto))
-    goto fail;
-  obj = JS_NewObjectProtoClass(ctx, proto, js_feature2d_class_id);
-  JS_FreeValue(ctx, proto);
-  if(JS_IsException(obj))
-    goto fail;
-  JS_SetOpaque(obj, s);
-  return obj;
-fail:
-  js_deallocate(ctx, s);
-  JS_FreeValue(ctx, obj);
-  return JS_EXCEPTION;
-}
 
 JSFeature2DData*
 js_feature2d_data2(JSContext* ctx, JSValueConst val) {

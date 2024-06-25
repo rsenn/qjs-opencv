@@ -81,7 +81,7 @@ js_cv_trace_skeleton(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
   JSContoursData<double> contours;
   uint32_t count;
   JSInputOutputArray src = js_umat_or_mat(ctx, argv[0]);
-  cv::Mat* mat, *neighborhood = 0, *mapping = 0;
+  cv::Mat *mat, *neighborhood = 0, *mapping = 0;
 
   if(!(mat = js_mat_data2(ctx, argv[0])))
     return JS_EXCEPTION;
@@ -101,12 +101,12 @@ js_cv_trace_skeleton(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
     if(!js_is_array(ctx, argv[1]))
       return JS_ThrowTypeError(ctx, "argument 2 must be array");
 
-    js_array_copy(ctx, argv[1], contours);
+    js_contours_copy(ctx, argv[1], contours);
 
     return JS_NewUint32(ctx, count);
   }
 
-  return js_array_from(ctx, contours);
+  return js_contours_new(ctx, contours);
 }
 
 static JSValue

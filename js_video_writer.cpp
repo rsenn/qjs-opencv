@@ -263,14 +263,6 @@ js_video_writer_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "VideoWriter");
 }
 
-void
-js_video_writer_constructor(JSContext* ctx, JSValue parent, const char* name) {
-  if(JS_IsUndefined(video_writer_class))
-    js_video_writer_init(ctx, 0);
-
-  JS_SetPropertyStr(ctx, parent, name ? name : "VideoWriter", video_writer_class);
-}
-
 #ifdef JS_VIDEO_WRITER_MODULE
 #define JS_INIT_MODULE VISIBLE js_init_module
 #else

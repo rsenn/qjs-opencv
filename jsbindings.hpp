@@ -141,7 +141,7 @@ JSModuleDef* js_init_module_video_capture(JSContext*, const char*);
 JSModuleDef* js_init_module_cv(JSContext*, const char*);
 }
 
-template<class Stream>
+/*template<class Stream>
 static inline Stream&
 operator<<(Stream& os, const cv::_InputOutputArray& arr) {
   os << "{ ";
@@ -152,40 +152,7 @@ operator<<(Stream& os, const cv::_InputOutputArray& arr) {
   os << " }";
 
   return os;
-}
-
-static inline std::string
-dump(const cv::_InputArray& arr) {
-  std::ostringstream os;
-  os << "{ ";
-  os << "type: " << arr.type();
-  os << ", depth: " << arr.depth();
-  os << ", channels: " << arr.channels();
-  os << ", total: " << arr.total();
-  os << " }";
-
-  return os.str();
-}
-
-static inline std::string
-dump(const cv::_InputOutputArray& arr) {
-  std::ostringstream os;
-  os << arr;
-  return os.str();
-}
-
-static inline std::string
-dump(const cv::_OutputArray& arr) {
-  std::ostringstream os;
-  os << "{ ";
-  os << "type: " << arr.type();
-  os << ", depth: " << arr.depth();
-  os << ", channels: " << arr.channels();
-  os << ", total: " << arr.total();
-  os << " }";
-
-  return os.str();
-}
+} */
 
 struct JSConstructor {
   JSConstructor(JSCFunction* _ctor, const char* _name) : name(_name), ctor(_ctor), proto(nullptr), nfuncs(0), class_obj(JS_UNDEFINED) {}

@@ -192,15 +192,7 @@ js_raspi_cam_init(JSContext* ctx, JSModuleDef* m) {
 extern "C" void
 js_raspi_cam_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "RaspiCam");
-}
-
-void
-js_raspi_cam_constructor(JSContext* ctx, JSValue parent, const char* name) {
-  if(JS_IsUndefined(raspi_cam_class))
-    js_raspi_cam_init(ctx, 0);
-
-  JS_SetPropertyStr(ctx, parent, name ? name : "RaspiCam", raspi_cam_class);
-}
+} 
 
 #ifdef JS_METHOD_MODULE
 #define JS_INIT_MODULE VISIBLE js_init_module

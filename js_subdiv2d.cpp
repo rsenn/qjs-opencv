@@ -1,6 +1,7 @@
 #include "js_alloc.hpp"
-#include "js_array.hpp"
 #include "js_point.hpp"
+#include "js_array.hpp"
+#include "js_contour.hpp"
 #include "js_rect.hpp"
 #include "jsbindings.hpp"
 #include <opencv2/core/matx.hpp>
@@ -284,14 +285,6 @@ js_subdiv2d_init(JSContext* ctx, JSModuleDef* m) {
 extern "C" void
 js_subdiv2d_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "Subdiv2D");
-}
-
-void
-js_subdiv2d_constructor(JSContext* ctx, JSValue parent, const char* name) {
-  if(JS_IsUndefined(subdiv2d_class))
-    js_subdiv2d_init(ctx, 0);
-
-  JS_SetPropertyStr(ctx, parent, name ? name : "Subdiv2D", subdiv2d_class);
 }
 
 #if defined(JS_SUBDIV2D_MODULE)

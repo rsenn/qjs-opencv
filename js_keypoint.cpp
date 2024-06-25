@@ -17,7 +17,7 @@ JSClassID js_keypoint_class_id;
 extern "C" int js_keypoint_init(JSContext*, JSModuleDef*);
 
 static JSValue
-js_keypoint_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
+js_keypoint_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   JSKeyPointData* kp;
   JSValue obj = JS_UNDEFINED;
   JSValue proto;
@@ -220,7 +220,7 @@ js_keypoint_init(JSContext* ctx, JSModuleDef* m) {
   JS_SetClassProto(ctx, js_keypoint_class_id, keypoint_proto);
   // js_set_inspect_method(ctx, keypoint_proto, js_keypoint_inspect);
 
-  keypoint_class = JS_NewCFunction2(ctx, js_keypoint_ctor, "KeyPoint", 2, JS_CFUNC_constructor, 0);
+  keypoint_class = JS_NewCFunction2(ctx, js_keypoint_constructor, "KeyPoint", 2, JS_CFUNC_constructor, 0);
   JS_SetConstructor(ctx, keypoint_class, keypoint_proto);
 
   if(m) {

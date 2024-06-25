@@ -703,15 +703,7 @@ js_rect_init(JSContext* ctx, JSModuleDef* m) {
 extern "C" void
 js_rect_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "Rect");
-}
-
-void
-js_rect_constructor(JSContext* ctx, JSValue parent, const char* name) {
-  if(JS_IsUndefined(rect_class))
-    js_rect_init(ctx, 0);
-
-  JS_SetPropertyStr(ctx, parent, name ? name : "Rect", rect_class);
-}
+} 
 
 #ifdef JS_RECT_MODULE
 #define JS_INIT_MODULE VISIBLE js_init_module

@@ -4,6 +4,7 @@
 #include "geometry.hpp"
 #include "js_alloc.hpp"
 #include "js_point.hpp"
+#include "js_array.hpp"
 #include "jsbindings.hpp"
 #include <quickjs.h>
 #include <cstdint>
@@ -29,19 +30,6 @@ JSContourData<double>* js_contour_data(JSValueConst val);
 };
 
 JSValue js_contour_move(JSContext* ctx, JSContourData<double>&& points);
-
-template<typename T>
-static inline JSValue
-js_contour_new(JSContext* ctx, const JSContourData<T>& points) {
-  JSValue ret = js_contour_create(ctx, contour_proto);
-  JSContourData<double>* contour = js_contour_data(ret);
-
-  new(contour) JSContourData<double>();
-  contour->resize(points.size());
-  transform_points(points.cbegin(), points.cend(), contour->begin());
-
-  return ret;
-}
 
 template<typename T>
 static inline JSContourData<T>*
@@ -220,21 +208,151 @@ js_contour_get(JSContext* ctx, JSValueConst contour) {
   return r;
 }
 
-template<class T>
+template<typename T>
 JSValue
-js_contours_new(JSContext* ctx, const std::vector<JSContourData<T>>& contours) {
+js_contour_new(JSContext* ctx, const JSContourData<T>& points) {
+  JSValue ret = js_contour_create(ctx, contour_proto);
+  JSContourData<double>* contour = js_contour_data(ret);
 
-  JSValue ret = JS_NewArray(ctx);
+  // new(contour) JSContourData<double>();
+  // contour->resize(points.size());
+
+  contour_copy(points, *contour);
+  // transform_points(points.cbegin(), points.cend(), contour->begin());
+
+  return ret;
+}
+
+template<class T>
+void
+js_contours_copy(JSContext* ctx, JSValueConst arr, const std::vector<JSContourData<T>>& contours) {
   uint32_t i, size = contours.size();
+
+  js_array_clear(ctx, arr);
 
   for(i = 0; i < size; i++) {
     JSValue contour = js_contour_new(ctx, contours[i]);
-    JS_SetPropertyUint32(ctx, ret, i, contour);
+    JS_SetPropertyUint32(ctx, arr, i, contour);
   }
+}
+
+template<class T>
+JSValue
+js_contours_new(JSContext* ctx, const std::vector<JSContourData<T>>& contours) {
+  JSValue ret = JS_NewArray(ctx);
+
+  js_contours_copy(ctx, ret, contours);
 
   return ret;
 }
 
 extern "C" int js_contour_init(JSContext*, JSModuleDef*);
+
+template<class T> class js_array<JSPointData<T>> {
+public:
+  static int64_t
+  to_vector(JSContext* ctx, JSValueConst arr, JSContourData<T>& out) {
+    int64_t i, n;
+    JSValue len;
+    if(!js_is_array(ctx, arr))
+      return -1;
+    len = JS_GetPropertyStr(ctx, arr, "length");
+    JS_ToInt64(ctx, &n, len);
+    out.reserve(out.size() + n);
+    for(i = 0; i < n; i++) {
+      JSPointData<double> value;
+      JSValue item = JS_GetPropertyUint32(ctx, arr, (uint32_t)i);
+      if(!js_point_read(ctx, item, &value)) {
+        JS_FreeValue(ctx, item);
+        out.clear();
+        return -1;
+      }
+      out.push_back(value);
+      JS_FreeValue(ctx, item);
+    }
+
+    return n;
+  }
+
+  template<class Iterator>
+  static size_t
+  copy_sequence(JSContext* ctx, JSValueConst arr, const Iterator& start, const Iterator& end) {
+    size_t i = 0;
+    for(Iterator it = start; it != end; ++it) {
+      JS_SetPropertyUint32(ctx, arr, i, js_point_new(ctx, *it));
+      ++i;
+    }
+
+    return i;
+  }
+  template<class Iterator>
+  static JSValue
+  from_sequence(JSContext* ctx, const Iterator& start, const Iterator& end) {
+    JSValue arr = JS_NewArray(ctx);
+    copy_sequence(ctx, arr, start, end);
+    return arr;
+  }
+
+  template<size_t N> static int64_t to_array(JSContext* ctx, JSValueConst arr, std::array<cv::Mat, N>& out);
+};
+
+template<class T> class js_array<JSContourData<T>> {
+public:
+  typedef JSContourData<T> contour_type;
+  typedef JSPointData<T> point_type;
+
+  static int64_t
+  to_vector(JSContext* ctx, JSValueConst arr, std::vector<contour_type>& out) {
+    int64_t i, n;
+    JSValue len;
+    if(!js_is_array(ctx, arr))
+      return -1;
+    len = JS_GetPropertyStr(ctx, arr, "length");
+    JS_ToInt64(ctx, &n, len);
+    out.reserve(out.size() + n);
+    for(i = 0; i < n; i++) {
+      JSContourData<double>* ptr;
+      contour_type contour;
+      JSValue item = JS_GetPropertyUint32(ctx, arr, (uint32_t)i);
+      if((ptr = js_contour_data(item))) {
+        for(const auto& point : *ptr)
+          contour.emplace_back(point.x, point.y);
+      } else {
+        // js_array<JSPointData<T>>::to_vector(ctx, item, contour);
+        js_array_to(ctx, item, contour);
+      }
+      out.push_back(contour);
+      JS_FreeValue(ctx, item);
+    }
+
+    return n;
+  }
+
+  template<class Iterator>
+  static size_t
+  copy_sequence(JSContext* ctx, JSValueConst arr, const Iterator& start, const Iterator& end) {
+    size_t i = 0;
+    for(Iterator it = start; it != end; ++it) {
+      JSValue item = js_contour_new(ctx, *it);
+      JS_SetPropertyUint32(ctx, arr, i, item);
+      ++i;
+    }
+
+    return i;
+  }
+  template<class Iterator>
+  static JSValue
+  from_sequence(JSContext* ctx, const Iterator& start, const Iterator& end) {
+    JSValue arr = JS_NewArray(ctx);
+    copy_sequence(ctx, arr, start, end);
+    return arr;
+  }
+
+  template<class Container>
+  static JSValue
+  from(JSContext* ctx, const Container& in) {
+    return from_sequence<typename Container::const_iterator>(ctx, in.begin(), in.end());
+  }
+};
 
 #endif /* defined(JS_CONTOUR_HPP) */

@@ -249,14 +249,6 @@ js_video_capture_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "VideoCapture");
 }
 
-void
-js_video_capture_constructor(JSContext* ctx, JSValue parent, const char* name) {
-  if(JS_IsUndefined(video_capture_class))
-    js_video_capture_init(ctx, 0);
-
-  JS_SetPropertyStr(ctx, parent, name ? name : "VideoCapture", video_capture_class);
-}
-
 #ifdef JS_VIDEO_CAPTURE_MODULE
 #define JS_INIT_MODULE VISIBLE js_init_module
 #else

@@ -15,8 +15,6 @@ JSRectData<double>* js_rect_data2(JSContext*, JSValueConst val);
 JSValue js_rect_wrap(JSContext*, const JSRectData<double>&);
 int js_rect_init(JSContext*, JSModuleDef*);
 JSModuleDef* js_init_module_rect(JSContext*, const char*);
-
-void js_rect_constructor(JSContext* ctx, JSValue parent, const char* name);
 }
 
 JSValue js_rect_new(JSContext* ctx, double x, double y, double w, double h);

@@ -231,7 +231,7 @@ js_umat_params(JSContext* ctx, int argc, JSValueConst argv[]) {
 }
 
 static JSValue
-js_umat_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
+js_umat_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
 
   const auto& [size, type] = js_umat_params(ctx, argc, argv);
 
@@ -1106,7 +1106,7 @@ js_umat_init(JSContext* ctx, JSModuleDef* m) {
     JS_SetPropertyFunctionList(ctx, umat_proto, js_umat_proto_funcs, countof(js_umat_proto_funcs));
     JS_SetClassProto(ctx, js_umat_class_id, umat_proto);
 
-    umat_class = JS_NewCFunction2(ctx, js_umat_ctor, "UMat", 2, JS_CFUNC_constructor, 0);
+    umat_class = JS_NewCFunction2(ctx, js_umat_constructor, "UMat", 2, JS_CFUNC_constructor, 0);
     /* set proto.constructor and ctor.prototype */
     JS_SetConstructor(ctx, umat_class, umat_proto);
 

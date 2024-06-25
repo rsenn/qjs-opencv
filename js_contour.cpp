@@ -1649,15 +1649,15 @@ const JSCFunctionListEntry js_contour_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("simplifyRadialDistance", 0, js_contour_psimpl, SIMPLIFY_RADIAL_DISTANCE),
     JS_CFUNC_MAGIC_DEF("simplifyPerpendicularDistance", 0, js_contour_psimpl, SIMPLIFY_PERPENDICULAR_DISTANCE),
     JS_CFUNC_DEF("toArray", 0, js_contour_toarray),
-    JS_CFUNC_MAGIC_DEF("toString", 0, js_contour_tostring, 0),
+    // JS_CFUNC_MAGIC_DEF("toString", 0, js_contour_tostring, 0),
     JS_CFUNC_MAGIC_DEF("toSource", 0, js_contour_tosource, 1),
     JS_CFUNC_MAGIC_DEF("lines", 0, js_contour_iterator, NEXT_LINE),
     JS_CFUNC_MAGIC_DEF("points", 0, js_contour_iterator, NEXT_POINT),
     JS_ALIAS_DEF("[Symbol.iterator]", "points"),
     JS_ALIAS_DEF("size", "length"),
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Contour", JS_PROP_CONFIGURABLE),
-
 };
+
 const JSCFunctionListEntry js_contour_static_funcs[] = {
     JS_CFUNC_DEF("fromRect", 1, js_contour_rect),
     JS_CFUNC_DEF("fromString", 1, js_contour_fromstr),
@@ -1686,8 +1686,9 @@ js_contour_init(JSContext* ctx, JSModuleDef* m) {
 
     contour_class = JS_NewCFunction2(ctx, js_contour_constructor, "Contour", 2, JS_CFUNC_constructor, 0);
     /* set proto.constructor and ctor.prototype */
-    JS_SetConstructor(ctx, contour_class, contour_proto);
     JS_SetPropertyFunctionList(ctx, contour_class, js_contour_static_funcs, countof(js_contour_static_funcs));
+
+    JS_SetConstructor(ctx, contour_class, contour_proto);
   }
 
   // js_set_inspect_method(ctx, contour_proto, js_contour_inspect);

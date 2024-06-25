@@ -279,14 +279,6 @@ js_rotated_rect_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "RotatedRect");
 }
 
-void
-js_rotated_rect_constructor(JSContext* ctx, JSValue parent, const char* name) {
-  if(JS_IsUndefined(rotated_rect_class))
-    js_rotated_rect_init(ctx, 0);
-
-  JS_SetPropertyStr(ctx, parent, name ? name : "RotatedRect", rotated_rect_class);
-}
-
 #ifdef JS_ROTATED_RECT_MODULE
 #define JS_INIT_MODULE VISIBLE js_init_module
 #else

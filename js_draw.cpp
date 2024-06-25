@@ -759,19 +759,21 @@ const JSCFunctionListEntry js_draw_global_funcs[] = {
 
 static JSValue
 js_draw_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
-  JSValue obj = JS_UNDEFINED;
-  JSValue proto;
+  JSValue obj , proto;
 
-  /* using new_target to get the prototype is necessary when the
-     class is extended. */
+  /* using new_target to get the prototype is necessary when the class is extended. */
   proto = JS_GetPropertyStr(ctx, new_target, "prototype");
   if(JS_IsException(proto))
     goto fail;
+
   obj = JS_NewObjectProtoClass(ctx, proto, js_draw_class_id);
   JS_FreeValue(ctx, proto);
+
   if(JS_IsException(obj))
     goto fail;
+
   return obj;
+
 fail:
   JS_FreeValue(ctx, obj);
   return JS_EXCEPTION;
@@ -824,12 +826,5 @@ JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
     return NULL;
   js_draw_export(ctx, m);
   return m;
-}
-void
-js_draw_constructor(JSContext* ctx, JSValue parent, const char* name) {
-  if(JS_IsUndefined(draw_class))
-    js_draw_init(ctx, 0);
-
-  JS_SetPropertyStr(ctx, parent, name ? name : "Draw", draw_class);
-}
+} 
 }

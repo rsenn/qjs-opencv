@@ -31,7 +31,7 @@ js_tick_meter_new(JSContext* ctx) {
 }
 
 static JSValue
-js_tick_meter_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
+js_tick_meter_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   JSTickMeterData* s;
   JSValue obj = JS_UNDEFINED;
   JSValue proto;
@@ -163,7 +163,7 @@ js_utility_init(JSContext* ctx, JSModuleDef* m) {
     JS_SetPropertyFunctionList(ctx, tick_meter_proto, js_tick_meter_proto_funcs, countof(js_tick_meter_proto_funcs));
     JS_SetClassProto(ctx, js_tick_meter_class_id, tick_meter_proto);
 
-    tick_meter_class = JS_NewCFunction2(ctx, js_tick_meter_ctor, "TickMeter", 0, JS_CFUNC_constructor, 0);
+    tick_meter_class = JS_NewCFunction2(ctx, js_tick_meter_constructor, "TickMeter", 0, JS_CFUNC_constructor, 0);
     /* set proto.constructor and ctor.prototype */
     JS_SetConstructor(ctx, tick_meter_class, tick_meter_proto);
   }

@@ -20,7 +20,7 @@ JSClassID js_line_iterator_class_id;
 extern "C" int js_line_iterator_init(JSContext*, JSModuleDef*);
 
 static JSValue
-js_line_iterator_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
+js_line_iterator_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   JSLineIteratorData* li;
   JSValue obj = JS_UNDEFINED;
   JSValue proto;
@@ -462,7 +462,7 @@ js_line_iterator_init(JSContext* ctx, JSModuleDef* m) {
   /* XXX */
   // js_set_inspect_method(ctx, line_iterator_proto, js_line_iterator_inspect);
 
-  line_iterator_class = JS_NewCFunction2(ctx, js_line_iterator_ctor, "LineIterator", 2, JS_CFUNC_constructor, 0);
+  line_iterator_class = JS_NewCFunction2(ctx, js_line_iterator_constructor, "LineIterator", 2, JS_CFUNC_constructor, 0);
   JS_SetConstructor(ctx, line_iterator_class, line_iterator_proto);
 
   if(m) {

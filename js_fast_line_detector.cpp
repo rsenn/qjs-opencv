@@ -48,7 +48,7 @@ js_fast_line_detector_new(JSContext* ctx,
 }
 
 static JSValue
-js_fast_line_detector_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
+js_fast_line_detector_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
 
   JSValue proto;
   int32_t length_threshold = 10;
@@ -162,7 +162,7 @@ js_fast_line_detector_init(JSContext* ctx, JSModuleDef* m) {
     JS_SetPropertyFunctionList(ctx, fast_line_detector_proto, js_fast_line_detector_proto_funcs, countof(js_fast_line_detector_proto_funcs));
     JS_SetClassProto(ctx, js_fast_line_detector_class_id, fast_line_detector_proto);
 
-    fast_line_detector_class = JS_NewCFunction2(ctx, js_fast_line_detector_ctor, "FastLineDetector", 2, JS_CFUNC_constructor, 0);
+    fast_line_detector_class = JS_NewCFunction2(ctx, js_fast_line_detector_constructor, "FastLineDetector", 2, JS_CFUNC_constructor, 0);
     /* set proto.constructor and ctor.prototype */
     JS_SetConstructor(ctx, fast_line_detector_class, fast_line_detector_proto);
     JS_SetPropertyFunctionList(ctx, fast_line_detector_class, js_fast_line_detector_static_funcs, countof(js_fast_line_detector_static_funcs));

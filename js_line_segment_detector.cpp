@@ -232,15 +232,7 @@ extern "C" void
 js_line_segment_detector_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "LineSegmentDetector");
 }
-
-void
-js_line_segment_detector_constructor(JSContext* ctx, JSValue parent, const char* name) {
-  if(JS_IsUndefined(line_segment_detector_class))
-    js_line_segment_detector_init(ctx, 0);
-
-  JS_SetPropertyStr(ctx, parent, name ? name : "LineSegmentDetector", line_segment_detector_class);
-}
-
+ 
 #if defined(JS_LINE_SEGMENT_DETECTOR_MODULE)
 #define JS_INIT_MODULE VISIBLE js_init_module
 #else

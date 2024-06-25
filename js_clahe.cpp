@@ -29,7 +29,7 @@ js_clahe_new(JSContext* ctx, double clipLimit = 40.0, cv::Size tileGridSize = cv
 }
 
 static JSValue
-js_clahe_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
+js_clahe_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   double clipLimit = 40.0;
   JSSizeData<double> tileGridSize = cv::Size2d(8, 8);
   if(argc >= 1)
@@ -168,7 +168,7 @@ js_clahe_init(JSContext* ctx, JSModuleDef* m) {
   JS_SetPropertyFunctionList(ctx, clahe_proto, js_clahe_proto_funcs, countof(js_clahe_proto_funcs));
   JS_SetClassProto(ctx, js_clahe_class_id, clahe_proto);
 
-  clahe_class = JS_NewCFunction2(ctx, js_clahe_ctor, "CLAHE", 2, JS_CFUNC_constructor, 0);
+  clahe_class = JS_NewCFunction2(ctx, js_clahe_constructor, "CLAHE", 2, JS_CFUNC_constructor, 0);
   /* set proto.constructor and ctor.prototype */
   JS_SetConstructor(ctx, clahe_class, clahe_proto);
 

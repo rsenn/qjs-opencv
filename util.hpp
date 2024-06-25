@@ -471,4 +471,42 @@ mul(const cv::Point_<T>& p, const cv::Size_<T>& s) {
   return cv::Point_<T>(p.x * s.width, p.y * s.height);
 }
 
+static inline std::string
+dump(const cv::_InputArray& arr) {
+  std::ostringstream os;
+  os << "{ ";
+  os << "type: " << arr.type();
+  os << ", depth: " << arr.depth();
+  os << ", channels: " << arr.channels();
+  os << ", total: " << arr.total();
+  os << " }";
+
+  return os.str();
+}
+
+static inline std::string
+dump(const cv::_InputOutputArray& arr) {
+  std::ostringstream os;
+  os << "{ ";
+  os << "type: " << arr.type();
+  os << ", depth: " << arr.depth();
+  os << ", channels: " << arr.channels();
+  os << ", total: " << arr.total();
+  os << " }";
+  return os.str();
+}
+
+static inline std::string
+dump(const cv::_OutputArray& arr) {
+  std::ostringstream os;
+  os << "{ ";
+  os << "type: " << arr.type();
+  os << ", depth: " << arr.depth();
+  os << ", channels: " << arr.channels();
+  os << ", total: " << arr.total();
+  os << " }";
+
+  return os.str();
+}
+
 #endif // defined(UTIL_HPP)

@@ -172,6 +172,7 @@ public:
             break;
 
       diff = point_difference(pt, next);
+      
       if((diff.x || diff.y)) {
         // std::cout << index << ": [" << n << "] direction " << point_direction(diff) << std::endl;
 
@@ -227,7 +228,6 @@ trace_skeleton(cv::Mat& mat, JSContoursData<double>& out, cv::Mat* neighborhood,
 
   if(mapping)
     tracer.mapping.copyTo(*mapping);
-    //*mapping = tracer.mapping;
 
   return ret;
   // return skeleton_tracing::run(mat, out, simplify);

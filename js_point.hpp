@@ -21,7 +21,6 @@ extern JSValue point_proto, point_class;
 extern thread_local JSClassID js_point_class_id;
 
 int js_point_init(JSContext*, JSModuleDef* m);
-void js_point_constructor(JSContext* ctx, JSValue parent, const char* name);
 
 JSModuleDef* js_init_module_point(JSContext*, const char*);
 }
@@ -235,6 +234,12 @@ inline std::istream&
 operator>>(std::istream& is, cv::Point_<T>& p) {
   point_parse(is, p);
   return is;
+}
+
+template<class T>
+static inline JSValue
+js_value_from(JSContext* ctx, const cv::Point_<T>& pt) {
+  return js_point_new(ctx, pt.x, pt.y);
 }
 
 #endif /* defined(JS_POINT_HPP) */

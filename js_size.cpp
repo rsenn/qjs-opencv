@@ -62,7 +62,7 @@ js_size_fit(const JSSizeData<T>& size, const JSSizeData<T>& to, js_size_fit_t mo
 }
 
 static JSValue
-js_size_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
+js_size_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   JSSizeData<double> size, *s;
   JSValue obj = JS_UNDEFINED;
   JSValue proto;
@@ -596,7 +596,7 @@ js_size_init(JSContext* ctx, JSModuleDef* m) {
 
     JS_SetClassProto(ctx, js_size_class_id, size_proto);
 
-    size_class = JS_NewCFunction2(ctx, js_size_ctor, "Size", 0, JS_CFUNC_constructor, 0);
+    size_class = JS_NewCFunction2(ctx, js_size_constructor, "Size", 0, JS_CFUNC_constructor, 0);
     /* set proto.constructor and ctor.prototype */
     JS_SetConstructor(ctx, size_class, size_proto);
     JS_SetPropertyFunctionList(ctx, size_class, js_size_static_funcs, countof(js_size_static_funcs));
@@ -614,14 +614,6 @@ js_size_init(JSContext* ctx, JSModuleDef* m) {
 extern "C" void
 js_size_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "Size");
-}
-
-void
-js_size_constructor(JSContext* ctx, JSValue parent, const char* name) {
-  if(JS_IsUndefined(size_class))
-    js_size_init(ctx, 0);
-
-  JS_SetPropertyStr(ctx, parent, name ? name : "Size", size_class);
 }
 
 #ifdef JS_SIZE_MODULE
