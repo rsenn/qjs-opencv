@@ -149,18 +149,22 @@ js_line_get(JSContext* ctx, JSValueConst this_val, int magic) {
     case PROP_A: {
       return js_point_new(ctx, ln->x1, ln->y1);
     }
+
     case PROP_B: {
       return js_point_new(ctx, ln->x2, ln->y2);
     }
+
     case PROP_SLOPE: {
       Line<double> line(ln->array);
       JSPointData<double> slope = line.slope();
       return js_point_new(ctx, slope);
     }
+
     case PROP_PIVOT: {
       JSPointData<double> pivot(ln->x1, ln->y1);
       return js_point_new(ctx, pivot);
     }
+
     case PROP_TO: {
       JSPointData<double> to(ln->x2, ln->y2);
       return js_point_new(ctx, to);
@@ -170,10 +174,12 @@ js_line_get(JSContext* ctx, JSValueConst this_val, int magic) {
       Line<double> line(ln->array);
       return JS_NewFloat64(ctx, std::atan2(ln->x2 - ln->x1, ln->y2 - ln->y1));
     }
+
     case PROP_ASPECT: {
       Line<double> line(ln->array);
       return JS_NewFloat64(ctx, std::fabs(ln->x2 - ln->x1) / fabs(ln->y2 - ln->y1));
     }
+
     case PROP_LENGTH: {
       Line<double> line(ln->array);
       return JS_NewFloat64(ctx, line.length());
@@ -198,6 +204,7 @@ js_line_set(JSContext* ctx, JSValueConst this_val, JSValueConst val, int magic) 
       ln->y1 = pivot.y;
       break;
     }
+
     case PROP_TO: {
       JSPointData<double> to;
       js_point_read(ctx, val, &to);
@@ -320,6 +327,7 @@ js_line_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
       ret = JS_DupValue(ctx, this_val);
       break;
     }
+
     case METHOD_AT: {
       double sigma;
       JSPointData<double> p;
@@ -333,6 +341,7 @@ js_line_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
       ret = js_point_new(ctx, p);
       break;
     }
+
     case METHOD_INTERSECT: {
       JSLineData<double>* lptr;
 
@@ -379,6 +388,7 @@ js_line_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
 
       break;
     }
+
     case METHOD_ENDPOINT_DISTANCES: {
       JSPointData<double> pt;
       js_point_read(ctx, argv[0], &pt);
@@ -389,6 +399,7 @@ js_line_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
       JS_SetPropertyUint32(ctx, ret, 1, js_number_new(ctx, distances.second));
       break;
     }
+
     case METHOD_DISTANCE: {
       cv::Point2d pt;
       js_point_read(ctx, argv[0], &pt);
@@ -396,6 +407,7 @@ js_line_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
       ret = js_number_new(ctx, line.distance(pt));
       break;
     }
+
     case METHOD_XINTERCEPT: {
       Line<double> line(*ln);
       double x = 0;
@@ -404,6 +416,7 @@ js_line_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
       ret = JS_NewFloat64(ctx, line.xIntercept(x));
       break;
     }
+
     case METHOD_YINTERCEPT: {
       Line<double> line(*ln);
       double y = 0;
@@ -412,6 +425,7 @@ js_line_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
       ret = JS_NewFloat64(ctx, line.yIntercept(y));
       break;
     }
+
     case METHOD_ADD: {
       int i = 0;
       JSLineData<double> l = {0, 0, 0, 0};
@@ -429,6 +443,7 @@ js_line_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
       }
       break;
     }
+
     case METHOD_SUB: {
       int i = 0;
       JSLineData<double> l = {0, 0, 0, 0};
@@ -446,6 +461,7 @@ js_line_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
       }
       break;
     }
+
     case METHOD_MUL: {
       int i = 0;
       JSSizeData<double> s = {1, 1};
@@ -468,6 +484,7 @@ js_line_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
       }
       break;
     }
+
     case METHOD_DIV: {
       int i = 0;
       JSSizeData<double> s = {1, 1};
@@ -688,8 +705,7 @@ js_line_constructor(JSContext* ctx, JSValue parent, const char* name) {
 JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   JSModuleDef* m;
-  m = JS_NewCModule(ctx, module_name, &js_line_init);
-  if(!m)
+  if(!(m = JS_NewCModule(ctx, module_name, &js_line_init)))
     return NULL;
   js_line_export(ctx, m);
   return m;

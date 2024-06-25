@@ -38,9 +38,6 @@
 
 enum { HIER_NEXT = 0, HIER_PREV, HIER_CHILD, HIER_PARENT };
 
-#define JS_CONSTANT(name) JS_PROP_INT32_DEF(#name, name, 0)
-#define JS_CV_CONSTANT(name) JS_PROP_INT32_DEF(#name, cv::name, JS_PROP_ENUMERABLE)
-
 enum { DISPLAY_OVERLAY };
 
 extern "C" {
@@ -1611,9 +1608,6 @@ js_function_list_t js_cv_constants{
     JS_CV_CONSTANT(THRESH_MASK),
     JS_CV_CONSTANT(THRESH_OTSU),
     JS_CV_CONSTANT(THRESH_TRIANGLE),
-    JS_CV_CONSTANT(MORPH_RECT),
-    JS_CV_CONSTANT(MORPH_CROSS),
-    JS_CV_CONSTANT(MORPH_ELLIPSE),
     JS_CV_CONSTANT(CAP_ANY),
     JS_CV_CONSTANT(CAP_VFW),
     JS_CV_CONSTANT(CAP_V4L),
@@ -1822,6 +1816,9 @@ js_function_list_t js_cv_constants{
     JS_CONSTANT(ALIGN_BOTTOM),
     JS_CONSTANT(ALIGN_VERTICAL),
 
+    JS_CV_CONSTANT(ADAPTIVE_THRESH_MEAN_C),
+    JS_CV_CONSTANT(ADAPTIVE_THRESH_GAUSSIAN_C),
+
 };
 
 extern "C" int
@@ -1875,9 +1872,10 @@ js_cv_export(JSContext* ctx, JSModuleDef* m) {
 extern "C" JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   JSModuleDef* m;
-  m = JS_NewCModule(ctx, module_name, &js_cv_init);
-  if(!m)
+
+  if(!(m = JS_NewCModule(ctx, module_name, &js_cv_init)))
     return NULL;
+
   js_cv_export(ctx, m);
   return m;
 }

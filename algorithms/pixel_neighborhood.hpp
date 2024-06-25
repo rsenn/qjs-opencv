@@ -38,38 +38,6 @@ pixel_offset_pred(const cv::Mat& src, array<int32_t, N> const& offsets, Callable
   return dst;
 }
 
-/*template<class Callable>
-static inline cv::Mat
-pixel_neighborhood_pred(const cv::Mat& src, Callable pred) {
-  int32_t step = src.step;
-  array<int32_t, 8> const offsets = {
-      -step - 1,
-      -step,
-      -step + 1,
-      -1,
-      +1,
-      step - 1,
-      step,
-      step + 1,
-  };
-
-  return pixel_offset_pred(src, offsets, pred);
-}
-
-template<class Callable>
-static inline cv::Mat
-pixel_neighborhood_cross_pred(const cv::Mat& src, Callable pred) {
-  int32_t step = src.step;
-  array<int32_t, 4> const offsets = {
-      -step,
-      -1,
-      +1,
-      step,
-  };
-
-  return pixel_offset_pred(src, offsets, pred);
-}*/
-
 static vector<cv::Point>
 pixel_find_value(const cv::Mat& mat, uchar value) {
   vector<cv::Point> result;

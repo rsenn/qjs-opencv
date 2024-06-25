@@ -189,8 +189,7 @@ js_slice_iterator_export(JSContext* ctx, JSModuleDef* m) {
 JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   JSModuleDef* m;
-  m = JS_NewCModule(ctx, module_name, &js_slice_iterator_init);
-  if(!m)
+  if(!(m = JS_NewCModule(ctx, module_name, &js_slice_iterator_init)))
     return NULL;
   js_slice_iterator_export(ctx, m);
   return m;

@@ -84,6 +84,7 @@ js_clahe_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
       (*s)->apply(*input, *output);
       break;
     }
+
     case METHOD_COLLECT_GARBAGE: {
       (*s)->collectGarbage();
       break;
@@ -106,6 +107,7 @@ js_clahe_getter(JSContext* ctx, JSValueConst this_val, int magic) {
       ret = JS_NewFloat64(ctx, (*s)->getClipLimit());
       break;
     }
+
     case PROP_TILES_GRID_SIZE: {
       ret = js_size_wrap(ctx, (*s)->getTilesGridSize());
       break;
@@ -129,6 +131,7 @@ js_clahe_setter(JSContext* ctx, JSValueConst this_val, JSValueConst value, int m
       (*s)->setClipLimit(clipLimit);
       break;
     }
+
     case PROP_TILES_GRID_SIZE: {
       JSSizeData<double> size;
       if(!js_size_read(ctx, value, &size))
@@ -199,8 +202,7 @@ js_clahe_export(JSContext* ctx, JSModuleDef* m) {
 extern "C" JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   JSModuleDef* m;
-  m = JS_NewCModule(ctx, module_name, &js_clahe_init);
-  if(!m)
+  if(!(m = JS_NewCModule(ctx, module_name, &js_clahe_init)))
     return NULL;
   js_clahe_export(ctx, m);
   return m;

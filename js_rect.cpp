@@ -156,47 +156,58 @@ js_rect_get(JSContext* ctx, JSValueConst this_val, int magic) {
       ret = JS_NewFloat64(ctx, s->x);
       break;
     }
+
     case PROP_Y:
     case PROP_Y1: {
       ret = JS_NewFloat64(ctx, s->y);
       break;
     }
+
     case PROP_WIDTH: {
       ret = JS_NewFloat64(ctx, s->width);
       break;
     }
+
     case PROP_HEIGHT: {
       ret = JS_NewFloat64(ctx, s->height);
       break;
     }
+
     case PROP_X2: {
       ret = JS_NewFloat64(ctx, s->x + s->width);
       break;
     }
+
     case PROP_Y2: {
       ret = JS_NewFloat64(ctx, s->y + s->height);
       break;
     }
+
     case PROP_POS: {
       ret = js_point_new(ctx, s->x, s->y);
       break;
     }
+
     case PROP_SIZE: {
       ret = js_size_new(ctx, s->width, s->height);
       break;
     }
+
     case PROP_TOPLEFT: {
       ret = js_point_new(ctx, s->x, s->y);
       break;
     }
+
     case PROP_BOTTOM_RIGHT: {
       ret = js_point_new(ctx, s->x + s->width, s->y + s->height);
       break;
     }
+
     case PROP_EMPTY: {
       ret = JS_NewBool(ctx, s->empty());
       break;
     }
+
     case PROP_AREA: {
       ret = JS_NewFloat64(ctx, s->area());
       break;
@@ -221,18 +232,22 @@ js_rect_set(JSContext* ctx, JSValueConst this_val, JSValueConst val, int magic) 
       s->x = v;
       break;
     }
+
     case PROP_Y: {
       s->y = v;
       break;
     }
+
     case PROP_WIDTH: {
       s->width = v;
       break;
     }
+
     case PROP_HEIGHT: {
       s->height = v;
       break;
     }
+
     case PROP_X1: {
       double x2 = s->x + s->width;
 
@@ -240,6 +255,7 @@ js_rect_set(JSContext* ctx, JSValueConst this_val, JSValueConst val, int magic) 
       s->width = x2 - v;
       break;
     }
+
     case PROP_Y1: {
       double y2 = s->y + s->height;
 
@@ -247,14 +263,17 @@ js_rect_set(JSContext* ctx, JSValueConst this_val, JSValueConst val, int magic) 
       s->height = y2 - v;
       break;
     }
+
     case PROP_X2: {
       s->width = v - s->x;
       break;
     }
+
     case PROP_Y2: {
       s->height = v - s->y;
       break;
     }
+
     case PROP_POS: {
       JSPointData<double> point;
       js_point_read(ctx, val, &point);
@@ -262,6 +281,7 @@ js_rect_set(JSContext* ctx, JSValueConst this_val, JSValueConst val, int magic) 
       s->y = point.y;
       break;
     }
+
     case PROP_SIZE: {
       JSSizeData<double> size;
       js_size_read(ctx, val, &size);
@@ -332,6 +352,7 @@ js_rect_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
       ret = JS_NewBool(ctx, equals);
       break;
     }
+
     case FUNC_ROUND: {
       double x, y, width, height, f;
       int32_t precision = 0;
@@ -345,6 +366,7 @@ js_rect_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
       ret = js_rect_new(ctx, x, y, width, height);
       break;
     }
+
     case FUNC_TOOBJECT: {
       ret = JS_NewObject(ctx);
 
@@ -354,6 +376,7 @@ js_rect_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
       JS_SetPropertyStr(ctx, ret, "height", JS_NewFloat64(ctx, rect.height));
       break;
     }
+
     case FUNC_TOARRAY: {
       std::array<double, 4> array{rect.x, rect.y, rect.width, rect.height};
 
@@ -398,11 +421,13 @@ js_rect_method(JSContext* ctx, JSValueConst rect, int argc, JSValueConst argv[],
       ret = js_point_new(ctx, pt.x, pt.y);
       break;
     }
+
     case METHOD_SIZE: {
       cv::Size2d sz = s->size();
       ret = js_size_new(ctx, sz.width, sz.height);
       break;
     }
+
     case METHOD_INSET: {
       JSRectData<double> rect = *s;
       if(argc >= 1) {
@@ -470,6 +495,7 @@ js_rect_method(JSContext* ctx, JSValueConst rect, int argc, JSValueConst argv[],
       ret = js_rect_wrap(ctx, rect);
       break;
     }
+
     case METHOD_HSPLIT: {
       std::vector<JSRectData<double>> rects;
       double x1 = s->x, x2 = s->x + s->width;
@@ -498,6 +524,7 @@ js_rect_method(JSContext* ctx, JSValueConst rect, int argc, JSValueConst argv[],
       ret = js_array_from(ctx, rects);
       break;
     }
+
     case METHOD_VSPLIT: {
       std::vector<JSRectData<double>> rects;
       double y1 = s->y, y2 = s->y + s->height;
@@ -526,6 +553,7 @@ js_rect_method(JSContext* ctx, JSValueConst rect, int argc, JSValueConst argv[],
       ret = js_array_from(ctx, rects);
       break;
     }
+
     case METHOD_MERGE: {
 
       double x1 = s->x, x2 = s->x + s->width, y1 = s->y, y2 = s->y + s->height;
@@ -694,8 +722,7 @@ js_rect_constructor(JSContext* ctx, JSValue parent, const char* name) {
 extern "C" JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   JSModuleDef* m;
-  m = JS_NewCModule(ctx, module_name, &js_rect_init);
-  if(!m)
+  if(!(m = JS_NewCModule(ctx, module_name, &js_rect_init)))
     return NULL;
   js_rect_export(ctx, m);
   return m;

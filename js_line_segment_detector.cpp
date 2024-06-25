@@ -250,8 +250,7 @@ js_line_segment_detector_constructor(JSContext* ctx, JSValue parent, const char*
 extern "C" JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   JSModuleDef* m;
-  m = JS_NewCModule(ctx, module_name, &js_line_segment_detector_init);
-  if(!m)
+  if(!(m = JS_NewCModule(ctx, module_name, &js_line_segment_detector_init)))
     return NULL;
   js_line_segment_detector_export(ctx, m);
   return m;

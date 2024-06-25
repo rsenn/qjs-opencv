@@ -537,8 +537,7 @@ js_highgui_export(JSContext* ctx, JSModuleDef* m) {
 extern "C" JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   JSModuleDef* m;
-  m = JS_NewCModule(ctx, module_name, &js_highgui_init);
-  if(!m)
+  if(!(m = JS_NewCModule(ctx, module_name, &js_highgui_init)))
     return NULL;
   js_highgui_export(ctx, m);
   return m;

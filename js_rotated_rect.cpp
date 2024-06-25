@@ -110,10 +110,12 @@ js_rotated_rect_get(JSContext* ctx, JSValueConst this_val, int magic) {
       ret = js_point_new(ctx, rr->center);
       break;
     }
+
     case ROTATED_RECT_PROP_SIZE: {
       ret = js_size_new(ctx, rr->size);
       break;
     }
+
     case ROTATED_RECT_PROP_ANGLE: {
       ret = JS_NewFloat64(ctx, rr->angle);
       break;
@@ -138,12 +140,14 @@ js_rotated_rect_set(JSContext* ctx, JSValueConst this_val, JSValueConst value, i
         rr->center = center;
       break;
     }
+
     case ROTATED_RECT_PROP_SIZE: {
       JSSizeData<float> size;
       if(js_size_read(ctx, value, &size))
         rr->size = size;
       break;
     }
+
     case ROTATED_RECT_PROP_ANGLE: {
       double angle;
       if(!JS_ToFloat64(ctx, &angle, value))
@@ -169,11 +173,13 @@ js_rotated_rect_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
       ret = js_rect_new(ctx, rect);
       break;
     }
+
     case ROTATED_RECT_METHOD_BOUNDING_RECT2F: {
       JSRectData<float> rect = rr->boundingRect2f();
       ret = js_rect_new(ctx, rect);
       break;
     }
+
     case ROTATED_RECT_METHOD_POINTS: {
       JSValue result;
       JSPointData<float> pts[4];
@@ -290,8 +296,7 @@ js_rotated_rect_constructor(JSContext* ctx, JSValue parent, const char* name) {
 JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   JSModuleDef* m;
-  m = JS_NewCModule(ctx, module_name, &js_rotated_rect_init);
-  if(!m)
+  if(!(m = JS_NewCModule(ctx, module_name, &js_rotated_rect_init)))
     return NULL;
   js_rotated_rect_export(ctx, m);
   return m;

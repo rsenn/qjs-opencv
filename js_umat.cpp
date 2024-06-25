@@ -269,22 +269,27 @@ js_umat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
       ret = js_umat_wrap(ctx, um->col(i));
       break;
     }
+
     case METHOD_ROW: {
       ret = js_umat_wrap(ctx, um->row(i));
       break;
     }
+
     case METHOD_COL_RANGE: {
       ret = js_umat_wrap(ctx, um->colRange(i, i2));
       break;
     }
+
     case METHOD_ROW_RANGE: {
       ret = js_umat_wrap(ctx, um->rowRange(i, i2));
       break;
     }
+
     case METHOD_CLONE: {
       ret = js_umat_wrap(ctx, um->clone());
       break;
     }
+
     case METHOD_ROI: {
       JSRectData<double> rect = {0, 0, 0, 0};
 
@@ -294,22 +299,27 @@ js_umat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
       ret = js_umat_wrap(ctx, (*um)(rect));
       break;
     }
+
     case METHOD_RELEASE: {
       um->release();
       break;
     }
+
     case METHOD_DUP: {
       ret = js_umat_wrap(ctx, *um);
       break;
     }
+
     case METHOD_CLEAR: {
       *um = cv::UMat::zeros(um->rows, um->cols, um->type());
       break;
     }
+
     case METHOD_RESET: {
       *um = cv::UMat();
       break;
     }
+
     case METHOD_STEP1: {
       int32_t i = 0;
 
@@ -317,6 +327,7 @@ js_umat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
       ret = JS_NewInt64(ctx, um->step1(i));
       break;
     }
+
     case METHOD_LOCATE_ROI: {
       cv::Size wholeSize;
       cv::Point ofs;
@@ -366,6 +377,7 @@ js_umat_init(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
       umat = cv::UMat::zeros(size, type);
       break;
     }
+
     case 1: {
       umat = cv::UMat::ones(size, type);
       break;
@@ -411,18 +423,21 @@ js_umat_get(JSContext* ctx, JSValueConst this_val, uint32_t row, uint32_t col) {
           ret = JS_NewUint32(ctx, value);
           break;
         }
+
         case CV_32SC1: {
           int32_t value;
           js_umat_get(ctx, this_val, row, col, value);
           ret = JS_NewInt32(ctx, value);
           break;
         }
+
         case CV_32FC1: {
           float value;
           js_umat_get(ctx, this_val, row, col, value);
           ret = JS_NewFloat64(ctx, value);
           break;
         }
+
         case CV_64FC1: {
           double value;
           js_umat_get(ctx, this_val, row, col, value);
@@ -895,6 +910,7 @@ js_umat_fill(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
       umat = cv::UMat::zeros(umat.rows, umat.cols, umat.type());
       break;
     }
+
     case 1: {
       umat = cv::UMat::ones(umat.rows, umat.cols, umat.type());
       break;
@@ -921,6 +937,7 @@ js_umat_class_create(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
       umat = cv::Scalar::all(0);
       break;
     }
+
     case 1: {
       umat = cv::Scalar::all(1);
       break;
@@ -1121,8 +1138,7 @@ js_umat_export(JSContext* ctx, JSModuleDef* m) {
 extern "C" JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   JSModuleDef* m;
-  m = JS_NewCModule(ctx, module_name, &js_umat_init);
-  if(!m)
+  if(!(m = JS_NewCModule(ctx, module_name, &js_umat_init)))
     return NULL;
   js_umat_export(ctx, m);
   return m;

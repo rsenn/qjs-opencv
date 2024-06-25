@@ -158,6 +158,7 @@ js_line_iterator_method(JSContext* ctx, JSValueConst this_val, int argc, JSValue
       li->init(mat, rect, pt1, pt2, connectivity, left_to_right);
       break;
     }
+
     case METHOD_DEREF: {
       size_t offset = *(*li) - li->ptr0;
       switch(li->elemSize) {
@@ -166,21 +167,25 @@ js_line_iterator_method(JSContext* ctx, JSValueConst this_val, int argc, JSValue
           ret = js_typedarray_from(ctx, *arr, offset);
           break;
         }
+
         case 2: {
           std::array<uchar, 2>* arr = reinterpret_cast<std::array<uchar, 2>*>(*(*li) - offset);
           ret = js_typedarray_from(ctx, *arr, offset);
           break;
         }
+
         case 3: {
           std::array<uchar, 3>* arr = reinterpret_cast<std::array<uchar, 3>*>(*(*li) - offset);
           ret = js_typedarray_from(ctx, *arr, offset);
           break;
         }
+
         case 4: {
           std::array<uchar, 4>* arr = reinterpret_cast<std::array<uchar, 4>*>(*(*li) - offset);
           ret = js_typedarray_from(ctx, *arr, offset);
           break;
         }
+
         case 8: {
           std::array<double, 1>* arr = reinterpret_cast<std::array<double, 1>*>(*(*li) - offset);
           ret = js_typedarray_from(ctx, *arr, offset);
@@ -189,16 +194,19 @@ js_line_iterator_method(JSContext* ctx, JSValueConst this_val, int argc, JSValue
       }
       break;
     }
+
     case METHOD_PREINCR: {
       ++(*li);
       ret = JS_DupValue(ctx, this_val);
       break;
     }
+
     case METHOD_POSTINCR: {
       JSLineIteratorData li2 = (*li)++;
       ret = js_line_iterator_wrap(ctx, li2);
       break;
     }
+
     case METHOD_POS: {
       ret = js_point_new(ctx, li->pos());
       break;
@@ -235,46 +243,57 @@ js_line_iterator_getter(JSContext* ctx, JSValueConst this_val, int magic) {
       ret = JS_NewInt32(ctx, li->count);
       break;
     }
+
     case PROP_ELEMSIZE: {
       ret = JS_NewInt32(ctx, li->elemSize);
       break;
     }
+
     case PROP_ERR: {
       ret = JS_NewInt32(ctx, li->err);
       break;
     }
+
     case PROP_MINUSDELTA: {
       ret = JS_NewInt32(ctx, li->minusDelta);
       break;
     }
+
     case PROP_MINUSSHIFT: {
       ret = JS_NewInt32(ctx, li->minusShift);
       break;
     }
+
     case PROP_MINUSSTEP: {
       ret = JS_NewInt32(ctx, li->minusStep);
       break;
     }
+
     case PROP_P: {
       ret = js_point_new(ctx, li->p.x, li->p.y);
       break;
     }
+
     case PROP_PLUSDELTA: {
       ret = JS_NewInt32(ctx, li->plusDelta);
       break;
     }
+
     case PROP_PLUSSHIFT: {
       ret = JS_NewInt32(ctx, li->plusShift);
       break;
     }
+
     case PROP_PLUSSTEP: {
       ret = JS_NewInt32(ctx, li->plusStep);
       break;
     }
+
     case PROP_PTMODE: {
       ret = JS_NewBool(ctx, li->ptmode);
       break;
     }
+
     case PROP_PTR: {
       char buf[256];
       sprintf(buf, "%p", li->ptr);
@@ -282,6 +301,7 @@ js_line_iterator_getter(JSContext* ctx, JSValueConst this_val, int magic) {
       /* XXX */
       break;
     }
+
     case PROP_PTR0: {
       char buf[256];
       sprintf(buf, "%p", li->ptr0);
@@ -289,6 +309,7 @@ js_line_iterator_getter(JSContext* ctx, JSValueConst this_val, int magic) {
       /* XXX */
       break;
     }
+
     case PROP_STEP: {
       ret = JS_NewInt32(ctx, li->step);
       break;
@@ -309,72 +330,85 @@ js_line_iterator_setter(JSContext* ctx, JSValueConst this_val, JSValueConst valu
         li->count = count;
       break;
     }
+
     case PROP_ELEMSIZE: {
       int32_t elem_size;
       if(!JS_ToInt32(ctx, &elem_size, value))
         li->elemSize = elem_size;
       break;
     }
+
     case PROP_ERR: {
       int32_t err;
       if(!JS_ToInt32(ctx, &err, value))
         li->err = err;
       break;
     }
+
     case PROP_MINUSDELTA: {
       int32_t minus_delta;
       if(!JS_ToInt32(ctx, &minus_delta, value))
         li->minusDelta = minus_delta;
       break;
     }
+
     case PROP_MINUSSHIFT: {
       int32_t minus_shift;
       if(!JS_ToInt32(ctx, &minus_shift, value))
         li->minusShift = minus_shift;
       break;
     }
+
     case PROP_MINUSSTEP: {
       int32_t minus_step;
       if(!JS_ToInt32(ctx, &minus_step, value))
         li->minusStep = minus_step;
       break;
     }
+
     case PROP_P: {
       JSPointData<double> p;
       if(js_point_read(ctx, value, &p))
         li->p = p;
       break;
     }
+
     case PROP_PLUSDELTA: {
       int32_t plus_delta;
       if(!JS_ToInt32(ctx, &plus_delta, value))
         li->plusDelta = plus_delta;
       break;
     }
+
     case PROP_PLUSSHIFT: {
       int32_t plus_shift;
       if(!JS_ToInt32(ctx, &plus_shift, value))
         li->plusShift = plus_shift;
       break;
     }
+
     case PROP_PLUSSTEP: {
       int32_t plus_step;
       if(!JS_ToInt32(ctx, &plus_step, value))
         li->plusStep = plus_step;
       break;
     }
+
     case PROP_PTMODE: {
       li->ptmode = JS_ToBool(ctx, value);
       break;
     }
+
     case PROP_PTR: {
       /* XXX */
       break;
     }
+
     case PROP_PTR0: {
       /* XXX */
       break;
     }
+
     case PROP_STEP: {
       int32_t step;
       if(!JS_ToInt32(ctx, &step, value))
@@ -452,8 +486,7 @@ js_line_iterator_export(JSContext* ctx, JSModuleDef* m) {
 extern "C" JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   JSModuleDef* m;
-  m = JS_NewCModule(ctx, module_name, &js_line_iterator_init);
-  if(!m)
+  if(!(m = JS_NewCModule(ctx, module_name, &js_line_iterator_init)))
     return NULL;
   js_line_iterator_export(ctx, m);
   return m;

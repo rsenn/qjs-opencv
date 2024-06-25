@@ -1842,8 +1842,10 @@ js_ximgproc_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
     switch(magic) {
       case THINNING: {
         int32_t flags = cv::ximgproc::THINNING_ZHANGSUEN;
+
         if(argc > 2)
           JS_ToInt32(ctx, &flags, argv[2]);
+
         cv::ximgproc::thinning(src, dst, flags);
         break;
       }
@@ -2014,21 +2016,25 @@ js_function_list_t js_imgproc_static_funcs{
     JS_CFUNC_MAGIC_DEF("minEnclosingCircle", 1, js_imgproc_shape, SHAPE_MIN_ENCLOSING_CIRCLE),
     JS_CFUNC_MAGIC_DEF("minEnclosingTriangle", 1, js_imgproc_shape, SHAPE_MIN_ENCLOSING_TRIANGLE),
     JS_CFUNC_MAGIC_DEF("rotatedRectangleIntersection", 1, js_imgproc_shape, SHAPE_ROTATED_RECTANGLE_INTERSECTION),
+    JS_CV_CONSTANT(MORPH_RECT),
+    JS_CV_CONSTANT(MORPH_CROSS),
+    JS_CV_CONSTANT(MORPH_ELLIPSE),
+    JS_CV_CONSTANT(MORPH_ERODE),
+    JS_CV_CONSTANT(MORPH_DILATE),
+    JS_CV_CONSTANT(MORPH_OPEN),
+    JS_CV_CONSTANT(MORPH_CLOSE),
+    JS_CV_CONSTANT(MORPH_GRADIENT),
+    JS_CV_CONSTANT(MORPH_TOPHAT),
+    JS_CV_CONSTANT(MORPH_BLACKHAT),
+    JS_CV_CONSTANT(MORPH_HITMISS),
     JS_OBJECT_DEF("ximgproc", js_ximgproc_static_funcs.data(), int(js_ximgproc_static_funcs.size()), JS_PROP_C_W_E),
 };
 
 extern "C" int
 js_imgproc_init(JSContext* ctx, JSModuleDef* m) {
-
-  /* std::cerr << "js_imgproc_static_funcs:" << std::endl << js_imgproc_static_funcs;
-   std::cerr << "js_imgproc_static_funcs.size() = " << js_imgproc_static_funcs.size() << std::endl;*/
-  if(m) {
+  if(m)
     JS_SetModuleExportList(ctx, m, js_imgproc_static_funcs.data(), js_imgproc_static_funcs.size());
-  }
 
-  /* if(JS_IsObject(cv_class))
-     JS_SetPropertyFunctionList(ctx, cv_class, js_imgproc_static_funcs.data(), js_imgproc_static_funcs.size());
- */
   return 0;
 }
 
@@ -2046,9 +2052,10 @@ js_imgproc_export(JSContext* ctx, JSModuleDef* m) {
 extern "C" JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   JSModuleDef* m;
-  m = JS_NewCModule(ctx, module_name, &js_imgproc_init);
-  if(!m)
+
+  if(!(m = JS_NewCModule(ctx, module_name, &js_imgproc_init)))
     return NULL;
+
   js_imgproc_export(ctx, m);
   return m;
 }

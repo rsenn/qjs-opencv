@@ -194,10 +194,8 @@ const JSCFunctionListEntry js_calib3d_static_funcs[] = {
 
 extern "C" int
 js_calib3d_init(JSContext* ctx, JSModuleDef* bd) {
-
-  if(bd) {
+  if(bd)
     JS_SetModuleExportList(ctx, bd, js_calib3d_static_funcs, countof(js_calib3d_static_funcs));
-  }
 
   return 0;
 }

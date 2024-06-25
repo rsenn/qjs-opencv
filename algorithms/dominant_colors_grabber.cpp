@@ -236,6 +236,7 @@ GetHist(cv::Mat img, color_space cs) {
       img.copyTo(img_colors);
       break;
     }
+
     case CS_HSV: {
       cvtColor(img, img_colors, cv::COLOR_BGR2HSV);
       break;

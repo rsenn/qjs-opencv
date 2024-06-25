@@ -548,62 +548,81 @@ js_libcamera_app_method(JSContext* ctx, JSValueConst this_val, int argc, JSValue
       case METHOD_CAMERA_ID: {
         break;
       }
+
       case METHOD_OPEN_CAMERA: {
         cam->OpenCamera();
         break;
       }
+
       case METHOD_CLOSE_CAMERA: {
         cam->CloseCamera();
         break;
       }
+
       case METHOD_CONFIGURE_STILL: {
         break;
       }
+
       case METHOD_CONFIGURE_VIEWFINDER: {
         break;
       }
+
       case METHOD_TEARDOWN: {
         break;
       }
+
       case METHOD_START_CAMERA: {
         break;
       }
+
       case METHOD_STOP_CAMERA: {
         break;
       }
+
       case METHOD_WAIT: {
         break;
       }
+
       case METHOD_POST_MESSAGE: {
         break;
       }
+
       case METHOD_GET_STREAM: {
         break;
       }
+
       case METHOD_VIEWFINDER_STREAM: {
         break;
       }
+
       case METHOD_STILL_STREAM: {
         break;
       }
+
       case METHOD_RAW_STREAM: {
         break;
       }
+
       case METHOD_VIDEO_STREAM: {
         break;
       }
+
       case METHOD_LORES_STREAM: {
         break;
       }
+
       case METHOD_GET_MAIN_STREAM: {
         break;
       }
+
       case METHOD_MMAP: {
         break;
       }
+
       case METHOD_SET_CONTROLS: {
         break;
       }
+
       case METHOD_STREAM_DIMENSIONS: {
         break;
       }
@@ -737,9 +756,10 @@ js_libcamera_app_constructor(JSContext* ctx, JSValue parent, const char* name) {
 extern "C" JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   JSModuleDef* m;
-  m = JS_NewCModule(ctx, module_name, &js_libcamera_app_init);
-  if(!m)
+
+  if(!(m = JS_NewCModule(ctx, module_name, &js_libcamera_app_init)))
     return NULL;
+
   js_libcamera_app_export(ctx, m);
   return m;
 }

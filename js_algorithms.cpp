@@ -81,19 +81,17 @@ js_cv_trace_skeleton(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
   JSContoursData<double> contours;
   uint32_t count;
   JSInputOutputArray src = js_umat_or_mat(ctx, argv[0]);
-  cv::Mat* mat;
+  cv::Mat* mat, *neighborhood = 0, *mapping = 0;
 
   if(!(mat = js_mat_data2(ctx, argv[0])))
     return JS_EXCEPTION;
 
-  /*  if(src.empty())
-      return JS_ThrowInternalError(ctx, "argument 1 must be Mat or UMat");
-  */
-
-  cv::Mat *neighborhood = 0, *mapping = 0;
+  /*if(src.empty())
+      return JS_ThrowInternalError(ctx, "argument 1 must be Mat or UMat");*/
 
   if(argc > 2)
     neighborhood = js_mat_data(argv[2]);
+
   if(argc > 3)
     mapping = js_mat_data(argv[3]);
 
@@ -113,9 +111,7 @@ js_cv_trace_skeleton(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
 
 static JSValue
 js_cv_palette_generate(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-
   JSInputArray src = js_umat_or_mat(ctx, argv[0]);
-
   dominant_colors_grabber dcg;
   int32_t mode = 0, count = 0;
   enum color_space cs;
@@ -236,9 +232,8 @@ js_function_list_t js_algorithms_static_funcs{
 
 extern "C" int
 js_algorithms_init(JSContext* ctx, JSModuleDef* m) {
-  if(m) {
+  if(m)
     JS_SetModuleExportList(ctx, m, js_algorithms_static_funcs.data(), js_algorithms_static_funcs.size());
-  }
 
   return 0;
 }
@@ -258,9 +253,7 @@ extern "C" JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   JSModuleDef* m;
 
-  m = JS_NewCModule(ctx, module_name, &js_algorithms_init);
-
-  if(!m)
+  if(!(m = JS_NewCModule(ctx, module_name, &js_algorithms_init)))
     return NULL;
 
   js_algorithms_export(ctx, m);

@@ -633,8 +633,7 @@ js_size_constructor(JSContext* ctx, JSValue parent, const char* name) {
 extern "C" JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   JSModuleDef* m;
-  m = JS_NewCModule(ctx, module_name, &js_size_init);
-  if(!m)
+  if(!(m = JS_NewCModule(ctx, module_name, &js_size_init)))
     return NULL;
   js_size_export(ctx, m);
   return m;

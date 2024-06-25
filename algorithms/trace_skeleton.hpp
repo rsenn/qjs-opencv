@@ -23,7 +23,7 @@ static const std::array<Point, 8> direction_points = {
 template<typename T>
 static inline T&
 pixel_ref(const Point& pt, Mat& mat) {
-  return mat.at<T>(pt.y, pt.x);
+  return *mat.ptr<T>(pt.y, pt.x);
 }
 
 template<typename T = uchar>
@@ -97,6 +97,7 @@ public:
   pixel_find_pred(Point& out, int32_t index, Predicate pred) {
     int h = mat.rows, w = mat.cols;
     Point pt;
+
     for(pt.y = 0; pt.y < h; pt.y++) {
       for(pt.x = 0; pt.x < w; pt.x++) {
         int& taken = pixel_ref<int>(pt, mapping);
@@ -138,6 +139,7 @@ public:
     for(const auto& offs : points)
       if(pixel_check(point_sum(pt, offs), index, pred, r))
         return true;
+
     return false;
   }
 
@@ -224,7 +226,8 @@ trace_skeleton(cv::Mat& mat, JSContoursData<double>& out, cv::Mat* neighborhood,
   ret = tracer.run(out, simplify);
 
   if(mapping)
-    *mapping = tracer.mapping;
+    tracer.mapping.copyTo(*mapping);
+    //*mapping = tracer.mapping;
 
   return ret;
   // return skeleton_tracing::run(mat, out, simplify);

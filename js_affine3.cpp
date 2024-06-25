@@ -393,8 +393,7 @@ js_affine3_export(JSContext* ctx, JSModuleDef* m) {
 JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   JSModuleDef* m;
-  m = JS_NewCModule(ctx, module_name, &js_affine3_init);
-  if(!m)
+  if(!(m = JS_NewCModule(ctx, module_name, &js_affine3_init)))
     return NULL;
   js_affine3_export(ctx, m);
   return m;
