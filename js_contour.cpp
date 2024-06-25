@@ -903,13 +903,14 @@ js_contour_splice(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
   JSValue ret;
   JSValue x, y;
   JSPointData<double>*ptr, point;
-  int64_t i, start = -1, end, num = -1, n = 0;
+  int64_t i, start = -1, end, num = -1, n = 0, sz;
 
   if(!(v = js_contour_data2(ctx, this_val)))
     return JS_EXCEPTION;
 
   start = 0;
   num = 0;
+  sz = v->size() + 1;
 
   if(argc > 0)
     JS_ToInt64(ctx, &start, argv[0]);
@@ -920,26 +921,30 @@ js_contour_splice(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
   end = start + num;
 
   if(start < 0)
-    start = ((start % v->size()) + v->size());
-  start %= v->size();
+    start = ((start % sz) + sz);
+  if(start >= sz)
+    start = sz;
 
   if(end < 0)
-    end = ((end % v->size()) + v->size());
-  end %= v->size();
+    end = ((end % sz) + sz);
+  if(end >= sz)
+    end = sz;
 
   if(start > end)
     start = end;
 
   num = end - start;
 
-  auto first = v->begin() + start;
-  auto last = v->begin() + end;
+  if(num > 0) {
+    auto first = v->begin() + start;
+    auto last = v->begin() + end;
 
-  if(first != last) {
-    for(auto it = first; it != last; ++it)
-      removed.push_back(*it);
+    if(first != last) {
+      for(auto it = first; it != last; ++it)
+        removed.push_back(*it);
 
-    v->erase(first, last);
+      v->erase(first, last);
+    }
   }
 
   auto args = argument_range(argc - 2, argv + 2);

@@ -4,6 +4,7 @@
 #include "js_point.hpp"
 #include "js_size.hpp"
 #include "js_typed_array.hpp"
+#include "js_contour.hpp"
 #include "jsbindings.hpp"
 #include <quickjs.h>
 #include "util.hpp"
@@ -333,7 +334,7 @@ js_rect_to_source(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
   return JS_NewString(ctx, os.str().c_str());
 }
 
-enum { FUNC_EQUALS = 0, FUNC_ROUND, FUNC_TOOBJECT, FUNC_TOARRAY };
+enum { FUNC_EQUALS = 0, FUNC_ROUND, FUNC_TOOBJECT, FUNC_TOARRAY, FUNC_CONTOUR };
 
 static JSValue
 js_rect_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
@@ -381,6 +382,18 @@ js_rect_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
       std::array<double, 4> array{rect.x, rect.y, rect.width, rect.height};
 
       ret = js_array_from(ctx, array.cbegin(), array.cend());
+      break;
+    }
+
+    case FUNC_CONTOUR: {
+      JSContourData<double> c = {
+          JSPointData<double>(rect.x, rect.y),
+          JSPointData<double>(rect.x + rect.width, rect.y),
+          JSPointData<double>(rect.x + rect.width, rect.y + rect.height),
+          JSPointData<double>(rect.x, rect.y + rect.height),
+      };
+
+      ret = js_contour_new(ctx, c);
       break;
     }
   }
@@ -531,17 +544,23 @@ js_rect_method(JSContext* ctx, JSValueConst rect, int argc, JSValueConst argv[],
       auto args = argument_range(argc, argv);
       JSRectData<double>* prev;
       std::vector<double> breakpoints;
+
       for(JSValueConst const& arg : args) {
         double d;
+
         js_value_to(ctx, arg, d);
+
         if(d < 0)
           d = s->height + d;
+
         if(d > 0 && d < s->height)
           breakpoints.push_back(d);
       }
+
       std::sort(breakpoints.begin(), breakpoints.end());
       rects.push_back(*s);
       prev = &rects.back();
+
       for(double v : breakpoints) {
         // printf("hsplit v=%lf\n", v);
         prev->height = v - (prev->y - y1);
@@ -550,6 +569,7 @@ js_rect_method(JSContext* ctx, JSValueConst rect, int argc, JSValueConst argv[],
         prev = &rects.back();
         prev->height = s->height - v;
       }
+
       ret = js_array_from(ctx, rects);
       break;
     }
@@ -596,6 +616,7 @@ js_rect_symbol_iterator(JSContext* ctx, JSValueConst this_val, int argc, JSValue
 
   if(!JS_IsFunction(ctx, (iter = JS_GetProperty(ctx, arr, iterator_symbol))))
     return JS_EXCEPTION;
+
   return JS_Call(ctx, iter, arr, 0, argv);
 }
 
@@ -618,8 +639,10 @@ js_rect_from(JSContext* ctx, JSValueConst rect, int argc, JSValueConst argv[]) {
   } else if(js_is_array(ctx, argv[0])) {
     js_array_to(ctx, argv[0], array);
   }
+
   if(array[2] > 0 && array[3] > 0)
     ret = js_rect_new(ctx, array[0], array[1], array[2], array[3]);
+
   return ret;
 }
 
@@ -654,8 +677,6 @@ const JSCFunctionListEntry js_rect_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("contains", 0, js_rect_method, METHOD_CONTAINS),
     JS_CGETSET_MAGIC_DEF("empty", js_rect_get, 0, PROP_EMPTY),
     JS_CGETSET_MAGIC_DEF("area", js_rect_get, 0, PROP_AREA),
-    /*  JS_CFUNC_MAGIC_DEF("br", 0, js_rect_method, METHOD_BR),
-      JS_CFUNC_MAGIC_DEF("tl", 0, js_rect_method, METHOD_TL),*/
     JS_CFUNC_MAGIC_DEF("inset", 1, js_rect_method, METHOD_INSET),
     JS_CFUNC_MAGIC_DEF("outset", 1, js_rect_method, METHOD_OUTSET),
     JS_CFUNC_MAGIC_DEF("hsplit", 1, js_rect_method, METHOD_HSPLIT),
@@ -666,6 +687,7 @@ const JSCFunctionListEntry js_rect_proto_funcs[] = {
     JS_CFUNC_DEF("toSource", 0, js_rect_to_source),
     JS_CFUNC_MAGIC_DEF("equals", 1, js_rect_funcs, FUNC_EQUALS),
     JS_CFUNC_MAGIC_DEF("round", 0, js_rect_funcs, FUNC_ROUND),
+    JS_CFUNC_MAGIC_DEF("contour", 0, js_rect_funcs, FUNC_CONTOUR),
     JS_CFUNC_MAGIC_DEF("toObject", 0, js_rect_funcs, FUNC_TOOBJECT),
     JS_CFUNC_MAGIC_DEF("toArray", 0, js_rect_funcs, FUNC_TOARRAY),
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Rect", JS_PROP_CONFIGURABLE),

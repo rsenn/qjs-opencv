@@ -128,6 +128,12 @@ js_contour_new(JSContext* ctx, JSValueConst proto, const JSContourData<T>& point
   return ret;
 }
 
+template<class T>
+static inline JSValue
+js_contour_new(JSContext* ctx, const JSContourData<T>& points) {
+  return js_contour_new(ctx, contour_proto, points);
+}
+
 template<typename T = double>
 static inline int
 js_contour_read(JSContext* ctx, JSValueConst contour, JSContourData<T>* out) {

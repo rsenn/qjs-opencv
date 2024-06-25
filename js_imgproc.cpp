@@ -1255,13 +1255,19 @@ js_imgproc_transform(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
         JSSizeData<int> dsize;
         double fx = 0, fy = 0;
         int32_t interpolation = cv::INTER_LINEAR;
+
         js_size_read(ctx, argv[2], &dsize);
 
         if(argc > 3)
           JS_ToFloat64(ctx, &fx, argv[3]);
 
         if(argc > 4)
-          JS_ToFloat64(ctx, &fx, argv[4]);
+          JS_ToFloat64(ctx, &fy, argv[4]);
+
+        /* if(!js_size_read(ctx, argv[2], &dsize) && fx > 0 && fy > 0) {
+           dsize.width = fx * src->cols;
+           dsize.height = fy * src->rows;
+         }*/
 
         if(argc > 5)
           JS_ToInt32(ctx, &interpolation, argv[5]);

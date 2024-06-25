@@ -38,16 +38,20 @@ js_size_read(JSContext* ctx, JSValueConst size, JSSizeData<T>* out) {
     width = JS_GetPropertyStr(ctx, size, "width");
     height = JS_GetPropertyStr(ctx, size, "height");
   }
+
   if(JS_IsNumber(width) && JS_IsNumber(height)) {
     ret &= js_number_read(ctx, width, &out->width);
     ret &= js_number_read(ctx, height, &out->height);
   } else {
     ret = 0;
   }
+
   if(!JS_IsUndefined(width))
     JS_FreeValue(ctx, width);
+
   if(!JS_IsUndefined(height))
     JS_FreeValue(ctx, height);
+
   return ret;
 }
 
@@ -56,6 +60,7 @@ static inline void
 js_size_write(JSContext* ctx, JSValueConst out, const JSSizeData<T>& in) {
   JSValue width = js_number_new<T>(ctx, in.width);
   JSValue height = js_number_new<T>(ctx, in.height);
+
   if(JS_IsArray(ctx, out)) {
     JS_SetPropertyUint32(ctx, out, 0, width);
     JS_SetPropertyUint32(ctx, out, 1, height);
@@ -68,6 +73,7 @@ js_size_write(JSContext* ctx, JSValueConst out, const JSSizeData<T>& in) {
     args[1] = height;
     JS_Call(ctx, out, JS_UNDEFINED, 2, args);
   }
+
   JS_FreeValue(ctx, width);
   JS_FreeValue(ctx, height);
 }

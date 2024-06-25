@@ -25,7 +25,6 @@ typedef cv::Ptr<cv::Feature2D> JSFeature2DData;
 #include <opencv2/xfeatures2d/nonfree.hpp>
 
 using namespace cv::xfeatures2d;
-using cv::SIFT; 
 using cv::AffineFeature;
 using cv::AgastFeatureDetector;
 using cv::AKAZE;
@@ -35,6 +34,7 @@ using cv::GFTTDetector;
 using cv::KAZE;
 using cv::MSER;
 using cv::ORB;
+using cv::SIFT;
 using cv::SimpleBlobDetector;
 
 static SimpleBlobDetector::Params simple_blob_params;
@@ -735,10 +735,10 @@ js_feature2d_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
   KAZE* kaze = js_feature2d_get<KAZE>(this_val);
 
   JS_DefinePropertyValueStr(ctx, obj, "empty", JS_NewBool(ctx, (*s)->empty()), JS_PROP_ENUMERABLE);
-  
+
   if(freak)
     JS_DefinePropertyValueStr(ctx, obj, "defaultName", js_get_tostringtag(ctx, this_val), JS_PROP_ENUMERABLE);
-  else  
+  else
     JS_DefinePropertyValueStr(ctx, obj, "defaultName", JS_NewString(ctx, f2d->getDefaultName().c_str()), JS_PROP_ENUMERABLE);
 
   js_set_tostringtag(ctx, obj, js_get_tostringtag(ctx, this_val));

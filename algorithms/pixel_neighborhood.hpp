@@ -101,7 +101,7 @@ pixel_neighborhood_if(const cv::Mat& mat, uchar match_count) {
 
 static inline cv::Mat
 pixel_neighborhood_cross(const cv::Mat& mat) {
-  const auto s = mat.step;
+  const int32_t s = mat.step;
 
   return pixel_neighborhood_pred2(mat,
                                   (array<int32_t, 4> const){

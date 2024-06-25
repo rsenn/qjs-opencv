@@ -196,6 +196,7 @@ js_cv_split(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
 
   if(dst.size() >= src->channels()) {
     cv::split(*src, dst.data());
+    
     for(int32_t i = 0; i < src->channels(); i++) {
       JS_SetPropertyUint32(ctx, argv[1], i, js_mat_wrap(ctx, dst[i]));
     }
