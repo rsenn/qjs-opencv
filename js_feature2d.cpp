@@ -25,10 +25,7 @@ typedef cv::Ptr<cv::Feature2D> JSFeature2DData;
 #include <opencv2/xfeatures2d/nonfree.hpp>
 
 using namespace cv::xfeatures2d;
-using cv::SIFT;
-#else
-#warning No xfeatures2d
-#endif
+using cv::SIFT; 
 using cv::AffineFeature;
 using cv::AgastFeatureDetector;
 using cv::AKAZE;
@@ -389,7 +386,6 @@ js_feature2d_simple_blob(JSContext* ctx, JSValueConst new_target, int argc, JSVa
   return ret;
 }
 
-#ifdef HAVE_OPENCV2_XFEATURES2D_HPP
 static JSValue
 js_feature2d_sift(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   cv::Ptr<SIFT> sift;
@@ -720,7 +716,6 @@ js_feature2d_vgg(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst
   js_set_tostringtag(ctx, ret, "VGG");
   return ret;
 }
-#endif
 
 void
 js_feature2d_finalizer(JSRuntime* rt, JSValue val) {
@@ -731,7 +726,7 @@ js_feature2d_finalizer(JSRuntime* rt, JSValue val) {
   js_deallocate(rt, s);
 }
 
-static JSValue
+/*static JSValue
 js_feature2d_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSFeature2DData* s = js_feature2d_data2(ctx, this_val);
   JSValue obj = JS_NewObject(ctx);
@@ -740,13 +735,15 @@ js_feature2d_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
   KAZE* kaze = js_feature2d_get<KAZE>(this_val);
 
   JS_DefinePropertyValueStr(ctx, obj, "empty", JS_NewBool(ctx, (*s)->empty()), JS_PROP_ENUMERABLE);
+  
   if(freak)
     JS_DefinePropertyValueStr(ctx, obj, "defaultName", js_get_tostringtag(ctx, this_val), JS_PROP_ENUMERABLE);
-  else // if(kaze)
+  else  
     JS_DefinePropertyValueStr(ctx, obj, "defaultName", JS_NewString(ctx, f2d->getDefaultName().c_str()), JS_PROP_ENUMERABLE);
+
   js_set_tostringtag(ctx, obj, js_get_tostringtag(ctx, this_val));
   return obj;
-}
+}*/
 
 enum { METHOD_CLEAR = 0, METHOD_COMPUTE, METHOD_DETECT, METHOD_WRITE, METHOD_READ };
 
@@ -883,10 +880,12 @@ const JSCFunctionListEntry js_feature2d_akaze_static_funcs[] = {
     JS_PROP_INT32_DEF("DESCRIPTOR_MLDB_UPRIGHT", AKAZE::DESCRIPTOR_MLDB_UPRIGHT, JS_PROP_ENUMERABLE),
     JS_PROP_INT32_DEF("DESCRIPTOR_MLDB", AKAZE::DESCRIPTOR_MLDB, JS_PROP_ENUMERABLE),
 };
+
 const JSCFunctionListEntry js_feature2d_orb_static_funcs[] = {
     JS_PROP_INT32_DEF("HARRIS_SCORE", ORB::HARRIS_SCORE, JS_PROP_ENUMERABLE),
     JS_PROP_INT32_DEF("FAST_SCORE", ORB::FAST_SCORE, JS_PROP_ENUMERABLE),
 };
+
 const JSCFunctionListEntry js_feature2d_boost_static_funcs[] = {
     JS_PROP_INT32_DEF("BGM", BoostDesc::BGM, JS_PROP_ENUMERABLE),
     JS_PROP_INT32_DEF("BGM_HARD", BoostDesc::BGM_HARD, JS_PROP_ENUMERABLE),
@@ -896,12 +895,14 @@ const JSCFunctionListEntry js_feature2d_boost_static_funcs[] = {
     JS_PROP_INT32_DEF("BINBOOST_128", BoostDesc::BINBOOST_128, JS_PROP_ENUMERABLE),
     JS_PROP_INT32_DEF("BINBOOST_256", BoostDesc::BINBOOST_256, JS_PROP_ENUMERABLE),
 };
+
 const JSCFunctionListEntry js_feature2d_daisy_static_funcs[] = {
     JS_PROP_INT32_DEF("NRM_NONE", DAISY::NRM_NONE, JS_PROP_ENUMERABLE),
     JS_PROP_INT32_DEF("NRM_PARTIAL", DAISY::NRM_PARTIAL, JS_PROP_ENUMERABLE),
     JS_PROP_INT32_DEF("NRM_FULL", DAISY::NRM_FULL, JS_PROP_ENUMERABLE),
     JS_PROP_INT32_DEF("NRM_SIFT", DAISY::NRM_SIFT, JS_PROP_ENUMERABLE),
 };
+
 const JSCFunctionListEntry js_feature2d_fast_static_funcs[] = {
     JS_PROP_INT32_DEF("TYPE_5_8", cv::FastFeatureDetector::TYPE_5_8, JS_PROP_ENUMERABLE),
     JS_PROP_INT32_DEF("TYPE_7_12", cv::FastFeatureDetector::TYPE_7_12, JS_PROP_ENUMERABLE),
@@ -1017,3 +1018,4 @@ JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   js_feature2d_export(ctx, m);
   return m;
 }
+#endif
