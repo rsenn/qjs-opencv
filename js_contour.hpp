@@ -100,7 +100,7 @@ contour_adjacent(const JSContourData<T>& contour, const JSContourData<T>& other)
   return false;
 }
 
-template<typename T> struct contour_line_iterator : JSContourData<T>::const_iterator {
+/*template<typename T> struct contour_line_iterator : JSContourData<T>::const_iterator {
   typedef typename JSContourData<T>::const_iterator point_iterator;
   typedef const JSPointData<T>* point_pointer;
 
@@ -120,8 +120,10 @@ template<typename T> struct contour_line_iterator : JSContourData<T>::const_iter
   operator==(const point_iterator& other) const {
     if(point_iterator(*this) == other)
       return true;
+
     if(point_iterator(*this) + 1 == other)
       return true;
+    
     return false;
   }
 
@@ -129,7 +131,7 @@ template<typename T> struct contour_line_iterator : JSContourData<T>::const_iter
   operator!=(const point_iterator& other) const {
     return !this->operator==(other);
   }
-};
+};*/
 
 template<typename T>
 static inline bool

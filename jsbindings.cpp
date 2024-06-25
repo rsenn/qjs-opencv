@@ -146,29 +146,4 @@ js_ref(JSContext* ctx, const char* name, JSValueConst arg, JSValue value) {
 
   return 1;
 }
-
-#ifdef JS_BINDINGS_INIT_MODULE
-static int
-js_bindings_init(JSContext* ctx, JSModuleDef* m) {
-  js_point_init(ctx, m);
-  js_point_iterator_init(ctx, m);
-  js_size_init(ctx, m);
-  js_rect_init(ctx, m);
-  js_mat_init(ctx, m);
-  js_contour_init(ctx, m);
-  js_draw_init(ctx, m);
-  js_video_capture_init(ctx, m);
-  return 0;
-}
-
-extern "C" JSModuleDef*
-
-js_init_module(JSContext* ctx, const char* module_name) {
-  JSModuleDef* m;
-
-  m = JS_NewCModule(ctx, module_name, &js_bindings_init);
-
-  return m;
-}
-
-#endif
+ 
