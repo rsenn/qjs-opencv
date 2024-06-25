@@ -179,14 +179,6 @@ js_utility_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "TickMeter");
 }
 
-void
-js_tick_meter_constructor(JSContext* ctx, JSValue parent, const char* name) {
-  if(JS_IsUndefined(tick_meter_class))
-    js_utility_init(ctx, 0);
-
-  JS_SetPropertyStr(ctx, parent, name ? name : "TickMeter", tick_meter_class);
-}
-
 #ifdef JS_UTILITY_MODULE
 #define JS_INIT_MODULE VISIBLE js_init_module
 #else
