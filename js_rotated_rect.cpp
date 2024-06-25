@@ -51,7 +51,7 @@ js_rotated_rect_new(JSContext* ctx, JSValueConst proto, const JSPointData<float>
 
 extern "C" {
 static JSValue
-js_rotated_rect_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
+js_rotated_rect_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   JSRotatedRectData* rr;
   JSValue obj = JS_UNDEFINED;
   JSValue proto;
@@ -260,7 +260,7 @@ js_rotated_rect_init(JSContext* ctx, JSModuleDef* m) {
     JS_SetPropertyFunctionList(ctx, rotated_rect_proto, js_rotated_rect_proto_funcs, countof(js_rotated_rect_proto_funcs));
     JS_SetClassProto(ctx, js_rotated_rect_class_id, rotated_rect_proto);
 
-    rotated_rect_class = JS_NewCFunction2(ctx, js_rotated_rect_ctor, "RotatedRect", 2, JS_CFUNC_constructor, 0);
+    rotated_rect_class = JS_NewCFunction2(ctx, js_rotated_rect_constructor, "RotatedRect", 2, JS_CFUNC_constructor, 0);
     /* set proto.constructor and ctor.prototype */
     JS_SetConstructor(ctx, rotated_rect_class, rotated_rect_proto);
     JS_SetPropertyFunctionList(ctx, rotated_rect_class, js_rotated_rect_static_funcs, countof(js_rotated_rect_static_funcs));

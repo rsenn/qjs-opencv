@@ -172,7 +172,7 @@ public:
             break;
 
       diff = point_difference(pt, next);
-      
+
       if((diff.x || diff.y)) {
         // std::cout << index << ": [" << n << "] direction " << point_direction(diff) << std::endl;
 

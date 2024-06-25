@@ -50,7 +50,7 @@ js_video_writer_open(JSContext* ctx, JSVideoWriterData* vw, int argc, JSValueCon
 }
 
 static JSValue
-js_video_writer_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
+js_video_writer_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   JSVideoWriterData* vw;
   JSValue obj = JS_UNDEFINED;
   JSValue proto, ret;
@@ -246,7 +246,7 @@ js_video_writer_init(JSContext* ctx, JSModuleDef* m) {
     JS_SetPropertyFunctionList(ctx, video_writer_proto, js_video_writer_proto_funcs, countof(js_video_writer_proto_funcs));
     JS_SetClassProto(ctx, js_video_writer_class_id, video_writer_proto);
 
-    video_writer_class = JS_NewCFunction2(ctx, js_video_writer_ctor, "VideoWriter", 2, JS_CFUNC_constructor, 0);
+    video_writer_class = JS_NewCFunction2(ctx, js_video_writer_constructor, "VideoWriter", 2, JS_CFUNC_constructor, 0);
     /* set proto.constructor and ctor.prototype */
     JS_SetConstructor(ctx, video_writer_class, video_writer_proto);
     JS_SetPropertyFunctionList(ctx, video_writer_class, js_video_writer_static_funcs, countof(js_video_writer_static_funcs));

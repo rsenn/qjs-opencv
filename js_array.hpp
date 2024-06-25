@@ -756,6 +756,59 @@ public:
   template<size_t N> static int64_t to_array(JSContext* ctx, JSValueConst arr, std::array<std::vector<T>, N>& out);
 };
 
+template<class T> class js_array<JSPointData<T>> {
+public:
+  static int64_t
+  to_vector(JSContext* ctx, JSValueConst arr, std::vector<JSPointData<T>>& out) {
+    int64_t i, n;
+    JSValue len;
+
+    if(!js_is_array(ctx, arr))
+      return -1;
+
+    len = JS_GetPropertyStr(ctx, arr, "length");
+    JS_ToInt64(ctx, &n, len);
+    out.reserve(out.size() + n);
+
+    for(i = 0; i < n; i++) {
+      JSPointData<double> value;
+      JSValue item = JS_GetPropertyUint32(ctx, arr, (uint32_t)i);
+
+      if(!js_point_read(ctx, item, &value)) {
+        JS_FreeValue(ctx, item);
+        out.clear();
+        return -1;
+      }
+
+      out.push_back(value);
+      JS_FreeValue(ctx, item);
+    }
+
+    return n;
+  }
+
+  template<class Iterator>
+  static size_t
+  copy_sequence(JSContext* ctx, JSValueConst arr, const Iterator& start, const Iterator& end) {
+    size_t i = 0;
+    for(Iterator it = start; it != end; ++it) {
+      JS_SetPropertyUint32(ctx, arr, i, js_point_new(ctx, *it));
+      ++i;
+    }
+
+    return i;
+  }
+  template<class Iterator>
+  static JSValue
+  from_sequence(JSContext* ctx, const Iterator& start, const Iterator& end) {
+    JSValue arr = JS_NewArray(ctx);
+    copy_sequence(ctx, arr, start, end);
+    return arr;
+  }
+
+  template<size_t N> static int64_t to_array(JSContext* ctx, JSValueConst arr, std::array<cv::Mat, N>& out);
+};
+
 template<class T>
 static inline int64_t
 js_array_to(JSContext* ctx, JSValueConst arr, std::vector<T>& out) {

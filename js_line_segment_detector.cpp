@@ -49,7 +49,7 @@ js_line_segment_detector_new(JSContext* ctx,
 }
 
 static JSValue
-js_line_segment_detector_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
+js_line_segment_detector_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
 
   JSValue proto;
   int32_t refine = cv::LSD_REFINE_STD, n_bins = 1024;
@@ -216,7 +216,7 @@ js_line_segment_detector_init(JSContext* ctx, JSModuleDef* m) {
     JS_SetPropertyFunctionList(ctx, line_segment_detector_proto, js_line_segment_detector_proto_funcs, countof(js_line_segment_detector_proto_funcs));
     JS_SetClassProto(ctx, js_line_segment_detector_class_id, line_segment_detector_proto);
 
-    line_segment_detector_class = JS_NewCFunction2(ctx, js_line_segment_detector_ctor, "LineSegmentDetector", 2, JS_CFUNC_constructor, 0);
+    line_segment_detector_class = JS_NewCFunction2(ctx, js_line_segment_detector_constructor, "LineSegmentDetector", 2, JS_CFUNC_constructor, 0);
     /* set proto.constructor and ctor.prototype */
     JS_SetConstructor(ctx, line_segment_detector_class, line_segment_detector_proto);
     JS_SetPropertyFunctionList(ctx, line_segment_detector_class, js_line_segment_detector_static_funcs, countof(js_line_segment_detector_static_funcs));
@@ -232,7 +232,7 @@ extern "C" void
 js_line_segment_detector_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "LineSegmentDetector");
 }
- 
+
 #if defined(JS_LINE_SEGMENT_DETECTOR_MODULE)
 #define JS_INIT_MODULE VISIBLE js_init_module
 #else

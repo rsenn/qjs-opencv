@@ -28,11 +28,13 @@ js_point_iterator_new(JSContext* ctx, JSPointData<double>* first, JSPointData<do
   assert(js_point_iterator_class_id);
 
   iterator = JS_NewObjectProtoClass(ctx, point_iterator_proto, js_point_iterator_class_id);
+  
   if(JS_IsException(iterator))
     goto fail;
-  it = js_allocate<JSPointIteratorData>(ctx);
-  if(!it)
+  
+  if(!(it = js_allocate<JSPointIteratorData>(ctx)))
     goto fail1;
+
   new(it) JSPointIteratorData();
 
   it->magic = JSPointIteratorMagic(magic);
@@ -41,8 +43,10 @@ js_point_iterator_new(JSContext* ctx, JSPointData<double>* first, JSPointData<do
 
   JS_SetOpaque(iterator, it);
   return iterator;
+
 fail1:
   JS_FreeValue(ctx, iterator);
+
 fail:
   return JS_EXCEPTION;
 }
@@ -56,8 +60,6 @@ js_point_iterator_next(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
   if((it = static_cast<JSPointIteratorData*>(JS_GetOpaque(this_val, js_point_iterator_class_id))) == nullptr)
     return JS_EXCEPTION;
 
-  //  JSPointData<double>* ptr;
-  // ptr = it->first;
   switch(it->magic) {
     case NEXT_POINT: {
       *pdone = it->first == nullptr || it->second == nullptr || (it->first == it->second);
@@ -71,7 +73,9 @@ js_point_iterator_next(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
       break;
     }
   }
+
   it->first++;
+  
   return result;
 }
 
@@ -100,14 +104,19 @@ js_point_iterator_constructor(JSContext* ctx, JSValueConst new_target, int argc,
   s->second = s->first + v->size();
 
   proto = JS_GetPropertyStr(ctx, new_target, "prototype");
+  
   if(JS_IsException(proto))
     goto fail;
+  
   obj = JS_NewObjectProtoClass(ctx, proto, js_point_iterator_class_id);
   JS_FreeValue(ctx, proto);
+  
   if(JS_IsException(obj))
     goto fail;
+  
   JS_SetOpaque(obj, s);
   return obj;
+
 fail:
   js_deallocate(ctx, s);
   JS_FreeValue(ctx, obj);
@@ -128,6 +137,7 @@ js_point_iterator_finalizer(JSRuntime* rt, JSValue val) {
 
   // JS_FreeValueRT(rt, val);
 }
+
 extern "C" {
 JSClassDef js_point_iterator_class = {
     .class_name = "PointIterator",
@@ -162,8 +172,7 @@ js_point_iterator_init(JSContext* ctx, JSModuleDef* m) {
 
   if(m)
     JS_SetModuleExport(ctx, m, "PointIterator", point_iterator_class);
-  /* else
-     JS_SetPropertyStr(ctx, *static_cast<JSValue*>(m), name, point_iterator_class);*/
+
   return 0;
 }
 
@@ -181,17 +190,20 @@ js_point_iterator_export(JSContext* ctx, JSModuleDef* m) {
 JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   JSModuleDef* m;
+
   if(!(m = JS_NewCModule(ctx, module_name, &js_point_iterator_init)))
     return NULL;
+  
   js_point_iterator_export(ctx, m);
   return m;
 }
 
 static JSValue
 js_point_iterator_to_string(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  JSPointIteratorData* s = static_cast<JSPointIteratorData*>(JS_GetOpaque2(ctx, this_val, js_point_iterator_class_id));
+  JSPointIteratorData* s;
   std::ostringstream os;
-  if(!s)
+ 
+  if(!(s = static_cast<JSPointIteratorData*>(JS_GetOpaque2(ctx, this_val, js_point_iterator_class_id))))
     return JS_EXCEPTION;
 
   // os << "{x:" << s->x << ",y:" << s->y << "}" << std::endl;

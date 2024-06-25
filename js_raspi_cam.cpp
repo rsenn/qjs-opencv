@@ -18,7 +18,7 @@ thread_local JSClassID js_raspi_cam_class_id = 0;
 }
 
 static JSValue
-js_raspi_cam_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
+js_raspi_cam_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   JSRaspiCamData* s;
   JSValue obj = JS_UNDEFINED;
   JSValue proto, ret;
@@ -176,7 +176,7 @@ js_raspi_cam_init(JSContext* ctx, JSModuleDef* m) {
     JS_SetPropertyFunctionList(ctx, raspi_cam_proto, js_raspi_cam_proto_funcs, countof(js_raspi_cam_proto_funcs));
     JS_SetClassProto(ctx, js_raspi_cam_class_id, raspi_cam_proto);
 
-    raspi_cam_class = JS_NewCFunction2(ctx, js_raspi_cam_ctor, "RaspiCam", 2, JS_CFUNC_constructor, 0);
+    raspi_cam_class = JS_NewCFunction2(ctx, js_raspi_cam_constructor, "RaspiCam", 2, JS_CFUNC_constructor, 0);
 
     /* set proto.constructor and ctor.prototype */
     JS_SetConstructor(ctx, raspi_cam_class, raspi_cam_proto);
@@ -192,7 +192,7 @@ js_raspi_cam_init(JSContext* ctx, JSModuleDef* m) {
 extern "C" void
 js_raspi_cam_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "RaspiCam");
-} 
+}
 
 #ifdef JS_METHOD_MODULE
 #define JS_INIT_MODULE VISIBLE js_init_module

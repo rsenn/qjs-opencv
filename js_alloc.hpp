@@ -69,6 +69,7 @@ template<class T> struct js_alloc_quickjs {
   deallocate(JSContext* ctx, T* ptr) {
     js_free(ctx, ptr);
   }
+
   static void
   deallocate(JSRuntime* rt, T* ptr) {
     js_free_rt(rt, ptr);
@@ -77,14 +78,17 @@ template<class T> struct js_alloc_quickjs {
 
 template<class T> struct js_alloc_cxx {
   static constexpr size_t size = ((sizeof(T) + 7) >> 3) << 3;
+
   static T*
   allocate(JSContext* ctx) {
     return new T();
   }
+
   static void
   deallocate(JSContext* ctx, T* ptr) {
     delete ptr;
   }
+
   static void
   deallocate(JSRuntime* rt, T* ptr) {
     delete ptr;

@@ -31,9 +31,6 @@ js_line_iterator_constructor(JSContext* ctx, JSValueConst new_target, int argc, 
   JSPointData<double> pt1, pt2;
   int32_t connectivity = 8;
   BOOL left_to_right = false;
-  /* double size, angle = -1, response = 0;
-   int32_t octave = -1, class_id = -1;
- */
 
   if(!(li = js_allocate<JSLineIteratorData>(ctx)))
     return JS_EXCEPTION;
@@ -42,8 +39,10 @@ js_line_iterator_constructor(JSContext* ctx, JSValueConst new_target, int argc, 
   proto = JS_GetPropertyStr(ctx, new_target, "prototype");
   if(JS_IsException(proto))
     goto fail;
+
   obj = JS_NewObjectProtoClass(ctx, proto, js_line_iterator_class_id);
   JS_FreeValue(ctx, proto);
+  
   if(JS_IsException(obj))
     goto fail;
 
@@ -57,6 +56,7 @@ js_line_iterator_constructor(JSContext* ctx, JSValueConst new_target, int argc, 
 
   js_point_read(ctx, argv[optind++], &pt1);
   js_point_read(ctx, argv[optind++], &pt2);
+  
   if(optind < argc) {
     js_value_to(ctx, argv[optind++], connectivity);
 
@@ -74,7 +74,9 @@ js_line_iterator_constructor(JSContext* ctx, JSValueConst new_target, int argc, 
     new(li) JSLineIteratorData(pt1, pt2, connectivity, left_to_right);
 
   JS_SetOpaque(obj, li);
+  
   return obj;
+
 fail:
   js_deallocate(ctx, li);
   JS_FreeValue(ctx, obj);
@@ -486,8 +488,10 @@ js_line_iterator_export(JSContext* ctx, JSModuleDef* m) {
 extern "C" JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   JSModuleDef* m;
+  
   if(!(m = JS_NewCModule(ctx, module_name, &js_line_iterator_init)))
     return NULL;
+
   js_line_iterator_export(ctx, m);
   return m;
 }

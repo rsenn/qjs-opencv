@@ -50,7 +50,7 @@ js_video_capture_open(JSContext* ctx, JSVideoCaptureData* s, int argc, JSValueCo
 }
 
 static JSValue
-js_video_capture_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
+js_video_capture_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   JSVideoCaptureData* s;
   JSValue obj = JS_UNDEFINED;
   JSValue proto, ret;
@@ -233,7 +233,7 @@ js_video_capture_init(JSContext* ctx, JSModuleDef* m) {
     JS_SetPropertyFunctionList(ctx, video_capture_proto, js_video_capture_proto_funcs, countof(js_video_capture_proto_funcs));
     JS_SetClassProto(ctx, js_video_capture_class_id, video_capture_proto);
 
-    video_capture_class = JS_NewCFunction2(ctx, js_video_capture_ctor, "VideoCapture", 2, JS_CFUNC_constructor, 0);
+    video_capture_class = JS_NewCFunction2(ctx, js_video_capture_constructor, "VideoCapture", 2, JS_CFUNC_constructor, 0);
     /* set proto.constructor and ctor.prototype */
     JS_SetConstructor(ctx, video_capture_class, video_capture_proto);
   }

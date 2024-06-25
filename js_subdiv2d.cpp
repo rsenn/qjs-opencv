@@ -37,7 +37,7 @@ js_subdiv2d_new(JSContext* ctx, JSRectData<int>* rect = nullptr) {
 }
 
 static JSValue
-js_subdiv2d_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
+js_subdiv2d_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   JSRectData<int> rect;
 
   if(argc > 0)
@@ -270,7 +270,7 @@ js_subdiv2d_init(JSContext* ctx, JSModuleDef* m) {
     JS_SetPropertyFunctionList(ctx, subdiv2d_proto, js_subdiv2d_proto_funcs, countof(js_subdiv2d_proto_funcs));
     JS_SetClassProto(ctx, js_subdiv2d_class_id, subdiv2d_proto);
 
-    subdiv2d_class = JS_NewCFunction2(ctx, js_subdiv2d_ctor, "Subdiv2D", 2, JS_CFUNC_constructor, 0);
+    subdiv2d_class = JS_NewCFunction2(ctx, js_subdiv2d_constructor, "Subdiv2D", 2, JS_CFUNC_constructor, 0);
     /* set proto.constructor and ctor.prototype */
     JS_SetConstructor(ctx, subdiv2d_class, subdiv2d_proto);
     JS_SetPropertyFunctionList(ctx, subdiv2d_class, js_subdiv2d_static_funcs, countof(js_subdiv2d_static_funcs));

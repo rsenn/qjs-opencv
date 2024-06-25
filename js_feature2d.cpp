@@ -47,7 +47,6 @@ JSClassID js_feature2d_class_id;
 
 extern "C" int js_feature2d_init(JSContext*, JSModuleDef*);
 
-
 JSFeature2DData*
 js_feature2d_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSFeature2DData*>(JS_GetOpaque2(ctx, val, js_feature2d_class_id));

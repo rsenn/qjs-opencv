@@ -700,7 +700,7 @@ JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
 
   if(!(m = JS_NewCModule(ctx, module_name, &js_line_init)))
     return NULL;
-  
+
   js_line_export(ctx, m);
   return m;
 }

@@ -15,7 +15,7 @@
 extern "C" {
 extern JSValue contour_class, contour_proto;
 extern JSClassDef js_contour_class;
-extern thread_local JSClassID js_contour_class_id;
+extern /*thread_local*/ JSClassID js_contour_class_id;
 
 JSValue js_contour_create(JSContext* ctx, JSValueConst proto);
 void js_contour_finalizer(JSRuntime* rt, JSValue val);
@@ -31,7 +31,7 @@ JSContourData<double>* js_contour_data(JSValueConst val);
 
 JSValue js_contour_move(JSContext* ctx, JSContourData<double>&& points);
 
-template<typename T>
+/*template<typename T>
 static inline JSContourData<T>*
 contour_allocate(JSContext* ctx) {
   return js_allocate<JSContourData<T>>(ctx);
@@ -47,13 +47,14 @@ template<typename T>
 static inline void
 contour_deallocate(JSRuntime* rt, JSContourData<T>* contour) {
   return js_deallocate<JSContourData<T>>(rt, contour);
-}
+}*/
 
 template<typename T, typename U>
 static inline size_t
 contour_copy(const JSContourData<T>& src, JSContourData<U>& dst) {
   dst.resize(src.size());
   std::copy(src.begin(), src.end(), dst.begin());
+
   return src.size();
 }
 
@@ -81,10 +82,9 @@ contour_getmat(JSContourData<T>& contour) {
 template<typename T>
 static inline bool
 contour_adjacent(const JSContourData<T>& contour, const JSPointData<T>& point) {
-  for(const JSPointData<T>& pt : contour) {
+  for(const JSPointData<T>& pt : contour)
     if(point_adjacent<int>(pt, point))
       return true;
-  }
 
   return false;
 }
@@ -166,6 +166,17 @@ contour_intersect(const JSContourData<T>& a, const JSContourData<T>& b, std::arr
   return false;
 }
 
+template<class T>
+static inline JSValue
+js_contour_new(JSContext* ctx, JSValueConst proto, const JSContourData<T>& points) {
+  JSValue ret = js_contour_create(ctx, proto);
+  JSContourData<double>* contour = js_contour_data(ret);
+
+  contour_copy(points, *contour);
+
+  return ret;
+}
+
 template<typename T = double>
 static inline int
 js_contour_read(JSContext* ctx, JSValueConst contour, JSContourData<T>* out) {
@@ -208,7 +219,7 @@ js_contour_get(JSContext* ctx, JSValueConst contour) {
   return r;
 }
 
-template<typename T>
+/*template<typename T>
 JSValue
 js_contour_new(JSContext* ctx, const JSContourData<T>& points) {
   JSValue ret = js_contour_create(ctx, contour_proto);
@@ -221,24 +232,24 @@ js_contour_new(JSContext* ctx, const JSContourData<T>& points) {
   // transform_points(points.cbegin(), points.cend(), contour->begin());
 
   return ret;
-}
+}*/
 
 template<class T>
 void
-js_contours_copy(JSContext* ctx, JSValueConst arr, const std::vector<JSContourData<T>>& contours) {
+js_contours_copy(JSContext* ctx, JSValueConst arr, const JSContoursData<T>& contours) {
   uint32_t i, size = contours.size();
 
   js_array_clear(ctx, arr);
 
   for(i = 0; i < size; i++) {
-    JSValue contour = js_contour_new(ctx, contours[i]);
+    JSValue contour = js_contour_new(ctx, contour_proto, contours[i]);
     JS_SetPropertyUint32(ctx, arr, i, contour);
   }
 }
 
 template<class T>
 JSValue
-js_contours_new(JSContext* ctx, const std::vector<JSContourData<T>>& contours) {
+js_contours_new(JSContext* ctx, const JSContoursData<T>& contours) {
   JSValue ret = JS_NewArray(ctx);
 
   js_contours_copy(ctx, ret, contours);
@@ -248,68 +259,24 @@ js_contours_new(JSContext* ctx, const std::vector<JSContourData<T>>& contours) {
 
 extern "C" int js_contour_init(JSContext*, JSModuleDef*);
 
-template<class T> class js_array<JSPointData<T>> {
-public:
-  static int64_t
-  to_vector(JSContext* ctx, JSValueConst arr, JSContourData<T>& out) {
-    int64_t i, n;
-    JSValue len;
-    if(!js_is_array(ctx, arr))
-      return -1;
-    len = JS_GetPropertyStr(ctx, arr, "length");
-    JS_ToInt64(ctx, &n, len);
-    out.reserve(out.size() + n);
-    for(i = 0; i < n; i++) {
-      JSPointData<double> value;
-      JSValue item = JS_GetPropertyUint32(ctx, arr, (uint32_t)i);
-      if(!js_point_read(ctx, item, &value)) {
-        JS_FreeValue(ctx, item);
-        out.clear();
-        return -1;
-      }
-      out.push_back(value);
-      JS_FreeValue(ctx, item);
-    }
-
-    return n;
-  }
-
-  template<class Iterator>
-  static size_t
-  copy_sequence(JSContext* ctx, JSValueConst arr, const Iterator& start, const Iterator& end) {
-    size_t i = 0;
-    for(Iterator it = start; it != end; ++it) {
-      JS_SetPropertyUint32(ctx, arr, i, js_point_new(ctx, *it));
-      ++i;
-    }
-
-    return i;
-  }
-  template<class Iterator>
-  static JSValue
-  from_sequence(JSContext* ctx, const Iterator& start, const Iterator& end) {
-    JSValue arr = JS_NewArray(ctx);
-    copy_sequence(ctx, arr, start, end);
-    return arr;
-  }
-
-  template<size_t N> static int64_t to_array(JSContext* ctx, JSValueConst arr, std::array<cv::Mat, N>& out);
-};
-
 template<class T> class js_array<JSContourData<T>> {
 public:
+  typedef JSContoursData<T> contours_type;
   typedef JSContourData<T> contour_type;
   typedef JSPointData<T> point_type;
 
   static int64_t
-  to_vector(JSContext* ctx, JSValueConst arr, std::vector<contour_type>& out) {
+  to_vector(JSContext* ctx, JSValueConst arr, contours_type& out) {
     int64_t i, n;
     JSValue len;
+
     if(!js_is_array(ctx, arr))
       return -1;
+
     len = JS_GetPropertyStr(ctx, arr, "length");
     JS_ToInt64(ctx, &n, len);
     out.reserve(out.size() + n);
+
     for(i = 0; i < n; i++) {
       JSContourData<double>* ptr;
       contour_type contour;
@@ -333,7 +300,7 @@ public:
   copy_sequence(JSContext* ctx, JSValueConst arr, const Iterator& start, const Iterator& end) {
     size_t i = 0;
     for(Iterator it = start; it != end; ++it) {
-      JSValue item = js_contour_new(ctx, *it);
+      JSValue item = js_contour_new(ctx, contour_proto, *it);
       JS_SetPropertyUint32(ctx, arr, i, item);
       ++i;
     }

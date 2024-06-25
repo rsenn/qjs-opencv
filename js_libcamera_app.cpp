@@ -461,7 +461,7 @@ const JSCFunctionListEntry js_libcamera_app_options_proto_funcs[] = {
 };
 
 static JSValue
-js_libcamera_app_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
+js_libcamera_app_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   JSLibcameraAppData* s;
   JSValue obj = JS_UNDEFINED;
   JSValue proto, ret;
@@ -714,7 +714,7 @@ js_libcamera_app_init(JSContext* ctx, JSModuleDef* m) {
     JS_SetPropertyFunctionList(ctx, libcamera_app_proto, js_libcamera_app_proto_funcs, countof(js_libcamera_app_proto_funcs));
     JS_SetClassProto(ctx, js_libcamera_app_class_id, libcamera_app_proto);
 
-    libcamera_app_class = JS_NewCFunction2(ctx, js_libcamera_app_ctor, "LibcameraApp", 2, JS_CFUNC_constructor, 0);
+    libcamera_app_class = JS_NewCFunction2(ctx, js_libcamera_app_constructor, "LibcameraApp", 2, JS_CFUNC_constructor, 0);
     JS_SetPropertyFunctionList(ctx, libcamera_app_class, js_libcamera_app_static_funcs, countof(js_libcamera_app_static_funcs));
 
     /* set proto.constructor and ctor.prototype */
@@ -737,7 +737,7 @@ js_libcamera_app_init(JSContext* ctx, JSModuleDef* m) {
 extern "C" void
 js_libcamera_app_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "LibcameraApp");
-} 
+}
 
 #ifdef JS_METHOD_MODULE
 #define JS_INIT_MODULE VISIBLE js_init_module

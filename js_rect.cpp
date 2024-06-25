@@ -59,7 +59,7 @@ js_rect_wrap(JSContext* ctx, const JSRectData<double>& rect) {
 }
 
 static JSValue
-js_rect_ctor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
+js_rect_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   double x = 0, y = 0, w = 0, h = 0;
   JSRectData<double> rect = {0, 0, 0, 0};
   int optind = 0;
@@ -686,7 +686,7 @@ js_rect_init(JSContext* ctx, JSModuleDef* m) {
     JS_SetPropertyFunctionList(ctx, rect_proto, js_rect_proto_funcs, countof(js_rect_proto_funcs));
     JS_SetClassProto(ctx, js_rect_class_id, rect_proto);
 
-    rect_class = JS_NewCFunction2(ctx, js_rect_ctor, "Rect", 0, JS_CFUNC_constructor, 0);
+    rect_class = JS_NewCFunction2(ctx, js_rect_constructor, "Rect", 0, JS_CFUNC_constructor, 0);
     /* set proto.constructor and ctor.prototype */
     JS_SetConstructor(ctx, rect_class, rect_proto);
     JS_SetPropertyFunctionList(ctx, rect_class, js_rect_static_funcs, countof(js_rect_static_funcs));
@@ -703,7 +703,7 @@ js_rect_init(JSContext* ctx, JSModuleDef* m) {
 extern "C" void
 js_rect_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "Rect");
-} 
+}
 
 #ifdef JS_RECT_MODULE
 #define JS_INIT_MODULE VISIBLE js_init_module
