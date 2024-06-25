@@ -74,13 +74,6 @@ thread_local JSClassID js_mat_class_id = 0, js_mat_iterator_class_id = 0;
 thread_local JSValue umat_proto = JS_UNDEFINED, umat_class = JS_UNDEFINED;
 thread_local JSClassID js_umat_class_id = 0;
 
-typedef struct JSMatIteratorData {
-  JSValue obj, buf;
-  uint32_t row, col;
-  int magic;
-  TypedArrayType type;
-} JSMatIteratorData;
-
 static void
 js_mat_free_func(JSRuntime* rt, void* opaque, void* ptr) {
   JSMatData* mat = static_cast<JSMatData*>(opaque);
@@ -1590,18 +1583,32 @@ js_mat_finalizer(JSRuntime* rt, JSValue val) {
   }*/
 }
 
+typedef struct {
+  JSValue obj, buf;
+  uint32_t row, col;
+  int magic;
+  TypedArrayType type;
+} JSMatIteratorData;
+
+JSMatIteratorData*
+js_mat_iterator_data(JSValueConst val) {
+  return static_cast<JSMatIteratorData*>(JS_GetOpaque(val, js_mat_iterator_class_id));
+}
+
 JSValue
 js_mat_iterator_new(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSValue enum_obj, mat;
   JSMatData* m;
   JSMatIteratorData* it;
 
-  if(!(m = static_cast<JSMatData*>(JS_GetOpaque(this_val, js_mat_class_id))))
+  if(!(m = js_mat_data(this_val)))
     return JS_EXCEPTION;
 
   mat = JS_DupValue(ctx, this_val);
+
   if(!JS_IsException(mat)) {
     enum_obj = JS_NewObjectProtoClass(ctx, mat_iterator_proto, js_mat_iterator_class_id);
+
     if(!JS_IsException(enum_obj)) {
       it = js_allocate<JSMatIteratorData>(ctx);
 
@@ -1617,19 +1624,13 @@ js_mat_iterator_new(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
       JS_SetOpaque(/*ctx, */ enum_obj, it);
       return enum_obj;
     }
+
     JS_FreeValue(ctx, enum_obj);
   }
+
   JS_FreeValue(ctx, mat);
   return JS_EXCEPTION;
 }
-
-/*typedef struct JSMatIteratorData {
-  JSValue obj, buf;
-  uint32_t row, col;
-  int magic;
-  TypedArrayType type;
-} JSMatIteratorData;
-*/
 
 void
 js_mat_iterator_dump(JSMatIteratorData* it) {
@@ -1641,35 +1642,39 @@ js_mat_iterator_next(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
   JSMatIteratorData* it;
   JSValue ret = JS_UNDEFINED;
   *pdone = FALSE;
-  it = static_cast<JSMatIteratorData*>(JS_GetOpaque(this_val, js_mat_iterator_class_id));
-  if(it) {
+
+  if((it = js_mat_iterator_data(this_val))) {
     JSMatData* m;
     uint32_t row, col;
     size_t offset, channels;
     JSMatDimensions dim;
+
     if((m = js_mat_data2(ctx, it->obj)) == nullptr)
       return JS_EXCEPTION;
+
     dim = mat_dimensions(*m);
 
-    /*std::cout << "mat_dimensions(*m) = " << dim.cols << "x" << dim.rows << std::endl;
-    js_mat_iterator_dump(it);*/
-    /* printf("cols= %zu, rows = %zu\n",dim.cols,dim.rows);*/
+    /*std::cout << "mat_dimensions(*m) = " << dim.cols << "x" << dim.rows << std::endl; js_mat_iterator_dump(it);*/
 
     row = it->row;
     col = it->col;
+
     if(row >= m->rows) {
       JS_FreeValue(ctx, it->obj);
       it->obj = JS_UNDEFINED;
+
     done:
       *pdone = TRUE;
       return JS_UNDEFINED;
     }
+
     if(col + 1 < dim.cols) {
       it->col = col + 1;
     } else {
       it->col = 0;
       it->row = row + 1;
     }
+
     *pdone = FALSE;
     channels = mat_channels(*m);
     offset = mat_offset(*m, row, col);
@@ -1707,7 +1712,8 @@ js_mat_iterator_next(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
 
 void
 js_mat_iterator_finalizer(JSRuntime* rt, JSValue val) {
-  JSMatIteratorData* it = static_cast<JSMatIteratorData*>(JS_GetOpaque(val, js_mat_iterator_class_id));
+  JSMatIteratorData* it = js_mat_iterator_data(val);
+
   js_deallocate(rt, it);
 }
 

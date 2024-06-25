@@ -45,6 +45,7 @@ point_direction(int dir) {
   static const size_t n = countof(direction_points);
 
   dir = ((dir % n) + n) % n;
+
   return direction_points[dir];
 }
 
@@ -100,13 +101,14 @@ public:
 
     for(pt.y = 0; pt.y < h; pt.y++) {
       for(pt.x = 0; pt.x < w; pt.x++) {
-        int& taken = pixel_ref<int>(pt, mapping);
+        int32_t& taken = pixel_ref<int32_t>(pt, mapping);
 
         if(taken == -1 && pixel_at(pt, neighborhood) > 0 && pred(pixel_at(pt, mat))) {
           out = pt;
           taken = index;
           decrement_neighborhood(pt);
           // pixel_remove(pt, mat);
+          
           return true;
         }
       }
@@ -121,7 +123,7 @@ public:
     if(!point_inside(pt, mat))
       return false;
 
-    int& taken = pixel_ref<int>(pt, mapping);
+    int32_t& taken = pixel_ref<int32_t>(pt, mapping);
 
     if(taken == -1 && pred(pixel_at(pt, mat))) {
       out = pt;

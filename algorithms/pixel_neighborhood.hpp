@@ -15,7 +15,7 @@ using std::count_if;
 using std::transform;
 using std::vector;
 
-template<class Callable, size_t N>
+/*template<class Callable, size_t N>
 static cv::Mat
 pixel_offset_pred(const cv::Mat& src, array<int32_t, N> const& offsets, Callable pred) {
   cv::Mat dst(src.size(), CV_8UC1);
@@ -36,7 +36,7 @@ pixel_offset_pred(const cv::Mat& src, array<int32_t, N> const& offsets, Callable
   }
 
   return dst;
-}
+}*/
 
 static vector<cv::Point>
 pixel_find_value(const cv::Mat& mat, uchar value) {
@@ -63,13 +63,9 @@ pixel_neighborhood_pred2(const cv::Mat& src, array<int32_t, N> const& offsets, C
       if(!*ptr)
         continue;
 
-      transform(offsets.begin(), offsets.end(), p.begin(), [ptr, y, x](int32_t offset) -> uchar { return ptr[offset]; });
+      transform(offsets.begin(), offsets.end(), p.begin(), [ptr](int32_t offset) -> uchar { return ptr[offset]; });
 
-      // std::cout << p << std::endl;
-
-      const auto c = count_if(p.begin(), p.end(), pred);
-
-      *dst.ptr<uchar>(y, x) = c;
+      *dst.ptr<uchar>(y, x) = count_if(p.begin(), p.end(), pred);
     }
   }
 
@@ -93,11 +89,7 @@ pixel_neighborhood(const cv::Mat& mat) {
                                   },
                                   [](uchar value) -> bool { return value > 0; });
 }
-
-/*static inline cv::Mat
-pixel_neighborhood_if(const cv::Mat& mat, uchar match_count) {
-  return pixel_neighborhood_pred(mat, [match_count](uchar value, uchar count) -> uchar { return count == match_count ? 0xff : 0; });
-}*/
+ 
 
 static inline cv::Mat
 pixel_neighborhood_cross(const cv::Mat& mat) {
@@ -111,11 +103,6 @@ pixel_neighborhood_cross(const cv::Mat& mat) {
                                       s,
                                   },
                                   [](uchar value) -> bool { return value > 0; });
-}
+} 
 
-/*static inline cv::Mat
-pixel_neighborhood_cross_if(const cv::Mat& mat, uchar match_count) {
-  return pixel_neighborhood_cross_pred(mat, [match_count](uchar value, uchar count) -> uchar { return count == match_count ? 0xff : 0; });
-}
-*/
 #endif /* PIXEL_NEIGHBORHOOD_HPP */

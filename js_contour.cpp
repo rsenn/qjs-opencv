@@ -1538,15 +1538,8 @@ js_contour_get_own_property_names(JSContext* ctx, JSPropertyEnum** ptab, uint32_
   if(!(contour = js_contour_data(obj)))
     return 0;
 
-  /*if((contour = js_contour_data(obj)))
-    len = contour->size();
-  else {
-    JSValue length = JS_GetPropertyStr(ctx, obj, "length");
-    JS_ToUint32(ctx, &len, length);
-    JS_FreeValue(ctx, length);
-  }*/
+  len = contour->size();
 
-  // if((props = static_cast<JSPropertyEnum*>(js_malloc(ctx, sizeof(JSPropertyEnum) * (len + 1))))) {
   if((props = js_allocate<JSPropertyEnum>(ctx, len + 1))) {
     for(i = 0; i < len; i++) {
       props[i].is_enumerable = TRUE;
@@ -1596,8 +1589,10 @@ js_contour_get_property(JSContext* ctx, JSValueConst obj, JSAtom prop, JSValueCo
     value = JS_NewUint32(ctx, contour->size());
   } else {
     JSValue proto = JS_GetPrototype(ctx, obj);
+
     if(JS_IsObject(proto)) {
       JSPropertyDescriptor desc = {0, JS_UNDEFINED, JS_UNDEFINED, JS_UNDEFINED};
+
       if(JS_GetOwnProperty(ctx, &desc, proto, prop) > 0) {
         if(JS_IsFunction(ctx, desc.getter))
           value = JS_Call(ctx, desc.getter, obj, 0, 0);

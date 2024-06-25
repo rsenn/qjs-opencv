@@ -206,7 +206,7 @@ js_contours_new(JSContext* ctx, const JSContoursData<T>& contours) {
   return arr;
 }
 
-/*template<class T> class js_array<JSContourData<T>> {
+template<class T> class js_array<JSContourData<T>> {
 public:
   typedef JSContoursData<T> contours_type;
   typedef JSContourData<T> contour_type;
@@ -273,6 +273,6 @@ public:
   from(JSContext* ctx, const Container& in) {
     return from_sequence<typename Container::const_iterator>(ctx, in.begin(), in.end());
   }
-};*/
+};
 
 #endif /* defined(JS_CONTOUR_HPP) */

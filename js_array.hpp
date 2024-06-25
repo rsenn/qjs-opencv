@@ -717,14 +717,17 @@ public:
     len = JS_GetPropertyStr(ctx, arr, "length");
     JS_ToInt64(ctx, &n, len);
     out.reserve(out.size() + n);
+
     for(i = 0; i < n; i++) {
       std::vector<T> value;
       JSValue item = JS_GetPropertyUint32(ctx, arr, (uint32_t)i);
+
       if(js_array<T>::to_vector(ctx, arr, value) == -1) {
         JS_FreeValue(ctx, item);
         out.clear();
         return -1;
       }
+
       out.push_back(value);
       JS_FreeValue(ctx, item);
     }

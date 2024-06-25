@@ -56,9 +56,11 @@ template<class ColorType>
 static inline JSColorData<float>
 color3f(const ColorType& c) {
   JSColorData<float> ret;
+
   ret.b = float(c.b) / 255.0;
   ret.g = float(c.g) / 255.0;
   ret.r = float(c.r) / 255.0;
+  
   return ret;
 }
 
@@ -88,6 +90,7 @@ find_nearest(const ColorType& color, const std::vector<ColorType>& palette, int 
       continue;
 
     float newdist = color_distance_squared(color, palette[index]);
+
     if(newdist < distance) {
       distance = newdist;
       ret = index;
@@ -103,6 +106,7 @@ palette_match(const cv::Mat& src, JSOutputArray dst, const std::vector<ColorType
   cv::Mat result(src.rows, src.cols, CV_8U);
 
   const uchar* ptr(src.ptr());
+
   size_t step(src.step);
   size_t elem_size(src.elemSize());
 
@@ -111,11 +115,13 @@ palette_match(const cv::Mat& src, JSOutputArray dst, const std::vector<ColorType
     for(int y = 0; y < src.rows; y++) {
       for(int x = 0; x < src.cols; x++) {
         const ColorType& color = *reinterpret_cast<const ColorType*>(ptr + (x * elem_size));
+ 
         int index = find_nearest(color, palette);
 
         if((int)(unsigned int)(uchar)index == index)
           result.at<uchar>(y, x) = index;
       }
+ 
       ptr += step;
     }
 
@@ -128,6 +134,7 @@ palette_match(const cv::Mat& src, JSOutputArray dst, const std::vector<ColorType
         if((int)(unsigned int)(uchar)index == index)
           result.at<uchar>(y, x) = index;
       }
+ 
       ptr += step;
     }
   }

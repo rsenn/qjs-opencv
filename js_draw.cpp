@@ -1,6 +1,7 @@
 #include "cutils.h"
 #include "geometry.hpp"
 #include "js_array.hpp"
+#include "js_contour.hpp"
 #include "js_line.hpp"
 #include "js_mat.hpp"
 #include "js_point.hpp"

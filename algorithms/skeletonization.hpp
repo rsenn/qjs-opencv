@@ -26,16 +26,16 @@ static inline void
 thinning_iteration(cv::Mat& im, int iter) {
   cv::Mat marker = cv::Mat::zeros(im.size(), CV_8UC1);
 
-  for(int i = 1; i < im.rows - 1; i++) {
-    for(int j = 1; j < im.cols - 1; j++) {
-      uchar p2 = im.at<uchar>(i - 1, j);
-      uchar p3 = im.at<uchar>(i - 1, j + 1);
-      uchar p4 = im.at<uchar>(i, j + 1);
-      uchar p5 = im.at<uchar>(i + 1, j + 1);
-      uchar p6 = im.at<uchar>(i + 1, j);
-      uchar p7 = im.at<uchar>(i + 1, j - 1);
-      uchar p8 = im.at<uchar>(i, j - 1);
-      uchar p9 = im.at<uchar>(i - 1, j - 1);
+  for(int y = 1; y < im.rows - 1; y++) {
+    for(int x = 1; x < im.cols - 1; x++) {
+      uchar p2 = im.at<uchar>(y - 1, x);
+      uchar p3 = im.at<uchar>(y - 1, x + 1);
+      uchar p4 = im.at<uchar>(y, x + 1);
+      uchar p5 = im.at<uchar>(y + 1, x + 1);
+      uchar p6 = im.at<uchar>(y + 1, x);
+      uchar p7 = im.at<uchar>(y + 1, x - 1);
+      uchar p8 = im.at<uchar>(y, x - 1);
+      uchar p9 = im.at<uchar>(y - 1, x - 1);
 
       int A = (p2 == 0 && p3 == 1) + (p3 == 0 && p4 == 1) + (p4 == 0 && p5 == 1) + (p5 == 0 && p6 == 1) + (p6 == 0 && p7 == 1) + (p7 == 0 && p8 == 1) +
               (p8 == 0 && p9 == 1) + (p9 == 0 && p2 == 1);
@@ -44,7 +44,7 @@ thinning_iteration(cv::Mat& im, int iter) {
       int m2 = iter == 0 ? (p4 * p6 * p8) : (p2 * p6 * p8);
 
       if(A == 1 && (B >= 2 && B <= 6) && m1 == 0 && m2 == 0)
-        marker.at<uchar>(i, j) = 1;
+        marker.at<uchar>(y, x) = 1;
     }
   }
 
@@ -57,15 +57,18 @@ thinning_iteration(cv::Mat& im, int iter) {
 static void
 thinning(cv::Mat& im) {
   int nonZero = -1;
+
   im /= 255;
 
   cv::Mat prev = cv::Mat::zeros(im.size(), CV_8UC1);
   cv::Mat diff;
 
   do {
-    std::cout << "thinning (nonZero = " << nonZero << ")" << std::endl;
+    //std::cout << "thinning (nonZero = " << nonZero << ")" << std::endl;
+   
     thinning_iteration(im, 0);
     thinning_iteration(im, 1);
+   
     cv::absdiff(im, prev, diff);
     im.copyTo(prev);
   } while((nonZero = cv::countNonZero(diff)) > 0);
@@ -89,7 +92,7 @@ skeletonization(InputArray inputImage) {
   else
     cv::cvtColor(inputImage, outputImage, cv::COLOR_BGR2GRAY);
 
-  // cv::threshold(outputImage, outputImage, 0, 255, cv::THRESH_BINARY + cv::THRESH_OTSU);
+  cv::threshold(outputImage, outputImage, 0, 255, cv::THRESH_BINARY + cv::THRESH_OTSU);
 
   thinning(outputImage);
 
