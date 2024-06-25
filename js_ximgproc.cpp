@@ -4,6 +4,9 @@
 
 #ifdef HAVE_OPENCV2_XIMGPROC_HPP
 #include <opencv2/ximgproc.hpp>
+#ifdef HAVE_OPENCV2_XIMGPROC_FIND_ELLIPSES_HPP
+#include <opencv2/ximgproc/find_ellipses.hpp>
+#endif
 
 enum {
   XIMGPROC_ANISOTROPIC_DIFFUSION,
@@ -45,6 +48,7 @@ js_ximgproc_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
         break;
       }
 
+#ifdef HAVE_OPENCV2_XIMGPROC_FIND_ELLIPSES_HPP
       case XIMGPROC_FIND_ELLIPSES: {
         double scoreThreshold = 0.7, reliabilityThreshold = 0.5, centerDistanceThreshold = 0.05;
 
@@ -55,6 +59,7 @@ js_ximgproc_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
         cv::ximgproc::findEllipses(src, dst, scoreThreshold, reliabilityThreshold, centerDistanceThreshold);
         break;
       }
+#endif
 
       case XIMGPROC_PEI_LIN_NORMALIZATION: {
         cv::ximgproc::PeiLinNormalization(src, dst);
@@ -100,7 +105,9 @@ js_function_list_t js_ximgproc_ximgproc_funcs{
     /* Extended Image Processing */
     JS_CFUNC_MAGIC_DEF("anisotropicDiffusion", 5, js_ximgproc_func, XIMGPROC_ANISOTROPIC_DIFFUSION),
     JS_CFUNC_MAGIC_DEF("edgePreservingFilter", 4, js_ximgproc_func, XIMGPROC_EDGE_PRESERVING_FILTER),
+#ifdef HAVE_OPENCV2_XIMGPROC_FIND_ELLIPSES_HPP
     JS_CFUNC_MAGIC_DEF("findEllipses", 2, js_ximgproc_func, XIMGPROC_FIND_ELLIPSES),
+#endif
     JS_CFUNC_MAGIC_DEF("niBlackThreshold", 6, js_ximgproc_func, XIMGPROC_NI_BLACK_THRESHOLD),
     JS_CFUNC_MAGIC_DEF("PeiLinNormalization", 2, js_ximgproc_func, XIMGPROC_PEI_LIN_NORMALIZATION),
     JS_CFUNC_MAGIC_DEF("thinning", 2, js_ximgproc_func, XIMGPROC_THINNING),

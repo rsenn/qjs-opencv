@@ -137,11 +137,16 @@ if(USE_FEATURE2D)
 endif()
 
 check_include_file_cxx(opencv2/ximgproc.hpp HAVE_OPENCV2_XIMGPROC_HPP)
+check_include_file_cxx(opencv2/ximgproc/find_ellipses.hpp HAVE_OPENCV2_XIMGPROC_FIND_ELLIPSES_HPP)
+
 #dump(HAVE_OPENCV2_XIMGPROC_HPP)
 if(HAVE_OPENCV2_XIMGPROC_HPP)
   add_definitions(-DHAVE_OPENCV2_XIMGPROC_HPP=1)
   set(OPENCV_XIMGPROC_LIBRARY opencv_ximgproc)
 endif(HAVE_OPENCV2_XIMGPROC_HPP)
+if(HAVE_OPENCV2_XIMGPROC_FIND_ELLIPSES_HPP)
+  add_definitions(-DHAVE_OPENCV2_XIMGPROC_FIND_ELLIPSES_HPP=1)
+endif(HAVE_OPENCV2_XIMGPROC_FIND_ELLIPSES_HPP)
 
 include(CheckCXXSymbolExists)
 check_cxx_symbol_exists(cv::AffineFeature opencv2/features2d.hpp HAVE_OPENCV_AFFINE_FEATURE)

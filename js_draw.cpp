@@ -32,8 +32,8 @@
 extern "C" int js_draw_init(JSContext*, JSModuleDef*);
 
 #ifdef HAVE_OPENCV_FREETYPE
-#include <opencv2/freetyp
-e.hpp > cv::Ptr<cv::freetype::FreeType2> freetype2 = nullptr;
+#include <opencv2/freetype.hpp>
+cv::Ptr<cv::freetype::FreeType2> freetype2 = nullptr;
 std::string freetype2_face;
 #endif
 
