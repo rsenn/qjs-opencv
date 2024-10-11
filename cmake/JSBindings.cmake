@@ -38,7 +38,7 @@ function(make_shared_module FNAME)
   add_library(${TARGET_NAME} SHARED ${SOURCES})
 
   target_link_directories(${TARGET_NAME} PUBLIC ${jsbindings_LINK_DIRECTORIES})
-  target_link_libraries(${TARGET_NAME} ${jsbindings_LIBRARIES} )
+  target_link_libraries(${TARGET_NAME} ${jsbindings_LIBRARIES})
   set_target_properties(
     ${TARGET_NAME}
     PROPERTIES

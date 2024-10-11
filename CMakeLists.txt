@@ -3,7 +3,6 @@ project(qjs-opencv)
 
 message("Building project [1;31m${PROJECT_NAME}[0m")
 
-
 set(DISABLE_WERROR TRUE CACHE BOOL "Disable -Werror flag" FORCE)
 
 set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "build type")
@@ -101,8 +100,6 @@ endif(HAVE_LIBX11 AND HAVE_X11_X_H)
 find_quickjs()
 find_opencv()
 
-
-
 dump(OPENCV_LIBDIR OPENCV_INCLUDE_DIRS)
 
 link_directories(${OPENCV_LIBDIR})
@@ -136,8 +133,8 @@ if(USE_FEATURE2D)
   endif(HAVE_OPENCV2_XFEATURES2D_HPP)
 endif()
 
-CHECK_INCLUDE_CXX_DEF(opencv2/ximgproc.hpp HAVE_OPENCV2_XIMGPROC_HPP)
-CHECK_INCLUDE_CXX_DEF(opencv2/ximgproc/find_ellipses.hpp HAVE_OPENCV2_XIMGPROC_FIND_ELLIPSES_HPP)
+check_include_cxx_def(opencv2/ximgproc.hpp HAVE_OPENCV2_XIMGPROC_HPP)
+check_include_cxx_def(opencv2/ximgproc/find_ellipses.hpp HAVE_OPENCV2_XIMGPROC_FIND_ELLIPSES_HPP)
 
 dump(HAVE_OPENCV2_XIMGPROC_HPP HAVE_OPENCV2_XIMGPROC_FIND_ELLIPSES_HPP)
 
@@ -203,7 +200,6 @@ if(HAS_F_LTO_FLAG)
   option(ENABLE_LTO "Enable link-time optimization" OFF)
 endif(HAS_F_LTO_FLAG)
 
-
 option(QUICKJS_MODULES "Build .so modules for quickjs" ON)
 
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
@@ -212,8 +208,6 @@ option(BUILD_QUICKJS "Build QuickJS" ON)
 option(USE_LIBCAMERA "Use libcamera-opencv" OFF)
 option(USE_LCCV "Use LCCV" ON)
 option(USE_FEATURE2D "Use feature2d" ON)
-
-
 
 if(ENABLE_LTO)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -flto")
@@ -226,7 +220,6 @@ link_directories("${CMAKE_CURRENT_BINARY_DIR}/quickjs")
 
 set(QUICKJS_LIBRARY quickjs)
 link_directories(${CMAKE_CURRENT_BINARY_DIR}/quickjs)
-
 
 if(USE_LIBCAMERA OR USE_LCCV)
   include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/libcamera.cmake)

@@ -10,19 +10,19 @@ find_opencv()
 # Verbose make
 #SET(CMAKE_VERBOSE_MAKEFILE ON)
 
-SET(CMAKE_BUILD_TYPE DEBUG)
+set(CMAKE_BUILD_TYPE DEBUG)
 
 # Library type (STATIC or SHARED)
-SET(LIBRARY_TYPE STATIC)
+set(LIBRARY_TYPE STATIC)
 
 # Set link and compile flags
 # -no-write-strings to remove deprecated conversion for the c-code.
-# -pg for profiling the code. REMOVE WHEN DELIVERING  
+# -pg for profiling the code. REMOVE WHEN DELIVERING
 # -O3 -ffast-math optimization flag
-SET(CXX_COVERAGE_FLAGS	"-Wno-write-strings -O3 -ffast-math -pg")
-SET(CXX_COVERAGE_LINK_FLAGS "")
-SET(CMAKE_CXX_FLAGS	"${CMAKE_CXX_FLAGS} ${CXX_COVERAGE_FLAGS}")
-SET(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_FLAGS} ${CXX_COVERAGE_LINK_FLAGS}")
+set(CXX_COVERAGE_FLAGS "-Wno-write-strings -O3 -ffast-math -pg")
+set(CXX_COVERAGE_LINK_FLAGS "")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX_COVERAGE_FLAGS}")
+set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_FLAGS} ${CXX_COVERAGE_LINK_FLAGS}")
 
 #set the default path for built executables to the "bin" directory
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR})
