@@ -19,8 +19,8 @@ list(FILTER LIBCAMERA_OPENCV_SOURCES EXCLUDE REGEX Simple)
 
 if(USE_LIBCAMERA)
   add_library(camera-opencv STATIC ${LIBCAMERA_OPENCV_SOURCES})
-  target_link_libraries(camera-opencv PUBLIC stdc++fs camera camera-base event event_pthreads
-                                             Threads::Threads ${OpenCV_LIBS})
+  target_link_libraries(camera-opencv PUBLIC stdc++fs camera camera-base event event_pthreads Threads::Threads
+                                             ${OpenCV_LIBS})
 
   if(BUILD_SHARED_LIBS)
     set_target_properties(camera-opencv PROPERTIES COMPILE_FLAGS "-fPIC")
@@ -29,5 +29,5 @@ endif(USE_LIBCAMERA)
 
 set(CAMERA_OPENCV_LIBRARY camera-opencv)
 set(CAMERA_OPENCV_LIBRARY_DIR "${CMAKE_CURRENT_BINARY_DIR}")
-set(CAMERA_OPENCV_LIBRARIES ${CAMERA_OPENCV_LIBRARY} stdc++fs camera camera-base event
-                            event_pthreads Threads::Threads ${OpenCV_LIBS})
+set(CAMERA_OPENCV_LIBRARIES ${CAMERA_OPENCV_LIBRARY} stdc++fs camera camera-base event event_pthreads Threads::Threads
+                            ${OpenCV_LIBS})

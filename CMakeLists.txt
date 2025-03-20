@@ -38,8 +38,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/JSBindings.cmake)
 if(UNIX AND NOT APPLE)
   include(GNUInstallDirs)
 elseif(NOT DEFINED CMAKE_INSTALL_LIBDIR)
-  set(CMAKE_INSTALL_LIBDIR "" CACHE PATH
-                                    "Specify the output directory for libraries (default is lib)")
+  set(CMAKE_INSTALL_LIBDIR "" CACHE PATH "Specify the output directory for libraries (default is lib)")
 endif()
 
 message(STATUS "Finding QuickJS...")
@@ -225,8 +224,8 @@ if(USE_LIBCAMERA OR USE_LCCV)
   include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/libcamera.cmake)
 endif(USE_LIBCAMERA OR USE_LCCV)
 
-file(GLOB OPENCV_SOURCES init_module.cpp geometry.cpp highgui.cpp jsbindings.cpp js_*.cpp
-     ${FEATURE2D_SOURCE} line.cpp util.cpp gifenc/gifenc.c algorithms/*.cpp lsd/src/*.cpp)
+file(GLOB OPENCV_SOURCES init_module.cpp geometry.cpp highgui.cpp jsbindings.cpp js_*.cpp ${FEATURE2D_SOURCE} line.cpp
+     util.cpp gifenc/gifenc.c algorithms/*.cpp lsd/src/*.cpp)
 #dump(OPENCV_SOURCES)
 
 if(USE_LCCV)
@@ -246,8 +245,8 @@ if(USE_LCCV)
   add_subdirectory(LCCV)
   include_directories(LCCV/include)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -fvisibility=hidden")
-  set(LCCV_LIBRARIES "${CMAKE_CURRENT_BINARY_DIR}/LCCV/liblccv.a" camera camera-base event
-                     event_pthreads Threads::Threads)
+  set(LCCV_LIBRARIES "${CMAKE_CURRENT_BINARY_DIR}/LCCV/liblccv.a" camera camera-base event event_pthreads
+                     Threads::Threads)
   set(LCCV_LIBRARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/LCCV" CACHE PATH "liblccv library directory")
 
   link_directories(${LCCV_LIBRARY_DIR})
@@ -267,8 +266,8 @@ endif(USE_LCCV)
 
 list(APPEND jsbindings_LINK_DIRECTORIES ${OPENCV_LIBDIR})
 list(APPEND jsbindings_LIBRARIES ${QUICKJS_LIBRARY} ${PNG_LIBRARIES} ${OPENCV_XIMGPROC_LIBRARY}
-     ${OPENCV_XFEATURES2D_LIBRARY} ${OPENCV_FREETYPE_LIBRARY} ${OPENCV_BGSEGM_LIBRARY}
-     ${OPENCV_EXTRA_LIBRARIES} ${OPENCV_LIBRARIES})
+     ${OPENCV_XFEATURES2D_LIBRARY} ${OPENCV_FREETYPE_LIBRARY} ${OPENCV_BGSEGM_LIBRARY} ${OPENCV_EXTRA_LIBRARIES}
+     ${OPENCV_LIBRARIES})
 
 if(USE_LIBCAMERA OR USE_LCCV)
   list(APPEND jsbindings_LIBRARIES ${pkgcfg_lib_LIBCAMERA_camera})
