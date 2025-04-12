@@ -64,7 +64,7 @@ export const MouseFlags = {
 
 export const Mouse = {
   printEvent: (() => {
-    return event => MouseEvents[event].replace(/EVENT_/, '');
+    return event => (MouseEvents[event] ?? '').replace(/EVENT_/, '');
   })(),
   printFlags: (() => {
     const toks = BitsToNames(MouseFlags, name => name.replace(/EVENT_FLAG_/, ''));
