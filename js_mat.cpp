@@ -1242,6 +1242,7 @@ js_mat_getrotationmatrix2d(JSContext* ctx, JSValueConst this_val, int argc, JSVa
   ret = js_mat_wrap(ctx, m);
   return ret;
 }
+
 static JSValue
 js_mat_convert_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSMatData *m, *output;

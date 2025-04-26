@@ -318,6 +318,7 @@ js_rect_to_string(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
 
   return JS_NewString(ctx, os.str().c_str());
 }
+
 static JSValue
 js_rect_to_source(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSRectData<double> rect, *s;
