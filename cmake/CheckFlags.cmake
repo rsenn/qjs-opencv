@@ -168,7 +168,7 @@ macro(check_cxx_standard_flag)
       message(STATUS "Checking for C++ standard flag: -std=${CXX_STANDARD}: failed")
       continue()
     endif(NOT CXX_STANDARD_${CXX_STANDARD_NUM})
- 
+
     set(CMAKE_REQUIRED_QUIET FALSE)
     if(CXX_STANDARD_${CXX_STANDARD_NUM})
       string(REGEX REPLACE "\\+" "x" CXX_STANDARD_NAME "${CXX_STANDARD_VALUE}")
