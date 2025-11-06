@@ -1836,7 +1836,8 @@ js_mat_init(JSContext* ctx, JSModuleDef* m) {
 
     JS_SetPropertyFunctionList(ctx, mat_class, js_mat_static_funcs, countof(js_mat_static_funcs));
 
-    // js_set_inspect_method(ctx, mat_proto, js_mat_inspect);
+    js_set_inspect_method(ctx, mat_proto, js_mat_inspect);
+
     /*   JSValue g = JS_GetGlobalObject(ctx);
        int32array_ctor = JS_GetProperty(ctx, g, JS_ATOM_Int32Array);
        int32array_proto = JS_GetPrototype(ctx, int32array_ctor);

@@ -35,8 +35,8 @@ palette_apply(const cv::Mat& src, JSOutputArray dst, Pixel palette[256]) {
   // printf("result.channels() = %u\n", result.channels());
   // printf("src.elemSize() = %zu\n", src.elemSize());
   // printf("result.elemSize() = %zu\n", result.elemSize());
-  // printf("result.ptr<Pixel>(0,1) - result.ptr<Pixel>(0,0) = %zu\n", reinterpret_cast<uchar*>(result.ptr<Pixel>(0, 1)) -
-  // reinterpret_cast<uchar*>(result.ptr<Pixel>(0, 0)));
+  // printf("result.ptr<Pixel>(0,1) - result.ptr<Pixel>(0,0) = %zu\n", reinterpret_cast<uchar*>(result.ptr<Pixel>(0, 1)) - reinterpret_cast<uchar*>(result.ptr<Pixel>(0, 0)));
+  
   for(int y = 0; y < src.rows; y++) {
     for(int x = 0; x < src.cols; x++) {
       uchar index = src.at<uchar>(y, x);
