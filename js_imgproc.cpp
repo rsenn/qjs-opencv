@@ -383,37 +383,44 @@ js_cv_cvt_color(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
   if(js_is_noarray(src) || js_is_noarray(dst))
     return JS_ThrowInternalError(ctx, "src or dst not an array!");
 
-  switch(magic) {
-    case CONVERT_COLOR: {
+  try {
+    switch(magic) {
+      case CONVERT_COLOR: {
 
-      JS_ToInt32(ctx, &code, argv[2]);
+        JS_ToInt32(ctx, &code, argv[2]);
 
-      if(argc > 3)
-        JS_ToInt32(ctx, &dstCn, argv[3]);
+        if(argc > 3)
+          JS_ToInt32(ctx, &dstCn, argv[3]);
 
-      cv::cvtColor(src, dst, code, dstCn);
+        cv::cvtColor(src, dst, code, dstCn);
 
-      break;
+        break;
+      }
+
+      case CONVERT_COLOR_TWOPLANE: {
+        JSInputOutputArray dst2 = js_umat_or_mat(ctx, argv[2]);
+
+        JS_ToInt32(ctx, &code, argv[3]);
+
+        cv::cvtColorTwoPlane(src, dst, dst2, code);
+        break;
+      }
+
+      case CONVERT_DEMOSAICING: {
+        JS_ToInt32(ctx, &code, argv[2]);
+
+        if(argc > 3)
+          JS_ToInt32(ctx, &dstCn, argv[3]);
+
+        cv::demosaicing(src, dst, code, dstCn);
+        break;
+      }
     }
-
-    case CONVERT_COLOR_TWOPLANE: {
-      JSInputOutputArray dst2 = js_umat_or_mat(ctx, argv[2]);
-
-      JS_ToInt32(ctx, &code, argv[3]);
-
-      cv::cvtColorTwoPlane(src, dst, dst2, code);
-      break;
-    }
-
-    case CONVERT_DEMOSAICING: {
-      JS_ToInt32(ctx, &code, argv[2]);
-
-      if(argc > 3)
-        JS_ToInt32(ctx, &dstCn, argv[3]);
-
-      cv::demosaicing(src, dst, code, dstCn);
-      break;
-    }
+  } catch(const cv::Exception& error) {
+    const char *msg, *what = e.what();
+    if((msg = strstr(what, ") ")))
+      what = msg + 2;
+    ret = JS_ThrowInternalError(ctx, "cv::Exception %s", what);
   }
 
   /*after = cv::getTickCount();
