@@ -51,7 +51,7 @@ export const MouseEvents = {
   EVENT_RBUTTONDBLCLK,
   EVENT_MBUTTONDBLCLK,
   EVENT_MOUSEWHEEL,
-  EVENT_MOUSEHWHEEL
+  EVENT_MOUSEHWHEEL,
 };
 export const MouseFlags = {
   EVENT_FLAG_LBUTTON,
@@ -59,7 +59,7 @@ export const MouseFlags = {
   EVENT_FLAG_MBUTTON,
   EVENT_FLAG_CTRLKEY,
   EVENT_FLAG_SHIFTKEY,
-  EVENT_FLAG_ALTKEY
+  EVENT_FLAG_ALTKEY,
 };
 
 export const Mouse = {
@@ -70,7 +70,7 @@ export const Mouse = {
     const toks = BitsToNames(MouseFlags, name => name.replace(/EVENT_FLAG_/, ''));
 
     return flags => [...toks(flags)];
-  })()
+  })(),
 };
 
 export class Screen {
@@ -210,7 +210,7 @@ Object.assign(TextStyle.prototype, {
   draw(mat, text, pos, color = [255, 255, 255, 255], lineThickness = FILLED, lineType = LINE_AA) {
     const { fontFace, fontScale, thickness } = this;
     Draw.text(mat, text, pos, fontFace, fontScale, color, lineThickness, lineType);
-  }
+  },
 });
 
 const palette16 = [0x000000, 0xa00000, 0x00a000, 0xa0a000, 0x0000a0, 0xa000a0, 0x00a0a0, 0xc0c0c0, 0xa0a0a0, 0xff0000, 0x00ff00, 0xffff00, 0x0000ff, 0xff00ff, 0x00ffff, 0xffffff];

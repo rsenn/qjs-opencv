@@ -1,3 +1,4 @@
+#include "js_cv.hpp"
 #include "js_umat.hpp"
 #include "jsbindings.hpp"
 #include <quickjs.h>
@@ -96,7 +97,7 @@ js_ximgproc_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
         break;
       }
     }
-  } catch(const cv::Exception& e) { ret = js_handle_exception(ctx, e); }
+  } catch(const cv::Exception& e) { ret = js_cv_throw(ctx, e); }
 
   return ret;
 }

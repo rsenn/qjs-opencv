@@ -1,5 +1,6 @@
 #include "cutils.h"
 #include "geometry.hpp"
+#include "js_cv.hpp"
 #include "js_array.hpp"
 #include "js_contour.hpp"
 #include "js_mat.hpp"
@@ -416,12 +417,7 @@ js_cv_cvt_color(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
         break;
       }
     }
-  } catch(const cv::Exception& error) {
-    const char *msg, *what = e.what();
-    if((msg = strstr(what, ") ")))
-      what = msg + 2;
-    ret = JS_ThrowInternalError(ctx, "cv::Exception %s", what);
-  }
+  } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 
   /*after = cv::getTickCount();
   double t = static_cast<double>(after - before) / cv::getTickFrequency();
@@ -575,7 +571,7 @@ js_cv_morphology(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
       case 0: cv::dilate(src, dst, kernel, anchor, iterations, borderType, borderValue); break;
       case 1: cv::erode(src, dst, kernel, anchor, iterations, borderType, borderValue); break;
     }
-  } catch(const cv::Exception& e) { return js_handle_exception(ctx, e); }
+  } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 
   return JS_UNDEFINED;
 }
@@ -911,7 +907,7 @@ js_imgproc_motion(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
         break;
       }
     }
-  } catch(const cv::Exception& e) { ret = js_handle_exception(ctx, e); }
+  } catch(const cv::Exception& e) { ret = js_cv_throw(ctx, e); }
 
   return ret;
 }
@@ -1085,7 +1081,7 @@ js_imgproc_misc(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
         break;
       }
     }
-  } catch(const cv::Exception& e) { ret = js_handle_exception(ctx, e); }
+  } catch(const cv::Exception& e) { ret = js_cv_throw(ctx, e); }
 
   return ret;
 }
@@ -1337,7 +1333,7 @@ js_imgproc_transform(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
         break;
       }
     }
-  } catch(const cv::Exception& e) { ret = js_handle_exception(ctx, e); }
+  } catch(const cv::Exception& e) { ret = js_cv_throw(ctx, e); }
 
   return ret;
 }
@@ -1637,7 +1633,7 @@ js_imgproc_filter(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
         break;
       }
     }
-  } catch(const cv::Exception& e) { ret = js_handle_exception(ctx, e); }
+  } catch(const cv::Exception& e) { ret = js_cv_throw(ctx, e); }
 
   return ret;
 }
@@ -1935,7 +1931,7 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
   }
 
   catch(const cv::Exception& e) {
-    ret = js_handle_exception(ctx, e);
+    ret = js_cv_throw(ctx, e);
   }
 
   return ret;

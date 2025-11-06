@@ -1,4 +1,5 @@
 #include "cutils.h"
+#include "js_cv.hpp"
 #include "js_alloc.hpp"
 #include "js_array.hpp"
 #include "js_keypoint.hpp"
@@ -797,12 +798,7 @@ js_feature2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
         ptr->read(str);
       }
     }
-  } catch(const cv::Exception& e) {
-    const char *msg, *what = e.what();
-    if((msg = strstr(what, ") ")))
-      what = msg + 2;
-    ret = JS_ThrowInternalError(ctx, "cv::Exception %s", what);
-  }
+  } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 
   return ret;
 }

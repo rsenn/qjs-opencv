@@ -90,7 +90,10 @@ js_draw_circle(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
     }
   }
 
-  cv::circle(dst, point, radius, js_to_scalar(color), thickness < 0 ? cv::FILLED : thickness, line_type);
+  try {
+    cv::circle(dst, point, radius, js_to_scalar(color), thickness < 0 ? cv::FILLED : thickness, line_type);
+  } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
+
   return JS_UNDEFINED;
 }
 
@@ -155,7 +158,9 @@ js_draw_ellipse(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
     }
   }
 
-  cv::ellipse(dst, center, axes, angle, start_angle, end_angle, js_to_scalar(color), thickness < 0 ? cv::FILLED : thickness, line_type);
+  try {
+    cv::ellipse(dst, center, axes, angle, start_angle, end_angle, js_to_scalar(color), thickness < 0 ? cv::FILLED : thickness, line_type);
+  } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 
   return JS_UNDEFINED;
 }
@@ -198,7 +203,9 @@ js_draw_contour(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
 
   std::cerr << "draw_contour() contours.length=" << contours.size() << " index=" << index << " thickness=" << thickness << std::endl;
 
-  cv::drawContours(dst, contours, index, js_to_scalar(color), thickness, line_type);
+  try {
+    cv::drawContours(dst, contours, index, js_to_scalar(color), thickness, line_type);
+  } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 
   std::cerr << "draw_contour() ret:" << ret << " color: " << js_to_scalar(color) << std::endl;
   return JS_UNDEFINED;
@@ -252,15 +259,18 @@ js_draw_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
   // index << " thickness="
   // << thickness << std::endl;
 
-  if(dst.isMat()) {
-    cv::Mat& mref = dst.getMatRef();
-    cv::drawContours(mref, contours, index, scalar, thickness, line_type, argc > 6 ? JSInputOutputArray(hier) : cv::noArray(), maxLevel, offset);
-  } else if(dst.isUMat()) {
-    cv::UMat& umref = dst.getUMatRef();
-    cv::drawContours(umref, contours, index, scalar, thickness, line_type, argc > 6 ? JSInputOutputArray(hier) : cv::noArray(), maxLevel, offset);
-  } else {
-    cv::drawContours(dst, contours, index, scalar, thickness, line_type, argc > 6 ? JSInputOutputArray(hier) : cv::noArray(), maxLevel, offset);
-  }
+  try {
+    if(dst.isMat()) {
+      cv::Mat& mref = dst.getMatRef();
+      cv::drawContours(mref, contours, index, scalar, thickness, line_type, argc > 6 ? JSInputOutputArray(hier) : cv::noArray(), maxLevel, offset);
+    } else if(dst.isUMat()) {
+      cv::UMat& umref = dst.getUMatRef();
+      cv::drawContours(umref, contours, index, scalar, thickness, line_type, argc > 6 ? JSInputOutputArray(hier) : cv::noArray(), maxLevel, offset);
+    } else {
+      cv::drawContours(dst, contours, index, scalar, thickness, line_type, argc > 6 ? JSInputOutputArray(hier) : cv::noArray(), maxLevel, offset);
+    }
+  } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
+
   // std::cerr << "draw_contours() ret:" << ret << " color: " <<
   // js_to_scalar(color) << std::endl;
 
@@ -327,7 +337,10 @@ js_draw_line(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
          antialias ? "true" : "false");
 #endif
 
-  cv::line(dst, line.a, line.b, scalar, thickness, antialias ? cv::LINE_AA : cv::LINE_8);
+  try {
+    cv::line(dst, line.a, line.b, scalar, thickness, antialias ? cv::LINE_AA : cv::LINE_8);
+  } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
+
   return JS_UNDEFINED;
 }
 
@@ -366,7 +379,10 @@ js_draw_polygon(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
     std::cerr << "drawPolygon() points: " << (points) << " color: " << to_string(color) << std::endl;
 
     // cv::fillPoly(*dptr, points, color, antialias ? cv::LINE_AA : cv::LINE_8);
-    (thickness <= 0 ? cv::fillPoly(dst, &pts, &size, 1, color, line_type) : cv::polylines(dst, &pts, &size, 1, true, color, thickness, line_type));
+
+    try {
+      (thickness <= 0 ? cv::fillPoly(dst, &pts, &size, 1, color, line_type) : cv::polylines(dst, &pts, &size, 1, true, color, thickness, line_type));
+    } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 
     return JS_UNDEFINED;
   }
@@ -410,8 +426,9 @@ js_draw_polylines(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
 
   // std::cerr << "polylines()" << " is_closed: " << is_closed << " color: " <<  (color) << " thickness: " << thickness << " line_type: " << line_type <<
   // std::endl;
-
-  cv::polylines(dst, points, is_closed, *reinterpret_cast<cv::Scalar const*>(&color), thickness, line_type);
+  try {
+    cv::polylines(dst, points, is_closed, *reinterpret_cast<cv::Scalar const*>(&color), thickness, line_type);
+  } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 
   return JS_UNDEFINED;
 }
@@ -474,7 +491,9 @@ js_draw_rectangle(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
   points[1].y = rect.y + rect.height;
 
   // printf("cv::rectangle %lf,%lf %lfx%lf [%.0lf,%.0lf,%.0lf,%.0lf]\n", rect.x, rect.y, rect.width, rect.height, scalar[0], scalar[1], scalar[2], scalar[3]);
-  cv::rectangle(dst, points[0], points[1], scalar, thickness, line_type);
+  try {
+    cv::rectangle(dst, points[0], points[1], scalar, thickness, line_type);
+  } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 
   return JS_UNDEFINED;
 }
@@ -494,7 +513,9 @@ js_draw_keypoints(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
   if(argc)
     js_color_read(ctx, argv[3], &color);
 
-  cv::drawKeypoints(image, keypoints, dst, *(cv::Scalar*)&color, cv::DrawMatchesFlags(0));
+  try {
+    cv::drawKeypoints(image, keypoints, dst, *(cv::Scalar*)&color, cv::DrawMatchesFlags(0));
+  } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 
   return JS_UNDEFINED;
 }
@@ -563,29 +584,31 @@ js_put_text(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
     }
   }
 
+  try {
 #ifdef HAVE_OPENCV_FREETYPE
-  if(freetype2 == nullptr)
-    freetype2 = cv::freetype::createFreeType2();
+    if(freetype2 == nullptr)
+      freetype2 = cv::freetype::createFreeType2();
 
-  if(!font_name.empty() && font_name != freetype2_face) {
-    try {
-      freetype2->loadFontData(font_name, 0);
-    } catch(const cv::Exception& e) {
-      const char *errstr = e.what(), *err2;
+    if(!font_name.empty() && font_name != freetype2_face) {
+      try {
+        freetype2->loadFontData(font_name, 0);
+      } catch(const cv::Exception& e) {
+        const char *errstr = e.what(), *err2;
 
-      if((err2 = strchr(errstr, '!')))
-        errstr = err2 + 1;
+        if((err2 = strchr(errstr, '!')))
+          errstr = err2 + 1;
 
-      return JS_ThrowInternalError(ctx, "freetype2 exception: %s\n", errstr);
+        return JS_ThrowInternalError(ctx, "freetype2 exception: %s\n", errstr);
+      }
+      freetype2_face = font_name;
     }
-    freetype2_face = font_name;
-  }
 
-  if(!font_name.empty())
-    freetype2->putText(*dst, text, point, font_scale, js_to_scalar(color), thickness, line_type, bottomLeftOrigin);
-  else
+    if(!font_name.empty())
+      freetype2->putText(*dst, text, point, font_scale, js_to_scalar(color), thickness, line_type, bottomLeftOrigin);
+    else
 #endif
-    cv::putText(*dst, text, point, font_face, font_scale, js_to_scalar(color), thickness < 0 ? 0 : thickness, line_type, bottomLeftOrigin);
+      cv::putText(*dst, text, point, font_face, font_scale, js_to_scalar(color), thickness < 0 ? 0 : thickness, line_type, bottomLeftOrigin);
+  } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 
   return JS_UNDEFINED;
 }
@@ -617,20 +640,22 @@ js_get_text_size(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
   if(argc > i)
     JS_ToInt32(ctx, &thickness, argv[i++]);
 
+  try {
 #ifdef HAVE_OPENCV_FREETYPE
-  if(freetype2 == nullptr)
-    freetype2 = cv::freetype::createFreeType2();
+    if(freetype2 == nullptr)
+      freetype2 = cv::freetype::createFreeType2();
 
-  if(!font_name.empty() && font_name != freetype2_face) {
-    freetype2->loadFontData(font_name, 0);
-    freetype2_face = font_name;
-  }
+    if(!font_name.empty() && font_name != freetype2_face) {
+      freetype2->loadFontData(font_name, 0);
+      freetype2_face = font_name;
+    }
 
-  if(!font_name.empty())
-    size = freetype2->getTextSize(text, font_scale, thickness, &baseline);
-  else
+    if(!font_name.empty())
+      size = freetype2->getTextSize(text, font_scale, thickness, &baseline);
+    else
 #endif
-    size = cv::getTextSize(text, font_face, font_scale, thickness, &baseline);
+      size = cv::getTextSize(text, font_face, font_scale, thickness, &baseline);
+  } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 
   baseline_value = JS_NewInt32(ctx, baseline);
 
@@ -657,7 +682,9 @@ js_get_font_scale_from_height(JSContext* ctx, JSValueConst this_val, int argc, J
   if(argc > 2)
     JS_ToInt32(ctx, &thickness, argv[2]);
 
-  font_scale = cv::getFontScaleFromHeight(font_face, pixel_height, thickness);
+  try {
+    font_scale = cv::getFontScaleFromHeight(font_face, pixel_height, thickness);
+  } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 
   return JS_NewFloat64(ctx, font_scale);
 }
@@ -667,18 +694,21 @@ js_load_font(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
   int32_t id = 0;
   std::string font_name;
 
+  try {
 #ifdef HAVE_OPENCV_FREETYPE
-  if(freetype2 == nullptr)
-    freetype2 = cv::freetype::createFreeType2();
+    if(freetype2 == nullptr)
+      freetype2 = cv::freetype::createFreeType2();
 #endif
 
-  js_value_to(ctx, argv[0], font_name);
-  if(argc > 1)
-    js_value_to(ctx, argv[1], id);
+    js_value_to(ctx, argv[0], font_name);
+    if(argc > 1)
+      js_value_to(ctx, argv[1], id);
 
 #ifdef HAVE_OPENCV_FREETYPE
-  freetype2->loadFontData(font_name, id);
+    freetype2->loadFontData(font_name, id);
 #endif
+  } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
+
   return JS_UNDEFINED;
 }
 
@@ -701,11 +731,12 @@ js_clip_line(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
     return JS_ThrowTypeError(ctx, "argument 2,3: expecting Point,Point or Line");
   }
 
-  if(js_rect_read(ctx, argv[0], &img_rect)) {
-    result = cv::clipLine(img_rect, line.a, line.b);
-  } else if(js_size_read(ctx, argv[0], &img_size)) {
-    result = cv::clipLine(img_size, line.a, line.b);
-  }
+  try {
+    if(js_rect_read(ctx, argv[0], &img_rect))
+      result = cv::clipLine(img_rect, line.a, line.b);
+    else if(js_size_read(ctx, argv[0], &img_size))
+      result = cv::clipLine(img_size, line.a, line.b);
+  } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 
   if(a && b) {
     *a = line.a;

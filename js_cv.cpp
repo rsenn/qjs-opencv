@@ -40,10 +40,13 @@ enum { HIER_NEXT = 0, HIER_PREV, HIER_CHILD, HIER_PARENT };
 
 enum { DISPLAY_OVERLAY };
 
-extern "C" {
+/*extern "C" {
 JSValue cv_proto = JS_UNDEFINED, cv_class = JS_UNDEFINED;
 thread_local JSClassID js_cv_class_id = 0;
-}
+}*/
+
+static JSValue exception_proto = JS_UNDEFINED, exception_class = JS_UNDEFINED;
+static JSClassID js_exception_class_id = 0;
 
 static JSValue
 js_cv_imdecode(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
@@ -167,9 +170,12 @@ js_cv_imwrite(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
     cv::minMaxLoc(image, nullptr, &max);
     if(palette.size() < size_t(max))
       palette.resize(size_t(max));
-    // printf("png++ write_mat '%s' [%zu] (transparent: %i)\n", filename, palette.size(), transparent);
 
-    png_write(filename, image.getMatRef(), palette, transparent);
+    printf("png++ write_mat '%s' [%zu] (transparent: %i)\n", filename, palette.size(), transparent);
+
+    try {
+      png_write(filename, image.getMatRef(), palette, transparent);
+    } catch(std::runtime_error& error) { return JS_ThrowInternalError(ctx, "runtime error: %s", error.what()); }
 
   } else {
     cv::imwrite(filename, image);
@@ -1847,23 +1853,76 @@ js_function_list_t js_cv_constants{
 
 };
 
+JSValue
+js_cv_throw(JSContext* ctx, const cv::Exception& e) {
+  const char *msg, *what = e.what(), *loc = 0;
+  size_t loclen;
+
+  if((msg = strstr(what, "/opencv")))
+    what = msg + 1;
+
+  /*if((msg = strstr(what, "/opencv"))) {
+    loc = msg + 1;
+    if((what = strstr(loc, ": "))) {
+      loclen = what - loc;
+      what += 2;
+    }
+  }
+
+  if((msg = strstr(what, "error: ("))) {
+    if((msg = strstr(msg, ") ")))
+      what = msg + 2;
+  }*/
+
+  JSValue ret = JS_NewError(ctx);
+
+  if(loc)
+    JS_DefinePropertyValueStr(ctx, ret, "location", JS_NewStringLen(ctx, loc, loclen), JS_PROP_CONFIGURABLE | JS_PROP_ENUMERABLE);
+
+  JS_DefinePropertyValueStr(ctx, ret, "message", JS_NewString(ctx, what), JS_PROP_CONFIGURABLE);
+
+  return JS_Throw(ctx, ret);
+}
+
+/*JSClassDef js_exception_class = {
+    .class_name = "Exception",
+    .finalizer = js_exception_finalizer,
+};*/
+
+const JSCFunctionListEntry js_exception_proto_funcs[] = {
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "cv::Exception", JS_PROP_CONFIGURABLE),
+};
+
 extern "C" int
 js_cv_init(JSContext* ctx, JSModuleDef* m) {
   JSAtom atom;
   JSValue cvObj, g = JS_GetGlobalObject(ctx);
+
+  JSValue error_proto = js_global_prototype(ctx, "Error");
+  exception_proto = JS_NewObjectProto(ctx, error_proto);
+  JS_FreeValue(ctx, error_proto);
+
+  JS_SetPropertyFunctionList(ctx, exception_proto, js_exception_proto_funcs, countof(js_exception_proto_funcs));
+
+  exception_class = JS_NewObjectProto(ctx, JS_NULL); // JS_NewCFunction2(ctx, js_exception_constructor, "Exception", 1, JS_CFUNC_constructor, 0);
+
+  JS_SetConstructor(ctx, exception_class, exception_proto);
+
   if(m) {
+    JS_SetModuleExport(ctx, m, "Exception", exception_class);
     JS_SetModuleExportList(ctx, m, js_cv_static_funcs.data(), js_cv_static_funcs.size());
     JS_SetModuleExportList(ctx, m, js_cv_constants.data(), js_cv_constants.size());
   }
 
-  cv_class = JS_NewObject(ctx);
-  /* JS_SetPropertyFunctionList(ctx, cv_class, js_cv_static_funcs.data(), js_cv_static_funcs.size());
+  /*cv_class = JS_NewObject(ctx);
+
+  JS_SetPropertyFunctionList(ctx, cv_class, js_cv_static_funcs.data(), js_cv_static_funcs.size());
   JS_SetPropertyFunctionList(ctx, cv_class, js_cv_constants.data(), js_cv_constants.size());
   JS_SetModuleExport(ctx, m, "default", cv_class);*/
 
-  atom = JS_NewAtom(ctx, "cv");
+  /*atom = JS_NewAtom(ctx, "cv");
 
-  /* if(JS_HasProperty(ctx, g, atom)) {
+  if(JS_HasProperty(ctx, g, atom)) {
      cvObj = JS_GetProperty(ctx, g, atom);
    } else {
      cvObj = JS_NewObject(ctx);
@@ -1875,15 +1934,16 @@ js_cv_init(JSContext* ctx, JSModuleDef* m) {
        JS_SetProperty(ctx, g, atom, cvObj);
      }
 
-   JS_SetModuleExport(ctx, m, "default", cvObj);
- */
+   JS_SetModuleExport(ctx, m, "default", cvObj);*/
+
   JS_FreeValue(ctx, g);
-  //  JS_FreeValue(ctx, cvObj);
+  // JS_FreeValue(ctx, cvObj);
   return 0;
 }
 
 extern "C" void
 js_cv_export(JSContext* ctx, JSModuleDef* m) {
+  JS_AddModuleExport(ctx, m, "Exception");
   JS_AddModuleExportList(ctx, m, js_cv_static_funcs.data(), js_cv_static_funcs.size());
   JS_AddModuleExportList(ctx, m, js_cv_constants.data(), js_cv_constants.size());
   JS_AddModuleExport(ctx, m, "default");

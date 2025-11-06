@@ -52,7 +52,7 @@ function main(...args) {
     palette2
       .map(c => c.map(n => (n + '').padStart(3)).join(', '))
       .map(c => `[ ${c} ]`)
-      .join('\n')
+      .join('\n'),
   );
 }
 

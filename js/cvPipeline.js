@@ -1,4 +1,4 @@
-import { isObject } from 'util';
+import { isObject, isFunction } from 'util';
 import { Modulo } from './cvUtils.js';
 import { WeakMapper } from './cvUtils.js';
 import { Mat } from 'opencv';
@@ -19,15 +19,18 @@ export class Pipeline extends Function {
         let args = [mat ?? self.images[i - 1], self.images[i]];
 
         self.invokeCallback('before', ...args);
-        //console.log(`Pipeline \x1b[38;5;112m#${i} \x1b[38;5;32m'${processor.name}'\x1b[m`);
 
         mat = processor.call(self, ...args);
 
+        //console.log(`Pipeline \x1b[38;5;112m#${i} \x1b[38;5;32m'${processor.name}'\x1b[m`, mat);
+
         self.invokeCallback('after', ...args);
+
         //console.log(`Pipeline`, { i, mat, isObj: isObject(mat) });
 
-        if(isObject(mat) && mat instanceof Mat) self.images[i] = mat;
-        mat = self.images[i];
+        if(isObject(mat) || isFunction(mat)) self.images[i] = mat;
+        else mat = self.images[i];
+
         if(typeof callback == 'function') callback.call(self, i, self.processors.length);
       }
       return mat;
@@ -37,7 +40,7 @@ export class Pipeline extends Function {
       processors,
       currentProcessor: -1,
       images: new Array(processors.length),
-      callback
+      callback,
     });
     self.times = new Array(processors.length);
     return Object.setPrototypeOf(self, Pipeline.prototype);
@@ -150,7 +153,7 @@ export function Processor(fn, ...args) {
     fn.call(this, src, dst, ...args);
     return dst;
   };
-  Object.assign(self, { fnName: fn.name });
+  Object.defineProperty(self, 'name', { value: fn.name });
   Object.setPrototypeOf(self, Processor.prototype);
   return self;
 }
@@ -161,5 +164,5 @@ Object.assign(Processor.prototype, {
   },
   get functionName() {
     return this.fnName;
-  }
+  },
 });

@@ -1,5 +1,6 @@
 #include "js_mat.hpp"
 #include "cutils.h"
+#include "js_cv.hpp"
 #include "js_alloc.hpp"
 #include "js_array.hpp"
 #include "js_point.hpp"
@@ -231,8 +232,7 @@ js_mat_dump(JSMatData* const s) {
   bool inList = posList != mat_list.cend();
   bool inFreed = std::find(mat_freed.cbegin(), mat_freed.cend(), s) != mat_freed.cend();
   const auto u = s->u;
-  std::cerr << " mat"
-            << "[" << (posList - mat_list.cbegin()) << "]=" << static_cast<void*>(s);
+  std::cerr << " mat" << "[" << (posList - mat_list.cbegin()) << "]=" << static_cast<void*>(s);
 
   if(inList)
     std::cerr << ", inList=" << (inList ? "true" : "false");
@@ -582,7 +582,7 @@ js_mat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
         break;
       }
     }
-  } catch(const cv::Exception& e) { return js_handle_exception(ctx, e); }
+  } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 
   return ret;
 }
@@ -1290,7 +1290,7 @@ js_mat_copy_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
       m->copyTo(output, mask);
     else
       m->copyTo(output);
-  } catch(const cv::Exception& e) { return js_handle_exception(ctx, e); }
+  } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 
   return JS_UNDEFINED;
 }

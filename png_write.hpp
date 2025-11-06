@@ -7,7 +7,7 @@
 #include "pngpp/palette.hpp"
 #include "pngpp/pixel_buffer.hpp"
 #include "pngpp/types.hpp"
-//#include <ext/alloc_traits.h>
+// #include <ext/alloc_traits.h>
 #include <opencv2/core/hal/interface.h>
 #include <stddef.h>
 #include <fstream>
@@ -27,7 +27,7 @@ png_new(const cv::Size& size) {
 template<class ColorType>
 static inline void
 png_set_palette(IndexedPNG& img, const std::vector<ColorType>& pal) {
-  png::palette palette(pal.size());
+  png::palette palette(pal.size() + 1);
   size_t i = 0;
 
   for(const ColorType& pix : pal) {

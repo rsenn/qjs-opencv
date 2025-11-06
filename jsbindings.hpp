@@ -26,12 +26,12 @@
 
 typedef std::vector<JSCFunctionListEntry> js_function_list_t;
 
-static inline JSValue
+/*static inline JSValue
 js_handle_exception(JSContext* ctx, const cv::Exception& e) {
   std::string msg(e.what());
 
   return JS_ThrowInternalError(ctx, "cv::Exception %s", msg.c_str() + msg.find_last_of("/\\") + 1);
-}
+}*/
 
 namespace cv {
 class CLAHE;
@@ -161,29 +161,23 @@ struct JSConstructor {
   JSConstructor(JSCFunction* _ctor, const char* _name, const JSCFunctionListEntry (&_funcs)[size])
       : name(_name), ctor(_ctor), proto(_funcs), nfuncs(size), class_obj(JS_UNDEFINED) {}
 
-  JSValue
-  create(JSContext* ctx) {
+  JSValue create(JSContext* ctx) {
     class_obj = JS_NewCFunction2(ctx, ctor, name, 0, JS_CFUNC_constructor, 0);
     if(proto && nfuncs)
       JS_SetPropertyFunctionList(ctx, class_obj, proto, nfuncs);
     return class_obj;
   }
 
-  void
-  set_prototype(JSContext* ctx, JSValueConst proto) const {
+  void set_prototype(JSContext* ctx, JSValueConst proto) const {
     assert(!JS_IsUndefined(class_obj));
     JS_SetConstructor(ctx, class_obj, proto);
   }
-  void
-  set_export(JSContext* ctx, JSModuleDef* m) const {
+  void set_export(JSContext* ctx, JSModuleDef* m) const {
     assert(!JS_IsUndefined(class_obj));
     JS_SetModuleExport(ctx, m, name, class_obj);
   }
 
-  void
-  add_export(JSContext* ctx, JSModuleDef* m) const {
-    JS_AddModuleExport(ctx, m, name);
-  }
+  void add_export(JSContext* ctx, JSModuleDef* m) const { JS_AddModuleExport(ctx, m, name); }
 
 protected:
   const char* name;
@@ -838,8 +832,7 @@ js_value_from(JSContext* ctx, const std::vector<T>& in) {
 
 template<class T> class js_iterable {
 public:
-  static int64_t
-  to_vector(JSContext* ctx, JSValueConst arg, std::vector<T>& out) {
+  static int64_t to_vector(JSContext* ctx, JSValueConst arg, std::vector<T>& out) {
     IteratorValue item;
     JSValue iter = js_iterator_new(ctx, arg);
     out.clear();
@@ -856,9 +849,7 @@ public:
     return out.size();
   }
 
-  template<size_t N>
-  static int64_t
-  to_array(JSContext* ctx, JSValueConst arg, std::array<T, N>& out) {
+  template<size_t N> static int64_t to_array(JSContext* ctx, JSValueConst arg, std::array<T, N>& out) {
     int64_t i = 0;
     IteratorValue item;
     JSValue iter = js_iterator_new(ctx, arg);
@@ -875,10 +866,7 @@ public:
     return i;
   }
 
-  static int64_t
-  to_scalar(JSContext* ctx, JSValueConst arg, cv::Scalar_<T>& out) {
-    return to_array(ctx, arg, *reinterpret_cast<std::array<T, 4>*>(&out));
-  }
+  static int64_t to_scalar(JSContext* ctx, JSValueConst arg, cv::Scalar_<T>& out) { return to_array(ctx, arg, *reinterpret_cast<std::array<T, 4>*>(&out)); }
 };
 
 template<class T>
