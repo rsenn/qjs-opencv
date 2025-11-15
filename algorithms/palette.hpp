@@ -35,8 +35,9 @@ palette_apply(const cv::Mat& src, JSOutputArray dst, Pixel palette[256]) {
   // printf("result.channels() = %u\n", result.channels());
   // printf("src.elemSize() = %zu\n", src.elemSize());
   // printf("result.elemSize() = %zu\n", result.elemSize());
-  // printf("result.ptr<Pixel>(0,1) - result.ptr<Pixel>(0,0) = %zu\n", reinterpret_cast<uchar*>(result.ptr<Pixel>(0, 1)) - reinterpret_cast<uchar*>(result.ptr<Pixel>(0, 0)));
-  
+  // printf("result.ptr<Pixel>(0,1) - result.ptr<Pixel>(0,0) = %zu\n", reinterpret_cast<uchar*>(result.ptr<Pixel>(0, 1)) -
+  // reinterpret_cast<uchar*>(result.ptr<Pixel>(0, 0)));
+
   for(int y = 0; y < src.rows; y++) {
     for(int x = 0; x < src.cols; x++) {
       uchar index = src.at<uchar>(y, x);
@@ -60,7 +61,7 @@ color3f(const ColorType& c) {
   ret.b = float(c.b) / 255.0;
   ret.g = float(c.g) / 255.0;
   ret.r = float(c.r) / 255.0;
-  
+
   return ret;
 }
 
@@ -115,13 +116,13 @@ palette_match(const cv::Mat& src, JSOutputArray dst, const std::vector<ColorType
     for(int y = 0; y < src.rows; y++) {
       for(int x = 0; x < src.cols; x++) {
         const ColorType& color = *reinterpret_cast<const ColorType*>(ptr + (x * elem_size));
- 
+
         int index = find_nearest(color, palette);
 
         if((int)(unsigned int)(uchar)index == index)
           result.at<uchar>(y, x) = index;
       }
- 
+
       ptr += step;
     }
 
@@ -134,7 +135,7 @@ palette_match(const cv::Mat& src, JSOutputArray dst, const std::vector<ColorType
         if((int)(unsigned int)(uchar)index == index)
           result.at<uchar>(y, x) = index;
       }
- 
+
       ptr += step;
     }
   }

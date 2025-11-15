@@ -820,29 +820,24 @@ fail:
 
 int
 js_draw_init(JSContext* ctx, JSModuleDef* m) {
+  /* create the Draw class */
+  JS_NewClassID(&js_draw_class_id);
+  JS_NewClass(JS_GetRuntime(ctx), js_draw_class_id, &js_draw_class);
 
-  if(js_draw_class_id == 0) {
-    /* create the Draw class */
-    JS_NewClassID(&js_draw_class_id);
-    JS_NewClass(JS_GetRuntime(ctx), js_draw_class_id, &js_draw_class);
+  draw_proto = JS_NewObject(ctx);
+  JS_SetPropertyFunctionList(ctx, draw_proto, js_draw_proto_funcs, countof(js_draw_proto_funcs));
+  JS_SetClassProto(ctx, js_draw_class_id, draw_proto);
 
-    draw_proto = JS_NewObject(ctx);
-    JS_SetPropertyFunctionList(ctx, draw_proto, js_draw_proto_funcs, countof(js_draw_proto_funcs));
-    JS_SetClassProto(ctx, js_draw_class_id, draw_proto);
+  draw_class = JS_NewCFunction2(ctx, js_draw_constructor, "Draw", 2, JS_CFUNC_constructor, 0);
 
-    draw_class = JS_NewCFunction2(ctx, js_draw_constructor, "Draw", 2, JS_CFUNC_constructor, 0);
+  /* set proto.constructor and ctor.prototype */
+  JS_SetConstructor(ctx, draw_class, draw_proto);
+  JS_SetPropertyFunctionList(ctx, draw_class, js_draw_static_funcs, countof(js_draw_static_funcs));
 
-    /* set proto.constructor and ctor.prototype */
-    JS_SetConstructor(ctx, draw_class, draw_proto);
-    JS_SetPropertyFunctionList(ctx, draw_class, js_draw_static_funcs, countof(js_draw_static_funcs));
-  }
+  JS_SetModuleExport(ctx, m, "Draw", draw_class);
 
-  if(m) {
-    JS_SetModuleExportList(ctx, m, js_draw_global_funcs, countof(js_draw_global_funcs));
-    JS_SetModuleExport(ctx, m, "Draw", draw_class);
-  }
-  /*  else
-      JS_SetPropertyStr(ctx, *static_cast<JSValue*>(m), "Draw", draw_class);*/
+  JS_SetModuleExportList(ctx, m, js_draw_global_funcs, countof(js_draw_global_funcs));
+
   return 0;
 }
 
