@@ -143,6 +143,7 @@ endif()
 if(USE_BARCODE)
   add_definitions(-DUSE_BARCODE=1)
   set(BARCODE_SOURCE js_barcode_detector.cpp) 
+  check_library_exists(opencv_barcode _ZN2cv7barcode15BarcodeDetectorD1Ev "${OPENCV_LIBDIR}" OPENCV_BARCODE)
 
   check_include_file_cxx(opencv2/barcode.hpp HAVE_OPENCV2_BARCODE_HPP)
   if(HAVE_OPENCV2_BARCODE_HPP)
