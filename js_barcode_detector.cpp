@@ -3,6 +3,8 @@
 #include "js_point.hpp"
 #include "js_mat.hpp"
 #include "js_umat.hpp"
+
+#ifdef USE_BARCODE
 #include <opencv2/barcode.hpp>
 
 typedef cv::barcode::BarcodeDetector JSBarcodeDetectorClass;
@@ -239,3 +241,4 @@ JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   js_barcode_detector_export(ctx, bd);
   return bd;
 }
+#endif
