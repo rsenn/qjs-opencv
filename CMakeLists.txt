@@ -1,5 +1,7 @@
 project(qjs-opencv C CXX)
 
+cmake_minimum_required(VERSION 3.5)
+
 message("Building project [1;31m${PROJECT_NAME}[0m")
 
 set(DISABLE_WERROR TRUE CACHE BOOL "Disable -Werror flag" FORCE)
@@ -111,7 +113,7 @@ include(CheckIncludeFileCXX)
 
 set(CMAKE_REQUIRED_INCLUDES "${OPENCV_INCLUDE_DIRS}")
 check_include_file_cxx(opencv2/freetype.hpp HAVE_OPENCV2_FREETYPE_HPP)
-check_library_exists(opencv_freetype _ZN2cv8freetype13FreeType2ImplC1Ev "${OPENCV_PREFIX}" OPENCV_FREETYPE)
+#check_library_exists(opencv_freetype _ZN2cv8freetype13FreeType2ImplC1Ev "${OPENCV_PREFIX}" OPENCV_FREETYPE)
 
 if(HAVE_OPENCV2_FREETYPE_HPP)
   set(OPENCV_FREETYPE TRUE)
