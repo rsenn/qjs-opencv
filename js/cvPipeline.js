@@ -1,4 +1,5 @@
-import { isObject, isFunction } from 'util';
+import { isFunction } from 'util';
+import { isObject } from 'util';
 import { Modulo } from './cvUtils.js';
 import { WeakMapper } from './cvUtils.js';
 import { Mat } from 'opencv';
