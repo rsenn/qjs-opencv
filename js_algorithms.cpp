@@ -49,8 +49,8 @@ js_cv_pixel_neighborhood(JSContext* ctx, JSValueConst this_val, int argc, JSValu
      int32_t count;
 
      JS_ToInt32(ctx, &count, argv[2]);
-     output = magic ? pixel_neighborhood_cross_if(*src, count) : pixel_neighborhood_if(*src, count);
-   } else*/
+     output = magic ? pixel_neighborhood_cross_if(*src, count) : pixel_neighborhood_if(*src,
+   count); } else*/
   { output = magic ? pixel_neighborhood_cross(*src) : pixel_neighborhood(*src); }
 
   dst.getMatRef() = output;
@@ -116,7 +116,8 @@ js_cv_palette_generate(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
   int32_t mode = 0, count = 0;
   enum color_space cs;
   enum dist_type dt;
-  // cv::Vec3i params[] = {{1, 1, 1}, {1, 2, 2}, {25, 0, 0}, {25, 0, 0}, {15, 0, 0}, {15, 0, 0}, {0, 0, 0}, {0, 0, 0}};
+  // cv::Vec3i params[] = {{1, 1, 1}, {1, 2, 2}, {25, 0, 0}, {25, 0, 0}, {15, 0, 0}, {15, 0, 0},
+  // {0, 0, 0}, {0, 0, 0}};
   vector<cv::Scalar> palette;
   vector<cv::Vec3b> result;
   JSValue ret = JS_UNDEFINED;

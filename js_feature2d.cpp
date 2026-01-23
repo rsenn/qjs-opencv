@@ -731,12 +731,13 @@ js_feature2d_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
   FREAK* freak = js_feature2d_get<FREAK>(this_val);
   KAZE* kaze = js_feature2d_get<KAZE>(this_val);
 
-  JS_DefinePropertyValueStr(ctx, obj, "empty", JS_NewBool(ctx, (*s)->empty()), JS_PROP_ENUMERABLE);
+  JS_DefinePropertyValueStr(ctx, obj, "empty", JS_NewBool(ctx, (*s)->empty()),
+JS_PROP_ENUMERABLE);
 
   if(freak)
-    JS_DefinePropertyValueStr(ctx, obj, "defaultName", js_object_tostringtag(ctx, this_val), JS_PROP_ENUMERABLE);
-  else
-    JS_DefinePropertyValueStr(ctx, obj, "defaultName", JS_NewString(ctx, f2d->getDefaultName().c_str()), JS_PROP_ENUMERABLE);
+    JS_DefinePropertyValueStr(ctx, obj, "defaultName", js_object_tostringtag(ctx, this_val),
+JS_PROP_ENUMERABLE); else JS_DefinePropertyValueStr(ctx, obj, "defaultName", JS_NewString(ctx,
+f2d->getDefaultName().c_str()), JS_PROP_ENUMERABLE);
 
   js_object_tostringtag(ctx, obj, js_object_tostringtag(ctx, this_val));
   return obj;

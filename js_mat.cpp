@@ -652,12 +652,13 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       /*        auto& scalar = *reinterpret_cast<cv::Scalar_<uint8_t>*>(&arr);
               auto& v4b = *reinterpret_cast<cv::Vec4b*>(&arr);
 
-              uint32_t value = (v4b.val[0] << 24) | (v4b.val[1] << 16) | (v4b.val[2] << 8) | (v4b.val[3]);*/
+              uint32_t value = (v4b.val[0] << 24) | (v4b.val[1] << 16) | (v4b.val[2] << 8) |
+         (v4b.val[3]);*/
       /*   std::array<uint8_t,4> arr;
        */
 
-      // std::cerr << "js_mat_expr input=" << (void*)input << " output=" << (void*)output << " scalar=" <<
-      // scalar << std::endl;
+      // std::cerr << "js_mat_expr input=" << (void*)input << " output=" << (void*)output << "
+      // scalar=" << scalar << std::endl;
 
       switch(magic) {
         case MAT_EXPR_AND: expr = mat & scalar; break;
@@ -957,8 +958,8 @@ std::vector<bool>& defined) { output.resize(static_cast<size_t>(argc));
 template<class T>
 typename std::enable_if<std::is_integral<typename T::value_type>::value, void>::type
 js_mat_vector_get(JSContext* ctx, int argc, JSValueConst argv[], std::vector<T>& output,
-std::vector<bool>& defined) { const size_t bits = (sizeof(typename T::value_type) * 8); const size_t
-n = T::channels; output.resize(static_cast<size_t>(argc));
+std::vector<bool>& defined) { const size_t bits = (sizeof(typename T::value_type) * 8); const
+size_t n = T::channels; output.resize(static_cast<size_t>(argc));
   defined.resize(static_cast<size_t>(argc));
   for(int i = 0; i < argc; i++) {
     double val = 0;
@@ -1009,8 +1010,8 @@ js_mat_set_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
     cv::Scalar s;
     size_t n = js_array_to(ctx, argv[0], s);
 
-    // std::cerr << "Scalar [ " << s[0] << ", " << s[1] << ", " << s[2] << ", " << s[3] << " ]" <<
-    // std::endl; std::cerr << "Scalar.size() = " << n << std::endl;
+    // std::cerr << "Scalar [ " << s[0] << ", " << s[1] << ", " << s[2] << ", " << s[3] << " ]"
+    // << std::endl; std::cerr << "Scalar.size() = " << n << std::endl;
 
     if(n >= m->channels()) {
       m->setTo(s);
@@ -1510,7 +1511,8 @@ js_mat_call(JSContext* ctx, JSValueConst func_obj, JSValueConst this_val, int ar
     return JS_ThrowTypeError(ctx, "cv::Mat(): argument 1 expecting Rect");
 
   // printf("js_mat_call %u,%u %ux%u\n", rect.x, rect.y, rect.width, rect.height);
-  // printf("js_mat_call %u,%u %ux%u rows=%u,cols=%u\n", rect.x, rect.y, rect.width, rect.height, src->rows, src->cols);
+  // printf("js_mat_call %u,%u %ux%u rows=%u,cols=%u\n", rect.x, rect.y, rect.width,
+  // rect.height, src->rows, src->cols);
 
   assert(rect.x >= 0);
   assert(rect.y >= 0);
@@ -1652,7 +1654,8 @@ js_mat_iterator_next(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
 
     dim = mat_dimensions(*m);
 
-    /*std::cout << "mat_dimensions(*m) = " << dim.cols << "x" << dim.rows << std::endl; js_mat_iterator_dump(it);*/
+    /*std::cout << "mat_dimensions(*m) = " << dim.cols << "x" << dim.rows << std::endl;
+     * js_mat_iterator_dump(it);*/
 
     row = it->row;
     col = it->col;
@@ -1695,7 +1698,8 @@ js_mat_iterator_next(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
       }
 
       case MAT_ITERATOR_ENTRIES: {
-        JSValue value = /*channels == 1 ? js_mat_get(ctx, it->obj, row, col) :*/ js_typedarray_new(ctx, it->buf, offset, channels, TypedArrayType(*m));
+        JSValue value =
+            /*channels == 1 ? js_mat_get(ctx, it->obj, row, col) :*/ js_typedarray_new(ctx, it->buf, offset, channels, TypedArrayType(*m));
 
         std::array<uint32_t, 2> pos = {row, col};
         std::array<JSValue, 2> entry = {js_array_from(ctx, pos), value};

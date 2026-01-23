@@ -22,7 +22,8 @@
 
 /*class js_array_iterator : public std::iterator<std::input_iterator_tag, JSValue> {
 public:
-  js_array_iterator(JSContext* c, const JSValueConst& a, const size_t i = 0) : ctx(c), array(&a), pos(i) {}
+  js_array_iterator(JSContext* c, const JSValueConst& a, const size_t i = 0) : ctx(c),
+array(&a), pos(i) {}
 
   value_type
   operator*() const {

@@ -230,7 +230,8 @@ js_draw_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
      std::cerr << "contour #" << (index + 1) << ": " << contours[index].size() << std::endl;
    } else {
      for(size_t m = 0; m < contours.size(); ++m) {
-       std::cerr << "contour #" << (m + 1) << "/" << (contours.size() - 1) << ": " << contours[m].size() << std::endl;
+       std::cerr << "contour #" << (m + 1) << "/" << (contours.size() - 1) << ": " <<
+   contours[m].size() << std::endl;
      }
    }*/
 
@@ -421,8 +422,9 @@ js_draw_polylines(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
       JS_ToInt32(ctx, &line_type, argv[i++]);
   }
 
-  // std::cerr << "polylines()" << " is_closed: " << is_closed << " color: " <<  (color) << " thickness: " << thickness << " line_type: " << line_type <<
-  // std::endl;
+  // std::cerr << "polylines()" << " is_closed: " << is_closed << " color: " <<  (color) << "
+  // thickness: " << thickness
+  // << " line_type: " << line_type << std::endl;
   try {
     cv::polylines(dst, points, is_closed, *reinterpret_cast<cv::Scalar const*>(&color), thickness, line_type);
   } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
@@ -487,7 +489,8 @@ js_draw_rectangle(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
   points[1].x = rect.x + rect.width;
   points[1].y = rect.y + rect.height;
 
-  // printf("cv::rectangle %lf,%lf %lfx%lf [%.0lf,%.0lf,%.0lf,%.0lf]\n", rect.x, rect.y, rect.width, rect.height, scalar[0], scalar[1], scalar[2], scalar[3]);
+  // printf("cv::rectangle %lf,%lf %lfx%lf [%.0lf,%.0lf,%.0lf,%.0lf]\n", rect.x, rect.y,
+  // rect.width, rect.height, scalar[0], scalar[1], scalar[2], scalar[3]);
   try {
     cv::rectangle(dst, points[0], points[1], scalar, thickness, line_type);
   } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }

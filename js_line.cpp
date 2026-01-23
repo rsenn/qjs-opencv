@@ -111,13 +111,10 @@ fail:
 /*static JSValue
  js_line_get_ab(JSContext* ctx, JSValueConst this_val, int magic) {
    JSValue ret = JS_UNDEFINED;
-   JSLineData<double>* ln = static_cast<JSLineData<double>*>(JS_GetOpaque2(ctx, this_val, js_line_class_id));
-   if(!ln)
-     ret = JS_EXCEPTION;
-   else if(magic == 0)
-     ret = js_point_new(ctx, ln->array[0], ln->array[1]);
-   else if(magic == 1)
-     ret = js_point_new(ctx, ln->array[2], ln->array[3]);
+   JSLineData<double>* ln = static_cast<JSLineData<double>*>(JS_GetOpaque2(ctx, this_val,
+ js_line_class_id)); if(!ln) ret = JS_EXCEPTION; else if(magic == 0) ret = js_point_new(ctx,
+ ln->array[0], ln->array[1]); else if(magic == 1) ret = js_point_new(ctx, ln->array[2],
+ ln->array[3]);
 
    return ret;
  }
@@ -274,10 +271,12 @@ js_line_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
       JS_NewAtom(ctx, "y2"),
   };
 
-  /* JS_DefineProperty(ctx, obj, props[0], JS_NewFloat64(ctx, ln->x1), JS_UNDEFINED, JS_UNDEFINED, JS_PROP_ENUMERABLE);
-   JS_DefineProperty(ctx, obj, props[1], JS_NewFloat64(ctx, ln->y1), JS_UNDEFINED, JS_UNDEFINED, JS_PROP_ENUMERABLE);
-   JS_DefineProperty(ctx, obj, props[2], JS_NewFloat64(ctx, ln->x2), JS_UNDEFINED, JS_UNDEFINED, JS_PROP_ENUMERABLE);
-   JS_DefineProperty(ctx, obj, props[3], JS_NewFloat64(ctx, ln->y2), JS_UNDEFINED, JS_UNDEFINED, JS_PROP_ENUMERABLE);*/
+  /* JS_DefineProperty(ctx, obj, props[0], JS_NewFloat64(ctx, ln->x1), JS_UNDEFINED,
+   JS_UNDEFINED, JS_PROP_ENUMERABLE); JS_DefineProperty(ctx, obj, props[1], JS_NewFloat64(ctx,
+   ln->y1), JS_UNDEFINED, JS_UNDEFINED, JS_PROP_ENUMERABLE); JS_DefineProperty(ctx, obj,
+   props[2], JS_NewFloat64(ctx, ln->x2), JS_UNDEFINED, JS_UNDEFINED, JS_PROP_ENUMERABLE);
+   JS_DefineProperty(ctx, obj, props[3], JS_NewFloat64(ctx, ln->y2), JS_UNDEFINED, JS_UNDEFINED,
+   JS_PROP_ENUMERABLE);*/
 
   JS_DefinePropertyValue(ctx, obj, props[0], JS_NewFloat64(ctx, ln->x1), JS_PROP_ENUMERABLE);
   JS_DefinePropertyValue(ctx, obj, props[1], JS_NewFloat64(ctx, ln->y1), JS_PROP_ENUMERABLE);

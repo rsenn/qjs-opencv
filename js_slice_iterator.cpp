@@ -64,8 +64,8 @@ js_slice_iterator_next(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
 
   if(!(*pdone = it->ptr >= it->range.end())) {
 
-    // printf("byte_pos = %zu, byte_size = %zu, num_elems = %i, increment = %zu\n", size_t(it->ptr -
-    // it->range.begin()), it->range.size(), it->num_elems, it->increment);
+    // printf("byte_pos = %zu, byte_size = %zu, num_elems = %i, increment = %zu\n",
+    // size_t(it->ptr - it->range.begin()), it->range.size(), it->num_elems, it->increment);
 
     result = js_typedarray_new(ctx, it->buffer, it->ptr - it->range.begin(), it->num_elems, it->ctor);
     it->ptr += it->increment;

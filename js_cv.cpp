@@ -141,7 +141,8 @@ js_cv_imwrite(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
     if(argc >= 6)
       JS_ToInt32(ctx, &loop, argv[5]);
 
-    // printf("gif_write '%s' (%zu) [%zu] (transparent: %i)\n", filename, mats.size(), palette.size(), transparent);
+    // printf("gif_write '%s' (%zu) [%zu] (transparent: %i)\n", filename, mats.size(),
+    // palette.size(), transparent);
     gif_write(filename, mats, delays, palette, transparent, loop);
     return JS_UNDEFINED;
   }
@@ -369,7 +370,8 @@ js_cv_min_max_loc(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
     if((mask = js_mat_data2(ctx, argv[1])) == nullptr)
       return JS_EXCEPTION;
 
-  cv::minMaxLoc(*src, &minVal, &maxVal, &minLoc, &maxLoc, mask == nullptr ? cv::noArray() : *mask);
+  cv::minMaxLoc(*src, &minVal, &maxVal, &minLoc, &maxLoc, mask == nullptr ? cv::noArray() :
+*mask);
 
   ret = JS_NewObject(ctx);
   JS_SetPropertyStr(ctx, ret, "minVal", JS_NewFloat64(ctx, minVal));
@@ -377,14 +379,12 @@ js_cv_min_max_loc(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
   JS_SetPropertyStr(ctx,
                     ret,
                     "minLoc",
-                    js_array_from(ctx, std::array<int, 2>{minLoc.x, minLoc.y})); // js_point_new(ctx, minLoc));
-  JS_SetPropertyStr(ctx,
-                    ret,
-                    "maxLoc",
-                    js_object::from_map(ctx,
+                    js_array_from(ctx, std::array<int, 2>{minLoc.x, minLoc.y})); //
+js_point_new(ctx, minLoc)); JS_SetPropertyStr(ctx, ret, "maxLoc", js_object::from_map(ctx,
                                         std::map<std::string, int>{
                                             std::pair<std::string, int>{"x", maxLoc.x},
-                                            std::pair<std::string, int>{"y", maxLoc.y}})); // js_point_new(ctx, maxLoc));
+                                            std::pair<std::string, int>{"y", maxLoc.y}})); //
+js_point_new(ctx, maxLoc));
 
   return ret;
 }*/
@@ -424,8 +424,9 @@ js_cv_bitwise(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
   o_str = dump(other);
   d_str = dump(dst);
 
-  // printf("js_cv_bitwise %s src=%s other=%s dst=%s\n", ((const char*[]){"cv::bitwise_and", "cv::bitwise_or", "cv::bitwise_xor", "cv::bitwise_not"})[magic],
-  // s_str.c_str(), o_str.c_str(), d_str.c_str());
+  // printf("js_cv_bitwise %s src=%s other=%s dst=%s\n", ((const char*[]){"cv::bitwise_and",
+  // "cv::bitwise_or", "cv::bitwise_xor", "cv::bitwise_not"})[magic], s_str.c_str(),
+  // o_str.c_str(), d_str.c_str());
 
   switch(magic) {
     case 0: cv::bitwise_and(src, other, dst, mask); break;
@@ -1900,7 +1901,8 @@ js_cv_init(JSContext* ctx, JSModuleDef* m) {
 
   JS_SetPropertyFunctionList(ctx, exception_proto, js_exception_proto_funcs, countof(js_exception_proto_funcs));
 
-  exception_class = JS_NewObjectProto(ctx, JS_NULL); // JS_NewCFunction2(ctx, js_exception_constructor, "Exception", 1, JS_CFUNC_constructor, 0);
+  exception_class = JS_NewObjectProto(ctx, JS_NULL); // JS_NewCFunction2(ctx, js_exception_constructor,
+                                                     // "Exception", 1, JS_CFUNC_constructor, 0);
 
   JS_SetConstructor(ctx, exception_class, exception_proto);
 
@@ -1912,9 +1914,9 @@ js_cv_init(JSContext* ctx, JSModuleDef* m) {
 
   /*cv_class = JS_NewObject(ctx);
 
-  JS_SetPropertyFunctionList(ctx, cv_class, js_cv_static_funcs.data(), js_cv_static_funcs.size());
-  JS_SetPropertyFunctionList(ctx, cv_class, js_cv_constants.data(), js_cv_constants.size());
-  JS_SetModuleExport(ctx, m, "default", cv_class);*/
+  JS_SetPropertyFunctionList(ctx, cv_class, js_cv_static_funcs.data(),
+  js_cv_static_funcs.size()); JS_SetPropertyFunctionList(ctx, cv_class, js_cv_constants.data(),
+  js_cv_constants.size()); JS_SetModuleExport(ctx, m, "default", cv_class);*/
 
   /*atom = JS_NewAtom(ctx, "cv");
 

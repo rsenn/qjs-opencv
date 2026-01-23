@@ -96,7 +96,8 @@ js_cv_gaussian_blur(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   if(argc > 5)
     JS_ToInt32(ctx, &borderType, argv[5]);
 
-  // std::cerr << "cv::GaussianBlur size=" << size << " sigmaX=" << sigmaX << " sigmaY=" << sigmaY
+  // std::cerr << "cv::GaussianBlur size=" << size << " sigmaX=" << sigmaX << " sigmaY=" <<
+  // sigmaY
   // << " borderType=" << borderType << std::endl;
   cv::GaussianBlur(input, output, size, sigmaX, sigmaY, borderType);
 
@@ -221,23 +222,21 @@ js_cv_hough_lines_p(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   cv::HoughLinesP(src, lines, rho, theta, threshold, minLineLength, maxLineGap);
 
   cv::Mat(lines).copyTo(dst);
-  /*
-    i = 0;
+
+  /* i = 0;
     js_array_truncate(ctx, array, 0);
 
     for(const auto& line : lines) {
       JSValue v = js_line_new(ctx, line[0], line[1], line[2], line[3]);
 
       JS_SetPropertyUint32(ctx, array, i++, v);
-    }
-  */
+    }*/
+
   return JS_UNDEFINED;
 }
 
 static JSValue
 js_cv_hough_circles(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  JSInputArray image;
-  JSOutputArray circles;
   JSValueConst array;
   int32_t method, minRadius = 0, maxRadius = 0;
   double dp, minDist, param1 = 100, param2 = 100;
@@ -249,8 +248,8 @@ js_cv_hough_circles(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   if(argc < 5)
     return JS_EXCEPTION;
 
-  image = js_umat_or_mat(ctx, argv[0]);
-  circles = js_cv_outputarray(ctx, argv[1]);
+  JSImageArgument image(ctx, argv[0]);
+  JSOutputArgument circles(ctx, argv[1]);
 
   /*  if(js_is_noarray(image) || !js_is_array(ctx, argv[1]))
       return JS_ThrowInternalError(ctx, "argument 1 or argument 2 not an array!");*/
@@ -1416,8 +1415,8 @@ js_imgproc_filter(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
                 if(argc > 6)
                   js_color_read(ctx, argv[6], &borderValue);
 
-                cv::dilate(src, dst, kernel, anchor, iterations, borderType, cv::Scalar(borderValue));
-                break;
+                cv::dilate(src, dst, kernel, anchor, iterations, borderType,
+           cv::Scalar(borderValue)); break;
               }*/
 
         /*  case FILTER_ERODE: {
@@ -1435,8 +1434,8 @@ js_imgproc_filter(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
             if(argc > 6)
               js_color_read(ctx, argv[6], &borderValue);
 
-            cv::erode(src, dst, kernel, anchor, iterations, borderType, cv::Scalar(borderValue));
-            break;
+            cv::erode(src, dst, kernel, anchor, iterations, borderType,
+          cv::Scalar(borderValue)); break;
           }
     */
       case FILTER_FILTER2_D: {
@@ -1998,7 +1997,8 @@ js_function_list_t js_imgproc_static_funcs{
     JS_CFUNC_MAGIC_DEF("getPerspectiveTransform", 2, js_imgproc_transform, TRANSFORM_GET_PERSPECTIVE_TRANSFORM),
     JS_CFUNC_MAGIC_DEF("getRectSubPix", 4, js_imgproc_transform, TRANSFORM_GET_RECT_SUB_PIX),
     JS_CFUNC_MAGIC_DEF("getRotationMatrix2D", 3, js_imgproc_transform, TRANSFORM_GET_ROTATION_MATRIX2_D),
-    // JS_CFUNC_MAGIC_DEF("getRotationMatrix2D_", 3, js_imgproc_transform, TRANSFORM_GET_ROTATION_MATRIX2D_),
+    // JS_CFUNC_MAGIC_DEF("getRotationMatrix2D_", 3, js_imgproc_transform,
+    // TRANSFORM_GET_ROTATION_MATRIX2D_),
     JS_CFUNC_MAGIC_DEF("invertAffineTransform", 2, js_imgproc_transform, TRANSFORM_INVERT_AFFINE_TRANSFORM),
     JS_CFUNC_MAGIC_DEF("linearPolar", 5, js_imgproc_transform, TRANSFORM_LINEAR_POLAR),
     JS_CFUNC_MAGIC_DEF("logPolar", 5, js_imgproc_transform, TRANSFORM_LOG_POLAR),
@@ -2045,8 +2045,9 @@ js_function_list_t js_imgproc_static_funcs{
     JS_CFUNC_MAGIC_DEF("contourArea", 1, js_imgproc_shape, SHAPE_CONTOUR_AREA),
     JS_CFUNC_MAGIC_DEF("convexHull", 1, js_imgproc_shape, SHAPE_CONVEX_HULL),
     JS_CFUNC_MAGIC_DEF("convexityDefects", 1, js_imgproc_shape, SHAPE_CONVEXITY_DEFECTS),
-    // JS_CFUNC_MAGIC_DEF("createGeneralizedHoughBallard", 1, js_imgproc_shape, SHAPE_CREATE_GENERALIZED_HOUGH_BALLARD),
-    // JS_CFUNC_MAGIC_DEF("createGeneralizedHoughGuil", 1, js_imgproc_shape, SHAPE_CREATE_GENERALIZED_HOUGH_GUIL),
+    // JS_CFUNC_MAGIC_DEF("createGeneralizedHoughBallard", 1, js_imgproc_shape,
+    // SHAPE_CREATE_GENERALIZED_HOUGH_BALLARD), JS_CFUNC_MAGIC_DEF("createGeneralizedHoughGuil",
+    // 1, js_imgproc_shape, SHAPE_CREATE_GENERALIZED_HOUGH_GUIL),
     JS_CFUNC_DEF("findContours", 1, js_cv_find_contours),
     JS_CFUNC_MAGIC_DEF("fitEllipse", 1, js_imgproc_shape, SHAPE_FIT_ELLIPSE),
     JS_CFUNC_MAGIC_DEF("fitEllipseAMS", 1, js_imgproc_shape, SHAPE_FIT_ELLIPSE_AMS),

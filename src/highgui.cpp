@@ -515,8 +515,9 @@ js_highgui_init(JSContext* ctx, JSModuleDef* m) {
   }
 
   /*if(JS_IsObject(cv_class)) {
-    JS_SetPropertyFunctionList(ctx, cv_class, js_highgui_static_funcs.data(), js_highgui_static_funcs.size());
-    JS_SetPropertyFunctionList(ctx, cv_class, js_highgui_constants.data(), js_highgui_constants.size());
+    JS_SetPropertyFunctionList(ctx, cv_class, js_highgui_static_funcs.data(),
+  js_highgui_static_funcs.size()); JS_SetPropertyFunctionList(ctx, cv_class,
+  js_highgui_constants.data(), js_highgui_constants.size());
   }*/
 
   return 0;

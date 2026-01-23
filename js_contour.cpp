@@ -1392,7 +1392,8 @@ js_contour_get(JSContext* ctx, JSValueConst this_val, int magic) {
   JSValue ret = JS_UNDEFINED;
 
   if(!(contour = js_contour_data(this_val))) {
-    // printf("js_contour_get   cid=%i this_val=%p contour=%p\n", JS_GetClassID(this_val), JS_VALUE_GET_OBJ(this_val), contour);
+    // printf("js_contour_get   cid=%i this_val=%p contour=%p\n", JS_GetClassID(this_val),
+    // JS_VALUE_GET_OBJ(this_val), contour);
     return JS_UNDEFINED;
   }
 
@@ -1475,7 +1476,8 @@ js_contour_finalizer(JSRuntime* rt, JSValue this_val) {
   contour = js_contour_data(this_val);
 
   if(contour) {
-    // printf("js_contour_finalizer  cid=%i this_val=%p contour=%p\n", JS_GetClassID(this_val), JS_VALUE_GET_OBJ(this_val), contour);
+    // printf("js_contour_finalizer  cid=%i this_val=%p contour=%p\n", JS_GetClassID(this_val),
+    // JS_VALUE_GET_OBJ(this_val), contour);
 
     js_deallocate(rt, contour);
   }

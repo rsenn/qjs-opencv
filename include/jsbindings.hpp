@@ -915,14 +915,23 @@ js_function_invoke(JSContext* ctx, JSValueConst this_obj, const char* method, in
  *  @}
  */
 
-
-class JSOutputArgument {
+class JSOutputArgument : public JSInputOutputArray {
 public:
-  JSOutputArgument(JSContext*ctx, JSValueConst val) : m_ctx(ctx),m_val(val) {}
+  JSOutputArgument(JSContext* ctx, JSValueConst val);
 
 protected:
-  JSContext*m_ctx;
+  JSContext* m_ctx;
   JSValue m_val;
-}
+};
+
+class JSInputArgument : public JSInputArray {
+public:
+  JSInputArgument(JSContext* ctx, JSValueConst val);
+};
+
+class JSImageArgument : public JSInputArray {
+public:
+  JSImageArgument(JSContext* ctx, JSValueConst val);
+};
 
 #endif

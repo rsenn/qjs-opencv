@@ -119,11 +119,8 @@ js_input_array(JSContext* ctx, JSValueConst value) {
 
 static inline JSValue
 js_umat_wrap(JSContext* ctx, const cv::UMat& umat) {
-  JSValue ret;
-  JSUMatData* s;
-  ret = JS_NewObjectProtoClass(ctx, umat_proto, js_umat_class_id);
-
-  s = js_allocate<cv::UMat>(ctx);
+  JSValue ret = JS_NewObjectProtoClass(ctx, umat_proto, js_umat_class_id);
+  JSUMatData* s = js_allocate<cv::UMat>(ctx);
 
   new(s) cv::UMat(umat);
 
@@ -138,12 +135,13 @@ js_cv_inputoutputarray(JSContext* ctx, JSValueConst value) {
 
   if((mat = js_mat_data_nothrow(value)))
     return JSInputOutputArray(*mat);
+
   if((umat = js_umat_data(value)))
     return JSInputOutputArray(*umat);
 
   if(js_contour_class_id) {
     JSContourData<double>* contour;
-    JSContoursData<double>* contours;
+
     if((contour = js_contour_data(value)))
       return JSInputOutputArray(*contour);
   }
@@ -155,9 +153,8 @@ js_cv_inputoutputarray(JSContext* ctx, JSValueConst value) {
   }
 
   if(js_is_arraybuffer(ctx, value)) {
-    uint8_t* ptr;
     size_t size;
-    ptr = JS_GetArrayBuffer(ctx, &size, value);
+    uint8_t* ptr = JS_GetArrayBuffer(ctx, &size, value);
 
     return JSInputOutputArray(ptr, size);
   }
@@ -175,13 +172,13 @@ js_cv_outputarray(JSContext* ctx, JSValueConst value) {
 
   if((mat = js_mat_data_nothrow(value)))
     return JSOutputArray(*mat);
-  
+
   if((umat = js_umat_data(value)))
     return JSOutputArray(*umat);
 
   if(js_contour_class_id) {
     JSContourData<double>* contour;
-    JSContoursData<double>* contours;
+
     if((contour = js_contour_data(value)))
       return JSOutputArray(*contour);
   }
@@ -194,9 +191,8 @@ js_cv_outputarray(JSContext* ctx, JSValueConst value) {
   }
 
   if(js_is_arraybuffer(ctx, value)) {
-    uint8_t* ptr;
     size_t size;
-    ptr = JS_GetArrayBuffer(ctx, &size, value);
+    uint8_t* ptr = JS_GetArrayBuffer(ctx, &size, value);
 
     return JSOutputArray(ptr, size);
   }
@@ -206,12 +202,5 @@ js_cv_outputarray(JSContext* ctx, JSValueConst value) {
 
   return cv::noArray();
 }
-
-/*template<typename A = JSInputOutputArray> class JSOutputArg : public A {
-public:
-  JSOutputArg() : A() {}
-
-  template<typename B> JSOutputArg(const B& arg) : A(arg) {}
-};*/
 
 #endif /* defined(JS_UMAT_HPP) */

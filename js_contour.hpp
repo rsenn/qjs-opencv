@@ -93,8 +93,8 @@ contour_intersect(const JSContourData<T>& a, const JSContourData<T>& b, std::arr
   /*while(ita != aend) {
     while(itb != bend) {
 
-      if(reinterpret_cast<const Line<T>*>(ita)->intersect(*reinterpret_cast<const Line<T>*>(itb), intersection)) {
-        if(indexes)
+      if(reinterpret_cast<const Line<T>*>(ita)->intersect(*reinterpret_cast<const
+  Line<T>*>(itb), intersection)) { if(indexes)
           (*indexes) = std::array<ssize_t, 2>{ita - a.data(), itb - b.data()};
         return true;
       }

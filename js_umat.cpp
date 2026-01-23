@@ -760,15 +760,14 @@ js_umat_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
   std::vector<std::string> sizeStrs = js_umat_dimensions(*um);
   os << "UMat " << " [ ";
   if(sizeStrs.size() || um->type()) {
-    os << "size: " COLOR_YELLOW "" << join(sizeStrs.cbegin(), sizeStrs.cend(), "" COLOR_NONE "*" COLOR_YELLOW "")
+    os << "size: " COLOR_YELLOW "" << join(sizeStrs.cbegin(), sizeStrs.cend(), "" COLOR_NONE "*"
+COLOR_YELLOW "")
        << "" COLOR_NONE ", ";
-    os << "type: " COLOR_YELLOW "CV_" << (bytes * 8) << sign << 'C' << um->channels() << "" COLOR_NONE ", ";
-    os << "elemSize: " COLOR_YELLOW "" << um->elemSize() << "" COLOR_NONE ", ";
-    os << "elemSize1: " COLOR_YELLOW "" << um->elemSize1() << "" COLOR_NONE ", ";
-    os << "total: " COLOR_YELLOW "" << um->total() << "" COLOR_NONE ", ";
-    os << "dims: " COLOR_YELLOW "" << um->dims << "" COLOR_NONE "";
-  } else {
-    os << "empty";
+    os << "type: " COLOR_YELLOW "CV_" << (bytes * 8) << sign << 'C' << um->channels() << ""
+COLOR_NONE ", "; os << "elemSize: " COLOR_YELLOW "" << um->elemSize() << "" COLOR_NONE ", "; os
+<< "elemSize1: " COLOR_YELLOW "" << um->elemSize1() << "" COLOR_NONE ", "; os << "total: "
+COLOR_YELLOW "" << um->total() << "" COLOR_NONE ", "; os << "dims: " COLOR_YELLOW "" << um->dims
+<< "" COLOR_NONE ""; } else { os << "empty";
   }
   if(um->u)
     os << ", refcount: " COLOR_YELLOW "" << um->u->refcount;
