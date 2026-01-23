@@ -1,6 +1,7 @@
 #include "js_filenode.hpp"
 #include "js_mat.hpp"
 #include "include/js_alloc.hpp"
+#include "include/js_array.hpp"
 #include "include/jsbindings.hpp"
 #include "include/util.hpp"
 
