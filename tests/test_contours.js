@@ -1,4 +1,4 @@
-import { Contour, Mat, Point, Size, CHAIN_APPROX_SIMPLE, COLOR_BGR2GRAY, CV_8UC3, Canny, HuMoments, RETR_TREE, blur, cvtColor, findContours, imread, imshow, moments, moments, waitKey } from 'opencv';
+import { Contour, Mat, Point, Size, CHAIN_APPROX_SIMPLE, COLOR_BGR2GRAY, CV_8UC3, Canny, HuMoments, RETR_TREE, blur, cvtColor, findContours, imread, imshow, moments, waitKey } from 'opencv';
 
 function main(...args) {
   let filename = args[0] ?? 'tests/test_linesegmentdetector.jpg';

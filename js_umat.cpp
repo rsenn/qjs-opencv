@@ -1029,7 +1029,7 @@ js_umat_call(JSContext* ctx, JSValueConst func_obj, JSValueConst this_val, int a
     return JS_EXCEPTION;
 
   if(!js_rect_read(ctx, argv[0], &rect))
-    return JS_ThrowTypeError(ctx, "argument 1 expecting Rect");
+    return JS_ThrowTypeError(ctx, "cv::UMat(): argument 1 expecting Rect");
   // printf("js_mat_call %u,%u %ux%u\n", rect.x, rect.y, rect.width, rect.height);
 
   cv::UMat umat = src->operator()(rect);
