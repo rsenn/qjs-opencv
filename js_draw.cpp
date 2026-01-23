@@ -41,9 +41,8 @@ js_draw_circle(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
   JSInputOutputArray dst;
   int i = 0, ret = -1;
   JSPointData<double> point;
-  int32_t x, y;
   int radius = 0;
-  JSColorData<double> color;
+  cv::Scalar color;
   bool antialias = true;
   int thickness = -1;
   int line_type = cv::LINE_AA;
@@ -58,12 +57,15 @@ js_draw_circle(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
     return JS_EXCEPTION;
 
   if(js_point_read(ctx, argv[i], &point)) {
-    x = point.x;
-    y = point.y;
+    /*x = point.x;
+    y = point.y;*/
     i++;
   } else {
+    int32_t x, y;
     JS_ToInt32(ctx, &x, argv[i]);
     JS_ToInt32(ctx, &y, argv[i + 1]);
+    point.x = x;
+    point.y = y;
     i += 2;
   }
 
@@ -86,7 +88,7 @@ js_draw_circle(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
   }
 
   try {
-    cv::circle(dst, point, radius, cv::Scalar(color), thickness < 0 ? cv::FILLED : thickness, line_type);
+    cv::circle(dst, point, radius, color, thickness < 0 ? cv::FILLED : thickness, line_type);
   } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 
   return JS_UNDEFINED;

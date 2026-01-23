@@ -36,6 +36,7 @@ extern "C" int js_algorithms_init(JSContext*, JSModuleDef*);
 extern "C" int js_ximgproc_init(JSContext*, JSModuleDef*);
 extern "C" int js_filestorage_init(JSContext*, JSModuleDef*);
 extern "C" int js_filenode_init(JSContext*, JSModuleDef*);
+extern "C" int js_line_iterator_init(JSContext*, JSModuleDef*);
 
 extern "C" void js_clahe_export(JSContext*, JSModuleDef*);
 extern "C" void js_contour_export(JSContext*, JSModuleDef*);
@@ -71,6 +72,7 @@ extern "C" void js_algorithms_export(JSContext*, JSModuleDef*);
 extern "C" void js_ximgproc_export(JSContext*, JSModuleDef*);
 extern "C" void js_filestorage_export(JSContext*, JSModuleDef*);
 extern "C" void js_filenode_export(JSContext*, JSModuleDef*);
+extern "C" void js_line_iterator_export(JSContext*, JSModuleDef*);
 
 int
 js_opencv_init(JSContext* ctx, JSModuleDef* m) {
@@ -81,6 +83,7 @@ js_opencv_init(JSContext* ctx, JSModuleDef* m) {
   js_contour_init(ctx, m);
   js_draw_init(ctx, m);
   js_line_init(ctx, m);
+  js_line_iterator_init(ctx, m);
   js_mat_init(ctx, m);
   js_affine3_init(ctx, m);
   js_point_init(ctx, m);
@@ -142,6 +145,7 @@ JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   js_contour_export(ctx, m);
   js_draw_export(ctx, m);
   js_line_export(ctx, m);
+  js_line_iterator_export(ctx, m);
   js_mat_export(ctx, m);
   js_affine3_export(ctx, m);
   js_point_export(ctx, m);

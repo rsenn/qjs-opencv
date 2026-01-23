@@ -237,11 +237,12 @@ js_cv_hough_lines_p(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 static JSValue
 js_cv_hough_circles(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSInputArray image;
+  JSOutputArray circles;
   JSValueConst array;
   int32_t method, minRadius = 0, maxRadius = 0;
   double dp, minDist, param1 = 100, param2 = 100;
 
-  std::vector<cv::Vec<float, 4>> circles;
+  // std::vector<cv::Vec<float, 4>> circles;
   size_t i;
 
   JSValue ret;
@@ -249,9 +250,10 @@ js_cv_hough_circles(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
     return JS_EXCEPTION;
 
   image = js_umat_or_mat(ctx, argv[0]);
+  circles = js_cv_outputarray(ctx, argv[1]);
 
-  if(js_is_noarray(image) || !js_is_array(ctx, argv[1]))
-    return JS_ThrowInternalError(ctx, "argument 1 or argument 2 not an array!");
+  /*  if(js_is_noarray(image) || !js_is_array(ctx, argv[1]))
+      return JS_ThrowInternalError(ctx, "argument 1 or argument 2 not an array!");*/
 
   array = argv[1];
   JS_ToInt32(ctx, &method, argv[2]);
@@ -269,15 +271,15 @@ js_cv_hough_circles(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 
   cv::HoughCircles(image, circles, method, dp, minDist, param1, param2, minRadius, maxRadius);
 
-  i = 0;
-  js_array_truncate(ctx, array, 0);
+  /* i = 0;
+   js_array_truncate(ctx, array, 0);
 
-  for(auto& circle : circles) {
+   for(auto& circle : circles) {
 
-    JSValue v = js_array_from(ctx, begin(circle), end(circle));
+     JSValue v = js_array_from(ctx, begin(circle), end(circle));
 
-    JS_SetPropertyUint32(ctx, array, i++, v);
-  }
+     JS_SetPropertyUint32(ctx, array, i++, v);
+   }*/
 
   return JS_UNDEFINED;
 }
