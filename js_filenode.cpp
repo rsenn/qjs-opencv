@@ -209,7 +209,8 @@ enum {
   METHOD_SIZE,
   METHOD_STRING,
   METHOD_TYPE,
-
+  METHOD_TOSTRING,
+  METHOD_VALUEOF,
 };
 
 static void
@@ -331,6 +332,9 @@ js_filenode_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
     case METHOD_AT: {
       int32_t idx;
 
+      if(!fn->isSeq())
+        return JS_ThrowTypeError(ctx, "FileNode must be of type SEQ");
+
       if(JS_ToInt32(ctx, &idx, argv[0]))
         return JS_ThrowTypeError(ctx, "argument 1 must be a number");
 
@@ -399,6 +403,41 @@ js_filenode_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
       ret = js_value_from(ctx, fn->type());
       break;
     }
+
+    case METHOD_TOSTRING: {
+      ret = js_value_from(ctx, std::string(*fn));
+      break;
+    }
+
+    case METHOD_VALUEOF: {
+      switch(fn->type()) {
+        case cv::FileNode::NONE: break;
+        case cv::FileNode::INT:
+        case cv::FileNode::REAL:
+        case cv::FileNode::FLOAT: {
+          ret = js_value_from(ctx, double(*fn));
+          break;
+        }
+
+        case cv::FileNode::STR:
+        case cv::FileNode::STRING: {
+          ret = js_value_from(ctx, std::string(*fn));
+          break;
+        }
+
+        case cv::FileNode::SEQ: {
+
+          break;
+        }
+
+        case cv::FileNode::MAP: {
+          break;
+        }
+      }
+
+      ret = js_value_from(ctx, double(*fn));
+      break;
+    }
   }
 
   return ret;
@@ -445,6 +484,9 @@ const JSCFunctionListEntry js_filenode_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("size", 0, js_filenode_method, METHOD_SIZE),
     JS_CFUNC_MAGIC_DEF("string", 0, js_filenode_method, METHOD_STRING),
     JS_CFUNC_MAGIC_DEF("type", 0, js_filenode_method, METHOD_TYPE),
+
+    JS_CFUNC_MAGIC_DEF("toString", 0, js_filenode_method, METHOD_TOSTRING),
+    JS_CFUNC_MAGIC_DEF("valueOf", 0, js_filenode_method, METHOD_VALUEOF),
 
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "FileNode", JS_PROP_CONFIGURABLE),
 };
