@@ -266,7 +266,7 @@ to_string(const T& t, size_t n_pad = 3, char ch_pad = ' ') {
 
   return ret;
 }
- 
+
 template<class T>
 double
 Line<T>::distance(const cv::Point_<T>& p) const {

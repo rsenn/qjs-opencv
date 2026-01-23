@@ -13,8 +13,6 @@
 #include <opencv2/core/types.hpp>
 #include <opencv2/core/utility.hpp>
 #include <opencv2/videoio.hpp>
-/*#include <type_traits>
-#include <utility>*/
 #include <ostream>
 #include <array>
 #include <string>

@@ -30,7 +30,6 @@ template<class T> struct js_alloc_libc {
   static constexpr size_t size = ((sizeof(T) + 7) >> 3) << 3;
 
   static T* allocate(JSContext* ctx) { return static_cast<T*>(malloc(size)); }
-
   static void deallocate(JSContext* ctx, T* ptr) { free(ptr); }
   static void deallocate(JSRuntime* rt, T* ptr) { free(ptr); }
 };
@@ -39,11 +38,8 @@ template<class T> struct js_alloc_quickjs {
   static constexpr size_t size = ((sizeof(T) + 7) >> 3) << 3;
 
   static T* allocate(JSContext* ctx) { return static_cast<T*>(js_mallocz(ctx, size)); }
-
   static T* allocate(JSContext* ctx, size_t n) { return static_cast<T*>(js_mallocz(ctx, size * n)); }
-
   static void deallocate(JSContext* ctx, T* ptr) { js_free(ctx, ptr); }
-
   static void deallocate(JSRuntime* rt, T* ptr) { js_free_rt(rt, ptr); }
 };
 
@@ -51,9 +47,7 @@ template<class T> struct js_alloc_cxx {
   static constexpr size_t size = ((sizeof(T) + 7) >> 3) << 3;
 
   static T* allocate(JSContext* ctx) { return new T(); }
-
   static void deallocate(JSContext* ctx, T* ptr) { delete ptr; }
-
   static void deallocate(JSRuntime* rt, T* ptr) { delete ptr; }
 };
 

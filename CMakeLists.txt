@@ -107,7 +107,7 @@ link_directories(${OPENCV_LIBDIR})
 #set(CMAKE_INSTALL_RPATH "${OPENCV_LIB_DIR}" CACHE PATH "Build with install rpath" FORCE)
 set(CMAKE_INSTALL_RPATH "${OPENCV_LIBDIR}")
 
-include_directories(${OPENCV_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR} lsd/include)
+include_directories(include ${OPENCV_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR} lsd/include)
 
 include(CheckIncludeFileCXX)
 
@@ -142,7 +142,7 @@ if(USE_FEATURE2D)
 endif()
 if(USE_BARCODE)
   add_definitions(-DUSE_BARCODE=1)
-  set(BARCODE_SOURCE js_barcode_detector.cpp) 
+  set(BARCODE_SOURCE js_barcode_detector.cpp)
   check_library_exists(opencv_barcode _ZN2cv7barcode15BarcodeDetectorD1Ev "${OPENCV_LIBDIR}" OPENCV_BARCODE)
 
   check_include_file_cxx(opencv2/barcode.hpp HAVE_OPENCV2_BARCODE_HPP)
@@ -184,7 +184,7 @@ else(HAVE_OPENCV2_BGSEGM_HPP AND OPENCV_BGSEGM)
 endif(HAVE_OPENCV2_BGSEGM_HPP AND OPENCV_BGSEGM)]]
 set(OPENCV_BGSEGM_LIBRARY opencv_bgsegm)
 if(USE_BARCODE)
-list(APPEND OPENCV_EXTRA_LIBRARIES opencv_barcode)
+  list(APPEND OPENCV_EXTRA_LIBRARIES opencv_barcode)
 endif(USE_BARCODE)
 list(APPEND OPENCV_EXTRA_LIBRARIES opencv_xphoto)
 
@@ -246,8 +246,8 @@ if(USE_LIBCAMERA OR USE_LCCV)
   include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/libcamera.cmake)
 endif(USE_LIBCAMERA OR USE_LCCV)
 
-file(GLOB OPENCV_SOURCES init_module.cpp geometry.cpp highgui.cpp jsbindings.cpp js_*.cpp ${FEATURE2D_SOURCE} line.cpp
-     util.cpp gifenc/gifenc.c algorithms/*.cpp lsd/src/*.cpp)
+file(GLOB OPENCV_SOURCES js_*.[ch]pp ${FEATURE2D_SOURCE} include/*.hpp src/*.cpp gifenc/gifenc.c algorithms/*.cpp
+     lsd/src/*.cpp)
 #dump(OPENCV_SOURCES)
 
 if(USE_LCCV)
@@ -258,8 +258,8 @@ else(USE_LCCV)
   list(REMOVE_ITEM OPENCV_SOURCES js_raspi_cam.cpp)
 endif(USE_LCCV)
 
-list(REMOVE_ITEM OPENCV_SOURCES init_module.cpp)
-list(REMOVE_ITEM OPENCV_SOURCES js.hpp js.cpp)
+#list(REMOVE_ITEM OPENCV_SOURCES init_module.cpp)
+#list(REMOVE_ITEM OPENCV_SOURCES js.hpp js.cpp)
 
 set(CMAKE_CXX11_EXTENSION_COMPILE_OPTION "${CXX_STANDARD_FLAG}" CACHE STRING "" FORCE)
 

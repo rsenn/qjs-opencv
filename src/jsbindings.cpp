@@ -49,6 +49,7 @@ public:
     js_free(p);
   }
 };*/
+
 void
 js_arraybuffer_free(JSRuntime* rt, void* opaque, void* ptr) {
   JS_FreeValueRT(rt, JS_MKPTR(JS_TAG_OBJECT, opaque));
