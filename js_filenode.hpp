@@ -29,6 +29,11 @@ js_filenode_new(JSContext* ctx, const JSFileNodeData& fn) {
   return js_filenode_new(ctx, filenode_proto, fn);
 }
 
+static inline JSValue
+js_value_from(JSContext* ctx, const JSFileNodeData& fn) {
+  return js_filenode_new(ctx, fn);
+}
+
 extern "C" int js_filenode_init(JSContext*, JSModuleDef*);
 
 #endif /* defined(JS_FILENODE_HPP) */

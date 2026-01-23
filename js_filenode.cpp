@@ -413,24 +413,31 @@ js_filenode_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
       switch(fn->type()) {
         case cv::FileNode::NONE: break;
         case cv::FileNode::INT:
-        case cv::FileNode::REAL:
         case cv::FileNode::FLOAT: {
           ret = js_value_from(ctx, double(*fn));
           break;
         }
 
-        case cv::FileNode::STR:
         case cv::FileNode::STRING: {
           ret = js_value_from(ctx, std::string(*fn));
           break;
         }
 
         case cv::FileNode::SEQ: {
+          size_t size = fn->size();
 
+          std::vector<JSFileNodeData> vec;
+
+          for(size_t i = 0; i < size; ++i)
+            vec.push_back(fn->operator[](i));
+
+          ret = js_value_from(ctx, vec);
           break;
         }
 
         case cv::FileNode::MAP: {
+
+          
           break;
         }
       }
