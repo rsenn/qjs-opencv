@@ -714,7 +714,7 @@ js_rect_init(JSContext* ctx, JSModuleDef* m) {
     JS_SetConstructor(ctx, rect_class, rect_proto);
     JS_SetPropertyFunctionList(ctx, rect_class, js_rect_static_funcs, countof(js_rect_static_funcs));
 
-    // js_set_inspect_method(ctx, rect_proto, js_rect_inspect);
+    // js_object_inspect(ctx, rect_proto, js_rect_inspect);
   }
 
   if(m)

@@ -87,6 +87,13 @@ std::string to_string(const cv::Scalar& scalar);
 
 std::string make_filename(const std::string& name, int count, const std::string& ext, const std::string& dir = "tmp");
 
+static inline size_t
+round_to(size_t num, size_t x) {
+  num /= x;
+  num *= x;
+  return num;
+}
+
 inline int32_t
 get_mtime(const char* filename) {
 #if __STDC_VERSION__ >= 201710L

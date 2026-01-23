@@ -31,7 +31,7 @@ js_size_read(JSContext* ctx, JSValueConst size, JSSizeData<T>* out) {
   int ret = 1;
   JSValue width = JS_UNDEFINED, height = JS_UNDEFINED;
 
-  if(js_is_array_like(ctx, size)) {
+  if(js_is_arraylike(ctx, size)) {
     width = JS_GetPropertyUint32(ctx, size, 0);
     height = JS_GetPropertyUint32(ctx, size, 1);
   } else if(JS_IsObject(size)) {

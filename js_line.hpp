@@ -41,7 +41,7 @@ js_line_read(JSContext* ctx, JSValueConst line, std::array<T, 4>& out) {
   int ret = 1;
   JSValue x1 = JS_UNDEFINED, y1 = JS_UNDEFINED, x2 = JS_UNDEFINED, y2 = JS_UNDEFINED;
 
-  /*if(js_is_array_like(ctx, line)) {
+  /*if(js_is_arraylike(ctx, line)) {
     js_array_to(ctx, line, out);
     return 1;
   } else */

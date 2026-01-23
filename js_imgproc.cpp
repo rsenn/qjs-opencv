@@ -123,6 +123,7 @@ js_cv_corner_harris(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 
   if(js_is_noarray(input) || js_is_noarray(output))
     return JS_ThrowInternalError(ctx, "argument 1 or argument 2 not an array!");
+
   JS_ToInt32(ctx, &blockSize, argv[2]);
   JS_ToInt32(ctx, &ksize, argv[3]);
 
@@ -747,12 +748,13 @@ js_cv_find_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   }
 
   /*{
-      JSValue hier_arr = js_vector_vec4i_to_array(ctx, hier);
-      JSValue contours_obj = js_contours_new(ctx, poly);
-      ret = JS_NewObject(ctx);
-      JS_SetPropertyStr(ctx, ret, "hier", hier_arr);
-      JS_SetPropertyStr(ctx, ret, "contours", contours_obj);
-    }*/
+    JSValue hier_arr = js_vector_vec4i_to_array(ctx, hier);
+    JSValue contours_obj = js_contours_new(ctx, poly);
+    ret = JS_NewObject(ctx);
+    JS_SetPropertyStr(ctx, ret, "hier", hier_arr);
+    JS_SetPropertyStr(ctx, ret, "contours", contours_obj);
+  }*/
+
   return ret;
 }
 

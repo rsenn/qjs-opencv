@@ -110,7 +110,7 @@ js_feature2d_affine(JSContext* ctx, JSValueConst new_target, int argc, JSValueCo
 
   affine = AffineFeature::create(backend, maxTilt, minTilt, tiltStep, rotateStepBase);
   ret = js_feature2d_wrap(ctx, affine);
-  js_set_tostringtag(ctx, ret, "AffineFeature");
+  js_object_tostringtag(ctx, ret, "AffineFeature");
   return ret;
 }
 
@@ -132,7 +132,7 @@ js_feature2d_agast(JSContext* ctx, JSValueConst new_target, int argc, JSValueCon
   agast = AgastFeatureDetector::create(threshold, nonmaxSuppression, AgastFeatureDetector::DetectorType(type));
 
   ret = js_feature2d_wrap(ctx, agast);
-  js_set_tostringtag(ctx, ret, "AgastFeatureDetector");
+  js_object_tostringtag(ctx, ret, "AgastFeatureDetector");
   return ret;
 }
 
@@ -164,7 +164,7 @@ js_feature2d_akaze(JSContext* ctx, JSValueConst new_target, int argc, JSValueCon
       AKAZE::DescriptorType(descriptor_type), descriptor_size, descriptor_channels, threshold, nOctaves, nOctaveLayers, KAZE::DiffusivityType(diffusivity));
 
   ret = js_feature2d_wrap(ctx, akaze);
-  js_set_tostringtag(ctx, ret, "AKAZE");
+  js_object_tostringtag(ctx, ret, "AKAZE");
   return ret;
 }
 
@@ -221,7 +221,7 @@ js_feature2d_brisk(JSContext* ctx, JSValueConst new_target, int argc, JSValueCon
     return JS_ThrowInternalError(ctx, "BRISK::create([thresh, octaves,] radiusList, numberList, dMax, dMin, indexChange)");
 
   ret = js_feature2d_wrap(ctx, brisk);
-  js_set_tostringtag(ctx, ret, "BRISK");
+  js_object_tostringtag(ctx, ret, "BRISK");
   return ret;
 }
 
@@ -243,7 +243,7 @@ js_feature2d_fast(JSContext* ctx, JSValueConst new_target, int argc, JSValueCons
   fast = FastFeatureDetector::create(threshold, nonmaxSuppression, FastFeatureDetector::DetectorType(type));
 
   ret = js_feature2d_wrap(ctx, fast);
-  js_set_tostringtag(ctx, ret, "FastFeatureDetector");
+  js_object_tostringtag(ctx, ret, "FastFeatureDetector");
   return ret;
 }
 
@@ -275,7 +275,7 @@ js_feature2d_gftt(JSContext* ctx, JSValueConst new_target, int argc, JSValueCons
   gftt = GFTTDetector::create(maxCorners, qualityLevel, minDistance, blockSize, bool(useHarrisDetector), k);
 
   ret = js_feature2d_wrap(ctx, gftt);
-  js_set_tostringtag(ctx, ret, "GFTTDetector");
+  js_object_tostringtag(ctx, ret, "GFTTDetector");
   return ret;
 }
 
@@ -303,7 +303,7 @@ js_feature2d_kaze(JSContext* ctx, JSValueConst new_target, int argc, JSValueCons
   kaze = KAZE::create(bool(extended), bool(upright), threshold, nOctaves, nOctaveLayers, KAZE::DiffusivityType(diffusivity));
 
   ret = js_feature2d_wrap(ctx, kaze);
-  js_set_tostringtag(ctx, ret, "KAZE");
+  js_object_tostringtag(ctx, ret, "KAZE");
   return ret;
 }
 
@@ -338,7 +338,7 @@ js_feature2d_mser(JSContext* ctx, JSValueConst new_target, int argc, JSValueCons
 
   mser = MSER::create(delta, minArea, maxArea, maxVariation, minDiversity, maxEvolution, areaThreshold, minMargin, edgeBlurSize);
   ret = js_feature2d_wrap(ctx, mser);
-  js_set_tostringtag(ctx, ret, "MSER");
+  js_object_tostringtag(ctx, ret, "MSER");
   return ret;
 }
 
@@ -373,7 +373,7 @@ js_feature2d_orb(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst
 
   orb = ORB::create(nfeatures, scaleFactor, nlevels, edgeThreshold, firstLevel, WTA_K, ORB::ScoreType(scoreType), patchSize, fastThreshold);
   ret = js_feature2d_wrap(ctx, orb);
-  js_set_tostringtag(ctx, ret, "ORB");
+  js_object_tostringtag(ctx, ret, "ORB");
   return ret;
 }
 
@@ -383,7 +383,7 @@ js_feature2d_simple_blob(JSContext* ctx, JSValueConst new_target, int argc, JSVa
   JSValue ret;
   simple_blob = SimpleBlobDetector::create();
   ret = js_feature2d_wrap(ctx, simple_blob);
-  js_set_tostringtag(ctx, ret, "SimpleBlobDetector");
+  js_object_tostringtag(ctx, ret, "SimpleBlobDetector");
   return ret;
 }
 
@@ -416,7 +416,7 @@ js_feature2d_sift(JSContext* ctx, JSValueConst new_target, int argc, JSValueCons
   }
 
   ret = js_feature2d_wrap(ctx, sift);
-  js_set_tostringtag(ctx, ret, "SIFT");
+  js_object_tostringtag(ctx, ret, "SIFT");
   return ret;
 }
 
@@ -434,7 +434,7 @@ js_feature2d_affine2d(JSContext* ctx, JSValueConst new_target, int argc, JSValue
     affine2d = AffineFeature2D::create(keypointDetector);
   }
   ret = js_feature2d_wrap(ctx, affine2d);
-  js_set_tostringtag(ctx, ret, "AffineFeature2D");
+  js_object_tostringtag(ctx, ret, "AffineFeature2D");
   return ret;
 }
 
@@ -455,7 +455,7 @@ js_feature2d_boost(JSContext* ctx, JSValueConst new_target, int argc, JSValueCon
 
   boost = BoostDesc::create(desc, use_scale_orientation, scale_factor);
   ret = js_feature2d_wrap(ctx, boost);
-  js_set_tostringtag(ctx, ret, "BoostDesc");
+  js_object_tostringtag(ctx, ret, "BoostDesc");
   return ret;
 }
 
@@ -473,7 +473,7 @@ js_feature2d_brief(JSContext* ctx, JSValueConst new_target, int argc, JSValueCon
 
   brief = BriefDescriptorExtractor::create(bytes, use_orientation);
   ret = js_feature2d_wrap(ctx, brief);
-  js_set_tostringtag(ctx, ret, "BriefDescriptorExtractor");
+  js_object_tostringtag(ctx, ret, "BriefDescriptorExtractor");
   return ret;
 }
 
@@ -506,7 +506,7 @@ js_feature2d_daisy(JSContext* ctx, JSValueConst new_target, int argc, JSValueCon
 
   daisy = DAISY::create(radius, q_radius, q_theta, q_hist, DAISY::NormalizationType(norm), H, interpolation, use_orientation);
   ret = js_feature2d_wrap(ctx, daisy);
-  js_set_tostringtag(ctx, ret, "DAISY");
+  js_object_tostringtag(ctx, ret, "DAISY");
   return ret;
 }
 
@@ -533,7 +533,7 @@ js_feature2d_freak(JSContext* ctx, JSValueConst new_target, int argc, JSValueCon
   freak = FREAK::create(orientationNormalized, scaleNormalized, patternScale, nOctaves, selectedPairs);
 
   ret = js_feature2d_wrap(ctx, freak);
-  js_set_tostringtag(ctx, ret, "FREAK");
+  js_object_tostringtag(ctx, ret, "FREAK");
   return ret;
 }
 
@@ -558,7 +558,7 @@ js_feature2d_harris_laplace(JSContext* ctx, JSValueConst new_target, int argc, J
 
   harris_laplace = HarrisLaplaceFeatureDetector::create(numOctaves, corn_thresh, DOG_thresh, maxCorners, num_layers);
   ret = js_feature2d_wrap(ctx, harris_laplace);
-  js_set_tostringtag(ctx, ret, "HarrisLaplaceFeatureDetector");
+  js_object_tostringtag(ctx, ret, "HarrisLaplaceFeatureDetector");
   return ret;
 }
 
@@ -582,7 +582,7 @@ js_feature2d_latch(JSContext* ctx, JSValueConst new_target, int argc, JSValueCon
 
   latch = LATCH::create(bytes, rotationInvariance, half_ssd_size, sigma);
   ret = js_feature2d_wrap(ctx, latch);
-  js_set_tostringtag(ctx, ret, "LATCH");
+  js_object_tostringtag(ctx, ret, "LATCH");
   return ret;
 }
 
@@ -601,7 +601,7 @@ js_feature2d_lucid(JSContext* ctx, JSValueConst new_target, int argc, JSValueCon
   lucid = LUCID::create(lucid_kernel, blur_kernel);
 
   ret = js_feature2d_wrap(ctx, lucid);
-  js_set_tostringtag(ctx, ret, "LUCID");
+  js_object_tostringtag(ctx, ret, "LUCID");
   return ret;
 }
 
@@ -638,7 +638,7 @@ js_feature2d_msd(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst
   msd = MSDDetector::create(
       m_patch_radius, m_search_area_radius, m_nms_radius, m_nms_scale_radius, m_th_saliency, m_kNN, m_scale_factor, m_n_scales, m_compute_orientation);
   ret = js_feature2d_wrap(ctx, msd);
-  js_set_tostringtag(ctx, ret, "MSDDetector");
+  js_object_tostringtag(ctx, ret, "MSDDetector");
   return ret;
 }
 
@@ -661,7 +661,7 @@ js_feature2d_star(JSContext* ctx, JSValueConst new_target, int argc, JSValueCons
 
   star = StarDetector::create(maxSize, responseThreshold, lineThresholdProjected, lineThresholdBinarized, suppressNonmaxSize);
   ret = js_feature2d_wrap(ctx, star);
-  js_set_tostringtag(ctx, ret, "StarDetector");
+  js_object_tostringtag(ctx, ret, "StarDetector");
   return ret;
 }
 
@@ -687,7 +687,7 @@ js_feature2d_surf(JSContext* ctx, JSValueConst new_target, int argc, JSValueCons
   surf = SURF::create(hessianThreshold, nOctaves, nOctaveLayers, extended, upright);
 
   ret = js_feature2d_wrap(ctx, surf);
-  js_set_tostringtag(ctx, ret, "SURF");
+  js_object_tostringtag(ctx, ret, "SURF");
   return ret;
 }
 
@@ -714,7 +714,7 @@ js_feature2d_vgg(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst
 
   vgg = VGG::create(desc, isigma, img_normalize, use_scale_orientation, scale_factor, dsc_normalize);
   ret = js_feature2d_wrap(ctx, vgg);
-  js_set_tostringtag(ctx, ret, "VGG");
+  js_object_tostringtag(ctx, ret, "VGG");
   return ret;
 }
 
@@ -738,11 +738,11 @@ js_feature2d_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
   JS_DefinePropertyValueStr(ctx, obj, "empty", JS_NewBool(ctx, (*s)->empty()), JS_PROP_ENUMERABLE);
 
   if(freak)
-    JS_DefinePropertyValueStr(ctx, obj, "defaultName", js_get_tostringtag(ctx, this_val), JS_PROP_ENUMERABLE);
+    JS_DefinePropertyValueStr(ctx, obj, "defaultName", js_object_tostringtag(ctx, this_val), JS_PROP_ENUMERABLE);
   else
     JS_DefinePropertyValueStr(ctx, obj, "defaultName", JS_NewString(ctx, f2d->getDefaultName().c_str()), JS_PROP_ENUMERABLE);
 
-  js_set_tostringtag(ctx, obj, js_get_tostringtag(ctx, this_val));
+  js_object_tostringtag(ctx, obj, js_object_tostringtag(ctx, this_val));
   return obj;
 }*/
 

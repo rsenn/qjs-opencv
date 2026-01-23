@@ -174,7 +174,7 @@ js_clahe_init(JSContext* ctx, JSModuleDef* m) {
   /* set proto.constructor and ctor.prototype */
   JS_SetConstructor(ctx, clahe_class, clahe_proto);
 
-  // js_set_inspect_method(ctx, clahe_proto, js_clahe_inspect);
+  // js_object_inspect(ctx, clahe_proto, js_clahe_inspect);
 
   if(m)
     JS_SetModuleExport(ctx, m, "CLAHE", clahe_class);

@@ -220,7 +220,7 @@ js_keypoint_init(JSContext* ctx, JSModuleDef* m) {
   keypoint_proto = JS_NewObject(ctx);
   JS_SetPropertyFunctionList(ctx, keypoint_proto, js_keypoint_proto_funcs, countof(js_keypoint_proto_funcs));
   JS_SetClassProto(ctx, js_keypoint_class_id, keypoint_proto);
-  // js_set_inspect_method(ctx, keypoint_proto, js_keypoint_inspect);
+  // js_object_inspect(ctx, keypoint_proto, js_keypoint_inspect);
 
   keypoint_class = JS_NewCFunction2(ctx, js_keypoint_constructor, "KeyPoint", 2, JS_CFUNC_constructor, 0);
   JS_SetConstructor(ctx, keypoint_class, keypoint_proto);

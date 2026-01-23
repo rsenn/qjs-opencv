@@ -1751,7 +1751,7 @@ js_contour_init(JSContext* ctx, JSModuleDef* m) {
 
     JS_FreeValue(ctx, array_proto);
 
-    // js_set_inspect_method(ctx, contour_proto, js_contour_inspect);
+    // js_object_inspect(ctx, contour_proto, js_contour_inspect);
   }
 
   JSValue global = JS_GetGlobalObject(ctx);

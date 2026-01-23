@@ -370,7 +370,7 @@ js_affine3_init(JSContext* ctx, JSModuleDef* m) {
     JS_SetConstructor(ctx, affine3_class, affine3_proto);
     JS_SetPropertyFunctionList(ctx, affine3_class, js_affine3_static_funcs, countof(js_affine3_static_funcs));
 
-    // js_set_inspect_method(ctx, affine3_proto, js_affine3_inspect);
+    // js_object_inspect(ctx, affine3_proto, js_affine3_inspect);
   }
 
   if(m)

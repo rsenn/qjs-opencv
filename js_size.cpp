@@ -601,7 +601,7 @@ js_size_init(JSContext* ctx, JSModuleDef* m) {
     JS_SetConstructor(ctx, size_class, size_proto);
     JS_SetPropertyFunctionList(ctx, size_class, js_size_static_funcs, countof(js_size_static_funcs));
 
-    // js_set_inspect_method(ctx, size_proto, js_size_inspect);
+    // js_object_inspect(ctx, size_proto, js_size_inspect);
   }
 
   if(m)

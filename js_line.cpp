@@ -338,7 +338,7 @@ js_line_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
 
       lptr = js_line_data(argv[0]);
 
-      if(!lptr && js_is_array_like(ctx, argv[0])) {
+      if(!lptr && js_is_arraylike(ctx, argv[0])) {
         std::vector<std::array<double, 4> /*cv::Vec4d*/> arr;
         std::vector<BOOL> results;
         uint32_t i, n = js_array_length(ctx, argv[0]);
@@ -695,7 +695,7 @@ js_line_init(JSContext* ctx, JSModuleDef* m) {
     JS_SetConstructor(ctx, line_class, line_proto);
     JS_SetPropertyFunctionList(ctx, line_class, js_line_static_funcs, countof(js_line_static_funcs));
 
-    // js_set_inspect_method(ctx, line_proto, js_line_inspect);
+    // js_object_inspect(ctx, line_proto, js_line_inspect);
   }
 
   if(m)

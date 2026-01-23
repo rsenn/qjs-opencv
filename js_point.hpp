@@ -114,7 +114,7 @@ js_point_write(JSContext* ctx, JSValueConst out, const JSPointData<T>& in) {
   JSValue x = js_number_new<T>(ctx, in.x);
   JSValue y = js_number_new<T>(ctx, in.y);
 
-  if(js_is_array_like(ctx, out)) {
+  if(js_is_arraylike(ctx, out)) {
     JS_SetPropertyUint32(ctx, out, 0, x);
     JS_SetPropertyUint32(ctx, out, 1, y);
   } else if(JS_IsObject(out)) {

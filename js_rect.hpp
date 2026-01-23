@@ -30,7 +30,7 @@ static inline int
 js_rect_read(JSContext* ctx, JSValueConst rect, JSRectData<T>* out) {
   int ret = 1;
   JSValue x = JS_UNDEFINED, y = JS_UNDEFINED, w = JS_UNDEFINED, h = JS_UNDEFINED;
-  if(js_is_array_like(ctx, rect)) {
+  if(js_is_arraylike(ctx, rect)) {
     x = JS_GetPropertyUint32(ctx, rect, 0);
     y = JS_GetPropertyUint32(ctx, rect, 1);
     w = JS_GetPropertyUint32(ctx, rect, 2);

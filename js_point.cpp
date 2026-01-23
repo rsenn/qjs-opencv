@@ -754,7 +754,7 @@ js_point_init(JSContext* ctx, JSModuleDef* m) {
 
     JS_SetConstructor(ctx, point_class, point_proto);
 
-    // js_set_inspect_method(ctx, point_proto, js_point_inspect);
+    // js_object_inspect(ctx, point_proto, js_point_inspect);
   }
 
   if(m)

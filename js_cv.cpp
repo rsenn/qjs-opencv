@@ -124,7 +124,7 @@ js_cv_imwrite(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
   JSInputOutputArray image;
   int32_t transparent = -1;
 
-  if(argc >= 3 && str_end(filename, "gif") && js_is_array_like(ctx, argv[1])) {
+  if(argc >= 3 && str_end(filename, "gif") && js_is_arraylike(ctx, argv[1])) {
     std::vector<JSColorData<uint8_t>> palette;
     std::vector<cv::Mat> mats;
     std::vector<int> delays;

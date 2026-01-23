@@ -22,16 +22,11 @@
 #include <string>
 #include <type_traits>
 #include <utility>
-#include <vector> 
+#include <vector>
 
 namespace cv {
 class CLAHE;
 }
-
-typedef struct {
-  BOOL done;
-  JSValue value;
-} IteratorValue;
 
 typedef cv::Mat JSMatData;
 typedef cv::UMat JSUMatData;
@@ -51,7 +46,7 @@ typedef cv::Ptr<cv::CLAHE> JSCLAHEData;
 typedef cv::_InputArray JSInputArray;
 typedef cv::_InputOutputArray JSInputOutputArray;
 typedef cv::_OutputArray JSOutputArray;
- 
+
 struct JSConstructor {
   JSConstructor(JSCFunction* _ctor, const char* _name) : name(_name), ctor(_ctor), proto(nullptr), nfuncs(0), class_obj(JS_UNDEFINED) {}
 
@@ -61,8 +56,10 @@ struct JSConstructor {
 
   JSValue create(JSContext* ctx) {
     class_obj = JS_NewCFunction2(ctx, ctor, name, 0, JS_CFUNC_constructor, 0);
+
     if(proto && nfuncs)
       JS_SetPropertyFunctionList(ctx, class_obj, proto, nfuncs);
+
     return class_obj;
   }
 
@@ -85,35 +82,24 @@ protected:
   JSValue class_obj;
 };
 
-/*extern "C" {
-static inline JSValue js_global_get(JSContext* ctx, const char* prop);
-static inline BOOL js_is_iterable(JSContext* ctx, JSValueConst obj);
-static inline JSValue js_iterator_method(JSContext* ctx, JSValueConst obj);
-static inline JSValue js_iterator_new(JSContext* ctx, JSValueConst obj);
-static inline IteratorValue js_iterator_next(JSContext* ctx, JSValueConst obj);
-static inline JSAtom js_symbol_atom(JSContext* ctx, const char* name);
-static inline JSValue js_symbol_ctor(JSContext* ctx);
-static inline JSValue js_symbol_get_static(JSContext* ctx, const char* name);
-}*/
-
-JSValue js_vector_vec4i_to_array(JSContext*, const std::vector<cv::Vec4i>& vec);
-
 int js_ref(JSContext*, const char*, JSValueConst, JSValue);
 static inline std::string js_function_name(JSContext*, JSValueConst);
 static inline JSValue js_typedarray_constructor(JSContext*);
-
-static inline size_t
-round_to(size_t num, size_t x) {
-  num /= x;
-  num *= x;
-  return num;
-}
+static inline JSAtom js_symbol_atom(JSContext*, const char*);
+static inline JSAtom js_symbol_for_atom(JSContext*, const char*);
 
 /** @defgroup line JSLineData
  *  @{
  */
-template<class T> union JSLineData {
+
+template<class T> struct JSLineTraits {
   typedef std::array<T, 4> array_type;
+  typedef cv::Vec<T, 4> vector_type;
+  typedef cv::Scalar_<T> scalar_type;
+};
+
+template<class T> union JSLineData {
+  typedef typename JSLineTraits<T>::array_type array_type;
   typedef std::array<JSPointData<T>, 2> points_type;
   typedef std::pair<JSPointData<T>, JSPointData<T>> pair_type;
 
@@ -129,23 +115,14 @@ template<class T> union JSLineData {
     JSPointData<T> a, b;
   };
 
-  JSLineData(const JSLineData<T>& other) {
-    x1 = other.x1;
-    y1 = other.y1;
-    x2 = other.x2;
-    y2 = other.y2;
-  }
+  JSLineData(const JSLineData<T>& other) : x1(other.x1), y1(other.y1), x2(other.x2), y2(other.y2) {}
+
   JSLineData(T _x1, T _y1, T _x2, T _y2) : x1(_x1), y1(_y1), x2(_x2), y2(_y2) {}
 
   operator array_type&() { return this->array; }
   operator array_type const &() const { return this->array; }
 };
 
-template<class T> struct JSLineTraits {
-  typedef std::array<T, 4> array_type;
-  typedef cv::Vec<T, 4> vector_type;
-  typedef cv::Scalar_<T> scalar_type;
-};
 /**
  *  @}
  */
@@ -389,6 +366,33 @@ js_object_classname(JSContext* ctx, JSValueConst value) {
 
   return ret;
 }
+
+static inline void
+js_object_inspect(JSContext* ctx, JSValueConst obj, JSCFunction* func) {
+  JSAtom inspect_symbol = js_symbol_for_atom(ctx, "quickjs.inspect.custom");
+  JS_DefinePropertyValue(ctx, obj, inspect_symbol, JS_NewCFunction(ctx, func, "inspect", 1), JS_PROP_CONFIGURABLE | JS_PROP_WRITABLE);
+  JS_FreeAtom(ctx, inspect_symbol);
+}
+
+static inline JSValue
+js_object_tostringtag(JSContext* ctx, JSValueConst obj) {
+  JSAtom tostringtag_symbol = js_symbol_atom(ctx, "toStringTag");
+  JSValue ret = JS_GetProperty(ctx, obj, tostringtag_symbol);
+  JS_FreeAtom(ctx, tostringtag_symbol);
+  return ret;
+}
+
+static inline void
+js_object_tostringtag(JSContext* ctx, JSValueConst obj, JSValue value) {
+  JSAtom tostringtag_symbol = js_symbol_atom(ctx, "toStringTag");
+  JS_DefinePropertyValue(ctx, obj, tostringtag_symbol, value, JS_PROP_CONFIGURABLE);
+  JS_FreeAtom(ctx, tostringtag_symbol);
+}
+
+static inline void
+js_object_tostringtag(JSContext* ctx, JSValueConst obj, const char* str) {
+  return js_object_tostringtag(ctx, obj, JS_NewString(ctx, str));
+}
 /**
  *  @}
  */
@@ -584,7 +588,7 @@ js_is_iterable(JSContext* ctx, JSValueConst obj) {
 }
 
 static inline BOOL
-js_is_array_like(JSContext* ctx, JSValueConst obj) {
+js_is_arraylike(JSContext* ctx, JSValueConst obj) {
   JSValue len = JS_GetPropertyStr(ctx, obj, "length");
   bool ret = JS_IsNumber(len);
   JS_FreeValue(ctx, len);
@@ -665,6 +669,11 @@ js_typedarray_constructor(JSContext* ctx) {
 /** @defgroup iterator
  *  @{
  */
+typedef struct {
+  BOOL done;
+  JSValue value;
+} IteratorValue;
+
 static inline JSValue
 js_iterator_method(JSContext* ctx, JSValueConst obj) {
   JSValue ret = JS_UNDEFINED;
@@ -964,32 +973,5 @@ js_function_invoke(JSContext* ctx, JSValueConst this_obj, const char* method, in
 /**
  *  @}
  */
-
-static inline void
-js_set_inspect_method(JSContext* ctx, JSValueConst obj, JSCFunction* func) {
-  JSAtom inspect_symbol = js_symbol_for_atom(ctx, "quickjs.inspect.custom");
-  JS_DefinePropertyValue(ctx, obj, inspect_symbol, JS_NewCFunction(ctx, func, "inspect", 1), JS_PROP_CONFIGURABLE | JS_PROP_WRITABLE);
-  JS_FreeAtom(ctx, inspect_symbol);
-}
-
-static inline JSValue
-js_get_tostringtag(JSContext* ctx, JSValueConst obj) {
-  JSAtom tostringtag_symbol = js_symbol_atom(ctx, "toStringTag");
-  JSValue ret = JS_GetProperty(ctx, obj, tostringtag_symbol);
-  JS_FreeAtom(ctx, tostringtag_symbol);
-  return ret;
-}
-
-static inline void
-js_set_tostringtag(JSContext* ctx, JSValueConst obj, JSValue value) {
-  JSAtom tostringtag_symbol = js_symbol_atom(ctx, "toStringTag");
-  JS_DefinePropertyValue(ctx, obj, tostringtag_symbol, value, JS_PROP_CONFIGURABLE);
-  JS_FreeAtom(ctx, tostringtag_symbol);
-}
-
-static inline void
-js_set_tostringtag(JSContext* ctx, JSValueConst obj, const char* str) {
-  return js_set_tostringtag(ctx, obj, JS_NewString(ctx, str));
-}
 
 #endif

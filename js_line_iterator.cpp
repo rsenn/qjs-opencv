@@ -462,7 +462,7 @@ js_line_iterator_init(JSContext* ctx, JSModuleDef* m) {
   JS_SetClassProto(ctx, js_line_iterator_class_id, line_iterator_proto);
 
   /* XXX */
-  // js_set_inspect_method(ctx, line_iterator_proto, js_line_iterator_inspect);
+  // js_object_inspect(ctx, line_iterator_proto, js_line_iterator_inspect);
 
   line_iterator_class = JS_NewCFunction2(ctx, js_line_iterator_constructor, "LineIterator", 2, JS_CFUNC_constructor, 0);
   JS_SetConstructor(ctx, line_iterator_class, line_iterator_proto);
