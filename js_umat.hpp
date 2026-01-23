@@ -18,6 +18,8 @@
 #include <new>
 #include <vector>
 
+typedef cv::UMat JSUMatData;
+
 extern "C" int js_umat_init(JSContext*, JSModuleDef*);
 
 extern "C" {

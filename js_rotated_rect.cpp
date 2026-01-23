@@ -1,5 +1,5 @@
 #include "js_alloc.hpp"
-#include "js_point.hpp"
+#include "js_rotated_rect.hpp"
 #include "js_rect.hpp"
 #include "js_size.hpp"
 #include "jsbindings.hpp"

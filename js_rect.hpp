@@ -1,8 +1,10 @@
 #ifndef JS_RECT_HPP
 #define JS_RECT_HPP
 
-#include "jsbindings.hpp"
-#include <quickjs.h>
+#include "js_point.hpp"
+#include "js_size.hpp"
+
+template<class T> using JSRectData = cv::Rect_<T>;
 
 extern "C" int js_rect_init(JSContext*, JSModuleDef*);
 

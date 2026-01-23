@@ -1,8 +1,7 @@
 #ifndef JS_POINT_ITERATOR_HPP
 #define JS_POINT_ITERATOR_HPP
 
-#include "jsbindings.hpp"
-#include <quickjs.h>
+#include "js_point.hpp"
 #include <utility>
 
 extern "C" int js_point_iterator_init(JSContext*, JSModuleDef*);

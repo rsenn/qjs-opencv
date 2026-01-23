@@ -4,6 +4,8 @@
 #include "jsbindings.hpp"
 #include <quickjs.h>
 
+template<class T> using JSPointData = cv::Point_<T>;
+
 template<typename T> struct point_traits {};
 
 template<> struct point_traits<uint16_t> { static const int type = CV_16UC2; };

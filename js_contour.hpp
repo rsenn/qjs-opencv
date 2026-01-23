@@ -12,6 +12,9 @@
 #include <vector>
 #include <cassert>
 
+template<class T> using JSContourData = std::vector<JSPointData<T>>;
+template<class T> using JSContoursData = std::vector<JSContourData<T>>;
+
 extern "C" {
 extern thread_local JSValue contour_class, contour_proto;
 extern thread_local JSClassID js_contour_class_id;

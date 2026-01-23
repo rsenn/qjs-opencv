@@ -1,8 +1,7 @@
 #include "js_slice_iterator.hpp"
+#include "js_contour.hpp"
 #include "cutils.h"
 #include "js_alloc.hpp"
-#include "jsbindings.hpp"
-#include <quickjs.h>
 #include <cassert>
 #include <iosfwd>
 #include <string>

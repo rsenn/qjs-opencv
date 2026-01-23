@@ -4,6 +4,8 @@
 #include "jsbindings.hpp"
 #include <quickjs.h>
 
+template<class T> using JSSizeData = cv::Size_<T>;
+
 extern "C" int js_size_init(JSContext*, JSModuleDef*);
 
 extern "C" {

@@ -1,8 +1,10 @@
 #ifndef JS_ROTATED_RECT_HPP
 #define JS_ROTATED_RECT_HPP
 
-#include "jsbindings.hpp"
-#include <quickjs.h>
+#include "js_point.hpp"
+#include "js_size.hpp"
+
+typedef cv::RotatedRect JSRotatedRectData;
 
 extern "C" {
 extern thread_local JSValue rotated_rect_proto, rotated_rect_class;

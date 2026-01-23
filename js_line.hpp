@@ -1,8 +1,7 @@
 #ifndef JS_LINE_HPP
 #define JS_LINE_HPP
 
-#include "jsbindings.hpp"
-#include <quickjs.h>
+#include "js_point.hpp"
 
 /** @defgroup line
  *  @{

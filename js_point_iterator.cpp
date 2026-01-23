@@ -1,3 +1,4 @@
+#include "js_contour.hpp"
 #include "js_point_iterator.hpp"
 #include "cutils.h"
 #include "js_alloc.hpp"

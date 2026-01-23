@@ -5,6 +5,8 @@
 #include <quickjs.h>
 #include <cstdint>
 
+typedef cv::Mat JSMatData;
+
 extern "C" int js_mat_init(JSContext*, JSModuleDef*);
 
 extern "C" {

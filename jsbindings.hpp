@@ -24,16 +24,6 @@ namespace cv {
 class CLAHE;
 }
 
-typedef cv::Mat JSMatData;
-typedef cv::UMat JSUMatData;
-typedef cv::RotatedRect JSRotatedRectData;
-
-template<class T> using JSPointData = cv::Point_<T>;
-template<class T> using JSSizeData = cv::Size_<T>;
-template<class T> using JSRectData = cv::Rect_<T>;
-template<class T> using JSContourData = std::vector<JSPointData<T>>;
-template<class T> using JSContoursData = std::vector<JSContourData<T>>;
-
 typedef cv::VideoCapture JSVideoCaptureData;
 typedef cv::VideoWriter JSVideoWraiterData;
 typedef cv::TickMeter JSTickMeterData;
