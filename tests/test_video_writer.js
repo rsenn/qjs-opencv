@@ -1,8 +1,5 @@
-import { Mat } from 'opencv';
-import { Point } from 'opencv';
-import { Size } from 'opencv';
-import { VideoWriter } from 'opencv';
-import * as cv from 'opencv';
+import { Mat, Point, Size, VideoWriter } from 'opencv';
+
 function repeat(n, fn, ...args) {
   for(let i = 0; i < n; i++) fn(...args);
 }
@@ -21,7 +18,7 @@ function main() {
     [0, 0, 255],
     [0, 255, 0],
     [255, 0, 0],
-    [0, 0, 0]
+    [0, 0, 0],
   ]) {
     mat.setTo(c);
     cv.drawLine(mat, new Point(0, 0), new Point(...frameSize), [0xdd, 0xdd, 0xdd], 2, cv.LINE_AA);

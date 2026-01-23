@@ -3,26 +3,8 @@ import * as util from 'util';
 import { TextStyle } from '../js/cvHighGUI.js';
 import { Window } from '../js/cvHighGUI.js';
 import { Console } from 'console';
-import { COLOR_BGR2GRAY } from 'opencv';
-import { Contour } from 'opencv';
-import { CV_8UC3 } from 'opencv';
-import { cvtColor } from 'opencv';
-import { drawRect } from 'opencv';
-import { FILLED } from 'opencv';
-import { imshow } from 'opencv';
-import { imwrite } from 'opencv';
-import { LINE_8 } from 'opencv';
-import { LINE_AA } from 'opencv';
-import { Mat } from 'opencv';
-import { namedWindow } from 'opencv';
-import { Point } from 'opencv';
-import { Rect } from 'opencv';
-import { resizeWindow } from 'opencv';
-import { Size } from 'opencv';
-import { THRESH_BINARY_INV } from 'opencv';
-import { threshold } from 'opencv';
-import { waitKey } from 'opencv';
-import { WINDOW_NORMAL } from 'opencv';
+import { COLOR_BGR2GRAY, Contour, CV_8UC3, cvtColor, drawRect, FILLED, imshow, imwrite, LINE_8, LINE_AA, Mat, namedWindow, Point, Rect, resizeWindow, Size, THRESH_BINARY_INV, threshold, waitKey, WINDOW_NORMAL, } from 'opencv';
+
 function main(...argv) {
   const args = argv.slice(1);
   globalThis.console = new Console({
@@ -30,8 +12,8 @@ function main(...argv) {
       colors: true,
       depth: 2,
       maxArrayLength: Infinity,
-      compact: 1
-    }
+      compact: 1,
+    },
   });
 
   /* namedWindow('out');
@@ -39,7 +21,7 @@ function main(...argv) {
   let mat;
   let colors = [
     [0, 0, 0],
-    [255, 255, 255]
+    [255, 255, 255],
   ];
 
   // drawRect(mat, [0, 0], [639, 479], colors[1], FILLED);
@@ -163,11 +145,11 @@ function main(...argv) {
         util
           .chunkArray(
             util.bitfieldToArray(bf).map(v => (v ? '\u2588\u2588' : '  ')),
-            box.width
+            box.width,
           )
           .map(row => row.join(''))
           .join('\n') +
-        '\x1b[0m'
+        '\x1b[0m',
     );
   }
 

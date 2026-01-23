@@ -43,7 +43,7 @@ Object.defineProperty(File.prototype, Symbol.toStringTag, { value: 'File' });
 
 function main(...args) {
   globalThis.console = new Console({
-    inspectOptions: { compact: false, colors: true, depth: 3 }
+    inspectOptions: { compact: false, colors: true, depth: 3 },
   });
   console.log(`main`, ...args);
 
@@ -130,7 +130,7 @@ function ReplaceStd(str) {
         'time.h',
         'uchar.h',
         'wchar.h',
-        'wctype.h'
+        'wctype.h',
       ].indexOf(name) != -1
     )
       name = 'c' + path.basename(name, '.h');

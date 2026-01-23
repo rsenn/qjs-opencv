@@ -1,4 +1,5 @@
-import * as cv from 'opencv';
+import { CV_8UC1, CV_8UC4, Mat, Point, Size, drawLine, imread, imwrite, imwrite, paletteGenerate, paletteMatch } from 'opencv';
+
 function main(...args) {
   let images = [],
     images2 = [];

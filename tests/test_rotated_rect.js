@@ -1,14 +1,15 @@
-import * as cv from 'opencv';
+import { Point, RotatedRect, Size } from 'opencv';
+
 function main() {
   const DEG2RAD = Math.PI / 180;
 
-  let center = new cv.Point(100, 50);
-  let size = new cv.Size(20, 20);
+  let center = new Point(100, 50);
+  let size = new Size(20, 20);
   let angle = 45 * DEG2RAD;
   console.log('center', center);
   console.log('size', size);
   console.log('angle', angle);
-  let rr = new cv.RotatedRect(center, size, angle);
+  let rr = new RotatedRect(center, size, angle);
   console.log('rr', rr);
   console.log('rr.center', rr.center);
   console.log('rr.size', rr.size);
