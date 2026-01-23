@@ -1,7 +1,4 @@
-import { isFunction } from 'util';
-import { isObject } from 'util';
-import { Modulo } from './cvUtils.js';
-import { WeakMapper } from './cvUtils.js';
+import { isFunction, isObject, Modulo, WeakMapper } from './cvUtils.js';
 import { Mat } from 'opencv';
 
 export class Pipeline extends Function {

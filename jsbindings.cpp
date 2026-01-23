@@ -6,7 +6,7 @@
 #include <iostream>
 #include <limits>
 
-template<class T> class jsallocator {
+/*template<class T> class jsallocator {
 public:
   typedef T value_type;
   typedef T* pointer;
@@ -15,16 +15,23 @@ public:
   typedef const T& const_reference;
   typedef std::size_t size_type;
   typedef std::ptrdiff_t difference_type;
+
   template<class U> struct rebind {
     typedef jsallocator<U> other;
   };
+
   pointer address(reference value) const { return &value; }
   const_pointer address(const_reference value) const { return &value; }
+
   jsallocator() throw() {}
   jsallocator(const jsallocator&) throw() {}
+
   template<class U> jsallocator(const jsallocator<U>&) throw() {}
+
   ~jsallocator() throw() {}
+
   size_type max_size() const throw() { return std::numeric_limits<std::size_t>::max() / sizeof(T); }
+
   pointer allocate(size_type num, const void* = 0) {
     pointer ret;
     std::cerr << "allocate " << num << " element(s)" << " of size " << sizeof(T) << std::endl;
@@ -32,14 +39,20 @@ public:
     std::cerr << " allocated at: " << (void*)ret << std::endl;
     return ret;
   }
+
   void construct(pointer p, const T& value) { p->T(value); }
+
   void destroy(pointer p) { p->~T(); }
+
   void deallocate(pointer p, size_type num) {
     std::cerr << "deallocate " << num << " element(s)" << " of size " << sizeof(T) << " at: " << (void*)p << std::endl;
     js_free(p);
   }
-};
+};*/
 
+/** @addtogroup color
+ *  @{
+ */
 int
 js_color_read(JSContext* ctx, JSValueConst color, JSColorData<double>* out) {
   int ret = 1;
@@ -113,12 +126,16 @@ js_color_read(JSContext* ctx, JSValueConst value, JSColorData<uint8_t>* out) {
 
   return 0;
 }
+/**
+ *  @}
+ */
 
 int
 js_ref(JSContext* ctx, const char* name, JSValueConst arg, JSValue value) {
   if(JS_IsFunction(ctx, arg)) {
     JSValueConst v = value;
-    JS_Call(ctx, arg, JS_UNDEFINED, 1, &v);
+    JSValue ret = JS_Call(ctx, arg, JS_UNDEFINED, 1, &v);
+    JS_FreeValue(ctx, ret);
   } else if(js_is_array(ctx, arg)) {
     JS_SetPropertyUint32(ctx, arg, 0, value);
   } else if(JS_IsObject(arg)) {

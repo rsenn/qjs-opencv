@@ -19,9 +19,7 @@
 #include <type_traits>
 #include <vector>
 
-template<class T> struct number_type {
-  static constexpr bool typed_array = false;
-};
+template<class T> struct number_type { static constexpr bool typed_array = false; };
 
 template<> struct number_type<int8_t> {
   typedef int8_t value_type;
@@ -407,7 +405,7 @@ js_typedarray_type(JSContext* ctx, JSValueConst obj) {
   else if(JS_IsString(obj))
     js_value_to(ctx, obj, class_name);
   else
-    class_name = js_class_name(ctx, obj);
+    class_name = js_object_classname(ctx, obj);
 
   return js_typedarray_type(class_name);
 }

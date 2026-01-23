@@ -1,43 +1,5 @@
 import { BitsToNames } from './cvUtils.js';
-import { destroyWindow } from 'opencv';
-import { Draw } from 'opencv';
-import { EVENT_FLAG_ALTKEY } from 'opencv';
-import { EVENT_FLAG_CTRLKEY } from 'opencv';
-import { EVENT_FLAG_LBUTTON } from 'opencv';
-import { EVENT_FLAG_MBUTTON } from 'opencv';
-import { EVENT_FLAG_RBUTTON } from 'opencv';
-import { EVENT_FLAG_SHIFTKEY } from 'opencv';
-import { EVENT_LBUTTONDBLCLK } from 'opencv';
-import { EVENT_LBUTTONDOWN } from 'opencv';
-import { EVENT_LBUTTONUP } from 'opencv';
-import { EVENT_MBUTTONDBLCLK } from 'opencv';
-import { EVENT_MBUTTONDOWN } from 'opencv';
-import { EVENT_MBUTTONUP } from 'opencv';
-import { EVENT_MOUSEHWHEEL } from 'opencv';
-import { EVENT_MOUSEMOVE } from 'opencv';
-import { EVENT_MOUSEWHEEL } from 'opencv';
-import { EVENT_RBUTTONDBLCLK } from 'opencv';
-import { EVENT_RBUTTONDOWN } from 'opencv';
-import { EVENT_RBUTTONUP } from 'opencv';
-import { FILLED } from 'opencv';
-import { FONT_HERSHEY_PLAIN } from 'opencv';
-import { getScreenResolution } from 'opencv';
-import { getWindowImageRect } from 'opencv';
-import { getWindowProperty } from 'opencv';
-import { imshow } from 'opencv';
-import { LINE_AA } from 'opencv';
-import { moveWindow } from 'opencv';
-import { namedWindow } from 'opencv';
-import { Point } from 'opencv';
-import { resizeWindow } from 'opencv';
-import { selectROI } from 'opencv';
-import { setMouseCallback } from 'opencv';
-import { setWindowProperty } from 'opencv';
-import { setWindowTitle } from 'opencv';
-import { Size } from 'opencv';
-import { waitKey } from 'opencv';
-import { waitKeyEx } from 'opencv';
-import { WINDOW_NORMAL } from 'opencv';
+import { destroyWindow, Draw, EVENT_FLAG_ALTKEY, EVENT_FLAG_CTRLKEY, EVENT_FLAG_LBUTTON, EVENT_FLAG_MBUTTON, EVENT_FLAG_RBUTTON, EVENT_FLAG_SHIFTKEY, EVENT_LBUTTONDBLCLK, EVENT_LBUTTONDOWN, EVENT_LBUTTONUP, EVENT_MBUTTONDBLCLK, EVENT_MBUTTONDOWN, EVENT_MBUTTONUP, EVENT_MOUSEHWHEEL, EVENT_MOUSEMOVE, EVENT_MOUSEWHEEL, EVENT_RBUTTONDBLCLK, EVENT_RBUTTONDOWN, EVENT_RBUTTONUP, FILLED, FONT_HERSHEY_PLAIN, getScreenResolution, getWindowImageRect, getWindowProperty, imshow, LINE_AA, moveWindow, namedWindow, Point, resizeWindow, selectROI, setMouseCallback, setWindowProperty, setWindowTitle, Size, waitKey, waitKeyEx, WINDOW_NORMAL, } from 'opencv';
 
 export const MouseEvents = {
   EVENT_MOUSEMOVE,
@@ -53,6 +15,7 @@ export const MouseEvents = {
   EVENT_MOUSEWHEEL,
   EVENT_MOUSEHWHEEL,
 };
+
 export const MouseFlags = {
   EVENT_FLAG_LBUTTON,
   EVENT_FLAG_RBUTTON,

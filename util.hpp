@@ -17,6 +17,8 @@
 #include <string>
 #include <vector>
 
+#define countof(x) (sizeof(x) / sizeof((x)[0]))
+
 #if defined(_WIN32) || defined(__MINGW32__)
 #define VISIBLE __declspec(dllexport)
 #define HIDDEN
@@ -36,6 +38,18 @@
 #error No TLS implementation found.
 #endif
 #endif
+
+#define JS_CGETSET_ENUMERABLE_DEF(prop_name, fgetter, fsetter, magic_num) \
+  { \
+    .name = prop_name, .prop_flags = JS_PROP_ENUMERABLE | JS_PROP_CONFIGURABLE, .def_type = JS_DEF_CGETSET_MAGIC, .magic = magic_num, .u = { \
+      .getset = {.get = {.getter_magic = fgetter}, .set = {.setter_magic = fsetter}} \
+    } \
+  }
+
+#define JS_CONSTANT(name) JS_PROP_INT32_DEF(#name, name, 0)
+#define JS_CV_CONSTANT(name) JS_PROP_INT32_DEF(#name, cv::name, JS_PROP_ENUMERABLE)
+
+typedef std::vector<JSCFunctionListEntry> js_function_list_t;
 
 #define COLOR_BLACK "\x1b[30m"
 #define COLOR_RED "\x1b[31m"

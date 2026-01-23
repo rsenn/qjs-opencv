@@ -3,9 +3,20 @@ import { COLOR_HSV2BGR, CV_8UC3, CV_8UC4, FILLED, Line, Mat, Point, Rect, Size, 
 const NUM_IMAGES = 30;
 const NUM_COLORS = 16;
 
+const toHex = n => n.toString(16).padStart(2, '0');
+const toDec = n => n.toString(10).padStart(3, ' ');
+const hexColor = (...args) => '#' + args.map(toHex).join('');
+const decTriplet = (...args) => args.map(toDec).join(', ');
+
+const randInt = max => Math.floor(Math.random() * max);
+const randCoord = () => new Point(randInt(size.width - 100) + 100, randInt(size.height));
+const randLine = () => new Line(...randCoord(), ...randCoord());
+
+const dumpPalette = (palette, fmt = hexColor) => [...palette].map((c, i) => i + ' ' + colorize(fmt(...c), c)).join(', ');
+
 function main(...args) {
-  let images = [];
-  let palette = [],
+  let images = [],
+    palette = [],
     palette2 = [],
     palette3 = [];
   let size = new Size(640, 480);
@@ -45,17 +56,6 @@ function main(...args) {
       i++;
     }
   }
-
-  const toHex = n => n.toString(16).padStart(2, '0');
-  const toDec = n => n.toString(10).padStart(3, ' ');
-  const hexColor = (...args) => '#' + args.map(toHex).join('');
-  const decTriplet = (...args) => args.map(toDec).join(', ');
-
-  const randInt = max => Math.floor(Math.random() * max);
-  const randCoord = () => new Point(randInt(size.width - 100) + 100, randInt(size.height));
-  const randLine = () => new Line(...randCoord(), ...randCoord());
-
-  const dumpPalette = (palette, fmt = hexColor) => [...palette].map((c, i) => i + ' ' + colorize(fmt(...c), c)).join(', ');
 
   cvtColor(hsv_pal, bgr_pal, COLOR_HSV2BGR);
 

@@ -1,19 +1,8 @@
-import { BindMethods } from './cvUtils.js';
-import { BindMethodsTo } from './cvUtils.js';
-import { Define } from './cvUtils.js';
-import { FindKey } from './cvUtils.js';
-import { Lookup } from './cvUtils.js';
-import { Modulo } from './cvUtils.js';
-import { WeakAssign } from './cvUtils.js';
-import { WeakMapper } from './cvUtils.js';
-import { Mat } from 'opencv';
-import { Rect } from 'opencv';
-import { Size } from 'opencv';
-import { VideoCapture } from 'opencv';
-import * as cv from 'opencv';
+import { BindMethods, BindMethodsTo, Define, FindKey, Lookup, Modulo, WeakAssign, WeakMapper, Mat, Rect, Size, VideoCapture, IMREAD_IGNORE_ORIENTATION, INTER_CUBIC, imread, resize } from 'opencv';
 
 const Crop = (() => {
   const mapper = WeakMapper(() => new Mat());
+
   return function Crop(mat, rect) {
     let tmp = mapper(mat);
     mat.roi(rect).copyTo(tmp);
@@ -60,7 +49,7 @@ function ImageSize(src, dst, dsize, action = (name, arg1, arg2) => console.debug
       }
       action(`Scale (ₓ${factors[0].toFixed(5)})`, ssize, dsize);
       dst.reset();
-      cv.resize(src, dst, dsize, 0, 0, cv.INTER_CUBIC);
+      resize(src, dst, dsize, 0, 0, INTER_CUBIC);
       dst.resize(dsize.height);
       return;
     }
@@ -96,11 +85,11 @@ export class ImageSequence {
       get pos_msec() {
         const { pos_frames, fps } = this;
         return (pos_frames * 1000) / fps;
-      }
+      },
     };
 
     if(!dimensions) {
-      let mat = cv.imread(images[0], cv.IMREAD_IGNORE_ORIENTATION);
+      let mat = imread(images[0], IMREAD_IGNORE_ORIENTATION);
       dimensions = mat.size;
       const { cols, rows } = mat;
       dimensions = new Size(mat.cols, mat.rows);
@@ -137,7 +126,7 @@ export class ImageSequence {
     this.framePos = this.index++;
     this.frameFile = images[this.framePos];
     const { index, framePos, frameFile } = this;
-    let ret = !!(this.frame = cv.imread(frameFile));
+    let ret = !!(this.frame = imread(frameFile));
     return ret;
   }
 
@@ -159,7 +148,7 @@ export class ImageSequence {
 
   *[Symbol.iterator]() {
     for(let image of this.images) {
-      yield cv.imread(image);
+      yield imread(image);
     }
   }
 }
@@ -201,8 +190,8 @@ export class VideoSource {
       'ARAVIS',
       'OPENCV_MJPEG',
       'INTEL_MFX',
-      'XINE'
-    ].map(name => [name, cv['CAP_' + name]])
+      'XINE',
+    ].map(name => [name, cv['CAP_' + name]]),
   );
 
   constructor(...args) {
@@ -276,10 +265,10 @@ export class VideoSource {
         'channel',
         'auto_wb',
         'wb_temperature',
-        'codec_pixel_format'
+        'codec_pixel_format',
       ]
         .filter(s => typeof s == 'string')
-        .filter(s => /pos_/.test(s) || this.cap.get(this.propId(s)) !== 0)
+        .filter(s => /pos_/.test(s) || this.cap.get(this.propId(s)) !== 0),
   );
 
   capture(device, driverId) {
@@ -397,13 +386,13 @@ export class VideoSource {
       return Define([this.get('pos_frames'), this.get('frame_count')], {
         toString() {
           return '#' + this[0] + '/' + this[1];
-        }
+        },
       });
     if(type.indexOf('ercent') != -1 || type == '%') return (this.get('pos_frames') * 100) / this.get('frame_count');
     return Define([this.tellMsecs, this.durationMsecs], {
       toString() {
         return FormatTime(this[0]) + '/' + FormatTime(this[1]);
-      }
+      },
     });
   }
 

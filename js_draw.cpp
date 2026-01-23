@@ -92,7 +92,7 @@ js_draw_circle(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
   }
 
   try {
-    cv::circle(dst, point, radius, js_to_scalar(color), thickness < 0 ? cv::FILLED : thickness, line_type);
+    cv::circle(dst, point, radius, js_color_scalar(color), thickness < 0 ? cv::FILLED : thickness, line_type);
   } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 
   return JS_UNDEFINED;
@@ -160,7 +160,7 @@ js_draw_ellipse(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
   }
 
   try {
-    cv::ellipse(dst, center, axes, angle, start_angle, end_angle, js_to_scalar(color), thickness < 0 ? cv::FILLED : thickness, line_type);
+    cv::ellipse(dst, center, axes, angle, start_angle, end_angle, js_color_scalar(color), thickness < 0 ? cv::FILLED : thickness, line_type);
   } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 
   return JS_UNDEFINED;
@@ -205,10 +205,10 @@ js_draw_contour(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
   std::cerr << "draw_contour() contours.length=" << contours.size() << " index=" << index << " thickness=" << thickness << std::endl;
 
   try {
-    cv::drawContours(dst, contours, index, js_to_scalar(color), thickness, line_type);
+    cv::drawContours(dst, contours, index, js_color_scalar(color), thickness, line_type);
   } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 
-  std::cerr << "draw_contour() ret:" << ret << " color: " << js_to_scalar(color) << std::endl;
+  std::cerr << "draw_contour() ret:" << ret << " color: " << js_color_scalar(color) << std::endl;
   return JS_UNDEFINED;
 }
 
@@ -255,7 +255,7 @@ js_draw_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
   if(argc > 8)
     js_point_read<int>(ctx, argv[8], &offset);
 
-  cv::Scalar scalar = js_to_scalar(color);
+  cv::Scalar scalar = js_color_scalar(color);
   // std::cerr << "draw_contours() contours.length=" << contours.size() << " index=" <<
   // index << " thickness="
   // << thickness << std::endl;
@@ -273,7 +273,7 @@ js_draw_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
   } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 
   // std::cerr << "draw_contours() ret:" << ret << " color: " <<
-  // js_to_scalar(color) << std::endl;
+  // js_color_scalar(color) << std::endl;
 
   return JS_UNDEFINED;
 }
@@ -605,10 +605,10 @@ js_put_text(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
     }
 
     if(!font_name.empty())
-      freetype2->putText(*dst, text, point, font_scale, js_to_scalar(color), thickness, line_type, bottomLeftOrigin);
+      freetype2->putText(*dst, text, point, font_scale, js_color_scalar(color), thickness, line_type, bottomLeftOrigin);
     else
 #endif
-      cv::putText(*dst, text, point, font_face, font_scale, js_to_scalar(color), thickness < 0 ? 0 : thickness, line_type, bottomLeftOrigin);
+      cv::putText(*dst, text, point, font_face, font_scale, js_color_scalar(color), thickness < 0 ? 0 : thickness, line_type, bottomLeftOrigin);
   } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 
   return JS_UNDEFINED;

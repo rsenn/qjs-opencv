@@ -1,3 +1,5 @@
+export const isFunction = v => typeof v == 'function';
+export const isObject = v => (v !== null && typeof v == 'object') || isFunction(v);
 export const Modulo = (a, b) => ((a % b) + b) % b;
 
 export const WeakMapper = (createFn, map = new WeakMap(), hitFn) => {
@@ -60,36 +62,42 @@ export const Define = (obj, ...args) => {
     const [arg, overwrite = true] = args;
     let adecl = Object.getOwnPropertyDescriptors(arg);
     let odecl = {};
+
     for(let prop in adecl) {
       if(prop in obj) {
         if(!overwrite) continue;
         else delete obj[prop];
       }
+
       if(Object.getOwnPropertyDescriptor(obj, prop)) delete odecl[prop];
       else
         odecl[prop] = {
           ...adecl[prop],
           enumerable: false,
           configurable: true,
-          writeable: true
+          writeable: true,
         };
     }
+
     Object.defineProperties(obj, odecl);
     return obj;
   }
+
   const [key, value, enumerable = false] = args;
+
   Object.defineProperty(obj, key, {
     enumerable,
     configurable: true,
     writable: true,
-    value
+    value,
   });
+
   return obj;
 };
 
 export const Once = (fn, thisArg, memoFn) => {
-  let ran = false;
-  let ret;
+  let ret,
+    ran = false;
 
   return function(...args) {
     if(!ran) {
@@ -98,66 +106,89 @@ export const Once = (fn, thisArg, memoFn) => {
     } else if(typeof memoFn == 'function') {
       ret = memoFn(ret);
     }
+
     return ret;
   };
 };
 
 export const GetOpt = (options = {}, args) => {
-  let short, long;
-  let result = {};
+  let short,
+    long,
+    result = {};
   let positional = (result['@'] = []);
+
   if(!(options instanceof Array)) options = Object.entries(options);
   const findOpt = arg => options.find(([optname, option]) => (Array.isArray(option) ? option.indexOf(arg) != -1 : false) || arg == optname);
   let [, params] = options.find(opt => opt[0] == '@') || [];
+
   if(typeof params == 'string') params = params.split(',');
+
   for(let i = 0; i < args.length; i++) {
     const arg = args[i];
     let opt;
+
     if(arg[0] == '-') {
       let name, value, start, end;
+
       if(arg[1] == '-') long = true;
       else short = true;
+
       start = short ? 1 : 2;
+
       if(short) end = 2;
       else if((end = arg.indexOf('=')) == -1) end = arg.length;
+
       name = arg.substring(start, end);
+
       if((opt = findOpt(name))) {
         const [, [has_arg, handler]] = opt;
+
         console.log(`name: ${name} has_arg: ${has_arg} opt[0]: ${opt[0]}`);
+
         if(has_arg) {
           if(arg.length > end) value = arg.substring(end + (arg[end] == '='));
           else value = args[++i];
         } else {
           value = true;
         }
+
         console.log(`value: ${value}`);
+
         try {
-          //          value = null;
           let tmp;
           if((tmp = handler(value, result[opt[0]], options, result)) !== undefined) value = tmp;
         } catch(e) {}
+
         result[opt[0]] = value;
         continue;
       }
     }
+
     if(params.length) {
       const param = params.shift();
+
       if((opt = findOpt(param))) {
         const [name, [, handler]] = opt;
+
         console.log(`param: ${param} name: ${name}`);
+
         let value = arg;
+
         if(typeof handler == 'function') {
           try {
             let tmp;
             if((tmp = handler(value, result[name], options, result)) !== undefined) value = tmp;
           } catch(e) {}
         }
+
         result[name] = value;
         continue;
       }
     }
+
     result['@'] = result['@'].concat([arg]);
   }
+
   return result;
 };
 
@@ -169,14 +200,17 @@ export function RoundTo(value, prec) {
 export function Range(...args) {
   let [start, end, step = 1] = args;
   let ret;
+
   start /= step;
   end /= step;
+
   if(start > end) {
     ret = [];
     while(start >= end) ret.push(start--);
   } else {
     ret = Array.from({ length: end - start + 1 }, (v, k) => k + start);
   }
+
   if(step != 1) ret = ret.map(n => n * step);
   return ret;
 }
@@ -203,12 +237,12 @@ export function Lookup(getter, setter, keys) {
         ? {
             set(target, prop, value) {
               setter(prop, value);
-            }
+            },
           }
         : {}),
       ownKeys(target) {
         return keys ? keys() : [];
-      }
-    }
+      },
+    },
   );
 }

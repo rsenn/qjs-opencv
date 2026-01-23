@@ -61,7 +61,7 @@ js_array_clear(JSContext* ctx, const JSValueConst& arr) {
     int64_t top = js_array_length(ctx, arr);
     JSValueConst args[] = {JS_NewInt64(ctx, 0), JS_NewInt64(ctx, top)};
 
-    JSValue ret = js_invoke(ctx, arr, "splice", countof(args), args);
+    JSValue ret = js_function_invoke(ctx, arr, "splice", countof(args), args);
     JS_FreeValue(ctx, ret);
     return TRUE;
   }

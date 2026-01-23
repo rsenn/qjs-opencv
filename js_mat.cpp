@@ -232,7 +232,8 @@ js_mat_dump(JSMatData* const s) {
   bool inList = posList != mat_list.cend();
   bool inFreed = std::find(mat_freed.cbegin(), mat_freed.cend(), s) != mat_freed.cend();
   const auto u = s->u;
-  std::cerr << " mat" << "[" << (posList - mat_list.cbegin()) << "]=" << static_cast<void*>(s);
+  std::cerr << " mat"
+            << "[" << (posList - mat_list.cbegin()) << "]=" << static_cast<void*>(s);
 
   if(inList)
     std::cerr << ", inList=" << (inList ? "true" : "false");
@@ -329,8 +330,8 @@ js_mat_initialize(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
       const auto typed = js_typedarray_type(ctx, argv[0]);
       type = typed.cv_type();
       JSValue tmp = JS_GetPropertyStr(ctx, argv[0], "buffer");
-      uint32_t offset = js_property_get<uint32_t>(ctx, argv[0], "byteOffset");
-      uint32_t length = js_property_get<uint32_t>(ctx, argv[0], "length");
+      uint32_t offset = js_object_property<uint32_t>(ctx, argv[0], "byteOffset");
+      uint32_t length = js_object_property<uint32_t>(ctx, argv[0], "length");
       size_t dummy;
 
       sizes.push_back(length);
