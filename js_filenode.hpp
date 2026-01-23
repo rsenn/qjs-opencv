@@ -24,6 +24,10 @@ JSModuleDef* js_init_module_filenode(JSContext*, const char*);
 
 JSValue js_filenode_new(JSContext*, JSValueConst);
 JSValue js_filenode_new(JSContext*, JSValueConst, const JSFileNodeData&);
+static inline JSValue
+js_filenode_new(JSContext* ctx, const JSFileNodeData& fn) {
+  return js_filenode_new(ctx, filenode_proto, fn);
+}
 
 extern "C" int js_filenode_init(JSContext*, JSModuleDef*);
 

@@ -1,5 +1,7 @@
 #include "js_filenode.hpp"
+#include "js_mat.hpp"
 #include "include/js_alloc.hpp"
+#include "include/jsbindings.hpp"
 #include "include/util.hpp"
 
 extern "C" {
@@ -8,14 +10,32 @@ thread_local JSValue filenode_proto = JS_UNDEFINED, filenode_class = JS_UNDEFINE
 thread_local JSClassID js_filenode_class_id = 0, js_filenode_iterator_class_id = 0;
 }
 
+static JSValue
+js_filenode_iterator_wrap(JSContext* ctx, JSValueConst proto, JSFileNodeIteratorData* fn) {
+  JSValue ret = JS_NewObjectProtoClass(ctx, proto, js_filenode_iterator_class_id);
+  JS_SetOpaque(ret, fn);
+  return ret;
+}
+
+JSValue
+js_filenode_iterator_new(JSContext* ctx, JSValueConst proto, const JSFileNodeIteratorData& other) {
+  JSFileNodeIteratorData* fn = js_allocate<JSFileNodeIteratorData>(ctx);
+
+  new(fn) JSFileNodeIteratorData(other);
+
+  return js_filenode_iterator_wrap(ctx, proto, fn);
+}
+
 void
 js_filenode_iterator_finalizer(JSRuntime* rt, JSValue val) {
   JSFileNodeIteratorData* fni;
   /* Note: 'fni' can be NULL in case JS_SetOpaque() was not called */
 
-  // fni->~JSFileNodeIteratorData();
-  if((fni = static_cast<JSFileNodeIteratorData*>(JS_GetOpaque(val, js_filenode_iterator_class_id))))
+  if((fni = static_cast<JSFileNodeIteratorData*>(JS_GetOpaque(val, js_filenode_iterator_class_id)))) {
+    fni->~JSFileNodeIteratorData();
+
     js_deallocate(rt, fni);
+  }
 }
 
 JSClassDef js_filenode_iterator_class = {
@@ -24,9 +44,9 @@ JSClassDef js_filenode_iterator_class = {
 };
 
 const JSCFunctionListEntry js_filenode_iterator_proto_funcs[] = {
-
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "FileNodeIterator", JS_PROP_CONFIGURABLE),
 };
+
 const JSCFunctionListEntry js_filenode_iterator_static_funcs[] = {};
 
 static JSValue
@@ -142,15 +162,19 @@ js_filenode_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
     case FUNCTION_ISCOLLECTION: {
       break;
     }
+
     case FUNCTION_ISEMPTYCOLLECTION: {
       break;
     }
+
     case FUNCTION_ISFLOW: {
       break;
     }
+
     case FUNCTION_ISMAP: {
       break;
     }
+
     case FUNCTION_ISSEQ: {
       break;
     }
@@ -187,6 +211,32 @@ enum {
 
 };
 
+static void
+js_filenode_freebuf(JSRuntime* rt, void* opaque, void* ptr) {
+  JSValue obj = JS_MKPTR(JS_TAG_OBJECT, opaque);
+
+  JS_FreeValueRT(rt, obj);
+}
+
+enum { GLOBAL_READ };
+
+static JSValue
+js_filenode_global(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  JSValue ret = JS_EXCEPTION;
+  JSFileNodeData* fn;
+
+  if(!(fn = js_filenode_data2(ctx, argv[0])))
+    return JS_EXCEPTION;
+
+  switch(magic) {
+    case GLOBAL_READ: {
+      break;
+    }
+  }
+
+  return ret;
+}
+
 static JSValue
 js_filenode_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSFileNodeData* fn;
@@ -197,75 +247,155 @@ js_filenode_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
 
   switch(magic) {
     case METHOD_BEGIN: {
+      ret = js_filenode_iterator_new(ctx, filenode_iterator_proto, fn->begin());
       break;
     }
-    case METHOD_EMPTY: {
-      break;
-    }
+
     case METHOD_END: {
+      ret = js_filenode_iterator_new(ctx, filenode_iterator_proto, fn->end());
       break;
     }
+
+    case METHOD_EMPTY: {
+      ret = JS_NewBool(ctx, fn->empty());
+      break;
+    }
+
     case METHOD_ISINT: {
+      ret = JS_NewBool(ctx, fn->isInt());
       break;
     }
+
     case METHOD_ISMAP: {
+      ret = JS_NewBool(ctx, fn->isMap());
       break;
     }
+
     case METHOD_ISNAMED: {
+      ret = JS_NewBool(ctx, fn->isNamed());
       break;
     }
+
     case METHOD_ISNONE: {
+      ret = JS_NewBool(ctx, fn->isNone());
       break;
     }
+
     case METHOD_ISREAL: {
+      ret = JS_NewBool(ctx, fn->isReal());
       break;
     }
+
     case METHOD_ISSEQ: {
+      ret = JS_NewBool(ctx, fn->isSeq());
       break;
     }
+
     case METHOD_ISSTRING: {
+      ret = JS_NewBool(ctx, fn->isString());
       break;
     }
+
     case METHOD_KEYS: {
+      std::vector<std::string> keys = fn->keys();
+
+      ret = js_array_from(ctx, keys);
       break;
     }
+
     case METHOD_MAT: {
+      cv::Mat mat = fn->mat();
+
+      ret = js_mat_wrap(ctx, mat);
       break;
     }
+
     case METHOD_NAME: {
+      std::string name = fn->name();
+
+      ret = js_value_from(ctx, name);
       break;
     }
+
     case METHOD_ASSIGN: {
+      JSFileNodeData* other;
+
+      if(!(other = js_filenode_data(argv[0])))
+        return JS_ThrowTypeError(ctx, "argument 1 must be of type cv::FileNode");
+
+      *fn = *other;
       break;
     }
+
     case METHOD_AT: {
+      int32_t idx;
+
+      if(JS_ToInt32(ctx, &idx, argv[0]))
+        return JS_ThrowTypeError(ctx, "argument 1 must be a number");
+
+      ret = js_filenode_new(ctx, fn->operator[](idx));
       break;
     }
+
     case METHOD_GETNODE: {
+      const char* name;
+
+      if(!(name = JS_ToCString(ctx, argv[0])))
+        return JS_ThrowTypeError(ctx, "argument 1 must be a string");
+
+      ret = js_filenode_new(ctx, fn->operator[](name));
+
+      JS_FreeCString(ctx, name);
       break;
     }
+
     case METHOD_PTR: {
+      ret = JS_NewArrayBuffer(
+          ctx, reinterpret_cast<uint8_t*>(fn->ptr()), fn->rawSize(), js_filenode_freebuf, JS_VALUE_GET_PTR(JS_DupValue(ctx, this_val)), FALSE);
       break;
     }
+
     case METHOD_RAWSIZE: {
+      ret = js_value_from(ctx, fn->rawSize());
       break;
     }
+
     case METHOD_READRAW: {
+      const char* fmt;
+
+      if(!(fmt = JS_ToCString(ctx, argv[0])))
+        return JS_ThrowTypeError(ctx, "argument 1 must be a string");
+
+      size_t len;
+      uint8_t* buf;
+
+      if(!(buf = JS_GetArrayBuffer(ctx, &len, argv[1])))
+        ret = JS_ThrowTypeError(ctx, "argument 2 must be an ArrayBuffer");
+      else
+        fn->readRaw(fmt, buf, len);
+
+      JS_FreeCString(ctx, fmt);
+
       break;
     }
+
     case METHOD_REAL: {
+      ret = js_value_from(ctx, fn->real());
       break;
     }
-    case METHOD_SETVALUE: {
-      break;
-    }
+
     case METHOD_SIZE: {
+      ret = js_value_from(ctx, fn->size());
       break;
     }
+
     case METHOD_STRING: {
+      ret = js_value_from(ctx, fn->string());
       break;
     }
+
     case METHOD_TYPE: {
+      ret = js_value_from(ctx, fn->type());
       break;
     }
   }
@@ -278,9 +408,11 @@ js_filenode_finalizer(JSRuntime* rt, JSValue val) {
   JSFileNodeData* fn;
   /* Note: 'fn' can be NULL in case JS_SetOpaque() was not called */
 
-  // fn->~JSFileNodeData();
-  if((fn = js_filenode_data(val)))
+  if((fn = js_filenode_data(val))) {
+    fn->~JSFileNodeData();
+
     js_deallocate(rt, fn);
+  }
 }
 
 JSClassDef js_filenode_class = {
@@ -309,7 +441,6 @@ const JSCFunctionListEntry js_filenode_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("rawSize", 0, js_filenode_method, METHOD_RAWSIZE),
     JS_CFUNC_MAGIC_DEF("readRaw", 0, js_filenode_method, METHOD_READRAW),
     JS_CFUNC_MAGIC_DEF("real", 0, js_filenode_method, METHOD_REAL),
-    JS_CFUNC_MAGIC_DEF("setValue", 0, js_filenode_method, METHOD_SETVALUE),
     JS_CFUNC_MAGIC_DEF("size", 0, js_filenode_method, METHOD_SIZE),
     JS_CFUNC_MAGIC_DEF("string", 0, js_filenode_method, METHOD_STRING),
     JS_CFUNC_MAGIC_DEF("type", 0, js_filenode_method, METHOD_TYPE),
@@ -338,6 +469,10 @@ const JSCFunctionListEntry js_filenode_static_funcs[] = {
     JS_PROP_INT32_DEF("NAMED", cv::FileNode::NAMED, JS_PROP_ENUMERABLE),
 
     // JS_CFUNC_DEF("from", 1, js_filenode_from),
+};
+
+const JSCFunctionListEntry js_filenode_global_funcs[] = {
+    JS_CFUNC_MAGIC_DEF("read", 2, js_filenode_global, GLOBAL_READ),
 };
 
 extern "C" int
@@ -372,6 +507,7 @@ js_filenode_init(JSContext* ctx, JSModuleDef* m) {
   if(m) {
     JS_SetModuleExport(ctx, m, "FileNode", filenode_class);
     JS_SetModuleExport(ctx, m, "FileNodeIterator", filenode_iterator_class);
+    JS_SetModuleExportList(ctx, m, js_filenode_global_funcs, countof(js_filenode_global_funcs));
   }
 
   return 0;
@@ -381,6 +517,7 @@ extern "C" void
 js_filenode_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "FileNode");
   JS_AddModuleExport(ctx, m, "FileNodeIterator");
+  JS_AddModuleExportList(ctx, m, js_filenode_global_funcs, countof(js_filenode_global_funcs));
 }
 
 #ifdef JS_FILENODE_MODULE

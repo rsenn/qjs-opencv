@@ -281,6 +281,7 @@ js_filestorage_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCo
     }
 
     case METHOD_GETFIRSTTOPLEVELNODE: {
+      ret = js_filenode_new(ctx, fs->getFirstTopLevelNode());
       break;
     }
 
@@ -292,7 +293,7 @@ js_filestorage_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCo
     case METHOD_GETNODE: {
       const char* name = JS_ToCString(ctx, argv[0]);
 
-      fs->operator[](name);
+      ret = js_filenode_new(ctx, fs->operator[](name));
 
       if(name)
         JS_FreeCString(ctx, name);
@@ -306,6 +307,12 @@ js_filestorage_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCo
     }
 
     case METHOD_ROOT: {
+      int32_t idx = 0;
+
+      if(argc > 0)
+        JS_ToInt32(ctx, &idx, argv[0]);
+
+      ret = js_filenode_new(ctx, fs->root());
       break;
     }
 
@@ -407,9 +414,11 @@ js_filestorage_finalizer(JSRuntime* rt, JSValue val) {
   JSFileStorageData* fs;
   /* Note: 'fs' can be NULL in case JS_SetOpaque() was not called */
 
-  // fs->~JSFileStorageData();
-  if((fs = js_filestorage_data(val)))
+  if((fs = js_filestorage_data(val))) {
+    fs->~JSFileStorageData();
+
     js_deallocate(rt, fs);
+  }
 }
 
 JSClassDef js_filestorage_class = {
