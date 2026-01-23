@@ -1594,9 +1594,9 @@ js_contour_get_property(JSContext* ctx, JSValueConst obj, JSAtom prop, JSValueCo
       JSPropertyDescriptor desc = {0, JS_UNDEFINED, JS_UNDEFINED, JS_UNDEFINED};
 
       if(JS_GetOwnProperty(ctx, &desc, proto, prop) > 0) {
-        if(JS_IsFunction(ctx, desc.getter))
+        if(js_is_function(ctx, desc.getter))
           value = JS_Call(ctx, desc.getter, obj, 0, 0);
-        else if(JS_IsFunction(ctx, desc.value))
+        else if(js_is_function(ctx, desc.value))
           value = JS_DupValue(ctx, desc.value);
       }
     }

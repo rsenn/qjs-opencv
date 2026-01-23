@@ -49,6 +49,10 @@ public:
     js_free(p);
   }
 };*/
+void
+js_arraybuffer_free(JSRuntime* rt, void* opaque, void* ptr) {
+  JS_FreeValueRT(rt, JS_MKPTR(JS_TAG_OBJECT, opaque));
+}
 
 /** @addtogroup color
  *  @{
@@ -132,7 +136,7 @@ js_color_read(JSContext* ctx, JSValueConst value, JSColorData<uint8_t>* out) {
 
 int
 js_ref(JSContext* ctx, const char* name, JSValueConst arg, JSValue value) {
-  if(JS_IsFunction(ctx, arg)) {
+  if(js_is_function(ctx, arg)) {
     JSValueConst v = value;
     JSValue ret = JS_Call(ctx, arg, JS_UNDEFINED, 1, &v);
     JS_FreeValue(ctx, ret);

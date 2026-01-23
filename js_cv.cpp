@@ -1003,7 +1003,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       results[2] = js_array_from(ctx, minIdx);
       results[3] = js_array_from(ctx, maxIdx);
       for(size_t i = 0; i < 4; i++)
-        if(JS_IsFunction(ctx, argv[i + 1]))
+        if(js_is_function(ctx, argv[i + 1]))
           JS_Call(ctx, argv[i + 1], JS_NULL, 1, results + i);
       ret = js_array<JSValue>::from_sequence(ctx, const_cast<JSValue*>(&results[0]), const_cast<JSValue*>(&results[4]));
       break;
@@ -1022,7 +1022,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       results[2] = js_point_new(ctx, minLoc);
       results[3] = js_point_new(ctx, maxLoc);
       for(size_t i = 0; i < 4; i++)
-        if(JS_IsFunction(ctx, argv[i + 1]))
+        if(js_is_function(ctx, argv[i + 1]))
           JS_Call(ctx, argv[i + 1], JS_NULL, 1, &results[i]);
       ret = js_array<JSValue>::from_sequence(ctx, const_cast<JSValue*>(&results[0]), const_cast<JSValue*>(&results[4]));
       break;

@@ -5,12 +5,7 @@
 #include "line.hpp"
 #include <cutils.h>
 #include <quickjs.h>
-#include <array>
 #include <cassert>
-#include <cctype>
-#include <cstdint>
-#include <cstdlib>
-#include <cstring>
 #include <opencv2/core/cvstd_wrapper.hpp>
 #include <opencv2/core/mat.hpp>
 #include <opencv2/core/mat.inl.hpp>
@@ -18,10 +13,11 @@
 #include <opencv2/core/types.hpp>
 #include <opencv2/core/utility.hpp>
 #include <opencv2/videoio.hpp>
+/*#include <type_traits>
+#include <utility>*/
 #include <ostream>
+#include <array>
 #include <string>
-#include <type_traits>
-#include <utility>
 #include <vector>
 
 namespace cv {
@@ -83,6 +79,7 @@ protected:
 };
 
 int js_ref(JSContext*, const char*, JSValueConst, JSValue);
+static inline BOOL js_is_function(JSContext*, JSValueConst);
 static inline std::string js_function_name(JSContext*, JSValueConst);
 static inline JSValue js_typedarray_constructor(JSContext*);
 static inline JSAtom js_symbol_atom(JSContext*, const char*);
@@ -91,17 +88,18 @@ static inline JSAtom js_symbol_for_atom(JSContext*, const char*);
 /** @defgroup line JSLineData
  *  @{
  */
-
 template<class T> struct JSLineTraits {
   typedef std::array<T, 4> array_type;
+  typedef std::array<JSPointData<T>, 2> points_type;
+  typedef std::pair<JSPointData<T>, JSPointData<T>> pair_type;
   typedef cv::Vec<T, 4> vector_type;
   typedef cv::Scalar_<T> scalar_type;
 };
 
 template<class T> union JSLineData {
   typedef typename JSLineTraits<T>::array_type array_type;
-  typedef std::array<JSPointData<T>, 2> points_type;
-  typedef std::pair<JSPointData<T>, JSPointData<T>> pair_type;
+  typedef typename JSLineTraits<T>::points_type points_type;
+  typedef typename JSLineTraits<T>::pair_type pair_type;
 
   array_type array;
   points_type points;
@@ -115,9 +113,16 @@ template<class T> union JSLineData {
     JSPointData<T> a, b;
   };
 
-  JSLineData(const JSLineData<T>& other) : x1(other.x1), y1(other.y1), x2(other.x2), y2(other.y2) {}
-
   JSLineData(T _x1, T _y1, T _x2, T _y2) : x1(_x1), y1(_y1), x2(_x2), y2(_y2) {}
+
+  template<class U> JSLineData(const JSLineData<U>& other) : x1(other.x1), y1(other.y1), x2(other.x2), y2(other.y2) {}  
+  template<class U> JSLineData(const JSPointData<U>& a, const JSPointData<U>& b) : x1(a.x), y1(a.y), x2(b.x), y2(b.y) {}
+
+  template<class U> JSLineData(const std::array<U, 4>& ar) : x1(ar[0]), y1(ar[1]), x2(ar[2]), y2(ar[3]) {}
+  template<class U> JSLineData(const std::pair<JSPointData<U>, JSPointData<U> >& p) : a(p.first), b(p.second.y) {}
+
+  template<class U> JSLineData(const cv::Scalar_<U>& sc) : x1(sc[0]), y1(sc[1]), x2(sc[2]), y2(sc[3]) {}
+  template<class U> JSLineData(const cv::Vec<U, 4>& vc) : x1(vc[0]), y1(vc[1]), x2(vc[2]), y2(vc[3]) {}
 
   operator array_type&() { return this->array; }
   operator array_type const &() const { return this->array; }
@@ -250,18 +255,6 @@ js_color_new(JSContext* ctx, const cv::Scalar& scalar) {
 }
 
 template<class T>
-static inline const cv::Scalar&
-js_color_scalar(const JSColorData<T>& color) {
-  return *reinterpret_cast<const cv::Scalar_<T>*>(&color);
-}
-
-template<class T>
-static inline cv::Scalar&
-js_color_scalar(JSColorData<T>& color) {
-  return *reinterpret_cast<cv::Scalar_<T>*>(&color);
-}
-
-template<class T>
 std::ostream&
 operator<<(std::ostream& stream, const JSColorData<T>& color) {
   stream << "[ " << (int)color.arr[0] << ", " << (int)color.arr[1] << ", " << (int)color.arr[2] << ", " << (int)color.arr[3] << " ]";
@@ -312,6 +305,11 @@ js_global_instanceof(JSContext* ctx, JSValueConst obj, const char* prop) {
 /** @defgroup object
  *  @{
  */
+static inline BOOL
+js_is_object(JSValueConst val) {
+  return JS_IsObject(val);
+}
+
 static inline const char*
 js_object_tostring2(JSContext* ctx, JSValueConst method, JSValueConst value) {
   JSValue str = JS_Call(ctx, method, value, 0, 0);
@@ -432,19 +430,14 @@ js_arraybuffer_from(JSContext* ctx, const Ptr& begin, const Ptr& end, JSFreeArra
   return JS_NewArrayBuffer(ctx, const_cast<uint8_t*>(ptr), len, &free_func, opaque, is_shared);
 }
 
-static void
-js_arraybuffer_free(JSRuntime* rt, void* opaque, void* ptr) {
-  JS_FreeValueRT(rt, JS_MKPTR(JS_TAG_OBJECT, opaque));
-}
+void js_arraybuffer_free(JSRuntime*, void*, void*);
 
 template<class Ptr>
 static inline JSValue
 js_arraybuffer_from(JSContext* ctx, const Ptr& begin, const Ptr& end, JSValueConst value) {
-  JSObject* obj;
+  assert(js_is_object(value));
 
-  assert(JS_VALUE_GET_TAG(value) == JS_TAG_OBJECT);
-
-  obj = JS_VALUE_GET_OBJ(value);
+  JSObject* obj = JS_VALUE_GET_OBJ(value);
   JS_DupValue(ctx, value);
 
   return js_arraybuffer_from(ctx, begin, end, js_arraybuffer_free, obj);
@@ -472,6 +465,7 @@ struct ArrayBufferProps {
   size_t len;
 
   ArrayBufferProps(uint8_t* _ptr, size_t _len) : ptr(_ptr), len(_len) {}
+  ArrayBufferProps(JSContext* ctx, JSValueConst obj) { ptr = JS_GetArrayBuffer(ctx, &len, obj); }
 };
 
 template<class Stream>
@@ -501,11 +495,11 @@ js_is_arraybuffer(JSContext* ctx, JSValueConst value) {
 
 static inline ArrayBufferProps
 js_arraybuffer_props(JSContext* ctx, JSValueConst obj) {
-  uint8_t* ptr;
   size_t len;
-  ptr = JS_GetArrayBuffer(ctx, &len, obj);
+  uint8_t* ptr = JS_GetArrayBuffer(ctx, &len, obj);
   return ArrayBufferProps(ptr, len);
 }
+
 /**
  *  @}
  */
@@ -684,7 +678,7 @@ js_iterator_method(JSContext* ctx, JSValueConst obj) {
 
   JS_FreeAtom(ctx, atom);
 
-  if(!JS_IsFunction(ctx, ret)) {
+  if(!js_is_function(ctx, ret)) {
     atom = js_symbol_atom(ctx, "asyncIterator");
 
     if(JS_HasProperty(ctx, obj, atom))
@@ -933,6 +927,11 @@ js_atom_is_symbol(JSContext* ctx, JSAtom atom) {
 /** @defgroup function
  *  @{
  */
+static inline BOOL
+js_is_function(JSContext* ctx, JSValueConst val) {
+  return JS_IsFunction(ctx, val);
+}
+
 static inline std::string
 js_function_name(JSContext* ctx, JSValueConst value) {
   const char *str, *name;

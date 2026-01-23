@@ -120,7 +120,7 @@ js_point_write(JSContext* ctx, JSValueConst out, const JSPointData<T>& in) {
   } else if(JS_IsObject(out)) {
     JS_SetPropertyStr(ctx, out, "x", x);
     JS_SetPropertyStr(ctx, out, "y", y);
-  } else if(JS_IsFunction(ctx, out)) {
+  } else if(js_is_function(ctx, out)) {
     JSValueConst args[2];
     args[0] = x;
     args[1] = y;

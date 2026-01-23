@@ -213,7 +213,7 @@ js_cv_create_trackbar(JSContext* ctx, JSValueConst this_val, int argc, JSValueCo
       [](int newValue, void* ptr) {
         Trackbar const& data = *static_cast<Trackbar*>(ptr);
 
-        if(JS_IsFunction(data.ctx, data.handler)) {
+        if(js_is_function(data.ctx, data.handler)) {
           JSValueConst argv[] = {JS_NewInt32(data.ctx, newValue), data.count, data.name, data.window};
 
           JS_Call(data.ctx, data.handler, JS_UNDEFINED, 4, argv);
@@ -263,7 +263,7 @@ js_cv_create_button(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
       bar_name,
       [](int state, void* ptr) {
         Button const& data = *static_cast<Button*>(ptr);
-        if(JS_IsFunction(data.ctx, data.callback)) {
+        if(js_is_function(data.ctx, data.callback)) {
           JSValueConst argv[] = {JS_NewInt32(data.ctx, state), data.bar_name, data.type};
           JS_Call(data.ctx, data.callback, JS_UNDEFINED, 3, argv);
         }
@@ -342,7 +342,7 @@ js_cv_set_mouse_callback(JSContext* ctx, JSValueConst this_val, int argc, JSValu
       [](int event, int x, int y, int flags, void* ptr) {
         MouseHandler const& data = *static_cast<MouseHandler*>(ptr);
 
-        if(JS_IsFunction(data.ctx, data.handler)) {
+        if(js_is_function(data.ctx, data.handler)) {
           JSValueConst argv[] = {
               JS_NewInt32(data.ctx, event),
               JS_NewInt32(data.ctx, x),

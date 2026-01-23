@@ -400,7 +400,7 @@ static inline TypedArrayType
 js_typedarray_type(JSContext* ctx, JSValueConst obj) {
   std::string class_name;
 
-  if(JS_IsFunction(ctx, obj))
+  if(js_is_function(ctx, obj))
     class_name = js_function_name(ctx, obj);
   else if(JS_IsString(obj))
     js_value_to(ctx, obj, class_name);
@@ -417,7 +417,7 @@ js_typedarray_props(JSContext* ctx, JSValueConst obj) {
 
   buffer = JS_GetTypedArrayBuffer(ctx, obj, &byte_offset, &byte_length, &bytes_per_element);
 
-  return TypedArrayProps(byte_offset, byte_length, bytes_per_element, js_arraybuffer_props(ctx, buffer));
+  return TypedArrayProps(byte_offset, byte_length, bytes_per_element, ArrayBufferProps(ctx, buffer));
 }
 
 static inline JSInputOutputArray

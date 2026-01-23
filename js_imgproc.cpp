@@ -695,7 +695,7 @@ js_cv_find_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   JSInputOutputArray hier(vec4i);
 
   hier_mat = /*hier.isUMat() || hier.isMat() || */ js_mat_data_nothrow(argv[2]);
-  hier_callback = !hier_mat && JS_IsFunction(ctx, argv[2]);
+  hier_callback = !hier_mat && js_is_function(ctx, argv[2]);
   contours_array = JS_IsArray(ctx, argv[1]);
   hier_array = js_is_array(ctx, argv[2]);
 
@@ -785,7 +785,7 @@ js_cv_draw_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   if(argc > 5)
     JS_ToInt32(ctx, &lineType, argv[5]);
 
-  cv::Scalar scalar = js_color_scalar(color);
+  cv::Scalar scalar = cv::Scalar(color);
 
   if(mat.isMat()) {
     cv::Mat& mref = mat.getMatRef();
@@ -990,7 +990,7 @@ js_imgproc_misc(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
         if(argc > 6)
           JS_ToInt32(ctx, &flags, argv[6]);
         // XXX: overload
-        ret = JS_NewInt32(ctx, cv::floodFill(src, seedPoint, js_color_scalar(newVal), rectPtr, loDiff, upDiff, flags));
+        ret = JS_NewInt32(ctx, cv::floodFill(src, seedPoint, cv::Scalar(newVal), rectPtr, loDiff, upDiff, flags));
         break;
       }
 
@@ -1251,7 +1251,7 @@ js_imgproc_transform(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
         if(argc > 6)
           js_color_read(ctx, argv[6], &borderValue);
 
-        cv::remap(src, dst, map1, map2, interpolation, borderMode, js_color_scalar(borderValue));
+        cv::remap(src, dst, map1, map2, interpolation, borderMode, cv::Scalar(borderValue));
         break;
       }
 
@@ -1296,7 +1296,7 @@ js_imgproc_transform(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
         if(argc > 6)
           js_color_read(ctx, argv[6], &borderValue);
 
-        cv::warpAffine(src, dst, M, dsize, flags, borderMode, js_color_scalar(borderValue));
+        cv::warpAffine(src, dst, M, dsize, flags, borderMode, cv::Scalar(borderValue));
         break;
       }
 
@@ -1315,7 +1315,7 @@ js_imgproc_transform(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
         if(argc > 6)
           js_color_read(ctx, argv[6], &borderValue);
 
-        cv::warpPerspective(src, dst, M, dsize, flags, borderMode, js_color_scalar(borderValue));
+        cv::warpPerspective(src, dst, M, dsize, flags, borderMode, cv::Scalar(borderValue));
         break;
       }
 
@@ -1422,7 +1422,7 @@ js_imgproc_filter(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
                 if(argc > 6)
                   js_color_read(ctx, argv[6], &borderValue);
 
-                cv::dilate(src, dst, kernel, anchor, iterations, borderType, js_color_scalar(borderValue));
+                cv::dilate(src, dst, kernel, anchor, iterations, borderType, cv::Scalar(borderValue));
                 break;
               }*/
 
@@ -1441,7 +1441,7 @@ js_imgproc_filter(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
             if(argc > 6)
               js_color_read(ctx, argv[6], &borderValue);
 
-            cv::erode(src, dst, kernel, anchor, iterations, borderType, js_color_scalar(borderValue));
+            cv::erode(src, dst, kernel, anchor, iterations, borderType, cv::Scalar(borderValue));
             break;
           }
     */
@@ -1894,13 +1894,13 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
         float radius;
         cv::minEnclosingCircle(src, center, radius);
 
-        if(JS_IsFunction(ctx, argv[1])) {
+        if(js_is_function(ctx, argv[1])) {
           JSValue point = js_point_new(ctx, center);
           JS_Call(ctx, argv[1], JS_NULL, 1, &point);
           JS_FreeValue(ctx, point);
         }
 
-        if(JS_IsFunction(ctx, argv[2])) {
+        if(js_is_function(ctx, argv[2])) {
           JSValue r = JS_NewFloat64(ctx, radius);
           JS_Call(ctx, argv[2], JS_NULL, 1, &r);
           JS_FreeValue(ctx, r);

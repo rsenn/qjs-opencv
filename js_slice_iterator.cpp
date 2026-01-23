@@ -96,7 +96,7 @@ js_slice_iterator_constructor(JSContext* ctx, JSValueConst new_target, int argc,
   s->type = js_typedarray_type(ctx, argv[1]);
   s->range = js_arraybuffer_range(ctx, s->buffer);
   s->ptr = s->range.begin();
-  s->ctor = JS_IsFunction(ctx, argv[1]) ? JS_DupValue(ctx, argv[1]) : js_global_get(ctx, s->type.constructor_name().c_str());
+  s->ctor = js_is_function(ctx, argv[1]) ? JS_DupValue(ctx, argv[1]) : js_global_get(ctx, s->type.constructor_name().c_str());
 
   if(argc > 2)
     js_value_to(ctx, argv[2], num_elems);

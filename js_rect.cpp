@@ -615,7 +615,7 @@ js_rect_symbol_iterator(JSContext* ctx, JSValueConst this_val, int argc, JSValue
   if(iterator_symbol == 0)
     iterator_symbol = js_symbol_atom(ctx, "iterator");
 
-  if(!JS_IsFunction(ctx, (iter = JS_GetProperty(ctx, arr, iterator_symbol))))
+  if(!js_is_function(ctx, (iter = JS_GetProperty(ctx, arr, iterator_symbol))))
     return JS_EXCEPTION;
 
   return JS_Call(ctx, iter, arr, 0, argv);
