@@ -411,7 +411,10 @@ js_filenode_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
 
     case METHOD_VALUEOF: {
       switch(fn->type()) {
-        case cv::FileNode::NONE: break;
+        case cv::FileNode::NONE: {
+          ret = JS_NULL;
+          break;
+        }
         case cv::FileNode::INT:
         case cv::FileNode::FLOAT: {
           ret = js_value_from(ctx, double(*fn));
@@ -424,11 +427,10 @@ js_filenode_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
         }
 
         case cv::FileNode::SEQ: {
-          size_t size = fn->size();
-
+          size_t n = fn->size();
           std::vector<JSFileNodeData> vec;
 
-          for(size_t i = 0; i < size; ++i)
+          for(size_t i = 0; i < n; ++i)
             vec.push_back(fn->operator[](i));
 
           ret = js_value_from(ctx, vec);
@@ -436,13 +438,18 @@ js_filenode_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
         }
 
         case cv::FileNode::MAP: {
+          ret = JS_NewObjectProto(ctx, JS_NULL);
 
-          
+          for(const auto& key : fn->keys()) {
+            JSValue val = js_value_from(ctx, fn->operator[](key));
+
+            JS_SetPropertyStr(ctx, ret, key.c_str(), val);
+          }
+
           break;
         }
       }
 
-      ret = js_value_from(ctx, double(*fn));
       break;
     }
   }
