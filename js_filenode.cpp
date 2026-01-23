@@ -440,7 +440,7 @@ js_filenode_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
         case cv::FileNode::MAP: {
           ret = JS_NewObjectProto(ctx, JS_NULL);
 
-          for(const auto& key : fn->keys()) {
+          for(auto key : fn->keys()) {
             JSValue val = js_value_from(ctx, fn->operator[](key));
 
             JS_SetPropertyStr(ctx, ret, key.c_str(), val);
