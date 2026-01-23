@@ -22,7 +22,7 @@ public:
 
   point_type a, b;
 
-  template<class U> Line(const U& other) : a(other.x1, other.y1), b(other.x2, other.y2) {}
+  template<class U> Line(const Line<U>& other) : a(other.x1, other.y1), b(other.x2, other.y2) {}
 
   Line(const point_type& p1, const point_type& p2) : a(p1), b(p2) {}
 
@@ -32,7 +32,6 @@ public:
   T length() const;
 
   point_type at(double sigma) const;
-
   point_type center() const;
   point_type start() const { return a; }
   point_type end() const { return b; }
@@ -82,7 +81,6 @@ public:
   }
 
   T yIntercept(T yintercept) const;
-
   T xIntercept(T xintercept) const;
 
   /**
@@ -205,6 +203,7 @@ template<class T> struct line_list {
   typedef Line<T> line_type;
   typedef std::vector<line_type> type;
 };
+
 typedef line_list<float> line4f_list;
 typedef line_list<int> line4i_list;
 typedef line_list<double> line4d_list;
@@ -255,6 +254,7 @@ to_string(const T& t, size_t n_pad = 3, char ch_pad = ' ') {
     if(ret.back() == '.')
       ret.pop_back();
   }
+
   if(ret.length() < n_pad)
     ret.insert(ret.begin(), n_pad - ret.length(), ch_pad);
   else if(ret.length() > n_pad) {
@@ -266,17 +266,7 @@ to_string(const T& t, size_t n_pad = 3, char ch_pad = ' ') {
 
   return ret;
 }
-
-/*
-template<class T>
-inline std::string
-to_string(const cv::Point_<T>& pt, size_t n_pad = 3, char ch_pad = '0') {
-  std::ostringstream oss;
-  oss << to_string(pt.x) << ',' << to_string(pt.y);
-  return oss.str();
-}
-
-*/
+ 
 template<class T>
 double
 Line<T>::distance(const cv::Point_<T>& p) const {
@@ -375,8 +365,7 @@ find_nearest_line(typename ContainerT::iterator& line, ContainerT& lines) {
   return index;
 }
 
-/*
-template <class InputIterator>
+/*template <class InputIterator>
 InputIterator
 find_nearest_line(const InputIterator& line, InputIterator from, InputIterator
 to) { typedef InputIterator iterator_type; typedef typename
@@ -395,9 +384,7 @@ index = to;
   }
 
   return index;
-}
-
-*/
+}*/
 
 template<class T> class LineEnd {
   Line<T>* line;
@@ -540,10 +527,12 @@ Line<T>::intersect(const Line<T>& line2, cv::Point_<T>* pt) const {
   point_type d1 = slope();
   point_type d2 = line2.slope();
   float inter = d1.x * d2.y - d1.y * d2.x;
-  if(fabs(inter) < 1e-8) {
+
+  if(fabs(inter) < 1e-8)
     return false;
-  }
+
   double t1 = (x.x * d2.y - x.y * d2.x) / inter;
+
   if(pt)
     *pt = pivot() + d1 * t1;
 
@@ -605,10 +594,9 @@ filter_lines(InputIterator from, InputIterator to, Pred predicate) {
   typedef typename std::iterator_traits<InputIterator>::value_type value_type;
   std::vector<int> ret;
   size_t index = 0;
+
   for(iterator_type it = from; it != to; ++it) {
-
     if(predicate(*it, index++)) {
-
       std::size_t index = std::distance(from, it);
       ret.push_back(index);
     }

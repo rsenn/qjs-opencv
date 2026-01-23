@@ -85,53 +85,6 @@ static inline JSValue js_typedarray_constructor(JSContext*);
 static inline JSAtom js_symbol_atom(JSContext*, const char*);
 static inline JSAtom js_symbol_for_atom(JSContext*, const char*);
 
-/** @defgroup line JSLineData
- *  @{
- */
-template<class T> struct JSLineTraits {
-  typedef std::array<T, 4> array_type;
-  typedef std::array<JSPointData<T>, 2> points_type;
-  typedef std::pair<JSPointData<T>, JSPointData<T>> pair_type;
-  typedef cv::Vec<T, 4> vector_type;
-  typedef cv::Scalar_<T> scalar_type;
-};
-
-template<class T> union JSLineData {
-  typedef typename JSLineTraits<T>::array_type array_type;
-  typedef typename JSLineTraits<T>::points_type points_type;
-  typedef typename JSLineTraits<T>::pair_type pair_type;
-
-  array_type array;
-  points_type points;
-  pair_type pt;
-
-  struct {
-    T x1, y1, x2, y2;
-  };
-
-  struct {
-    JSPointData<T> a, b;
-  };
-
-  JSLineData(T _x1, T _y1, T _x2, T _y2) : x1(_x1), y1(_y1), x2(_x2), y2(_y2) {}
-
-  template<class U> JSLineData(const JSLineData<U>& other) : x1(other.x1), y1(other.y1), x2(other.x2), y2(other.y2) {}  
-  template<class U> JSLineData(const JSPointData<U>& a, const JSPointData<U>& b) : x1(a.x), y1(a.y), x2(b.x), y2(b.y) {}
-
-  template<class U> JSLineData(const std::array<U, 4>& ar) : x1(ar[0]), y1(ar[1]), x2(ar[2]), y2(ar[3]) {}
-  template<class U> JSLineData(const std::pair<JSPointData<U>, JSPointData<U> >& p) : a(p.first), b(p.second.y) {}
-
-  template<class U> JSLineData(const cv::Scalar_<U>& sc) : x1(sc[0]), y1(sc[1]), x2(sc[2]), y2(sc[3]) {}
-  template<class U> JSLineData(const cv::Vec<U, 4>& vc) : x1(vc[0]), y1(vc[1]), x2(vc[2]), y2(vc[3]) {}
-
-  operator array_type&() { return this->array; }
-  operator array_type const &() const { return this->array; }
-};
-
-/**
- *  @}
- */
-
 /** @defgroup number
  *  @{
  */
