@@ -212,8 +212,7 @@ public:
   typedef JSContourData<T> contour_type;
   typedef JSPointData<T> point_type;
 
-  static int64_t
-  to_vector(JSContext* ctx, JSValueConst arr, contours_type& out) {
+  static int64_t to_vector(JSContext* ctx, JSValueConst arr, contours_type& out) {
     int64_t i, n;
     JSValue len;
 
@@ -244,9 +243,7 @@ public:
     return n;
   }
 
-  template<class Iterator>
-  static size_t
-  copy_sequence(JSContext* ctx, JSValueConst arr, const Iterator& start, const Iterator& end) {
+  template<class Iterator> static size_t copy_sequence(JSContext* ctx, JSValueConst arr, const Iterator& start, const Iterator& end) {
     size_t i = 0;
 
     for(Iterator it = start; it != end; ++it) {
@@ -258,9 +255,7 @@ public:
     return i;
   }
 
-  template<class Iterator>
-  static JSValue
-  from_sequence(JSContext* ctx, const Iterator& start, const Iterator& end) {
+  template<class Iterator> static JSValue from_sequence(JSContext* ctx, const Iterator& start, const Iterator& end) {
     JSValue arr = JS_NewArray(ctx);
 
     copy_sequence(ctx, arr, start, end);
@@ -268,9 +263,7 @@ public:
     return arr;
   }
 
-  template<class Container>
-  static JSValue
-  from(JSContext* ctx, const Container& in) {
+  template<class Container> static JSValue from(JSContext* ctx, const Container& in) {
     return from_sequence<typename Container::const_iterator>(ctx, in.begin(), in.end());
   }
 };

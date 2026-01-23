@@ -6,7 +6,7 @@
 #include <quickjs.h>
 
 #ifdef USE_LCCV
-//#include "LCCV/include/libcamera_app.hpp"
+// #include "LCCV/include/libcamera_app.hpp"
 #include <lccv.hpp>
 
 extern "C" int js_libcamera_app_init(JSContext*, JSModuleDef*);

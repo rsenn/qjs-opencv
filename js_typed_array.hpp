@@ -19,96 +19,68 @@
 #include <type_traits>
 #include <vector>
 
-template<class T> struct number_type { static constexpr bool typed_array = false; };
+template<class T> struct number_type {
+  static constexpr bool typed_array = false;
+};
 
 template<> struct number_type<int8_t> {
   typedef int8_t value_type;
   static constexpr bool typed_array = true;
-  static constexpr const char*
-  constructor_name() {
-    return "Int8Array";
-  }
+  static constexpr const char* constructor_name() { return "Int8Array"; }
 };
 
 template<> struct number_type<uint8_t> {
   typedef uint8_t value_type;
   static constexpr bool typed_array = true;
-  static constexpr const char*
-  constructor_name() {
-    return "Uint8Array";
-  }
+  static constexpr const char* constructor_name() { return "Uint8Array"; }
 };
 
 template<> struct number_type<int16_t> {
   typedef int16_t value_type;
   static constexpr bool typed_array = true;
-  static constexpr const char*
-  constructor_name() {
-    return "Int16Array";
-  }
+  static constexpr const char* constructor_name() { return "Int16Array"; }
 };
 
 template<> struct number_type<uint16_t> {
   typedef uint16_t value_type;
   static constexpr bool typed_array = true;
-  static constexpr const char*
-  constructor_name() {
-    return "Uint16Array";
-  }
+  static constexpr const char* constructor_name() { return "Uint16Array"; }
 };
 
 template<> struct number_type<int32_t> {
   typedef int32_t value_type;
   static constexpr bool typed_array = true;
-  static constexpr const char*
-  constructor_name() {
-    return "Int32Array";
-  }
+  static constexpr const char* constructor_name() { return "Int32Array"; }
 };
 
 template<> struct number_type<uint32_t> {
   typedef uint32_t value_type;
   static constexpr bool typed_array = true;
-  static constexpr const char*
-  constructor_name() {
-    return "Uint32Array";
-  }
+  static constexpr const char* constructor_name() { return "Uint32Array"; }
 };
 
 template<> struct number_type<int64_t> {
   typedef int64_t value_type;
   static constexpr bool typed_array = true;
-  static constexpr const char*
-  constructor_name() {
-    return "BigInt64Array";
-  }
+  static constexpr const char* constructor_name() { return "BigInt64Array"; }
 };
 
 template<> struct number_type<uint64_t> {
   typedef uint64_t value_type;
   static constexpr bool typed_array = true;
-  static constexpr const char*
-  constructor_name() {
-    return "BigUint64Array";
-  }
+  static constexpr const char* constructor_name() { return "BigUint64Array"; }
 };
 
 template<> struct number_type<float> {
   typedef float value_type;
   static constexpr bool typed_array = true;
-  static constexpr const char*
-  constructor_name() {
-    return "Float32Array";
-  }
+  static constexpr const char* constructor_name() { return "Float32Array"; }
 };
 
 template<> struct number_type<double> {
   typedef double value_type;
   static constexpr bool typed_array = true;
-  static constexpr const char*
-  constructor_name() {
-    return "Float64Array";
-  }
+  static constexpr const char* constructor_name() { return "Float64Array"; }
 };
 
 template<class T> struct pointer_type {
@@ -174,8 +146,7 @@ struct TypedArrayType {
   bool is_signed;
   bool is_floating_point;
 
-  const std::string
-  constructor_name() const {
+  const std::string constructor_name() const {
     std::ostringstream os;
     if(!is_floating_point) {
       if(byte_size == 8)
@@ -189,8 +160,7 @@ struct TypedArrayType {
     return os.str();
   }
 
-  int32_t
-  cv_type() const {
+  int32_t cv_type() const {
     if(is_floating_point)
       return int32_t(byte_size == 8 ? CV_64F : CV_32F);
 
@@ -203,8 +173,7 @@ struct TypedArrayType {
     return -1;
   }
 
-  TypedArrayValue
-  flags() const {
+  TypedArrayValue flags() const {
     return TypedArrayValue(uint8_t(is_floating_point ? TYPEDARRAY_FLOATING_POINT : 0) | uint8_t(is_signed ? TYPEDARRAY_SIGNED : 0) |
                            uint8_t(byte_size) & TYPEDARRAY_BITS_FIELD);
   }
@@ -234,28 +203,15 @@ struct TypedArrayProps {
   size_t byte_offset, byte_length, bytes_per_element;
   ArrayBufferProps buffer;
 
-  template<class T>
-  const T*
-  ptr() const {
-    return reinterpret_cast<const T*>(buffer.ptr + byte_offset);
-  }
+  template<class T> const T* ptr() const { return reinterpret_cast<const T*>(buffer.ptr + byte_offset); }
 
-  template<class T>
-  T*
-  ptr() {
-    return reinterpret_cast<T*>(buffer.ptr + byte_offset);
-  }
+  template<class T> T* ptr() { return reinterpret_cast<T*>(buffer.ptr + byte_offset); }
 
-  template<class T>
-  int
-  size() const {
+  template<class T> int size() const {
     return byte_length / sizeof(T);
     ;
   }
-  size_t
-  size() const {
-    return byte_length / bytes_per_element;
-  }
+  size_t size() const { return byte_length / bytes_per_element; }
 };
 
 static inline std::string
@@ -272,24 +228,12 @@ dump(TypedArrayProps props) {
 template<class T> struct TypedArrayRange : public TypedArrayProps {
   TypedArrayRange(const TypedArrayProps& props) : TypedArrayProps(props) {}
 
-  const T*
-  begin() const {
-    return ptr<T>();
-  }
-  T*
-  begin() {
-    return ptr<T>();
-  }
+  const T* begin() const { return ptr<T>(); }
+  T* begin() { return ptr<T>(); }
 
-  const T*
-  end() const {
-    return begin() + size<T>();
-  }
+  const T* end() const { return begin() + size<T>(); }
 
-  T*
-  end() {
-    return begin() + size<T>();
-  }
+  T* end() { return begin() + size<T>(); }
 };
 
 template<class T> struct TypedArrayTraits {
@@ -303,10 +247,7 @@ template<class T> struct TypedArrayTraits {
   static constexpr bool is_signed = std::is_signed<value_type>::value;
   static constexpr bool is_floating_point = std::is_floating_point<value_type>::value;
 
-  static TypedArrayType
-  getProps() {
-    return TypedArrayType(byte_size, is_signed, is_floating_point);
-  }
+  static TypedArrayType getProps() { return TypedArrayType(byte_size, is_signed, is_floating_point); }
 };
 
 static inline JSValue
@@ -354,20 +295,14 @@ js_typedarray_remain(Iterator& start, Iterator& end, uint32_t byteOffset, uint32
 
 template<class T> class js_typedarray {
 public:
-  template<class Container>
-  static JSValue
-  from(JSContext* ctx, const Container& in, uint32_t byteOffset = 0) {
+  template<class Container> static JSValue from(JSContext* ctx, const Container& in, uint32_t byteOffset = 0) {
     return from_sequence<typename Container::const_iterator>(ctx, in.begin(), in.end(), byteOffset);
   }
 
-  static JSValue
-  from_vector(JSContext* ctx, const std::vector<T>& in) {
-    return from_sequence(ctx, in.begin(), in.end());
-  }
+  static JSValue from_vector(JSContext* ctx, const std::vector<T>& in) { return from_sequence(ctx, in.begin(), in.end()); }
 
   template<class Iterator>
-  static JSValue
-  from_sequence(JSContext* ctx, const Iterator& start, const Iterator& end, uint32_t byteOffset = 0, uint32_t length = UINT32_MAX) {
+  static JSValue from_sequence(JSContext* ctx, const Iterator& start, const Iterator& end, uint32_t byteOffset = 0, uint32_t length = UINT32_MAX) {
     JSValue buf = js_arraybuffer_from(ctx, start, end);
     uint32_t count = std::min<uint32_t>(length, end - start);
 
@@ -376,8 +311,7 @@ public:
     return js_typedarray_new(ctx, buf, 0, count, TypedArrayTraits<T>::getProps());
   }
 
-  static JSValue
-  from_buffer(JSContext* ctx, JSValueConst buf, uint32_t byteOffset = 0, uint32_t length = UINT32_MAX) {
+  static JSValue from_buffer(JSContext* ctx, JSValueConst buf, uint32_t byteOffset = 0, uint32_t length = UINT32_MAX) {
     size_t buflen;
     uint8_t* bufptr;
     uint32_t end;
@@ -390,8 +324,7 @@ public:
     return js_typedarray_new(ctx, buf, byteOffset, (end - byteOffset) / sizeof(T), TypedArrayTraits<T>::getProps());
   }
 
-  static int64_t
-  to_vector(JSContext* ctx, JSValueConst arr, std::vector<T>& out) {
+  static int64_t to_vector(JSContext* ctx, JSValueConst arr, std::vector<T>& out) {
     JSValue length = JS_GetPropertyStr(ctx, arr, "length");
     size_t i, len = 0;
     JS_ToIndex(ctx, &len, length);

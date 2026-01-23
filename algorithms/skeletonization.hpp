@@ -64,11 +64,11 @@ thinning(cv::Mat& im) {
   cv::Mat diff;
 
   do {
-    //std::cout << "thinning (nonZero = " << nonZero << ")" << std::endl;
-   
+    // std::cout << "thinning (nonZero = " << nonZero << ")" << std::endl;
+
     thinning_iteration(im, 0);
     thinning_iteration(im, 1);
-   
+
     cv::absdiff(im, prev, diff);
     im.copyTo(prev);
   } while((nonZero = cv::countNonZero(diff)) > 0);

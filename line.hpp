@@ -34,32 +34,16 @@ public:
   point_type at(double sigma) const;
 
   point_type center() const;
-  point_type
-  start() const {
-    return a;
-  }
-  point_type
-  end() const {
-    return b;
-  }
+  point_type start() const { return a; }
+  point_type end() const { return b; }
 
-  point_type
-  slope() const {
-    return point_type(b.x - a.x, b.y - a.y);
-  }
+  point_type slope() const { return point_type(b.x - a.x, b.y - a.y); }
 
-  const point_type&
-  pivot() const {
-    return a;
-  }
+  const point_type& pivot() const { return a; }
 
-  const point_type&
-  to() const {
-    return b;
-  }
+  const point_type& to() const { return b; }
 
-  void
-  swap() {
+  void swap() {
     point_type temp = a;
     a = b;
     b = temp;
@@ -77,35 +61,22 @@ public:
 
   T endpointDistance(const cv::Point_<T>& p, size_t* point_index = nullptr) const;
 
-  template<class OtherT>
-  std::pair<line_type&, line_type&>
-  nearest(const Line<OtherT>& l) const {
-    return std::make_pair<T, T>(distance(l.a), distance(l.b));
-  }
+  template<class OtherT> std::pair<line_type&, line_type&> nearest(const Line<OtherT>& l) const { return std::make_pair<T, T>(distance(l.a), distance(l.b)); }
 
-  template<class OtherT>
-  bool
-  operator==(const Line<OtherT>& other) const {
-    return other.a == this->a && other.b == this->b;
-  }
+  template<class OtherT> bool operator==(const Line<OtherT>& other) const { return other.a == this->a && other.b == this->b; }
 
   T minDistance(Line<T>& l2, size_t* point_index = nullptr) const;
 
   T nearestEnd(Line<T>& l2, LineEnd<T>& end) const;
 
-  T
-  angleDiff(const Line<T>& l) const {
-    return l.angle() - angle();
-  }
+  T angleDiff(const Line<T>& l) const { return l.angle() - angle(); }
 
-  std::array<point_type, 2>
-  pointsArray() const {
+  std::array<point_type, 2> pointsArray() const {
     std::array<point_type, 2> ret = {a, b};
     return ret;
   }
 
-  std::vector<point_type>
-  points() const {
+  std::vector<point_type> points() const {
     std::vector<point_type> ret{a, b};
     return ret;
   }
@@ -128,97 +99,73 @@ public:
 
   std::string str(const std::string& comma = ",", const std::string& sep = "|") const;
 
-  template<class U>
-  Line<T>&
-  operator-=(const Line<U>& other) {
+  template<class U> Line<T>& operator-=(const Line<U>& other) {
     a = sub(a, other.a);
     b = sub(b, other.b);
     return *this;
   }
 
-  template<class U>
-  Line<T>&
-  operator-=(const cv::Point_<U>& pt) {
+  template<class U> Line<T>& operator-=(const cv::Point_<U>& pt) {
     a = sub(a, pt);
     b = sub(b, pt);
     return *this;
   }
 
-  template<class U>
-  Line<T>&
-  operator+=(const Line<U>& other) {
+  template<class U> Line<T>& operator+=(const Line<U>& other) {
     a = add(a, other.a);
     b = add(b, other.b);
     return *this;
   }
 
-  template<class U>
-  Line<T>&
-  operator+=(const cv::Point_<U>& pt) {
+  template<class U> Line<T>& operator+=(const cv::Point_<U>& pt) {
     a = add(a, pt);
     b = add(b, pt);
     return *this;
   }
 
-  template<class U>
-  Line<T>&
-  operator/=(const cv::Size_<U>& sz) {
+  template<class U> Line<T>& operator/=(const cv::Size_<U>& sz) {
     a = div(a, sz);
     b = div(b, sz);
     return *this;
   }
 
-  template<class U>
-  Line<T>&
-  operator/=(U divisor) {
+  template<class U> Line<T>& operator/=(U divisor) {
     a = div(a, divisor);
     b = div(b, divisor);
     return *this;
   }
 
-  template<class U>
-  Line<T>&
-  operator*=(const cv::Size_<U>& sz) {
+  template<class U> Line<T>& operator*=(const cv::Size_<U>& sz) {
     a = mul(a, sz);
     b = mul(b, sz);
     return *this;
   }
 
-  template<class U>
-  Line<T>&
-  operator*=(U factor) {
+  template<class U> Line<T>& operator*=(U factor) {
     a = mul(a, factor);
     b = mul(b, factor);
     return *this;
   }
 
-  template<class U>
-  Line<T>
-  operator-(const Line<U>& o) const {
+  template<class U> Line<T> operator-(const Line<U>& o) const {
     Line<T> l = *this;
     l -= o;
     return l;
   }
 
-  template<class U>
-  Line<T>
-  operator+(const Line<U>& o) const {
+  template<class U> Line<T> operator+(const Line<U>& o) const {
     Line<T> l = *this;
     l += o;
     return l;
   }
 
-  template<class U>
-  Line<T>
-  operator/(const U& o) const {
+  template<class U> Line<T> operator/(const U& o) const {
     Line<T> l = *this;
     l /= o;
     return l;
   }
 
-  template<class U>
-  Line<T>
-  operator*(const U& o) const {
+  template<class U> Line<T> operator*(const U& o) const {
     Line<T> l = *this;
     l *= o;
     return l;
@@ -457,28 +404,16 @@ template<class T> class LineEnd {
   size_t point_index;
 
 protected:
-  cv::Point_<T>*
-  ptr() {
-    return line == nullptr ? nullptr : point_index > 0 ? &line->b : &line->a;
-  }
-  const cv::Point_<T>*
-  const_ptr() const {
-    return line == nullptr ? nullptr : point_index > 0 ? &line->b : &line->a;
-  }
+  cv::Point_<T>* ptr() { return line == nullptr ? nullptr : point_index > 0 ? &line->b : &line->a; }
+  const cv::Point_<T>* const_ptr() const { return line == nullptr ? nullptr : point_index > 0 ? &line->b : &line->a; }
 
 public:
   LineEnd() {}
   LineEnd(Line<T>& l, size_t pt_i) : line(&l), point_index(pt_i) {}
   ~LineEnd() {}
 
-  cv::Point_<T>&
-  point() {
-    return *ptr();
-  }
-  cv::Point_<T> const&
-  point() const {
-    return *const_ptr();
-  }
+  cv::Point_<T>& point() { return *ptr(); }
+  cv::Point_<T> const& point() const { return *const_ptr(); }
 
   operator cv::Point_<T>() const { return point(); }
 };

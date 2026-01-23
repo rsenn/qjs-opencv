@@ -15,44 +15,27 @@ public:
   typedef const T& const_reference;
   typedef std::size_t size_type;
   typedef std::ptrdiff_t difference_type;
-  template<class U> struct rebind { typedef jsallocator<U> other; };
-  pointer
-  address(reference value) const {
-    return &value;
-  }
-  const_pointer
-  address(const_reference value) const {
-    return &value;
-  }
+  template<class U> struct rebind {
+    typedef jsallocator<U> other;
+  };
+  pointer address(reference value) const { return &value; }
+  const_pointer address(const_reference value) const { return &value; }
   jsallocator() throw() {}
   jsallocator(const jsallocator&) throw() {}
   template<class U> jsallocator(const jsallocator<U>&) throw() {}
   ~jsallocator() throw() {}
-  size_type
-  max_size() const throw() {
-    return std::numeric_limits<std::size_t>::max() / sizeof(T);
-  }
-  pointer
-  allocate(size_type num, const void* = 0) {
+  size_type max_size() const throw() { return std::numeric_limits<std::size_t>::max() / sizeof(T); }
+  pointer allocate(size_type num, const void* = 0) {
     pointer ret;
-    std::cerr << "allocate " << num << " element(s)"
-              << " of size " << sizeof(T) << std::endl;
+    std::cerr << "allocate " << num << " element(s)" << " of size " << sizeof(T) << std::endl;
 
     std::cerr << " allocated at: " << (void*)ret << std::endl;
     return ret;
   }
-  void
-  construct(pointer p, const T& value) {
-    p->T(value);
-  }
-  void
-  destroy(pointer p) {
-    p->~T();
-  }
-  void
-  deallocate(pointer p, size_type num) {
-    std::cerr << "deallocate " << num << " element(s)"
-              << " of size " << sizeof(T) << " at: " << (void*)p << std::endl;
+  void construct(pointer p, const T& value) { p->T(value); }
+  void destroy(pointer p) { p->~T(); }
+  void deallocate(pointer p, size_type num) {
+    std::cerr << "deallocate " << num << " element(s)" << " of size " << sizeof(T) << " at: " << (void*)p << std::endl;
     js_free(p);
   }
 };

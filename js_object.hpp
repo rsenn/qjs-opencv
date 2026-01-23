@@ -10,8 +10,7 @@
 class js_object {
 public:
   template<class T>
-  static int64_t
-  to_map(JSContext* ctx, JSValueConst obj, std::map<std::string, T>& out, int flags = JS_GPN_STRING_MASK | JS_GPN_SYMBOL_MASK) {
+  static int64_t to_map(JSContext* ctx, JSValueConst obj, std::map<std::string, T>& out, int flags = JS_GPN_STRING_MASK | JS_GPN_SYMBOL_MASK) {
     int64_t i = 0;
     JSPropertyEnum* names = 0;
     uint32_t plen = 0;
@@ -29,9 +28,7 @@ public:
     return i;
   }
 
-  template<class T>
-  static JSValue
-  from_map(JSContext* ctx, const std::map<std::string, T>& in) {
+  template<class T> static JSValue from_map(JSContext* ctx, const std::map<std::string, T>& in) {
     typedef std::pair<std::string, T> entry_type;
     JSValue obj = JS_NewObject(ctx);
 

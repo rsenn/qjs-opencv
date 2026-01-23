@@ -27,8 +27,7 @@ extern "C" int js_keypoint_init(JSContext*, JSModuleDef*);
 
 template<> class js_array<JSKeyPointData> {
 public:
-  static int64_t
-  to_vector(JSContext* ctx, JSValueConst arr, std::vector<JSKeyPointData>& out) {
+  static int64_t to_vector(JSContext* ctx, JSValueConst arr, std::vector<JSKeyPointData>& out) {
     int64_t i, n;
     JSValue len;
     if(!js_is_array(ctx, arr))
@@ -51,9 +50,7 @@ public:
     return n;
   }
 
-  template<class Iterator>
-  static size_t
-  copy_sequence(JSContext* ctx, JSValueConst arr, const Iterator& start, const Iterator& end) {
+  template<class Iterator> static size_t copy_sequence(JSContext* ctx, JSValueConst arr, const Iterator& start, const Iterator& end) {
     size_t i = 0;
     for(Iterator it = start; it != end; ++it) {
       JS_SetPropertyUint32(ctx, arr, i, js_keypoint_new(ctx, *it));
@@ -62,9 +59,7 @@ public:
 
     return i;
   }
-  template<class Iterator>
-  static JSValue
-  from_sequence(JSContext* ctx, const Iterator& start, const Iterator& end) {
+  template<class Iterator> static JSValue from_sequence(JSContext* ctx, const Iterator& start, const Iterator& end) {
     JSValue arr = JS_NewArray(ctx);
     copy_sequence(ctx, arr, start, end);
     return arr;

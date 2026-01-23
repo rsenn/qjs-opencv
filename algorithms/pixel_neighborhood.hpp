@@ -89,7 +89,6 @@ pixel_neighborhood(const cv::Mat& mat) {
                                   },
                                   [](uchar value) -> bool { return value > 0; });
 }
- 
 
 static inline cv::Mat
 pixel_neighborhood_cross(const cv::Mat& mat) {
@@ -103,6 +102,6 @@ pixel_neighborhood_cross(const cv::Mat& mat) {
                                       s,
                                   },
                                   [](uchar value) -> bool { return value > 0; });
-} 
+}
 
 #endif /* PIXEL_NEIGHBORHOOD_HPP */

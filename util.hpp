@@ -357,8 +357,7 @@ public:
   // range_view(range_view<T> const& range) : p(range.begin()), n(range.size()) {}
   range_view(T* const base, size_t size) : p(base), n(size) {}
 
-  range_view<T>&
-  operator=(range_view<T> const& range) {
+  range_view<T>& operator=(range_view<T> const& range) {
     p = range.begin();
     n = range.size();
     return *this;

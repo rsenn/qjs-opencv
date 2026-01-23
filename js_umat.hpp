@@ -96,7 +96,7 @@ js_input_array(JSContext* ctx, JSValueConst value) {
       case TYPEDARRAY_FLOAT32: return typed_input_array<float>(props);
       case TYPEDARRAY_FLOAT64: return typed_input_array<double>(props);
       case TYPEDARRAY_BIGUINT64: JS_ThrowTypeError(ctx, "No cv::InputArray for uint64_t"); break;
-      case TYPEDARRAY_BIGINT64:JS_ThrowTypeError(ctx, "No cv::InputArray for int64_t"); break;
+      case TYPEDARRAY_BIGINT64: JS_ThrowTypeError(ctx, "No cv::InputArray for int64_t"); break;
     }
   } else if(js_is_array(ctx, value)) {
     std::vector<double> arr;

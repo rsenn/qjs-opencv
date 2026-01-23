@@ -77,8 +77,7 @@ class skeleton_tracer {
 public:
   explicit skeleton_tracer(Mat& _m) : mat(_m), mapping(_m.rows, _m.cols, CV_32SC1), neighborhood(pixel_neighborhood(_m)), index(0) { mapping.setTo(-1); }
 
-  void
-  decrement_neighborhood(const Point& pt) {
+  void decrement_neighborhood(const Point& pt) {
     for(const auto& v : direction_points) {
       Point q = point_sum(pt, v);
 
@@ -93,9 +92,7 @@ public:
     }
   }
 
-  template<typename Predicate = bool(unsigned)>
-  bool
-  pixel_find_pred(Point& out, int32_t index, Predicate pred) {
+  template<typename Predicate = bool(unsigned)> bool pixel_find_pred(Point& out, int32_t index, Predicate pred) {
     int h = mat.rows, w = mat.cols;
     Point pt;
 
@@ -108,7 +105,7 @@ public:
           taken = index;
           decrement_neighborhood(pt);
           // pixel_remove(pt, mat);
-          
+
           return true;
         }
       }
@@ -117,9 +114,7 @@ public:
     return false;
   }
 
-  template<typename Predicate = bool(unsigned)>
-  bool
-  pixel_check(const Point& pt, int32_t index, Predicate pred, Point& out) {
+  template<typename Predicate = bool(unsigned)> bool pixel_check(const Point& pt, int32_t index, Predicate pred, Point& out) {
     if(!point_inside(pt, mat))
       return false;
 
@@ -135,9 +130,7 @@ public:
     return false;
   }
 
-  template<typename Predicate = bool(unsigned)>
-  bool
-  pixel_neighbour(const Point& pt, int32_t index, Predicate pred, Point& r, const vector<Point>& points) {
+  template<typename Predicate = bool(unsigned)> bool pixel_neighbour(const Point& pt, int32_t index, Predicate pred, Point& r, const vector<Point>& points) {
     for(const auto& offs : points)
       if(pixel_check(point_sum(pt, offs), index, pred, r))
         return true;
@@ -145,9 +138,7 @@ public:
     return false;
   }
 
-  template<typename Predicate = bool(unsigned)>
-  bool
-  trace(JSContoursData<double>& contours, bool simplify, Predicate pred) {
+  template<typename Predicate = bool(unsigned)> bool trace(JSContoursData<double>& contours, bool simplify, Predicate pred) {
     Point pt, ppdiff, pdiff, diff, next;
     size_t n;
     int dir = -1;
@@ -197,8 +188,7 @@ public:
     return true;
   }
 
-  uint32_t
-  run(JSContoursData<double>& contours, bool simplify = false) {
+  uint32_t run(JSContoursData<double>& contours, bool simplify = false) {
 
     while(trace(contours, simplify, [](unsigned p) -> bool { return p > 0; })) {
 #ifdef DEBUG_OUTPUT

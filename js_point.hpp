@@ -6,11 +6,21 @@
 
 template<typename T> struct point_traits {};
 
-template<> struct point_traits<uint16_t> { static const int type = CV_16UC2; };
-template<> struct point_traits<int16_t> { static const int type = CV_16SC2; };
-template<> struct point_traits<int32_t> { static const int type = CV_32SC2; };
-template<> struct point_traits<float> { static const int type = CV_32FC2; };
-template<> struct point_traits<double> { static const int type = CV_64FC2; };
+template<> struct point_traits<uint16_t> {
+  static const int type = CV_16UC2;
+};
+template<> struct point_traits<int16_t> {
+  static const int type = CV_16SC2;
+};
+template<> struct point_traits<int32_t> {
+  static const int type = CV_32SC2;
+};
+template<> struct point_traits<float> {
+  static const int type = CV_32FC2;
+};
+template<> struct point_traits<double> {
+  static const int type = CV_64FC2;
+};
 
 extern "C" int js_point_init(JSContext*, JSModuleDef*);
 
@@ -199,10 +209,7 @@ template<typename T> struct point_compare {
 
   point_compare(const point_type& point) : m_pt(point) {}
 
-  bool
-  operator()(const point_type& other) const {
-    return point_equal(m_pt, other);
-  }
+  bool operator()(const point_type& other) const { return point_equal(m_pt, other); }
 
 private:
   cv::Point_<T> m_pt;
