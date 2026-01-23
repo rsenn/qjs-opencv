@@ -1,18 +1,18 @@
-import { CV_8UC1, CV_8UC4, Mat, Point, Size, drawLine, imread, imwrite, imwrite, paletteGenerate, paletteMatch } from 'opencv';
+import { CV_8UC1, CV_8UC4, Mat, Point, Size, drawLine, imread, imwrite, paletteGenerate, paletteMatch } from 'opencv';
 
 function main(...args) {
   let images = [],
     images2 = [];
   let palette = [],
     palette2 = [];
-  let size = new cv.Size(640, 480);
+  let size = new Size(640, 480);
 
-  let paletteImage = cv.imread('lsd/images/building.jpg');
+  let paletteImage = imread('lsd/images/building.jpg');
 
-  palette = cv.paletteGenerate(paletteImage, (0 << 1) + 1, 16);
+  palette = paletteGenerate(paletteImage, (0 << 1) + 1, 16);
 
   for(let i = 0; i < 10; i++) {
-    let mat = new cv.Mat(size, cv.CV_8UC4);
+    let mat = new Mat(size, CV_8UC4);
 
     images.push(mat);
   }
@@ -29,7 +29,7 @@ function main(...args) {
   }
 
   const randInt = max => Math.floor(Math.random() * max);
-  const randCoord = () => new cv.Point(randInt(size.width), randInt(size.height));
+  const randCoord = () => new Point(randInt(size.width), randInt(size.height));
   console.log('palette', palette);
 
   for(let i = 0; i < images.length; i++) {
@@ -39,14 +39,14 @@ function main(...args) {
       /* console.log('coords', coords.map(({ x, y }) => x + ',' + y).join(' -> '));
       console.log('color', color);
       console.log('j', j);*/
-      cv.drawLine(images[i], ...coords, [...color.slice(0, 3), 255], 3, false);
+      drawLine(images[i], ...coords, [...color.slice(0, 3), 255], 3, false);
     }
-    images2[i] = cv.Mat.zeros(size, cv.CV_8UC1);
+    images2[i] = Mat.zeros(size, CV_8UC1);
 
-    cv.paletteMatch(images[i], images2[i], palette, 15);
+    paletteMatch(images[i], images2[i], palette, 15);
 
-    //cv.imwrite(`test-${i}.png`, images[i]/*, palette*/);
-    cv.imwrite(`test-${i}.png`, images2[i], palette, 15);
+    //imwrite(`test-${i}.png`, images[i]/*, palette*/);
+    imwrite(`test-${i}.png`, images2[i], palette, 15);
   }
   console.log(
     'palette2',

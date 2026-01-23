@@ -1,4 +1,4 @@
-import { COLOR_HSV2BGR, CV_8UC3, CV_8UC3, CV_8UC4, FILLED, Line, Mat, Mat, Mat, Point, Point, Point, Rect, Size, cvtColor, imread, imwrite, imwrite, line, paletteGenerate, rectangle } from 'opencv';
+import { COLOR_HSV2BGR, CV_8UC3, CV_8UC4, FILLED, Line, Mat, Point, Rect, Size, cvtColor, imread, imwrite, drawLine, paletteGenerate, drawRect } from 'opencv';
 
 const NUM_IMAGES = 30;
 const NUM_COLORS = 16;
@@ -80,12 +80,12 @@ function main(...args) {
       let coords = [a[j].at(i / (images.length - 1)), b[j].at(i / (images.length - 1))];
 
       let color = palette3[j];
-      line(images[i], ...coords, [...color.slice(0, 3), 255], 3, false);
+      drawLine(images[i], ...coords, [...color.slice(0, 3), 255], 3, false);
     }
     for(let j = 0; j < 15; j++) {
       let color = palette3[j];
       let rect = new Rect(new Point(0, j * 20), new Point(100, (j + 1) * 20));
-      rectangle(images[i], rect, [...color.slice(0, 3), 255], FILLED, false);
+      drawRect(images[i], rect, [...color.slice(0, 3), 255], FILLED, false);
     }
 
     imwrite(`image-${(i + '').padStart(3, '0')}.png`, images[i]);

@@ -1,30 +1,34 @@
-import { Contour, Mat, Point, Size, CHAIN_APPROX_SIMPLE, COLOR_BGR2GRAY, CV_8UC3, Canny, HuMoments, RETR_TREE, blur, cvtColor, findContours, imread, imshow, moments, waitKey } from 'opencv';
+import { drawContours, LINE_AA, Contour, Mat, Point, Size, CHAIN_APPROX_SIMPLE, COLOR_BGR2GRAY, CV_8UC3, Canny, HuMoments, RETR_TREE, blur, cvtColor, findContours, imread, imshow, moments, waitKey, } from 'opencv';
+
+const randInt = max => Math.floor(Math.random() * max);
 
 function main(...args) {
   let filename = args[0] ?? 'tests/test_linesegmentdetector.jpg';
   console.log('filename', filename);
   let input = imread(filename);
+
   console.log('input.type', '0x' + input.type.toString(16));
   console.log('input.depth', '0x' + input.depth.toString(16));
   console.log('input.channels', '0x' + input.channels.toString(16));
   console.log('input.elemSize1', input.elemSize1);
   console.log('input.total', input.total);
   console.log('input.at', input.at(0, 0));
+
   let size = input.size;
   console.log('size', size);
   let { width, height } = size;
   let mat = new Mat(input.size, CV_8UC3);
   let thresh = 100;
-  const RandomPoint = () => new Point(Util.randInt(0, width - 1), Util.randInt(0, height - 1));
-  const RandomColor = () => [Util.randInt(0, 255), Util.randInt(0, 255), Util.randInt(0, 255), 255];
+  const RandomPoint = () => new Point(randInt(width - 1), randInt(height - 1));
+  const RandomColor = () => [randInt(255), randInt(255), randInt(255), 255];
 
   let gray = new Mat();
   cvtColor(input, gray, COLOR_BGR2GRAY);
-  let blur = new Mat();
-  blur(gray, blur, new Size(3, 3));
+  let blurred = new Mat();
+  blur(gray, blurred, new Size(3, 3));
 
   let canny = new Mat();
-  Canny(blur, canny, thresh, thresh * 2, 3);
+  Canny(blurred, canny, thresh, thresh * 2, 3);
   let canny2 = new Mat();
   canny.copyTo(canny2);
 
@@ -32,6 +36,8 @@ function main(...args) {
   let hierarchy = [];
   findContours(canny, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE, new Point(0, 0));
   let i = 0;
+
+  drawContours(input, contours, -1, [255, 0, 255, 255], 1, LINE_AA);
 
   for(let contour of contours) {
     console.log('contour.length', contour.length);
@@ -69,11 +75,11 @@ function main(...args) {
   contours.reverse();
 
   let poly = [...contours[0]];
-  let moments = moments(poly, false);
+  let mom = moments(poly, false);
   console.log(`poly`, console.config({ maxArrayLength: 20, compact: 1 }), poly);
-  console.log(`moments(poly)`, console.config({ compact: 1 }), moments);
+  console.log(`moments(poly)`, console.config({ compact: 1 }), mom);
   let huMoments;
-  HuMoments(moments, (huMoments = []));
+  HuMoments(mom, (huMoments = []));
   console.log(`huMoments`, console.config({ compact: 1 }), huMoments);
 
   imshow('input', input);

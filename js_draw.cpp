@@ -297,7 +297,7 @@ js_draw_line(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
   if(js_is_noarray(dst))
     return JS_EXCEPTION;
 
-  if(!(ia = js_line_arg(ctx, argc, argv, line)))
+  if(!(ia = js_line_arg(ctx, argc - i, argv + i, line)))
     return JS_ThrowTypeError(ctx, "argument 2 must be a line");
 
   i += ia;

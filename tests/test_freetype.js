@@ -191,7 +191,7 @@ function main(...argv) {
   }
 
   function toSource(obj) {
-    return inspect(obj, { reparseable: 1, colors: false, compact: 3, numberBase: 16 });
+    return util.inspect(obj, { reparseable: 1, colors: false, compact: 3, numberBase: 16 });
   }
 
   //boxes.forEach((box, i) => writeROI(i, box));

@@ -1,4 +1,4 @@
-import { COLOR_BGR2Lab, COLOR_GRAY2BGR, LINE_AA, LSD_REFINE_ADV, LSD_REFINE_ADV, LSD_REFINE_ADV, LineSegmentDetector, Mat, Mat, cvtColor, cvtColor, imread, imshow, line, split, waitKey, } from 'opencv';
+import { COLOR_BGR2Lab, COLOR_GRAY2BGR, LINE_AA, LSD_REFINE_ADV, LineSegmentDetector, Mat, cvtColor, imread, imshow, drawLine, split, waitKey } from 'opencv';
 
 function main(...args) {
   let lsd = new LineSegmentDetector(LSD_REFINE_ADV, 1, 2, 2.0, 45, 2, 0.9, 1024);
@@ -16,7 +16,7 @@ function main(...args) {
   image = Color(gray);
 
   for(let line of lines) {
-    line(image, line.a, line.b, [0, 0, 255], 1, LINE_AA);
+    drawLine(image, line.a, line.b, [0, 0, 255], 1, LINE_AA);
   }
 
   imshow('test', image);
