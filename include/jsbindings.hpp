@@ -632,6 +632,11 @@ js_value_to(JSContext* ctx, JSValueConst value, bool& out) {
 }
 
 static inline int
+js_value_to(JSContext* ctx, JSValueConst value, int32_t& out) {
+  return !JS_ToInt32(ctx, &out, value);
+}
+
+static inline int
 js_value_to(JSContext* ctx, JSValueConst value, std::string& out) {
   const char* str;
   size_t len;

@@ -442,7 +442,6 @@ enum { MATH_ABSDIFF = 0, MATH_ADD, MATH_COMPARE, MATH_DIVIDE, MATH_GEMM, MATH_MA
 
 static JSValue
 js_cv_math(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
-
   JSOutputArray dst;
   JSInputArray src1, src2;
   JSValue ret = JS_UNDEFINED;
@@ -460,10 +459,13 @@ js_cv_math(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[],
     case MATH_ADD: {
       JSInputArray mask;
       int32_t dtype = -1;
+
       if(argc >= 4)
         mask = js_umat_or_mat(ctx, argv[3]);
+
       if(argc >= 5)
         mask = JS_ToInt32(ctx, &dtype, argv[4]);
+
       cv::add(src1, src2, dst, mask, dtype);
       break;
     }

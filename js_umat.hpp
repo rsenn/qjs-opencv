@@ -187,6 +187,7 @@ js_cv_outputarray(JSContext* ctx, JSValueConst value) {
 
   if(js_line_class_id) {
     JSLineData<double>* line;
+
     if((line = js_line_data(value)))
       return JSOutputArray(line->array);
   }

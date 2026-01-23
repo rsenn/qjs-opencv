@@ -422,7 +422,6 @@ js_typedarray_props(JSContext* ctx, JSValueConst obj) {
 
 static inline JSInputOutputArray
 js_typedarray_inputoutputarray(JSContext* ctx, JSValueConst obj) {
-
   TypedArrayType type = js_typedarray_type(ctx, obj);
   TypedArrayProps props = js_typedarray_props(ctx, obj);
 
@@ -436,7 +435,7 @@ js_typedarray_inputoutputarray(JSContext* ctx, JSValueConst obj) {
         TypedArrayRange<uint32_t> range(props);
         return std::vector<uint32_t>(range.begin(), range.end());
       }*/
-      //    case TYPEDARRAY_UINT32: return JSInputOutputArray(props.ptr<uint32_t>(), props.size<uint32_t>());
+      // case TYPEDARRAY_UINT32: return JSInputOutputArray(props.ptr<uint32_t>(), props.size<uint32_t>());
     case TYPEDARRAY_INT32: return JSInputOutputArray(props.ptr<int32_t>(), props.size<int32_t>());
     /*case TYPEDARRAY_BIGUINT64: {
       TypedArrayRange<uint64_t> range(props);

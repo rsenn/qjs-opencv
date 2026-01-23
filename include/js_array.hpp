@@ -20,60 +20,6 @@
 #include <type_traits>
 #include <vector>
 
-static inline int64_t
-js_array_length(JSContext* ctx, const JSValueConst& arr) {
-  int64_t ret = -1;
-
-  if(js_is_object(arr)) {
-    uint32_t len;
-    JSValue v = JS_GetPropertyStr(ctx, arr, "length");
-
-    if(JS_IsNumber(v)) {
-      JS_ToUint32(ctx, &len, v);
-      JS_FreeValue(ctx, v);
-      ret = len;
-    }
-  }
-
-  return ret;
-}
-
-extern "C" int JS_DeletePropertyInt64(JSContext* ctx, JSValueConst obj, int64_t idx, int flags);
-
-static inline int64_t
-js_array_truncate(JSContext* ctx, const JSValueConst& arr, int64_t len) {
-  int64_t newlen = -1;
-
-  if(js_is_array(ctx, arr)) {
-    int64_t top = js_array_length(ctx, arr);
-
-    newlen = std::min(top, len < 0 ? top + len : len);
-
-    while(--top >= newlen)
-      JS_DeletePropertyInt64(ctx, arr, top, 0);
-
-    JS_SetPropertyStr(ctx, arr, "length", JS_NewInt64(ctx, newlen));
-  }
-
-  return newlen;
-}
-
-static inline BOOL
-js_array_clear(JSContext* ctx, const JSValueConst& arr) {
-  int64_t newlen = -1;
-
-  if(js_is_array(ctx, arr)) {
-    int64_t top = js_array_length(ctx, arr);
-    JSValueConst args[] = {JS_NewInt64(ctx, 0), JS_NewInt64(ctx, top)};
-
-    JSValue ret = js_function_invoke(ctx, arr, "splice", countof(args), args);
-    JS_FreeValue(ctx, ret);
-    return TRUE;
-  }
-
-  return FALSE;
-}
-
 /*class js_array_iterator : public std::iterator<std::input_iterator_tag, JSValue> {
 public:
   js_array_iterator(JSContext* c, const JSValueConst& a, const size_t i = 0) : ctx(c), array(&a), pos(i) {}
@@ -832,6 +778,60 @@ public:
 
   template<size_t N> static int64_t to_array(JSContext* ctx, JSValueConst arr, std::array<cv::Mat, N>& out);
 };
+
+extern "C" int JS_DeletePropertyInt64(JSContext* ctx, JSValueConst obj, int64_t idx, int flags);
+
+static inline int64_t
+js_array_length(JSContext* ctx, const JSValueConst& arr) {
+  int64_t ret = -1;
+
+  if(js_is_object(arr)) {
+    uint32_t len;
+    JSValue v = JS_GetPropertyStr(ctx, arr, "length");
+
+    if(JS_IsNumber(v)) {
+      JS_ToUint32(ctx, &len, v);
+      JS_FreeValue(ctx, v);
+      ret = len;
+    }
+  }
+
+  return ret;
+}
+
+static inline int64_t
+js_array_truncate(JSContext* ctx, const JSValueConst& arr, int64_t len) {
+  int64_t newlen = -1;
+
+  if(js_is_array(ctx, arr)) {
+    int64_t top = js_array_length(ctx, arr);
+
+    newlen = std::min(top, len < 0 ? top + len : len);
+
+    while(--top >= newlen)
+      JS_DeletePropertyInt64(ctx, arr, top, 0);
+
+    JS_SetPropertyStr(ctx, arr, "length", JS_NewInt64(ctx, newlen));
+  }
+
+  return newlen;
+}
+
+static inline BOOL
+js_array_clear(JSContext* ctx, const JSValueConst& arr) {
+  int64_t newlen = -1;
+
+  if(js_is_array(ctx, arr)) {
+    int64_t top = js_array_length(ctx, arr);
+    JSValueConst args[] = {JS_NewInt64(ctx, 0), JS_NewInt64(ctx, top)};
+
+    JSValue ret = js_function_invoke(ctx, arr, "splice", countof(args), args);
+    JS_FreeValue(ctx, ret);
+    return TRUE;
+  }
+
+  return FALSE;
+}
 
 template<class T>
 static inline int64_t

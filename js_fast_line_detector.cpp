@@ -97,16 +97,17 @@ static JSValue
 js_fast_line_detector_detect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSFastLineDetector* s;
   JSInputArray image;
-  std::vector<cv::Vec4f> lines;
+  JSOutputArray lines;
 
   if((s = js_fast_line_detector_data2(ctx, this_val)) == nullptr)
     return JS_EXCEPTION;
 
   image = js_umat_or_mat(ctx, argv[0]);
+  lines = js_cv_outputarray(ctx, argv[1]);
 
   (*s)->detect(image, lines);
 
-  if(argc >= 2 && js_is_array(ctx, argv[1])) {
+  /*if(argc >= 2 && js_is_array(ctx, argv[1])) {
     size_t i, length = lines.size();
 
     for(i = 0; i < length; i++) {
@@ -114,7 +115,7 @@ js_fast_line_detector_detect(JSContext* ctx, JSValueConst this_val, int argc, JS
 
       JS_SetPropertyUint32(ctx, argv[1], i, js_line_new(ctx, line));
     }
-  }
+  }*/
 
   return JS_UNDEFINED;
 }
@@ -123,16 +124,29 @@ static JSValue
 js_fast_line_detector_draw_segments(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSFastLineDetector* s;
   JSInputOutputArray image;
-  std::vector<cv::Vec4f> lines;
+  // std::vector<cv::Vec4f> lines;
+  cv::Mat mat;
+  JSInputArray lines;
+  BOOL draw_arrow = FALSE;
+  cv::Scalar linecolor{255, 255, 255, 255};
+  int32_t linethickness = 1;
 
   if((s = js_fast_line_detector_data2(ctx, this_val)) == nullptr)
     return JS_EXCEPTION;
 
   image = js_umat_or_mat(ctx, argv[0]);
+  lines = js_input_array(ctx, argv[1]);
 
-  js_array_to(ctx, argv[1], lines);
+  // js_array_to(ctx, argv[1], lines);
 
-  (*s)->drawSegments(image, lines);
+  if(argc > 2)
+    js_value_to(ctx, argv[2], draw_arrow);
+  if(argc > 3)
+    js_color_read(ctx, argv[3], &linecolor);
+  if(argc > 4)
+    js_value_to(ctx, argv[4], linethickness);
+
+  (*s)->drawSegments(image, lines, draw_arrow, linecolor, linethickness);
 
   return JS_UNDEFINED;
 }

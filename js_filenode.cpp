@@ -410,6 +410,11 @@ js_filenode_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
     }
 
     case METHOD_VALUEOF: {
+      BOOL recursive = FALSE;
+
+      if(argc > 0)
+        recursive = JS_ToBool(ctx, argv[0]);
+
       switch(fn->type()) {
         case cv::FileNode::NONE: {
           ret = JS_NULL;
@@ -428,12 +433,22 @@ js_filenode_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
 
         case cv::FileNode::SEQ: {
           size_t n = fn->size();
-          std::vector<JSFileNodeData> vec;
+          std::vector<JSValue> vec;
 
-          for(size_t i = 0; i < n; ++i)
-            vec.push_back(fn->operator[](i));
+          for(size_t i = 0; i < n; ++i) {
+            JSFileNodeData child = fn->operator[](i);
+            JSValue val = js_value_from(ctx, child);
 
-          ret = js_value_from(ctx, vec);
+            if(recursive) {
+              JSValue tmp = js_filenode_method(ctx, val, argc, argv, METHOD_VALUEOF);
+              JS_FreeValue(ctx, val);
+              val = tmp;
+            }
+
+            vec.push_back(val);
+          }
+
+          ret = js_array_from(ctx, vec);
           break;
         }
 
@@ -441,7 +456,14 @@ js_filenode_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
           ret = JS_NewObjectProto(ctx, JS_NULL);
 
           for(auto key : fn->keys()) {
-            JSValue val = js_value_from(ctx, fn->operator[](key));
+            JSFileNodeData child = fn->operator[](key);
+            JSValue val = js_value_from(ctx, child);
+
+            if(recursive) {
+              JSValue tmp = js_filenode_method(ctx, val, argc, argv, METHOD_VALUEOF);
+              JS_FreeValue(ctx, val);
+              val = tmp;
+            }
 
             JS_SetPropertyStr(ctx, ret, key.c_str(), val);
           }
