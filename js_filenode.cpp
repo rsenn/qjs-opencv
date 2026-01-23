@@ -7,16 +7,32 @@ thread_local JSValue filenode_proto = JS_UNDEFINED, filenode_class = JS_UNDEFINE
 thread_local JSClassID js_filenode_class_id = 0;
 }
 
+JSValue
+js_filenode_wrap(JSContext* ctx, JSValueConst proto, JSFileNodeData* fn) {
+  JSValue ret = JS_NewObjectProtoClass(ctx, proto, js_filenode_class_id);
+  JS_SetOpaque(ret, fn);
+  return ret;
+}
+
+JSValue
+js_filenode_new(JSContext* ctx, JSValueConst proto) {
+  JSFileNodeData* fn = js_allocate<JSFileNodeData>(ctx);
+
+  new(fn) JSFileNodeData();
+
+  return js_filenode_wrap(ctx, proto, fn);
+}
+
 static JSValue
 js_filenode_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
-  JSFileNodeData* fs;
+  JSFileNodeData* fn;
   JSValue obj = JS_UNDEFINED, proto;
 
-  if(!(fs = js_allocate<JSFileNodeData>(ctx)))
+  if(!(fn = js_allocate<JSFileNodeData>(ctx)))
     return JS_EXCEPTION;
 
   if(argc == 0) {
-    new(fs) JSFileNodeData();
+    new(fn) JSFileNodeData();
   } else {
 
     JS_ThrowTypeError(ctx, "arguments expected");
@@ -34,12 +50,12 @@ js_filenode_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSVal
   if(JS_IsException(obj))
     goto fail;
 
-  JS_SetOpaque(obj, fs);
+  JS_SetOpaque(obj, fn);
 
   return obj;
 
 fail:
-  js_deallocate(ctx, fs);
+  js_deallocate(ctx, fn);
   JS_FreeValue(ctx, obj);
   return JS_EXCEPTION;
 }
@@ -56,10 +72,10 @@ js_filenode_data2(JSContext* ctx, JSValueConst val) {
 
 static JSValue
 js_filenode_get(JSContext* ctx, JSValueConst this_val, int magic) {
-  JSFileNodeData* fs;
+  JSFileNodeData* fn;
   JSValue ret = JS_UNDEFINED;
 
-  if(!(fs = js_filenode_data2(ctx, this_val)))
+  if(!(fn = js_filenode_data2(ctx, this_val)))
     return JS_EXCEPTION;
 
   switch(magic) {}
@@ -69,9 +85,9 @@ js_filenode_get(JSContext* ctx, JSValueConst this_val, int magic) {
 
 static JSValue
 js_filenode_set(JSContext* ctx, JSValueConst this_val, JSValueConst val, int magic) {
-  JSFileNodeData* fs;
+  JSFileNodeData* fn;
 
-  if(!(fs = js_filenode_data2(ctx, this_val)))
+  if(!(fn = js_filenode_data2(ctx, this_val)))
     return JS_EXCEPTION;
 
   switch(magic) {}
@@ -142,10 +158,10 @@ enum {
 
 static JSValue
 js_filenode_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
-  JSFileNodeData* fs;
+  JSFileNodeData* fn;
   JSValue ret = JS_UNDEFINED;
 
-  if(!(fs = js_filenode_data2(ctx, this_val)))
+  if(!(fn = js_filenode_data2(ctx, this_val)))
     return JS_EXCEPTION;
 
   switch(magic) {
@@ -228,12 +244,12 @@ js_filenode_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
 
 void
 js_filenode_finalizer(JSRuntime* rt, JSValue val) {
-  JSFileNodeData* fs;
-  /* Note: 'fs' can be NULL in case JS_SetOpaque() was not called */
+  JSFileNodeData* fn;
+  /* Note: 'fn' can be NULL in case JS_SetOpaque() was not called */
 
-  // fs->~JSFileNodeData();
-  if((fs = js_filenode_data(val)))
-    js_deallocate(rt, fs);
+  // fn->~JSFileNodeData();
+  if((fn = js_filenode_data(val)))
+    js_deallocate(rt, fn);
 }
 
 JSClassDef js_filenode_class = {

@@ -1,6 +1,8 @@
 #include "js_filestorage.hpp"
 #include "js_filenode.hpp"
 #include "js_mat.hpp"
+#include "js_rect.hpp"
+#include "js_point.hpp"
 #include "include/js_array.hpp"
 #include "include/js_alloc.hpp"
 #include "include/util.hpp"
@@ -96,7 +98,9 @@ js_filestorage_set(JSContext* ctx, JSValueConst this_val, JSValueConst val, int 
   return JS_UNDEFINED;
 }
 
-enum { FUNCTION_GETDEFAULTOBJECTNAME };
+enum {
+  FUNCTION_GETDEFAULTOBJECTNAME,
+};
 
 static JSValue
 js_filestorage_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
@@ -114,6 +118,97 @@ js_filestorage_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
       JS_FreeCString(ctx, filename);
 
       ret = JS_NewString(ctx, str.c_str());
+      break;
+    }
+  }
+
+  return ret;
+}
+
+enum { GLOBAL_WRITE, GLOBAL_WRITESCALAR };
+
+static JSValue
+js_filestorage_global(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  JSValue ret = JS_EXCEPTION;
+  JSFileStorageData* fs;
+
+  if(!(fs = js_filestorage_data2(ctx, argv[0])))
+    return JS_EXCEPTION;
+
+  switch(magic) {
+    case GLOBAL_WRITE: {
+      if(argc > 2) {
+        const char* name;
+
+        if(!(name = JS_ToCString(ctx, argv[1])))
+          return JS_ThrowTypeError(ctx, "argument 2 must be a string");
+
+        JSMatData* m;
+
+        if((m = js_mat_data(argv[2]))) {
+          cv::write(*fs, name, *m);
+        } else if(JS_IsNumber(argv[2])) {
+          double val;
+          JS_ToFloat64(ctx, &val, argv[2]);
+
+          cv::write(*fs, name, val);
+        } else if(JS_IsString(argv[2])) {
+          const char* str;
+
+          if(!(str = JS_ToCString(ctx, argv[2])))
+            return JS_ThrowTypeError(ctx, "argument 3 must be a string");
+
+          cv::write(*fs, name, str);
+          JS_FreeCString(ctx, str);
+        }
+
+        JS_FreeCString(ctx, name);
+      } else {
+        JSPointData<double> pt;
+        JSSizeData<double> sz;
+        JSRectData<double> rt;
+
+        if(JS_IsNumber(argv[1])) {
+          double val;
+          JS_ToFloat64(ctx, &val, argv[1]);
+
+          cv::write(*fs, val);
+        } else if(JS_IsString(argv[1])) {
+          const char* str;
+
+          if(!(str = JS_ToCString(ctx, argv[1])))
+            return JS_ThrowTypeError(ctx, "argument 2 must be a string");
+
+          cv::write(*fs, str);
+          JS_FreeCString(ctx, str);
+        } else if(js_point_read(ctx, argv[1], &pt)) {
+          cv::write(*fs, pt);
+        } else if(js_size_read(ctx, argv[1], &sz)) {
+          cv::write(*fs, sz);
+        } else if(js_rect_read(ctx, argv[1], &rt)) {
+          cv::write(*fs, rt);
+        }
+      }
+
+      break;
+    }
+
+    case GLOBAL_WRITESCALAR: {
+      if(JS_IsNumber(argv[1])) {
+        double val;
+        JS_ToFloat64(ctx, &val, argv[1]);
+
+        cv::writeScalar(*fs, val);
+      } else {
+        const char* str;
+
+        if(!(str = JS_ToCString(ctx, argv[1])))
+          return JS_ThrowTypeError(ctx, "argument 2 must be a string");
+
+        cv::writeScalar(*fs, str);
+        JS_FreeCString(ctx, str);
+      }
+
       break;
     }
   }
@@ -261,9 +356,10 @@ js_filestorage_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCo
         const char* str;
 
         if(!(str = JS_ToCString(ctx, argv[1])))
-          return JS_ThrowTypeError(ctx, "argument 1 must be a string");
+          return JS_ThrowTypeError(ctx, "argument 2 must be a string");
 
         fs->write(name, str);
+        JS_FreeCString(ctx, str);
       }
 
       break;
@@ -340,6 +436,7 @@ const JSCFunctionListEntry js_filestorage_proto_funcs[] = {
 
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "FileStorage", JS_PROP_CONFIGURABLE),
 };
+
 const JSCFunctionListEntry js_filestorage_static_funcs[] = {
     JS_CFUNC_MAGIC_DEF("getDefaultObjectName", 1, js_filestorage_funcs, FUNCTION_GETDEFAULTOBJECTNAME),
     /* enum Mode */
@@ -361,7 +458,11 @@ const JSCFunctionListEntry js_filestorage_static_funcs[] = {
     JS_PROP_INT32_DEF("NAME_EXPECTED", cv::FileStorage::NAME_EXPECTED, JS_PROP_ENUMERABLE),
     JS_PROP_INT32_DEF("INSIDE_MAP", cv::FileStorage::INSIDE_MAP, JS_PROP_ENUMERABLE),
 
-    // JS_CFUNC_DEF("from", 1, js_filestorage_from),
+};
+
+const JSCFunctionListEntry js_filestorage_global_funcs[] = {
+    JS_CFUNC_MAGIC_DEF("write", 3, js_filestorage_global, GLOBAL_WRITE),
+    JS_CFUNC_MAGIC_DEF("writeScalar", 2, js_filestorage_global, GLOBAL_WRITESCALAR),
 };
 
 extern "C" int
@@ -384,8 +485,11 @@ js_filestorage_init(JSContext* ctx, JSModuleDef* m) {
     // js_object_inspect(ctx, filestorage_proto, js_filestorage_inspect);
   }
 
-  if(m)
+  if(m) {
     JS_SetModuleExport(ctx, m, "FileStorage", filestorage_class);
+
+    JS_SetModuleExportList(ctx, m, js_filestorage_global_funcs, countof(js_filestorage_global_funcs));
+  }
 
   return 0;
 }
@@ -393,6 +497,7 @@ js_filestorage_init(JSContext* ctx, JSModuleDef* m) {
 extern "C" void
 js_filestorage_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "FileStorage");
+  JS_AddModuleExportList(ctx, m, js_filestorage_global_funcs, countof(js_filestorage_global_funcs));
 }
 
 #ifdef JS_FILESTORAGE_MODULE

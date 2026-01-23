@@ -32,6 +32,7 @@ static inline int
 js_rect_read(JSContext* ctx, JSValueConst rect, JSRectData<T>* out) {
   int ret = 1;
   JSValue x = JS_UNDEFINED, y = JS_UNDEFINED, w = JS_UNDEFINED, h = JS_UNDEFINED;
+
   if(js_is_arraylike(ctx, rect)) {
     x = JS_GetPropertyUint32(ctx, rect, 0);
     y = JS_GetPropertyUint32(ctx, rect, 1);
@@ -44,6 +45,7 @@ js_rect_read(JSContext* ctx, JSValueConst rect, JSRectData<T>* out) {
     w = JS_GetPropertyStr(ctx, rect, "width");
     h = JS_GetPropertyStr(ctx, rect, "height");
   }
+
   if(JS_IsNumber(x) && JS_IsNumber(y) && JS_IsNumber(w) && JS_IsNumber(h)) {
     ret &= js_number_read(ctx, x, &out->x);
     ret &= js_number_read(ctx, y, &out->y);
@@ -52,6 +54,7 @@ js_rect_read(JSContext* ctx, JSValueConst rect, JSRectData<T>* out) {
   } else {
     ret = 0;
   }
+
   if(!JS_IsUndefined(x))
     JS_FreeValue(ctx, x);
   if(!JS_IsUndefined(y))
