@@ -5,6 +5,7 @@
 #include <opencv2/core.hpp>
 #include <quickjs.h>
 
+#ifdef USE_LCCV
 //#include "LCCV/include/libcamera_app.hpp"
 #include <lccv.hpp>
 
@@ -756,3 +757,4 @@ JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   js_libcamera_app_export(ctx, m);
   return m;
 }
+#endif // defined(USE_LCCV)

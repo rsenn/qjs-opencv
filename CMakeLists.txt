@@ -253,6 +253,9 @@ file(GLOB OPENCV_SOURCES init_module.cpp geometry.cpp highgui.cpp jsbindings.cpp
 if(USE_LCCV)
   list(APPEND OPENCV_SOURCES js_raspi_cam.cpp js_libcamera_app.cpp)
   add_definitions(-DUSE_LCCV=1)
+else(USE_LCCV)
+  list(REMOVE_ITEM OPENCV_SOURCES js_libcamera_app.cpp)
+  list(REMOVE_ITEM OPENCV_SOURCES js_raspi_cam.cpp)
 endif(USE_LCCV)
 
 list(REMOVE_ITEM OPENCV_SOURCES init_module.cpp)
