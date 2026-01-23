@@ -5,12 +5,16 @@
 #include <opencv2/core/persistence.hpp>
 
 using JSFileNodeData = cv::FileNode;
+using JSFileNodeIteratorData = cv::FileNodeIterator;
 
 extern "C" int js_filenode_init(JSContext*, JSModuleDef*);
 
 extern "C" {
 extern thread_local JSValue filenode_proto, filenode_class;
 extern thread_local JSClassID js_filenode_class_id;
+
+extern thread_local JSValue filenode_iterator_proto, filenode_iterator_class;
+extern thread_local JSClassID js_filenode_iterator_class_id;
 
 JSFileNodeData* js_filenode_data(JSValueConst val);
 JSFileNodeData* js_filenode_data2(JSContext*, JSValueConst val);
@@ -19,8 +23,7 @@ JSModuleDef* js_init_module_filenode(JSContext*, const char*);
 }
 
 JSValue js_filenode_new(JSContext*, JSValueConst);
-
-JSValue js_filenode_wrap(JSContext*, JSValueConst, JSFileNodeData*);
+JSValue js_filenode_new(JSContext*, JSValueConst, const JSFileNodeData&);
 
 extern "C" int js_filenode_init(JSContext*, JSModuleDef*);
 

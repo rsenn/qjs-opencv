@@ -3,11 +3,33 @@
 #include "include/util.hpp"
 
 extern "C" {
-thread_local JSValue filenode_proto = JS_UNDEFINED, filenode_class = JS_UNDEFINED;
-thread_local JSClassID js_filenode_class_id = 0;
+thread_local JSValue filenode_proto = JS_UNDEFINED, filenode_class = JS_UNDEFINED, filenode_iterator_proto = JS_UNDEFINED,
+                     filenode_iterator_class = JS_UNDEFINED;
+thread_local JSClassID js_filenode_class_id = 0, js_filenode_iterator_class_id = 0;
 }
 
-JSValue
+void
+js_filenode_iterator_finalizer(JSRuntime* rt, JSValue val) {
+  JSFileNodeIteratorData* fni;
+  /* Note: 'fni' can be NULL in case JS_SetOpaque() was not called */
+
+  // fni->~JSFileNodeIteratorData();
+  if((fni = static_cast<JSFileNodeIteratorData*>(JS_GetOpaque(val, js_filenode_iterator_class_id))))
+    js_deallocate(rt, fni);
+}
+
+JSClassDef js_filenode_iterator_class = {
+    .class_name = "FileNodeIterator",
+    .finalizer = js_filenode_iterator_finalizer,
+};
+
+const JSCFunctionListEntry js_filenode_iterator_proto_funcs[] = {
+
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "FileNodeIterator", JS_PROP_CONFIGURABLE),
+};
+const JSCFunctionListEntry js_filenode_iterator_static_funcs[] = {};
+
+static JSValue
 js_filenode_wrap(JSContext* ctx, JSValueConst proto, JSFileNodeData* fn) {
   JSValue ret = JS_NewObjectProtoClass(ctx, proto, js_filenode_class_id);
   JS_SetOpaque(ret, fn);
@@ -19,6 +41,15 @@ js_filenode_new(JSContext* ctx, JSValueConst proto) {
   JSFileNodeData* fn = js_allocate<JSFileNodeData>(ctx);
 
   new(fn) JSFileNodeData();
+
+  return js_filenode_wrap(ctx, proto, fn);
+}
+
+JSValue
+js_filenode_new(JSContext* ctx, JSValueConst proto, const JSFileNodeData& other) {
+  JSFileNodeData* fn = js_allocate<JSFileNodeData>(ctx);
+
+  new(fn) JSFileNodeData(other);
 
   return js_filenode_wrap(ctx, proto, fn);
 }
@@ -312,25 +343,36 @@ const JSCFunctionListEntry js_filenode_static_funcs[] = {
 extern "C" int
 js_filenode_init(JSContext* ctx, JSModuleDef* m) {
 
-  if(js_filenode_class_id == 0) {
-    /* create the FileNode class */
-    JS_NewClassID(&js_filenode_class_id);
-    JS_NewClass(JS_GetRuntime(ctx), js_filenode_class_id, &js_filenode_class);
+  /* create the FileNode class */
+  JS_NewClassID(&js_filenode_class_id);
+  JS_NewClass(JS_GetRuntime(ctx), js_filenode_class_id, &js_filenode_class);
 
-    filenode_proto = JS_NewObject(ctx);
-    JS_SetPropertyFunctionList(ctx, filenode_proto, js_filenode_proto_funcs, countof(js_filenode_proto_funcs));
-    JS_SetClassProto(ctx, js_filenode_class_id, filenode_proto);
+  filenode_proto = JS_NewObject(ctx);
+  JS_SetPropertyFunctionList(ctx, filenode_proto, js_filenode_proto_funcs, countof(js_filenode_proto_funcs));
+  JS_SetClassProto(ctx, js_filenode_class_id, filenode_proto);
 
-    filenode_class = JS_NewCFunction2(ctx, js_filenode_constructor, "FileNode", 0, JS_CFUNC_constructor, 0);
-    /* set proto.constructor and ctor.prototype */
-    JS_SetConstructor(ctx, filenode_class, filenode_proto);
-    JS_SetPropertyFunctionList(ctx, filenode_class, js_filenode_static_funcs, countof(js_filenode_static_funcs));
+  filenode_class = JS_NewCFunction2(ctx, js_filenode_constructor, "FileNode", 0, JS_CFUNC_constructor, 0);
+  /* set proto.constructor and ctor.prototype */
+  JS_SetConstructor(ctx, filenode_class, filenode_proto);
+  JS_SetPropertyFunctionList(ctx, filenode_class, js_filenode_static_funcs, countof(js_filenode_static_funcs));
 
-    // js_object_inspect(ctx, filenode_proto, js_filenode_inspect);
-  }
+  /* create the FileNodeIterator class */
+  JS_NewClassID(&js_filenode_iterator_class_id);
+  JS_NewClass(JS_GetRuntime(ctx), js_filenode_iterator_class_id, &js_filenode_iterator_class);
 
-  if(m)
+  filenode_iterator_proto = JS_NewObject(ctx);
+  JS_SetPropertyFunctionList(ctx, filenode_iterator_proto, js_filenode_iterator_proto_funcs, countof(js_filenode_iterator_proto_funcs));
+  JS_SetClassProto(ctx, js_filenode_iterator_class_id, filenode_iterator_proto);
+
+  filenode_iterator_class = JS_NewObjectProto(ctx, JS_NULL);
+  /* set proto.constructor and ctor.prototype */
+  JS_SetConstructor(ctx, filenode_iterator_class, filenode_iterator_proto);
+  JS_SetPropertyFunctionList(ctx, filenode_iterator_class, js_filenode_iterator_static_funcs, countof(js_filenode_iterator_static_funcs));
+
+  if(m) {
     JS_SetModuleExport(ctx, m, "FileNode", filenode_class);
+    JS_SetModuleExport(ctx, m, "FileNodeIterator", filenode_iterator_class);
+  }
 
   return 0;
 }
@@ -338,6 +380,7 @@ js_filenode_init(JSContext* ctx, JSModuleDef* m) {
 extern "C" void
 js_filenode_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "FileNode");
+  JS_AddModuleExport(ctx, m, "FileNodeIterator");
 }
 
 #ifdef JS_FILENODE_MODULE
