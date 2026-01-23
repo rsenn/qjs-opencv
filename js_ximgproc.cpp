@@ -20,12 +20,10 @@ enum {
 
 static JSValue
 js_ximgproc_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
-  JSInputArray src;
-  JSInputOutputArray dst;
   JSValue ret = JS_UNDEFINED;
 
-  src = js_umat_or_mat(ctx, argv[0]);
-  dst = js_umat_or_mat(ctx, argv[1]);
+  JSImageArgument src(ctx, argv[0]);
+  JSImageArgument dst(ctx, argv[1]);
 
   try {
     switch(magic) {

@@ -42,7 +42,6 @@ js_cv_blur(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[])
   double sigmaX, sigmaY = 0;
   JSInputOutputArray input, output;
   int32_t borderType = cv::BORDER_DEFAULT;
-
   JSValue ret;
 
   if(js_is_noarray((input = js_umat_or_mat(ctx, argv[0]))))
@@ -66,10 +65,8 @@ js_cv_blur(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[])
 
 static JSValue
 js_cv_bounding_rect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  JSInputArray input;
   JSRectData<double> rect;
-
-  input = js_cv_inputoutputarray(ctx, argv[0]);
+  JSImageArgument input(ctx, argv[0]);
 
   rect = cv::boundingRect(input);
   return js_rect_wrap(ctx, rect);
@@ -79,11 +76,9 @@ static JSValue
 js_cv_gaussian_blur(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSSizeData<double> size;
   double sigmaX, sigmaY = 0;
-  JSInputOutputArray input, output;
   int32_t borderType = cv::BORDER_DEFAULT;
-
-  input = js_umat_or_mat(ctx, argv[0]);
-  output = js_umat_or_mat(ctx, argv[1]);
+  JSImageArgument input(ctx, argv[0]);
+  JSImageArgument output(ctx, argv[1]);
 
   if(js_is_noarray(input) || js_is_noarray(output))
     return JS_ThrowInternalError(ctx, "argument 1 or argument 2 not an array!");
@@ -108,11 +103,9 @@ static JSValue
 js_cv_corner_harris(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   cv::Mat* image;
   double k;
-  JSInputOutputArray input, output;
   int32_t blockSize, ksize, borderType = cv::BORDER_DEFAULT;
-
-  input = js_umat_or_mat(ctx, argv[0]);
-  output = js_umat_or_mat(ctx, argv[1]);
+  JSImageArgument input(ctx, argv[0]);
+  JSImageArgument output(ctx, argv[1]);
 
   if(js_is_noarray(input) || js_is_noarray(output))
     return JS_ThrowInternalError(ctx, "argument 1 or argument 2 not an array!");
@@ -132,14 +125,12 @@ js_cv_corner_harris(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 
 static JSValue
 js_cv_hough_lines(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  JSInputOutputArray image;
   JSValueConst array;
   double rho, theta;
   int32_t threshold;
   double srn = 0, stn = 0, min_theta = 0, max_theta = CV_PI;
   std::vector<cv::Vec2f> lines;
   size_t i;
-
   double angle = 0, scale = 1;
   cv::Mat m;
 
@@ -147,7 +138,7 @@ js_cv_hough_lines(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
   if(argc < 5)
     return JS_EXCEPTION;
 
-  image = js_umat_or_mat(ctx, argv[0]);
+  JSImageArgument image(ctx, argv[0]);
 
   if(js_is_noarray(image) || !js_is_array(ctx, argv[1]))
     return JS_ThrowInternalError(ctx, "argument 1 or argument 2 not an array!");
@@ -187,7 +178,6 @@ js_cv_hough_lines(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
 
 static JSValue
 js_cv_hough_lines_p(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  JSInputOutputArray src, dst;
   JSValueConst array;
   double rho, theta;
   int32_t threshold;
@@ -203,8 +193,8 @@ js_cv_hough_lines_p(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   if(argc < 5)
     return JS_EXCEPTION;
 
-  src = js_umat_or_mat(ctx, argv[0]);
-  dst = js_cv_inputoutputarray(ctx, argv[1]);
+  JSImageArgument src(ctx, argv[0]);
+  JSImageArgument dst(ctx, argv[1]);
 
   if(js_is_noarray(src) || js_is_noarray(dst))
     return JS_ThrowInternalError(ctx, "src or dst not an array!");
@@ -240,11 +230,9 @@ js_cv_hough_circles(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   JSValueConst array;
   int32_t method, minRadius = 0, maxRadius = 0;
   double dp, minDist, param1 = 100, param2 = 100;
-
-  // std::vector<cv::Vec<float, 4>> circles;
   size_t i;
-
   JSValue ret;
+
   if(argc < 5)
     return JS_EXCEPTION;
 
@@ -285,13 +273,12 @@ js_cv_hough_circles(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 
 static JSValue
 js_cv_canny(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  JSInputOutputArray image, edges;
   double threshold1, threshold2;
   int32_t apertureSize = 3;
   bool L2gradient = false;
 
-  image = js_umat_or_mat(ctx, argv[0]);
-  edges = js_cv_inputoutputarray(ctx, argv[1]);
+  JSImageArgument image(ctx, argv[0]);
+  JSImageArgument edges(ctx, argv[1]);
 
   if(js_is_noarray(image) || js_is_noarray(edges))
     return JS_ThrowInternalError(ctx, "argument 1 or argument 2 not an array!");
@@ -369,11 +356,10 @@ enum {
 
 static JSValue
 js_cv_cvt_color(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
-  JSInputOutputArray src, dst;
   int32_t code = -1, dstCn = 0;
 
-  src = js_umat_or_mat(ctx, argv[0]);
-  dst = js_umat_or_mat(ctx, argv[1]);
+  JSImageArgument src(ctx, argv[0]);
+  JSImageArgument dst(ctx, argv[1]);
 
   if(js_is_noarray(src) || js_is_noarray(dst))
     return JS_ThrowInternalError(ctx, "src or dst not an array!");
@@ -422,9 +408,8 @@ js_cv_cvt_color(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
 
 static JSValue
 js_cv_equalize_hist(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  JSInputOutputArray src, dst;
-  src = js_umat_or_mat(ctx, argv[0]);
-  dst = js_umat_or_mat(ctx, argv[1]);
+  JSImageArgument src(ctx, argv[0]);
+  JSImageArgument dst(ctx, argv[1]);
 
   if(js_is_noarray(src) || js_is_noarray(dst))
     return JS_ThrowInternalError(ctx, "src or dst not an array!");
@@ -435,12 +420,11 @@ js_cv_equalize_hist(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 
 static JSValue
 js_cv_threshold(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  JSInputOutputArray src, dst;
   double thresh, maxval;
   int32_t type;
 
-  src = js_umat_or_mat(ctx, argv[0]);
-  dst = js_umat_or_mat(ctx, argv[1]);
+  JSImageArgument src(ctx, argv[0]);
+  JSImageArgument dst(ctx, argv[1]);
 
   if(js_is_noarray(src) || js_is_noarray(dst))
     return JS_ThrowInternalError(ctx, "src or dst not an array!");
@@ -455,12 +439,10 @@ js_cv_threshold(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
 
 static JSValue
 js_cv_bilateral_filter(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  JSInputOutputArray src, dst;
   double sigmaColor, sigmaSpace;
   int32_t d, borderType = cv::BORDER_DEFAULT;
-
-  src = js_umat_or_mat(ctx, argv[0]);
-  dst = js_umat_or_mat(ctx, argv[1]);
+  JSImageArgument src(ctx, argv[0]);
+  JSImageArgument dst(ctx, argv[1]);
 
   if(js_is_noarray(src) || js_is_noarray(dst))
     return JS_ThrowInternalError(ctx, "src or dst not an array!");
@@ -482,7 +464,6 @@ js_cv_calc_hist(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
   std::vector<cv::Mat> images;
   std::vector<int> channels, histSize;
   std::vector<std::vector<float>> ranges;
-
   cv::Mat *mask, *hist;
   int32_t dims;
   bool uniform = true, accumulate = false;
@@ -492,11 +473,13 @@ js_cv_calc_hist(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
 
   if(js_array_to(ctx, argv[1], channels) == -1)
     return JS_EXCEPTION;
+
   mask = js_mat_data2(ctx, argv[2]);
   hist = js_mat_data2(ctx, argv[3]);
 
   if(mask == nullptr || hist == nullptr || argc < 8)
     return JS_EXCEPTION;
+
   JS_ToInt32(ctx, &dims, argv[4]);
 
   if(js_array_to(ctx, argv[5], histSize) == -1)
@@ -507,36 +490,33 @@ js_cv_calc_hist(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
 
   if(argc > 7)
     uniform = JS_ToBool(ctx, argv[7]);
+
   if(argc > 8)
     accumulate = JS_ToBool(ctx, argv[8]);
 
-  {
-    std::vector<const float*> rangePtr(ranges.size());
+  std::vector<const float*> rangePtr(ranges.size());
 
-    for(size_t i = 0; i < ranges.size(); i++) {
-      if(ranges[i].size() < 2)
-        ranges[i].resize(2);
+  for(size_t i = 0; i < ranges.size(); i++) {
+    if(ranges[i].size() < 2)
+      ranges[i].resize(2);
 
-      rangePtr[i] = ranges[i].data();
-    }
-
-    cv::calcHist(
-        const_cast<const cv::Mat*>(images.data()), images.size(), channels.data(), *mask, *hist, dims, histSize.data(), rangePtr.data(), uniform, accumulate);
+    rangePtr[i] = ranges[i].data();
   }
+
+  cv::calcHist(
+      const_cast<const cv::Mat*>(images.data()), images.size(), channels.data(), *mask, *hist, dims, histSize.data(), rangePtr.data(), uniform, accumulate);
 
   return JS_UNDEFINED;
 }
 
 static JSValue
 js_cv_morphology(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
-  JSInputOutputArray src, dst, kernel;
   JSPointData<double> anchor = cv::Point(-1, -1);
   int32_t iterations = 1, borderType = cv::BORDER_CONSTANT;
   cv::Scalar borderValue = cv::morphologyDefaultBorderValue();
-
-  src = js_umat_or_mat(ctx, argv[0]);
-  dst = js_umat_or_mat(ctx, argv[1]);
-  kernel = js_cv_inputoutputarray(ctx, argv[2]);
+  JSImageArgument src(ctx, argv[0]);
+  JSImageArgument dst(ctx, argv[1]);
+  JSImageArgument kernel(ctx, argv[2]);
 
   if(js_is_noarray(src) || js_is_noarray(dst) || js_is_noarray(kernel) || argc < 3)
     return JS_ThrowInternalError(ctx, "src or dst or kernel not an array!");
@@ -572,18 +552,16 @@ js_cv_morphology(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
 
 static JSValue
 js_cv_morphology_ex(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-
-  JSInputOutputArray src, dst, kernel;
   JSPointData<double> anchor = cv::Point(-1, -1);
 
   int32_t op, iterations = 1, borderType = cv::BORDER_CONSTANT;
   cv::Scalar borderValue = cv::morphologyDefaultBorderValue();
 
-  src = js_umat_or_mat(ctx, argv[0]);
-  dst = js_umat_or_mat(ctx, argv[1]);
+  JSImageArgument src(ctx, argv[0]);
+  JSImageArgument dst(ctx, argv[1]);
 
   JS_ToInt32(ctx, &op, argv[2]);
-  kernel = js_umat_or_mat(ctx, argv[3]);
+  JSImageArgument kernel(ctx, argv[3]);
 
   if(js_is_noarray(src) || js_is_noarray(dst) || js_is_noarray(kernel) || argc < 3)
     return JS_ThrowInternalError(ctx, "src or dst or kernel not an array!");
@@ -613,11 +591,9 @@ js_cv_morphology_ex(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 
 static JSValue
 js_cv_median_blur(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  JSInputOutputArray src, dst;
   int32_t ksize;
-
-  src = js_umat_or_mat(ctx, argv[0]);
-  dst = js_umat_or_mat(ctx, argv[1]);
+  JSImageArgument src(ctx, argv[0]);
+  JSImageArgument dst(ctx, argv[1]);
 
   if(js_is_noarray(src) || js_is_noarray(dst))
     return JS_ThrowInternalError(ctx, "src or dst not an array!");
@@ -634,7 +610,6 @@ js_cv_median_blur(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
 static JSValue
 js_cv_lsd(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   std::vector<cv::Vec4i> lines;
-  // JSInputOutputArray lines;
   std::vector<double> width, prec, nfa;
   JSInputArray src = js_umat_or_mat(ctx, argv[0]);
 
@@ -753,12 +728,11 @@ js_cv_find_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 
 static JSValue
 js_cv_draw_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  JSInputOutputArray mat;
   JSContoursData<int> contours;
   JSColorData<double> color;
   int32_t index = -1, thickness = 1, lineType = cv::LINE_8;
 
-  mat = js_umat_or_mat(ctx, argv[0]);
+  JSImageArgument mat(ctx, argv[0]);
 
   if(js_is_noarray(mat))
     return JS_ThrowInternalError(ctx, "mat not an array!");

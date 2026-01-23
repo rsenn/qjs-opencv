@@ -17,7 +17,7 @@ JSOutputArgument::JSOutputArgument(JSContext* ctx, JSValueConst val) : JSInputOu
 JSInputArgument::JSInputArgument(JSContext* ctx, JSValueConst val) : JSInputArray(js_input_array(ctx, val)) {
 }
 
-JSImageArgument::JSImageArgument(JSContext* ctx, JSValueConst val) : JSInputArray(js_umat_or_mat(ctx, val)) {
+JSImageArgument::JSImageArgument(JSContext* ctx, JSValueConst val) : JSInputOutputArray(js_umat_or_mat(ctx, val)) {
 }
 
 void

@@ -929,7 +929,7 @@ public:
   JSInputArgument(JSContext* ctx, JSValueConst val);
 };
 
-class JSImageArgument : public JSInputArray {
+class JSImageArgument : public JSInputOutputArray {
 public:
   JSImageArgument(JSContext* ctx, JSValueConst val);
 };
