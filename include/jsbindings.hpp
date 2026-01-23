@@ -2,16 +2,15 @@
 #define JSBINDINGS_HPP
 
 #include "util.hpp"
-#include "line.hpp"
 #include <cutils.h>
 #include <quickjs.h>
 #include <cassert>
-#include <opencv2/core/cvstd_wrapper.hpp>
+/*#include <opencv2/core/cvstd_wrapper.hpp>
 #include <opencv2/core/mat.hpp>
 #include <opencv2/core/mat.inl.hpp>
 #include <opencv2/core/matx.hpp>
 #include <opencv2/core/types.hpp>
-#include <opencv2/core/utility.hpp>
+#include <opencv2/core/utility.hpp>*/
 #include <opencv2/videoio.hpp>
 #include <ostream>
 #include <array>
@@ -697,11 +696,11 @@ js_value_to(JSContext* ctx, JSValueConst value, std::vector<T>& in) {
   return js_array_to(ctx, value, in);
 }
 
-template<class T>
+/*template<class T>
 static inline int
 js_value_to(JSContext* ctx, JSValueConst value, Line<T>& in) {
   return js_array_to(ctx, value, reinterpret_cast<std::array<T, 4>*>(&in));
-}
+}*/
 
 template<class T, typename std::enable_if<std::is_integral<T>::value || std::is_floating_point<T>::value, T>::type* = nullptr>
 static inline JSValue

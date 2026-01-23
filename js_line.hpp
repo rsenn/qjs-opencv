@@ -1,6 +1,7 @@
 #ifndef JS_LINE_HPP
 #define JS_LINE_HPP
 
+#include "include/line.hpp"
 #include "js_point.hpp"
 
 /** @defgroup line

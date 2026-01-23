@@ -5,8 +5,8 @@
 #include "js_size.hpp"
 #include "js_typed_array.hpp"
 #include "jsbindings.hpp"
-#include "util.hpp"
-#include "geometry.hpp"
+#include "include/util.hpp"
+#include "include/geometry.hpp"
 #include <quickjs.h>
 #include <math.h>
 #include <cctype>

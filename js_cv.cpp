@@ -6,11 +6,11 @@
 #include "js_umat.hpp"
 #include "jsbindings.hpp"
 #include "algorithms/palette.hpp"
-#include "png_write.hpp"
-#include "png_read.hpp"
-#include "gif_write.hpp"
+#include "include/png_write.hpp"
+#include "include/png_read.hpp"
+#include "include/gif_write.hpp"
 #include <quickjs.h>
-#include "util.hpp"
+#include "include/util.hpp"
 #include <exception>
 #include <float.h>
 #include <opencv2/core/core_c.h>

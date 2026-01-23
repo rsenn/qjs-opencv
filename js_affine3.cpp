@@ -3,7 +3,7 @@
 #include "js_array.hpp"
 #include "js_typed_array.hpp"
 #include "jsbindings.hpp"
-#include "util.hpp"
+#include "include/util.hpp"
 #include <quickjs.h>
 /*#include <algorithm>
 #include <cctype>

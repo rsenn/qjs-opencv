@@ -7,7 +7,7 @@
 #include "js_contour.hpp"
 #include "jsbindings.hpp"
 #include <quickjs.h>
-#include "util.hpp"
+#include "include/util.hpp"
 #include <float.h>
 #include <algorithm>
 #include <array>

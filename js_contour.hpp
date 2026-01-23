@@ -1,7 +1,7 @@
 #ifndef JS_CONTOUR_HPP
 #define JS_CONTOUR_HPP
 
-#include "geometry.hpp"
+#include "include/geometry.hpp"
 #include "js_alloc.hpp"
 #include "js_point.hpp"
 #include "js_array.hpp"

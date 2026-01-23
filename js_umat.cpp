@@ -10,7 +10,7 @@
 #include <opencv2/core/mat.inl.hpp>
 #include <opencv2/core/types.hpp>
 #include <quickjs.h>
-#include "util.hpp"
+#include "include/util.hpp"
 #include <opencv2/core/hal/interface.h>
 #include <algorithm>
 #include <cstdio>

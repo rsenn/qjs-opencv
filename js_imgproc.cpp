@@ -1,5 +1,5 @@
 #include "cutils.h"
-#include "geometry.hpp"
+#include "include/geometry.hpp"
 #include "js_cv.hpp"
 #include "js_array.hpp"
 #include "js_contour.hpp"
@@ -21,7 +21,7 @@
 #include <opencv2/core/matx.hpp>
 #include <opencv2/core/types.hpp>
 #include <quickjs.h>
-#include "util.hpp"
+#include "include/util.hpp"
 #include <cassert>
 #include <stddef.h>
 #include <array>

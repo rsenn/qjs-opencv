@@ -8,7 +8,7 @@
 #include "algorithms/skeletonization.hpp"
 #include "algorithms/trace_skeleton.hpp"
 #include <quickjs.h>
-#include "util.hpp"
+#include "include/util.hpp"
 
 using std::array;
 using std::cout;

@@ -1,6 +1,6 @@
 #include "js_contour.hpp"
 #include "cutils.h"
-#include "geometry.hpp"
+#include "include/geometry.hpp"
 #include "js_alloc.hpp"
 #include "js_array.hpp"
 #include "js_mat.hpp"
@@ -11,9 +11,9 @@
 #include "js_typed_array.hpp"
 #include "js_umat.hpp"
 #include "jsbindings.hpp"
-#include "psimpl.hpp"
+#include "include/psimpl.hpp"
 #include <quickjs.h>
-#include "util.hpp"
+#include "include/util.hpp"
 #include <opencv2/core/hal/interface.h>
 #include <stddef.h>
 #include <algorithm>

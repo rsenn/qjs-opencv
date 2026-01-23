@@ -32,7 +32,7 @@
 #include <utility>
 #include <vector>
 #include <cassert>
-#include "util.hpp"
+#include "include/util.hpp"
 
 enum {
   PROP_COLS = 0,

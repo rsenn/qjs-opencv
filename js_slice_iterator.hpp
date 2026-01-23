@@ -4,7 +4,7 @@
 #include "js_typed_array.hpp"
 #include "jsbindings.hpp"
 #include <quickjs.h>
-#include "util.hpp"
+#include "include/util.hpp"
 #include <stddef.h>
 #include <cstdint>
 

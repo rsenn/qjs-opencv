@@ -5,7 +5,7 @@
 #include "js_array.hpp"
 #include "js_typed_array.hpp"
 #include "jsbindings.hpp"
-#include "line.hpp"
+#include "include/line.hpp"
 #include <quickjs.h>
 #include <algorithm>
 #include <cctype>
