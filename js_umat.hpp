@@ -175,6 +175,7 @@ js_cv_outputarray(JSContext* ctx, JSValueConst value) {
 
   if((mat = js_mat_data_nothrow(value)))
     return JSOutputArray(*mat);
+  
   if((umat = js_umat_data(value)))
     return JSOutputArray(*umat);
 
@@ -206,30 +207,11 @@ js_cv_outputarray(JSContext* ctx, JSValueConst value) {
   return cv::noArray();
 }
 
-/*template<typename  A =JSInputOutputArray>
- class JSOutputArg   {
+/*template<typename A = JSInputOutputArray> class JSOutputArg : public A {
 public:
-  JSOutputArg() : array() {}
+  JSOutputArg() : A() {}
 
-template<typename T>
-  JSOutputArray(const T& arg) : array(arg) {}
-template<typename T>
-  JSOutputArray( T* ptr, size_t size) : array(ptr,size) {}
-
-  A array;
-
+  template<typename B> JSOutputArg(const B& arg) : A(arg) {}
 };*/
 
-class JSInputArg {
-public:
-  JSInputArray m_array;
-
-  JSInputArg(JSContext* ctx, JSValueConst arg) : m_array(js_input_array(ctx, arg)) {}
-  /* JSInputArg() : array() {}
-
- template<typename T>
-   JSInputArg(const T& arg) : array(arg) {}
- template<typename T>
-   JSInputArg( T* ptr, size_t size) : array(ptr,size) {}*/
-};
 #endif /* defined(JS_UMAT_HPP) */

@@ -4,6 +4,8 @@
 #include "include/js_array.hpp"
 #include "js_keypoint.hpp"
 #include "js_umat.hpp"
+#include "js_filenode.hpp"
+#include "js_filestorage.hpp"
 #include "jsbindings.hpp"
 #include <quickjs.h>
 #include <cstring>
@@ -740,15 +742,15 @@ js_feature2d_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
   return obj;
 }*/
 
-enum { METHOD_CLEAR = 0, METHOD_COMPUTE, METHOD_DETECT, METHOD_WRITE, METHOD_READ };
+enum { METHOD_CLEAR = 0, METHOD_COMPUTE, METHOD_DETECT, METHOD_DETECTANDCOMPUTE, METHOD_WRITE, METHOD_READ };
 
 static JSValue
 js_feature2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSFeature2DData* s = static_cast<JSFeature2DData*>(JS_GetOpaque2(ctx, this_val, js_feature2d_class_id));
   JSValue ret = JS_UNDEFINED;
   cv::Feature2D* ptr = s->get();
-  try {
 
+  try {
     switch(magic) {
       case METHOD_CLEAR: {
         (*s)->clear();
@@ -780,16 +782,60 @@ js_feature2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
         break;
       }
 
+      case METHOD_DETECTANDCOMPUTE: {
+        JSInputOutputArray image = js_umat_or_mat(ctx, argv[0]);
+        JSInputArray mask = cv::noArray();
+        std::vector<JSKeyPointData> keypoints;
+        JSOutputArray descriptors = cv::noArray();
+        BOOL useProvidedKeypoints = FALSE;
+
+        if(argc > 1)
+          mask = js_input_array(ctx, argv[1]);
+
+        if(argc > 3)
+          descriptors = js_cv_outputarray(ctx, argv[3]);
+
+        if(argc > 4)
+          js_value_to(ctx, argv[4], useProvidedKeypoints);
+
+        ptr->detectAndCompute(image, mask, keypoints, descriptors, useProvidedKeypoints);
+        break;
+      }
+
       case METHOD_WRITE: {
-        std::string str;
-        js_value_to(ctx, argv[0], str);
-        ptr->write(str);
+        JSFileStorageData* fs;
+
+        if(JS_IsString(argv[0])) {
+          std::string filename;
+          js_value_to(ctx, argv[0], filename);
+          ptr->write(filename);
+        } else if((fs = js_filestorage_data(argv[0]))) {
+
+          if(argc > 1) {
+            std::string name;
+            js_value_to(ctx, argv[1], name);
+
+            ptr->write(*fs, name);
+          } else {
+            ptr->write(*fs);
+          }
+        }
+
+        break;
       }
 
       case METHOD_READ: {
-        std::string str;
-        js_value_to(ctx, argv[0], str);
-        ptr->read(str);
+        JSFileNodeData* fn;
+
+        if(JS_IsString(argv[0])) {
+          std::string filename;
+          js_value_to(ctx, argv[0], filename);
+          ptr->read(filename);
+        } else if((fn = js_filenode_data(argv[0]))) {
+          ptr->read(*fn);
+        }
+
+        break;
       }
     }
   } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
@@ -813,6 +859,7 @@ enum {
 static JSValue
 js_feature2d_getter(JSContext* ctx, JSValueConst this_val, int magic) {
   JSFeature2DData* s;
+
   JSValue ret = JS_UNDEFINED;
 
   if(!(s = js_feature2d_data(this_val)))
@@ -820,6 +867,11 @@ js_feature2d_getter(JSContext* ctx, JSValueConst this_val, int magic) {
   try {
 
     switch(magic) {
+      case PROP_EMPTY: {
+        ret = js_value_from(ctx, (*s)->empty());
+        break;
+      }
+
       case PROP_DEFAULT_NAME: {
         std::string name = (*s)->getDefaultName();
 
@@ -916,6 +968,7 @@ const JSCFunctionListEntry js_feature2d_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("clear", 0, js_feature2d_method, METHOD_CLEAR),
     JS_CFUNC_MAGIC_DEF("compute", 2, js_feature2d_method, METHOD_COMPUTE),
     JS_CFUNC_MAGIC_DEF("detect", 2, js_feature2d_method, METHOD_DETECT),
+    JS_CFUNC_MAGIC_DEF("detectAndCompute", 4, js_feature2d_method, METHOD_DETECTANDCOMPUTE),
     JS_CFUNC_MAGIC_DEF("write", 1, js_feature2d_method, METHOD_WRITE),
     JS_CFUNC_MAGIC_DEF("read", 1, js_feature2d_method, METHOD_READ),
     JS_CGETSET_MAGIC_DEF("empty", js_feature2d_getter, 0, PROP_EMPTY),

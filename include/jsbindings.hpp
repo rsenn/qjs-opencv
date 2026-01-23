@@ -915,4 +915,14 @@ js_function_invoke(JSContext* ctx, JSValueConst this_obj, const char* method, in
  *  @}
  */
 
+
+class JSOutputArgument {
+public:
+  JSOutputArgument(JSContext*ctx, JSValueConst val) : m_ctx(ctx),m_val(val) {}
+
+protected:
+  JSContext*m_ctx;
+  JSValue m_val;
+}
+
 #endif

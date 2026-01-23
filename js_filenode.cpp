@@ -27,6 +27,153 @@ js_filenode_iterator_new(JSContext* ctx, JSValueConst proto, const JSFileNodeIte
   return js_filenode_iterator_wrap(ctx, proto, fn);
 }
 
+JSValue
+js_filenode_iterator_new(JSContext* ctx, const JSFileNodeIteratorData& other) {
+  return js_filenode_iterator_new(ctx, filenode_iterator_proto, other);
+}
+
+static JSValue
+js_filenode_iterator_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
+  JSFileNodeData* fn;
+  JSFileNodeIteratorData *fni, *other;
+  JSValue obj = JS_UNDEFINED, proto;
+
+  if(!(fni = js_allocate<JSFileNodeIteratorData>(ctx)))
+    return JS_EXCEPTION;
+
+  if(argc == 0) {
+    new(fni) JSFileNodeIteratorData();
+  } else if((fn = js_filenode_data(argv[0]))) {
+    BOOL seek_end = FALSE;
+    if(argc > 1)
+      js_value_to(ctx, argv[1], seek_end);
+
+    new(fni) JSFileNodeIteratorData(*fn, seek_end);
+  } else if((other = reinterpret_cast<JSFileNodeIteratorData*>(JS_GetOpaque(argv[0], js_filenode_iterator_class_id)))) {
+    new(fni) JSFileNodeIteratorData(*other);
+  } else {
+    JS_ThrowTypeError(ctx, "argument 1 must be FileNode or FileNodeIterator");
+    goto fail;
+  }
+
+  /* using new_target to get the prototype is necessary when the class is extended. */
+  proto = JS_GetPropertyStr(ctx, new_target, "prototype");
+  if(JS_IsException(proto))
+    goto fail;
+
+  obj = JS_NewObjectProtoClass(ctx, proto, js_filenode_iterator_class_id);
+  JS_FreeValue(ctx, proto);
+
+  if(JS_IsException(obj))
+    goto fail;
+
+  JS_SetOpaque(obj, fni);
+
+  return obj;
+
+fail:
+  js_deallocate(ctx, fni);
+  JS_FreeValue(ctx, obj);
+  return JS_EXCEPTION;
+}
+
+enum {
+  FUNCTION_NOTEQUAL,
+  FUNCTION_EQUAL,
+  FUNCTION_LESSTHAN,
+  FUNCTION_DIFFERENCE,
+};
+
+static JSValue
+js_filenode_iterator_function(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  JSFileNodeIteratorData *fni1, *fni2;
+  JSValue ret = JS_UNDEFINED;
+
+  if(!(fni1 = reinterpret_cast<JSFileNodeIteratorData*>(JS_GetOpaque2(ctx, argv[0], js_filenode_iterator_class_id))))
+    return JS_EXCEPTION;
+
+  if(!(fni2 = reinterpret_cast<JSFileNodeIteratorData*>(JS_GetOpaque2(ctx, argv[1], js_filenode_iterator_class_id))))
+    return JS_EXCEPTION;
+
+  switch(magic) {
+    case FUNCTION_NOTEQUAL: {
+      ret = JS_NewBool(ctx, *fni1 != *fni2);
+      break;
+    }
+    case FUNCTION_EQUAL: {
+      ret = JS_NewBool(ctx, *fni1 == *fni2);
+      break;
+    }
+    case FUNCTION_LESSTHAN: {
+      ret = JS_NewBool(ctx, *fni1 < *fni2);
+      break;
+    }
+    case FUNCTION_DIFFERENCE: {
+      ret = JS_NewBool(ctx, *fni1 - *fni2);
+      break;
+    }
+  }
+
+  return ret;
+}
+
+enum {
+  METHOD_EQUALTO,
+  METHOD_PREINC,
+  METHOD_POSTINC,
+  METHOD_ADVANCE,
+  METHOD_REMAINING,
+};
+
+static JSValue
+js_filenode_iterator_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  JSFileNodeIteratorData* fn;
+  JSValue ret = JS_UNDEFINED;
+
+  if(!(fn = reinterpret_cast<JSFileNodeIteratorData*>(JS_GetOpaque2(ctx, this_val, js_filenode_iterator_class_id))))
+    return JS_EXCEPTION;
+
+  switch(magic) {
+    case METHOD_EQUALTO: {
+      JSFileNodeIteratorData* other;
+
+      if(!(other = reinterpret_cast<JSFileNodeIteratorData*>(JS_GetOpaque(argv[0], js_filenode_iterator_class_id))))
+        return JS_ThrowTypeError(ctx, "argument 1 must be a FileNodeIterator");
+
+      ret = JS_NewBool(ctx, fn->equalTo(*other));
+      break;
+    }
+
+    case METHOD_PREINC: {
+      fn->operator++();
+      ret = JS_DupValue(ctx, this_val);
+      break;
+    }
+
+    case METHOD_POSTINC: {
+      JSFileNodeIteratorData before = fn->operator++(0);
+      ret = js_filenode_iterator_new(ctx, before);
+      break;
+    }
+
+    case METHOD_ADVANCE: {
+      int32_t ofs = 0;
+      if(argc > 0)
+        js_value_to(ctx, argv[0], ofs);
+
+      fn->operator+=(ofs);
+      ret = JS_DupValue(ctx, this_val);
+      break;
+    }
+
+    case METHOD_REMAINING: {
+      ret = js_value_from(ctx, fn->remaining());
+      break;
+    }
+  }
+
+  return ret;
+}
 void
 js_filenode_iterator_finalizer(JSRuntime* rt, JSValue val) {
   JSFileNodeIteratorData* fni;
@@ -45,10 +192,21 @@ JSClassDef js_filenode_iterator_class = {
 };
 
 const JSCFunctionListEntry js_filenode_iterator_proto_funcs[] = {
+    JS_CFUNC_MAGIC_DEF("equalTo", 1, js_filenode_iterator_method, METHOD_EQUALTO),
+    JS_CFUNC_MAGIC_DEF("preInc", 0, js_filenode_iterator_method, METHOD_PREINC),
+    JS_CFUNC_MAGIC_DEF("postInc", 0, js_filenode_iterator_method, METHOD_POSTINC),
+    JS_CFUNC_MAGIC_DEF("advance", 1, js_filenode_iterator_method, METHOD_ADVANCE),
+    JS_CFUNC_MAGIC_DEF("remaining", 0, js_filenode_iterator_method, METHOD_REMAINING),
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "FileNodeIterator", JS_PROP_CONFIGURABLE),
 };
 
-const JSCFunctionListEntry js_filenode_iterator_static_funcs[] = {};
+const JSCFunctionListEntry js_filenode_iterator_static_funcs[] = {
+    JS_CFUNC_MAGIC_DEF("notEqual", 2, js_filenode_iterator_function, FUNCTION_NOTEQUAL),
+    JS_CFUNC_MAGIC_DEF("difference", 2, js_filenode_iterator_function, FUNCTION_DIFFERENCE),
+    JS_CFUNC_MAGIC_DEF("lessThan", 2, js_filenode_iterator_function, FUNCTION_LESSTHAN),
+    JS_CFUNC_MAGIC_DEF("equal", 2, js_filenode_iterator_function, FUNCTION_EQUAL),
+
+};
 
 static JSValue
 js_filenode_wrap(JSContext* ctx, JSValueConst proto, JSFileNodeData* fn) {
@@ -77,7 +235,7 @@ js_filenode_new(JSContext* ctx, JSValueConst proto, const JSFileNodeData& other)
 
 static JSValue
 js_filenode_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
-  JSFileNodeData* fn;
+  JSFileNodeData *fn, *other;
   JSValue obj = JS_UNDEFINED, proto;
 
   if(!(fn = js_allocate<JSFileNodeData>(ctx)))
@@ -85,6 +243,8 @@ js_filenode_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSVal
 
   if(argc == 0) {
     new(fn) JSFileNodeData();
+  } else if((other = js_filenode_data(argv[0]))) {
+    new(fn) JSFileNodeData(*other);
   } else {
 
     JS_ThrowTypeError(ctx, "arguments expected");
@@ -232,6 +392,7 @@ js_filenode_global(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
 
   switch(magic) {
     case GLOBAL_READ: {
+
       break;
     }
   }
@@ -578,7 +739,7 @@ js_filenode_init(JSContext* ctx, JSModuleDef* m) {
   JS_SetPropertyFunctionList(ctx, filenode_iterator_proto, js_filenode_iterator_proto_funcs, countof(js_filenode_iterator_proto_funcs));
   JS_SetClassProto(ctx, js_filenode_iterator_class_id, filenode_iterator_proto);
 
-  filenode_iterator_class = JS_NewObjectProto(ctx, JS_NULL);
+  filenode_iterator_class = JS_NewCFunction2(ctx, js_filenode_iterator_constructor, "FileNodeIterator", 0, JS_CFUNC_constructor, 0);
   /* set proto.constructor and ctor.prototype */
   JS_SetConstructor(ctx, filenode_iterator_class, filenode_iterator_proto);
   JS_SetPropertyFunctionList(ctx, filenode_iterator_class, js_filenode_iterator_static_funcs, countof(js_filenode_iterator_static_funcs));

@@ -29,20 +29,24 @@ template<> class js_array<JSKeyPointData> {
 public:
   static int64_t to_vector(JSContext* ctx, JSValueConst arr, std::vector<JSKeyPointData>& out) {
     int64_t i, n;
-    JSValue len;
+
     if(!js_is_array(ctx, arr))
       return -1;
-    len = JS_GetPropertyStr(ctx, arr, "length");
+
+    JSValue len = JS_GetPropertyStr(ctx, arr, "length");
     JS_ToInt64(ctx, &n, len);
     out.reserve(out.size() + n);
+
     for(i = 0; i < n; i++) {
       JSKeyPointData* kp;
       JSValue item = JS_GetPropertyUint32(ctx, arr, (uint32_t)i);
+
       if(!(kp = js_keypoint_data2(ctx, item))) {
         JS_FreeValue(ctx, item);
         out.clear();
         return -1;
       }
+
       out.push_back(*kp);
       JS_FreeValue(ctx, item);
     }
@@ -52,6 +56,7 @@ public:
 
   template<class Iterator> static size_t copy_sequence(JSContext* ctx, JSValueConst arr, const Iterator& start, const Iterator& end) {
     size_t i = 0;
+
     for(Iterator it = start; it != end; ++it) {
       JS_SetPropertyUint32(ctx, arr, i, js_keypoint_new(ctx, *it));
       ++i;

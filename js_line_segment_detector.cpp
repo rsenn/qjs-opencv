@@ -118,7 +118,6 @@ js_line_segment_detector_compare_segments(JSContext* ctx, JSValueConst this_val,
 static JSValue
 js_line_segment_detector_detect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSLineSegmentDetector* s;
-  JSInputArray image;
   std::vector<cv::Vec4f> lines;
   std::vector<float> width, prec;
   std::vector<int32_t> nfa;
@@ -131,7 +130,7 @@ js_line_segment_detector_detect(JSContext* ctx, JSValueConst this_val, int argc,
   if(copyArray)
     linearr = JSOutputArray(lines);
 
-  image = js_umat_or_mat(ctx, argv[0]);
+  JSInputArray image = js_umat_or_mat(ctx, argv[0]);
 
   try {
     (*s)->detect(image, linearr, width, prec, nfa);
@@ -168,15 +167,13 @@ js_line_segment_detector_detect(JSContext* ctx, JSValueConst this_val, int argc,
 static JSValue
 js_line_segment_detector_draw_segments(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSLineSegmentDetector* s;
-  JSInputOutputArray image;
-  JSInputArray linearr;
   std::vector<cv::Vec4f> lines;
 
   if((s = js_line_segment_detector_data2(ctx, this_val)) == nullptr)
     return JS_EXCEPTION;
 
-  image = js_umat_or_mat(ctx, argv[0]);
-  linearr = js_input_array(ctx, argv[1]);
+  JSInputOutputArray image = js_umat_or_mat(ctx, argv[0]);
+  JSInputArray linearr = js_input_array(ctx, argv[1]);
 
   if(!linearr.isMat() && !linearr.isVector()) {
     linearr = JSInputArray(lines);

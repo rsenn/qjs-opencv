@@ -218,12 +218,11 @@ public:
 
   static int64_t to_vector(JSContext* ctx, JSValueConst arr, contours_type& out) {
     int64_t i, n;
-    JSValue len;
 
     if(!js_is_array(ctx, arr))
       return -1;
 
-    len = JS_GetPropertyStr(ctx, arr, "length");
+    JSValue len = JS_GetPropertyStr(ctx, arr, "length");
     JS_ToInt64(ctx, &n, len);
     out.reserve(out.size() + n);
 

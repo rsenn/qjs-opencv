@@ -1,4 +1,4 @@
-import { HoughCircles,HOUGH_STANDARD,HOUGH_PROBABILISTIC,HOUGH_MULTI_SCALE,HOUGH_GRADIENT_ALT, HOUGH_GRADIENT, drawCircle, threshold, THRESH_BINARY_INV, skeletonization, COLOR_BGR2Lab, COLOR_GRAY2BGR, CV_8UC1, FastLineDetector, LINE_AA, Mat, NORM_MINMAX, cvtColor, equalizeHist, imread, imshow, drawLine, normalize, split, waitKey, } from 'opencv';
+import { HoughCircles, HOUGH_STANDARD, HOUGH_PROBABILISTIC, HOUGH_MULTI_SCALE, HOUGH_GRADIENT_ALT, HOUGH_GRADIENT, drawCircle, threshold, THRESH_BINARY_INV, skeletonization, COLOR_BGR2Lab, COLOR_GRAY2BGR, CV_8UC1, FastLineDetector, LINE_AA, Mat, NORM_MINMAX, cvtColor, equalizeHist, imread, imshow, drawLine, normalize, split, waitKey, } from 'opencv';
 
 function main(...args) {
   let lsd = new FastLineDetector(5, 1.414213562, 50, 50, 0, false);
@@ -16,13 +16,13 @@ function main(...args) {
 
   threshold(gray, gray2, 100, 255, THRESH_BINARY_INV);
 
-  skeletonization(gray2,skel);
+  skeletonization(gray2, skel);
 
   let lines = new Mat();
   lsd.detect(skel, lines);
 
   let circles = new Mat();
-  HoughCircles(gray2, circles, HOUGH_GRADIENT,2, image.rows /4, 200,100);
+  HoughCircles(gray2, circles, HOUGH_GRADIENT, 2, image.rows / 4, 200, 100);
   console.log('lines', lines.rows);
   console.log('circles', [...circles]);
 
