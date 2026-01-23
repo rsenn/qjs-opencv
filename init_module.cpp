@@ -104,7 +104,9 @@ js_opencv_init(JSContext* ctx, JSModuleDef* m) {
 #endif
   js_bg_subtractor_init(ctx, m);
   js_white_balancer_init(ctx, m);
+#ifdef USE_BARCODE
   js_barcode_detector_init(ctx, m);
+#endif
   js_calib3d_init(ctx, m);
   js_algorithms_init(ctx, m);
 #ifdef HAVE_OPENCV2_XIMGPROC_HPP
@@ -161,7 +163,9 @@ JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
 #endif
   js_bg_subtractor_export(ctx, m);
   js_white_balancer_export(ctx, m);
+#ifdef USE_BARCODE
   js_barcode_detector_export(ctx, m);
+#endif
   js_calib3d_export(ctx, m);
   js_algorithms_export(ctx, m);
 #ifdef HAVE_OPENCV2_XIMGPROC_HPP
