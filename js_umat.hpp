@@ -2,7 +2,7 @@
 #define JS_UMAT_HPP
 
 #include "js_alloc.hpp"
-#include "js_array.hpp"
+#include "include/js_array.hpp"
 #include "js_contour.hpp"
 #include "js_line.hpp"
 #include "js_mat.hpp"

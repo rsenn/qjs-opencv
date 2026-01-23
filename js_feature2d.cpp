@@ -1,7 +1,7 @@
 #include "cutils.h"
 #include "js_cv.hpp"
 #include "js_alloc.hpp"
-#include "js_array.hpp"
+#include "include/js_array.hpp"
 #include "js_keypoint.hpp"
 #include "js_umat.hpp"
 #include "jsbindings.hpp"

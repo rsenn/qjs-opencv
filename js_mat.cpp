@@ -2,7 +2,7 @@
 #include "cutils.h"
 #include "js_cv.hpp"
 #include "js_alloc.hpp"
-#include "js_array.hpp"
+#include "include/js_array.hpp"
 #include "js_point.hpp"
 #include "js_rect.hpp"
 #include "js_size.hpp"

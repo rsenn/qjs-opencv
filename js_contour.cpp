@@ -2,7 +2,7 @@
 #include "cutils.h"
 #include "include/geometry.hpp"
 #include "js_alloc.hpp"
-#include "js_array.hpp"
+#include "include/js_array.hpp"
 #include "js_mat.hpp"
 #include "js_point.hpp"
 #include "js_point_iterator.hpp"

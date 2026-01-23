@@ -1,6 +1,6 @@
 #include "js_affine3.hpp"
 #include "js_alloc.hpp"
-#include "js_array.hpp"
+#include "include/js_array.hpp"
 #include "js_typed_array.hpp"
 #include "jsbindings.hpp"
 #include "include/util.hpp"

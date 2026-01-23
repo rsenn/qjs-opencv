@@ -1,6 +1,6 @@
 #include "js_cv.hpp"
 #include "cutils.h"
-#include "js_array.hpp"
+#include "include/js_array.hpp"
 #include "js_mat.hpp"
 #include "js_point.hpp"
 #include "js_umat.hpp"

@@ -1,6 +1,6 @@
 #include "js_size.hpp"
 #include "js_alloc.hpp"
-#include "js_array.hpp"
+#include "include/js_array.hpp"
 #include "js_rect.hpp"
 #include "jsbindings.hpp"
 #include <quickjs.h>

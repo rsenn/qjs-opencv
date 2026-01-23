@@ -1,6 +1,6 @@
 #include "js_alloc.hpp"
 #include "js_point.hpp"
-#include "js_array.hpp"
+#include "include/js_array.hpp"
 #include "js_keypoint.hpp"
 #include "jsbindings.hpp"
 #include <opencv2/core/types.hpp>

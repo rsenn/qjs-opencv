@@ -1,4 +1,7 @@
 #include "js_filestorage.hpp"
+#include "js_filenode.hpp"
+#include "js_mat.hpp"
+#include "include/js_array.hpp"
 #include "include/js_alloc.hpp"
 #include "include/util.hpp"
 
@@ -18,7 +21,6 @@ js_filestorage_constructor(JSContext* ctx, JSValueConst new_target, int argc, JS
   if(argc == 0) {
     new(fs) JSFileStorageData();
   } else {
-
     const char *filename, *encoding;
     int32_t flags = 0;
 
@@ -94,13 +96,27 @@ js_filestorage_set(JSContext* ctx, JSValueConst this_val, JSValueConst val, int 
   return JS_UNDEFINED;
 }
 
-enum {};
+enum { FUNCTION_GETDEFAULTOBJECTNAME };
 
 static JSValue
 js_filestorage_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSValue ret = JS_EXCEPTION;
 
-  switch(magic) {}
+  switch(magic) {
+    case FUNCTION_GETDEFAULTOBJECTNAME: {
+      const char* filename;
+
+      if(!(filename = JS_ToCString(ctx, argv[0])))
+        return JS_ThrowTypeError(ctx, "argument 1 must be a string");
+
+      std::string str = cv::FileStorage::getDefaultObjectName(filename);
+
+      JS_FreeCString(ctx, filename);
+
+      ret = JS_NewString(ctx, str.c_str());
+      break;
+    }
+  }
 
   return ret;
 }
@@ -131,18 +147,41 @@ js_filestorage_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCo
 
   switch(magic) {
     case METHOD_OPEN: {
+      const char *filename, *encoding;
+      int32_t flags = 0;
+
+      if(!(filename = JS_ToCString(ctx, argv[0])))
+        return JS_ThrowTypeError(ctx, "argument 1 must be a string");
+
+      if(argc > 1)
+        JS_ToInt32(ctx, &flags, argv[1]);
+
+      if(argc > 2)
+        encoding = JS_ToCString(ctx, argv[2]);
+
+      ret = JS_NewBool(ctx, fs->open(filename, flags, encoding));
+
+      JS_FreeCString(ctx, filename);
+      if(encoding)
+        JS_FreeCString(ctx, encoding);
+
       break;
     }
 
     case METHOD_RELEASE: {
+      fs->release();
       break;
     }
 
     case METHOD_RELEASEANDGETSTRING: {
+      std::string str = fs->releaseAndGetString();
+
+      ret = JS_NewString(ctx, str.c_str());
       break;
     }
 
     case METHOD_ENDWRITESTRUCT: {
+      fs->endWriteStruct();
       break;
     }
 
@@ -151,6 +190,7 @@ js_filestorage_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCo
     }
 
     case METHOD_GETFORMAT: {
+      ret = JS_NewInt32(ctx, fs->getFormat());
       break;
     }
 
@@ -166,6 +206,7 @@ js_filestorage_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCo
     }
 
     case METHOD_ISOPENED: {
+      ret = JS_NewBool(ctx, fs->isOpened());
       break;
     }
 
@@ -174,18 +215,90 @@ js_filestorage_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCo
     }
 
     case METHOD_STARTWRITESTRUCT: {
+      const char *name, *typeName;
+      int32_t flags = 0;
+
+      if(!(name = JS_ToCString(ctx, argv[0])))
+        return JS_ThrowTypeError(ctx, "argument 1 must be a string");
+
+      if(argc > 1)
+        JS_ToInt32(ctx, &flags, argv[1]);
+
+      if(argc > 2)
+        typeName = JS_ToCString(ctx, argv[2]);
+
+      fs->startWriteStruct(name, flags, typeName);
+
+      JS_FreeCString(ctx, name);
+      if(typeName)
+        JS_FreeCString(ctx, typeName);
       break;
     }
 
     case METHOD_WRITE: {
+      const char* name;
+
+      if(!(name = JS_ToCString(ctx, argv[0])))
+        return JS_ThrowTypeError(ctx, "argument 1 must be a string");
+
+      JSMatData* m;
+
+      if(js_is_array(ctx, argv[1])) {
+        std::vector<std::string> strv;
+
+        js_array_to(ctx, argv[1], strv);
+
+        fs->write(name, strv);
+      } else if((m = js_mat_data(argv[1]))) {
+        fs->write(name, *m);
+
+      } else if(JS_IsNumber(argv[1])) {
+        double val;
+        JS_ToFloat64(ctx, &val, argv[1]);
+
+        fs->write(name, val);
+      } else if(JS_IsString(argv[1])) {
+        const char* str;
+
+        if(!(str = JS_ToCString(ctx, argv[1])))
+          return JS_ThrowTypeError(ctx, "argument 1 must be a string");
+
+        fs->write(name, str);
+      }
+
       break;
     }
 
     case METHOD_WRITECOMMENT: {
+      const char* comment;
+
+      if(!(comment = JS_ToCString(ctx, argv[0])))
+        return JS_ThrowTypeError(ctx, "argument 1 must be a string");
+
+      BOOL append = FALSE;
+
+      if(argc > 1)
+        append = JS_ToBool(ctx, argv[1]);
+
+      fs->writeComment(comment, append);
       break;
     }
 
     case METHOD_WRITERAW: {
+      const char* fmt;
+
+      if(!(fmt = JS_ToCString(ctx, argv[0])))
+        return JS_ThrowTypeError(ctx, "argument 1 must be a string");
+
+      uint8_t* buf;
+      size_t len;
+
+      if(!(buf = JS_GetArrayBuffer(ctx, &len, argv[1]))) {
+        JS_FreeCString(ctx, fmt);
+        return JS_ThrowTypeError(ctx, "argument 2 must be an ArrayBuffer");
+      }
+
+      fs->writeRaw(fmt, buf, len);
       break;
     }
   }

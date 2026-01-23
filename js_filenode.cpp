@@ -19,23 +19,8 @@ js_filenode_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSVal
     new(fs) JSFileNodeData();
   } else {
 
-    const char *filename, *encoding;
-    int32_t flags = 0;
-
-    if(!(filename = JS_ToCString(ctx, argv[0])))
-      goto fail;
-
-    if(argc > 1)
-      JS_ToInt32(ctx, &flags, argv[1]);
-
-    if(argc > 2)
-      encoding = JS_ToCString(ctx, argv[2]);
-
-    new(fs) JSFileNodeData(filename, flags, encoding);
-
-    JS_FreeCString(ctx, filename);
-    if(encoding)
-      JS_FreeCString(ctx, encoding);
+    JS_ThrowTypeError(ctx, "arguments expected");
+    goto fail;
   }
 
   /* using new_target to get the prototype is necessary when the class is extended. */
@@ -94,13 +79,35 @@ js_filenode_set(JSContext* ctx, JSValueConst this_val, JSValueConst val, int mag
   return JS_UNDEFINED;
 }
 
-enum {};
+enum {
+  FUNCTION_ISCOLLECTION,
+  FUNCTION_ISEMPTYCOLLECTION,
+  FUNCTION_ISFLOW,
+  FUNCTION_ISMAP,
+  FUNCTION_ISSEQ,
+};
 
 static JSValue
 js_filenode_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSValue ret = JS_EXCEPTION;
 
-  switch(magic) {}
+  switch(magic) {
+    case FUNCTION_ISCOLLECTION: {
+      break;
+    }
+    case FUNCTION_ISEMPTYCOLLECTION: {
+      break;
+    }
+    case FUNCTION_ISFLOW: {
+      break;
+    }
+    case FUNCTION_ISMAP: {
+      break;
+    }
+    case FUNCTION_ISSEQ: {
+      break;
+    }
+  }
 
   return ret;
 }
@@ -235,30 +242,30 @@ JSClassDef js_filenode_class = {
 };
 
 const JSCFunctionListEntry js_filenode_proto_funcs[] = {
-    JS_CFUNC_MAGIC_DEF("begin", 0, js_filestorage_method, METHOD_BEGIN),
-    JS_CFUNC_MAGIC_DEF("empty", 0, js_filestorage_method, METHOD_EMPTY),
-    JS_CFUNC_MAGIC_DEF("end", 0, js_filestorage_method, METHOD_END),
-    JS_CFUNC_MAGIC_DEF("isInt", 0, js_filestorage_method, METHOD_ISINT),
-    JS_CFUNC_MAGIC_DEF("isMap", 0, js_filestorage_method, METHOD_ISMAP),
-    JS_CFUNC_MAGIC_DEF("isNamed", 0, js_filestorage_method, METHOD_ISNAMED),
-    JS_CFUNC_MAGIC_DEF("isNone", 0, js_filestorage_method, METHOD_ISNONE),
-    JS_CFUNC_MAGIC_DEF("isReal", 0, js_filestorage_method, METHOD_ISREAL),
-    JS_CFUNC_MAGIC_DEF("isSeq", 0, js_filestorage_method, METHOD_ISSEQ),
-    JS_CFUNC_MAGIC_DEF("isString", 0, js_filestorage_method, METHOD_ISSTRING),
-    JS_CFUNC_MAGIC_DEF("keys", 0, js_filestorage_method, METHOD_KEYS),
-    JS_CFUNC_MAGIC_DEF("mat", 0, js_filestorage_method, METHOD_MAT),
-    JS_CFUNC_MAGIC_DEF("name", 0, js_filestorage_method, METHOD_NAME),
-    JS_CFUNC_MAGIC_DEF("assign", 1, js_filestorage_method, METHOD_ASSIGN),
-    JS_CFUNC_MAGIC_DEF("at", 1, js_filestorage_method, METHOD_AT),
-    JS_CFUNC_MAGIC_DEF("getNode", 1, js_filestorage_method, METHOD_GETNODE),
-    JS_CFUNC_MAGIC_DEF("ptr", 0, js_filestorage_method, METHOD_PTR),
-    JS_CFUNC_MAGIC_DEF("rawSize", 0, js_filestorage_method, METHOD_RAWSIZE),
-    JS_CFUNC_MAGIC_DEF("readRaw", 0, js_filestorage_method, METHOD_READRAW),
-    JS_CFUNC_MAGIC_DEF("real", 0, js_filestorage_method, METHOD_REAL),
-    JS_CFUNC_MAGIC_DEF("setValue", 0, js_filestorage_method, METHOD_SETVALUE),
-    JS_CFUNC_MAGIC_DEF("size", 0, js_filestorage_method, METHOD_SIZE),
-    JS_CFUNC_MAGIC_DEF("string", 0, js_filestorage_method, METHOD_STRING),
-    JS_CFUNC_MAGIC_DEF("type", 0, js_filestorage_method, METHOD_TYPE),
+    JS_CFUNC_MAGIC_DEF("begin", 0, js_filenode_method, METHOD_BEGIN),
+    JS_CFUNC_MAGIC_DEF("empty", 0, js_filenode_method, METHOD_EMPTY),
+    JS_CFUNC_MAGIC_DEF("end", 0, js_filenode_method, METHOD_END),
+    JS_CFUNC_MAGIC_DEF("isInt", 0, js_filenode_method, METHOD_ISINT),
+    JS_CFUNC_MAGIC_DEF("isMap", 0, js_filenode_method, METHOD_ISMAP),
+    JS_CFUNC_MAGIC_DEF("isNamed", 0, js_filenode_method, METHOD_ISNAMED),
+    JS_CFUNC_MAGIC_DEF("isNone", 0, js_filenode_method, METHOD_ISNONE),
+    JS_CFUNC_MAGIC_DEF("isReal", 0, js_filenode_method, METHOD_ISREAL),
+    JS_CFUNC_MAGIC_DEF("isSeq", 0, js_filenode_method, METHOD_ISSEQ),
+    JS_CFUNC_MAGIC_DEF("isString", 0, js_filenode_method, METHOD_ISSTRING),
+    JS_CFUNC_MAGIC_DEF("keys", 0, js_filenode_method, METHOD_KEYS),
+    JS_CFUNC_MAGIC_DEF("mat", 0, js_filenode_method, METHOD_MAT),
+    JS_CFUNC_MAGIC_DEF("name", 0, js_filenode_method, METHOD_NAME),
+    JS_CFUNC_MAGIC_DEF("assign", 1, js_filenode_method, METHOD_ASSIGN),
+    JS_CFUNC_MAGIC_DEF("at", 1, js_filenode_method, METHOD_AT),
+    JS_CFUNC_MAGIC_DEF("getNode", 1, js_filenode_method, METHOD_GETNODE),
+    JS_CFUNC_MAGIC_DEF("ptr", 0, js_filenode_method, METHOD_PTR),
+    JS_CFUNC_MAGIC_DEF("rawSize", 0, js_filenode_method, METHOD_RAWSIZE),
+    JS_CFUNC_MAGIC_DEF("readRaw", 0, js_filenode_method, METHOD_READRAW),
+    JS_CFUNC_MAGIC_DEF("real", 0, js_filenode_method, METHOD_REAL),
+    JS_CFUNC_MAGIC_DEF("setValue", 0, js_filenode_method, METHOD_SETVALUE),
+    JS_CFUNC_MAGIC_DEF("size", 0, js_filenode_method, METHOD_SIZE),
+    JS_CFUNC_MAGIC_DEF("string", 0, js_filenode_method, METHOD_STRING),
+    JS_CFUNC_MAGIC_DEF("type", 0, js_filenode_method, METHOD_TYPE),
 
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "FileNode", JS_PROP_CONFIGURABLE),
 };
