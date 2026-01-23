@@ -20,10 +20,10 @@
 #include <cmath>
 #include <iomanip>
 #include <iterator>
-#include <opencv2/core/mat.hpp>
+/*#include <opencv2/core/mat.hpp>
 #include <opencv2/core/mat.inl.hpp>
 #include <opencv2/core/matx.hpp>
-#include <opencv2/core/types.hpp>
+#include <opencv2/core/types.hpp>*/
 #include <opencv2/imgproc.hpp>
 #include <ostream>
 #include <iostream>
@@ -1500,7 +1500,7 @@ js_contour_get_own_property(JSContext* ctx, JSPropertyDescriptor* pdesc, JSValue
   if(js_atom_is_symbol(ctx, prop))
     return FALSE;
 
-  if(js_atom_is_index(ctx, &index, prop)) {
+  if(js_atom_is_index(ctx, prop, &index)) {
     if(index < contour->size()) {
       value = js_point_new(ctx, (*contour)[index]);
 
@@ -1561,7 +1561,7 @@ js_contour_has_property(JSContext* ctx, JSValueConst obj, JSAtom prop) {
   JSContourData<double>* contour = js_contour_data(obj);
   uint32_t index;
 
-  if(js_atom_is_index(ctx, &index, prop)) {
+  if(js_atom_is_index(ctx, prop, &index)) {
     if(index < contour->size())
       return TRUE;
   } else if(js_atom_is_length(ctx, prop)) {
@@ -1582,7 +1582,7 @@ js_contour_get_property(JSContext* ctx, JSValueConst obj, JSAtom prop, JSValueCo
   JSValue value = JS_UNDEFINED;
   uint32_t index;
 
-  if(js_atom_is_index(ctx, &index, prop)) {
+  if(js_atom_is_index(ctx, prop, &index)) {
     if(index < contour->size())
       value = js_point_new(ctx, (*contour)[index]);
   } else if(js_atom_is_length(ctx, prop)) {
@@ -1610,7 +1610,7 @@ js_contour_set_property(JSContext* ctx, JSValueConst obj, JSAtom prop, JSValueCo
   JSContourData<double>* contour = js_contour_data(obj);
   uint32_t index;
 
-  if(js_atom_is_index(ctx, &index, prop)) {
+  if(js_atom_is_index(ctx, prop, &index)) {
     JSPointData<double> point;
     if(index >= contour->size())
       contour->resize(index + 1);

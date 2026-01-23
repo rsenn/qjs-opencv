@@ -146,23 +146,24 @@ js_contour_read(JSContext* ctx, JSValueConst contour, JSContourData<T>* out) {
   if((c = js_contour_data(contour))) {
     ret = contour_copy(*c, *out);
   } else if(js_is_iterable(ctx, contour)) {
-    JSValue iter = js_iterator_new(ctx, contour);
-    IteratorValue result;
+    JSValue item, iter = js_iterator_new(ctx, contour);
+    BOOL done;
     JSPointData<double> pt;
 
     for(uint32_t i = 0;; ++i) {
-      result = js_iterator_next(ctx, iter);
+      item = js_iterator_next(ctx, iter, done);
 
-      if(result.done)
+      if(done)
         break;
 
-      if(js_point_read(ctx, result.value, &pt)) {
+      if(js_point_read(ctx, item, &pt)) {
         out->push_back(pt);
       } else {
-        JS_FreeValue(ctx, result.value);
+        JS_FreeValue(ctx, item);
         break;
       }
-      JS_FreeValue(ctx, result.value);
+
+      JS_FreeValue(ctx, item);
     }
 
     JS_FreeValue(ctx, iter);

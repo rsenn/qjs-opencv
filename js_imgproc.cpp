@@ -12,14 +12,6 @@
 #include "js_typed_array.hpp"
 #include "js_umat.hpp"
 #include "jsbindings.hpp"
-#include <opencv2/core.hpp>
-#include <opencv2/core/base.hpp>
-#include <opencv2/core/cvdef.h>
-#include <opencv2/core/hal/interface.h>
-#include <opencv2/core/mat.hpp>
-#include <opencv2/core/mat.inl.hpp>
-#include <opencv2/core/matx.hpp>
-#include <opencv2/core/types.hpp>
 #include <quickjs.h>
 #include "include/util.hpp"
 #include <cassert>

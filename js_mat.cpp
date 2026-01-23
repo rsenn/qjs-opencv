@@ -21,11 +21,7 @@
 #include <iterator>
 #include <list>
 #include <new>
-#include <opencv2/core.hpp>
-#include <opencv2/core/mat.hpp>
-#include <opencv2/core/mat.inl.hpp>
-#include <opencv2/core/operations.hpp>
-#include <opencv2/core/types.hpp>
+
 #include <opencv2/imgproc.hpp>
 #include <string>
 #include <type_traits>

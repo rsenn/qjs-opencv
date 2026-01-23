@@ -24,25 +24,27 @@ thread_local JSClassID js_video_writer_class_id = 0;
 static bool
 js_video_writer_open(JSContext* ctx, JSVideoWriterData* vw, int argc, JSValueConst argv[]) {
   int32_t apiPreference = cv::CAP_ANY;
-  cv::String filename;
   JSSizeData<int> frameSize;
   int sizeIndex, argIndex;
   uint32_t fourcc;
   double fps;
 
-  filename = JS_ToCString(ctx, argv[0]);
+  cv::String filename = JS_ToCString(ctx, argv[0]);
 
-  for(sizeIndex = 2; sizeIndex < argc; sizeIndex++) {
+  for(sizeIndex = 2; sizeIndex < argc; sizeIndex++)
     if(js_size_read(ctx, argv[sizeIndex], &frameSize))
       break;
-  }
+
   argIndex = 1;
-  if(sizeIndex - argIndex == 3) {
+
+  if(sizeIndex - argIndex == 3)
     JS_ToInt32(ctx, &apiPreference, argv[argIndex++]);
-  }
+
   JS_ToUint32(ctx, &fourcc, argv[argIndex++]);
+
   if(argIndex < sizeIndex)
     JS_ToFloat64(ctx, &fps, argv[argIndex++]);
+
   if(apiPreference != cv::CAP_ANY)
     return vw->open(filename, apiPreference, fourcc, fps, frameSize);
 
@@ -52,11 +54,11 @@ js_video_writer_open(JSContext* ctx, JSVideoWriterData* vw, int argc, JSValueCon
 static JSValue
 js_video_writer_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   JSVideoWriterData* vw;
-  JSValue obj = JS_UNDEFINED;
-  JSValue proto, ret;
+  JSValue obj = JS_UNDEFINED, proto, ret;
 
   if(!(vw = js_allocate<JSVideoWriterData>(ctx)))
     return JS_EXCEPTION;
+
   new(vw) JSVideoWriterData();
 
   /* using new_target to get the prototype is necessary when the
@@ -70,13 +72,13 @@ js_video_writer_constructor(JSContext* ctx, JSValueConst new_target, int argc, J
   if(JS_IsException(obj))
     goto fail;
 
-  if(argc > 0) {
+  if(argc > 0)
     if(!js_video_writer_open(ctx, vw, argc, argv))
       return JS_EXCEPTION;
-  }
 
   JS_SetOpaque(obj, vw);
   return obj;
+
 fail:
   js_deallocate(ctx, vw);
   JS_FreeValue(ctx, obj);

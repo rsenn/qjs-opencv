@@ -513,6 +513,7 @@ js_size_symbol_iterator(JSContext* ctx, JSValueConst this_val, int argc, JSValue
 
   if(!js_is_function(ctx, (iter = JS_GetProperty(ctx, arr, iterator_symbol))))
     return JS_EXCEPTION;
+
   return JS_Call(ctx, iter, arr, 0, argv);
 }
 

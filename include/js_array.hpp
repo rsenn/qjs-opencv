@@ -46,12 +46,12 @@ js_array_truncate(JSContext* ctx, const JSValueConst& arr, int64_t len) {
 
   if(js_is_array(ctx, arr)) {
     int64_t top = js_array_length(ctx, arr);
-    
+
     newlen = std::min(top, len < 0 ? top + len : len);
-    
+
     while(--top >= newlen)
       JS_DeletePropertyInt64(ctx, arr, top, 0);
-    
+
     JS_SetPropertyStr(ctx, arr, "length", JS_NewInt64(ctx, newlen));
   }
 
@@ -188,13 +188,13 @@ js_array<T>::to_array(JSContext* ctx, JSValueConst arr, std::array<T, N>& out) {
   std::vector<T> tmp;
 
   to_vector(ctx, arr, tmp);
-  
+
   if(tmp.size() < N)
     return -1;
-  
+
   for(size_t i = 0; i < N; i++)
     out[i] = tmp[i];
-  
+
   return N;
 }
 
@@ -205,13 +205,13 @@ js_array<T>::to_scalar(JSContext* ctx, JSValueConst arr, cv::Scalar_<T>& out) {
   std::vector<T> tmp;
 
   to_vector(ctx, arr, tmp);
-  
+
   if((n = tmp.size()) < 4)
     tmp.resize(4);
-  
+
   for(size_t i = 0; i < 4; i++)
     out[i] = tmp[i];
-  
+
   return n;
 }
 
@@ -219,18 +219,18 @@ template<> class js_array<uint32_t> {
 public:
   static int64_t to_vector(JSContext* ctx, JSValueConst arr, std::vector<uint32_t>& out) {
     int64_t i, n;
-    
+
     if(!js_is_array(ctx, arr))
       return -1;
-    
+
     JSValue len = JS_GetPropertyStr(ctx, arr, "length");
     JS_ToInt64(ctx, &n, len);
     out.reserve(out.size() + n);
-    
+
     for(i = 0; i < n; i++) {
       JSValue value = JS_GetPropertyUint32(ctx, arr, (uint32_t)i);
       uint32_t u;
-    
+
       JS_ToUint32(ctx, &u, value);
       out.push_back(u);
     }
@@ -240,7 +240,7 @@ public:
 
   template<class Iterator> static size_t copy_sequence(JSContext* ctx, JSValueConst arr, const Iterator& start, const Iterator& end) {
     size_t i = 0;
-  
+
     for(Iterator it = start; it != end; ++it) {
       uint32_t u = *it;
       JS_SetPropertyUint32(ctx, arr, i, JS_NewUint32(ctx, u));
@@ -266,7 +266,7 @@ js_array<uint32_t>::to_array(JSContext* ctx, JSValueConst arr, std::array<uint32
 
   if(!js_is_array(ctx, arr))
     return -1;
- 
+
   for(i = 0; i < N; i++) {
     JSValue value = JS_GetPropertyUint32(ctx, arr, (uint32_t)i);
     uint32_t u;
@@ -281,14 +281,14 @@ template<> class js_array<JSValue> {
 public:
   static int64_t to_vector(JSContext* ctx, JSValueConst arr, std::vector<JSValue>& out) {
     int64_t i, n;
- 
+
     if(!js_is_array(ctx, arr))
       return -1;
- 
+
     JSValue len = JS_GetPropertyStr(ctx, arr, "length");
     JS_ToInt64(ctx, &n, len);
     out.reserve(out.size() + n);
-    
+
     for(i = 0; i < n; i++) {
       JSValue value = JS_GetPropertyUint32(ctx, arr, (uint32_t)i);
       out.push_back(value);
@@ -321,10 +321,10 @@ template<size_t N>
 int64_t
 js_array<JSValue>::to_array(JSContext* ctx, JSValueConst arr, std::array<JSValue, N>& out) {
   int64_t i;
-  
+
   if(!js_is_array(ctx, arr))
     return -1;
-  
+
   for(i = 0; i < N; i++) {
     JSValue value = JS_GetPropertyUint32(ctx, arr, (uint32_t)i);
     out[i] = value;
@@ -344,17 +344,17 @@ public:
     JSValue len = JS_GetPropertyStr(ctx, arr, "length");
     JS_ToInt64(ctx, &n, len);
     out.reserve(out.size() + n);
-  
+
     for(i = 0; i < n; i++) {
       JSColorData<T> value;
       JSValue item = JS_GetPropertyUint32(ctx, arr, (uint32_t)i);
-    
+
       if(!js_color_read(ctx, item, &value)) {
         JS_FreeValue(ctx, item);
         out.clear();
         return -1;
       }
-  
+
       out.push_back(value);
       JS_FreeValue(ctx, item);
     }
@@ -364,7 +364,7 @@ public:
 
   template<class Iterator> static size_t copy_sequence(JSContext* ctx, JSValueConst arr, const Iterator& start, const Iterator& end) {
     size_t i = 0;
-  
+
     for(Iterator it = start; it != end; ++it) {
       JS_SetPropertyUint32(ctx, arr, i, js_color_new(ctx, *it));
       ++i;
@@ -744,7 +744,7 @@ public:
 
   template<class Iterator> static size_t copy_sequence(JSContext* ctx, JSValueConst arr, const Iterator& start, const Iterator& end) {
     size_t i = 0;
-    
+
     for(Iterator it = start; it != end; ++it) {
       JSValue item = js_array_from(ctx, *it);
       JS_SetPropertyUint32(ctx, arr, i, item);

@@ -5,12 +5,6 @@
 #include <cutils.h>
 #include <quickjs.h>
 #include <cassert>
-/*#include <opencv2/core/cvstd_wrapper.hpp>
-#include <opencv2/core/mat.hpp>
-#include <opencv2/core/mat.inl.hpp>
-#include <opencv2/core/matx.hpp>
-#include <opencv2/core/types.hpp>
-#include <opencv2/core/utility.hpp>*/
 #include <opencv2/videoio.hpp>
 #include <ostream>
 #include <array>
@@ -71,6 +65,7 @@ static inline std::string js_function_name(JSContext*, JSValueConst);
 static inline JSValue js_typedarray_constructor(JSContext*);
 static inline JSAtom js_symbol_atom(JSContext*, const char*);
 static inline JSAtom js_symbol_for_atom(JSContext*, const char*);
+static inline JSValue js_iterable_function(JSContext*, JSValueConst);
 
 /** @defgroup number
  *  @{
@@ -80,8 +75,10 @@ static inline int
 js_number_read(JSContext* ctx, JSValueConst num, T* out) {
   double d;
   int ret;
+
   if((ret = !JS_ToFloat64(ctx, &d, num)))
     *out = d;
+
   return ret;
 }
 
@@ -500,28 +497,6 @@ js_symbol_atom(JSContext* ctx, const char* name) {
  *  @{
  */
 static inline BOOL
-js_is_iterable(JSContext* ctx, JSValueConst obj) {
-  BOOL ret = FALSE;
-  JSAtom atom = js_symbol_atom(ctx, "iterator");
-
-  if(JS_HasProperty(ctx, obj, atom))
-    ret = TRUE;
-
-  JS_FreeAtom(ctx, atom);
-
-  if(!ret) {
-    atom = js_symbol_atom(ctx, "asyncIterator");
-
-    if(JS_HasProperty(ctx, obj, atom))
-      ret = TRUE;
-
-    JS_FreeAtom(ctx, atom);
-  }
-
-  return ret;
-}
-
-static inline BOOL
 js_is_arraylike(JSContext* ctx, JSValueConst obj) {
   JSValue len = JS_GetPropertyStr(ctx, obj, "length");
   bool ret = JS_IsNumber(len);
@@ -603,55 +578,38 @@ js_typedarray_constructor(JSContext* ctx) {
 /** @defgroup iterator
  *  @{
  */
-typedef struct {
-  BOOL done;
-  JSValue value;
-} IteratorValue;
-
-static inline JSValue
-js_iterator_method(JSContext* ctx, JSValueConst obj) {
-  JSValue ret = JS_UNDEFINED;
-  JSAtom atom = js_symbol_atom(ctx, "iterator");
-
-  if(JS_HasProperty(ctx, obj, atom))
-    ret = JS_GetProperty(ctx, obj, atom);
-
-  JS_FreeAtom(ctx, atom);
-
-  if(!js_is_function(ctx, ret)) {
-    atom = js_symbol_atom(ctx, "asyncIterator");
-
-    if(JS_HasProperty(ctx, obj, atom))
-      ret = JS_GetProperty(ctx, obj, atom);
-
-    JS_FreeAtom(ctx, atom);
-  }
-
-  return ret;
-}
-
 static inline JSValue
 js_iterator_new(JSContext* ctx, JSValueConst obj) {
-  JSValue fn = js_iterator_method(ctx, obj);
+  JSValue fn = js_iterable_function(ctx, obj);
   JSValue ret = JS_Call(ctx, fn, obj, 0, 0);
   JS_FreeValue(ctx, fn);
   return ret;
 }
 
-static inline IteratorValue
-js_iterator_next(JSContext* ctx, JSValueConst obj) {
-  IteratorValue ret;
+static inline JSValue
+js_iterator_next(JSContext* ctx, JSValueConst obj, BOOL& done) {
   JSValue fn = JS_GetPropertyStr(ctx, obj, "next");
   JSValue result = JS_Call(ctx, fn, obj, 0, 0);
   JS_FreeValue(ctx, fn);
 
-  JSValue done = JS_GetPropertyStr(ctx, result, "done");
-  ret.value = JS_GetPropertyStr(ctx, result, "value");
+  JSValue dval = JS_GetPropertyStr(ctx, result, "done");
+  JSValue ret = JS_GetPropertyStr(ctx, result, "value");
   JS_FreeValue(ctx, result);
 
-  ret.done = JS_ToBool(ctx, done);
-  JS_FreeValue(ctx, done);
+  done = JS_ToBool(ctx, dval);
+  JS_FreeValue(ctx, dval);
 
+  return ret;
+}
+
+static inline BOOL
+js_is_iterator(JSContext* ctx, JSValueConst obj) {
+  if(!js_is_object(obj))
+    return FALSE;
+
+  JSValue fn = JS_GetPropertyStr(ctx, obj, "next");
+  BOOL ret = js_is_function(ctx, fn);
+  JS_FreeValue(ctx, fn);
   return ret;
 }
 /**
@@ -739,20 +697,20 @@ js_value_from(JSContext* ctx, const std::vector<T>& in) {
 template<class T> class js_iterable {
 public:
   static int64_t to_vector(JSContext* ctx, JSValueConst arg, std::vector<T>& out) {
-    IteratorValue item;
     JSValue iter = js_iterator_new(ctx, arg);
     out.clear();
 
     for(;;) {
       T value;
-      item = js_iterator_next(ctx, iter);
+      BOOL done;
+      JSValue item = js_iterator_next(ctx, iter, done);
 
-      if(item.done)
+      if(done)
         break;
 
-      js_value_to(ctx, item.value, value);
+      js_value_to(ctx, item, value);
       out.push_back(value);
-      JS_FreeValue(ctx, item.value);
+      JS_FreeValue(ctx, item);
     }
 
     JS_FreeValue(ctx, iter);
@@ -761,19 +719,19 @@ public:
 
   template<size_t N> static int64_t to_array(JSContext* ctx, JSValueConst arg, std::array<T, N>& out) {
     int64_t i = 0;
-    IteratorValue item;
     JSValue iter = js_iterator_new(ctx, arg);
 
     for(i = 0; i < N; i++) {
       T value;
-      item = js_iterator_next(ctx, iter);
+      BOOL done;
+      JSValue item = js_iterator_next(ctx, iter, done);
 
-      if(item.done)
+      if(done)
         break;
 
-      js_value_to(ctx, item.value, value);
+      js_value_to(ctx, item, value);
       out[i] = value;
-      JS_FreeValue(ctx, item.value);
+      JS_FreeValue(ctx, item);
     }
 
     JS_FreeValue(ctx, iter);
@@ -782,6 +740,36 @@ public:
 
   static int64_t to_scalar(JSContext* ctx, JSValueConst arg, cv::Scalar_<T>& out) { return to_array(ctx, arg, *reinterpret_cast<std::array<T, 4>*>(&out)); }
 };
+
+static inline JSAtom
+js_iterable_property(JSContext* ctx, JSValueConst obj) {
+  BOOL ret = FALSE;
+  JSAtom atom = js_symbol_atom(ctx, "iterator");
+
+  if(JS_HasProperty(ctx, obj, atom))
+    return atom;
+
+  JS_FreeAtom(ctx, atom);
+  atom = js_symbol_atom(ctx, "asyncIterator");
+
+  if(JS_HasProperty(ctx, obj, atom))
+    return atom;
+
+  JS_FreeAtom(ctx, atom);
+  return 0;
+}
+
+static inline JSValue
+js_iterable_function(JSContext* ctx, JSValueConst obj) {
+  JSAtom atom = js_iterable_property(ctx, obj);
+
+  if(!atom)
+    return JS_ThrowTypeError(ctx, "the given object is not iterable");
+
+  JSValue ret = JS_GetProperty(ctx, obj, atom);
+  JS_FreeAtom(ctx, atom);
+  return ret;
+}
 
 template<class T>
 static inline int64_t
@@ -792,14 +780,21 @@ js_iterable_to(JSContext* ctx, JSValueConst arr, std::vector<T>& out) {
 template<class T, size_t N>
 static inline int64_t
 js_iterable_to(JSContext* ctx, JSValueConst arr, std::array<T, N>& out) {
-  typedef js_iterable<T> array_type;
-  return array_type::to_array(ctx, arr, out);
+  return js_iterable<T>::to_array(ctx, arr, out);
 }
 
 template<class T>
 static inline int64_t
 js_iterable_to(JSContext* ctx, JSValueConst arr, cv::Scalar_<T>& out) {
   return js_iterable<T>::to_scalar(ctx, arr, out);
+}
+
+static inline BOOL
+js_is_iterable(JSContext* ctx, JSValueConst obj) {
+  JSAtom atom = js_iterable_property(ctx, obj);
+  BOOL ret = atom != 0;
+  JS_FreeAtom(ctx, atom);
+  return ret;
 }
 /**
  *  @}
@@ -809,13 +804,14 @@ js_iterable_to(JSContext* ctx, JSValueConst arr, cv::Scalar_<T>& out) {
  *  @{
  */
 static inline BOOL
-js_atom_is_index(JSContext* ctx, uint32_t* pval, JSAtom atom) {
+js_atom_is_index(JSContext* ctx, JSAtom atom, uint32_t* pval = nullptr) {
   JSValue value;
   BOOL ret = FALSE;
   int64_t index;
 
   if(atom & (1U << 31)) {
-    *pval = atom & (~(1U << 31));
+    if(pval)
+      *pval = atom & (~(1U << 31));
     return TRUE;
   }
 
@@ -836,7 +832,8 @@ js_atom_is_index(JSContext* ctx, uint32_t* pval, JSAtom atom) {
   }
 
   if(ret == TRUE && index >= 0 && index <= UINT32_MAX)
-    *pval = index;
+    if(pval)
+      *pval = index;
 
   return ret;
 }

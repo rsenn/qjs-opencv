@@ -288,6 +288,7 @@ js_point_set_xy(JSContext* ctx, JSValueConst this_val, JSValueConst val, int mag
 
   switch(magic) {
     case POINT_PROP_X: JS_ToFloat64(ctx, &s->x, val); break;
+
     case POINT_PROP_Y: JS_ToFloat64(ctx, &s->y, val); break;
   }
 
@@ -563,6 +564,7 @@ js_point_round(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
       y = round(s->y / prec);
       ret = js_point_new(ctx, x * prec, y * prec);
       break;
+
     case 1:
       if(argc > 0)
         JS_ToFloat64(ctx, &prec, argv[0]);
@@ -571,6 +573,7 @@ js_point_round(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
       y = floor(s->y / prec);
       ret = js_point_new(ctx, x * prec, y * prec);
       break;
+
     case 2:
       if(argc > 0)
         JS_ToFloat64(ctx, &prec, argv[0]);

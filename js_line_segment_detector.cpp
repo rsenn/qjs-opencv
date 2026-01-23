@@ -50,12 +50,10 @@ js_line_segment_detector_new(JSContext* ctx,
 
 static JSValue
 js_line_segment_detector_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
-
-  JSValue proto;
   int32_t refine = cv::LSD_REFINE_STD, n_bins = 1024;
   double scale = 0.8, sigma_scale = 0.6, quant = 2.0, ang_th = 22.5, log_eps = 0, density_th = 0.7;
 
-  proto = JS_GetPropertyStr(ctx, new_target, "prototype");
+  JSValue proto = JS_GetPropertyStr(ctx, new_target, "prototype");
   if(JS_IsException(proto))
     return JS_EXCEPTION;
 

@@ -20,13 +20,6 @@
 #include <array>
 #include <cstdint>
 #include <cstdio>
-#include <opencv2/core.hpp>
-#include <opencv2/core/base.hpp>
-#include <opencv2/core/mat.hpp>
-#include <opencv2/core/mat.inl.hpp>
-#include <opencv2/core/types.hpp>
-#include <opencv2/core/utility.hpp>
-#include <opencv2/core/version.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 #ifdef HAVE_OPENCV2_XIMGPROC_HPP

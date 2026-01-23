@@ -1,6 +1,7 @@
 #ifndef JS_SIZE_HPP
 #define JS_SIZE_HPP
 
+#include <opencv2/core/types.hpp>
 #include "jsbindings.hpp"
 #include <quickjs.h>
 

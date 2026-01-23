@@ -11,12 +11,6 @@
 #include "js_umat.hpp"
 #include "js_keypoint.hpp"
 #include "jsbindings.hpp"
-#include <opencv2/core/cvstd.inl.hpp>
-#include <opencv2/core/cvstd_wrapper.hpp>
-#include <opencv2/core/mat.hpp>
-#include <opencv2/core/mat.inl.hpp>
-#include <opencv2/core/matx.hpp>
-#include <opencv2/core/types.hpp>
 #include <opencv2/features2d.hpp>
 #include <opencv2/imgproc.hpp>
 #include <quickjs.h>

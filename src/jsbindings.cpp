@@ -62,8 +62,10 @@ int
 js_color_read(JSContext* ctx, JSValueConst color, JSColorData<double>* out) {
   int ret = 1;
   std::array<double, 4> c = {0, 0, 0, 255};
+
   if(JS_IsObject(color)) {
     JSValue v[4];
+
     if(js_is_array(ctx, color)) {
       v[0] = JS_GetPropertyUint32(ctx, color, 0);
       v[1] = JS_GetPropertyUint32(ctx, color, 1);
@@ -82,6 +84,7 @@ js_color_read(JSContext* ctx, JSValueConst color, JSColorData<double>* out) {
       JS_ToFloat64(ctx, &c[0], v[0]);
       JS_ToFloat64(ctx, &c[1], v[1]);
       JS_ToFloat64(ctx, &c[2], v[2]);
+
       if(JS_IsNumber(v[3]))
         JS_ToFloat64(ctx, &c[3], v[3]);
     }
@@ -92,7 +95,9 @@ js_color_read(JSContext* ctx, JSValueConst color, JSColorData<double>* out) {
     JS_FreeValue(ctx, v[3]);
   } else if(JS_IsNumber(color)) {
     uint32_t value;
+
     JS_ToUint32(ctx, &value, color);
+
     c[0] = value & 0xff;
     c[1] = (value >> 8) & 0xff;
     c[2] = (value >> 16) & 0xff;
@@ -112,11 +117,13 @@ js_color_read(JSContext* ctx, JSValueConst value, JSColorData<uint8_t>* out) {
 
   if(js_is_array(ctx, value)) {
     std::array<uint8_t, 4> a;
+
     if(js_array_to(ctx, value, a) >= 3) {
       out->arr[0] = a[0];
       out->arr[1] = a[1];
       out->arr[2] = a[2];
       out->arr[3] = a[3];
+
       return 1;
     }
   }
@@ -126,6 +133,7 @@ js_color_read(JSContext* ctx, JSValueConst value, JSColorData<uint8_t>* out) {
     out->arr[1] = color.arr[1];
     out->arr[2] = color.arr[2];
     out->arr[3] = color.arr[3];
+
     return 1;
   }
 
