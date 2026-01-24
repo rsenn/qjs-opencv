@@ -36,6 +36,8 @@ js_edge_drawing_constructor(JSContext* ctx, JSValueConst new_target, int argc, J
   if(!(ed = js_allocate<JSEdgeDrawingData>(ctx)))
     return JS_EXCEPTION;
 
+  *ed = cv::ximgproc::createEdgeDrawing();
+
   /* using new_target to get the prototype is necessary when the class is extended. */
   proto = JS_GetPropertyStr(ctx, new_target, "prototype");
   if(JS_IsException(proto))
@@ -455,9 +457,8 @@ js_ximgproc_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
       case XIMGPROC_CREATEEDGEDRAWING: {
         ret = js_edge_drawing_constructor(ctx, edge_drawing_class, argc, argv);
 
-        JSEdgeDrawingData* ed = js_edge_drawing_data(ret);
-
-        *ed = cv::ximgproc::createEdgeDrawing();
+        /*JSEdgeDrawingData* ed = js_edge_drawing_data(ret);
+         *ed = cv::ximgproc::createEdgeDrawing();*/
         break;
       }
     }
