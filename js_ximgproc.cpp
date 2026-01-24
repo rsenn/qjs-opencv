@@ -372,6 +372,141 @@ const JSCFunctionListEntry js_edge_drawing_params_proto_funcs[] = {
 
 const JSCFunctionListEntry js_edge_drawing_static_funcs[] = {};
 
+typedef cv::Ptr<cv::ximgproc::StructuredEdgeDetection> JSStructuredEdgeDetectionData;
+
+extern "C" {
+thread_local JSValue structured_edge_detection_proto = JS_UNDEFINED, structured_edge_detection_class = JS_UNDEFINED,
+                     structured_edge_detection_params_proto = JS_UNDEFINED;
+thread_local JSClassID js_structured_edge_detection_class_id = 0;
+}
+
+JSStructuredEdgeDetectionData*
+js_structured_edge_detection_data(JSValueConst val) {
+  return static_cast<JSStructuredEdgeDetectionData*>(JS_GetOpaque(val, js_structured_edge_detection_class_id));
+}
+
+JSStructuredEdgeDetectionData*
+js_structured_edge_detection_data2(JSContext* ctx, JSValueConst val) {
+  return static_cast<JSStructuredEdgeDetectionData*>(JS_GetOpaque2(ctx, val, js_structured_edge_detection_class_id));
+}
+
+static JSValue
+js_structured_edge_detection_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
+  JSStructuredEdgeDetectionData* sed;
+  JSValue obj = JS_UNDEFINED, proto;
+
+  if(!(sed = js_allocate<JSStructuredEdgeDetectionData>(ctx)))
+    return JS_EXCEPTION;
+
+  std::string model;
+
+  js_value_to(ctx, argv[0], model);
+
+  *sed = cv::ximgproc::createStructuredEdgeDetection(model);
+
+  /* using new_target to get the prototype is necessary when the class is extended. */
+  proto = JS_GetPropertyStr(ctx, new_target, "prototype");
+  if(JS_IsException(proto))
+    goto fail;
+
+  obj = JS_NewObjectProtoClass(ctx, proto, js_structured_edge_detection_class_id);
+  JS_FreeValue(ctx, proto);
+
+  if(JS_IsException(obj))
+    goto fail;
+
+  JS_SetOpaque(obj, sed);
+
+  return obj;
+
+fail:
+  js_deallocate(ctx, sed);
+  JS_FreeValue(ctx, obj);
+  return JS_EXCEPTION;
+}
+
+void
+js_structured_edge_detection_finalizer(JSRuntime* rt, JSValue val) {
+  JSStructuredEdgeDetectionData* sed;
+
+  if((sed = js_structured_edge_detection_data(val))) {
+    cv::ximgproc::StructuredEdgeDetection* ptr = sed->get();
+
+    ptr->~StructuredEdgeDetection();
+
+    js_deallocate(rt, sed);
+  }
+}
+
+enum {
+  STRUCTUREDEDGEDETECTION_COMPUTEORIENTATION,
+  STRUCTUREDEDGEDETECTION_DETECTEDGES,
+  STRUCTUREDEDGEDETECTION_EDGESNMS,
+};
+
+static JSValue
+js_structured_edge_detection_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  JSStructuredEdgeDetectionData* sed;
+  JSValue ret = JS_UNDEFINED;
+
+  if(!(sed = js_structured_edge_detection_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  switch(magic) {
+    case STRUCTUREDEDGEDETECTION_COMPUTEORIENTATION : {
+      JSInputArray input = js_input_array(ctx, argv[0]);
+      JSOutputArray output = js_cv_outputarray(ctx, argv[1]);
+
+      sed->get()->computeOrientation(input, output);
+      break;
+    }
+    case STRUCTUREDEDGEDETECTION_DETECTEDGES : {
+      JSInputArray input = js_input_array(ctx, argv[0]);
+      JSOutputArray output = js_cv_outputarray(ctx, argv[1]);
+
+      sed->get()->detectEdges(input, output);
+      break;
+    }
+    case STRUCTUREDEDGEDETECTION_EDGESNMS : {
+      JSInputArray edge_image = js_input_array(ctx, argv[0]);
+      JSInputArray orientation_image = js_input_array(ctx, argv[1]);
+      JSOutputArray dst = js_cv_outputarray(ctx, argv[2]);
+      int32_t r = 2, s = 0;
+      double m = 1;
+      BOOL isParallel = TRUE;
+
+      if(argc > 3)
+        js_value_to(ctx, argv[3], r);
+      if(argc > 4)
+        js_value_to(ctx, argv[4], s);
+      if(argc > 5)
+        js_value_to(ctx, argv[5], m);
+      if(argc > 6)
+        js_value_to(ctx, argv[6], isParallel);
+    
+      sed->get()->edgesNms(edge_image, orientation_image, dst, r, s, m, isParallel);
+      break;
+    }
+  }
+
+  return ret;
+}
+
+JSClassDef js_structured_edge_detection_class = {
+    .class_name = "StructuredEdgeDetection",
+    .finalizer = js_structured_edge_detection_finalizer,
+};
+
+const JSCFunctionListEntry js_structured_edge_detection_proto_funcs[] = {
+    JS_CFUNC_MAGIC_DEF("computeOrientation", 2, js_structured_edge_detection_method, STRUCTUREDEDGEDETECTION_COMPUTEORIENTATION),
+    JS_CFUNC_MAGIC_DEF("detectEdges", 2, js_structured_edge_detection_method, STRUCTUREDEDGEDETECTION_DETECTEDGES),
+    JS_CFUNC_MAGIC_DEF("edgesNms", 3, js_structured_edge_detection_method, STRUCTUREDEDGEDETECTION_EDGESNMS),
+
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "StructuredEdgeDetection", JS_PROP_CONFIGURABLE),
+};
+
+const JSCFunctionListEntry js_structured_edge_detection_static_funcs[] = {};
+
 enum {
   XIMGPROC_ANISOTROPIC_DIFFUSION,
   XIMGPROC_EDGE_PRESERVING_FILTER,
@@ -561,7 +696,7 @@ js_ximgproc_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
         int32_t d, numOfIter = 4, borderType = cv::BORDER_DEFAULT;
         double sigmaColor = 25, sigmaSpace = 3;
 
-            js_value_to(ctx, argv[2], d);
+        js_value_to(ctx, argv[2], d);
         if(argc > 3)
           js_value_to(ctx, argv[3], sigmaColor);
         if(argc > 4)
@@ -591,7 +726,7 @@ js_ximgproc_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
         cv::ximgproc::FastHoughTransform(input, output, dstMatDepth, angleRange, op, makeSkew);
         break;
       }
-      
+
       case XIMGPROC_HOUGHPOINT2LINE: {
         JSPointData<double> point;
         JSInputArray srcImgInfo = js_input_array(ctx, argv[1]);
@@ -698,9 +833,25 @@ js_ximgproc_init(JSContext* ctx, JSModuleDef* m) {
   /* set proto.constructor and ctor.prototype */
   JS_SetConstructor(ctx, edge_drawing_params_class, edge_drawing_params_proto);
 
+  JS_NewClassID(&js_structured_edge_detection_class_id);
+  JS_NewClass(JS_GetRuntime(ctx), js_structured_edge_detection_class_id, &js_structured_edge_detection_class);
+
+  structured_edge_detection_proto = JS_NewObject(ctx);
+  JS_SetPropertyFunctionList(ctx, structured_edge_detection_proto, js_structured_edge_detection_proto_funcs, countof(js_structured_edge_detection_proto_funcs));
+  JS_SetClassProto(ctx, js_structured_edge_detection_class_id, structured_edge_detection_proto);
+
+  structured_edge_detection_class = JS_NewCFunction2(ctx, js_structured_edge_detection_constructor, "StructuredEdgeDetection", 0, JS_CFUNC_constructor, 0);
+  /* set proto.constructor and ctor.prototype */
+  JS_SetConstructor(ctx, structured_edge_detection_class, structured_edge_detection_proto);
+  JS_SetPropertyFunctionList(ctx,
+                             structured_edge_detection_class,
+                             js_structured_edge_detection_static_funcs,
+                             countof(js_structured_edge_detection_static_funcs));
+
   if(m) {
     JS_SetModuleExport(ctx, m, "EdgeDrawing", edge_drawing_class);
     JS_SetModuleExport(ctx, m, "EdgeDrawingParams", edge_drawing_params_class);
+    JS_SetModuleExport(ctx, m, "StructuredEdgeDetection", structured_edge_detection_class);
     JS_SetModuleExportList(ctx, m, js_ximgproc_static_funcs.data(), js_ximgproc_static_funcs.size());
   }
 
@@ -711,6 +862,7 @@ extern "C" void
 js_ximgproc_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "EdgeDrawing");
   JS_AddModuleExport(ctx, m, "EdgeDrawingParams");
+  JS_AddModuleExport(ctx, m, "StructuredEdgeDetection");
   JS_AddModuleExportList(ctx, m, js_ximgproc_static_funcs.data(), js_ximgproc_static_funcs.size());
 }
 
