@@ -16,6 +16,7 @@
 #include <numeric>
 #include <string>
 #include <vector>
+#include <opencv2/imgproc.hpp>
 
 #define countof(x) (sizeof(x) / sizeof((x)[0]))
 
@@ -555,6 +556,31 @@ dump(const cv::_OutputArray& arr) {
   os << " }";
 
   return os.str();
+}
+
+template<typename T> 
+static inline T
+hsv_to_rgb(T c) {
+  cv::Mat in(1, 1, CV_32FC3);
+  cv::Mat out(1, 1, CV_32FC3);
+
+  float* p = in.ptr<float>(0);
+
+  p[0] = (float)c[0] * 360.0f;
+  p[1] = (float)c[1];
+  p[2] = (float)c[2];
+
+  cv::cvtColor(in, out, cv::COLOR_HSV2RGB);
+
+  T t;
+
+  cv::Vec3f p2 = out.at<cv::Vec3f>(0, 0);
+
+  t[0] = (int)(p2[0] * 255);
+  t[1] = (int)(p2[1] * 255);
+  t[2] = (int)(p2[2] * 255);
+
+  return t;
 }
 
 #endif // defined(UTIL_HPP)

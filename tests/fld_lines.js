@@ -1,4 +1,4 @@
-import { Mat, Scalar, IMREAD_GRAYSCALE, LINE_AA, FastLineDetector, getTickFrequency, getTickCount, Point, drawLine, imread, imshow, waitKey, cvtColor, COLOR_GRAY2BGR } from 'opencv';
+import { Line, Mat, Scalar, IMREAD_GRAYSCALE, LINE_AA, FastLineDetector, getTickFrequency, getTickCount, Point, drawLine, imread, imshow, waitKey, cvtColor, COLOR_GRAY2BGR } from 'opencv';
 
 function main(input = 'corridor.jpg') {
   const image = imread(input, IMREAD_GRAYSCALE);
@@ -50,8 +50,13 @@ function main(input = 'corridor.jpg') {
   cvtColor(line_image_fld, line_image_fld, COLOR_GRAY2BGR);
 
   //fld.drawSegments(line_image_fld, lines);
+  lines = [...lines].map(l => new Line(l));
 
-  for(let line of lines) drawLine(line_image_fld, line, [0, 0, 255], 1, LINE_AA);
+  for(let line of lines) {
+    drawLine(line_image_fld, line, [line.aspect * 255, (line.angle * 255) / Math.PI, 255], 1, LINE_AA);
+  }
+
+  console.log('lines', console.config({ maxArrayLength: Infinity }), lines);
 
   imshow('FLD result', line_image_fld);
   waitKey();
