@@ -35,12 +35,11 @@ js_mat_data_nothrow(JSValueConst val) {
   return static_cast<JSMatData*>(JS_GetOpaque(val, js_mat_class_id));
 }
 
-template<class T>
 static inline int
 js_value_to(JSContext* ctx, JSValueConst value, JSMatData& mat) {
   JSMatData* m;
 
-  if((m = js_mat_data(value))) {
+  if((m = js_mat_data_nothrow(value))) {
     mat = *m;
     return 1;
   }
@@ -48,7 +47,6 @@ js_value_to(JSContext* ctx, JSValueConst value, JSMatData& mat) {
   return 0;
 }
 
-template<class T>
 static inline JSValue
 js_value_from(JSContext* ctx, const JSMatData& mat) {
   return js_mat_wrap(ctx, mat);
