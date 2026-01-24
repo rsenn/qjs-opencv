@@ -453,21 +453,21 @@ js_structured_edge_detection_method(JSContext* ctx, JSValueConst this_val, int a
     return JS_EXCEPTION;
 
   switch(magic) {
-    case STRUCTUREDEDGEDETECTION_COMPUTEORIENTATION : {
+    case STRUCTUREDEDGEDETECTION_COMPUTEORIENTATION: {
       JSInputArray input = js_input_array(ctx, argv[0]);
       JSOutputArray output = js_cv_outputarray(ctx, argv[1]);
 
       sed->get()->computeOrientation(input, output);
       break;
     }
-    case STRUCTUREDEDGEDETECTION_DETECTEDGES : {
+    case STRUCTUREDEDGEDETECTION_DETECTEDGES: {
       JSInputArray input = js_input_array(ctx, argv[0]);
       JSOutputArray output = js_cv_outputarray(ctx, argv[1]);
 
       sed->get()->detectEdges(input, output);
       break;
     }
-    case STRUCTUREDEDGEDETECTION_EDGESNMS : {
+    case STRUCTUREDEDGEDETECTION_EDGESNMS: {
       JSInputArray edge_image = js_input_array(ctx, argv[0]);
       JSInputArray orientation_image = js_input_array(ctx, argv[1]);
       JSOutputArray dst = js_cv_outputarray(ctx, argv[2]);
@@ -483,7 +483,7 @@ js_structured_edge_detection_method(JSContext* ctx, JSValueConst this_val, int a
         js_value_to(ctx, argv[5], m);
       if(argc > 6)
         js_value_to(ctx, argv[6], isParallel);
-    
+
       sed->get()->edgesNms(edge_image, orientation_image, dst, r, s, m, isParallel);
       break;
     }
@@ -522,6 +522,7 @@ enum {
   XIMGPROC_FOURIERDESCRIPTOR,
   XIMGPROC_WEIGHTEDMEDIANFILTER,
   XIMGPROC_ROLLINGGUIDANCEFILTER,
+  XIMGPROC_CREATESTRUCTUREDEDGEDETECTION,
   XIMGPROC_FASTHOUGHTRANSFORM,
   XIMGPROC_HOUGHPOINT2LINE,
 };
@@ -710,6 +711,11 @@ js_ximgproc_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
         break;
       }
 
+      case XIMGPROC_CREATESTRUCTUREDEDGEDETECTION: {
+        ret = js_structured_edge_detection_constructor(ctx, structured_edge_detection_class, argc, argv);
+        break;
+      }
+
       case XIMGPROC_FASTHOUGHTRANSFORM: {
         JSInputArray input = js_input_array(ctx, argv[0]);
         JSOutputArray output = js_cv_outputarray(ctx, argv[1]);
@@ -771,6 +777,7 @@ js_function_list_t js_ximgproc_ximgproc_funcs{
     JS_CFUNC_MAGIC_DEF("fourierDescriptor", 2, js_ximgproc_func, XIMGPROC_FOURIERDESCRIPTOR),
     JS_CFUNC_MAGIC_DEF("weightedMedianFilter", 4, js_ximgproc_func, XIMGPROC_WEIGHTEDMEDIANFILTER),
     JS_CFUNC_MAGIC_DEF("rollingGuidanceFilter", 2, js_ximgproc_func, XIMGPROC_ROLLINGGUIDANCEFILTER),
+    JS_CFUNC_MAGIC_DEF("createStructuredEdgeDetection", 1, js_ximgproc_func, XIMGPROC_CREATESTRUCTUREDEDGEDETECTION),
 
     JS_PROP_INT32_DEF("ARO_0_45", cv::ximgproc::ARO_0_45, JS_PROP_ENUMERABLE),
     JS_PROP_INT32_DEF("ARO_45_90", cv::ximgproc::ARO_45_90, JS_PROP_ENUMERABLE),
