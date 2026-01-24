@@ -45,8 +45,8 @@ function main(file = 'opencv-logo.png') {
 
   console.log(me, { in1, in2, from_to });
 
-  mixChannels(in1, /*3,*/ [result_ZS], /*1,*/ from_to /*, 3*/);
-  mixChannels(in2, /*3,*/ [result_GH], /*1,*/ from_to /*, 3*/);
+  mixChannels(in1, 3, [result_ZS], 1, from_to , 3);
+  mixChannels(in2, 3, [result_GH], 1, from_to , 3);
 
   /// Combine everything into a canvas
   const canvas = new Mat(img.rows, img.cols * 3, CV_8UC3);
