@@ -35,6 +35,7 @@ function main(input, algo = 'MOG2') {
     //console.log('keyboard',keyboard);
     if(keyboard == 'q' || keyboard == 27 || keyboard == 113) break;
   }
+  
   waitKey(-1);
 }
 

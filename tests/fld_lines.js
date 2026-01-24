@@ -56,10 +56,11 @@ function main(input = 'corridor.jpg') {
     drawLine(line_image_fld, line, [line.aspect * 255, (line.angle * 255) / Math.PI, 255], 1, LINE_AA);
   }
 
-  console.log('lines', console.config({ maxArrayLength: Infinity }), lines);
+  //console.log('lines', console.config({ maxArrayLength: Infinity }), lines);
 
   imshow('FLD result', line_image_fld);
-  waitKey();
+  
+  waitKey(-1);
 
   return 0;
 }

@@ -1260,7 +1260,6 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
           sca[i] = i < argc && JS_IsNumber(argv[i]) ? js_value_to<double>(ctx, argv[i]) : 0;
 
       double a = sca[3];
-      // sca[0] /= 360.0;
 
       sca = hsv_to_rgb(sca);
       sca[3] = a;
