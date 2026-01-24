@@ -322,7 +322,13 @@ js_mat_initialize(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
     cv::Scalar scalar = {0, 0, 0, 0};
     JSValue abuf = JS_NULL;
 
-    if(js_is_typedarray(ctx, argv[0])) {
+    if(argc >= 3 && JS_IsNumber(argv[0]) && js_is_array(ctx, argv[1])) {
+      int32_t ndims, type;
+      js_value_to(ctx, argv[0], ndims);
+      js_array_to(ctx, argv[1], sizes);
+      js_value_to(ctx, argv[2], type);
+
+    } else if(js_is_typedarray(ctx, argv[0])) {
       const auto typed = js_typedarray_type(ctx, argv[0]);
       type = typed.cv_type();
       JSValue tmp = JS_GetPropertyStr(ctx, argv[0], "buffer");
@@ -426,9 +432,9 @@ js_mat_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueCon
     goto fail;
   obj = JS_NewObjectProtoClass(ctx, proto, js_mat_class_id);
   JS_FreeValue(ctx, proto);
-  if(JS_IsException(obj)) {
+
+  if(JS_IsException(obj))
     goto fail;
-  }
 
   JS_SetOpaque(obj, m);
 
@@ -564,21 +570,51 @@ js_mat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
       }
 
       case METHOD_PTR: {
-        uint32_t row = 0, col = 0;
         uchar* ptr;
         std::ostringstream os;
 
-        if(argc > 0)
-          JS_ToUint32(ctx, &row, argv[0]);
+        if(argc == 2) {
+          uint32_t row = 0, col = 0;
 
-        if(argc > 1)
-          JS_ToUint32(ctx, &col, argv[1]);
+          if(argc > 0)
+            JS_ToUint32(ctx, &row, argv[0]);
 
-        ptr = m->ptr<uchar>(row, col);
+          if(argc > 1)
+            JS_ToUint32(ctx, &col, argv[1]);
+
+          ptr = m->ptr<uchar>(row, col);
+
+        } else if(argc == m->dims) {
+
+          switch(m->dims) {
+            case 3: {
+              cv::Vec<int, 3> vec;
+
+              js_value_to(ctx, argv[0], vec[0]);
+              js_value_to(ctx, argv[1], vec[1]);
+              js_value_to(ctx, argv[2], vec[2]);
+
+              ptr = &mat_at<uchar>(*m, vec);
+              break;
+            }
+            case 4: {
+              cv::Vec<int, 4> vec;
+
+              js_value_to(ctx, argv[0], vec[0]);
+              js_value_to(ctx, argv[1], vec[1]);
+              js_value_to(ctx, argv[2], vec[2]);
+              js_value_to(ctx, argv[3], vec[3]);
+
+              ptr = &mat_at<uchar>(*m, vec);
+              break;
+            }
+          }
+        }
 
         os << static_cast<void*>(ptr);
 
         ret = js_value_from(ctx, os.str());
+
         break;
       }
     }
@@ -920,14 +956,29 @@ js_mat_at(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) 
     JS_ToUint32(ctx, &col, argv[1]);
     argc -= 2;
     argv += 2;
-  } else if(argc == 3 && m->dims == 3) {
-    cv::Vec<int, 3> vec;
+  } else if(argc == m->dims) {
 
-    js_value_to(ctx, argv[0], vec[0]);
-    js_value_to(ctx, argv[1], vec[1]);
-    js_value_to(ctx, argv[2], vec[2]);
+    switch(m->dims) {
+      case 3: {
+        cv::Vec<int, 3> vec;
 
-    return js_mat_at<3>(ctx, this_val, vec);
+        js_value_to(ctx, argv[0], vec[0]);
+        js_value_to(ctx, argv[1], vec[1]);
+        js_value_to(ctx, argv[2], vec[2]);
+
+        return js_mat_at<3>(ctx, this_val, vec);
+      }
+      case 4: {
+        cv::Vec<int, 4> vec;
+
+        js_value_to(ctx, argv[0], vec[0]);
+        js_value_to(ctx, argv[1], vec[1]);
+        js_value_to(ctx, argv[2], vec[2]);
+        js_value_to(ctx, argv[3], vec[3]);
+
+        return js_mat_at<4>(ctx, this_val, vec);
+      }
+    }
 
   } else if(argc == 1 && js_is_array(ctx, argv[0])) {
     const int64_t len = js_array_length(ctx, argv[0]);
@@ -1117,12 +1168,12 @@ js_mat_get_props(JSContext* ctx, JSValueConst this_val, int magic) {
 
   switch(magic) {
     case PROP_COLS: {
-      ret = JS_NewUint32(ctx, m->cols);
+      ret = JS_NewInt32(ctx, m->cols);
       break;
     }
 
     case PROP_ROWS: {
-      ret = JS_NewUint32(ctx, m->rows);
+      ret = JS_NewInt32(ctx, m->rows);
       break;
     }
 
@@ -1157,7 +1208,17 @@ js_mat_get_props(JSContext* ctx, JSValueConst this_val, int magic) {
       }*/
 
     case PROP_SIZE: {
-      ret = js_size_new(ctx, m->cols, m->rows);
+      if(m->cols != -1 && m->rows != -1) {
+        ret = js_size_new(ctx, m->cols, m->rows);
+      } else {
+        std::vector<int> sizes;
+
+        for(int i = 0; i < m->size.dims(); ++i)
+          sizes.push_back(m->size[i]);
+
+        ret = js_array_from(ctx, sizes);
+      }
+
       break;
     }
 
@@ -1172,7 +1233,16 @@ js_mat_get_props(JSContext* ctx, JSValueConst this_val, int magic) {
     }
 
     case PROP_STEP: {
-      ret = JS_NewUint32(ctx, m->step);
+      if(m->cols != -1 && m->rows != -1) {
+        ret = JS_NewUint32(ctx, m->step);
+      } else {
+        std::vector<int> steps;
+
+        for(int i = 0; i < m->dims - 1; ++i)
+          steps.push_back(m->step[i]);
+
+        ret = js_array_from(ctx, steps);
+      }
       break;
     }
 
@@ -1261,8 +1331,8 @@ js_mat_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
   JSMatData* mat = js_mat_data2(ctx, this_val);
   JSValue obj = JS_NewObject(ctx /*, js_mat_class_id*/);
 
-  JS_DefinePropertyValueStr(ctx, obj, "cols", JS_NewUint32(ctx, mat->cols), JS_PROP_ENUMERABLE);
-  JS_DefinePropertyValueStr(ctx, obj, "rows", JS_NewUint32(ctx, mat->rows), JS_PROP_ENUMERABLE);
+  JS_DefinePropertyValueStr(ctx, obj, "cols", JS_NewInt32(ctx, mat->cols), JS_PROP_ENUMERABLE);
+  JS_DefinePropertyValueStr(ctx, obj, "rows", JS_NewInt32(ctx, mat->rows), JS_PROP_ENUMERABLE);
   JS_DefinePropertyValueStr(ctx, obj, "depth", JS_NewUint32(ctx, mat->depth()), JS_PROP_ENUMERABLE);
   JS_DefinePropertyValueStr(ctx, obj, "channels", JS_NewUint32(ctx, mat->channels()), JS_PROP_ENUMERABLE);
 
