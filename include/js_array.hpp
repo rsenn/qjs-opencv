@@ -78,10 +78,7 @@ public:
 
   static JSValue from_vector(JSContext* ctx, const std::vector<T>& in) { return from_sequence(ctx, in.begin(), in.end()); }
 
-  template<int N> static JSValue from_vector(JSContext* ctx, const cv::Vec<T, N>& in) { 
-  return from_sequence(ctx, in.begin(), in.end()); 
-
-}
+  template<int N> static JSValue from_vector(JSContext* ctx, const cv::Vec<T, N>& in) { return from_sequence(ctx, in.begin(), in.end()); }
 
   template<class Iterator> static size_t copy_sequence(JSContext* ctx, JSValueConst arr, const Iterator& start, const Iterator& end) {
     size_t i = 0;
