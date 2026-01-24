@@ -507,6 +507,130 @@ const JSCFunctionListEntry js_structured_edge_detection_proto_funcs[] = {
 
 const JSCFunctionListEntry js_structured_edge_detection_static_funcs[] = {};
 
+typedef cv::Ptr<cv::Algorithm> JSSuperpixelData;
+
+extern "C" {
+thread_local JSValue superpixel_proto = JS_UNDEFINED, superpixel_class = JS_UNDEFINED, superpixel_params_proto = JS_UNDEFINED;
+thread_local JSClassID js_superpixel_class_id = 0;
+}
+
+JSSuperpixelData*
+js_superpixel_data(JSValueConst val) {
+  return static_cast<JSSuperpixelData*>(JS_GetOpaque(val, js_superpixel_class_id));
+}
+
+JSSuperpixelData*
+js_superpixel_data2(JSContext* ctx, JSValueConst val) {
+  return static_cast<JSSuperpixelData*>(JS_GetOpaque2(ctx, val, js_superpixel_class_id));
+}
+
+static JSValue
+js_superpixel_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
+  JSSuperpixelData* sp;
+  JSValue obj = JS_UNDEFINED, proto;
+
+  if(!(sp = js_allocate<JSSuperpixelData>(ctx)))
+    return JS_EXCEPTION;
+
+  std::string model;
+
+  js_value_to(ctx, argv[0], model);
+
+  //*sp = cv::ximgproc::createSuperpixel(model);
+
+  /* using new_target to get the prototype is necessary when the class is extended. */
+  proto = JS_GetPropertyStr(ctx, new_target, "prototype");
+  if(JS_IsException(proto))
+    goto fail;
+
+  obj = JS_NewObjectProtoClass(ctx, proto, js_superpixel_class_id);
+  JS_FreeValue(ctx, proto);
+
+  if(JS_IsException(obj))
+    goto fail;
+
+  JS_SetOpaque(obj, sp);
+
+  return obj;
+
+fail:
+  js_deallocate(ctx, sp);
+  JS_FreeValue(ctx, obj);
+  return JS_EXCEPTION;
+}
+
+void
+js_superpixel_finalizer(JSRuntime* rt, JSValue val) {
+  JSSuperpixelData* sp;
+
+  if((sp = js_superpixel_data(val))) {
+    cv::Algorithm* ptr = sp->get();
+
+    cv::ximgproc::SuperpixelSLIC* slic;
+    cv::ximgproc::SuperpixelLSC* lsc;
+    cv::ximgproc::SuperpixelSEEDS* seeds;
+
+    if((slic = dynamic_cast<cv::ximgproc::SuperpixelSLIC*>(ptr)))
+      slic->~SuperpixelSLIC();
+    else if((lsc = dynamic_cast<cv::ximgproc::SuperpixelLSC*>(ptr)))
+      lsc->~SuperpixelLSC();
+    else if((seeds = dynamic_cast<cv::ximgproc::SuperpixelSEEDS*>(ptr)))
+      seeds->~SuperpixelSEEDS();
+
+    js_deallocate(rt, sp);
+  }
+}
+
+enum {
+  SUPERPIXEL_GETNUMBEROFSUPERPIXELS,
+  SUPERPIXEL_ITERATE,
+  SUPERPIXEL_GETLABELS,
+  SUPERPIXEL_GETLABELCONTOURMASK,
+
+};
+
+static JSValue
+js_superpixel_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  JSSuperpixelData* sp;
+  JSValue ret = JS_UNDEFINED;
+
+  if(!(sp = js_superpixel_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  switch(magic) {
+    case SUPERPIXEL_GETNUMBEROFSUPERPIXELS: {
+      break;
+    }
+    case SUPERPIXEL_ITERATE: {
+      break;
+    }
+    case SUPERPIXEL_GETLABELS: {
+      break;
+    }
+    case SUPERPIXEL_GETLABELCONTOURMASK: {
+      break;
+    }
+  }
+
+  return ret;
+}
+
+JSClassDef js_superpixel_class = {
+    .class_name = "Superpixel",
+    .finalizer = js_superpixel_finalizer,
+};
+
+const JSCFunctionListEntry js_superpixel_proto_funcs[] = {
+    JS_CFUNC_MAGIC_DEF("getNumberOfSuperpixels", 0, js_superpixel_method, SUPERPIXEL_GETNUMBEROFSUPERPIXELS),
+    JS_CFUNC_MAGIC_DEF("iterate", 0, js_superpixel_method, SUPERPIXEL_ITERATE),
+    JS_CFUNC_MAGIC_DEF("getLabels", 1, js_superpixel_method, SUPERPIXEL_GETLABELS),
+    JS_CFUNC_MAGIC_DEF("getLabelContourMask", 1, js_superpixel_method, SUPERPIXEL_GETLABELCONTOURMASK),
+
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Superpixel", JS_PROP_CONFIGURABLE),
+};
+
+const JSCFunctionListEntry js_superpixel_static_funcs[] = {};
+
 enum {
   XIMGPROC_ANISOTROPIC_DIFFUSION,
   XIMGPROC_EDGE_PRESERVING_FILTER,
@@ -523,6 +647,9 @@ enum {
   XIMGPROC_WEIGHTEDMEDIANFILTER,
   XIMGPROC_ROLLINGGUIDANCEFILTER,
   XIMGPROC_CREATESTRUCTUREDEDGEDETECTION,
+  XIMGPROC_CREATESUPERPIXELSLIC,
+  XIMGPROC_CREATESUPERPIXELLSC,
+  XIMGPROC_CREATESUPERPIXELSEEDS,
   XIMGPROC_FASTHOUGHTRANSFORM,
   XIMGPROC_HOUGHPOINT2LINE,
 };
@@ -753,6 +880,65 @@ js_ximgproc_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
         ret = js_value_from(ctx, v);
         break;
       }
+
+      case XIMGPROC_CREATESUPERPIXELSLIC: {
+        JSInputArray image = js_input_array(ctx, argv[0]);
+        int32_t algorithm = cv::ximgproc::SLICO, region_size = 10;
+        double ruler = 10.0;
+
+        if(argc > 1)
+          js_value_to(ctx, argv[1], algorithm);
+        if(argc > 2)
+          js_value_to(ctx, argv[2], region_size);
+        if(argc > 3)
+          js_value_to(ctx, argv[3], ruler);
+
+        ret = js_superpixel_constructor(ctx, superpixel_class, 0, 0);
+        JSSuperpixelData* sp = js_superpixel_data(ret);
+
+        *sp = cv::ximgproc::createSuperpixelSLIC(image, algorithm, region_size, ruler);
+        break;
+      }
+
+      case XIMGPROC_CREATESUPERPIXELLSC: {
+        JSInputArray image = js_input_array(ctx, argv[0]);
+        int32_t region_size = 10;
+        double ratio = 0.075;
+
+        if(argc > 1)
+          js_value_to(ctx, argv[1], region_size);
+        if(argc > 2)
+          js_value_to(ctx, argv[2], ratio);
+
+        ret = js_superpixel_constructor(ctx, superpixel_class, 0, 0);
+        JSSuperpixelData* sp = js_superpixel_data(ret);
+
+        *sp = cv::ximgproc::createSuperpixelLSC(image, region_size, ratio);
+        break;
+      }
+
+      case XIMGPROC_CREATESUPERPIXELSEEDS: {
+        int32_t image_width, image_height, image_channels, num_superpixels, num_levels, prior = 2, histogram_bins = 5;
+        BOOL double_step = FALSE;
+
+        js_value_to(ctx, argv[0], image_width);
+        js_value_to(ctx, argv[1], image_height);
+        js_value_to(ctx, argv[2], image_channels);
+        js_value_to(ctx, argv[3], num_superpixels);
+        js_value_to(ctx, argv[4], num_levels);
+        if(argc > 5)
+          js_value_to(ctx, argv[5], prior);
+        if(argc > 6)
+          js_value_to(ctx, argv[6], histogram_bins);
+        if(argc > 7)
+          js_value_to(ctx, argv[7], double_step);
+
+        ret = js_superpixel_constructor(ctx, superpixel_class, 0, 0);
+        JSSuperpixelData* sp = js_superpixel_data(ret);
+
+        *sp = cv::ximgproc::createSuperpixelSEEDS(image_width, image_height, image_channels, num_superpixels, num_levels, prior, histogram_bins, double_step);
+        break;
+      }
     }
   } catch(const cv::Exception& e) { ret = js_cv_throw(ctx, e); }
 
@@ -778,6 +964,9 @@ js_function_list_t js_ximgproc_ximgproc_funcs{
     JS_CFUNC_MAGIC_DEF("weightedMedianFilter", 4, js_ximgproc_func, XIMGPROC_WEIGHTEDMEDIANFILTER),
     JS_CFUNC_MAGIC_DEF("rollingGuidanceFilter", 2, js_ximgproc_func, XIMGPROC_ROLLINGGUIDANCEFILTER),
     JS_CFUNC_MAGIC_DEF("createStructuredEdgeDetection", 1, js_ximgproc_func, XIMGPROC_CREATESTRUCTUREDEDGEDETECTION),
+    JS_CFUNC_MAGIC_DEF("createSuperpixelSLIC", 1, js_ximgproc_func, XIMGPROC_CREATESUPERPIXELSLIC),
+    JS_CFUNC_MAGIC_DEF("createSuperpixelLSC", 1, js_ximgproc_func, XIMGPROC_CREATESUPERPIXELLSC),
+    JS_CFUNC_MAGIC_DEF("createSuperpixelSEEDS", 5, js_ximgproc_func, XIMGPROC_CREATESUPERPIXELSEEDS),
 
     JS_PROP_INT32_DEF("ARO_0_45", cv::ximgproc::ARO_0_45, JS_PROP_ENUMERABLE),
     JS_PROP_INT32_DEF("ARO_45_90", cv::ximgproc::ARO_45_90, JS_PROP_ENUMERABLE),
