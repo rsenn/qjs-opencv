@@ -19,56 +19,7 @@
 #include <iterator>
 #include <type_traits>
 #include <vector>
-
-/*class js_array_iterator : public std::iterator<std::input_iterator_tag, JSValue> {
-public:
-  js_array_iterator(JSContext* c, const JSValueConst& a, const size_t i = 0) : ctx(c),
-array(&a), pos(i) {}
-
-  value_type
-  operator*() const {
-    return JS_GetPropertyUint32(ctx, *array, pos);
-  }
-
-  js_array_iterator&
-  operator++() {
-    ++this->pos;
-    return *this;
-  }
-
-  js_array_iterator
-  operator++(int) {
-    js_array_iterator temp(*this);
-    ++(*this);
-    return temp;
-  }
-
-  bool
-  operator==(const js_array_iterator& rhs) {
-    return array == rhs.array && pos == rhs.pos;
-  }
-
-  bool
-  operator!=(const js_array_iterator& rhs) {
-    return !operator==(rhs);
-  }
-
-private:
-  JSContext* ctx;
-  const JSValueConst* array;
-  difference_type pos;
-};
-
-static inline js_array_iterator
-js_begin(JSContext* c, const JSValueConst& a) {
-  return js_array_iterator(c, a, 0);
-}
-
-static inline js_array_iterator
-js_end(JSContext* c, const JSValueConst& a) {
-  return js_array_iterator(c, a, js_array_length(c, a));
-}*/
-
+ 
 template<class T> class js_array {
 public:
   static int64_t to_vector(JSContext* ctx, JSValueConst arr, std::vector<T>& out) {
@@ -578,7 +529,7 @@ public:
   }
 };*/
 
-template<> class js_array<uint8_t> {
+/*template<> class js_array<uint8_t> {
 public:
   static int64_t to_vector(JSContext* ctx, JSValueConst arr, std::vector<uint8_t>& out) {
     int64_t i, n;
@@ -648,7 +599,7 @@ public:
 
     return N;
   }
-};
+};*/
 
 template<> class js_array<cv::Mat> {
 public:
@@ -683,7 +634,7 @@ public:
   template<size_t N> static int64_t to_array(JSContext* ctx, JSValueConst arr, std::array<cv::Mat, N>& out);
 };
 
-template<class T> class js_array<std::vector<T>> {
+/*template<class T> class js_array<std::vector<T>> {
 public:
   static int64_t to_vector(JSContext* ctx, JSValueConst arr, std::vector<std::vector<T>>& out) {
     int64_t i, n;
@@ -731,7 +682,7 @@ public:
   }
 
   template<size_t N> static int64_t to_array(JSContext* ctx, JSValueConst arr, std::array<std::vector<T>, N>& out);
-};
+};*/
 
 template<class T> class js_array<JSPointData<T>> {
 public:
