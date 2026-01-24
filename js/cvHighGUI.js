@@ -122,17 +122,13 @@ export class Window {
   }
 
   setMouseCallback(fn) {
-    console.log('Window.setMouseCallback', fn);
-    setMouseCallback(this.name, (event, x, y, flags) => {
-      //console.log("MouseCallback", {event,x,y,flags});
-      fn.call(this, event, x, y, flags);
-    });
-
+    setMouseCallback(this.name, (event, x, y, flags) => fn.call(this, event, x, y, flags));
     this.update();
   }
 
   show(mat) {
     this.mat = mat;
+      if(this.name!==undefined)
     imshow(this.name, mat);
   }
 
