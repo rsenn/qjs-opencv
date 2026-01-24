@@ -13,7 +13,8 @@
 typedef cv::Ptr<cv::ximgproc::EdgeDrawing> JSEdgeDrawingData;
 
 extern "C" {
-thread_local JSValue edge_drawing_proto = JS_UNDEFINED, edge_drawing_class = JS_UNDEFINED;
+thread_local JSValue edge_drawing_proto = JS_UNDEFINED, edge_drawing_class = JS_UNDEFINED, edge_drawing_params_proto = JS_UNDEFINED,
+                     edge_drawing_params_class = JS_UNDEFINED;
 thread_local JSClassID js_edge_drawing_class_id = 0;
 }
 
@@ -86,7 +87,7 @@ enum {
 };
 
 static JSValue
-js_edge_drawing_get(JSContext* ctx, JSValueConst this_val, int magic) {
+js_edge_drawing_params_get(JSContext* ctx, JSValueConst this_val, int magic) {
   JSEdgeDrawingData* ed;
   JSValue ret = JS_UNDEFINED;
 
@@ -154,7 +155,7 @@ js_edge_drawing_get(JSContext* ctx, JSValueConst this_val, int magic) {
 }
 
 static JSValue
-js_edge_drawing_set(JSContext* ctx, JSValueConst this_val, JSValueConst value, int magic) {
+js_edge_drawing_params_set(JSContext* ctx, JSValueConst this_val, JSValueConst value, int magic) {
   JSEdgeDrawingData* ed;
   JSValue ret = JS_UNDEFINED;
 
@@ -229,7 +230,30 @@ enum {
   EDGEDRAWING_GETGRADIENTIMAGE,
   EDGEDRAWING_GETSEGMENTINDICESOFLINES,
   EDGEDRAWING_GETSEGMENTS,
+  EDGEDRAWING_PARAMS,
+  EDGEDRAWING_SETPARAMS,
 };
+
+static JSValue
+js_edge_drawing_get(JSContext* ctx, JSValueConst this_val, int magic) {
+  JSEdgeDrawingData* ed;
+  JSValue ret = JS_UNDEFINED;
+
+  if(!(ed = js_edge_drawing_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  switch(magic) {
+    case EDGEDRAWING_PARAMS: {
+      ret = js_edge_drawing_constructor(ctx, edge_drawing_params_class, 0, 0);
+      JSEdgeDrawingData* ed2 = js_edge_drawing_data(ret);
+
+      *ed2 = *ed;
+      break;
+    }
+  }
+
+  return ret;
+}
 
 static JSValue
 js_edge_drawing_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
@@ -282,6 +306,15 @@ js_edge_drawing_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
       ret = js_contours_new(ctx, segments);
       break;
     }
+    case EDGEDRAWING_SETPARAMS: {
+      JSEdgeDrawingData* ed2 = js_edge_drawing_data(argv[0]);
+
+      if(!ed2)
+        return JS_ThrowTypeError(ctx, "argument 1 must be EdgeDrawingParams");
+
+      ed->get()->setParams(ed2->get()->params);
+      break;
+    }
   }
 
   return ret;
@@ -289,6 +322,11 @@ js_edge_drawing_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
 
 JSClassDef js_edge_drawing_class = {
     .class_name = "EdgeDrawing",
+    .finalizer = js_edge_drawing_finalizer,
+};
+
+JSClassDef js_edge_drawing_params_class = {
+    .class_name = "EdgeDrawingParams",
     .finalizer = js_edge_drawing_finalizer,
 };
 
@@ -300,22 +338,29 @@ const JSCFunctionListEntry js_edge_drawing_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("getGradientImage", 1, js_edge_drawing_method, EDGEDRAWING_GETGRADIENTIMAGE),
     JS_CFUNC_MAGIC_DEF("getSegmentIndicesOfLines", 0, js_edge_drawing_method, EDGEDRAWING_GETSEGMENTINDICESOFLINES),
     JS_CFUNC_MAGIC_DEF("getSegments", 0, js_edge_drawing_method, EDGEDRAWING_GETSEGMENTS),
+    JS_CFUNC_MAGIC_DEF("setParams", 1, js_edge_drawing_method, EDGEDRAWING_SETPARAMS),
 
-    JS_CGETSET_MAGIC_DEF("AnchorThresholdValue", js_edge_drawing_get, js_edge_drawing_set, PARAM_ANCHORTHRESHOLDVALUE),
-    JS_CGETSET_MAGIC_DEF("EdgeDetectionOperator", js_edge_drawing_get, js_edge_drawing_set, PARAM_EDGEDETECTIONOPERATOR),
-    JS_CGETSET_MAGIC_DEF("GradientThresholdValue", js_edge_drawing_get, js_edge_drawing_set, PARAM_GRADIENTTHRESHOLDVALUE),
-    JS_CGETSET_MAGIC_DEF("LineFitErrorThreshold", js_edge_drawing_get, js_edge_drawing_set, PARAM_LINEFITERRORTHRESHOLD),
-    JS_CGETSET_MAGIC_DEF("MaxDistanceBetweenTwoLines", js_edge_drawing_get, js_edge_drawing_set, PARAM_MAXDISTANCEBETWEENTWOLINES),
-    JS_CGETSET_MAGIC_DEF("MaxErrorThreshold", js_edge_drawing_get, js_edge_drawing_set, PARAM_MAXERRORTHRESHOLD),
-    JS_CGETSET_MAGIC_DEF("MinLineLength", js_edge_drawing_get, js_edge_drawing_set, PARAM_MINLINELENGTH),
-    JS_CGETSET_MAGIC_DEF("MinPathLength", js_edge_drawing_get, js_edge_drawing_set, PARAM_MINPATHLENGTH),
-    JS_CGETSET_MAGIC_DEF("NFAValidation", js_edge_drawing_get, js_edge_drawing_set, PARAM_NFAVALIDATION),
-    JS_CGETSET_MAGIC_DEF("PFmode", js_edge_drawing_get, js_edge_drawing_set, PARAM_PFMODE),
-    JS_CGETSET_MAGIC_DEF("ScanInterval", js_edge_drawing_get, js_edge_drawing_set, PARAM_SCANINTERVAL),
-    JS_CGETSET_MAGIC_DEF("Sigma", js_edge_drawing_get, js_edge_drawing_set, PARAM_SIGMA),
-    JS_CGETSET_MAGIC_DEF("SumFlag", js_edge_drawing_get, js_edge_drawing_set, PARAM_SUMFLAG),
+    JS_CGETSET_MAGIC_DEF("params", js_edge_drawing_get, 0, EDGEDRAWING_PARAMS),
 
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "EdgeDrawing", JS_PROP_CONFIGURABLE),
+};
+
+const JSCFunctionListEntry js_edge_drawing_params_proto_funcs[] = {
+    JS_CGETSET_MAGIC_DEF("AnchorThresholdValue", js_edge_drawing_params_get, js_edge_drawing_params_set, PARAM_ANCHORTHRESHOLDVALUE),
+    JS_CGETSET_MAGIC_DEF("EdgeDetectionOperator", js_edge_drawing_params_get, js_edge_drawing_params_set, PARAM_EDGEDETECTIONOPERATOR),
+    JS_CGETSET_MAGIC_DEF("GradientThresholdValue", js_edge_drawing_params_get, js_edge_drawing_params_set, PARAM_GRADIENTTHRESHOLDVALUE),
+    JS_CGETSET_MAGIC_DEF("LineFitErrorThreshold", js_edge_drawing_params_get, js_edge_drawing_params_set, PARAM_LINEFITERRORTHRESHOLD),
+    JS_CGETSET_MAGIC_DEF("MaxDistanceBetweenTwoLines", js_edge_drawing_params_get, js_edge_drawing_params_set, PARAM_MAXDISTANCEBETWEENTWOLINES),
+    JS_CGETSET_MAGIC_DEF("MaxErrorThreshold", js_edge_drawing_params_get, js_edge_drawing_params_set, PARAM_MAXERRORTHRESHOLD),
+    JS_CGETSET_MAGIC_DEF("MinLineLength", js_edge_drawing_params_get, js_edge_drawing_params_set, PARAM_MINLINELENGTH),
+    JS_CGETSET_MAGIC_DEF("MinPathLength", js_edge_drawing_params_get, js_edge_drawing_params_set, PARAM_MINPATHLENGTH),
+    JS_CGETSET_MAGIC_DEF("NFAValidation", js_edge_drawing_params_get, js_edge_drawing_params_set, PARAM_NFAVALIDATION),
+    JS_CGETSET_MAGIC_DEF("PFmode", js_edge_drawing_params_get, js_edge_drawing_params_set, PARAM_PFMODE),
+    JS_CGETSET_MAGIC_DEF("ScanInterval", js_edge_drawing_params_get, js_edge_drawing_params_set, PARAM_SCANINTERVAL),
+    JS_CGETSET_MAGIC_DEF("Sigma", js_edge_drawing_params_get, js_edge_drawing_params_set, PARAM_SIGMA),
+    JS_CGETSET_MAGIC_DEF("SumFlag", js_edge_drawing_params_get, js_edge_drawing_params_set, PARAM_SUMFLAG),
+
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "EdgeDrawing::Params", JS_PROP_CONFIGURABLE),
 };
 
 const JSCFunctionListEntry js_edge_drawing_static_funcs[] = {};
@@ -455,13 +500,25 @@ js_ximgproc_init(JSContext* ctx, JSModuleDef* m) {
   JS_SetPropertyFunctionList(ctx, edge_drawing_proto, js_edge_drawing_proto_funcs, countof(js_edge_drawing_proto_funcs));
   JS_SetClassProto(ctx, js_edge_drawing_class_id, edge_drawing_proto);
 
-  edge_drawing_class = JS_NewCFunction2(ctx, js_edge_drawing_constructor, "EdgeDrawing", 2, JS_CFUNC_constructor, 0);
+  edge_drawing_class = JS_NewCFunction2(ctx, js_edge_drawing_constructor, "EdgeDrawing", 0, JS_CFUNC_constructor, 0);
   /* set proto.constructor and ctor.prototype */
   JS_SetConstructor(ctx, edge_drawing_class, edge_drawing_proto);
   JS_SetPropertyFunctionList(ctx, edge_drawing_class, js_edge_drawing_static_funcs, countof(js_edge_drawing_static_funcs));
 
+  /* create the EdgeDrawingParams class */
+  JS_NewClass(JS_GetRuntime(ctx), js_edge_drawing_class_id, &js_edge_drawing_params_class);
+
+  edge_drawing_params_proto = JS_NewObject(ctx);
+  JS_SetPropertyFunctionList(ctx, edge_drawing_params_proto, js_edge_drawing_params_proto_funcs, countof(js_edge_drawing_params_proto_funcs));
+  JS_SetClassProto(ctx, js_edge_drawing_class_id, edge_drawing_params_proto);
+
+  edge_drawing_params_class = JS_NewCFunction2(ctx, js_edge_drawing_constructor, "EdgeDrawingParams", 0, JS_CFUNC_constructor, 0);
+  /* set proto.constructor and ctor.prototype */
+  JS_SetConstructor(ctx, edge_drawing_params_class, edge_drawing_params_proto);
+
   if(m) {
     JS_SetModuleExport(ctx, m, "EdgeDrawing", edge_drawing_class);
+    JS_SetModuleExport(ctx, m, "EdgeDrawingParams", edge_drawing_params_class);
     JS_SetModuleExportList(ctx, m, js_ximgproc_static_funcs.data(), js_ximgproc_static_funcs.size());
   }
 
@@ -471,6 +528,7 @@ js_ximgproc_init(JSContext* ctx, JSModuleDef* m) {
 extern "C" void
 js_ximgproc_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "EdgeDrawing");
+  JS_AddModuleExport(ctx, m, "EdgeDrawingParams");
   JS_AddModuleExportList(ctx, m, js_ximgproc_static_funcs.data(), js_ximgproc_static_funcs.size());
 }
 
