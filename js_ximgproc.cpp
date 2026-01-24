@@ -362,7 +362,7 @@ const JSCFunctionListEntry js_edge_drawing_params_proto_funcs[] = {
     JS_CGETSET_MAGIC_DEF("Sigma", js_edge_drawing_params_get, js_edge_drawing_params_set, PARAM_SIGMA),
     JS_CGETSET_MAGIC_DEF("SumFlag", js_edge_drawing_params_get, js_edge_drawing_params_set, PARAM_SUMFLAG),
 
-    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "EdgeDrawing::Params", JS_PROP_CONFIGURABLE),
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "EdgeDrawingParams", JS_PROP_CONFIGURABLE),
 };
 
 const JSCFunctionListEntry js_edge_drawing_static_funcs[] = {};
@@ -375,6 +375,8 @@ enum {
   XIMGPROC_NI_BLACK_THRESHOLD,
   XIMGPROC_PEI_LIN_NORMALIZATION,
   XIMGPROC_CREATEEDGEDRAWING,
+  XIMGPROC_FASTHOUGHTRANSFORM,
+  XIMGPROC_HOUGHPOINT2LINE,
 };
 
 static JSValue
@@ -461,6 +463,43 @@ js_ximgproc_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
          *ed = cv::ximgproc::createEdgeDrawing();*/
         break;
       }
+
+      case XIMGPROC_FASTHOUGHTRANSFORM: {
+        JSInputArray input = js_input_array(ctx, argv[0]);
+        JSOutputArray output = js_cv_outputarray(ctx, argv[1]);
+        int32_t dstMatDepth, angleRange = cv::ximgproc::ARO_315_135, op = cv::ximgproc::FHT_ADD, makeSkew = cv::ximgproc::HDO_DESKEW;
+
+        js_value_to(ctx, argv[2], dstMatDepth);
+        if(argc > 3)
+          js_value_to(ctx, argv[3], angleRange);
+        if(argc > 4)
+          js_value_to(ctx, argv[4], op);
+        if(argc > 5)
+          js_value_to(ctx, argv[5], makeSkew);
+
+        cv::ximgproc::FastHoughTransform(input, output, dstMatDepth, angleRange, op, makeSkew);
+        break;
+      }
+      case XIMGPROC_HOUGHPOINT2LINE: {
+        JSPointData<double> point;
+        JSInputArray srcImgInfo = js_input_array(ctx, argv[1]);
+
+        js_point_read(ctx, argv[0], &point);
+
+        int32_t angleRange = cv::ximgproc::ARO_315_135, makeSkew = cv::ximgproc::HDO_DESKEW, rules = cv::ximgproc::RO_IGNORE_BORDERS;
+
+        if(argc > 2)
+          js_value_to(ctx, argv[2], angleRange);
+        if(argc > 3)
+          js_value_to(ctx, argv[3], makeSkew);
+        if(argc > 4)
+          js_value_to(ctx, argv[4], rules);
+
+        cv::Vec4i v = cv::ximgproc::HoughPoint2Line(point, srcImgInfo, angleRange, makeSkew, rules);
+
+        ret = js_value_from(ctx, v);
+        break;
+      }
     }
   } catch(const cv::Exception& e) { ret = js_cv_throw(ctx, e); }
 
@@ -478,6 +517,29 @@ js_function_list_t js_ximgproc_ximgproc_funcs{
     JS_CFUNC_MAGIC_DEF("PeiLinNormalization", 2, js_ximgproc_func, XIMGPROC_PEI_LIN_NORMALIZATION),
     JS_CFUNC_MAGIC_DEF("thinning", 2, js_ximgproc_func, XIMGPROC_THINNING),
     JS_CFUNC_MAGIC_DEF("createEdgeDrawing", 0, js_ximgproc_func, XIMGPROC_CREATEEDGEDRAWING),
+
+    JS_PROP_INT32_DEF("ARO_0_45", cv::ximgproc::ARO_0_45, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("ARO_45_90", cv::ximgproc::ARO_45_90, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("ARO_90_135", cv::ximgproc::ARO_90_135, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("ARO_315_0", cv::ximgproc::ARO_315_0, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("ARO_315_45", cv::ximgproc::ARO_315_45, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("ARO_45_135", cv::ximgproc::ARO_45_135, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("ARO_315_135", cv::ximgproc::ARO_315_135, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("ARO_CTR_HOR", cv::ximgproc::ARO_CTR_HOR, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("ARO_CTR_VER", cv::ximgproc::ARO_CTR_VER, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("FHT_MIN", cv::ximgproc::FHT_MIN, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("FHT_MAX", cv::ximgproc::FHT_MAX, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("FHT_ADD", cv::ximgproc::FHT_ADD, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("FHT_AVE", cv::ximgproc::FHT_AVE, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("HDO_RAW", cv::ximgproc::HDO_RAW, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("HDO_DESKEW", cv::ximgproc::HDO_DESKEW, JS_PROP_ENUMERABLE),
+
+    JS_PROP_INT32_DEF("RO_STRICT", cv::ximgproc::RO_STRICT, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("RO_IGNORE_BORDERS", cv::ximgproc::RO_IGNORE_BORDERS, JS_PROP_ENUMERABLE),
+
+    JS_CFUNC_MAGIC_DEF("FastHoughTransform", 3, js_ximgproc_func, XIMGPROC_FASTHOUGHTRANSFORM),
+    JS_CFUNC_MAGIC_DEF("HoughPoint2Line", 2, js_ximgproc_func, XIMGPROC_HOUGHPOINT2LINE),
+
     JS_PROP_INT32_DEF("THINNING_ZHANGSUEN", cv::ximgproc::THINNING_ZHANGSUEN, JS_PROP_ENUMERABLE),
     JS_PROP_INT32_DEF("THINNING_GUOHALL", cv::ximgproc::THINNING_GUOHALL, JS_PROP_ENUMERABLE),
     JS_PROP_INT32_DEF("BINARIZATION_NIBLACK", cv::ximgproc::BINARIZATION_NIBLACK, JS_PROP_ENUMERABLE),
