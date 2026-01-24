@@ -407,7 +407,7 @@ js_cv_bitwise(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
   JSInputOutputArray src = js_cv_inputoutputarray(ctx, argv[0]);
   JSInputArray other = js_input_array(ctx, argv[1]);
   JSInputOutputArray dst = src;
-  
+
   if(argc > 2)
     dst = js_umat_or_mat(ctx, argv[2]);
 
@@ -1232,6 +1232,15 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
 
       break;
     }
+
+    case OTHER_SCALAR: {
+      ret = JS_NewArray(ctx);
+
+      for(int i = 0; i < argc; ++i)
+        JS_SetPropertyUint32(ctx, ret, i, JS_DupValue(ctx, argv[i]));
+
+      break;
+    }
   }
 
   return ret;
@@ -1341,6 +1350,7 @@ js_function_list_t js_cv_static_funcs{
     JS_CFUNC_MAGIC_DEF("trace", 1, js_cv_other, OTHER_TRACE),
     JS_CFUNC_MAGIC_DEF("CV_RGB", 3, js_cv_other, OTHER_RGB),
     JS_CFUNC_MAGIC_DEF("swap", 2, js_cv_other, OTHER_SWAP),
+    JS_CFUNC_MAGIC_DEF("Scalar", 0, js_cv_other, OTHER_SCALER),
 };
 
 js_function_list_t js_cv_constants{
