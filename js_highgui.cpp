@@ -268,18 +268,20 @@ js_cv_create_button(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   /*JSValue str = JS_ToString(ctx, userdata->callback);
   std::cout << "callback: " << JS_ToCString(ctx, str) << std::endl;*/
 
-  ret = cv::createButton(
-      bar_name,
-      [](int state, void* ptr) {
-        Button const& data = *static_cast<Button*>(ptr);
-        if(js_is_function(data.ctx, data.callback)) {
-          JSValueConst argv[] = {JS_NewInt32(data.ctx, state), data.bar_name, data.type};
-          JS_Call(data.ctx, data.callback, JS_UNDEFINED, 3, argv);
-        }
-      },
-      userdata,
-      type,
-      initial_button_state);
+  try {
+    ret = cv::createButton(
+        bar_name,
+        [](int state, void* ptr) {
+          Button const& data = *static_cast<Button*>(ptr);
+          if(js_is_function(data.ctx, data.callback)) {
+            JSValueConst argv[] = {JS_NewInt32(data.ctx, state), data.bar_name, data.type};
+            JS_Call(data.ctx, data.callback, JS_UNDEFINED, 3, argv);
+          }
+        },
+        userdata,
+        type,
+        initial_button_state);
+  } catch(const cv::Exception& exception) { return js_cv_throw(ctx, exception); }
 
   return JS_NewInt32(ctx, ret);
 }
@@ -477,7 +479,7 @@ js_cv_select_rois(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
 
 static JSValue
 js_cv_start_window_thread(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  return  JS_NewInt32(ctx, cv::startWindowThread());
+  return JS_NewInt32(ctx, cv::startWindowThread());
 }
 
 typedef std::vector<JSCFunctionListEntry> js_function_list_t;
