@@ -32,6 +32,7 @@ template<class T> union JSLineData {
     JSPointData<T> a, b;
   };
 
+  JSLineData() {}
   JSLineData(T _x1, T _y1, T _x2, T _y2) : x1(_x1), y1(_y1), x2(_x2), y2(_y2) {}
 
   template<class U> JSLineData(const Line<U>& other) : x1(other.a.x), y1(other.a.y), x2(other.b.x), y2(other.b.y) {}
