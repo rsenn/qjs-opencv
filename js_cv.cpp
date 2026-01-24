@@ -802,6 +802,7 @@ enum {
   OTHER_SWAP,
   OTHER_SCALAR,
   OTHER_HSV2RGB,
+  OTHER_RGB2HSV,
 };
 
 static JSValue
@@ -1249,24 +1250,35 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
     }
 
     case OTHER_HSV2RGB: {
-      cv::Scalar sca;
+      cv::Scalar sca = {0, 0, 0, 255};
 
-      sca[3] = 255;
-
-      if(argc == 1 && js_is_array(ctx, argv[0])) {
+      if(argc == 1 && js_is_array(ctx, argv[0]))
         js_value_to(ctx, argv[0], sca);
-      } else {
+      else
         for(int i = 0; i < 4 && i < argc; ++i)
           sca[i] = i < argc && JS_IsNumber(argv[i]) ? js_value_to<double>(ctx, argv[i]) : 0;
-      }
 
       double a = sca[3];
-
-      sca[0] /= 360.0;
-      /*sca[1] /= 255;
-sca[2] /= 255;*/
+      // sca[0] /= 360.0;
 
       sca = hsv_to_rgb(sca);
+      sca[3] = a;
+
+      ret = js_value_from(ctx, sca);
+      break;
+    }
+
+    case OTHER_RGB2HSV: {
+      cv::Scalar sca = {0, 0, 0, 255};
+
+      if(argc == 1 && js_is_array(ctx, argv[0]))
+        js_value_to(ctx, argv[0], sca);
+      else
+        for(int i = 0; i < 4 && i < argc; ++i)
+          sca[i] = i < argc && JS_IsNumber(argv[i]) ? js_value_to<double>(ctx, argv[i]) : 0;
+
+      double a = sca[3];
+      sca = rgb_to_hsv(sca);
       sca[3] = a;
 
       ret = js_value_from(ctx, sca);
@@ -1383,6 +1395,7 @@ js_function_list_t js_cv_static_funcs{
     JS_CFUNC_MAGIC_DEF("swap", 2, js_cv_other, OTHER_SWAP),
     JS_CFUNC_MAGIC_DEF("Scalar", 0, js_cv_other, OTHER_SCALAR),
     JS_CFUNC_MAGIC_DEF("HSVtoRGB", 1, js_cv_other, OTHER_HSV2RGB),
+    JS_CFUNC_MAGIC_DEF("RGBtoHSV", 1, js_cv_other, OTHER_RGB2HSV),
 };
 
 js_function_list_t js_cv_constants{

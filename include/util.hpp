@@ -564,21 +564,46 @@ hsv_to_rgb(T c) {
   cv::Mat in(1, 1, CV_32FC3);
   cv::Mat out(1, 1, CV_32FC3);
 
-  float* p = in.ptr<float>(0);
+  float* x = in.ptr<float>(0);
 
-  p[0] = (float)c[0] * 360.0f;
-  p[1] = (float)c[1];
-  p[2] = (float)c[2];
+  x[0] = c[0] /* * 360.0f*/;
+  x[1] = c[1];
+  x[2] = c[2];
 
   cv::cvtColor(in, out, cv::COLOR_HSV2RGB);
 
   T t;
 
-  cv::Vec3f p2 = out.at<cv::Vec3f>(0, 0);
+  cv::Vec3f y = out.at<cv::Vec3f>(0, 0);
 
-  t[0] = (int)(p2[0] * 255);
-  t[1] = (int)(p2[1] * 255);
-  t[2] = (int)(p2[2] * 255);
+  t[0] = (int)(y[0] * 255);
+  t[1] = (int)(y[1] * 255);
+  t[2] = (int)(y[2] * 255);
+
+  return t;
+}
+
+template<typename T>
+static inline T
+rgb_to_hsv(T c) {
+  cv::Mat in(1, 1, CV_32FC3);
+  cv::Mat out(1, 1, CV_32FC3);
+
+  float* x = in.ptr<float>(0);
+
+  x[0] = c[0] / 255;
+  x[1] = c[1] / 255;
+  x[2] = c[2] / 255;
+
+  cv::cvtColor(in, out, cv::COLOR_RGB2HSV);
+
+  T t;
+
+  cv::Vec3f y = out.at<cv::Vec3f>(0, 0);
+
+  t[0] = y[0] * 360;
+  t[1] = y[1];
+  t[2] = y[2];
 
   return t;
 }
