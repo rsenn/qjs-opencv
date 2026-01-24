@@ -567,10 +567,13 @@ js_mat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
         uint32_t row = 0, col = 0;
         uchar* ptr;
         std::ostringstream os;
+
         if(argc > 0)
           JS_ToUint32(ctx, &row, argv[0]);
+
         if(argc > 1)
           JS_ToUint32(ctx, &col, argv[1]);
+
         ptr = m->ptr<uchar>(row, col);
 
         os << static_cast<void*>(ptr);
@@ -832,7 +835,6 @@ js_mat_at(JSContext* ctx, JSValueConst this_val, const cv::Vec<int, N>& vec) {
 
     if(channels == 1) {
       switch(m->type()) {
-
         case CV_8UC1: {
           uint8_t value;
           js_mat_get<uint8_t, N>(ctx, this_val, vec, value);
@@ -913,18 +915,25 @@ js_mat_at(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) 
   if(js_point_read(ctx, argv[0], &pt)) {
     col = pt.x;
     row = pt.y;
-  } else if(argc >= 2 && JS_IsNumber(argv[0]) && JS_IsNumber(argv[1])) {
+  } else if(argc == 2 && m->dims == 2 && JS_IsNumber(argv[0]) && JS_IsNumber(argv[1])) {
     JS_ToUint32(ctx, &row, argv[0]);
     JS_ToUint32(ctx, &col, argv[1]);
     argc -= 2;
     argv += 2;
+  } else if(argc == 3 && m->dims == 3) {
+    cv::Vec<int, 3> vec;
+
+    js_value_to(ctx, argv[0], vec[0]);
+    js_value_to(ctx, argv[1], vec[1]);
+    js_value_to(ctx, argv[2], vec[2]);
+
+    return js_mat_at<3>(ctx, this_val, vec);
+
   } else if(argc == 1 && js_is_array(ctx, argv[0])) {
     const int64_t len = js_array_length(ctx, argv[0]);
 
     if(len != m->dims)
       return JS_ThrowInternalError(ctx, "Supplied array has %" PRId64 " items, Mat has %d dimensions", len, m->dims);
-
-    uchar* ptr;
 
     switch(m->dims) {
       case 1: {
@@ -932,16 +941,19 @@ js_mat_at(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) 
         js_array_to(ctx, argv[0], vec);
         return js_mat_at<1>(ctx, this_val, vec);
       }
+
       case 2: {
         cv::Vec<int, 2> vec;
         js_array_to(ctx, argv[0], vec);
         return js_mat_at<2>(ctx, this_val, vec);
       }
+
       case 3: {
         cv::Vec<int, 3> vec;
         js_array_to(ctx, argv[0], vec);
         return js_mat_at<3>(ctx, this_val, vec);
       }
+
       case 4: {
         cv::Vec<int, 4> vec;
         js_array_to(ctx, argv[0], vec);
@@ -949,9 +961,7 @@ js_mat_at(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) 
       }
     }
 
-    // JSColorData<uint8_t> pixel;
-
-  } else if(argc >= 1 && JS_IsNumber(argv[0])) {
+  } else if(argc == 1 && JS_IsNumber(argv[0])) {
     JSMatDimensions dim = {uint32_t(m->rows), uint32_t(m->cols)};
     uint32_t idx;
 
