@@ -819,6 +819,73 @@ js_mat_get(JSContext* ctx, JSValueConst this_val, uint32_t row, uint32_t col) {
   return JS_UNDEFINED;
 }
 
+template<size_t N>
+static JSValue
+js_mat_at(JSContext* ctx, JSValueConst this_val, const cv::Vec<int, N>& vec) {
+  JSValue ret = JS_EXCEPTION;
+  cv::Mat* m;
+
+  if((m = js_mat_data2(ctx, this_val))) {
+    uint32_t bytes = m->elemSize();
+    size_t channels = mat_channels(*m);
+    size_t offset = mat_offset<N>(*m, vec);
+
+    if(channels == 1) {
+      switch(m->type()) {
+
+        case CV_8UC1: {
+          uint8_t value;
+          js_mat_get<uint8_t, N>(ctx, this_val, vec, value);
+          ret = JS_NewUint32(ctx, value);
+          break;
+        }
+
+        case CV_16UC1: {
+          uint16_t value;
+          js_mat_get<uint16_t, N>(ctx, this_val, vec, value);
+          ret = JS_NewUint32(ctx, value);
+          break;
+        }
+
+        case CV_32SC1: {
+          int32_t value;
+          js_mat_get<int32_t, N>(ctx, this_val, vec, value);
+          ret = JS_NewInt32(ctx, value);
+          break;
+        }
+
+        case CV_32FC1: {
+          float value;
+          js_mat_get<float, N>(ctx, this_val, vec, value);
+          ret = JS_NewFloat64(ctx, value);
+          break;
+        }
+
+        case CV_64FC1: {
+          double value;
+          js_mat_get<double, N>(ctx, this_val, vec, value);
+          ret = JS_NewFloat64(ctx, value);
+          break;
+        }
+        default: {
+          ret = JS_ThrowTypeError(ctx, "Invalid Mat type %u", m->type());
+          break;
+        }
+      }
+
+    } else {
+      JSValue buffer = js_arraybuffer_from(ctx, begin(*m), end(*m));
+      TypedArrayType type(*m);
+
+      ret = js_typedarray_new(ctx, buffer, offset, channels, type);
+    }
+
+    return ret;
+  }
+
+  return JS_UNDEFINED;
+}
+
 static int
 js_mat_get_wh(JSContext* ctx, JSMatDimensions* size, JSValueConst obj) {
   cv::Mat* m;
@@ -857,15 +924,32 @@ js_mat_at(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) 
     if(len != m->dims)
       return JS_ThrowInternalError(ctx, "Supplied array has %" PRId64 " items, Mat has %d dimensions", len, m->dims);
 
-    cv::Vec<int, 4> vec;
+    uchar* ptr;
+
+    switch(m->dims) {
+      case 1: {
+        cv::Vec<int, 1> vec;
+        js_array_to(ctx, argv[0], vec);
+        return js_mat_at<1>(ctx, this_val, vec);
+      }
+      case 2: {
+        cv::Vec<int, 2> vec;
+        js_array_to(ctx, argv[0], vec);
+        return js_mat_at<2>(ctx, this_val, vec);
+      }
+      case 3: {
+        cv::Vec<int, 3> vec;
+        js_array_to(ctx, argv[0], vec);
+        return js_mat_at<3>(ctx, this_val, vec);
+      }
+      case 4: {
+        cv::Vec<int, 4> vec;
+        js_array_to(ctx, argv[0], vec);
+        return js_mat_at<4>(ctx, this_val, vec);
+      }
+    }
 
     // JSColorData<uint8_t> pixel;
-
-    js_array_to(ctx, argv[0], vec);
-
-    /*js_mat_get(ctx, this_val, vec, pixel);
-
-    return js_value_from(ctx, pixel);*/
 
   } else if(argc >= 1 && JS_IsNumber(argv[0])) {
     JSMatDimensions dim = {uint32_t(m->rows), uint32_t(m->cols)};

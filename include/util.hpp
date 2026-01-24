@@ -197,11 +197,23 @@ mat_ptr(cv::Matx<T, rows, cols>& mat) {
 }
 
 static inline size_t
+
 mat_offset(const cv::Mat& mat, uint32_t row, uint32_t col) {
   const uchar *base, *ptr;
 
   base = mat.ptr<uchar>();
   ptr = mat.ptr<uchar>(row, col);
+
+  return ptr - base;
+}
+
+template<size_t N>
+static inline size_t
+mat_offset(const cv::Mat& mat, const cv::Vec<int, N>& vec) {
+  const uchar *base, *ptr;
+
+  base = mat.ptr();
+  ptr = mat.ptr<N>(vec);
 
   return ptr - base;
 }
@@ -221,6 +233,13 @@ template<class T>
 static inline T&
 mat_at(cv::UMat& mat, uint32_t row, uint32_t col) {
   size_t offs = mat_offset(mat, row, col);
+  return *reinterpret_cast<T*>(mat_ptr(mat) + offs);
+}
+
+template<class T, size_t N>
+static inline T&
+mat_at(cv::UMat& mat, const cv::Vec<int, N>& vec) {
+  size_t offs = mat_offset(mat, vec);
   return *reinterpret_cast<T*>(mat_ptr(mat) + offs);
 }
 
