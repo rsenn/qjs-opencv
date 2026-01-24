@@ -800,6 +800,7 @@ enum {
   OTHER_TRACE,
   OTHER_RGB,
   OTHER_SWAP,
+  OTHER_SCALAR,
 };
 
 static JSValue
@@ -808,7 +809,6 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
   JSInputOutputArray src = argc >= 1 ? js_cv_inputoutputarray(ctx, argv[0]) : cv::noArray();
 
   switch(magic) {
-
     case OTHER_MEAN: {
       cv::Scalar mean;
       JSInputArray mask = cv::noArray();
@@ -1236,8 +1236,13 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
     case OTHER_SCALAR: {
       ret = JS_NewArray(ctx);
 
-      for(int i = 0; i < argc; ++i)
+      int i = 0, n = argc < 4 ? argc : 4;
+
+      for(; i < n; ++i)
         JS_SetPropertyUint32(ctx, ret, i, JS_DupValue(ctx, argv[i]));
+
+      for(; i < 4; ++i)
+        JS_SetPropertyUint32(ctx, ret, i, JS_NewInt32(ctx, 0));
 
       break;
     }
@@ -1350,7 +1355,7 @@ js_function_list_t js_cv_static_funcs{
     JS_CFUNC_MAGIC_DEF("trace", 1, js_cv_other, OTHER_TRACE),
     JS_CFUNC_MAGIC_DEF("CV_RGB", 3, js_cv_other, OTHER_RGB),
     JS_CFUNC_MAGIC_DEF("swap", 2, js_cv_other, OTHER_SWAP),
-    JS_CFUNC_MAGIC_DEF("Scalar", 0, js_cv_other, OTHER_SCALER),
+    JS_CFUNC_MAGIC_DEF("Scalar", 0, js_cv_other, OTHER_SCALAR),
 };
 
 js_function_list_t js_cv_constants{
