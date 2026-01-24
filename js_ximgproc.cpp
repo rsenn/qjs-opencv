@@ -591,6 +591,7 @@ js_ximgproc_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
         cv::ximgproc::FastHoughTransform(input, output, dstMatDepth, angleRange, op, makeSkew);
         break;
       }
+      
       case XIMGPROC_HOUGHPOINT2LINE: {
         JSPointData<double> point;
         JSInputArray srcImgInfo = js_input_array(ctx, argv[1]);
