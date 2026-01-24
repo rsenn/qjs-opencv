@@ -1,5 +1,5 @@
-import { BitsToNames } from './cvUtils.js';
-import { destroyWindow, Draw, EVENT_FLAG_ALTKEY, EVENT_FLAG_CTRLKEY, EVENT_FLAG_LBUTTON, EVENT_FLAG_MBUTTON, EVENT_FLAG_RBUTTON, EVENT_FLAG_SHIFTKEY, EVENT_LBUTTONDBLCLK, EVENT_LBUTTONDOWN, EVENT_LBUTTONUP, EVENT_MBUTTONDBLCLK, EVENT_MBUTTONDOWN, EVENT_MBUTTONUP, EVENT_MOUSEHWHEEL, EVENT_MOUSEMOVE, EVENT_MOUSEWHEEL, EVENT_RBUTTONDBLCLK, EVENT_RBUTTONDOWN, EVENT_RBUTTONUP, FILLED, FONT_HERSHEY_PLAIN, getScreenResolution, getWindowImageRect, getWindowProperty, imshow, LINE_AA, moveWindow, namedWindow, Point, resizeWindow, selectROI, setMouseCallback, setWindowProperty, setWindowTitle, Size, waitKey, waitKeyEx, WINDOW_NORMAL, } from 'opencv';
+import { BitsToNames, RandomString } from './cvUtils.js';
+import { destroyAllWindows, destroyWindow, Draw, EVENT_FLAG_ALTKEY, EVENT_FLAG_CTRLKEY, EVENT_FLAG_LBUTTON, EVENT_FLAG_MBUTTON, EVENT_FLAG_RBUTTON, EVENT_FLAG_SHIFTKEY, EVENT_LBUTTONDBLCLK, EVENT_LBUTTONDOWN, EVENT_LBUTTONUP, EVENT_MBUTTONDBLCLK, EVENT_MBUTTONDOWN, EVENT_MBUTTONUP, EVENT_MOUSEHWHEEL, EVENT_MOUSEMOVE, EVENT_MOUSEWHEEL, EVENT_RBUTTONDBLCLK, EVENT_RBUTTONDOWN, EVENT_RBUTTONUP, FILLED, FONT_HERSHEY_PLAIN, getScreenResolution, getWindowImageRect, getWindowProperty, imshow, LINE_AA, moveWindow, namedWindow, Point, resizeWindow, selectROI, setMouseCallback, setWindowProperty, setWindowTitle, Size, waitKey, waitKeyEx, WINDOW_NORMAL, } from 'opencv';
 
 export const MouseEvents = {
   EVENT_MOUSEMOVE,
@@ -43,7 +43,7 @@ export class Screen {
 }
 
 export class Window {
-  constructor(name, flags = WINDOW_NORMAL) {
+  constructor(name = 'cvHighGUI', flags = WINDOW_NORMAL) {
     this.flags = flags;
     if(typeof name == 'string') this.#create(name);
   }
@@ -66,11 +66,13 @@ export class Window {
   update(waitFor = 10) {
     let key, t;
     const deadline = (t = Date.now()) + waitFor;
+
     do {
       if((key = waitKeyEx(Math.max(1, deadline - t))) == -1) break;
 
       this.#handleKey(key);
     } while((t = Date.now()) < deadline);
+
     //console.log('Window.update', { waitFor, key, t: deadline - t });
   }
 
@@ -82,7 +84,6 @@ export class Window {
   }
 
   resize(...args) {
-    //console.log("Window.resize", ...args);
     let size = new Size(...args);
     resizeWindow(this.name, ...size);
 
@@ -133,8 +134,6 @@ export class Window {
   show(mat) {
     this.mat = mat;
     imshow(this.name, mat);
-
-    //this.update(50);
   }
 
   close() {
@@ -153,16 +152,31 @@ export class Window {
     return selectROI(this.name, mat ?? this.mat, showCrosshair, fromCenter);
   }
 
-  static show(image) {
-    const win = new Window('temp');
-    win.show(image);
+  loop() {
     let done = false;
-    while(!done) {
-      let key = waitKey(-1);
-      if(key == 113 || key == 27 || key == 13) done = true;
+    const { onkey } = this;
+
+    this.onkey = ({ key, keycode, scancode, mods }) => {
+      if([13, 27, 113].indexOf(keycode) != -1) done = true;
       else console.log('key code =', key);
-    }
-    win.close();
+
+      if(onkey) onkey({ key, keycode, scancode, mods });
+    };
+
+    while(!done) this.update();
+  }
+
+  static show(image) {
+    const wnd = new Window('cvHighGUI');
+
+    wnd.show(image);
+    wnd.loop();
+    wnd.close();
+  }
+
+  static destroyAll() {
+    destroyAllWindows();
+    waitKey(0);
   }
 }
 

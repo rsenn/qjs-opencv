@@ -2,6 +2,24 @@ export const isFunction = v => typeof v == 'function';
 export const isObject = v => (v !== null && typeof v == 'object') || isFunction(v);
 export const Modulo = (a, b) => ((a % b) + b) % b;
 
+export function RandomInteger(...args) {
+  let range = args.splice(0, 2);
+  let rng = args.shift() ?? Math.random;
+
+  if(range.length < 1) range.push(Number.MAX_SAFE_INTEGER);
+  if(range.length < 2) range.unshift(0);
+
+  return Math.round(rand(range[1] - range[0] + 1) + range[0]);
+}
+
+export function RandomString(n = RandomInteger(10, 20), set = '_0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', rng = Math.random) {
+  let o = '';
+
+  while(--n >= 0) o += set[Math.round(rng() * (set.length - 1))];
+
+  return o;
+}
+
 export const WeakMapper = (createFn, map = new WeakMap(), hitFn) => {
   let self = function(obj, ...args) {
     let ret;

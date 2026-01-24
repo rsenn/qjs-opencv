@@ -589,7 +589,7 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
   JSValue ret = JS_UNDEFINED;
   JSColorData<double> color;
   double value = 0;
-  JSMatData *input = nullptr, *output = nullptr, *other = nullptr;
+  JSMatData *input, *output, *other;
   double scale = 1.0;
   std::array<uint8_t, 4> arr;
 
@@ -658,7 +658,9 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
         case MAT_EXPR_DIV: expr = mat / scalar; break;
       }
       tmp = static_cast<cv::Mat>(expr);
-      ret = js_mat_wrap(ctx, tmp);
+
+      *output = tmp;
+      // ret = js_mat_wrap(ctx, tmp);
     }
 
   } else {
@@ -1356,7 +1358,7 @@ static JSValue
 js_mat_class_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSValueConst *v = argv, *e = &argv[argc];
   JSMatData result;
-  JSMatData *prev = nullptr, *mat = nullptr;
+  JSMatData *prev, *mat;
 
   while(v < e) {
     JSValueConst arg = *v++;

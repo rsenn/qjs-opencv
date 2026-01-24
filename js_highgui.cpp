@@ -174,6 +174,15 @@ js_cv_destroy_window(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
 }
 
 static JSValue
+js_cv_destroy_all_windows(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+  cv::destroyAllWindows();
+
+  window_list.clear();
+
+  return JS_UNDEFINED;
+}
+
+static JSValue
 js_cv_create_trackbar(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   const char *name, *window;
   int32_t ret, count;
@@ -466,6 +475,11 @@ js_cv_select_rois(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
   return ret;
 }
 
+static JSValue
+js_cv_start_window_thread(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+  return  JS_NewInt32(ctx, cv::startWindowThread());
+}
+
 typedef std::vector<JSCFunctionListEntry> js_function_list_t;
 
 js_function_list_t js_highgui_static_funcs{
@@ -474,6 +488,7 @@ js_function_list_t js_highgui_static_funcs{
     JS_CFUNC_DEF("moveWindow", 2, js_cv_move_window),
     JS_CFUNC_DEF("resizeWindow", 2, js_cv_resize_window),
     JS_CFUNC_DEF("destroyWindow", 1, js_cv_destroy_window),
+    JS_CFUNC_DEF("destroyAllWindows", 0, js_cv_destroy_all_windows),
     JS_CFUNC_DEF("getWindowImageRect", 1, js_cv_get_window_image_rect),
     JS_CFUNC_DEF("getWindowProperty", 2, js_cv_get_window_property),
     JS_CFUNC_DEF("setWindowProperty", 3, js_cv_set_window_property),
@@ -493,6 +508,7 @@ js_function_list_t js_highgui_static_funcs{
     JS_CFUNC_DEF("selectROI", 1, js_cv_select_roi),
     JS_CFUNC_DEF("selectROIs", 2, js_cv_select_rois),
     JS_CFUNC_MAGIC_DEF("displayOverlay", 2, js_cv_gui_methods, DISPLAY_OVERLAY),
+    JS_CFUNC_DEF("startWindowThread", 0, js_cv_start_window_thread),
 };
 
 js_function_list_t js_highgui_constants{
