@@ -152,6 +152,18 @@ export class Window {
   selectROI(mat, showCrosshair = true, fromCenter = false) {
     return selectROI(this.name, mat ?? this.mat, showCrosshair, fromCenter);
   }
+
+  static show(image) {
+    const win = new Window('temp');
+    win.show(image);
+    let done = false;
+    while(!done) {
+      let key = waitKey(-1);
+      if(key == 113 || key == 27 || key == 13) done = true;
+      else console.log('key code =', key);
+    }
+    win.close();
+  }
 }
 
 export function TextStyle(fontFace = FONT_HERSHEY_PLAIN, fontScale = 1.0, thickness = -1) {

@@ -649,7 +649,7 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
 
       js_array_to(ctx, argv[0], arr);
       auto& scalar = *reinterpret_cast<cv::Scalar*>(&arr);
-      /*        auto& scalar = *reinterpret_cast<cv::Scalar_<uint8_t>*>(&arr);
+      /*auto& scalar = *reinterpret_cast<cv::Scalar_<uint8_t>*>(&arr);
               auto& v4b = *reinterpret_cast<cv::Vec4b*>(&arr);
 
               uint32_t value = (v4b.val[0] << 24) | (v4b.val[1] << 16) | (v4b.val[2] << 8) |
@@ -668,6 +668,7 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
         case MAT_EXPR_DIV: expr = mat / scalar; break;
       }
       tmp = static_cast<cv::Mat>(expr);
+      ret=js_mat_wrap(ctx, tmp);
     }
 
   } else {
