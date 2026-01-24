@@ -108,50 +108,62 @@ js_edge_drawing_params_get(JSContext* ctx, JSValueConst this_val, int magic) {
       ret = js_value_from(ctx, params.AnchorThresholdValue);
       break;
     }
+
     case PARAM_EDGEDETECTIONOPERATOR: {
       ret = js_value_from(ctx, params.EdgeDetectionOperator);
       break;
     }
+
     case PARAM_GRADIENTTHRESHOLDVALUE: {
       ret = js_value_from(ctx, params.GradientThresholdValue);
       break;
     }
+
     case PARAM_LINEFITERRORTHRESHOLD: {
       ret = js_value_from(ctx, params.LineFitErrorThreshold);
       break;
     }
+
     case PARAM_MAXDISTANCEBETWEENTWOLINES: {
       ret = js_value_from(ctx, params.MaxDistanceBetweenTwoLines);
       break;
     }
+
     case PARAM_MAXERRORTHRESHOLD: {
       ret = js_value_from(ctx, params.MaxErrorThreshold);
       break;
     }
+
     case PARAM_MINLINELENGTH: {
       ret = js_value_from(ctx, params.MinLineLength);
       break;
     }
+
     case PARAM_MINPATHLENGTH: {
       ret = js_value_from(ctx, params.MinPathLength);
       break;
     }
+
     case PARAM_NFAVALIDATION: {
       ret = js_value_from(ctx, params.NFAValidation);
       break;
     }
+
     case PARAM_PFMODE: {
       ret = js_value_from(ctx, params.PFmode);
       break;
     }
+
     case PARAM_SCANINTERVAL: {
       ret = js_value_from(ctx, params.ScanInterval);
       break;
     }
+
     case PARAM_SIGMA: {
       ret = js_value_from(ctx, params.Sigma);
       break;
     }
+
     case PARAM_SUMFLAG: {
       ret = js_value_from(ctx, params.SumFlag);
       break;
@@ -176,50 +188,62 @@ js_edge_drawing_params_set(JSContext* ctx, JSValueConst this_val, JSValueConst v
       js_value_to(ctx, value, params.AnchorThresholdValue);
       break;
     }
+
     case PARAM_EDGEDETECTIONOPERATOR: {
       js_value_to(ctx, value, params.EdgeDetectionOperator);
       break;
     }
+
     case PARAM_GRADIENTTHRESHOLDVALUE: {
       js_value_to(ctx, value, params.GradientThresholdValue);
       break;
     }
+
     case PARAM_LINEFITERRORTHRESHOLD: {
       js_value_to(ctx, value, params.LineFitErrorThreshold);
       break;
     }
+
     case PARAM_MAXDISTANCEBETWEENTWOLINES: {
       js_value_to(ctx, value, params.MaxDistanceBetweenTwoLines);
       break;
     }
+
     case PARAM_MAXERRORTHRESHOLD: {
       js_value_to(ctx, value, params.MaxErrorThreshold);
       break;
     }
+
     case PARAM_MINLINELENGTH: {
       js_value_to(ctx, value, params.MinLineLength);
       break;
     }
+
     case PARAM_MINPATHLENGTH: {
       js_value_to(ctx, value, params.MinPathLength);
       break;
     }
+
     case PARAM_NFAVALIDATION: {
       js_value_to(ctx, value, params.NFAValidation);
       break;
     }
+
     case PARAM_PFMODE: {
       js_value_to(ctx, value, params.PFmode);
       break;
     }
+
     case PARAM_SCANINTERVAL: {
       js_value_to(ctx, value, params.ScanInterval);
       break;
     }
+
     case PARAM_SIGMA: {
       js_value_to(ctx, value, params.Sigma);
       break;
     }
+
     case PARAM_SUMFLAG: {
       js_value_to(ctx, value, params.SumFlag);
       break;
@@ -277,42 +301,49 @@ js_edge_drawing_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
       ed->get()->detectEdges(input);
       break;
     }
+
     case EDGEDRAWING_DETECTELLIPSES: {
       JSOutputArray output = js_cv_outputarray(ctx, argv[0]);
 
       ed->get()->detectEllipses(output);
       break;
     }
+
     case EDGEDRAWING_DETECTLINES: {
       JSOutputArray output = js_cv_outputarray(ctx, argv[0]);
 
       ed->get()->detectLines(output);
       break;
     }
+
     case EDGEDRAWING_GETEDGEIMAGE: {
       JSOutputArray output = js_cv_outputarray(ctx, argv[0]);
 
       ed->get()->getEdgeImage(output);
       break;
     }
+
     case EDGEDRAWING_GETGRADIENTIMAGE: {
       JSOutputArray output = js_cv_outputarray(ctx, argv[0]);
 
       ed->get()->getGradientImage(output);
       break;
     }
+
     case EDGEDRAWING_GETSEGMENTINDICESOFLINES: {
       std::vector<int> indices = ed->get()->getSegmentIndicesOfLines();
 
       ret = js_array_from(ctx, indices);
       break;
     }
+
     case EDGEDRAWING_GETSEGMENTS: {
       auto segments = ed->get()->getSegments();
 
       ret = js_contours_new(ctx, segments);
       break;
     }
+
     case EDGEDRAWING_SETPARAMS: {
       JSEdgeDrawingData* ed2 = js_edge_drawing_data(argv[0]);
 
@@ -460,6 +491,7 @@ js_structured_edge_detection_method(JSContext* ctx, JSValueConst this_val, int a
       sed->get()->computeOrientation(input, output);
       break;
     }
+
     case STRUCTUREDEDGEDETECTION_DETECTEDGES: {
       JSInputArray input = js_input_array(ctx, argv[0]);
       JSOutputArray output = js_cv_outputarray(ctx, argv[1]);
@@ -467,6 +499,7 @@ js_structured_edge_detection_method(JSContext* ctx, JSValueConst this_val, int a
       sed->get()->detectEdges(input, output);
       break;
     }
+
     case STRUCTUREDEDGEDETECTION_EDGESNMS: {
       JSInputArray edge_image = js_input_array(ctx, argv[0]);
       JSInputArray orientation_image = js_input_array(ctx, argv[1]);
@@ -702,6 +735,278 @@ const JSCFunctionListEntry js_superpixel_proto_funcs[] = {
 
 const JSCFunctionListEntry js_superpixel_static_funcs[] = {};
 
+typedef cv::Ptr<cv::ximgproc::EdgeBoxes> JSEdgeBoxesData;
+
+extern "C" {
+thread_local JSValue edgeboxes_proto = JS_UNDEFINED, edgeboxes_class = JS_UNDEFINED, edgeboxes_params_proto = JS_UNDEFINED;
+thread_local JSClassID js_edgeboxes_class_id = 0;
+}
+
+JSEdgeBoxesData*
+js_edgeboxes_data(JSValueConst val) {
+  return static_cast<JSEdgeBoxesData*>(JS_GetOpaque(val, js_edgeboxes_class_id));
+}
+
+JSEdgeBoxesData*
+js_edgeboxes_data2(JSContext* ctx, JSValueConst val) {
+  return static_cast<JSEdgeBoxesData*>(JS_GetOpaque2(ctx, val, js_edgeboxes_class_id));
+}
+
+static JSValue
+js_edgeboxes_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
+  JSEdgeBoxesData* eb;
+  JSValue obj = JS_UNDEFINED, proto;
+
+  if(!(eb = js_allocate<JSEdgeBoxesData>(ctx)))
+    return JS_EXCEPTION;
+
+  /* using new_target to get the prototype is necessary when the class is extended. */
+  proto = JS_GetPropertyStr(ctx, new_target, "prototype");
+  if(JS_IsException(proto))
+    goto fail;
+
+  obj = JS_NewObjectProtoClass(ctx, proto, js_edgeboxes_class_id);
+  JS_FreeValue(ctx, proto);
+
+  if(JS_IsException(obj))
+    goto fail;
+
+  JS_SetOpaque(obj, eb);
+
+  return obj;
+
+fail:
+  js_deallocate(ctx, eb);
+  JS_FreeValue(ctx, obj);
+  return JS_EXCEPTION;
+}
+
+void
+js_edgeboxes_finalizer(JSRuntime* rt, JSValue val) {
+  JSEdgeBoxesData* eb;
+
+  if((eb = js_edgeboxes_data(val))) {
+    cv::Algorithm* ptr = eb->get();
+
+    ptr->~Algorithm();
+
+    js_deallocate(rt, eb);
+  }
+}
+
+enum {
+  EDGEBOXES_GETALPHA,
+  EDGEBOXES_GETBETA,
+  EDGEBOXES_GETBOUNDINGBOXES,
+  EDGEBOXES_GETCLUSTERMINMAG,
+  EDGEBOXES_GETEDGEMERGETHR,
+  EDGEBOXES_GETEDGEMINMAG,
+  EDGEBOXES_GETETA,
+  EDGEBOXES_GETGAMMA,
+  EDGEBOXES_GETKAPPA,
+  EDGEBOXES_GETMAXASPECTRATIO,
+  EDGEBOXES_GETMAXBOXES,
+  EDGEBOXES_GETMINBOXAREA,
+  EDGEBOXES_GETMINSCORE,
+  EDGEBOXES_SETALPHA,
+  EDGEBOXES_SETBETA,
+  EDGEBOXES_SETCLUSTERMINMAG,
+  EDGEBOXES_SETEDGEMERGETHR,
+  EDGEBOXES_SETEDGEMINMAG,
+  EDGEBOXES_SETETA,
+  EDGEBOXES_SETGAMMA,
+  EDGEBOXES_SETKAPPA,
+  EDGEBOXES_SETMAXASPECTRATIO,
+  EDGEBOXES_SETMAXBOXES,
+  EDGEBOXES_SETMINBOXAREA,
+  EDGEBOXES_SETMINSCORE,
+};
+
+static JSValue
+js_edgeboxes_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  JSEdgeBoxesData* eb;
+  JSValue ret = JS_UNDEFINED;
+
+  if(!(eb = js_edgeboxes_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  switch(magic) {
+    case EDGEBOXES_GETALPHA: {
+      ret = js_value_from(ctx, eb->get()->getAlpha());
+      break;
+    }
+
+    case EDGEBOXES_GETBETA: {
+      ret = js_value_from(ctx, eb->get()->getBeta());
+      break;
+    }
+
+    case EDGEBOXES_GETBOUNDINGBOXES: {
+      JSInputArray edge_map = js_input_array(ctx, argv[0]);
+      JSInputArray orientation_map = js_input_array(ctx, argv[1]);
+      JSOutputArray scores = cv::noArray();
+
+      std::vector<JSRectData<int>> boxes;
+      js_array_to(ctx, argv[2], boxes);
+
+      if(argc > 3)
+        scores = js_cv_outputarray(ctx, argv[3]);
+
+      eb->get()->getBoundingBoxes(edge_map, orientation_map, boxes, scores);
+      break;
+    }
+
+    case EDGEBOXES_GETCLUSTERMINMAG: {
+      ret = js_value_from(ctx, eb->get()->getClusterMinMag());
+      break;
+    }
+
+    case EDGEBOXES_GETEDGEMERGETHR: {
+      ret = js_value_from(ctx, eb->get()->getEdgeMergeThr());
+      break;
+    }
+
+    case EDGEBOXES_GETEDGEMINMAG: {
+      ret = js_value_from(ctx, eb->get()->getEdgeMinMag());
+      break;
+    }
+
+    case EDGEBOXES_GETETA: {
+      ret = js_value_from(ctx, eb->get()->getEta());
+      break;
+    }
+
+    case EDGEBOXES_GETGAMMA: {
+      ret = js_value_from(ctx, eb->get()->getGamma());
+      break;
+    }
+
+    case EDGEBOXES_GETKAPPA: {
+      ret = js_value_from(ctx, eb->get()->getKappa());
+      break;
+    }
+
+    case EDGEBOXES_GETMAXASPECTRATIO: {
+      ret = js_value_from(ctx, eb->get()->getMaxAspectRatio());
+      break;
+    }
+
+    case EDGEBOXES_GETMAXBOXES: {
+      ret = js_value_from(ctx, eb->get()->getMaxBoxes());
+      break;
+    }
+
+    case EDGEBOXES_GETMINBOXAREA: {
+      ret = js_value_from(ctx, eb->get()->getMinBoxArea());
+      break;
+    }
+
+    case EDGEBOXES_GETMINSCORE: {
+      ret = js_value_from(ctx, eb->get()->getMinScore());
+      break;
+    }
+
+    case EDGEBOXES_SETALPHA: {
+      eb->get()->setAlpha(js_value_to<double>(ctx, argv[0]));
+      break;
+    }
+
+    case EDGEBOXES_SETBETA: {
+      eb->get()->setBeta(js_value_to<double>(ctx, argv[0]));
+      break;
+    }
+
+    case EDGEBOXES_SETCLUSTERMINMAG: {
+      eb->get()->setClusterMinMag(js_value_to<double>(ctx, argv[0]));
+      break;
+    }
+
+    case EDGEBOXES_SETEDGEMERGETHR: {
+      eb->get()->setEdgeMergeThr(js_value_to<double>(ctx, argv[0]));
+      break;
+    }
+
+    case EDGEBOXES_SETEDGEMINMAG: {
+      eb->get()->setEdgeMinMag(js_value_to<double>(ctx, argv[0]));
+      break;
+    }
+
+    case EDGEBOXES_SETETA: {
+      eb->get()->setEta(js_value_to<double>(ctx, argv[0]));
+      break;
+    }
+
+    case EDGEBOXES_SETGAMMA: {
+      eb->get()->setGamma(js_value_to<double>(ctx, argv[0]));
+      break;
+    }
+
+    case EDGEBOXES_SETKAPPA: {
+      eb->get()->setKappa(js_value_to<double>(ctx, argv[0]));
+      break;
+    }
+
+    case EDGEBOXES_SETMAXASPECTRATIO: {
+      eb->get()->setMaxAspectRatio(js_value_to<double>(ctx, argv[0]));
+      break;
+    }
+
+    case EDGEBOXES_SETMAXBOXES: {
+      eb->get()->setMaxBoxes(js_value_to<int32_t>(ctx, argv[0]));
+      break;
+    }
+
+    case EDGEBOXES_SETMINBOXAREA: {
+      eb->get()->setMinBoxArea(js_value_to<double>(ctx, argv[0]));
+      break;
+    }
+
+    case EDGEBOXES_SETMINSCORE: {
+      eb->get()->setMinScore(js_value_to<double>(ctx, argv[0]));
+      break;
+    }
+  }
+
+  return ret;
+}
+
+JSClassDef js_edgeboxes_class = {
+    .class_name = "EdgeBoxes",
+    .finalizer = js_edgeboxes_finalizer,
+};
+
+const JSCFunctionListEntry js_edgeboxes_proto_funcs[] = {
+    JS_CFUNC_MAGIC_DEF("getAlpha", 0, js_edgeboxes_method, EDGEBOXES_GETALPHA),
+    JS_CFUNC_MAGIC_DEF("getBeta", 0, js_edgeboxes_method, EDGEBOXES_GETBETA),
+    JS_CFUNC_MAGIC_DEF("getBoundingBoxes", 0, js_edgeboxes_method, EDGEBOXES_GETBOUNDINGBOXES),
+    JS_CFUNC_MAGIC_DEF("getClusterMinMag", 0, js_edgeboxes_method, EDGEBOXES_GETCLUSTERMINMAG),
+    JS_CFUNC_MAGIC_DEF("getEdgeMergeThr", 0, js_edgeboxes_method, EDGEBOXES_GETEDGEMERGETHR),
+    JS_CFUNC_MAGIC_DEF("getEdgeMinMag", 0, js_edgeboxes_method, EDGEBOXES_GETEDGEMINMAG),
+    JS_CFUNC_MAGIC_DEF("getEta", 0, js_edgeboxes_method, EDGEBOXES_GETETA),
+    JS_CFUNC_MAGIC_DEF("getGamma", 0, js_edgeboxes_method, EDGEBOXES_GETGAMMA),
+    JS_CFUNC_MAGIC_DEF("getKappa", 0, js_edgeboxes_method, EDGEBOXES_GETKAPPA),
+    JS_CFUNC_MAGIC_DEF("getMaxAspectRatio", 0, js_edgeboxes_method, EDGEBOXES_GETMAXASPECTRATIO),
+    JS_CFUNC_MAGIC_DEF("getMaxBoxes", 0, js_edgeboxes_method, EDGEBOXES_GETMAXBOXES),
+    JS_CFUNC_MAGIC_DEF("getMinBoxArea", 0, js_edgeboxes_method, EDGEBOXES_GETMINBOXAREA),
+    JS_CFUNC_MAGIC_DEF("getMinScore", 0, js_edgeboxes_method, EDGEBOXES_GETMINSCORE),
+    JS_CFUNC_MAGIC_DEF("setAlpha", 0, js_edgeboxes_method, EDGEBOXES_SETALPHA),
+    JS_CFUNC_MAGIC_DEF("setBeta", 0, js_edgeboxes_method, EDGEBOXES_SETBETA),
+    JS_CFUNC_MAGIC_DEF("setClusterMinMag", 0, js_edgeboxes_method, EDGEBOXES_SETCLUSTERMINMAG),
+    JS_CFUNC_MAGIC_DEF("setEdgeMergeThr", 0, js_edgeboxes_method, EDGEBOXES_SETEDGEMERGETHR),
+    JS_CFUNC_MAGIC_DEF("setEdgeMinMag", 0, js_edgeboxes_method, EDGEBOXES_SETEDGEMINMAG),
+    JS_CFUNC_MAGIC_DEF("setEta", 0, js_edgeboxes_method, EDGEBOXES_SETETA),
+    JS_CFUNC_MAGIC_DEF("setGamma", 0, js_edgeboxes_method, EDGEBOXES_SETGAMMA),
+    JS_CFUNC_MAGIC_DEF("setKappa", 0, js_edgeboxes_method, EDGEBOXES_SETKAPPA),
+    JS_CFUNC_MAGIC_DEF("setMaxAspectRatio", 0, js_edgeboxes_method, EDGEBOXES_SETMAXASPECTRATIO),
+    JS_CFUNC_MAGIC_DEF("setMaxBoxes", 0, js_edgeboxes_method, EDGEBOXES_SETMAXBOXES),
+    JS_CFUNC_MAGIC_DEF("setMinBoxArea", 0, js_edgeboxes_method, EDGEBOXES_SETMINBOXAREA),
+    JS_CFUNC_MAGIC_DEF("setMinScore", 0, js_edgeboxes_method, EDGEBOXES_SETMINSCORE),
+
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "EdgeBoxes", JS_PROP_CONFIGURABLE),
+};
+
+const JSCFunctionListEntry js_edgeboxes_static_funcs[] = {};
+
 enum {
   XIMGPROC_ANISOTROPIC_DIFFUSION,
   XIMGPROC_EDGE_PRESERVING_FILTER,
@@ -721,6 +1026,7 @@ enum {
   XIMGPROC_CREATESUPERPIXELSLIC,
   XIMGPROC_CREATESUPERPIXELLSC,
   XIMGPROC_CREATESUPERPIXELSEEDS,
+  XIMGPROC_CREATEEDGEBOXES,
   XIMGPROC_FASTHOUGHTRANSFORM,
   XIMGPROC_HOUGHPOINT2LINE,
 };
@@ -1010,6 +1316,44 @@ js_ximgproc_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
         *sp = cv::ximgproc::createSuperpixelSEEDS(image_width, image_height, image_channels, num_superpixels, num_levels, prior, histogram_bins, double_step);
         break;
       }
+
+      case XIMGPROC_CREATEEDGEBOXES: {
+        double alpha = 0.65, beta = 0.75, eta = 1, minScore = 0.01f, edgeMinMag = 0.1, edgeMergeThr = 0.5, clusterMinMag = 0.5, maxAspectRatio = 3,
+               minBoxArea = 1000, gamma = 2, kappa = 1.5;
+        int32_t maxBoxes = 10000;
+
+        if(argc > 0)
+          js_value_to(ctx, argv[0], alpha);
+        if(argc > 1)
+          js_value_to(ctx, argv[1], beta);
+        if(argc > 2)
+          js_value_to(ctx, argv[2], eta);
+        if(argc > 3)
+          js_value_to(ctx, argv[3], minScore);
+        if(argc > 4)
+          js_value_to(ctx, argv[4], maxBoxes);
+        if(argc > 5)
+          js_value_to(ctx, argv[5], edgeMinMag);
+        if(argc > 6)
+          js_value_to(ctx, argv[6], edgeMergeThr);
+        if(argc > 7)
+          js_value_to(ctx, argv[7], clusterMinMag);
+        if(argc > 8)
+          js_value_to(ctx, argv[8], maxAspectRatio);
+        if(argc > 9)
+          js_value_to(ctx, argv[9], minBoxArea);
+        if(argc > 10)
+          js_value_to(ctx, argv[10], gamma);
+        if(argc > 11)
+          js_value_to(ctx, argv[11], kappa);
+
+        ret = js_edgeboxes_constructor(ctx, edgeboxes_class, 0, 0);
+        JSEdgeBoxesData* eb = js_edgeboxes_data(ret);
+
+        *eb = cv::ximgproc::createEdgeBoxes(
+            alpha, beta, eta, minScore, maxBoxes, edgeMinMag, edgeMergeThr, clusterMinMag, maxAspectRatio, minBoxArea, gamma, kappa);
+        break;
+      }
     }
   } catch(const cv::Exception& e) { ret = js_cv_throw(ctx, e); }
 
@@ -1038,6 +1382,7 @@ js_function_list_t js_ximgproc_ximgproc_funcs{
     JS_CFUNC_MAGIC_DEF("createSuperpixelSLIC", 1, js_ximgproc_func, XIMGPROC_CREATESUPERPIXELSLIC),
     JS_CFUNC_MAGIC_DEF("createSuperpixelLSC", 1, js_ximgproc_func, XIMGPROC_CREATESUPERPIXELLSC),
     JS_CFUNC_MAGIC_DEF("createSuperpixelSEEDS", 5, js_ximgproc_func, XIMGPROC_CREATESUPERPIXELSEEDS),
+    JS_CFUNC_MAGIC_DEF("createEdgeBoxes", 0, js_ximgproc_func, XIMGPROC_CREATEEDGEBOXES),
 
     JS_PROP_INT32_DEF("ARO_0_45", cv::ximgproc::ARO_0_45, JS_PROP_ENUMERABLE),
     JS_PROP_INT32_DEF("ARO_45_90", cv::ximgproc::ARO_45_90, JS_PROP_ENUMERABLE),
@@ -1127,11 +1472,24 @@ js_ximgproc_init(JSContext* ctx, JSModuleDef* m) {
   JS_SetConstructor(ctx, superpixel_class, superpixel_proto);
   JS_SetPropertyFunctionList(ctx, superpixel_class, js_superpixel_static_funcs, countof(js_superpixel_static_funcs));
 
+  JS_NewClassID(&js_edgeboxes_class_id);
+  JS_NewClass(JS_GetRuntime(ctx), js_edgeboxes_class_id, &js_edgeboxes_class);
+
+  edgeboxes_proto = JS_NewObject(ctx);
+  JS_SetPropertyFunctionList(ctx, edgeboxes_proto, js_edgeboxes_proto_funcs, countof(js_edgeboxes_proto_funcs));
+  JS_SetClassProto(ctx, js_edgeboxes_class_id, edgeboxes_proto);
+
+  edgeboxes_class = JS_NewCFunction2(ctx, js_edgeboxes_constructor, "EdgeBoxes", 0, JS_CFUNC_constructor, 0);
+  /* set proto.constructor and ctor.prototype */
+  JS_SetConstructor(ctx, edgeboxes_class, edgeboxes_proto);
+  JS_SetPropertyFunctionList(ctx, edgeboxes_class, js_edgeboxes_static_funcs, countof(js_edgeboxes_static_funcs));
+
   if(m) {
     JS_SetModuleExport(ctx, m, "EdgeDrawing", edge_drawing_class);
     JS_SetModuleExport(ctx, m, "EdgeDrawingParams", edge_drawing_params_class);
     JS_SetModuleExport(ctx, m, "StructuredEdgeDetection", structured_edge_detection_class);
     JS_SetModuleExport(ctx, m, "Superpixel", superpixel_class);
+    JS_SetModuleExport(ctx, m, "EdgeBoxes", edgeboxes_class);
     JS_SetModuleExportList(ctx, m, js_ximgproc_static_funcs.data(), js_ximgproc_static_funcs.size());
   }
 
@@ -1144,6 +1502,7 @@ js_ximgproc_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "EdgeDrawingParams");
   JS_AddModuleExport(ctx, m, "StructuredEdgeDetection");
   JS_AddModuleExport(ctx, m, "Superpixel");
+  JS_AddModuleExport(ctx, m, "EdgeBoxes");
 
   JS_AddModuleExportList(ctx, m, js_ximgproc_static_funcs.data(), js_ximgproc_static_funcs.size());
 }

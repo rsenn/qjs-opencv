@@ -668,6 +668,14 @@ js_value_to(JSContext* ctx, JSValueConst value, cv::Range& rn) {
   return js_range_read(ctx, value, &rn);
 }
 
+template<class T>
+static inline T
+js_value_to(JSContext* ctx, JSValueConst value) {
+  T ret;
+  js_value_to(ctx, value, ret);
+  return ret;
+}
+
 /*template<class T>
 static inline int
 js_value_to(JSContext* ctx, JSValueConst value, Line<T>& in) {
