@@ -560,13 +560,38 @@ dump(const cv::_OutputArray& arr) {
 
 template<typename T>
 static inline T
+color_convert(T c, int flag) {
+  cv::Mat in(1, 1, CV_32FC3);
+  cv::Mat out(1, 1, CV_32FC3);
+
+  float* x = in.ptr<float>(0);
+
+  x[0] = c[0];
+  x[1] = c[1];
+  x[2] = c[2];
+
+  cv::cvtColor(in, out, flag);
+
+  T t;
+
+  cv::Vec3f y = out.at<cv::Vec3f>(0, 0);
+
+  t[0] = y[0];
+  t[1] = y[1];
+  t[2] = y[2];
+
+  return t;
+}
+
+template<typename T>
+static inline T
 hsv_to_rgb(T c) {
   cv::Mat in(1, 1, CV_32FC3);
   cv::Mat out(1, 1, CV_32FC3);
 
   float* x = in.ptr<float>(0);
 
-  x[0] = c[0] /* * 360.0f*/;
+  x[0] = c[0];
   x[1] = c[1];
   x[2] = c[2];
 
@@ -601,7 +626,7 @@ rgb_to_hsv(T c) {
 
   cv::Vec3f y = out.at<cv::Vec3f>(0, 0);
 
-  t[0] = y[0] * 360;
+  t[0] = y[0];
   t[1] = y[1];
   t[2] = y[2];
 
