@@ -94,7 +94,7 @@ js_raspi_cam_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
       }
 
       case RASPI_CAM_CAPTURE_PHOTO: {
-        JSInputOutputArray mat = js_umat_or_mat(ctx, argv[0]);
+        JSInputOutputArray mat = js_cv_inputoutputarray(ctx, argv[0]);
         cam->capturePhoto(mat.getMatRef());
         break;
       }
@@ -110,7 +110,7 @@ js_raspi_cam_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
       }
 
       case RASPI_CAM_GET_VIDEO_FRAME: {
-        JSInputOutputArray mat = js_umat_or_mat(ctx, argv[0]);
+        JSInputOutputArray mat = js_cv_inputoutputarray(ctx, argv[0]);
         uint32_t timeout = 1000;
         if(argc > 1)
           JS_ToUint32(ctx, &timeout, argv[1]);

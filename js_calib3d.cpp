@@ -21,7 +21,7 @@ js_calib3d_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
 
   switch(magic) {
     case FIND_CHESSBOARD_CORNERS: {
-      JSInputOutputArray image = js_umat_or_mat(ctx, argv[0]);
+      JSInputOutputArray image = js_cv_inputoutputarray(ctx, argv[0]);
       cv::Size pattern_size = js_size_get(ctx, argv[1]);
       std::vector<cv::Point2f> corners;
       int32_t flags = cv::CALIB_CB_ADAPTIVE_THRESH | cv::CALIB_CB_NORMALIZE_IMAGE;
@@ -38,7 +38,7 @@ js_calib3d_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
     }
 
     case FIND_CHESSBOARD_CORNERS_SB: {
-      JSInputOutputArray image = js_umat_or_mat(ctx, argv[0]);
+      JSInputOutputArray image = js_cv_inputoutputarray(ctx, argv[0]);
       cv::Size pattern_size = js_size_get(ctx, argv[1]);
       std::vector<cv::Point2f> corners;
       int32_t flags = cv::CALIB_CB_EXHAUSTIVE | cv::CALIB_CB_NORMALIZE_IMAGE;

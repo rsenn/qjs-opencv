@@ -406,7 +406,7 @@ js_cv_wait_key(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
 static JSValue
 js_cv_imshow(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   const char* winname = JS_ToCString(ctx, argv[0]);
-  JSInputOutputArray image = js_umat_or_mat(ctx, argv[1]);
+  JSInputOutputArray image = js_cv_inputoutputarray(ctx, argv[1]);
 
   if(image.empty())
     return JS_ThrowInternalError(ctx, "Empty image");
@@ -426,7 +426,7 @@ static JSValue
 js_cv_select_roi(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSValue ret = JS_UNDEFINED;
   const char* winname = JS_ToCString(ctx, argv[0]);
-  JSInputOutputArray image = js_umat_or_mat(ctx, argv[1]);
+  JSInputOutputArray image = js_cv_inputoutputarray(ctx, argv[1]);
   BOOL showCrosshair = TRUE, fromCenter = FALSE;
   cv::Rect2d rect;
 
@@ -452,7 +452,7 @@ static JSValue
 js_cv_select_rois(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSValue ret = JS_UNDEFINED;
   const char* winname = JS_ToCString(ctx, argv[0]);
-  JSInputOutputArray image = js_umat_or_mat(ctx, argv[1]);
+  JSInputOutputArray image = js_cv_inputoutputarray(ctx, argv[1]);
   BOOL showCrosshair = TRUE, fromCenter = FALSE;
   std::vector<cv::Rect> rects;
 

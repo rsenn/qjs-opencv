@@ -80,7 +80,7 @@ static JSValue
 js_cv_trace_skeleton(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSContoursData<double> contours;
   uint32_t count;
-  JSInputOutputArray src = js_umat_or_mat(ctx, argv[0]);
+  JSInputOutputArray src = js_cv_inputoutputarray(ctx, argv[0]);
   cv::Mat *mat, *neighborhood = 0, *mapping = 0;
 
   if(!(mat = js_mat_data2(ctx, argv[0])))
@@ -111,7 +111,7 @@ js_cv_trace_skeleton(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
 
 static JSValue
 js_cv_palette_generate(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  JSInputArray src = js_umat_or_mat(ctx, argv[0]);
+  JSInputArray src = js_input_array(ctx, argv[0]);
   dominant_colors_grabber dcg;
   int32_t mode = 0, count = 0;
   enum color_space cs;

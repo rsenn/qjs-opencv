@@ -213,13 +213,11 @@ js_cv_split(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
 
 static JSValue
 js_cv_normalize(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-
-  JSInputOutputArray src, dst;
   double alpha = 1, beta = 0;
   int32_t norm_type = cv::NORM_L2, dtype = -1;
 
-  src = js_umat_or_mat(ctx, argv[0]);
-  dst = js_umat_or_mat(ctx, argv[1]);
+  JSInputOutputArray src = js_cv_inputoutputarray(ctx, argv[0]);
+  JSInputOutputArray dst = js_cv_inputoutputarray(ctx, argv[1]);
 
   if(js_is_noarray(src) || js_is_noarray(dst))
     return JS_ThrowInternalError(ctx, "src or dst not an array!");
@@ -239,13 +237,12 @@ js_cv_normalize(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
 
 static JSValue
 js_cv_add_weighted(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  JSInputOutputArray a1, a2, dst;
-
+  JSInputOutputArray dst = cv::noArray();
   double alpha, beta, gamma;
   int32_t dtype = -1;
 
-  a1 = js_umat_or_mat(ctx, argv[0]);
-  a2 = js_umat_or_mat(ctx, argv[2]);
+  JSInputOutputArray a1 = js_cv_inputoutputarray(ctx, argv[0]);
+  JSInputOutputArray a2 = js_cv_inputoutputarray(ctx, argv[2]);
 
   if(js_is_noarray(a1) || js_is_noarray(a2))
     return JS_ThrowInternalError(ctx, "a1 or a2 not an array!");
@@ -275,8 +272,7 @@ enum { MAT_COUNTNONZERO = 0, MAT_FINDNONZERO, MAT_HCONCAT, MAT_VCONCAT };
 static JSValue
 js_cv_mat_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSValue ret = JS_UNDEFINED;
-  JSInputOutputArray mat;
-  mat = js_umat_or_mat(ctx, argv[0]);
+  JSInputOutputArray mat = js_cv_inputoutputarray(ctx, argv[0]);
 
   if(js_is_noarray(mat))
     return JS_ThrowInternalError(ctx, "mat not an array!");
@@ -408,17 +404,14 @@ js_cv_getticks(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
 
 static JSValue
 js_cv_bitwise(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
-
-  JSInputOutputArray src, dst;
-  JSInputArray other, mask;
-
-  src = js_umat_or_mat(ctx, argv[0]);
-  other = js_input_array(ctx, argv[1]);
-  dst = src;
+  JSInputOutputArray src = js_cv_inputoutputarray(ctx, argv[0]);
+  JSInputArray other = js_input_array(ctx, argv[1]);
+  JSInputOutputArray dst = src;
+  
   if(argc > 2)
     dst = js_umat_or_mat(ctx, argv[2]);
 
-  mask = cv::noArray();
+  JSInputArray mask = cv::noArray();
   if(argc > 3)
     mask = js_input_array(ctx, argv[3]);
 
@@ -447,13 +440,10 @@ enum { MATH_ABSDIFF = 0, MATH_ADD, MATH_COMPARE, MATH_DIVIDE, MATH_GEMM, MATH_MA
 
 static JSValue
 js_cv_math(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
-  JSOutputArray dst;
-  JSInputArray src1, src2;
   JSValue ret = JS_UNDEFINED;
-
-  src1 = argc >= 1 ? js_umat_or_mat(ctx, argv[0]) : cv::noArray();
-  src2 = argc >= 2 ? js_umat_or_mat(ctx, argv[1]) : cv::noArray();
-  dst = argc >= 3 ? js_umat_or_mat(ctx, argv[2]) : cv::noArray();
+  JSInputArray src1 = argc >= 1 ? js_umat_or_mat(ctx, argv[0]) : cv::noArray();
+  JSInputArray src2 = argc >= 2 ? js_umat_or_mat(ctx, argv[1]) : cv::noArray();
+  JSOutputArray dst = argc >= 3 ? js_umat_or_mat(ctx, argv[2]) : cv::noArray();
 
   switch(magic) {
     case MATH_ABSDIFF: {
@@ -565,15 +555,13 @@ enum {
 
 static JSValue
 js_cv_core(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
-
-  JSOutputArray dst;
   JSInputArray src;
   JSValue ret = JS_UNDEFINED;
 
   if(argc >= 1)
     src = js_input_array(ctx, argv[0]);
 
-  dst = argc >= 2 ? js_umat_or_mat(ctx, argv[1]) : cv::noArray();
+  JSOutputArray dst = argc >= 2 ? js_umat_or_mat(ctx, argv[1]) : cv::noArray();
 
   switch(magic) {
     case CORE_CONVERTFP16: {
@@ -816,10 +804,8 @@ enum {
 
 static JSValue
 js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
-  JSInputOutputArray src;
   JSValue ret = JS_UNDEFINED;
-
-  src = argc >= 1 ? js_umat_or_mat(ctx, argv[0]) : cv::noArray();
+  JSInputOutputArray src = argc >= 1 ? js_cv_inputoutputarray(ctx, argv[0]) : cv::noArray();
 
   switch(magic) {
 

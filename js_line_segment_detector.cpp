@@ -130,7 +130,7 @@ js_line_segment_detector_detect(JSContext* ctx, JSValueConst this_val, int argc,
   if(copyArray)
     linearr = JSOutputArray(lines);
 
-  JSInputArray image = js_umat_or_mat(ctx, argv[0]);
+  JSInputArray image = js_input_array(ctx, argv[0]);
 
   try {
     (*s)->detect(image, linearr, width, prec, nfa);
@@ -172,7 +172,7 @@ js_line_segment_detector_draw_segments(JSContext* ctx, JSValueConst this_val, in
   if((s = js_line_segment_detector_data2(ctx, this_val)) == nullptr)
     return JS_EXCEPTION;
 
-  JSInputOutputArray image = js_umat_or_mat(ctx, argv[0]);
+  JSInputOutputArray image = js_cv_inputoutputarray(ctx, argv[0]);
   JSInputArray linearr = js_input_array(ctx, argv[1]);
 
   if(linearr.isVector()) {

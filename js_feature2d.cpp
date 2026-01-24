@@ -759,7 +759,7 @@ js_feature2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
       }
 
       case METHOD_COMPUTE: {
-        JSInputOutputArray image = js_umat_or_mat(ctx, argv[0]);
+        JSInputOutputArray image = js_cv_inputoutputarray(ctx, argv[0]);
         JSOutputArray descriptors = js_cv_outputarray(ctx, argv[2]);
         std::vector<JSKeyPointData> keypoints;
 
@@ -770,7 +770,7 @@ js_feature2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
       }
 
       case METHOD_DETECT: {
-        JSInputOutputArray image = js_umat_or_mat(ctx, argv[0]);
+        JSInputOutputArray image = js_cv_inputoutputarray(ctx, argv[0]);
         JSInputArray mask = cv::noArray();
         std::vector<JSKeyPointData> keypoints;
 
@@ -784,7 +784,7 @@ js_feature2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
       }
 
       case METHOD_DETECTANDCOMPUTE: {
-        JSInputOutputArray image = js_umat_or_mat(ctx, argv[0]);
+        JSInputOutputArray image = js_cv_inputoutputarray(ctx, argv[0]);
         JSInputArray mask = cv::noArray();
         std::vector<JSKeyPointData> keypoints;
         JSOutputArray descriptors = cv::noArray();

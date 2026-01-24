@@ -162,7 +162,7 @@ js_video_writer_method(JSContext* ctx, JSValueConst video_writer, int argc, JSVa
     }
 
     case VIDEO_WRITER_METHOD_WRITE: {
-      JSInputArray mat = js_umat_or_mat(ctx, argv[0]);
+      JSInputArray mat = js_input_array(ctx, argv[0]);
 
       vw->write(mat);
       break;
