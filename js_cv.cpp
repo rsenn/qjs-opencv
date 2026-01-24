@@ -338,14 +338,12 @@ static JSValue
 js_cv_mix_channels(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   std::vector<cv::Mat> srcs, dsts;
   std::vector<int> fromTo;
-
   cv::Mat* dst;
 
   if(js_array_to(ctx, argv[0], srcs) == -1)
     return JS_EXCEPTION;
   if(js_array_to(ctx, argv[1], dsts) == -1)
     return JS_EXCEPTION;
-
   if(js_array_to(ctx, argv[2], fromTo) == -1)
     return JS_EXCEPTION;
 
