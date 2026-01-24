@@ -27,21 +27,18 @@ enum { DISPLAY_OVERLAY };
 static std::vector<cv::String> window_list;
 
 static JSValue
-js_cv_gui_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+js_cv_display_overlay(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSValue ret = JS_UNDEFINED;
-  switch(magic) {
-    case DISPLAY_OVERLAY: {
-      const char *winname, *text;
-      int32_t delayms = 0;
-      winname = JS_ToCString(ctx, argv[0]);
-      text = JS_ToCString(ctx, argv[1]);
-      if(argc > 2)
-        JS_ToInt32(ctx, &delayms, argv[2]);
+  const char *winname, *text;
+  int32_t delayms = 0;
 
-      cv::displayOverlay(winname, text, delayms);
-      break;
-    }
-  }
+  winname = JS_ToCString(ctx, argv[0]);
+  text = JS_ToCString(ctx, argv[1]);
+
+  if(argc > 2)
+    JS_ToInt32(ctx, &delayms, argv[2]);
+
+  cv::displayOverlay(winname, text, delayms);
 
   return ret;
 }
@@ -509,7 +506,7 @@ js_function_list_t js_highgui_static_funcs{
     JS_CFUNC_DEF("getScreenResolution", 0, js_cv_get_screen_resolution),
     JS_CFUNC_DEF("selectROI", 1, js_cv_select_roi),
     JS_CFUNC_DEF("selectROIs", 2, js_cv_select_rois),
-    JS_CFUNC_MAGIC_DEF("displayOverlay", 2, js_cv_gui_methods, DISPLAY_OVERLAY),
+    JS_CFUNC_DEF("displayOverlay", 2, js_cv_display_overlay),
     JS_CFUNC_DEF("startWindowThread", 0, js_cv_start_window_thread),
 };
 
