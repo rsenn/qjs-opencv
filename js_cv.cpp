@@ -1261,9 +1261,10 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       }
 
       double a = sca[3];
-      sca[0] /= 255;
-      sca[1] /= 255;
-      sca[2] /= 255;
+
+      sca[0] /= 360.0;
+      /*sca[1] /= 255;
+sca[2] /= 255;*/
 
       sca = hsv_to_rgb(sca);
       sca[3] = a;
