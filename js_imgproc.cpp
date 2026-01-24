@@ -1251,7 +1251,7 @@ js_imgproc_transform(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
 
       case TRANSFORM_WARP_AFFINE: {
         JSInputOutputArray dst = js_umat_or_mat(ctx, argv[1]);
-        JSInputArray M = js_umat_or_mat(ctx, argv[2]);
+        JSInputArray M = js_input_array(ctx, argv[2]);
         JSSizeData<int> dsize;
         int32_t flags = cv::INTER_LINEAR, borderMode = cv::BORDER_CONSTANT;
         JSColorData<double> borderValue;
@@ -1270,7 +1270,7 @@ js_imgproc_transform(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
 
       case TRANSFORM_WARP_PERSPECTIVE: {
         JSInputOutputArray dst = js_umat_or_mat(ctx, argv[1]);
-        JSInputArray M = js_umat_or_mat(ctx, argv[2]);
+        JSInputArray M = js_input_array(ctx, argv[2]);
         JSSizeData<int> dsize;
         int32_t flags = cv::INTER_LINEAR, borderMode = cv::BORDER_CONSTANT;
         JSColorData<double> borderValue;
@@ -1972,8 +1972,7 @@ js_function_list_t js_imgproc_static_funcs{
     JS_CFUNC_MAGIC_DEF("getPerspectiveTransform", 2, js_imgproc_transform, TRANSFORM_GET_PERSPECTIVE_TRANSFORM),
     JS_CFUNC_MAGIC_DEF("getRectSubPix", 4, js_imgproc_transform, TRANSFORM_GET_RECT_SUB_PIX),
     JS_CFUNC_MAGIC_DEF("getRotationMatrix2D", 3, js_imgproc_transform, TRANSFORM_GET_ROTATION_MATRIX2_D),
-    // JS_CFUNC_MAGIC_DEF("getRotationMatrix2D_", 3, js_imgproc_transform,
-    // TRANSFORM_GET_ROTATION_MATRIX2D_),
+    // JS_CFUNC_MAGIC_DEF("getRotationMatrix2D_", 3, js_imgproc_transform,  TRANSFORM_GET_ROTATION_MATRIX2D_),
     JS_CFUNC_MAGIC_DEF("invertAffineTransform", 2, js_imgproc_transform, TRANSFORM_INVERT_AFFINE_TRANSFORM),
     JS_CFUNC_MAGIC_DEF("linearPolar", 5, js_imgproc_transform, TRANSFORM_LINEAR_POLAR),
     JS_CFUNC_MAGIC_DEF("logPolar", 5, js_imgproc_transform, TRANSFORM_LOG_POLAR),
