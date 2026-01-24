@@ -1035,10 +1035,12 @@ js_mat_get_props(JSContext* ctx, JSValueConst this_val, int magic) {
       ret = JS_NewBool(ctx, m->empty());
       break;
     }
-      /* case PROP_TOTAL: {
-         ret = JS_NewFloat64(ctx, m->total());
-         break;
-       }*/
+    
+    /*case PROP_TOTAL: {
+      ret = JS_NewFloat64(ctx, m->total());
+      break;
+    }*/
+    
     case PROP_SIZE: {
       ret = js_size_new(ctx, m->cols, m->rows);
       break;
