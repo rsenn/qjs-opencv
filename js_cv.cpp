@@ -1234,16 +1234,15 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
     }
 
     case OTHER_SCALAR: {
-      ret = JS_NewArray(ctx);
+      cv::Scalar sca;
 
-      int i = 0, n = argc < 4 ? argc : 4;
+      // ret = JS_NewArray(ctx);
 
-      for(; i < n; ++i)
-        JS_SetPropertyUint32(ctx, ret, i, JS_DupValue(ctx, argv[i]));
+      for(int i = 0; i < 4 && i < argc; ++i) {
+        sca[i] = i < argc && JS_IsNumber(argv[i]) ? js_value_to<double>(ctx, argv[i]) : 0;
+      }
 
-      for(; i < 4; ++i)
-        JS_SetPropertyUint32(ctx, ret, i, JS_NewInt32(ctx, 0));
-
+      ret = js_value_from(ctx, sca);
       break;
     }
   }
