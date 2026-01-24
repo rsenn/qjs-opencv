@@ -394,8 +394,7 @@ end(cv::Mat const& mat) {
 
 template<class T> class range_view {
 public:
-  // range_view(range_view<T> const& range) : p(range.begin()), n(range.size()) {}
-  range_view(T* const base, size_t size) : p(base), n(size) {}
+   range_view(T* const base, size_t size) : p(base), n(size) {}
 
   range_view<T>& operator=(range_view<T> const& range) {
     p = range.begin();
