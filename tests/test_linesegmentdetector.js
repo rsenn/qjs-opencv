@@ -15,12 +15,10 @@ function main(...args) {
 
   console.log('lines', lines.length);
 
-  for(const line of lines) {
+  for(const line of lines) 
     drawLine(image, line, [255,128,0], 1, LINE_AA);
-  }
 
   imshow('test', image);
-
   waitKey(-1);
 }
 
