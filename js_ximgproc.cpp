@@ -532,11 +532,10 @@ js_superpixel_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSV
   if(!(sp = js_allocate<JSSuperpixelData>(ctx)))
     return JS_EXCEPTION;
 
-  std::string model;
+  /*std::string model;
 
-  js_value_to(ctx, argv[0], model);
-
-  //*sp = cv::ximgproc::createSuperpixel(model);
+  if(argc > 0)
+    js_value_to(ctx, argv[0], model);*/
 
   /* using new_target to get the prototype is necessary when the class is extended. */
   proto = JS_GetPropertyStr(ctx, new_target, "prototype");
@@ -597,17 +596,89 @@ js_superpixel_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
   if(!(sp = js_superpixel_data2(ctx, this_val)))
     return JS_EXCEPTION;
 
+  cv::ximgproc::SuperpixelSLIC* slic;
+  cv::ximgproc::SuperpixelLSC* lsc;
+  cv::ximgproc::SuperpixelSEEDS* seeds;
+
   switch(magic) {
     case SUPERPIXEL_GETNUMBEROFSUPERPIXELS: {
+      int32_t num;
+      if((slic = dynamic_cast<cv::ximgproc::SuperpixelSLIC*>(sp->get())))
+        num = slic->getNumberOfSuperpixels();
+      else if((lsc = dynamic_cast<cv::ximgproc::SuperpixelLSC*>(sp->get())))
+        num = lsc->getNumberOfSuperpixels();
+      else if((seeds = dynamic_cast<cv::ximgproc::SuperpixelSEEDS*>(sp->get())))
+        num = seeds->getNumberOfSuperpixels();
+      else {
+        ret = JS_ThrowInternalError(ctx, "Superpixel is none of SLIC, LSC, SEEDS");
+        break;
+      }
+
+      ret = js_value_from(ctx, num);
       break;
     }
+
     case SUPERPIXEL_ITERATE: {
+      if((slic = dynamic_cast<cv::ximgproc::SuperpixelSLIC*>(sp->get()))) {
+        int32_t num_iterations = 10;
+
+        if(argc > 0)
+          js_value_to(ctx, argv[0], num_iterations);
+
+        slic->iterate(num_iterations);
+      } else if((lsc = dynamic_cast<cv::ximgproc::SuperpixelLSC*>(sp->get()))) {
+        int32_t num_iterations = 10;
+
+        if(argc > 0)
+          js_value_to(ctx, argv[0], num_iterations);
+
+        lsc->iterate(num_iterations);
+      } else if((seeds = dynamic_cast<cv::ximgproc::SuperpixelSEEDS*>(sp->get()))) {
+        JSInputArray input = js_input_array(ctx, argv[0]);
+        int32_t num_iterations = 4;
+
+        if(argc > 1)
+          js_value_to(ctx, argv[1], num_iterations);
+
+        seeds->iterate(input, num_iterations);
+      } else {
+        ret = JS_ThrowInternalError(ctx, "Superpixel is none of SLIC, LSC, SEEDS");
+      }
+
       break;
     }
+
     case SUPERPIXEL_GETLABELS: {
+      JSOutputArray output = js_cv_outputarray(ctx, argv[0]);
+
+      if((slic = dynamic_cast<cv::ximgproc::SuperpixelSLIC*>(sp->get())))
+        slic->getLabels(output);
+      else if((lsc = dynamic_cast<cv::ximgproc::SuperpixelLSC*>(sp->get())))
+        lsc->getLabels(output);
+      else if((seeds = dynamic_cast<cv::ximgproc::SuperpixelSEEDS*>(sp->get())))
+        seeds->getLabels(output);
+      else
+        ret = JS_ThrowInternalError(ctx, "Superpixel is none of SLIC, LSC, SEEDS");
+
       break;
     }
+
     case SUPERPIXEL_GETLABELCONTOURMASK: {
+      JSOutputArray output = js_cv_outputarray(ctx, argv[0]);
+      BOOL thick_line = FALSE;
+
+      if(argc > 1)
+        js_value_to(ctx, argv[1], thick_line);
+
+      if((slic = dynamic_cast<cv::ximgproc::SuperpixelSLIC*>(sp->get())))
+        slic->getLabelContourMask(output, thick_line);
+      else if((lsc = dynamic_cast<cv::ximgproc::SuperpixelLSC*>(sp->get())))
+        lsc->getLabelContourMask(output, thick_line);
+      else if((seeds = dynamic_cast<cv::ximgproc::SuperpixelSEEDS*>(sp->get())))
+        seeds->getLabelContourMask(output, thick_line);
+      else
+        ret = JS_ThrowInternalError(ctx, "Superpixel is none of SLIC, LSC, SEEDS");
+
       break;
     }
   }
@@ -1044,10 +1115,23 @@ js_ximgproc_init(JSContext* ctx, JSModuleDef* m) {
                              js_structured_edge_detection_static_funcs,
                              countof(js_structured_edge_detection_static_funcs));
 
+  JS_NewClassID(&js_superpixel_class_id);
+  JS_NewClass(JS_GetRuntime(ctx), js_superpixel_class_id, &js_superpixel_class);
+
+  superpixel_proto = JS_NewObject(ctx);
+  JS_SetPropertyFunctionList(ctx, superpixel_proto, js_superpixel_proto_funcs, countof(js_superpixel_proto_funcs));
+  JS_SetClassProto(ctx, js_superpixel_class_id, superpixel_proto);
+
+  superpixel_class = JS_NewCFunction2(ctx, js_superpixel_constructor, "Superpixel", 0, JS_CFUNC_constructor, 0);
+  /* set proto.constructor and ctor.prototype */
+  JS_SetConstructor(ctx, superpixel_class, superpixel_proto);
+  JS_SetPropertyFunctionList(ctx, superpixel_class, js_superpixel_static_funcs, countof(js_superpixel_static_funcs));
+
   if(m) {
     JS_SetModuleExport(ctx, m, "EdgeDrawing", edge_drawing_class);
     JS_SetModuleExport(ctx, m, "EdgeDrawingParams", edge_drawing_params_class);
     JS_SetModuleExport(ctx, m, "StructuredEdgeDetection", structured_edge_detection_class);
+    JS_SetModuleExport(ctx, m, "Superpixel", superpixel_class);
     JS_SetModuleExportList(ctx, m, js_ximgproc_static_funcs.data(), js_ximgproc_static_funcs.size());
   }
 
@@ -1059,6 +1143,8 @@ js_ximgproc_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "EdgeDrawing");
   JS_AddModuleExport(ctx, m, "EdgeDrawingParams");
   JS_AddModuleExport(ctx, m, "StructuredEdgeDetection");
+  JS_AddModuleExport(ctx, m, "Superpixel");
+
   JS_AddModuleExportList(ctx, m, js_ximgproc_static_funcs.data(), js_ximgproc_static_funcs.size());
 }
 
