@@ -742,10 +742,15 @@ void
 js_mat_get(JSContext* ctx, JSValueConst this_val, uint32_t row, uint32_t col, T& value) {
   cv::Mat* m = js_mat_data2(ctx, this_val);
 
-  if(m)
-    value = (*m).at<T>(row, col);
-  else
-    value = T();
+  value = m ? (*m).at<T>(row, col) : T();
+}
+
+template<class T, size_t N>
+void
+js_mat_get(JSContext* ctx, JSValueConst this_val, cv::Vec<int, N> idx, T& value) {
+  cv::Mat* m = js_mat_data2(ctx, this_val);
+
+  value = m ? (*m).at<T>(idx) : T();
 }
 
 static JSValue
@@ -846,6 +851,22 @@ js_mat_at(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) 
     JS_ToUint32(ctx, &col, argv[1]);
     argc -= 2;
     argv += 2;
+  } else if(argc == 1 && js_is_array(ctx, argv[0])) {
+    const int64_t len = js_array_length(ctx, argv[0]);
+
+    if(len != m->dims)
+      return JS_ThrowInternalError(ctx, "Supplied array has %" PRId64 " items, Mat has %d dimensions", len, m->dims);
+
+    cv::Vec<int, 4> vec;
+
+    // JSColorData<uint8_t> pixel;
+
+    js_array_to(ctx, argv[0], vec);
+
+    /*js_mat_get(ctx, this_val, vec, pixel);
+
+    return js_value_from(ctx, pixel);*/
+
   } else if(argc >= 1 && JS_IsNumber(argv[0])) {
     JSMatDimensions dim = {uint32_t(m->rows), uint32_t(m->cols)};
     uint32_t idx;
@@ -860,10 +881,10 @@ js_mat_at(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) 
 
 static JSValue
 js_mat_set(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  cv::Mat* m ;
+  cv::Mat* m;
   uint32_t bytes;
 
-  if(!(m= js_mat_data2(ctx, this_val)))
+  if(!(m = js_mat_data2(ctx, this_val)))
     return JS_EXCEPTION;
 
   JSPointData<double> pt;
@@ -903,7 +924,7 @@ js_mat_set(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[])
 
   } else if(bytes <= sizeof(uint)) {
     uint32_t data, mask = (1LU << (bytes * 8)) - 1;
- 
+
     if(JS_ToUint32(ctx, &data, argv[0]))
       return JS_EXCEPTION;
 
@@ -922,7 +943,7 @@ js_mat_set(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[])
     return JS_UNDEFINED;
 
   return JS_UNDEFINED;
-} 
+}
 
 static JSValue
 js_mat_set_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
@@ -949,7 +970,7 @@ js_mat_set_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
 
     m->setTo(input, mask);
 
-    // std::cerr << "Scalar [ " << s[0] << ", " << s[1] << ", " << s[2] << ", " << s[3] << " ]" << std::endl; 
+    // std::cerr << "Scalar [ " << s[0] << ", " << s[1] << ", " << s[2] << ", " << s[3] << " ]" << std::endl;
     // std::cerr << "Scalar.size() = " << n << std::endl;
 
     /*if(n >= m->channels()) {
@@ -958,33 +979,33 @@ js_mat_set_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
     }*/
   }
 
- /*uint32_t bytes = m->elemSize();
+  /*uint32_t bytes = m->elemSize();
 
-  if(m->depth() == CV_16U && m->channels() > 1) {
-    if(m->channels() == 2)
-      js_mat_set_vector<cv::Vec<uint16_t, 2>>(ctx, m, argc, argv);
-    else if(m->channels() == 3)
-      js_mat_set_vector<cv::Vec<uint16_t, 3>>(ctx, m, argc, argv);
-    else if(m->channels() == 4)
-      js_mat_set_vector<cv::Vec<uint16_t, 4>>(ctx, m, argc, argv);
-  } else if(m->depth() == CV_32F) {
-    if(m->channels() == 1)
-      js_mat_set_vector<float>(ctx, m, argc, argv);
-  } else if(bytes <= sizeof(uint)) {
-    if(bytes <= 1) {
-      std::vector<uint8_t> v;
-      js_mat_vector_get(ctx, argc, argv, v, defined);
-      m->setTo(cv::InputArray(v), defined);
-    } else if(bytes <= 2) {
-      std::vector<uint16_t> v;
-      js_mat_vector_get(ctx, argc, argv, v, defined);
-      m->setTo(cv::InputArray(v), defined);
-    } else if(bytes <= 4) {
-      js_mat_set_vector<uint32_t>(ctx, m, argc, argv);
-    } else if(bytes <= 8) {
-      js_mat_set_vector<uint64_t>(ctx, m, argc, argv);
-    }
-  }*/
+   if(m->depth() == CV_16U && m->channels() > 1) {
+     if(m->channels() == 2)
+       js_mat_set_vector<cv::Vec<uint16_t, 2>>(ctx, m, argc, argv);
+     else if(m->channels() == 3)
+       js_mat_set_vector<cv::Vec<uint16_t, 3>>(ctx, m, argc, argv);
+     else if(m->channels() == 4)
+       js_mat_set_vector<cv::Vec<uint16_t, 4>>(ctx, m, argc, argv);
+   } else if(m->depth() == CV_32F) {
+     if(m->channels() == 1)
+       js_mat_set_vector<float>(ctx, m, argc, argv);
+   } else if(bytes <= sizeof(uint)) {
+     if(bytes <= 1) {
+       std::vector<uint8_t> v;
+       js_mat_vector_get(ctx, argc, argv, v, defined);
+       m->setTo(cv::InputArray(v), defined);
+     } else if(bytes <= 2) {
+       std::vector<uint16_t> v;
+       js_mat_vector_get(ctx, argc, argv, v, defined);
+       m->setTo(cv::InputArray(v), defined);
+     } else if(bytes <= 4) {
+       js_mat_set_vector<uint32_t>(ctx, m, argc, argv);
+     } else if(bytes <= 8) {
+       js_mat_set_vector<uint64_t>(ctx, m, argc, argv);
+     }
+   }*/
 
   return JS_UNDEFINED;
 }
@@ -1035,12 +1056,12 @@ js_mat_get_props(JSContext* ctx, JSValueConst this_val, int magic) {
       ret = JS_NewBool(ctx, m->empty());
       break;
     }
-    
-    /*case PROP_TOTAL: {
-      ret = JS_NewFloat64(ctx, m->total());
-      break;
-    }*/
-    
+
+      /*case PROP_TOTAL: {
+        ret = JS_NewFloat64(ctx, m->total());
+        break;
+      }*/
+
     case PROP_SIZE: {
       ret = js_size_new(ctx, m->cols, m->rows);
       break;

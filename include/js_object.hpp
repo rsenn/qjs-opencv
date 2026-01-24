@@ -15,6 +15,7 @@ public:
     JSPropertyEnum* names = 0;
     uint32_t plen = 0;
     JS_GetOwnPropertyNames(ctx, &names, &plen, obj, flags);
+
     for(auto penum : range_view<JSPropertyEnum>(names, plen)) {
       JSValue value = JS_GetProperty(ctx, obj, penum.atom);
       const char* name = JS_AtomToCString(ctx, penum.atom);

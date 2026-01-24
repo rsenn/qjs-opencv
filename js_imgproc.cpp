@@ -1010,6 +1010,7 @@ js_imgproc_misc(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
         BOOL binaryImage = false;
         cv::Moments moments;
         std::map<std::string, double> moments_map;
+
         if(argc >= 2)
           binaryImage = JS_ToBool(ctx, argv[1]);
 
