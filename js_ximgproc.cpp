@@ -10,6 +10,11 @@
 #include <opencv2/ximgproc/find_ellipses.hpp>
 #endif
 
+/**
+ * Wrapping https://docs.opencv.org/4.7.0/d9/d29/namespacecv_1_1ximgproc.html
+ *
+ */
+
 typedef cv::Ptr<cv::ximgproc::EdgeDrawing> JSEdgeDrawingData;
 
 extern "C" {
@@ -375,6 +380,13 @@ enum {
   XIMGPROC_NI_BLACK_THRESHOLD,
   XIMGPROC_PEI_LIN_NORMALIZATION,
   XIMGPROC_CREATEEDGEDRAWING,
+  XIMGPROC_CONTOURSAMPLING,
+  XIMGPROC_COVARIANCEESTIMATION,
+  XIMGPROC_COLORMATCHTEMPLATE,
+  XIMGPROC_TRANSFORMFD,
+  XIMGPROC_FOURIERDESCRIPTOR,
+  XIMGPROC_WEIGHTEDMEDIANFILTER,
+  XIMGPROC_ROLLINGGUIDANCEFILTER,
   XIMGPROC_FASTHOUGHTRANSFORM,
   XIMGPROC_HOUGHPOINT2LINE,
 };
@@ -464,6 +476,105 @@ js_ximgproc_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
         break;
       }
 
+      case XIMGPROC_CONTOURSAMPLING: {
+        JSInputArray src = js_input_array(ctx, argv[0]);
+        JSOutputArray dst = js_cv_outputarray(ctx, argv[1]);
+        int32_t nbElt;
+
+        js_value_to(ctx, argv[2], nbElt);
+
+        cv::ximgproc::contourSampling(src, dst, nbElt);
+        break;
+      }
+
+      case XIMGPROC_COVARIANCEESTIMATION: {
+        JSInputArray src = js_input_array(ctx, argv[0]);
+        JSOutputArray dst = js_cv_outputarray(ctx, argv[1]);
+        int32_t rows, cols;
+
+        js_value_to(ctx, argv[2], rows);
+        js_value_to(ctx, argv[3], cols);
+
+        cv::ximgproc::covarianceEstimation(src, dst, rows, cols);
+        break;
+      }
+
+      case XIMGPROC_COLORMATCHTEMPLATE: {
+        JSInputArray img = js_input_array(ctx, argv[0]);
+        JSInputArray templ = js_input_array(ctx, argv[1]);
+        JSOutputArray result = js_cv_outputarray(ctx, argv[2]);
+
+        cv::ximgproc::colorMatchTemplate(img, templ, result);
+        break;
+      }
+
+      case XIMGPROC_TRANSFORMFD: {
+        JSInputArray src = js_input_array(ctx, argv[0]);
+        JSInputArray t = js_input_array(ctx, argv[1]);
+        JSOutputArray dst = js_cv_outputarray(ctx, argv[2]);
+        BOOL fd_contour = TRUE;
+
+        if(argc > 3)
+          js_value_to(ctx, argv[3], fd_contour);
+
+        cv::ximgproc::transformFD(src, t, dst, fd_contour);
+        break;
+      }
+
+      case XIMGPROC_FOURIERDESCRIPTOR: {
+        JSInputArray src = js_input_array(ctx, argv[0]);
+        JSOutputArray dst = js_cv_outputarray(ctx, argv[1]);
+        int32_t nbElt = -1, nbFD = -1;
+
+        if(argc > 2)
+          js_value_to(ctx, argv[2], nbElt);
+        if(argc > 3)
+          js_value_to(ctx, argv[3], nbFD);
+
+        cv::ximgproc::fourierDescriptor(src, dst, nbElt, nbFD);
+        break;
+      }
+
+      case XIMGPROC_WEIGHTEDMEDIANFILTER: {
+        JSInputArray joint = js_input_array(ctx, argv[0]);
+        JSInputArray src = js_input_array(ctx, argv[1]);
+        JSOutputArray dst = js_cv_outputarray(ctx, argv[2]);
+        int32_t r, weightType = cv::ximgproc::WMF_EXP;
+        double sigma = 25.5;
+        JSInputArray mask = cv::noArray();
+
+        js_value_to(ctx, argv[3], r);
+        if(argc > 4)
+          js_value_to(ctx, argv[4], sigma);
+        if(argc > 5)
+          js_value_to(ctx, argv[5], weightType);
+        if(argc > 6)
+          mask = js_input_array(ctx, argv[5]);
+
+        cv::ximgproc::weightedMedianFilter(joint, src, dst, r, sigma, weightType, mask);
+        break;
+      }
+
+      case XIMGPROC_ROLLINGGUIDANCEFILTER: {
+        JSInputArray src = js_input_array(ctx, argv[0]);
+        JSOutputArray dst = js_cv_outputarray(ctx, argv[1]);
+        int32_t d, numOfIter = 4, borderType = cv::BORDER_DEFAULT;
+        double sigmaColor = 25, sigmaSpace = 3;
+
+            js_value_to(ctx, argv[2], d);
+        if(argc > 3)
+          js_value_to(ctx, argv[3], sigmaColor);
+        if(argc > 4)
+          js_value_to(ctx, argv[4], sigmaSpace);
+        if(argc > 5)
+          js_value_to(ctx, argv[5], numOfIter);
+        if(argc > 6)
+          js_value_to(ctx, argv[6], borderType);
+
+        cv::ximgproc::rollingGuidanceFilter(src, dst, d, sigmaColor, sigmaSpace, numOfIter, borderType);
+        break;
+      }
+
       case XIMGPROC_FASTHOUGHTRANSFORM: {
         JSInputArray input = js_input_array(ctx, argv[0]);
         JSOutputArray output = js_cv_outputarray(ctx, argv[1]);
@@ -517,6 +628,13 @@ js_function_list_t js_ximgproc_ximgproc_funcs{
     JS_CFUNC_MAGIC_DEF("PeiLinNormalization", 2, js_ximgproc_func, XIMGPROC_PEI_LIN_NORMALIZATION),
     JS_CFUNC_MAGIC_DEF("thinning", 2, js_ximgproc_func, XIMGPROC_THINNING),
     JS_CFUNC_MAGIC_DEF("createEdgeDrawing", 0, js_ximgproc_func, XIMGPROC_CREATEEDGEDRAWING),
+    JS_CFUNC_MAGIC_DEF("contourSampling", 3, js_ximgproc_func, XIMGPROC_CONTOURSAMPLING),
+    JS_CFUNC_MAGIC_DEF("covarianceEstimation", 4, js_ximgproc_func, XIMGPROC_COVARIANCEESTIMATION),
+    JS_CFUNC_MAGIC_DEF("colorMatchTemplate", 3, js_ximgproc_func, XIMGPROC_COLORMATCHTEMPLATE),
+    JS_CFUNC_MAGIC_DEF("transformFD", 3, js_ximgproc_func, XIMGPROC_TRANSFORMFD),
+    JS_CFUNC_MAGIC_DEF("fourierDescriptor", 2, js_ximgproc_func, XIMGPROC_FOURIERDESCRIPTOR),
+    JS_CFUNC_MAGIC_DEF("weightedMedianFilter", 4, js_ximgproc_func, XIMGPROC_WEIGHTEDMEDIANFILTER),
+    JS_CFUNC_MAGIC_DEF("rollingGuidanceFilter", 2, js_ximgproc_func, XIMGPROC_ROLLINGGUIDANCEFILTER),
 
     JS_PROP_INT32_DEF("ARO_0_45", cv::ximgproc::ARO_0_45, JS_PROP_ENUMERABLE),
     JS_PROP_INT32_DEF("ARO_45_90", cv::ximgproc::ARO_45_90, JS_PROP_ENUMERABLE),
