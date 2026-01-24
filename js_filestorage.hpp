@@ -9,9 +9,6 @@ using JSFileStorageData = cv::FileStorage;
 extern "C" int js_filestorage_init(JSContext*, JSModuleDef*);
 
 extern "C" {
-extern thread_local JSValue filestorage_proto, filestorage_class;
-extern thread_local JSClassID js_filestorage_class_id;
-
 JSFileStorageData* js_filestorage_data(JSValueConst val);
 JSFileStorageData* js_filestorage_data2(JSContext*, JSValueConst val);
 int js_filestorage_init(JSContext*, JSModuleDef*);

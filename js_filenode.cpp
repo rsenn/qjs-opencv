@@ -6,9 +6,8 @@
 #include "include/util.hpp"
 
 extern "C" {
-thread_local JSValue filenode_proto = JS_UNDEFINED, filenode_class = JS_UNDEFINED, filenode_iterator_proto = JS_UNDEFINED,
-                     filenode_iterator_class = JS_UNDEFINED;
-thread_local JSClassID js_filenode_class_id = 0, js_filenode_iterator_class_id = 0;
+thread_local JSValue filenode_proto, filenode_class, filenode_iterator_proto, filenode_iterator_class;
+thread_local JSClassID js_filenode_class_id, js_filenode_iterator_class_id;
 }
 
 static JSValue
@@ -231,6 +230,11 @@ js_filenode_new(JSContext* ctx, JSValueConst proto, const JSFileNodeData& other)
   new(fn) JSFileNodeData(other);
 
   return js_filenode_wrap(ctx, proto, fn);
+}
+
+JSValue
+js_filenode_new(JSContext* ctx, const JSFileNodeData& fn) {
+  return js_filenode_new(ctx, filenode_proto, fn);
 }
 
 static JSValue

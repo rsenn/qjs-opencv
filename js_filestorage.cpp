@@ -8,8 +8,8 @@
 #include "include/util.hpp"
 
 extern "C" {
-thread_local JSValue filestorage_proto = JS_UNDEFINED, filestorage_class = JS_UNDEFINED;
-thread_local JSClassID js_filestorage_class_id = 0;
+thread_local JSValue filestorage_proto, filestorage_class;
+thread_local JSClassID js_filestorage_class_id;
 }
 
 static JSValue
