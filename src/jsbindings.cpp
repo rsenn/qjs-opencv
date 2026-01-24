@@ -129,3 +129,20 @@ js_ref(JSContext* ctx, const char* name, JSValueConst arg, JSValue value) {
 
   return 1;
 }
+
+int
+js_range_read(JSContext* ctx, JSValueConst value, cv::Range* range) {
+  cv::Vec<int, 2> vec;
+  int ret = 0;
+
+  if(js_is_array(ctx, value)) {
+    ret = js_value_to(ctx, value, vec);
+
+    range->start = vec[0];
+    range->end = vec[1];
+  } else {
+    *range = cv::Range::all();
+  }
+
+  return ret;
+}

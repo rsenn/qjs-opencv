@@ -66,6 +66,7 @@ static inline JSValue js_typedarray_constructor(JSContext*);
 static inline JSAtom js_symbol_atom(JSContext*, const char*);
 static inline JSAtom js_symbol_for_atom(JSContext*, const char*);
 static inline JSValue js_iterable_function(JSContext*, JSValueConst);
+int js_range_read(JSContext* ctx, JSValueConst value, cv::Range* range);
 
 /** @defgroup number
  *  @{
@@ -657,6 +658,11 @@ template<class T>
 static inline int
 js_value_to(JSContext* ctx, JSValueConst value, std::vector<T>& in) {
   return js_array_to(ctx, value, in);
+}
+
+static inline int
+js_value_to(JSContext* ctx, JSValueConst value, cv::Range& rn) {
+  return js_range_read(ctx, value, &rn);
 }
 
 /*template<class T>
