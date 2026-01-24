@@ -594,7 +594,7 @@ js_mat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
               js_value_to(ctx, argv[1], vec[1]);
               js_value_to(ctx, argv[2], vec[2]);
 
-              ptr = &mat_at<uchar>(*m, vec);
+              ptr = &mat_at<uchar,3>(*m, vec);
               break;
             }
             case 4: {
@@ -605,7 +605,7 @@ js_mat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
               js_value_to(ctx, argv[2], vec[2]);
               js_value_to(ctx, argv[3], vec[3]);
 
-              ptr = &mat_at<uchar>(*m, vec);
+              ptr = &mat_at<uchar,4>(*m, vec);
               break;
             }
           }
