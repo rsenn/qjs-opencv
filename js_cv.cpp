@@ -1262,7 +1262,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       double a = sca[3];
       // sca[0] /= 360.0;
 
-      sca = color_convert(sca, cv::COLOR_HSV2RGB);
+      sca = hsv_to_rgb(sca);
       sca[3] = a;
 
       ret = js_value_from(ctx, sca);
@@ -1279,7 +1279,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
           sca[i] = i < argc && JS_IsNumber(argv[i]) ? js_value_to<double>(ctx, argv[i]) : 0;
 
       double a = sca[3];
-      sca = color_convert(sca, cv::COLOR_RGB2HSV);
+      sca = rgb_to_hsv(sca);
       sca[3] = a;
 
       ret = js_value_from(ctx, sca);
@@ -1288,12 +1288,14 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
 
     case OTHER_COLORCONVERT: {
       cv::Scalar sca = {0, 0, 0, 255};
-      int32_t flag = argc > 1 ? js_value_to<int32_t>(ctx, argv[1]) : 0;
+      int32_t flag = 0, i = 0;
 
-      if(argc == 1 && js_is_array(ctx, argv[0]))
-        js_value_to(ctx, argv[0], sca);
+      js_value_to(ctx, argv[i++], flag);
+
+      if(i < argc && js_is_array(ctx, argv[i]))
+        js_value_to(ctx, argv[i++], sca);
       else
-        for(int i = 0; i < 4 && i < argc; ++i)
+        for(; i < 4 && i < argc; ++i)
           sca[i] = i < argc && JS_IsNumber(argv[i]) ? js_value_to<double>(ctx, argv[i]) : 0;
 
       double a = sca[3];
