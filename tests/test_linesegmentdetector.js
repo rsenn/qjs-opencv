@@ -16,7 +16,7 @@ function main(...args) {
   console.log('lines', lines.length);
 
   for(const line of lines) {
-    drawLine(image, line.a, line.b, [255,128,0], 1, LINE_AA);
+    drawLine(image, line, [255,128,0], 1, LINE_AA);
   }
 
   imshow('test', image);
