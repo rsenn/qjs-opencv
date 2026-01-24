@@ -1251,6 +1251,8 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
     case OTHER_HSV2RGB: {
       cv::Scalar sca;
 
+      sca[3] = 255;
+
       if(argc == 1 && js_is_array(ctx, argv[0])) {
         js_value_to(ctx, argv[0], sca);
       } else {
@@ -1258,7 +1260,15 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
           sca[i] = i < argc && JS_IsNumber(argv[i]) ? js_value_to<double>(ctx, argv[i]) : 0;
       }
 
-      ret = js_value_from(ctx, hsv_to_rgb(sca));
+      double a = sca[3];
+      sca[0] /= 255;
+      sca[1] /= 255;
+      sca[2] /= 255;
+
+      sca = hsv_to_rgb(sca);
+      sca[3] = a;
+
+      ret = js_value_from(ctx, sca);
       break;
     }
   }

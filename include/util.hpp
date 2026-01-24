@@ -558,7 +558,7 @@ dump(const cv::_OutputArray& arr) {
   return os.str();
 }
 
-template<typename T> 
+template<typename T>
 static inline T
 hsv_to_rgb(T c) {
   cv::Mat in(1, 1, CV_32FC3);
