@@ -15,7 +15,7 @@ function main(filename = 'smarties.png') {
 
   HoughCircles(gray, circles, HOUGH_GRADIENT, 1, gray.rows / 16, 100, 30, 1, 30);
 
- for(const [x, y, radius] of circles) {
+  for(const [x, y, radius] of circles) {
     const center = new Point(x, y);
 
     drawCircle(src, center, 1, [0, 255, 255], 3, LINE_AA);
