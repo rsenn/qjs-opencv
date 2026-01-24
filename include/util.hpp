@@ -84,7 +84,6 @@ bool str_end(const char* str, const char* suffix);
 bool str_end(const std::string& str, const std::string& suffix);
 
 std::string to_string(const cv::Scalar& scalar);
-
 std::string make_filename(const std::string& name, int count, const std::string& ext, const std::string& dir = "tmp");
 
 static inline size_t
@@ -150,10 +149,12 @@ static inline int
 mattype_depth(int type) {
   return type & 0x7;
 }
+
 static inline int
 mattype_channels(int type) {
   return (type >> 3) + 1;
 }
+
 static inline bool
 mattype_floating(int type) {
   switch(mattype_depth(type)) {
@@ -162,6 +163,7 @@ mattype_floating(int type) {
     default: return false;
   }
 }
+
 static inline bool
 mattype_signed(int type) {
   switch(mattype_depth(type)) {
@@ -197,7 +199,6 @@ mat_ptr(cv::Matx<T, rows, cols>& mat) {
 }
 
 static inline size_t
-
 mat_offset(const cv::Mat& mat, uint32_t row, uint32_t col) {
   const uchar *base, *ptr;
 
@@ -265,17 +266,16 @@ static inline std::array<T, rows * cols>&
 mat_array(cv::Matx<T, rows, cols>& mat) {
   return *reinterpret_cast<std::array<T, rows * cols>*>(mat_ptr(mat));
 }
-/*
-template<class T, int rows, int cols>
+
+/*template<class T, int rows, int cols>
 static inline std::array<T, rows * cols> const&
 mat_array(cv::Matx<T, rows, cols> const& mat) {
   return *reinterpret_cast<std::array<T, rows * cols> const*>(mat_ptr(mat));
-}
-*/
+}*/
+
 static inline size_t
 mat_bytesize(const cv::Mat& mat) {
   return mat.ptr<uchar>(mat.rows - 1, mat.cols - 1) - mat.ptr<uchar>() + mat.elemSize();
-  // return mat.elemSize() * mat.total();
 }
 
 int mat_depth(const cv::Mat& mat);
@@ -291,10 +291,12 @@ template<typename T = int>
 static inline T
 mat_col(const cv::Mat& mat, const T col) {
   T x = col;
+
   if(x < 0 && -x >= T(mat.cols))
     x %= T(mat.cols);
   if(x < 0)
     x += mat.cols;
+
   return x;
 }
 
@@ -302,10 +304,12 @@ template<typename T = int>
 static inline T
 mat_row(const cv::Mat& mat, const T row) {
   T y = row;
+
   if(y < 0 && -y >= T(mat.rows))
     y %= T(mat.rows);
   if(y < 0)
     y += mat.rows;
+
   return y;
 }
 
@@ -314,6 +318,7 @@ static inline T*
 begin(cv::Vec<T, N>& v) {
   return &v[0];
 }
+
 template<class T, int N>
 static inline T*
 end(cv::Vec<T, N>& v) {
@@ -325,17 +330,19 @@ static inline T const*
 begin(cv::Vec<T, N> const& v) {
   return &v[0];
 }
+
 template<class T, int N>
 static inline T const*
 end(cv::Vec<T, N> const& v) {
   return &v[N];
 }
-/*
-template<class T>
+
+/*template<class T>
 static inline typename T::value_type const*
 begin(const T& obj) {
   return obj.begin();
 }
+
 template<class T>
 static inline typename T::value_type*
 begin(T& obj) {
@@ -347,27 +354,31 @@ static inline typename T::value_type const*
 end(const T& obj) {
   return obj.end();
 }
+
 template<class T>
 static inline typename T::value_type*
 end(T& obj) {
   return obj.end();
-}
-*/
+}*/
+
 template<class T>
 static inline T*
 begin(std::vector<T>& v) {
   return &v[0];
 }
+
 template<class T>
 static inline T*
 end(std::vector<T>& v) {
   return &v[v.size()];
 }
+
 template<class T>
 static inline T const*
 begin(std::vector<T> const& v) {
   return &v[0];
 }
+
 template<class T>
 static inline T const*
 end(std::vector<T> const& v) {
@@ -394,7 +405,7 @@ end(cv::Mat const& mat) {
 
 template<class T> class range_view {
 public:
-   range_view(T* const base, size_t size) : p(base), n(size) {}
+  range_view(T* const base, size_t size) : p(base), n(size) {}
 
   range_view<T>& operator=(range_view<T> const& range) {
     p = range.begin();
@@ -444,15 +455,14 @@ range(Container& c) {
 }
 
 std::string js_prop_flags(int flags);
-
 std::ostream& operator<<(std::ostream& s, const JSCFunctionListEntry& entry);
 
 template<class Stream, class Item>
 Stream&
 operator<<(Stream& s, const std::vector<Item>& vector) {
   size_t i = 0;
-  for(auto entry : vector) {
 
+  for(auto entry : vector) {
     s << "#" << i << " ";
     s << entry;
     i++;
