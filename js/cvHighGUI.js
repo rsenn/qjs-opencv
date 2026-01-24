@@ -128,8 +128,7 @@ export class Window {
 
   show(mat) {
     this.mat = mat;
-      if(this.name!==undefined)
-    imshow(this.name, mat);
+    if(this.name !== undefined) imshow(this.name, mat);
   }
 
   close() {
