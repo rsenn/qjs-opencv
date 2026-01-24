@@ -136,7 +136,7 @@ js_array<T>::to_scalar(JSContext* ctx, JSValueConst arr, cv::Scalar_<T>& out) {
   return n;
 }
 
-template<> class js_array<JSValue> {
+/*template<> class js_array<JSValue> {
 public:
   static int64_t to_vector(JSContext* ctx, JSValueConst arr, std::vector<JSValue>& out) {
     int64_t i, n;
@@ -190,7 +190,7 @@ js_array<JSValue>::to_array(JSContext* ctx, JSValueConst arr, std::array<JSValue
   }
 
   return i;
-}
+}*/
 
 extern "C" int JS_DeletePropertyInt64(JSContext* ctx, JSValueConst obj, int64_t idx, int flags);
 
