@@ -241,6 +241,19 @@ extern "C" int js_line_init(JSContext*, JSModuleDef*);
 
 JSLineData<double>* js_line_data(JSValueConst val);
 JSLineData<double>* js_line_data2(JSContext*, JSValueConst val);
+
+template<class T>
+static inline int
+js_value_to(JSContext* ctx, JSValueConst value, JSLineData<T>& line) {
+  return js_line_read(ctx, value, &line);
+}
+
+template<class T>
+static inline JSValue
+js_value_from(JSContext* ctx, const JSLineData<T>& line) {
+  return js_line_new(ctx, line.x1, line.y1, line.x2, line.y2);
+}
+
 /**
  *  @}
  */

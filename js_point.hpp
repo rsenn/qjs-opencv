@@ -247,6 +247,12 @@ operator>>(std::istream& is, cv::Point_<T>& p) {
 }
 
 template<class T>
+static inline int
+js_value_to(JSContext* ctx, JSValueConst value, cv::Point_<T>& pt) {
+  return js_point_read(ctx, value, &pt);
+}
+
+template<class T>
 static inline JSValue
 js_value_from(JSContext* ctx, const cv::Point_<T>& pt) {
   return js_point_new(ctx, pt.x, pt.y);

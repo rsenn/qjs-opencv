@@ -112,6 +112,18 @@ js_rect_set(JSContext* ctx, JSValue out, double x, double y, double w, double h)
   return r;
 }
 
+template<class T>
+static inline int
+js_value_to(JSContext* ctx, JSValueConst value, JSRectData<T>& rect) {
+  return js_rect_read(ctx, value, &rect);
+}
+
+template<class T>
+static inline JSValue
+js_value_from(JSContext* ctx, const JSRectData<T>& rect) {
+  return js_rect_new(ctx, rect.x, rect.y, rect.width, rect.height);
+}
+
 extern "C" int js_rect_init(JSContext*, JSModuleDef*);
 
 #endif /* defined(JS_RECT_HPP) */

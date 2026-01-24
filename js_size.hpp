@@ -106,4 +106,16 @@ js_size_arg(JSContext* ctx, int argc, JSValueConst argv[], int& argind, JSSizeDa
   return FALSE;
 }
 
+template<class T>
+static inline int
+js_value_to(JSContext* ctx, JSValueConst value, JSSizeData<T>& size) {
+  return js_size_read(ctx, value, &size);
+}
+
+template<class T>
+static inline JSValue
+js_value_from(JSContext* ctx, const JSSizeData<T>& size) {
+  return js_size_new(ctx, size.width, size.height);
+}
+
 #endif /* defined(JS_SIZE_HPP) */

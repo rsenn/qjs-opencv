@@ -19,7 +19,7 @@
 #include <iterator>
 #include <type_traits>
 #include <vector>
- 
+
 template<class T> class js_array {
 public:
   static int64_t to_vector(JSContext* ctx, JSValueConst arr, std::vector<T>& out) {
@@ -192,7 +192,7 @@ js_array<JSValue>::to_array(JSContext* ctx, JSValueConst arr, std::array<JSValue
   return i;
 }
 
-template<class T> class js_array<JSRectData<T>> {
+/*template<class T> class js_array<JSRectData<T>> {
 public:
   static int64_t to_vector(JSContext* ctx, JSValueConst arr, std::vector<JSRectData<T>>& out) {
     int64_t i, n;
@@ -239,9 +239,9 @@ public:
   }
 
   template<size_t N> static int64_t to_array(JSContext* ctx, JSValueConst arr, std::array<JSRectData<T>, N>& out);
-};
+};*/
 
- template<class T> class js_array<JSLineData<T>> {
+/*template<class T> class js_array<JSLineData<T>> {
 public:
   static int64_t to_vector(JSContext* ctx, JSValueConst arr, std::vector<JSLineData<T>>& out) {
     int64_t i, n;
@@ -305,8 +305,8 @@ js_array<JSLineData<T>>::to_array(JSContext* ctx, JSValueConst arr, std::array<J
   }
 
   return i;
-}
- 
+}*/
+
 template<> class js_array<cv::Mat> {
 public:
   static int64_t to_vector(JSContext* ctx, JSValueConst arr, std::vector<cv::Mat>& out) {
@@ -339,8 +339,8 @@ public:
 
   template<size_t N> static int64_t to_array(JSContext* ctx, JSValueConst arr, std::array<cv::Mat, N>& out);
 };
- 
-template<class T> class js_array<JSPointData<T>> {
+
+/*template<class T> class js_array<JSPointData<T>> {
 public:
   static int64_t to_vector(JSContext* ctx, JSValueConst arr, std::vector<JSPointData<T>>& out) {
     int64_t i, n;
@@ -385,7 +385,7 @@ public:
   }
 
   template<size_t N> static int64_t to_array(JSContext* ctx, JSValueConst arr, std::array<cv::Mat, N>& out);
-};
+};*/
 
 extern "C" int JS_DeletePropertyInt64(JSContext* ctx, JSValueConst obj, int64_t idx, int flags);
 
