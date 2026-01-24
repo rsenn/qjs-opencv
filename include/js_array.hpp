@@ -85,7 +85,7 @@ public:
       T value;
       JSValue item = JS_GetPropertyUint32(ctx, arr, (uint32_t)i);
 
-      if(js_value_to(ctx, item, value) == -1) {
+      if(!js_value_to(ctx, item, value)) {
         JS_FreeValue(ctx, item);
         out.clear();
         return -1;
@@ -185,7 +185,7 @@ js_array<T>::to_scalar(JSContext* ctx, JSValueConst arr, cv::Scalar_<T>& out) {
   return n;
 }
 
-template<> class js_array<uint32_t> {
+/*template<> class js_array<uint32_t> {
 public:
   static int64_t to_vector(JSContext* ctx, JSValueConst arr, std::vector<uint32_t>& out) {
     int64_t i, n;
@@ -245,7 +245,7 @@ js_array<uint32_t>::to_array(JSContext* ctx, JSValueConst arr, std::array<uint32
   }
 
   return i;
-}
+}*/
 
 template<> class js_array<JSValue> {
 public:
@@ -303,7 +303,7 @@ js_array<JSValue>::to_array(JSContext* ctx, JSValueConst arr, std::array<JSValue
   return i;
 }
 
-template<class T> class js_array<JSColorData<T>> {
+/*template<class T> class js_array<JSColorData<T>> {
 public:
   static int64_t to_vector(JSContext* ctx, JSValueConst arr, std::vector<JSColorData<T>>& out) {
     int64_t i, n;
@@ -366,7 +366,7 @@ js_array<JSColorData<T>>::to_array(JSContext* ctx, JSValueConst arr, std::array<
   }
 
   return i;
-}
+}*/
 
 template<class T> class js_array<JSRectData<T>> {
 public:
@@ -417,7 +417,7 @@ public:
   template<size_t N> static int64_t to_array(JSContext* ctx, JSValueConst arr, std::array<JSRectData<T>, N>& out);
 };
 
-template<class T> class js_array<JSLineData<T>> {
+ template<class T> class js_array<JSLineData<T>> {
 public:
   static int64_t to_vector(JSContext* ctx, JSValueConst arr, std::vector<JSLineData<T>>& out) {
     int64_t i, n;
@@ -483,7 +483,7 @@ js_array<JSLineData<T>>::to_array(JSContext* ctx, JSValueConst arr, std::array<J
   return i;
 }
 
-template<> class js_array<double> {
+/*template<> class js_array<double> {
 public:
   static int64_t to_vector(JSContext* ctx, JSValueConst arr, std::vector<double>& out) {
     int64_t i, n;
@@ -576,7 +576,7 @@ public:
 
     return N;
   }
-};
+};*/
 
 template<> class js_array<uint8_t> {
 public:

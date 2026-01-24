@@ -67,6 +67,9 @@ static inline JSAtom js_symbol_atom(JSContext*, const char*);
 static inline JSAtom js_symbol_for_atom(JSContext*, const char*);
 static inline JSValue js_iterable_function(JSContext*, JSValueConst);
 int js_range_read(JSContext* ctx, JSValueConst value, cv::Range* range);
+int js_range_size(JSContext* ctx, JSValueConst value);
+bool js_range_empty(JSContext* ctx, JSValueConst value);
+bool js_range_valid(JSContext* ctx, JSValueConst value);
 
 /** @defgroup number
  *  @{

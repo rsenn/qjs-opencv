@@ -143,3 +143,30 @@ js_range_read(JSContext* ctx, JSValueConst value, cv::Range* range) {
 
   return ret;
 }
+
+int
+js_range_size(JSContext* ctx, JSValueConst value) {
+  cv::Range r;
+
+  if(js_range_read(ctx, value, &r))
+    return r.size();
+
+  return -1;
+}
+
+bool
+js_range_empty(JSContext* ctx, JSValueConst value) {
+  cv::Range r;
+
+  if(js_range_read(ctx, value, &r))
+    return r.empty();
+
+  return true;
+}
+
+bool
+js_range_valid(JSContext* ctx, JSValueConst value) {
+  cv::Range r;
+
+  return js_range_read(ctx, value, &r);
+}
