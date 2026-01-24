@@ -587,6 +587,23 @@ js_mat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
         } else if(argc == m->dims) {
 
           switch(m->dims) {
+            case 1: {
+              cv::Vec<int, 1> vec;
+
+              js_value_to(ctx, argv[0], vec[0]);
+
+              ptr = m->ptr<uchar>(vec);
+              break;
+            }
+            case 2: {
+              cv::Vec<int, 2> vec;
+
+              js_value_to(ctx, argv[0], vec[0]);
+              js_value_to(ctx, argv[1], vec[1]);
+
+              ptr = m->ptr<uchar>(vec);
+              break;
+            }
             case 3: {
               cv::Vec<int, 3> vec;
 
@@ -594,7 +611,7 @@ js_mat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
               js_value_to(ctx, argv[1], vec[1]);
               js_value_to(ctx, argv[2], vec[2]);
 
-              ptr = &mat_at<uchar,3>(*m, vec);
+              ptr = m->ptr<uchar>(vec);
               break;
             }
             case 4: {
@@ -605,7 +622,32 @@ js_mat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
               js_value_to(ctx, argv[2], vec[2]);
               js_value_to(ctx, argv[3], vec[3]);
 
-              ptr = &mat_at<uchar,4>(*m, vec);
+              ptr = m->ptr<uchar>(vec);
+              break;
+            }
+            case 5: {
+              cv::Vec<int, 5> vec;
+
+              js_value_to(ctx, argv[0], vec[0]);
+              js_value_to(ctx, argv[1], vec[1]);
+              js_value_to(ctx, argv[2], vec[2]);
+              js_value_to(ctx, argv[3], vec[3]);
+              js_value_to(ctx, argv[4], vec[4]);
+
+              ptr = m->ptr<uchar>(vec);
+              break;
+            }
+            case 6: {
+              cv::Vec<int, 6> vec;
+
+              js_value_to(ctx, argv[0], vec[0]);
+              js_value_to(ctx, argv[1], vec[1]);
+              js_value_to(ctx, argv[2], vec[2]);
+              js_value_to(ctx, argv[3], vec[3]);
+              js_value_to(ctx, argv[4], vec[4]);
+              js_value_to(ctx, argv[5], vec[5]);
+
+              ptr = m->ptr<uchar>(vec);
               break;
             }
           }

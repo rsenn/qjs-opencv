@@ -239,7 +239,7 @@ mat_at(cv::UMat& mat, uint32_t row, uint32_t col) {
 template<class T, size_t N>
 static inline T&
 mat_at(cv::UMat& mat, const cv::Vec<int, N>& vec) {
-  size_t offs = mat_offset(mat, vec);
+  size_t offs = mat_offset<N>(mat, vec);
   return *reinterpret_cast<T*>(mat_ptr(mat) + offs);
 }
 
