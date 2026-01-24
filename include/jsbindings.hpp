@@ -921,6 +921,25 @@ js_function_invoke(JSContext* ctx, JSValueConst this_obj, const char* method, in
  *  @}
  */
 
+template<class T>
+static inline int
+js_arguments_to(JSContext* ctx, int argc, JSValueConst argv[], std::vector<T>& out) {
+  int r = 0;
+  out.clear();
+  out.resize(argc);
+
+  for(int i = 0; i < argc; i++) {
+    int result = js_value_to(ctx, argv[i], out[i]);
+
+    if(!result)
+      return -1;
+
+    r += result;
+  }
+
+  return r;
+}
+
 class JSOutputArgument : public JSInputOutputArray {
 public:
   JSOutputArgument(JSContext* ctx, JSValueConst val);

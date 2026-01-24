@@ -132,17 +132,14 @@ js_ref(JSContext* ctx, const char* name, JSValueConst arg, JSValue value) {
 
 int
 js_range_read(JSContext* ctx, JSValueConst value, cv::Range* range) {
-  cv::Vec<int, 2> vec;
   int ret = 0;
+  cv::Vec<int, 2> vec{INT_MIN, INT_MAX};
 
-  if(js_is_array(ctx, value)) {
+  if(js_is_array(ctx, value) && js_array_length(ctx, value) == 2)
     ret = js_value_to(ctx, value, vec);
 
-    range->start = vec[0];
-    range->end = vec[1];
-  } else {
-    *range = cv::Range::all();
-  }
+  if(range)
+    *range = cv::Range(vec[0], vec[1]);
 
   return ret;
 }

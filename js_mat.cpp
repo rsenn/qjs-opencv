@@ -1669,25 +1669,29 @@ js_mat_array(JSContext* ctx, JSValueConst this_val) {
 
 JSValue
 js_mat_call(JSContext* ctx, JSValueConst func_obj, JSValueConst this_val, int argc, JSValueConst argv[], int flags) {
-  cv::Rect rect = {0, 0, 0, 0};
+  JSRectData<double>* rect;
   JSMatData* src;
+  std::vector<cv::Range> ranges;
+  cv::Mat mat;
 
   if((src = js_mat_data2(ctx, func_obj)) == nullptr)
     return JS_EXCEPTION;
 
-  if(!js_rect_read(ctx, argv[0], &rect))
-    return JS_ThrowTypeError(ctx, "cv::Mat(): argument 1 expecting Rect");
+  if(argc == 1 && (rect = js_rect_data(argv[0]))) {
+    assert(rect->x >= 0);
+    assert(rect->y >= 0);
+    assert(rect->width <= src->cols - rect->x);
+    assert(rect->height <= src->rows - rect->y);
 
-  // printf("js_mat_call %u,%u %ux%u\n", rect.x, rect.y, rect.width, rect.height);
-  // printf("js_mat_call %u,%u %ux%u rows=%u,cols=%u\n", rect.x, rect.y, rect.width,
-  // rect.height, src->rows, src->cols);
+    mat = src->operator()(*rect);
+  } else if(argc == 1 && js_is_array(ctx, argv[0]) && js_array_to(ctx, argv[0], ranges)) {
+    mat = src->operator()(ranges);
+  } else if(js_arguments_to(ctx, argc, argv, ranges) > 0) {
+    mat = src->operator()(ranges);
+  } else {
+    return JS_ThrowTypeError(ctx, "cv::Mat(): argument 1 expecting Rect or Array<Ranges>");
+  }
 
-  assert(rect.x >= 0);
-  assert(rect.y >= 0);
-  assert(rect.width <= src->cols - rect.x);
-  assert(rect.height <= src->rows - rect.y);
-
-  cv::Mat mat = src->operator()(rect);
   return js_mat_wrap(ctx, mat);
 }
 
