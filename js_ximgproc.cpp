@@ -12,8 +12,6 @@
 
 typedef cv::Ptr<cv::ximgproc::EdgeDrawing> JSEdgeDrawingData;
 
-extern "C" int js_edge_drawing_init(JSContext*, JSModuleDef*);
-
 extern "C" {
 thread_local JSValue edge_drawing_proto = JS_UNDEFINED, edge_drawing_class = JS_UNDEFINED;
 thread_local JSClassID js_edge_drawing_class_id = 0;
