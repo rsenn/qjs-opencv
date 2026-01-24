@@ -998,13 +998,15 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
 
       cv::minMaxIdx(src, &minVal, &maxVal, minIdx.data(), maxIdx.data(), mask);
 
-      results[0] = JS_NewFloat64(ctx, minVal);
-      results[1] = JS_NewFloat64(ctx, maxVal);
-      results[2] = js_array_from(ctx, minIdx);
-      results[3] = js_array_from(ctx, maxIdx);
+      results[0] = js_value_from(ctx, minVal);
+      results[1] = js_value_from(ctx, maxVal);
+      results[2] = js_value_from(ctx, minIdx);
+      results[3] = js_value_from(ctx, maxIdx);
+
       for(size_t i = 0; i < 4; i++)
         if(js_is_function(ctx, argv[i + 1]))
           JS_Call(ctx, argv[i + 1], JS_NULL, 1, results + i);
+
       ret = js_array<JSValue>::from_sequence(ctx, const_cast<JSValue*>(&results[0]), const_cast<JSValue*>(&results[4]));
       break;
     }
