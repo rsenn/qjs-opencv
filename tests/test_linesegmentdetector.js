@@ -2,22 +2,21 @@ import { IMREAD_GRAYSCALE, IMREAD_COLOR, COLOR_BGR2Lab, COLOR_GRAY2BGR, LINE_AA,
 
 function main(...args) {
   //let lsd = new LineSegmentDetector(LSD_REFINE_ADV, 1, 2, 2.0, 45, 2, 0.9, 1024);
-  let lsd = new LineSegmentDetector(LSD_REFINE_NONE);
+  const lsd = new LineSegmentDetector(LSD_REFINE_NONE);
   /*console.log('LSD_REFINE_ADV', LSD_REFINE_ADV);
   console.log('lsd', lsd);*/
 
-  let image = imread('tests/test_linesegmentdetector.jpg');
-  console.log('image', image);
-  let gray = Grayscale(image);
+  const image = imread('tests/test_linesegmentdetector.jpg');
 
-  let lines;
-  lsd.detect(gray, (lines = []));
+  const gray = Grayscale(image);
+
+  const lines = [];
+  lsd.detect(gray, lines);
 
   console.log('lines', lines.length);
-  image = Color(gray);
 
-  for(let line of lines) {
-    drawLine(image, line.a, line.b, [0, 255, 0, 0x80], 1, LINE_AA);
+  for(const line of lines) {
+    drawLine(image, line.a, line.b, [255,128,0], 1, LINE_AA);
   }
 
   imshow('test', image);
@@ -26,15 +25,15 @@ function main(...args) {
 }
 
 function Grayscale(src) {
-  let channels = [];
-  let mat = new Mat();
+  const channels = [];
+  const mat = new Mat();
   cvtColor(src, mat, COLOR_BGR2Lab);
   split(mat, channels);
   return channels[0];
 }
 
 function Color(src) {
-  let mat = new Mat();
+  const mat = new Mat();
   cvtColor(src, mat, COLOR_GRAY2BGR);
   return mat;
 }

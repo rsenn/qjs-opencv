@@ -96,14 +96,18 @@ js_cv_imread(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
   const char* filename;
   size_t len;
   cv::Mat mat;
+  int32_t flags = cv::IMREAD_COLOR;
 
   if(!(filename = JS_ToCStringLen(ctx, &len, argv[0])))
     return JS_ThrowTypeError(ctx, "argument 1 must be a filename");
 
+  if(argc > 1)
+    JS_ToInt32(ctx, &flags, argv[1]);
+
   if(!strcasecmp(".png", (filename + len - 4)))
     mat = png_read(filename);
   else
-    mat = cv::imread(filename);
+    mat = cv::imread(filename, flags);
 
   JS_FreeCString(ctx, filename);
 
