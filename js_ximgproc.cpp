@@ -72,12 +72,165 @@ js_edge_drawing_finalizer(JSRuntime* rt, JSValue val) {
 }
 
 enum {
+  PARAM_ANCHORTHRESHOLDVALUE,
+  PARAM_EDGEDETECTIONOPERATOR,
+  PARAM_GRADIENTTHRESHOLDVALUE,
+  PARAM_LINEFITERRORTHRESHOLD,
+  PARAM_MAXDISTANCEBETWEENTWOLINES,
+  PARAM_MAXERRORTHRESHOLD,
+  PARAM_MINLINELENGTH,
+  PARAM_MINPATHLENGTH,
+  PARAM_NFAVALIDATION,
+  PARAM_PFMODE,
+  PARAM_SCANINTERVAL,
+  PARAM_SIGMA,
+  PARAM_SUMFLAG,
+};
+
+static JSValue
+js_edge_drawing_get(JSContext* ctx, JSValueConst this_val, int magic) {
+  JSEdgeDrawingData* ed;
+  JSValue ret = JS_UNDEFINED;
+
+  if(!(ed = js_edge_drawing_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  auto const& params = ed->get()->params;
+
+  switch(magic) {
+    case PARAM_ANCHORTHRESHOLDVALUE: {
+      ret = js_value_from(ctx, params.AnchorThresholdValue);
+      break;
+    }
+    case PARAM_EDGEDETECTIONOPERATOR: {
+      ret = js_value_from(ctx, params.EdgeDetectionOperator);
+      break;
+    }
+    case PARAM_GRADIENTTHRESHOLDVALUE: {
+      ret = js_value_from(ctx, params.GradientThresholdValue);
+      break;
+    }
+    case PARAM_LINEFITERRORTHRESHOLD: {
+      ret = js_value_from(ctx, params.LineFitErrorThreshold);
+      break;
+    }
+    case PARAM_MAXDISTANCEBETWEENTWOLINES: {
+      ret = js_value_from(ctx, params.MaxDistanceBetweenTwoLines);
+      break;
+    }
+    case PARAM_MAXERRORTHRESHOLD: {
+      ret = js_value_from(ctx, params.MaxErrorThreshold);
+      break;
+    }
+    case PARAM_MINLINELENGTH: {
+      ret = js_value_from(ctx, params.MinLineLength);
+      break;
+    }
+    case PARAM_MINPATHLENGTH: {
+      ret = js_value_from(ctx, params.MinPathLength);
+      break;
+    }
+    case PARAM_NFAVALIDATION: {
+      ret = js_value_from(ctx, params.NFAValidation);
+      break;
+    }
+    case PARAM_PFMODE: {
+      ret = js_value_from(ctx, params.PFmode);
+      break;
+    }
+    case PARAM_SCANINTERVAL: {
+      ret = js_value_from(ctx, params.ScanInterval);
+      break;
+    }
+    case PARAM_SIGMA: {
+      ret = js_value_from(ctx, params.Sigma);
+      break;
+    }
+    case PARAM_SUMFLAG: {
+      ret = js_value_from(ctx, params.SumFlag);
+      break;
+    }
+  }
+
+  return ret;
+}
+
+static JSValue
+js_edge_drawing_set(JSContext* ctx, JSValueConst this_val, JSValueConst value, int magic) {
+  JSEdgeDrawingData* ed;
+  JSValue ret = JS_UNDEFINED;
+
+  if(!(ed = js_edge_drawing_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  auto& params = ed->get()->params;
+
+  switch(magic) {
+    case PARAM_ANCHORTHRESHOLDVALUE: {
+      js_value_to(ctx, value, params.AnchorThresholdValue);
+      break;
+    }
+    case PARAM_EDGEDETECTIONOPERATOR: {
+      js_value_to(ctx, value, params.EdgeDetectionOperator);
+      break;
+    }
+    case PARAM_GRADIENTTHRESHOLDVALUE: {
+      js_value_to(ctx, value, params.GradientThresholdValue);
+      break;
+    }
+    case PARAM_LINEFITERRORTHRESHOLD: {
+      js_value_to(ctx, value, params.LineFitErrorThreshold);
+      break;
+    }
+    case PARAM_MAXDISTANCEBETWEENTWOLINES: {
+      js_value_to(ctx, value, params.MaxDistanceBetweenTwoLines);
+      break;
+    }
+    case PARAM_MAXERRORTHRESHOLD: {
+      js_value_to(ctx, value, params.MaxErrorThreshold);
+      break;
+    }
+    case PARAM_MINLINELENGTH: {
+      js_value_to(ctx, value, params.MinLineLength);
+      break;
+    }
+    case PARAM_MINPATHLENGTH: {
+      js_value_to(ctx, value, params.MinPathLength);
+      break;
+    }
+    case PARAM_NFAVALIDATION: {
+      js_value_to(ctx, value, params.NFAValidation);
+      break;
+    }
+    case PARAM_PFMODE: {
+      js_value_to(ctx, value, params.PFmode);
+      break;
+    }
+    case PARAM_SCANINTERVAL: {
+      js_value_to(ctx, value, params.ScanInterval);
+      break;
+    }
+    case PARAM_SIGMA: {
+      js_value_to(ctx, value, params.Sigma);
+      break;
+    }
+    case PARAM_SUMFLAG: {
+      js_value_to(ctx, value, params.SumFlag);
+      break;
+    }
+  }
+
+  return ret;
+}
+
+enum {
   EDGEDRAWING_DETECTEDGES,
   EDGEDRAWING_DETECTELLIPSES,
   EDGEDRAWING_DETECTLINES,
   EDGEDRAWING_GETEDGEIMAGE,
   EDGEDRAWING_GETGRADIENTIMAGE,
   EDGEDRAWING_GETSEGMENTINDICESOFLINES,
+
   EDGEDRAWING_GETSEGMENTS,
 };
 
@@ -150,6 +303,21 @@ const JSCFunctionListEntry js_edge_drawing_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("getGradientImage", 1, js_edge_drawing_method, EDGEDRAWING_GETGRADIENTIMAGE),
     JS_CFUNC_MAGIC_DEF("getSegmentIndicesOfLines", 0, js_edge_drawing_method, EDGEDRAWING_GETSEGMENTINDICESOFLINES),
     JS_CFUNC_MAGIC_DEF("getSegments", 0, js_edge_drawing_method, EDGEDRAWING_GETSEGMENTS),
+
+    JS_CGETSET_MAGIC_DEF("AnchorThresholdValue", js_edge_drawing_get, js_edge_drawing_set, PARAM_ANCHORTHRESHOLDVALUE),
+    JS_CGETSET_MAGIC_DEF("EdgeDetectionOperator", js_edge_drawing_get, js_edge_drawing_set, PARAM_EDGEDETECTIONOPERATOR),
+    JS_CGETSET_MAGIC_DEF("GradientThresholdValue", js_edge_drawing_get, js_edge_drawing_set, PARAM_GRADIENTTHRESHOLDVALUE),
+    JS_CGETSET_MAGIC_DEF("LineFitErrorThreshold", js_edge_drawing_get, js_edge_drawing_set, PARAM_LINEFITERRORTHRESHOLD),
+    JS_CGETSET_MAGIC_DEF("MaxDistanceBetweenTwoLines", js_edge_drawing_get, js_edge_drawing_set, PARAM_MAXDISTANCEBETWEENTWOLINES),
+    JS_CGETSET_MAGIC_DEF("MaxErrorThreshold", js_edge_drawing_get, js_edge_drawing_set, PARAM_MAXERRORTHRESHOLD),
+    JS_CGETSET_MAGIC_DEF("MinLineLength", js_edge_drawing_get, js_edge_drawing_set, PARAM_MINLINELENGTH),
+    JS_CGETSET_MAGIC_DEF("MinPathLength", js_edge_drawing_get, js_edge_drawing_set, PARAM_MINPATHLENGTH),
+    JS_CGETSET_MAGIC_DEF("NFAValidation", js_edge_drawing_get, js_edge_drawing_set, PARAM_NFAVALIDATION),
+    JS_CGETSET_MAGIC_DEF("PFmode", js_edge_drawing_get, js_edge_drawing_set, PARAM_PFMODE),
+    JS_CGETSET_MAGIC_DEF("ScanInterval", js_edge_drawing_get, js_edge_drawing_set, PARAM_SCANINTERVAL),
+    JS_CGETSET_MAGIC_DEF("Sigma", js_edge_drawing_get, js_edge_drawing_set, PARAM_SIGMA),
+    JS_CGETSET_MAGIC_DEF("SumFlag", js_edge_drawing_get, js_edge_drawing_set, PARAM_SUMFLAG),
+
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "EdgeDrawing", JS_PROP_CONFIGURABLE),
 };
 
