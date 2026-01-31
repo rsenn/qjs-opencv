@@ -228,7 +228,8 @@ js_mat_dump(JSMatData* const s) {
   bool inList = posList != mat_list.cend();
   bool inFreed = std::find(mat_freed.cbegin(), mat_freed.cend(), s) != mat_freed.cend();
   const auto u = s->u;
-  std::cerr << " mat" << "[" << (posList - mat_list.cbegin()) << "]=" << static_cast<void*>(s);
+  std::cerr << " mat"
+            << "[" << (posList - mat_list.cbegin()) << "]=" << static_cast<void*>(s);
 
   if(inList)
     std::cerr << ", inList=" << (inList ? "true" : "false");

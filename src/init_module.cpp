@@ -37,6 +37,8 @@ extern "C" int js_ximgproc_init(JSContext*, JSModuleDef*);
 extern "C" int js_filestorage_init(JSContext*, JSModuleDef*);
 extern "C" int js_filenode_init(JSContext*, JSModuleDef*);
 extern "C" int js_line_iterator_init(JSContext*, JSModuleDef*);
+extern "C" int js_fisheye_init(JSContext*, JSModuleDef*);
+extern "C" int js_matx_init(JSContext*, JSModuleDef*);
 
 extern "C" void js_clahe_export(JSContext*, JSModuleDef*);
 extern "C" void js_contour_export(JSContext*, JSModuleDef*);
@@ -73,6 +75,8 @@ extern "C" void js_ximgproc_export(JSContext*, JSModuleDef*);
 extern "C" void js_filestorage_export(JSContext*, JSModuleDef*);
 extern "C" void js_filenode_export(JSContext*, JSModuleDef*);
 extern "C" void js_line_iterator_export(JSContext*, JSModuleDef*);
+extern "C" void js_fisheye_export(JSContext*, JSModuleDef*);
+extern "C" void js_matx_export(JSContext*, JSModuleDef*);
 
 int
 js_opencv_init(JSContext* ctx, JSModuleDef* m) {
@@ -121,6 +125,8 @@ js_opencv_init(JSContext* ctx, JSModuleDef* m) {
 #endif
   js_filestorage_init(ctx, m);
   js_filenode_init(ctx, m);
+  js_fisheye_init(ctx, m);
+  js_matx_init(ctx, m);
 
   return 0;
 }
@@ -183,6 +189,8 @@ JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
 #endif
   js_filestorage_export(ctx, m);
   js_filenode_export(ctx, m);
+  js_fisheye_export(ctx, m);
+  js_matx_export(ctx, m);
 
   return m;
 }
