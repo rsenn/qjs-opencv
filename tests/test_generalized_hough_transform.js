@@ -36,6 +36,8 @@ function main() {
   guil.setDp(3);
   guil.setMaxBufferSize(1000);
 
+  // XXX: TODO
+
   /*guil.setMinAngle(0);
   guil.setMaxAngle(360);
   guil.setAngleStep(1);
