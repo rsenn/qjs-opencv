@@ -338,16 +338,30 @@ static JSValue
 js_cv_mix_channels(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   std::vector<cv::Mat> srcs, dsts;
   std::vector<int> fromTo;
-
   cv::Mat* dst;
+  int i = 0;
+  uint32_t n;
 
-  if(js_array_to(ctx, argv[0], srcs) == -1)
-    return JS_EXCEPTION;
-  if(js_array_to(ctx, argv[1], dsts) == -1)
+  if(js_array_to(ctx, argv[i++], srcs) == -1)
     return JS_EXCEPTION;
 
-  if(js_array_to(ctx, argv[2], fromTo) == -1)
+  if(i < argc && JS_IsNumber(argv[i]))
+    if((n = js_value_to<uint32_t>(ctx, argv[i++])) < srcs.size())
+      srcs.resize(n);
+
+  if(js_array_to(ctx, argv[i++], dsts) == -1)
     return JS_EXCEPTION;
+
+  if(i < argc && JS_IsNumber(argv[i]))
+    if((n = js_value_to<uint32_t>(ctx, argv[i++])) < dsts.size())
+      dsts.resize(n);
+
+  if(js_array_to(ctx, argv[i++], fromTo) == -1)
+    return JS_EXCEPTION;
+
+  if(i < argc && JS_IsNumber(argv[i]))
+    if((n = js_value_to<uint32_t>(ctx, argv[i++])) * 2 < fromTo.size())
+      fromTo.resize(n * 2);
 
   cv::mixChannels(const_cast<const cv::Mat*>(srcs.data()), srcs.size(), dsts.data(), dsts.size(), fromTo.data(), fromTo.size() >> 1);
 

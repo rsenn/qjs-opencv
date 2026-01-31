@@ -1,4 +1,4 @@
-import { Line, Mat, Scalar, IMREAD_GRAYSCALE, LINE_AA, FastLineDetector, getTickFrequency, getTickCount, Point, drawLine, imread, imshow, waitKey, cvtColor, COLOR_GRAY2BGR, moveWindow, getWindowImageRect, } from 'opencv';
+import { Line, Mat, Scalar, IMREAD_GRAYSCALE, LINE_AA, FastLineDetector, getTickFrequency, getTickCount, Point, drawLine, imread, imshow, waitKey, cvtColor, COLOR_GRAY2BGR, moveWindow, getWindowImageRect, imwrite, } from 'opencv';
 
 function main(...args) {
   if(args.length == 0) args = ['corridor.jpg'];
@@ -25,7 +25,7 @@ function main(...args) {
     //                                     will be performed
     let length_threshold = 10;
     let distance_threshold = 1.41421356;
-    let canny_th1 = 50.0;
+    let canny_th1 = 30.0;
     let canny_th2 = 50.0;
     let canny_aperture_size = 3;
     let do_merge = false;
@@ -72,6 +72,8 @@ function main(...args) {
 
     console.log('rect', rect);
     moveWindow('FLD result', (1920 - rect.width) / 2, 0);
+
+    imwrite('out.png', line_image_fld);
 
     let key = waitKey(3000);
 
