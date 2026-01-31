@@ -12,7 +12,6 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/videoio.hpp>
 #include <opencv2/highgui.hpp>
-#include "opencv2/objdetect/charuco_detector.hpp"
 
 enum {
   FISHEYE_CALIBRATE = 0,
@@ -240,7 +239,6 @@ js_fisheye_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
 }
 
 js_function_list_t js_fisheye_fisheye_funcs{
-    /* Extended Image Processing */
     JS_CFUNC_MAGIC_DEF("calibrate", 7, js_fisheye_func, FISHEYE_CALIBRATE),
     JS_CFUNC_MAGIC_DEF("distortPoints", 4, js_fisheye_func, FISHEYE_DISTORT_POINTS),
     JS_CFUNC_MAGIC_DEF("estimateNewCameraMatrixForUndistortRectify", 5, js_fisheye_func, FISHEYE_ESTIMATE_NEW_CAMERA_MATRIX_FOR_UNDISTORT_RECTIFY),

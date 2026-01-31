@@ -3,6 +3,7 @@
 
 #include "jsbindings.hpp"
 #include "util.hpp"
+#include "js_alloc.hpp"
 #include <quickjs.h>
 #include <opencv2/core/types.hpp>
 
@@ -11,10 +12,13 @@ template<class T, size_t rows, size_t cols> using JSMatxData = cv::Matx<T, rows,
 extern "C" int js_matx_init(JSContext*, JSModuleDef*);
 
 extern "C" {
+extern thread_local JSValue matx_class, matx_proto;
+extern thread_local JSClassID js_matx_class_id;
+
 int js_matx_init(JSContext*, JSModuleDef*);
 }
 
-template<class T, size_t rows, size_t cols>
+/*template<class T, size_t rows, size_t cols>
 static inline JSValue
 js_matx_new(JSContext* ctx, const JSMatxData<T, rows, cols>& matx) {
   JSValue ret = JS_NewArray(ctx);
@@ -29,6 +33,19 @@ js_matx_new(JSContext* ctx, const JSMatxData<T, rows, cols>& matx) {
     JS_FreeValue(ctx, row);
   }
 
+  return ret;
+}*/
+
+template<class T, size_t rows, size_t cols>
+static inline JSValue
+js_matx_new(JSContext* ctx, const JSMatxData<T, rows, cols>& matx) {
+  JSValue ret = JS_NewObjectProtoClass(ctx, matx_proto, js_matx_class_id);
+
+  auto* ptr = js_allocate<JSInputOutputArray>(ctx);
+
+  *ptr = matx;
+
+  JS_SetOpaque(ret, ptr);
   return ret;
 }
 

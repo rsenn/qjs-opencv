@@ -1,5 +1,4 @@
 #include "js_matx.hpp"
-#include "js_alloc.hpp"
 #include "js_umat.hpp"
 
 extern "C" {
@@ -25,7 +24,7 @@ js_matx_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueCo
   if(JS_IsException(proto))
     goto fail;
 
-  obj = JS_NewObjectProtoClass(ctx, proto, js_contour_class_id);
+  obj = JS_NewObjectProtoClass(ctx, proto, js_matx_class_id);
   JS_FreeValue(ctx, proto);
 
   if(JS_IsException(obj))
@@ -51,29 +50,38 @@ js_matx_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSInputOutputArray*>(JS_GetOpaque2(ctx, val, js_matx_class_id));
 }
 
-enum {};
+enum {
+  PROP_COLS,
+  PROP_ROWS,
+};
 
 static JSValue
 js_matx_get(JSContext* ctx, JSValueConst this_val, int magic) {
   JSValue ret = JS_UNDEFINED;
-  JSInputOutputArray* s;
+  JSInputOutputArray* matx;
 
-  if((s = static_cast<JSInputOutputArray*>(JS_GetOpaque /*2*/ (/*ctx, */ this_val, js_matx_class_id))) == nullptr)
+  if((matx = static_cast<JSInputOutputArray*>(JS_GetOpaque2(ctx, this_val, js_matx_class_id))) == nullptr)
     return JS_UNDEFINED;
 
-  switch(magic) {}
+  switch(magic) {
+    case PROP_ROWS: {
+      ret = JS_NewUint32(ctx, matx->rows());
+      break;
+    }
+    case PROP_COLS: {
+      ret = JS_NewUint32(ctx, matx->cols());
+      break;
+    }
+  }
 
   return ret;
 }
 
 static JSValue
 js_matx_set(JSContext* ctx, JSValueConst this_val, JSValueConst val, int magic) {
-  JSInputOutputArray* s;
-  double v;
-  if((s = static_cast<JSInputOutputArray*>(JS_GetOpaque2(ctx, this_val, js_matx_class_id))) == nullptr)
-    return JS_EXCEPTION;
+  JSInputOutputArray* matx;
 
-  if(JS_ToFloat64(ctx, &v, val))
+  if((matx = static_cast<JSInputOutputArray*>(JS_GetOpaque2(ctx, this_val, js_matx_class_id))) == nullptr)
     return JS_EXCEPTION;
 
   switch(magic) {}
@@ -81,16 +89,21 @@ js_matx_set(JSContext* ctx, JSValueConst this_val, JSValueConst val, int magic) 
   return JS_UNDEFINED;
 }
 
-enum { FUNC_ALL };
+enum { FUNC_ALL, FUNC_EYE };
 
 static JSValue
 js_matx_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSInputOutputArray matx;
   JSValue ret = JS_EXCEPTION;
 
-  switch(magic) {
+  uint32_t rows = js_value_to<uint32_t>(ctx, argv[0]), cols = js_value_to<uint32_t>(ctx, argv[1]);
 
+  switch(magic) {
     case FUNC_ALL: {
+      /* double v = 0;
+       JS_ToFloat64(ctx, &v, argv[2]);
+
+       ret = js_matx_new(ctx, cv::Matx<double, rows, cols>::all(v));*/
       break;
     }
   }
@@ -129,10 +142,13 @@ JSClassDef js_matx_class = {
 };
 
 const JSCFunctionListEntry js_matx_proto_funcs[] = {
+    JS_CGETSET_MAGIC_DEF("cols", js_matx_get, 0, PROP_COLS),
+    JS_CGETSET_MAGIC_DEF("rows", js_matx_get, 0, PROP_ROWS),
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Matx", JS_PROP_CONFIGURABLE),
 };
 const JSCFunctionListEntry js_matx_static_funcs[] = {
     JS_CFUNC_MAGIC_DEF("all", 1, js_matx_funcs, FUNC_ALL),
+    JS_CFUNC_MAGIC_DEF("eye", 0, js_matx_funcs, FUNC_EYE),
 };
 
 extern "C" int
