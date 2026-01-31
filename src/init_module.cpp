@@ -194,7 +194,7 @@ JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   js_filenode_export(ctx, m);
   js_fisheye_export(ctx, m);
   // js_matx_export(ctx, m);
-   js_aruco_export(ctx, m);
+  js_aruco_export(ctx, m);
 
   return m;
 }

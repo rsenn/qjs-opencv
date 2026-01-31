@@ -1,21 +1,14 @@
 #include "js_cv.hpp"
 #include "js_umat.hpp"
-#include "js_affine3.hpp"
 #include "jsbindings.hpp"
 #include <quickjs.h>
 
-#include <opencv2/core.hpp>
-#include <opencv2/core/utility.hpp>
-#include <opencv2/core/types.hpp>
-#include <opencv2/imgproc.hpp>
-#include <opencv2/calib3d.hpp>
-#include <opencv2/imgcodecs.hpp>
-#include <opencv2/videoio.hpp>
-#include <opencv2/highgui.hpp>
-#include "opencv2/objdetect/charuco_detector.hpp"
+#include <opencv2/objdetect/charuco_detector.hpp>
 
 enum {
-  ARUCO_DRAW_DETECTED_CORNERS_CHARUCO=0,
+  ARUCO_DRAW_DETECTED_CORNERS_CHARUCO = 0,
+  ARUCO_DRAW_DETECTED_DIAMONDS,
+  ARUCO_DRAW_DETECTED_MARKERS,
 };
 
 static JSValue
@@ -25,9 +18,55 @@ js_aruco_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
   try {
     switch(magic) {
       case ARUCO_DRAW_DETECTED_CORNERS_CHARUCO: {
+        JSInputOutputArray image = js_cv_inputoutputarray(ctx, argv[0]);
+        JSInputArray charucoCorners = js_input_array(ctx, argv[1]);
+        JSInputArray charucoIds = cv::noArray();
+
+        if(argc > 2)
+          charucoIds = js_input_array(ctx, argv[2]);
+
+        JSColorData<double> cornerColor{255, 0, 0};
+
+        if(argc > 3)
+          js_color_read(ctx, argv[3], &cornerColor);
+
+        cv::aruco::drawDetectedCornersCharuco(image, charucoCorners, charucoIds, cornerColor);
         break;
       }
- 
+
+      case ARUCO_DRAW_DETECTED_DIAMONDS: {
+        JSInputOutputArray image = js_cv_inputoutputarray(ctx, argv[0]);
+        JSInputArray diamondCorners = js_input_array(ctx, argv[1]);
+        JSInputArray diamondIds = cv::noArray();
+
+        if(argc > 2)
+          diamondIds = js_input_array(ctx, argv[2]);
+
+        JSColorData<double> borderColor{0, 0, 255};
+
+        if(argc > 3)
+          js_color_read(ctx, argv[3], &borderColor);
+
+        cv::aruco::drawDetectedDiamonds(image, diamondCorners, diamondIds, borderColor);
+        break;
+      }
+
+      case ARUCO_DRAW_DETECTED_MARKERS: {
+        JSInputOutputArray image = js_cv_inputoutputarray(ctx, argv[0]);
+        JSInputArray corners = js_input_array(ctx, argv[1]);
+        JSInputArray ids = cv::noArray();
+
+        if(argc > 2)
+          ids = js_input_array(ctx, argv[2]);
+
+        JSColorData<double> borderColor{0, 0, 255};
+
+        if(argc > 3)
+          js_color_read(ctx, argv[3], &borderColor);
+
+        cv::aruco::drawDetectedMarkers(image, corners, ids, borderColor);
+        break;
+      }
     }
   } catch(const cv::Exception& e) { ret = js_cv_throw(ctx, e); }
 
@@ -35,7 +74,9 @@ js_aruco_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
 }
 
 js_function_list_t js_aruco_aruco_funcs{
-     JS_CFUNC_MAGIC_DEF("drawDetectedCornersCharuco", 2, js_aruco_func, ARUCO_DRAW_DETECTED_CORNERS_CHARUCO), 
+    JS_CFUNC_MAGIC_DEF("drawDetectedCornersCharuco", 2, js_aruco_func, ARUCO_DRAW_DETECTED_CORNERS_CHARUCO),
+    JS_CFUNC_MAGIC_DEF("drawDetectedDiamonds", 2, js_aruco_func, ARUCO_DRAW_DETECTED_DIAMONDS),
+    JS_CFUNC_MAGIC_DEF("drawDetectedMarkers", 2, js_aruco_func, ARUCO_DRAW_DETECTED_MARKERS),
 };
 
 js_function_list_t js_aruco_static_funcs{
