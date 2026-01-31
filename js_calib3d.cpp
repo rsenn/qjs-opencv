@@ -14,6 +14,7 @@ enum {
   ESTIMATE_AFFINE_3D,
   ESTIMATE_AFFINE_PARTIAL_2D,
   FIND_HOMOGRAPHY,
+  DRAW_CHESSBOARD_CORNERS,
 };
 
 static JSValue
@@ -214,6 +215,17 @@ js_calib3d_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
       ret = js_mat_wrap(ctx, mat);
       break;
     }
+
+    case DRAW_CHESSBOARD_CORNERS: {
+      JSInputOutputArray image = js_cv_inputoutputarray(ctx, argv[0]);
+      JSSizeData<int> patternSize;
+      js_value_to(ctx, argv[1], patternSize);
+      JSInputArray corners = js_input_array(ctx, argv[2]);
+      BOOL patternWasFound = js_value_to<BOOL>(ctx, argv[3]);
+
+      cv::drawChessboardCorners(image, patternSize, corners, patternWasFound);
+      break;
+    }
   }
 
   return ret;
@@ -227,6 +239,7 @@ const JSCFunctionListEntry js_calib3d_static_funcs[] = {
     JS_CFUNC_MAGIC_DEF("estimateAffine3D", 4, js_calib3d_functions, ESTIMATE_AFFINE_3D),
     JS_CFUNC_MAGIC_DEF("estimateAffinePartial2D", 2, js_calib3d_functions, ESTIMATE_AFFINE_PARTIAL_2D),
     JS_CFUNC_MAGIC_DEF("findHomography", 2, js_calib3d_functions, FIND_HOMOGRAPHY),
+    JS_CFUNC_MAGIC_DEF("drawChessboardCorners", 4, js_calib3d_functions, DRAW_CHESSBOARD_CORNERS),
     JS_PROP_INT32_DEF("CALIB_CB_ADAPTIVE_THRESH", cv::CALIB_CB_ADAPTIVE_THRESH, 0),
     JS_PROP_INT32_DEF("CALIB_CB_NORMALIZE_IMAGE", cv::CALIB_CB_NORMALIZE_IMAGE, 0),
     JS_PROP_INT32_DEF("CALIB_CB_FILTER_QUADS", cv::CALIB_CB_FILTER_QUADS, 0),
