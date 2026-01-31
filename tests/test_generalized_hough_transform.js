@@ -2,8 +2,8 @@ import { Mat, imread, IMREAD_GRAYSCALE, cvtColor, COLOR_RGB2GRAY, createGenerali
 
 function main() {
   //  load source image and grayscale template
-  const image = imread('./samples/samples/cpp/tutorial_code/ImgTrans/generalized_hough_mini_image.jpg');
-  const templ = imread('./samples/samples/cpp/tutorial_code/ImgTrans/generalized_hough_mini_template.jpg', IMREAD_GRAYSCALE);
+  const image = imread('tests/generalized_hough_mini_image.jpg');
+  const templ = imread('tests/generalized_hough_mini_template.jpg', IMREAD_GRAYSCALE);
 
   //  create grayscale image
   const grayImage = new Mat();
