@@ -1,10 +1,9 @@
-import { Mat, imread, cvtColor, COLOR_RGB2GRAY, createGeneralizedHoughBallard, createGeneralizedHoughGuil, Point, Size, Scalar, RotatedRect, imshow, drawLine, waitKey } from 'opencv';
+import { Mat, imread, IMREAD_GRAYSCALE, cvtColor, COLOR_RGB2GRAY, createGeneralizedHoughBallard, createGeneralizedHoughGuil, Point, Size, Scalar, RotatedRect, imshow, drawLine, waitKey, } from 'opencv';
 
 function main() {
   //  load source image and grayscale template
   const image = imread('./samples/samples/cpp/tutorial_code/ImgTrans/generalized_hough_mini_image.jpg');
-  const templ = imread('./samples/samples/cpp/tutorial_code/ImgTrans/generalized_hough_mini_template.jpg');
-  cvtColor(templ, templ, COLOR_RGB2GRAY);
+  const templ = imread('./samples/samples/cpp/tutorial_code/ImgTrans/generalized_hough_mini_template.jpg', IMREAD_GRAYSCALE);
 
   //  create grayscale image
   const grayImage = new Mat();
