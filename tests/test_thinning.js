@@ -1,11 +1,15 @@
-import { Mat, imread, resize, Size, IMREAD_COLOR, INTER_LINEAR_EXACT, cvtColor, COLOR_BGR2GRAY, threshold, THRESH_OTSU, THRESH_BINARY_INV, ximgproc, CV_8UC3, mixChannels, Rect, imshow, waitKey, } from 'opencv';
+import { Mat, imread, resize, Size, IMREAD_COLOR, INTER_LINEAR_EXACT, cvtColor, COLOR_BGR2GRAY, threshold, THRESH_OTSU, THRESH_BINARY_INV, THRESH_BINARY, ximgproc, CV_8UC3, mixChannels, Rect, imshow, waitKey, } from 'opencv';
 
 const [me] = scriptArgs;
 
 function main(file = 'opencv-logo.png') {
-  const img = imread(file, IMREAD_COLOR);
+  const src = imread(file, IMREAD_COLOR);
 
-  resize(img, img, new Size(), 0.5, 0.5, INTER_LINEAR_EXACT);
+  const img = new Mat(src.rows + 2, src.cols + 2, src.type);
+
+  src.copyTo(img(new Rect(1, 1, src.cols, src.rows)));
+
+  //resize(img, img, new Size(), 0.5, 0.5, INTER_LINEAR_EXACT);
 
   /// Threshold the input image
   const img_grayscale = new Mat(),
@@ -26,7 +30,7 @@ function main(file = 'opencv-logo.png') {
 
   imshow('img_thinning', img_thinning_ZS);
   imshow('img_thinning', img_thinning_GH);
-  
+
   /// Make 3 channel images from thinning result
   let result_ZS = new Mat(img.rows, img.cols, CV_8UC3),
     result_GH = new Mat(img.rows, img.cols, CV_8UC3);
