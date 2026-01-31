@@ -185,14 +185,17 @@ js_rotated_rect_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
       JSValue result;
       JSPointData<float> pts[4];
       rr->points(pts);
+
       if(js_is_array(ctx, argv[0])) {
         result = JS_DupValue(ctx, argv[0]);
       } else {
         ret = JS_NewArray(ctx);
         result = JS_DupValue(ctx, ret);
       }
+      
       for(size_t i = 0; i < 4; i++)
         JS_SetPropertyUint32(ctx, result, i, js_point_new(ctx, pts[i]));
+      
       JS_FreeValue(ctx, result);
       break;
     }

@@ -63,7 +63,7 @@ function main(arg = 'tests/test_linesegmentdetector.jpg') {
 
   lines = [...lines].map(l => new Line(...l.map(Math.round)));
 
-  for(let l of lines) drawLine(canvas, l.x1 + image.cols * 2, l.y1, l.x2 + image.cols * 2, l.y2, HSVtoRGB((l.angle + Math.PI) * 360 / (Math.PI*2),1,1,255), 1, LINE_AA);
+  for(let l of lines) drawLine(canvas, l.x1 + image.cols * 2, l.y1, l.x2 + image.cols * 2, l.y2, HSVtoRGB(((l.angle + Math.PI) * 360) / (Math.PI * 2), 1, 1, 255), 1, LINE_AA);
 
   console.log('lines', lines);
 

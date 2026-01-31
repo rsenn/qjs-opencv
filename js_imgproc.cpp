@@ -34,6 +34,300 @@ enum {
   HIER_PARENT,
 };
 
+typedef cv::Ptr<cv::GeneralizedHough> JSGeneralizedHoughData;
+
+extern "C" {
+thread_local JSValue generalized_hough_proto = JS_UNDEFINED, generalized_hough_class = JS_UNDEFINED, generalized_hough_params_proto = JS_UNDEFINED;
+thread_local JSClassID js_generalized_hough_class_id = 0;
+}
+
+JSGeneralizedHoughData*
+js_generalized_hough_data(JSValueConst val) {
+  return static_cast<JSGeneralizedHoughData*>(JS_GetOpaque(val, js_generalized_hough_class_id));
+}
+
+JSGeneralizedHoughData*
+js_generalized_hough_data2(JSContext* ctx, JSValueConst val) {
+  return static_cast<JSGeneralizedHoughData*>(JS_GetOpaque2(ctx, val, js_generalized_hough_class_id));
+}
+
+static JSValue
+js_generalized_hough_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
+  JSGeneralizedHoughData* gh;
+  JSValue obj = JS_UNDEFINED, proto;
+
+  if(!(gh = js_allocate<JSGeneralizedHoughData>(ctx)))
+    return JS_EXCEPTION;
+
+  new(gh) JSGeneralizedHoughData();
+
+  /* using new_target to get the prototype is necessary when the class is extended. */
+  proto = JS_GetPropertyStr(ctx, new_target, "prototype");
+  if(JS_IsException(proto))
+    goto fail;
+
+  obj = JS_NewObjectProtoClass(ctx, proto, js_generalized_hough_class_id);
+  JS_FreeValue(ctx, proto);
+
+  if(JS_IsException(obj))
+    goto fail;
+
+  JS_SetOpaque(obj, gh);
+
+  return obj;
+
+fail:
+  js_deallocate(ctx, gh);
+  JS_FreeValue(ctx, obj);
+  return JS_EXCEPTION;
+}
+
+static JSValue
+js_generalized_hough_new(JSContext* ctx, const JSGeneralizedHoughData& arg) {
+  JSGeneralizedHoughData* ptr;
+
+  if(!(ptr = js_allocate<JSGeneralizedHoughData>(ctx)))
+    return JS_EXCEPTION;
+
+  new(ptr) JSGeneralizedHoughData(arg);
+
+  JSValue obj = JS_NewObjectProtoClass(ctx, generalized_hough_proto, js_generalized_hough_class_id);
+
+  JS_SetOpaque(obj, ptr);
+
+  return obj;
+}
+
+void
+js_generalized_hough_finalizer(JSRuntime* rt, JSValue val) {
+  JSGeneralizedHoughData* gh;
+
+  if((gh = js_generalized_hough_data(val))) {
+    cv::Algorithm* ptr = gh->get();
+
+    ptr->~Algorithm();
+
+    js_deallocate(rt, gh);
+  }
+}
+
+enum {
+  GENERALIZED_HOUGH_DETECT = 0,
+  GENERALIZED_HOUGH_GET_CANNY_HIGH_THRES,
+  GENERALIZED_HOUGH_GET_CANNY_LOW_THRES,
+  GENERALIZED_HOUGH_GET_DP,
+  GENERALIZED_HOUGH_GET_MAX_BUFFER_SIZE,
+  GENERALIZED_HOUGH_GET_MIN_DIST,
+  GENERALIZED_HOUGH_GET_LEVELS,
+  GENERALIZED_HOUGH_GET_VOTES_THRESHOLD,
+  GENERALIZED_HOUGH_SET_CANNY_HIGH_THRES,
+  GENERALIZED_HOUGH_SET_CANNY_LOW_THRES,
+  GENERALIZED_HOUGH_SET_DP,
+  GENERALIZED_HOUGH_SET_MAX_BUFFER_SIZE,
+  GENERALIZED_HOUGH_SET_MIN_DIST,
+  GENERALIZED_HOUGH_SET_TEMPLATE,
+  GENERALIZED_HOUGH_SET_LEVELS,
+  GENERALIZED_HOUGH_SET_VOTES_THRESHOLD,
+};
+
+static JSValue
+js_generalized_hough_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  JSGeneralizedHoughData* gh;
+  JSValue ret = JS_UNDEFINED;
+
+  if(!(gh = js_generalized_hough_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  try {
+    switch(magic) {
+      case GENERALIZED_HOUGH_DETECT: {
+        if(argc >= 4) {
+          JSInputArray edges = js_input_array(ctx, argv[0]);
+          JSInputArray dx = js_input_array(ctx, argv[1]), dy = js_input_array(ctx, argv[2]);
+          JSOutputArray positions = js_cv_outputarray(ctx, argv[3]), votes = cv::noArray();
+
+          if(argc > 4)
+            votes = js_cv_outputarray(ctx, argv[4]);
+
+          gh->get()->detect(edges, dx, dy, positions, votes);
+        } else {
+          JSInputArray image = js_input_array(ctx, argv[0]);
+          JSOutputArray positions = js_cv_outputarray(ctx, argv[1]), votes = cv::noArray();
+
+          if(argc > 2)
+            votes = js_cv_outputarray(ctx, argv[2]);
+
+          gh->get()->detect(image, positions, votes);
+        }
+
+        break;
+      }
+
+      case GENERALIZED_HOUGH_GET_CANNY_HIGH_THRES: {
+        ret = JS_NewInt32(ctx, gh->get()->getCannyHighThresh());
+        break;
+      }
+
+      case GENERALIZED_HOUGH_GET_CANNY_LOW_THRES: {
+        ret = JS_NewInt32(ctx, gh->get()->getCannyLowThresh());
+        break;
+      }
+
+      case GENERALIZED_HOUGH_GET_DP: {
+        ret = JS_NewFloat64(ctx, gh->get()->getDp());
+        break;
+      }
+
+      case GENERALIZED_HOUGH_GET_MAX_BUFFER_SIZE: {
+        ret = JS_NewInt32(ctx, gh->get()->getMaxBufferSize());
+        break;
+      }
+
+      case GENERALIZED_HOUGH_GET_MIN_DIST: {
+        ret = JS_NewInt32(ctx, gh->get()->getMinDist());
+        break;
+      }
+
+      case GENERALIZED_HOUGH_GET_LEVELS: {
+        auto* ptr = gh->get();
+
+        cv::GeneralizedHoughBallard* ballard;
+        cv::GeneralizedHoughGuil* guil;
+
+        if((ballard = dynamic_cast<cv::GeneralizedHoughBallard*>(ptr))) {
+          ret = js_value_from(ctx, ballard->getLevels());
+        } else if((guil = dynamic_cast<cv::GeneralizedHoughGuil*>(ptr))) {
+          ret = js_value_from(ctx, guil->getLevels());
+        } else {
+          ret = JS_ThrowInternalError(ctx, "GeneralizedHough is none of Ballard/Guil");
+        }
+
+        break;
+      }
+
+      case GENERALIZED_HOUGH_GET_VOTES_THRESHOLD: {
+        auto* ptr = gh->get();
+
+        cv::GeneralizedHoughBallard* ballard;
+
+        if((ballard = dynamic_cast<cv::GeneralizedHoughBallard*>(ptr))) {
+          ret = js_value_from(ctx, ballard->getVotesThreshold());
+        } else {
+          ret = JS_ThrowInternalError(ctx, "GeneralizedHough is not GeneralizedHoughBallard");
+        }
+
+        break;
+      }
+
+      case GENERALIZED_HOUGH_SET_CANNY_HIGH_THRES: {
+        gh->get()->setCannyHighThresh(js_value_to<int32_t>(ctx, argv[0]));
+        break;
+      }
+
+      case GENERALIZED_HOUGH_SET_CANNY_LOW_THRES: {
+        gh->get()->setCannyLowThresh(js_value_to<int32_t>(ctx, argv[0]));
+        break;
+      }
+
+      case GENERALIZED_HOUGH_SET_DP: {
+        gh->get()->setDp(js_value_to<double>(ctx, argv[0]));
+        break;
+      }
+
+      case GENERALIZED_HOUGH_SET_MAX_BUFFER_SIZE: {
+        gh->get()->setMaxBufferSize(js_value_to<int32_t>(ctx, argv[0]));
+        break;
+      }
+
+      case GENERALIZED_HOUGH_SET_MIN_DIST: {
+        gh->get()->setMinDist(js_value_to<int32_t>(ctx, argv[0]));
+        break;
+      }
+
+      case GENERALIZED_HOUGH_SET_TEMPLATE: {
+        if(argc >= 3) {
+          JSInputArray edges = js_input_array(ctx, argv[0]), dx = js_input_array(ctx, argv[1]), dy = js_input_array(ctx, argv[2]);
+          JSPointData<int> templCenter{-1, -1};
+
+          if(argc > 3)
+            js_value_to(ctx, argv[3], templCenter);
+
+          gh->get()->setTemplate(edges, dx, dy, templCenter);
+        } else {
+          JSInputArray templ = js_input_array(ctx, argv[0]);
+          JSPointData<int> templCenter{-1, -1};
+
+          if(argc > 1)
+            js_value_to(ctx, argv[1], templCenter);
+
+          gh->get()->setTemplate(templ, templCenter);
+        }
+        break;
+      }
+
+      case GENERALIZED_HOUGH_SET_LEVELS: {
+        auto* ptr = gh->get();
+
+        cv::GeneralizedHoughBallard* ballard;
+        cv::GeneralizedHoughGuil* guil;
+
+        if((ballard = dynamic_cast<cv::GeneralizedHoughBallard*>(ptr))) {
+          ballard->setLevels(js_value_to<int32_t>(ctx, argv[0]));
+        } else if((guil = dynamic_cast<cv::GeneralizedHoughGuil*>(ptr))) {
+          guil->setLevels(js_value_to<int32_t>(ctx, argv[0]));
+        } else {
+          ret = JS_ThrowInternalError(ctx, "GeneralizedHough is none of Ballard/Guil");
+        }
+
+        break;
+      }
+
+      case GENERALIZED_HOUGH_SET_VOTES_THRESHOLD: {
+        auto* ptr = gh->get();
+
+        cv::GeneralizedHoughBallard* ballard;
+
+        if((ballard = dynamic_cast<cv::GeneralizedHoughBallard*>(ptr))) {
+          ballard->setVotesThreshold(js_value_to<int32_t>(ctx, argv[0]));
+        } else {
+          ret = JS_ThrowInternalError(ctx, "GeneralizedHough is not GeneralizedHoughBallard");
+        }
+
+        break;
+      }
+    }
+  } catch(const cv::Exception& e) { ret = js_cv_throw(ctx, e); }
+
+  return ret;
+}
+
+JSClassDef js_generalized_hough_class = {
+    .class_name = "GeneralizedHough",
+    .finalizer = js_generalized_hough_finalizer,
+};
+
+const JSCFunctionListEntry js_generalized_hough_proto_funcs[] = {
+    JS_CFUNC_MAGIC_DEF("detect", 2, js_generalized_hough_method, GENERALIZED_HOUGH_DETECT),
+    JS_CFUNC_MAGIC_DEF("getCannyHighThresh", 0, js_generalized_hough_method, GENERALIZED_HOUGH_GET_CANNY_HIGH_THRES),
+    JS_CFUNC_MAGIC_DEF("getCannyLowThresh", 0, js_generalized_hough_method, GENERALIZED_HOUGH_GET_CANNY_LOW_THRES),
+    JS_CFUNC_MAGIC_DEF("getDp", 0, js_generalized_hough_method, GENERALIZED_HOUGH_GET_DP),
+    JS_CFUNC_MAGIC_DEF("getMaxBufferSize", 0, js_generalized_hough_method, GENERALIZED_HOUGH_GET_MAX_BUFFER_SIZE),
+    JS_CFUNC_MAGIC_DEF("getMinDist", 0, js_generalized_hough_method, GENERALIZED_HOUGH_GET_MIN_DIST),
+    JS_CFUNC_MAGIC_DEF("getLevels", 0, js_generalized_hough_method, GENERALIZED_HOUGH_GET_LEVELS),
+    JS_CFUNC_MAGIC_DEF("getVotesThreshold", 0, js_generalized_hough_method, GENERALIZED_HOUGH_GET_VOTES_THRESHOLD),
+    JS_CFUNC_MAGIC_DEF("setCannyHighThresh", 1, js_generalized_hough_method, GENERALIZED_HOUGH_SET_CANNY_HIGH_THRES),
+    JS_CFUNC_MAGIC_DEF("setCannyLowThresh", 1, js_generalized_hough_method, GENERALIZED_HOUGH_SET_CANNY_LOW_THRES),
+    JS_CFUNC_MAGIC_DEF("setDp", 1, js_generalized_hough_method, GENERALIZED_HOUGH_SET_DP),
+    JS_CFUNC_MAGIC_DEF("setMaxBufferSize", 1, js_generalized_hough_method, GENERALIZED_HOUGH_SET_MAX_BUFFER_SIZE),
+    JS_CFUNC_MAGIC_DEF("setMinDist", 1, js_generalized_hough_method, GENERALIZED_HOUGH_SET_MIN_DIST),
+    JS_CFUNC_MAGIC_DEF("setTemplate", 1, js_generalized_hough_method, GENERALIZED_HOUGH_SET_TEMPLATE),
+    JS_CFUNC_MAGIC_DEF("setLevels", 1, js_generalized_hough_method, GENERALIZED_HOUGH_SET_LEVELS),
+    JS_CFUNC_MAGIC_DEF("setVotesThreshold", 1, js_generalized_hough_method, GENERALIZED_HOUGH_SET_VOTES_THRESHOLD),
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "GeneralizedHough", JS_PROP_CONFIGURABLE),
+};
+
+const JSCFunctionListEntry js_generalized_hough_static_funcs[] = {};
+
 static JSValue
 js_cv_blur(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   cv::Mat* image;
@@ -1615,7 +1909,8 @@ enum {
   SHAPE_CONTOUR_AREA,
   SHAPE_CONVEX_HULL,
   SHAPE_CONVEXITY_DEFECTS,
-
+  SHAPE_CREATE_GENERALIZED_HOUGH_BALLARD,
+  SHAPE_CREATE_GENERALIZED_HOUGH_GUIL,
   SHAPE_FIT_ELLIPSE,
   SHAPE_FIT_ELLIPSE_AMS,
   SHAPE_FIT_ELLIPSE_DIRECT,
@@ -1764,6 +2059,16 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
         JSInputOutputArray convexityDefects = js_cv_inputoutputarray(ctx, argv[2]);
 
         cv::convexityDefects(src, convexhull, convexityDefects);
+        break;
+      }
+
+      case SHAPE_CREATE_GENERALIZED_HOUGH_BALLARD: {
+        ret = js_generalized_hough_new(ctx, cv::createGeneralizedHoughBallard());
+        break;
+      }
+
+      case SHAPE_CREATE_GENERALIZED_HOUGH_GUIL: {
+        ret = js_generalized_hough_new(ctx, cv::createGeneralizedHoughGuil());
         break;
       }
 
@@ -2018,9 +2323,8 @@ js_function_list_t js_imgproc_static_funcs{
     JS_CFUNC_MAGIC_DEF("contourArea", 1, js_imgproc_shape, SHAPE_CONTOUR_AREA),
     JS_CFUNC_MAGIC_DEF("convexHull", 1, js_imgproc_shape, SHAPE_CONVEX_HULL),
     JS_CFUNC_MAGIC_DEF("convexityDefects", 1, js_imgproc_shape, SHAPE_CONVEXITY_DEFECTS),
-    // JS_CFUNC_MAGIC_DEF("createGeneralizedHoughBallard", 1, js_imgproc_shape,
-    // SHAPE_CREATE_GENERALIZED_HOUGH_BALLARD), JS_CFUNC_MAGIC_DEF("createGeneralizedHoughGuil",
-    // 1, js_imgproc_shape, SHAPE_CREATE_GENERALIZED_HOUGH_GUIL),
+    JS_CFUNC_MAGIC_DEF("createGeneralizedHoughBallard", 0, js_imgproc_shape, SHAPE_CREATE_GENERALIZED_HOUGH_BALLARD),
+    JS_CFUNC_MAGIC_DEF("createGeneralizedHoughGuil", 0, js_imgproc_shape, SHAPE_CREATE_GENERALIZED_HOUGH_GUIL),
     JS_CFUNC_DEF("findContours", 1, js_cv_find_contours),
     JS_CFUNC_MAGIC_DEF("fitEllipse", 1, js_imgproc_shape, SHAPE_FIT_ELLIPSE),
     JS_CFUNC_MAGIC_DEF("fitEllipseAMS", 1, js_imgproc_shape, SHAPE_FIT_ELLIPSE_AMS),
@@ -2054,6 +2358,19 @@ js_function_list_t js_imgproc_static_funcs{
 
 extern "C" int
 js_imgproc_init(JSContext* ctx, JSModuleDef* m) {
+
+  JS_NewClassID(&js_generalized_hough_class_id);
+  JS_NewClass(JS_GetRuntime(ctx), js_generalized_hough_class_id, &js_generalized_hough_class);
+
+  generalized_hough_proto = JS_NewObject(ctx);
+  JS_SetPropertyFunctionList(ctx, generalized_hough_proto, js_generalized_hough_proto_funcs, countof(js_generalized_hough_proto_funcs));
+  JS_SetClassProto(ctx, js_generalized_hough_class_id, generalized_hough_proto);
+
+  generalized_hough_class = JS_NewCFunction2(ctx, js_generalized_hough_constructor, "GeneralizedHough", 0, JS_CFUNC_constructor, 0);
+  /* set proto.constructor and ctor.prototype */
+  JS_SetConstructor(ctx, generalized_hough_class, generalized_hough_proto);
+  JS_SetPropertyFunctionList(ctx, generalized_hough_class, js_generalized_hough_static_funcs, countof(js_generalized_hough_static_funcs));
+
   if(m)
     JS_SetModuleExportList(ctx, m, js_imgproc_static_funcs.data(), js_imgproc_static_funcs.size());
 
