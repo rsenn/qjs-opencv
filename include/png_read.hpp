@@ -19,7 +19,7 @@ png_read(const std::string& filename) {
     for(size_t j = 0; j < s.width; ++j) {
       png::rgba_pixel px = image.get_pixel(j, i);
 
-      uint32_t& v = ret.at<uint32_t>(i, j);
+      int& v = ret.at<int>(i, j);
 
       v = (px.alpha << 24) | (px.red << 16) | (px.green << 8) | px.blue;
     }

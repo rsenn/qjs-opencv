@@ -1121,8 +1121,8 @@ js_mat_set(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[])
       uint16_t* p = &(*m).at<uint16_t>(row, col);
       *p = (uint16_t)data & mask;
     } else if(bytes <= 4) {
-      uint* p = &(*m).at<uint>(row, col);
-      *p = (uint)data & mask;
+      int* p = &(*m).at<int>(row, col);
+      *p = (int)data & mask;
     }
 
   } else
@@ -1345,7 +1345,7 @@ js_mat_tostring(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
         if(m->type() == CV_32FC1)
           os << m->at<float>(y, x);
         else
-          os << std::setfill('0') << std::setbase(16) << std::setw(m->type() == CV_8UC4 ? 8 : m->type() == CV_8UC1 ? 2 : 6) << m->at<uint32_t>(y, x);
+          os << std::setfill('0') << std::setbase(16) << std::setw(m->type() == CV_8UC4 ? 8 : m->type() == CV_8UC1 ? 2 : 6) << m->at<int>(y, x);
       }
     }
 
