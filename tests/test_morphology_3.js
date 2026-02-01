@@ -102,14 +102,14 @@ function main(input = './samples/samples/data/notes.png') {
   return 0;
 }
 
-let ypos=0;
+let ypos = 0;
 
 function show_wait_destroy(winname, img) {
   imshow(winname, img);
   moveWindow(winname, 500, ypos);
   waitKey(0);
 
-  ypos+=200;
+  ypos += 200;
   //destroyWindow(winname);
 }
 
