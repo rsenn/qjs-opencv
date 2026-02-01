@@ -77,8 +77,8 @@ js_array_clear(JSContext* ctx, const JSValueConst& arr) {
 template<class T> class js_array {
 public:
   static int64_t to_vector(JSContext* ctx, JSValueConst arr, std::vector<T>& out) {
-    if(!js_is_array(ctx, arr))
-      return -1;
+  /*  if(!js_is_array(ctx, arr))
+      return -1;*/
 
     int64_t i, n = js_array_length(ctx, arr);
 
@@ -102,8 +102,8 @@ public:
   }
 
   template<int N> static int64_t to_cvvector(JSContext* ctx, JSValueConst arr, cv::Vec<T, N>& out) {
-    if(!js_is_array(ctx, arr))
-      return -1;
+    /*if(!js_is_array(ctx, arr))
+      return -1;*/
 
     int64_t i, n = js_array_length(ctx, arr);
 
