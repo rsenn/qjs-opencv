@@ -105,14 +105,15 @@ function main(...args) {
 
     subdiv.insert(fp);
 
-    img = new Mat(rect.size, CV_8UC3); //  img = Scalar(0,0,0,0);
+     img.clear();
+ //  img = Scalar(0,0,0,0);
     draw_subdiv(img, subdiv, delaunay_color);
     imshow(win, img);
 
     if(waitKey(100) >= 0) break;
   }
 
-  img = new Mat(rect.size, CV_8UC3); //img = Scalar(0,0,0,0);
+  img.clear();
   paint_voronoi(img, subdiv);
   imshow(win, img);
 
