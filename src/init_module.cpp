@@ -134,7 +134,7 @@ js_opencv_init(JSContext* ctx, JSModuleDef* m) {
   js_aruco_init(ctx, m);
   js_opengl_init(ctx, m);
 
-    return 0;
+  return 0;
 }
 
 #ifdef JS_OPENCV_MODULE

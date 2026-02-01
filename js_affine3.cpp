@@ -300,7 +300,7 @@ js_call_method(JSContext* ctx, JSValue obj, const char* name, int argc, JSValueC
   JSValue fn, ret = JS_UNDEFINED;
 
   fn = JS_GetPropertyStr(ctx, obj, name);
-  
+
   if(!JS_IsUndefined(fn))
     ret = JS_Call(ctx, fn, obj, argc, argv);
 
