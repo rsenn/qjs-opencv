@@ -228,4 +228,11 @@ bresenham(cv::Point_<T> p0, cv::Point_<T> p1, std::vector<cv::Point_<U>>& out) {
   }
 }
 
+template<class T>
+bool
+point_inside_circle(cv::Point_<T> circle, T rad, cv::Point_<T> pt) {
+  // Compare radius of circle with distance of its center from given point
+  return (pt.x - circle.x) * (pt.x - circle.x) + (pt.y - circle.y) * (pt.y - circle.y) <= rad * rad;
+}
+
 #endif // defined GEOMETRY_HPP

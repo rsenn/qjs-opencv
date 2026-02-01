@@ -277,14 +277,26 @@ js_point_set_xy(JSContext* ctx, JSValueConst this_val, JSValueConst val, int mag
 
 static JSValue
 js_point_inside(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  JSPointData<double>* s = js_point_data2(ctx, this_val);
-  JSRectData<double> r = js_rect_get(ctx, argv[0]);
+  JSPointData<double>* s;
   bool retval;
 
-  if(!s /*|| !r*/)
+  if(!(s = js_point_data2(ctx, this_val)))
     return JS_EXCEPTION;
 
-  retval = s->inside(r);
+  if(argc > 1) {
+    JSPointData<double> center;
+    double rad = js_value_to<double>(ctx, argv[1]);
+
+    js_point_read(ctx, argv[0], &center);
+
+    retval = point_inside_circle(center, rad, *s);
+  } else {
+    JSRectData<double> r;
+
+    js_rect_read(ctx, argv[0], &r);
+
+    retval = s->inside(r);
+  }
 
   return JS_NewBool(ctx, retval);
 }
