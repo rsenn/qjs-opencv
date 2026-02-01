@@ -824,7 +824,10 @@ enum {
 static JSValue
 js_cv_vector(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   int n = magic >> 16;
-  int type = magic & 0xffff;
+  TypedArrayType type(TypedArrayValue  ( magic & 0xffff));
+
+
+  std::string ctor_name = type.constructor_name();
 
   return JS_UNDEFINED;
 }
