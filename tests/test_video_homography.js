@@ -94,9 +94,11 @@ function main(cam = 0) {
 
   let train_pts = new Contour(),
     query_pts = new Contour();
+
   let train_kpts = [],
     query_kpts = [];
-  /*vector<unsigned char>*/ let match_mask = new Mat();
+
+  let match_mask = new Mat();
 
   const gray = new Mat();
 
@@ -104,6 +106,7 @@ function main(cam = 0) {
 
   let train_desc = new Mat(),
     query_desc = new Mat();
+
   const detector = new FastFeatureDetector(10, true);
 
   let H_prev = Mat.eye(3, 3, CV_32FC1);
@@ -149,7 +152,7 @@ function main(cam = 0) {
 
         let H = findHomography(train_pts, query_pts, RANSAC, 4, match_mask);
 
-        const nz = countNonZero(  match_mask);
+        const nz = countNonZero(match_mask);
 
         //console.log('nz', nz);
 
