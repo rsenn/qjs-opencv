@@ -17,9 +17,11 @@ function main(...args) {
 
     line=new Line(line);
    
-//let color = HSVtoRGB( (line.angle + Math.PI) * 180 /Math.PI, 1, 0.5);
+let color =[ 255, (line.angle + Math.PI) * 255 /Math.PI, 0 ]
 
-    drawLine(image, line, [0,255,0] , 1, LINE_AA);
+
+
+    drawLine(image, line, color , 1, LINE_AA);
 
 
   }
