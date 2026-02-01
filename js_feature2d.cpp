@@ -173,17 +173,28 @@ js_descriptor_matcher_method(JSContext* ctx, JSValueConst this_val, int argc, JS
     }
 
     case DESCRIPTOR_MATCHER_MATCH: {
-      JSInputArray queryDescriptors = js_input_array(ctx, argv[0]);
+      JSInputArray queryDescriptors = js_input_array(ctx, argv[0]), trainDescriptors;
       std::vector<cv::DMatch> matches;
       JSInputArray masks = cv::noArray();
 
-      if(argc > 2)
-        masks = js_input_array(ctx, argv[2]);
+      if(argc > 3) {
+        trainDescriptors = js_input_array(ctx, argv[1]);
+        masks = js_input_array(ctx, argv[3]);
 
-      dm->get()->match(queryDescriptors, matches, masks);
+        dm->get()->match(queryDescriptors, trainDescriptors, matches, masks);
 
-      js_array_clear(ctx, argv[1]);
-      js_array_copy(ctx, argv[1], matches);
+        js_array_clear(ctx, argv[2]);
+        js_array_copy(ctx, argv[2], matches);
+      } else {
+        if(argc > 2)
+          masks = js_input_array(ctx, argv[2]);
+
+        dm->get()->match(queryDescriptors, matches, masks);
+
+        js_array_clear(ctx, argv[1]);
+        js_array_copy(ctx, argv[1], matches);
+      }
+
       break;
     }
 

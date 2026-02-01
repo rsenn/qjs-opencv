@@ -311,10 +311,9 @@ static BOOL
 js_mat_initialize(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSMatData* m = js_mat_data(this_val);
 
-  if(argc == 0)
+  if(argc == 0) {
     new(m) cv::Mat();
-
-  if(argc > 0) {
+  } else {
     int32_t type = 0;
     int index = 0;
     uint8_t* buf = 0;
@@ -323,6 +322,13 @@ js_mat_initialize(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
     std::vector<size_t> steps;
     cv::Scalar scalar = {0, 0, 0, 0};
     JSValue abuf = JS_NULL;
+    JSContourData<double>* cont;
+
+    if((cont = js_contour_data(argv[0]))) {
+      new(m) cv::Mat(cont->size(), 1, CV_64FC2, static_cast<void*>(cont->data()));
+      // new(m) cv::Mat(*cont, true);
+      return TRUE;
+    }
 
     if(argc >= 3 && JS_IsNumber(argv[0]) && js_is_array(ctx, argv[1])) {
       int32_t ndims, type;
@@ -366,7 +372,7 @@ js_mat_initialize(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
       sizes.push_back(cols);
       index += 2;
     } else {
-      JS_ThrowTypeError(ctx, "argument %d must be one of: Array, cv.Size, Number, TypedArray", index + 1);
+      JS_ThrowTypeError(ctx, "argument %d must be one of: Array, cv.Size, Contour, Number, TypedArray", index + 1);
       return FALSE;
     }
 

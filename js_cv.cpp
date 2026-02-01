@@ -575,7 +575,7 @@ js_cv_core(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[],
   if(argc >= 1)
     src = js_input_array(ctx, argv[0]);
 
-  JSOutputArray dst = argc >= 2 ? js_umat_or_mat(ctx, argv[1]) : cv::noArray();
+  JSOutputArray dst = argc >= 2 ? js_cv_inputoutputarray(ctx, argv[1]) : cv::noArray();
 
   switch(magic) {
     case CORE_CONVERTFP16: {
@@ -713,8 +713,9 @@ js_cv_core(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[],
 
     case CORE_PERSPECTIVETRANSFORM: {
       JSInputArray m = cv::noArray();
-      if(argc >= 3)
-        m = js_umat_or_mat(ctx, argv[2]);
+
+      if(argc > 2)
+        m = js_input_array(ctx, argv[2]);
 
       cv::perspectiveTransform(src, dst, m);
       break;
