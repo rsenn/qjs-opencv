@@ -10,7 +10,7 @@ function main(input = './samples/samples/data/notes.png') {
   }
 
   // Show source image
-  imshow('src', src);
+  //imshow('src', src);
 
   // Transform source image to gray if it is not already
   let gray = new Mat();
@@ -102,11 +102,15 @@ function main(input = './samples/samples/data/notes.png') {
   return 0;
 }
 
+let ypos=0;
+
 function show_wait_destroy(winname, img) {
   imshow(winname, img);
-  moveWindow(winname, 500, 50);
+  moveWindow(winname, 500, ypos);
   waitKey(0);
-  destroyWindow(winname);
+
+  ypos+=200;
+  //destroyWindow(winname);
 }
 
 main(...scriptArgs.slice(1));

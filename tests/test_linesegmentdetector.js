@@ -1,8 +1,8 @@
-import { IMREAD_GRAYSCALE, IMREAD_COLOR, COLOR_BGR2Lab, COLOR_GRAY2BGR, LINE_AA, LSD_REFINE_ADV, LSD_REFINE_STD, LSD_REFINE_NONE, LineSegmentDetector, Mat, cvtColor, imread, imshow, drawLine, split, waitKey, } from 'opencv';
+import { HSVtoRGB, Line ,IMREAD_GRAYSCALE, IMREAD_COLOR, COLOR_BGR2Lab, COLOR_GRAY2BGR, LINE_AA, LSD_REFINE_ADV, LSD_REFINE_STD, LSD_REFINE_NONE, LineSegmentDetector, Mat, cvtColor, imread, imshow, drawLine, split, waitKey, } from 'opencv';
 
 function main(...args) {
   //const lsd = new LineSegmentDetector(LSD_REFINE_ADV, 1, 2, 2.0, 45, 2, 0.9, 1024);
-  const lsd = new LineSegmentDetector(LSD_REFINE_NONE);
+  const lsd = new LineSegmentDetector(LSD_REFINE_ADV);
 
   const image = imread('tests/test_linesegmentdetector.jpg');
 
@@ -13,7 +13,16 @@ function main(...args) {
 
   console.log('lines', lines.length);
 
-  for(const line of lines) drawLine(image, line, [255, 128, 0], 1, LINE_AA);
+  for(let line of lines) {
+
+    line=new Line(line);
+   
+//let color = HSVtoRGB( (line.angle + Math.PI) * 180 /Math.PI, 1, 0.5);
+
+    drawLine(image, line, [0,255,0] , 1, LINE_AA);
+
+
+  }
 
   //lsd.drawSegments(image, lines);
 

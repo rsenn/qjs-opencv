@@ -73,7 +73,7 @@ function main(...args) {
     console.log('rect', rect);
     moveWindow('FLD result', (1920 - rect.width) / 2, 0);
 
-    imwrite('out.png', line_image_fld);
+    imwrite(input.replace(/\.\w+$/gi, '').replace(/.*\//g, '')+'.out.png', line_image_fld);
 
     let key = waitKey(3000);
 
