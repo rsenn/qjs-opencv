@@ -1156,7 +1156,7 @@ static JSValue
 js_mat_set_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSMatData* m;
 
-  if(!(m = js_mat_data2(ctx, this_val))
+  if(!(m = js_mat_data2(ctx, this_val)))
     return JS_EXCEPTION;
 
   JSInputArray mask = cv::noArray();
@@ -1170,19 +1170,11 @@ js_mat_set_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
     m->setTo(cv::Scalar(value), mask);
 
   } else {
-    JSInputArray input = js_input_array(ctx, argv[0]);
+    cv::Scalar input;
 
-    /*cv::Scalar s; size_t n = js_array_to(ctx, argv[0], s);*/
+    js_value_to(ctx, argv[0], input);
 
     m->setTo(input, mask);
-
-    // std::cerr << "Scalar [ " << s[0] << ", " << s[1] << ", " << s[2] << ", " << s[3] << " ]" << std::endl;
-    // std::cerr << "Scalar.size() = " << n << std::endl;
-
-    /*if(n >= m->channels()) {
-      m->setTo(s);
-      return JS_UNDEFINED;
-    }*/
   }
 
   /*uint32_t bytes = m->elemSize();

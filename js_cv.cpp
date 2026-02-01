@@ -830,6 +830,9 @@ enum {
   OTHER_RGB2HSV,
   OTHER_COLORCONVERT,
   OTHER_FORMAT,
+  OTHER_CVROUND,
+  OTHER_CVCEIL,
+  OTHER_CVFLOOR,
 };
 
 static JSValue
@@ -1392,6 +1395,20 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
 
         break;
       }*/
+
+    case OTHER_CVROUND: {
+      ret = JS_NewFloat64(ctx, cvRound(js_value_to<double>(ctx, argv[0])));
+      break;
+    }
+
+    case OTHER_CVFLOOR: {
+      ret = JS_NewFloat64(ctx, cvFloor(js_value_to<double>(ctx, argv[0])));
+      break;
+    }
+    case OTHER_CVCEIL: {
+      ret = JS_NewFloat64(ctx, cvCeil(js_value_to<double>(ctx, argv[0])));
+      break;
+    }
   }
 
   return ret;
@@ -1506,6 +1523,9 @@ js_function_list_t js_cv_static_funcs{
     JS_CFUNC_MAGIC_DEF("colorConvert", 2, js_cv_other, OTHER_COLORCONVERT),
     // JS_CFUNC_MAGIC_DEF("format", 1, js_cv_other, OTHER_FORMAT),
     JS_CTOR_MAGIC_DEF("Scalar", 0, js_cv_other, OTHER_SCALAR),
+    JS_CFUNC_MAGIC_DEF("cvRound", 1, js_cv_other, OTHER_CVROUND),
+    JS_CFUNC_MAGIC_DEF("cvFloor", 1, js_cv_other, OTHER_CVFLOOR),
+    JS_CFUNC_MAGIC_DEF("cvCeil", 1, js_cv_other, OTHER_CVCEIL),
 };
 
 #define VEC_TYPE(n, type) (((n) << 8) | (type))

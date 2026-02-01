@@ -143,22 +143,28 @@ js_subdiv2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
 
     case SUBDIV2D_GET_EDGE_LIST: {
       std::vector<cv::Vec4f> edgeList;
-      js_array_to(ctx, argv[0], edgeList);
+
       s->getEdgeList(edgeList);
+
+      js_array_copy(ctx, argv[0], edgeList);
       break;
     }
 
     case SUBDIV2D_GET_LEADING_EDGE_LIST: {
       std::vector<int> leadingEdgeList;
-      js_array_to(ctx, argv[0], leadingEdgeList);
+
       s->getLeadingEdgeList(leadingEdgeList);
+
+      js_array_copy(ctx, argv[0], leadingEdgeList);
       break;
     }
 
     case SUBDIV2D_GET_TRIANGLE_LIST: {
       std::vector<cv::Vec6f> triangleList;
-      js_array_to(ctx, argv[0], triangleList);
+
       s->getTriangleList(triangleList);
+
+      js_array_copy(ctx, argv[0], triangleList);
       break;
     }
 
@@ -173,6 +179,7 @@ js_subdiv2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
         js_ref(ctx, "firstEdge", argv[1], val);
         JS_FreeValue(ctx, val);
       }
+
       break;
     }
 
@@ -199,6 +206,7 @@ js_subdiv2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
 
     case SUBDIV2D_INSERT: {
       JSPointData<float> pt;
+
       if(!js_point_read(ctx, argv[0], &pt)) {
         std::vector<JSPointData<float>> ptvec;
         js_array_to(ctx, argv[0], ptvec);
@@ -206,14 +214,19 @@ js_subdiv2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
       } else {
         s->insert(pt);
       }
+
       break;
     }
 
     case SUBDIV2D_LOCATE: {
       JSPointData<float> pt;
+
       js_point_read(ctx, argv[0], &pt);
+
       int32_t edge = 0, vertex = 0;
+
       ret = JS_NewInt32(ctx, s->locate(pt, edge, vertex));
+
       if(argc > 1) {
         JSValue val = JS_NewInt32(ctx, edge);
         js_ref(ctx, "edge", argv[1], val);
@@ -221,9 +234,11 @@ js_subdiv2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
       }
       if(argc > 2) {
         JSValue val = JS_NewInt32(ctx, vertex);
+
         js_ref(ctx, "vertex", argv[1], val);
         JS_FreeValue(ctx, val);
       }
+
       break;
     }
 
