@@ -22,6 +22,17 @@ typedef cv::Ptr<cv::DescriptorMatcher> JSDescriptorMatcherData;
 #include <opencv2/xfeatures2d.hpp>
 #include <opencv2/xfeatures2d/nonfree.hpp>
 
+static inline JSValue
+js_value_from(JSContext* ctx, const cv::DMatch& dm) {
+  JSValue ret = JS_NewObjectProto(ctx, JS_NULL);
+  JS_SetPropertyStr(ctx, ret, "queryIdx", JS_NewInt32(ctx, dm.queryIdx));
+  JS_SetPropertyStr(ctx, ret, "trainIdx", JS_NewInt32(ctx, dm.trainIdx));
+  JS_SetPropertyStr(ctx, ret, "imgIdx", JS_NewInt32(ctx, dm.imgIdx));
+  JS_SetPropertyStr(ctx, ret, "distance", JS_NewFloat64(ctx, dm.distance));
+
+  return ret;
+}
+
 using namespace cv::xfeatures2d;
 using cv::AffineFeature;
 using cv::AgastFeatureDetector;
@@ -80,6 +91,7 @@ js_descriptor_matcher_constructor(JSContext* ctx, JSValueConst new_target, int a
       new(dm) JSDescriptorMatcherData(new cv::BFMatcher(normType, crossCheck));
       break;
     }
+
     case DESCRIPTOR_MATCHER_FLANN_BASED: {
       new(dm) JSDescriptorMatcherData(new cv::FlannBasedMatcher());
       break;
@@ -107,6 +119,84 @@ fail:
   return JS_EXCEPTION;
 }
 
+enum {
+  DESCRIPTOR_MATCHER_EMPTY = 0,
+};
+
+static JSValue
+js_descriptor_matcher_get(JSContext* ctx, JSValueConst this_val, int magic) {
+  JSDescriptorMatcherData* dm;
+  JSValue ret = JS_UNDEFINED;
+
+  if(!(dm = js_descriptor_matcher_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  switch(magic) {
+    case DESCRIPTOR_MATCHER_EMPTY: {
+      ret = JS_NewBool(ctx, dm->get()->empty());
+      break;
+    }
+  }
+
+  return ret;
+}
+enum {
+  DESCRIPTOR_MATCHER_ADD = 0,
+  DESCRIPTOR_MATCHER_CLEAR,
+  DESCRIPTOR_MATCHER_MATCH,
+  DESCRIPTOR_MATCHER_TRAIN,
+};
+
+static JSValue
+js_descriptor_matcher_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  JSDescriptorMatcherData* dm;
+  JSValue ret = JS_UNDEFINED;
+
+  if(!(dm = js_descriptor_matcher_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  cv::BFMatcher* bfm = dynamic_cast<cv::BFMatcher*>(dm->get());
+  cv::FlannBasedMatcher* flm = dynamic_cast<cv::FlannBasedMatcher*>(dm->get());
+
+  switch(magic) {
+    case DESCRIPTOR_MATCHER_ADD: {
+      JSInputArray descriptors = js_input_array(ctx, argv[0]);
+
+      dm->get()->add(descriptors);
+      break;
+    }
+
+    case DESCRIPTOR_MATCHER_CLEAR: {
+      dm->get()->clear();
+      break;
+    }
+
+    case DESCRIPTOR_MATCHER_MATCH: {
+      JSInputArray queryDescriptors = js_input_array(ctx, argv[0]);
+      std::vector<cv::DMatch> matches;
+      JSInputArray masks = cv::noArray();
+
+      if(argc > 2)
+        masks = js_input_array(ctx, argv[2]);
+
+      dm->get()->match(queryDescriptors, matches, masks);
+
+      js_array_clear(ctx, argv[1]);
+      js_array_copy(ctx, argv[1], matches);
+
+      // for(const& auto m : matches) {}
+
+      break;
+    }
+
+    case DESCRIPTOR_MATCHER_TRAIN: {
+      dm->get()->train();
+      break;
+    }
+  }
+
+  return ret;
+}
 void
 js_descriptor_matcher_finalizer(JSRuntime* rt, JSValue val) {
   JSDescriptorMatcherData* dm;
@@ -120,36 +210,17 @@ js_descriptor_matcher_finalizer(JSRuntime* rt, JSValue val) {
   }
 }
 
-enum {
-  DESCRIPTOR_MATCHER_GETNUMBEROFDESCRIPTOR_MATCHERS,
-  DESCRIPTOR_MATCHER_ITERATE,
-  DESCRIPTOR_MATCHER_GETLABELS,
-  DESCRIPTOR_MATCHER_GETLABELCONTOURMASK,
-
-};
-
-static JSValue
-js_descriptor_matcher_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
-  JSDescriptorMatcherData* dm;
-  JSValue ret = JS_UNDEFINED;
-
-  if(!(dm = js_descriptor_matcher_data2(ctx, this_val)))
-    return JS_EXCEPTION;
-
-  cv::BFMatcher* bfm;
-  cv::FlannBasedMatcher* flm;
-
-  switch(magic) {}
-
-  return ret;
-}
-
 JSClassDef js_descriptor_matcher_class = {
     .class_name = "DescriptorMatcher",
     .finalizer = js_descriptor_matcher_finalizer,
 };
 
 const JSCFunctionListEntry js_descriptor_matcher_proto_funcs[] = {
+    JS_CFUNC_MAGIC_DEF("add", 1, js_descriptor_matcher_method, DESCRIPTOR_MATCHER_ADD),
+    JS_CFUNC_MAGIC_DEF("clear", 0, js_descriptor_matcher_method, DESCRIPTOR_MATCHER_CLEAR),
+    JS_CFUNC_MAGIC_DEF("match", 2, js_descriptor_matcher_method, DESCRIPTOR_MATCHER_MATCH),
+    JS_CFUNC_MAGIC_DEF("train", 0, js_descriptor_matcher_method, DESCRIPTOR_MATCHER_TRAIN),
+    JS_CGETSET_MAGIC_DEF("empty", js_descriptor_matcher_get, 0, DESCRIPTOR_MATCHER_EMPTY),
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "DescriptorMatcher", JS_PROP_CONFIGURABLE),
 };
 
