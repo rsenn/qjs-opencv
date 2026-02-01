@@ -750,7 +750,7 @@ js_clip_line(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
 static JSValue
 js_fill_convex_poly(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSInputOutputArray img = js_cv_inputoutputarray(ctx, argv[0]);
-  JSContourData<float> points;
+  JSContourData<int> points;
   cv::Scalar color;
   int32_t lineType = cv::LINE_8, shift = 0;
 
