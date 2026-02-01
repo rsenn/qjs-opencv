@@ -25,6 +25,7 @@ typedef cv::Ptr<cv::DescriptorMatcher> JSDescriptorMatcherData;
 static inline JSValue
 js_value_from(JSContext* ctx, const cv::DMatch& dm) {
   JSValue ret = JS_NewObjectProto(ctx, JS_NULL);
+  
   JS_SetPropertyStr(ctx, ret, "queryIdx", JS_NewInt32(ctx, dm.queryIdx));
   JS_SetPropertyStr(ctx, ret, "trainIdx", JS_NewInt32(ctx, dm.trainIdx));
   JS_SetPropertyStr(ctx, ret, "imgIdx", JS_NewInt32(ctx, dm.imgIdx));
