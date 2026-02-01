@@ -6,6 +6,7 @@
 #include "js_typed_array.hpp"
 #include "jsbindings.hpp"
 #include "include/line.hpp"
+#include "include/geometry.hpp"
 #include <quickjs.h>
 #include <algorithm>
 #include <cctype>
@@ -300,7 +301,8 @@ enum {
   METHOD_ADD,
   METHOD_SUB,
   METHOD_MUL,
-  METHOD_DIV
+  METHOD_DIV,
+  METHOD_INSIDE,
 };
 
 static JSValue
@@ -518,6 +520,25 @@ js_line_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
 
       break;
     }
+
+    case METHOD_INSIDE: {
+      if(argc > 1) {
+        JSPointData<double> center;
+        double rad = js_value_to<double>(ctx, argv[1]);
+
+        js_point_read(ctx, argv[0], &center);
+
+        ret = JS_NewBool(ctx, point_inside_circle(center, rad, ln->a) && point_inside_circle(center, rad, ln->b));
+      } else {
+        JSRectData<double> r;
+
+        js_rect_read(ctx, argv[0], &r);
+
+        ret = JS_NewBool(ctx, ln->a.inside(r) && ln->b.inside(r));
+      }
+
+      break;
+    }
   }
 
   return ret;
@@ -662,6 +683,7 @@ const JSCFunctionListEntry js_line_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("sub", 1, js_line_methods, METHOD_SUB),
     JS_CFUNC_MAGIC_DEF("mul", 1, js_line_methods, METHOD_MUL),
     JS_CFUNC_MAGIC_DEF("div", 1, js_line_methods, METHOD_DIV),
+    JS_CFUNC_MAGIC_DEF("inside", 1, js_line_methods, METHOD_INSIDE),
     JS_CFUNC_DEF("toArray", 0, js_line_toarray),
     JS_CFUNC_MAGIC_DEF("toPoints", 0, js_line_iterator, JS_LINE_AS_POINTS),
     JS_CFUNC_MAGIC_DEF("toString", 0, js_line_iterator, JS_LINE_AS_POINTS | JS_LINE_TO_STRING),
