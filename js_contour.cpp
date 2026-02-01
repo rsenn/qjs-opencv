@@ -105,16 +105,21 @@ js_contour_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValu
 
   JS_SetOpaque(obj, c);
 
-  if(argc > 0) {
+  if(argc > 0 && JS_IsNumber(argv[0])) {
+    c->resize(js_value_to<uint32_t>(ctx, argv[0]));
+  } else if(argc > 0) {
     for(int i = 0; i < argc; i++) {
       JSPointData<double> p;
 
       if(i == 0 && (other = js_contour_data(argv[0]))) {
-        *c = *other;
-        break;
+
+        std::copy(other->begin(), other->end(), std::back_inserter(*c));
+
       } else if(i == 0 && js_is_array(ctx, argv[i])) {
-        js_array_to(ctx, argv[i], *c);
-        break;
+        JSContourData<double> tmp;
+        js_array_to(ctx, argv[i], tmp);
+
+        std::copy(tmp.begin(), tmp.end(), std::back_inserter(*c));
       }
 
       if(js_point_read(ctx, argv[i], &p)) {

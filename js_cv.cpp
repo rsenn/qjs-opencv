@@ -2021,6 +2021,7 @@ js_function_list_t js_cv_constants{
     JS_CV_CONSTANT(ADAPTIVE_THRESH_MEAN_C),
     JS_CV_CONSTANT(ADAPTIVE_THRESH_GAUSSIAN_C),
 
+    JS_CV_CONSTANT(RANSAC),
 };
 
 JSValue
