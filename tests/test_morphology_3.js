@@ -1,7 +1,6 @@
 import { Size, CV_8UC1, blur, getStructuringElement, MORPH_RECT, IMREAD_COLOR, moveWindow, waitKey, destroyWindow, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY, bitwise_not, erode, dilate, imread, imshow, cvtColor, COLOR_BGR2GRAY, adaptiveThreshold, Mat, Point, } from 'opencv';
 
 function main(input = './samples/samples/data/notes.png') {
-
   const src = imread(input, IMREAD_COLOR);
 
   if(src.empty) {
@@ -26,15 +25,10 @@ function main(input = './samples/samples/data/notes.png') {
   show_wait_destroy('gray', gray);
 
   // Apply adaptiveThreshold at the bitwise_not of gray, notice the ~ symbol
-  let bw = new Mat(), gray2 = new Mat(gray.size, gray.type);
+  let bw = new Mat(),
+    gray2 = new Mat(gray.size, gray.type);
 
-bitwise_not(gray, gray2);
-
-  /*console.log('gray.size', gray.size);
-  console.log('gray.type', gray.type);
-
-  console.log('gray2.size', gray2.size);
-  console.log('gray2.channels', gray2.channels);*/
+  bitwise_not(gray, gray2); 
 
   adaptiveThreshold(gray2, bw, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY, 15, -2);
 
