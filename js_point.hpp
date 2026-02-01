@@ -69,10 +69,12 @@ js_point_read(JSContext* ctx, JSValueConst point, JSPointData<T>* out) {
   } else {
     ret = 0;
   }
+
   if(!JS_IsUndefined(x))
     JS_FreeValue(ctx, x);
   if(!JS_IsUndefined(y))
     JS_FreeValue(ctx, y);
+
   return ret;
 }
 

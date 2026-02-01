@@ -107,22 +107,18 @@ js_contour_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValu
 
   if(argc > 0 && JS_IsNumber(argv[0])) {
     c->resize(js_value_to<uint32_t>(ctx, argv[0]));
-  } else if(argc > 0) {
+  } else {
     for(int i = 0; i < argc; i++) {
       JSPointData<double> p;
 
-      if(i == 0 && (other = js_contour_data(argv[0]))) {
-
+      if((other = js_contour_data(argv[i]))) {
         std::copy(other->begin(), other->end(), std::back_inserter(*c));
-
-      } else if(i == 0 && js_is_array(ctx, argv[i])) {
+      } else if(js_is_array(ctx, argv[i])) {
         JSContourData<double> tmp;
         js_array_to(ctx, argv[i], tmp);
 
         std::copy(tmp.begin(), tmp.end(), std::back_inserter(*c));
-      }
-
-      if(js_point_read(ctx, argv[i], &p)) {
+      } else if(!js_point_read(ctx, argv[i], &p)) {
         c->push_back(p);
       } else {
         JS_ThrowTypeError(ctx, "argument %d must be one of: Contour, Array, Point", i + 1);
