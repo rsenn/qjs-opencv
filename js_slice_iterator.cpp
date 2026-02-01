@@ -126,13 +126,13 @@ js_slice_iterator_dup(JSContext* ctx, JSValueConst this_val, int argc, JSValueCo
 static void
 js_slice_iterator_finalizer(JSRuntime* rt, JSValue val) {
   JSSliceIteratorData* s;
+
   /* Note: 's' can be NULL in case JS_SetOpaque() was not called */
   if((s = static_cast<JSSliceIteratorData*>(JS_GetOpaque(val, js_slice_iterator_class_id)))) {
     JS_FreeValueRT(rt, s->buffer);
     JS_FreeValueRT(rt, s->ctor);
     js_deallocate(rt, s);
   }
-  // JS_FreeValueRT(rt, val);
 }
 
 extern "C" {

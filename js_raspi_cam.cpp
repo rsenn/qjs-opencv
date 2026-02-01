@@ -53,13 +53,13 @@ js_raspi_cam_data2(JSContext* ctx, JSValueConst val) {
 
 void
 js_raspi_cam_finalizer(JSRuntime* rt, JSValue val) {
-  JSRaspiCamData* s = static_cast<JSRaspiCamData*>(JS_GetOpaque(val, js_raspi_cam_class_id));
+  JSRaspiCamData* s;
+
   /* Note: 's' can be NULL in case JS_SetOpaque() was not called */
-
-  s->~JSRaspiCamData();
-  js_deallocate(rt, s);
-
-  JS_FreeValueRT(rt, val);
+  if((s = static_cast<JSRaspiCamData*>(JS_GetOpaque(val, js_raspi_cam_class_id)))) {
+    s->~JSRaspiCamData();
+    js_deallocate(rt, s);
+  }
 }
 
 enum {

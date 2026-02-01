@@ -1700,59 +1700,10 @@ js_mat_finalizer(JSRuntime* rt, JSValue val) {
   JSMatData* s;
 
   if((s = static_cast<JSMatData*>(JS_GetOpaque(val, js_mat_class_id)))) {
+    s->~JSMatData();
+
     js_deallocate(rt, s);
   }
-
-  return;
-
-  /*auto it2 = std::find(mat_freed.cbegin(), mat_freed.cend(), s);
-  auto it = std::find(mat_list.cbegin(), mat_list.cend(), s);
-
-  if(it2 != mat_freed.cend()) {
-#ifdef DEBUG_MAT
-    std::cerr << "js_mat_finalizer";
-    js_mat_dump(s);
-#endif
-
-    std::cerr << " ERROR: already freed" << std::endl;
-    return;
-  }
-  JS_FreeValueRT(rt, val);
-  if(it != mat_list.cend()) {
-    size_t refcount = s->u != nullptr ? s->u->refcount : 0;
-    if(s->u) {
-      auto data = s->u;
-#ifdef DEBUG_MAT
-      std::cerr << "cv::Mat::release";
-      std::cerr << " mat=" << static_cast<void*>(s);
-      std::cerr << ", refcount=" << refcount;
-      std::cerr << std::endl;
-#endif
-      if(refcount > 1)
-        s->release();
-      if(s->u)
-        refcount = s->u->refcount;
-      else
-        refcount = 0;
-    }
-    if(s->u == nullptr) {
-      mat_list.erase(it);
-      mat_freed.push_front(s);
-    }
-#ifdef DEBUG_MAT
-    std::cerr << "js_mat_finalizer";
-    js_mat_dump(s);
-    std::cerr << ", refcount=" << refcount;
-    std::cerr << ", mat_list.size()=" << mat_list.size();
-    std::cerr << ", mat_freed.size()=" << mat_freed.size() << std::endl;
-#endif
-  } else {
-#ifdef DEBUG_MAT
-    std::cerr << "js_mat_finalizer";
-    js_mat_dump(s);
-#endif
-    std::cerr << " ERROR: not found" << std::endl;
-  }*/
 }
 
 typedef struct {

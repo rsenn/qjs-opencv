@@ -49,13 +49,14 @@ enum {
 
 void
 js_libcamera_app_options_finalizer(JSRuntime* rt, JSValue val) {
-  JSLibcameraAppOptionsData* s = static_cast<JSLibcameraAppOptionsData*>(JS_GetOpaque(val, js_libcamera_app_options_class_id));
-  /* Note: 's' can be NULL in case JS_SetOpaque() was not called */
+  JSLibcameraAppOptionsData* s;
 
-  /*s->~JSLibcameraAppOptionsData();
-  js_deallocate(rt, s);*/
+  if((s = static_cast<JSLibcameraAppOptionsData*>(JS_GetOpaque(val, js_libcamera_app_options_class_id)))) {
+    /* Note: 's' can be NULL in case JS_SetOpaque() was not called */
 
-  JS_FreeValueRT(rt, val);
+    /*s->~JSLibcameraAppOptionsData();
+    js_deallocate(rt, s);*/
+  }
 }
 
 JSValue
@@ -498,13 +499,14 @@ js_libcamera_app_data2(JSContext* ctx, JSValueConst val) {
 
 void
 js_libcamera_app_finalizer(JSRuntime* rt, JSValue val) {
-  JSLibcameraAppData* s = static_cast<JSLibcameraAppData*>(JS_GetOpaque(val, js_libcamera_app_class_id));
-  /* Note: 's' can be NULL in case JS_SetOpaque() was not called */
+  JSLibcameraAppData* s;
 
-  s->~JSLibcameraAppData();
-  js_deallocate(rt, s);
+  if((s = static_cast<JSLibcameraAppData*>(JS_GetOpaque(val, js_libcamera_app_class_id)))) {
+    /* Note: 's' can be NULL in case JS_SetOpaque() was not called */
 
-  JS_FreeValueRT(rt, val);
+    s->~JSLibcameraAppData();
+    js_deallocate(rt, s);
+  }
 }
 
 enum {

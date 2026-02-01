@@ -92,13 +92,13 @@ js_video_capture_data2(JSContext* ctx, JSValueConst val) {
 
 void
 js_video_capture_finalizer(JSRuntime* rt, JSValue val) {
-  JSVideoCaptureData* s = static_cast<JSVideoCaptureData*>(JS_GetOpaque(val, js_video_capture_class_id));
+  JSVideoCaptureData* s;
+
   /* Note: 's' can be NULL in case JS_SetOpaque() was not called */
-
-  s->~JSVideoCaptureData();
-  js_deallocate(rt, s);
-
-  JS_FreeValueRT(rt, val);
+  if((s = static_cast<JSVideoCaptureData*>(JS_GetOpaque(val, js_video_capture_class_id)))) {
+    s->~JSVideoCaptureData();
+    js_deallocate(rt, s);
+  }
 }
 enum {
   VIDEO_CAPTURE_METHOD_GET = 0,

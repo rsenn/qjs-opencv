@@ -1473,16 +1473,13 @@ js_contour_finalizer(JSRuntime* rt, JSValue this_val) {
   JSContourData<double>* contour;
 
   assert(js_contour_class_id);
-  contour = js_contour_data(this_val);
 
-  if(contour) {
+  if((contour = js_contour_data(this_val))) {
     // printf("js_contour_finalizer  cid=%i this_val=%p contour=%p\n", JS_GetClassID(this_val),
     // JS_VALUE_GET_OBJ(this_val), contour);
 
     js_deallocate(rt, contour);
   }
-
-  JS_FreeValueRT(rt, this_val);
 }
 
 extern "C" {

@@ -97,21 +97,23 @@ js_video_writer_data(JSValueConst val) {
 
 void
 js_video_writer_finalizer(JSRuntime* rt, JSValue val) {
-  JSVideoWriterData* s = static_cast<JSVideoWriterData*>(JS_GetOpaque(val, js_video_writer_class_id));
-  /* Note: 's' can be NULL in case JS_SetOpaque() was not called */
+  JSVideoWriterData* s;
 
-  s->~JSVideoWriterData();
-  js_deallocate(rt, s);
+  if((s = static_cast<JSVideoWriterData*>(JS_GetOpaque(val, js_video_writer_class_id)))) {
+    s->~JSVideoWriterData();
 
-  JS_FreeValueRT(rt, val);
+    js_deallocate(rt, s);
+  }
 }
+
 enum {
   VIDEO_WRITER_METHOD_GET = 0,
   VIDEO_WRITER_METHOD_SET,
   VIDEO_WRITER_METHOD_GET_BACKEND_NAME,
   VIDEO_WRITER_METHOD_IS_OPENED,
   VIDEO_WRITER_METHOD_OPEN,
-  VIDEO_WRITER_METHOD_WRITE
+  VIDEO_WRITER_METHOD_WRITE,
+  VIDEO_WRITER_METHOD_RELEASE,
 };
 
 static JSValue
@@ -165,6 +167,11 @@ js_video_writer_method(JSContext* ctx, JSValueConst video_writer, int argc, JSVa
       JSInputArray mat = js_input_array(ctx, argv[0]);
 
       vw->write(mat);
+      break;
+    }
+
+    case VIDEO_WRITER_METHOD_RELEASE: {
+      vw->release();
       break;
     }
   }
@@ -227,6 +234,7 @@ const JSCFunctionListEntry js_video_writer_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("isOpened", 0, js_video_writer_method, VIDEO_WRITER_METHOD_IS_OPENED),
     JS_CFUNC_MAGIC_DEF("open", 1, js_video_writer_method, VIDEO_WRITER_METHOD_OPEN),
     JS_CFUNC_MAGIC_DEF("write", 1, js_video_writer_method, VIDEO_WRITER_METHOD_WRITE),
+    JS_CFUNC_MAGIC_DEF("release", 0, js_video_writer_method, VIDEO_WRITER_METHOD_RELEASE),
 
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "VideoWriter", JS_PROP_CONFIGURABLE),
 

@@ -675,17 +675,11 @@ js_point_distance(JSContext* ctx, JSValueConst point, int argc, JSValueConst arg
 
 static void
 js_point_finalizer(JSRuntime* rt, JSValue val) {
-  JSPointData<double>* s = static_cast<JSPointData<double>*>(JS_GetOpaque(val, js_point_class_id));
+  JSPointData<double>* s;
 
-  if(s != nullptr) {
+  if((s = static_cast<JSPointData<double>*>(JS_GetOpaque(val, js_point_class_id)))) {
     js_deallocate(rt, s);
   }
-
-  // JS_FreeValueRT(rt, val);
-
-  /*  if(points.size() == 0)
-      JS_FreeValueRT(rt, point_proto);*/
-}
 }
 
 extern "C" {
