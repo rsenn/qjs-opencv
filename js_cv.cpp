@@ -1490,11 +1490,11 @@ js_function_list_t js_cv_static_funcs{
     JS_CFUNC_MAGIC_DEF("trace", 1, js_cv_other, OTHER_TRACE),
     JS_CFUNC_MAGIC_DEF("CV_RGB", 3, js_cv_other, OTHER_RGB),
     JS_CFUNC_MAGIC_DEF("swap", 2, js_cv_other, OTHER_SWAP),
-    JS_CTOR_MAGIC_DEF("Scalar", 0, js_cv_other, OTHER_SCALAR),
     JS_CFUNC_MAGIC_DEF("HSVtoRGB", 1, js_cv_other, OTHER_HSV2RGB),
     JS_CFUNC_MAGIC_DEF("RGBtoHSV", 1, js_cv_other, OTHER_RGB2HSV),
     JS_CFUNC_MAGIC_DEF("colorConvert", 2, js_cv_other, OTHER_COLORCONVERT),
-    JS_CFUNC_MAGIC_DEF("format", 1, js_cv_other, OTHER_FORMAT),
+    // JS_CFUNC_MAGIC_DEF("format", 1, js_cv_other, OTHER_FORMAT),
+    JS_CTOR_MAGIC_DEF("Scalar", 0, js_cv_other, OTHER_SCALAR),
 };
 
 #define VEC_TYPE(n, type) (((n) << 8) | (type))
