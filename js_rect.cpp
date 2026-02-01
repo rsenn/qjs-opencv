@@ -576,7 +576,6 @@ js_rect_method(JSContext* ctx, JSValueConst rect, int argc, JSValueConst argv[],
     }
 
     case METHOD_MERGE: {
-
       double x1 = s->x, x2 = s->x + s->width, y1 = s->y, y2 = s->y + s->height;
       size_t i;
       for(i = 0; i < argc; i++) {

@@ -303,6 +303,7 @@ enum {
   METHOD_MUL,
   METHOD_DIV,
   METHOD_INSIDE,
+  METHOD_TO_RECT,
 };
 
 static JSValue
@@ -317,10 +318,7 @@ js_line_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
     case METHOD_SWAP: {
       JSPointData<double> a = ln->points[0], b = ln->points[1];
 
-      ln->points[0] = b;
-      ln->points[1] = a;
-
-      ret = JS_DupValue(ctx, this_val);
+      ret = js_line_new(ctx, b, a);
       break;
     }
 
@@ -539,13 +537,25 @@ js_line_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
 
       break;
     }
+
+    case METHOD_TO_RECT: {
+      JSRectData<double> rect;
+
+      rect.x = std::min(ln->x1, ln->x2);
+      rect.y = std::min(ln->y1, ln->y2);
+      rect.width = std::max(ln->x1, ln->x2) - rect.x;
+      rect.height = std::max(ln->y1, ln->y2) - rect.y;
+
+      ret = js_rect_new(ctx, rect);
+      break;
+    }
   }
 
   return ret;
 }
 
 static JSValue
-js_line_toarray(JSContext* ctx, JSValueConst line, int argc, JSValueConst* arg) {
+js_line_toarray(JSContext* ctx, JSValueConst line, int argc, JSValueConst argv[]) {
   JSLineData<double>* ln;
 
   if(!(ln = static_cast<JSLineData<double>*>(JS_GetOpaque2(ctx, line, js_line_class_id))))
@@ -684,6 +694,7 @@ const JSCFunctionListEntry js_line_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("mul", 1, js_line_methods, METHOD_MUL),
     JS_CFUNC_MAGIC_DEF("div", 1, js_line_methods, METHOD_DIV),
     JS_CFUNC_MAGIC_DEF("inside", 1, js_line_methods, METHOD_INSIDE),
+    JS_CFUNC_MAGIC_DEF("toRect", 0, js_line_methods, METHOD_TO_RECT),
     JS_CFUNC_DEF("toArray", 0, js_line_toarray),
     JS_CFUNC_MAGIC_DEF("toPoints", 0, js_line_iterator, JS_LINE_AS_POINTS),
     JS_CFUNC_MAGIC_DEF("toString", 0, js_line_iterator, JS_LINE_AS_POINTS | JS_LINE_TO_STRING),
