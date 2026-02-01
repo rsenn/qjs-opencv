@@ -26,12 +26,62 @@ static JSValue
 js_buffer_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   JSBufferData* tx;
   JSValue obj = JS_UNDEFINED, proto;
+  JSSizeData<int> asize;
+  cv::ogl::Buffer::Target target = cv::ogl::Buffer::ARRAY_BUFFER;
+  int32_t abufId = -1, atype = -1;
+  int i = 0;
+  bool autoRelease = false;
+
+  if(!(tx = js_allocate<JSBufferData>(ctx)))
+    return JS_EXCEPTION;
+
+  if(i < argc) {
+    if(JS_IsNumber(argv[i])) {
+      asize.width = js_value_to<uint32_t>(ctx, argv[i++]);
+      asize.height = js_value_to<uint32_t>(ctx, argv[i++]);
+    } else if(!js_size_read(ctx, argv[i], &asize)) {
+      i++;
+    } else {
+      JS_ThrowTypeError(ctx, "argument 1 must be Number or cv::Size");
+      goto fail;
+    }
+  }
 
   if(!(tx = js_allocate<JSBufferData>(ctx)))
     return JS_EXCEPTION;
 
   try {
-    new(tx) JSBufferData();
+    if(argc == 0) {
+      new(tx) JSBufferData();
+    } else if(i > 0) {
+      if(i < argc)
+        atype = js_value_to<int32_t>(ctx, argv[i++]);
+
+      if(i < argc && JS_IsNumber(argv[i]))
+        abufId = js_value_to<int32_t>(ctx, argv[i++]);
+
+      if(i < argc)
+        autoRelease = js_value_to<BOOL>(ctx, argv[i++]);
+
+      if((abufId & 0xffffff00) == 0x8800) {
+        target = cv::ogl::Buffer::Target(abufId);
+        new(tx) JSBufferData(asize, atype, target, autoRelease);
+      } else {
+        new(tx) JSBufferData(asize, atype, abufId, autoRelease);
+      }
+
+    } else {
+      JSInputArray arr = js_input_array(ctx, argv[0]);
+
+      if(argc > 1)
+        target = cv::ogl::Buffer::Target(js_value_to<int32_t>(ctx, argv[1]));
+
+      if(argc > 2)
+        autoRelease = js_value_to<BOOL>(ctx, argv[2]);
+
+      new(tx) JSBufferData(arr, target, autoRelease);
+    }
+
   } catch(const cv::Exception& e) {
     js_cv_throw(ctx, e);
     goto fail;
@@ -275,32 +325,37 @@ js_texture2d_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSVa
     }
   }
 
-  if(argc == 0) {
-    new(tx) JSTexture2DData();
-  } else if(i) {
+  try {
+    if(argc == 0) {
+      new(tx) JSTexture2DData();
+    } else if(i) {
 
-    if(i < argc)
-      format = cv::ogl::Texture2D::Format(js_value_to<int32_t>(ctx, argv[i++]));
+      if(i < argc)
+        format = cv::ogl::Texture2D::Format(js_value_to<int32_t>(ctx, argv[i++]));
 
-    if(i < argc && JS_IsNumber(argv[i]))
-      atexId = js_value_to<int32_t>(ctx, argv[i++]);
+      if(i < argc && JS_IsNumber(argv[i]))
+        atexId = js_value_to<int32_t>(ctx, argv[i++]);
 
-    if(i < argc)
-      autoRelease = js_value_to<BOOL>(ctx, argv[i++]);
+      if(i < argc)
+        autoRelease = js_value_to<BOOL>(ctx, argv[i++]);
 
-    if(atexId != -1)
-      new(tx) JSTexture2DData(asize, format, atexId, autoRelease);
-    else
-      new(tx) JSTexture2DData(asize, format, autoRelease);
+      if(atexId != -1)
+        new(tx) JSTexture2DData(asize, format, atexId, autoRelease);
+      else
+        new(tx) JSTexture2DData(asize, format, autoRelease);
 
-  } else {
+    } else {
 
-    JSInputArray arr = js_input_array(ctx, argv[i++]);
+      JSInputArray arr = js_input_array(ctx, argv[i++]);
 
-    if(i < argc)
-      autoRelease = js_value_to<BOOL>(ctx, argv[i++]);
+      if(i < argc)
+        autoRelease = js_value_to<BOOL>(ctx, argv[i++]);
 
-    new(tx) JSTexture2DData(arr, autoRelease);
+      new(tx) JSTexture2DData(arr, autoRelease);
+    }
+  } catch(const cv::Exception& e) {
+    js_cv_throw(ctx, e);
+    goto fail;
   }
 
   /* using new_target to get the prototype is necessary when the class is extended. */
@@ -513,6 +568,8 @@ static const JSCFunctionListEntry js_texture2d_static_funcs[] = {
 enum {
   OPENGL_CONVERT_FROM_GL_TEXTURE_2D = 0,
   OPENGL_CONVERT_TO_GL_TEXTURE_2D,
+  OPENGL_MAP_GL_BUFFER,
+  OPENGL_UNMAP_GL_BUFFER,
 };
 
 static JSValue
@@ -543,14 +600,53 @@ js_opengl_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
         cv::ogl::convertToGLTexture2D(src, *tx);
         break;
       }
+
+      case OPENGL_MAP_GL_BUFFER: {
+        JSBufferData* b;
+        int32_t accessFlag = cv::ACCESS_READ | cv::ACCESS_WRITE;
+
+        if(!(b = js_buffer_data2(ctx, argv[0])))
+          return JS_EXCEPTION;
+
+        if(argc > 1)
+          accessFlag = js_value_to<int32_t>(ctx, argv[1]);
+
+        ret = js_umat_wrap(ctx, cv::ogl::mapGLBuffer(*b, cv::AccessFlag(accessFlag)));
+        break;
+      }
+
+      case OPENGL_UNMAP_GL_BUFFER: {
+        JSUMatData* um;
+
+        if(!(um = js_umat_data2(ctx, argv[0])))
+          return JS_EXCEPTION;
+
+        cv::ogl::unmapGLBuffer(*um);
+        break;
+      }
     }
   } catch(const cv::Exception& e) { ret = js_cv_throw(ctx, e); }
 
   return ret;
 }
 
-js_function_list_t js_opengl_ogl_funcs{JS_CFUNC_MAGIC_DEF("convertFromGLTexture2D", 2, js_opengl_func, OPENGL_CONVERT_FROM_GL_TEXTURE_2D),
-                                       JS_CFUNC_MAGIC_DEF("convertToGLTexture2D", 2, js_opengl_func, OPENGL_CONVERT_TO_GL_TEXTURE_2D)};
+js_function_list_t js_opengl_ogl_funcs{
+    JS_CFUNC_MAGIC_DEF("convertFromGLTexture2D", 2, js_opengl_func, OPENGL_CONVERT_FROM_GL_TEXTURE_2D),
+    JS_CFUNC_MAGIC_DEF("convertToGLTexture2D", 2, js_opengl_func, OPENGL_CONVERT_TO_GL_TEXTURE_2D),
+    JS_CFUNC_MAGIC_DEF("mapGLBuffer", 1, js_opengl_func, OPENGL_MAP_GL_BUFFER),
+    // XXX: TODO: render() function
+    JS_CFUNC_MAGIC_DEF("unmapGLBuffer", 1, js_opengl_func, OPENGL_UNMAP_GL_BUFFER),
+    JS_PROP_INT32_DEF("POINTS", cv::ogl::POINTS, JS_PROP_CONFIGURABLE),
+    JS_PROP_INT32_DEF("LINES", cv::ogl::LINES, JS_PROP_CONFIGURABLE),
+    JS_PROP_INT32_DEF("LINE_LOOP", cv::ogl::LINE_LOOP, JS_PROP_CONFIGURABLE),
+    JS_PROP_INT32_DEF("LINE_STRIP", cv::ogl::LINE_STRIP, JS_PROP_CONFIGURABLE),
+    JS_PROP_INT32_DEF("TRIANGLES", cv::ogl::TRIANGLES, JS_PROP_CONFIGURABLE),
+    JS_PROP_INT32_DEF("TRIANGLE_STRIP", cv::ogl::TRIANGLE_STRIP, JS_PROP_CONFIGURABLE),
+    JS_PROP_INT32_DEF("TRIANGLE_FAN", cv::ogl::TRIANGLE_FAN, JS_PROP_CONFIGURABLE),
+    JS_PROP_INT32_DEF("QUADS", cv::ogl::QUADS, JS_PROP_CONFIGURABLE),
+    JS_PROP_INT32_DEF("QUAD_STRIP", cv::ogl::QUAD_STRIP, JS_PROP_CONFIGURABLE),
+    JS_PROP_INT32_DEF("POLYGON", cv::ogl::POLYGON, JS_PROP_CONFIGURABLE),
+};
 
 /*js_function_list_t js_opengl_static_funcs{
     JS_OBJECT_DEF("ogl", js_opengl_ogl_funcs.data(), int(js_opengl_ogl_funcs.size()), JS_PROP_C_W_E),
