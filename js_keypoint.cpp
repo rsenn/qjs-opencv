@@ -42,16 +42,16 @@ js_keypoint_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSVal
     goto fail;
 
   if(argc >= 2) {
-
     if((optind = js_point_argument(ctx, argc, argv, &pt))) {
-
       if(optind < argc) {
         JS_ToFloat64(ctx, &size, argv[optind++]);
 
         if(optind < argc) {
           JS_ToFloat64(ctx, &response, argv[optind++]);
+
           if(optind < argc) {
             JS_ToInt32(ctx, &octave, argv[optind++]);
+
             if(optind < argc) {
               JS_ToInt32(ctx, &class_id, argv[optind++]);
             }
@@ -123,8 +123,10 @@ js_keypoint_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 
   if(kp->angle != -1)
     JS_DefinePropertyValueStr(ctx, obj, "angle", JS_NewFloat64(ctx, kp->angle), JS_PROP_ENUMERABLE);
+ 
   if(kp->class_id != -1)
     JS_DefinePropertyValueStr(ctx, obj, "class_id", JS_NewInt32(ctx, kp->class_id), JS_PROP_ENUMERABLE);
+ 
   JS_DefinePropertyValueStr(ctx, obj, "octave", JS_NewInt32(ctx, kp->octave), JS_PROP_ENUMERABLE);
   JS_DefinePropertyValueStr(ctx, obj, "pt", js_point_new(ctx, kp->pt), JS_PROP_ENUMERABLE);
   JS_DefinePropertyValueStr(ctx, obj, "response", JS_NewFloat64(ctx, kp->response), JS_PROP_ENUMERABLE);
@@ -246,8 +248,10 @@ js_keypoint_export(JSContext* ctx, JSModuleDef* m) {
 extern "C" JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   JSModuleDef* m;
+ 
   if(!(m = JS_NewCModule(ctx, module_name, &js_keypoint_init)))
     return NULL;
+ 
   js_keypoint_export(ctx, m);
   return m;
 }
