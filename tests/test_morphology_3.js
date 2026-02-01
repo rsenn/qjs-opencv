@@ -104,7 +104,7 @@ function main(input = './samples/samples/data/notes.png') {
 
 function show_wait_destroy(winname, img) {
   imshow(winname, img);
-  moveWindow(winname, 500, 0);
+  moveWindow(winname, 500, 50);
   waitKey(0);
   destroyWindow(winname);
 }
