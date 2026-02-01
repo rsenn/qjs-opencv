@@ -266,14 +266,14 @@ js_opengl_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
   return ret;
 }
 
-static js_function_list_t js_opengl_ogl_funcs{
+js_function_list_t js_opengl_ogl_funcs{
     JS_CFUNC_MAGIC_DEF("convertFromGLTexture2D", 2, js_opengl_func, OPENGL_CONVERT_FROM_GL_TEXTURE_2D),
     JS_CFUNC_MAGIC_DEF("convertToGLTexture2D", 2, js_opengl_func, OPENGL_CONVERT_TO_GL_TEXTURE_2D),
-    JS_CTOR_DEF("Buffer", 0, js_buffer_constructor),
+    //JS_CTOR_DEF("Buffer", 0, js_buffer_constructor),
     // JS_CTOR_DEF("Texture2D", 0, js_texture2d_constructor)
 };
 
-static js_function_list_t js_opengl_static_funcs{
+  js_function_list_t js_opengl_static_funcs{
     JS_OBJECT_DEF("ogl", js_opengl_ogl_funcs.data(), int(js_opengl_ogl_funcs.size()), JS_PROP_C_W_E),
 };
 
