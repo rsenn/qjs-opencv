@@ -95,7 +95,7 @@ js_buffer_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
   try {
     switch(magic) {
       case BUFFER_BIND: {
-        int32_t target=-1;
+        int32_t target = -1;
         JS_ToInt32(ctx, &target, argv[0]);
         b->bind(cv::ogl::Buffer::Target(target));
         break;
@@ -116,11 +116,9 @@ static const JSCFunctionListEntry js_buffer_proto_funcs[] = {
 };
 
 static const JSCFunctionListEntry js_buffer_static_funcs[] = {
-JS_PROP_INT32_DEF("ARRAY_BUFFER", cv::ogl::Buffer::ARRAY_BUFFER, JS_PROP_CONFIGURABLE),
+    JS_PROP_INT32_DEF("ARRAY_BUFFER", cv::ogl::Buffer::ARRAY_BUFFER, JS_PROP_CONFIGURABLE),
 
 };
-
-
 
 typedef cv::ogl::Texture2D JSTexture2DData;
 
@@ -272,7 +270,7 @@ static js_function_list_t js_opengl_ogl_funcs{
     JS_CFUNC_MAGIC_DEF("convertFromGLTexture2D", 2, js_opengl_func, OPENGL_CONVERT_FROM_GL_TEXTURE_2D),
     JS_CFUNC_MAGIC_DEF("convertToGLTexture2D", 2, js_opengl_func, OPENGL_CONVERT_TO_GL_TEXTURE_2D),
     JS_CTOR_DEF("Buffer", 0, js_buffer_constructor),
-    //JS_CTOR_DEF("Texture2D", 0, js_texture2d_constructor)
+    // JS_CTOR_DEF("Texture2D", 0, js_texture2d_constructor)
 };
 
 static js_function_list_t js_opengl_static_funcs{
@@ -293,7 +291,6 @@ js_opengl_init(JSContext* ctx, JSModuleDef* m) {
   /* set proto.constructor and ctor.prototype */
   JS_SetConstructor(ctx, buffer_class, buffer_proto);
   JS_SetPropertyFunctionList(ctx, buffer_class, js_buffer_static_funcs, countof(js_buffer_static_funcs));
-
 
   JS_NewClassID(&js_texture2d_class_id);
   JS_NewClass(JS_GetRuntime(ctx), js_texture2d_class_id, &js_texture2d_class);

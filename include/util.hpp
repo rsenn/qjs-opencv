@@ -54,6 +54,7 @@
   }
 
 #define JS_CTOR_MAGIC_DEF(n, len, func1, magic_num) JS_CFUNC_SPECIAL_MAGIC_DEF(n, len, constructor_or_func_magic, func1, magic_num)
+#define JS_CTOR_DEF(n, len, func1) JS_CFUNC_SPECIAL_DEF(n, len, constructor_or_func_magic, func1)
 
 #define JS_CONSTANT(name) JS_PROP_INT32_DEF(#name, name, 0)
 #define JS_CV_CONSTANT(name) JS_PROP_INT32_DEF(#name, cv::name, JS_PROP_ENUMERABLE)
