@@ -515,6 +515,7 @@ js_texture2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
         tx->release();
         break;
       }
+
       case TEXTURE2D_SET_AUTO_RELEASE: {
         bool autoRelease = js_value_to<BOOL>(ctx, argv[0]);
 
@@ -564,6 +565,211 @@ static const JSCFunctionListEntry js_texture2d_static_funcs[] = {
     JS_PROP_INT32_DEF("RGB", cv::ogl::Texture2D::RGB, JS_PROP_CONFIGURABLE),
     JS_PROP_INT32_DEF("RGBA", cv::ogl::Texture2D::RGBA, JS_PROP_CONFIGURABLE),
 };
+
+typedef cv::ogl::Arrays JSArraysData;
+
+static JSValue arrays_proto = JS_UNDEFINED, arrays_class = JS_UNDEFINED, arrays_params_proto = JS_UNDEFINED;
+static JSClassID js_arrays_class_id = 0;
+
+static JSArraysData*
+js_arrays_data(JSValueConst val) {
+  return static_cast<JSArraysData*>(JS_GetOpaque(val, js_arrays_class_id));
+}
+
+static JSArraysData*
+js_arrays_data2(JSContext* ctx, JSValueConst val) {
+  return static_cast<JSArraysData*>(JS_GetOpaque2(ctx, val, js_arrays_class_id));
+}
+
+static JSValue
+js_arrays_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
+  JSArraysData* a;
+  JSValue obj = JS_UNDEFINED, proto;
+
+  if(!(a = js_allocate<JSArraysData>(ctx)))
+    return JS_EXCEPTION;
+
+  try {
+    new(a) JSArraysData();
+  } catch(const cv::Exception& e) {
+    js_cv_throw(ctx, e);
+    goto fail;
+  }
+
+  /* using new_target to get the prototype is necessary when the class is extended. */
+  proto = JS_GetPropertyStr(ctx, new_target, "prototype");
+  if(JS_IsException(proto))
+    goto fail;
+
+  obj = JS_NewObjectProtoClass(ctx, proto, js_arrays_class_id);
+  JS_FreeValue(ctx, proto);
+
+  if(JS_IsException(obj))
+    goto fail;
+
+  JS_SetOpaque(obj, a);
+
+  return obj;
+
+fail:
+  js_deallocate(ctx, a);
+  JS_FreeValue(ctx, obj);
+  return JS_EXCEPTION;
+}
+
+enum {
+  ARRAYS_EMPTY = 0,
+  ARRAYS_SIZE,
+};
+
+static JSValue
+js_arrays_get(JSContext* ctx, JSValueConst this_val, int magic) {
+  JSArraysData* a;
+  JSValue ret = JS_UNDEFINED;
+
+  if(!(a = js_arrays_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  try {
+    switch(magic) {
+      case ARRAYS_EMPTY: {
+        ret = JS_NewBool(ctx, a->empty());
+        break;
+      }
+
+      case ARRAYS_SIZE: {
+        ret = JS_NewInt32(ctx, a->size());
+        break;
+      }
+    }
+  } catch(const cv::Exception& e) { ret = js_cv_throw(ctx, e); }
+
+  return ret;
+}
+
+enum {
+  ARRAYS_BIND = 0,
+  ARRAYS_RESET_COLOR_ARRAY,
+  ARRAYS_RESET_NORMAL_ARRAY,
+  ARRAYS_RESET_TEXCOORD_ARRAY,
+  ARRAYS_RESET_VERTEX_ARRAY,
+  ARRAYS_RELEASE,
+  ARRAYS_SET_AUTO_RELEASE,
+  ARRAYS_SET_COLOR_ARRAY,
+  ARRAYS_SET_NORMAL_ARRAY,
+  ARRAYS_SET_TEXCOORD_ARRAY,
+  ARRAYS_SET_VERTEX_ARRAY,
+};
+
+static JSValue
+js_arrays_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  JSArraysData* a;
+  JSValue ret = JS_UNDEFINED;
+
+  if(!(a = js_arrays_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  try {
+    switch(magic) {
+      case ARRAYS_BIND: {
+        a->bind();
+        break;
+      }
+
+      case ARRAYS_RESET_COLOR_ARRAY: {
+        a->resetColorArray();
+        break;
+      }
+
+      case ARRAYS_RESET_NORMAL_ARRAY: {
+        a->resetNormalArray();
+        break;
+      }
+
+      case ARRAYS_RESET_TEXCOORD_ARRAY: {
+        a->resetTexCoordArray();
+        break;
+      }
+
+      case ARRAYS_RESET_VERTEX_ARRAY: {
+        a->resetVertexArray();
+        break;
+      }
+
+      case ARRAYS_RELEASE: {
+        a->release();
+        break;
+      }
+
+      case ARRAYS_SET_AUTO_RELEASE: {
+        bool autoRelease = js_value_to<BOOL>(ctx, argv[0]);
+
+        a->setAutoRelease(autoRelease);
+        break;
+      }
+
+      case ARRAYS_SET_COLOR_ARRAY: {
+        JSInputArray arr = js_input_array(ctx, argv[0]);
+        a->setColorArray(arr);
+        break;
+      }
+
+      case ARRAYS_SET_NORMAL_ARRAY: {
+        JSInputArray arr = js_input_array(ctx, argv[0]);
+        a->setNormalArray(arr);
+        break;
+      }
+
+      case ARRAYS_SET_TEXCOORD_ARRAY: {
+        JSInputArray arr = js_input_array(ctx, argv[0]);
+        a->setTexCoordArray(arr);
+        break;
+      }
+
+      case ARRAYS_SET_VERTEX_ARRAY: {
+        JSInputArray arr = js_input_array(ctx, argv[0]);
+        a->setVertexArray(arr);
+        break;
+      }
+    }
+  } catch(const cv::Exception& e) { ret = js_cv_throw(ctx, e); }
+
+  return ret;
+}
+
+static void
+js_arrays_finalizer(JSRuntime* rt, JSValue val) {
+  JSArraysData* a;
+
+  if((a = js_arrays_data(val))) {
+    a->~Arrays();
+
+    js_deallocate(rt, a);
+  }
+}
+
+static JSClassDef js_arrays_class = {
+    .class_name = "Arrays",
+    .finalizer = js_arrays_finalizer,
+};
+
+static const JSCFunctionListEntry js_arrays_proto_funcs[] = {
+    JS_CFUNC_MAGIC_DEF("bind", 0, js_arrays_method, ARRAYS_BIND),
+    JS_CGETSET_MAGIC_DEF("empty", js_arrays_get, 0, ARRAYS_EMPTY),
+    JS_CFUNC_MAGIC_DEF("release", 0, js_arrays_method, ARRAYS_RELEASE),
+    JS_CFUNC_MAGIC_DEF("resetColorArray", 0, js_arrays_method, ARRAYS_RESET_COLOR_ARRAY),
+    JS_CFUNC_MAGIC_DEF("resetNormalArray", 0, js_arrays_method, ARRAYS_RESET_NORMAL_ARRAY),
+    JS_CFUNC_MAGIC_DEF("resetTexCoordArray", 0, js_arrays_method, ARRAYS_RESET_TEXCOORD_ARRAY),
+    JS_CFUNC_MAGIC_DEF("resetVertexArray", 0, js_arrays_method, ARRAYS_RESET_VERTEX_ARRAY),
+    JS_CFUNC_MAGIC_DEF("setAutoRelease", 1, js_arrays_method, ARRAYS_SET_AUTO_RELEASE),
+    JS_CFUNC_MAGIC_DEF("setColorArray", 1, js_arrays_method, ARRAYS_SET_COLOR_ARRAY),
+    JS_CFUNC_MAGIC_DEF("setNormalArray", 1, js_arrays_method, ARRAYS_SET_NORMAL_ARRAY),
+    JS_CFUNC_MAGIC_DEF("setTexCoordArray", 1, js_arrays_method, ARRAYS_SET_TEXCOORD_ARRAY),
+    JS_CFUNC_MAGIC_DEF("setVertexArray", 1, js_arrays_method, ARRAYS_SET_VERTEX_ARRAY),
+    JS_CGETSET_MAGIC_DEF("size", js_arrays_get, 0, ARRAYS_SIZE),
+};
+
+static const JSCFunctionListEntry js_arrays_static_funcs[] = {};
 
 enum {
   OPENGL_CONVERT_FROM_GL_TEXTURE_2D = 0,
@@ -688,6 +894,20 @@ js_opengl_init(JSContext* ctx, JSModuleDef* m) {
   JS_SetPropertyFunctionList(ctx, texture2d_class, js_texture2d_static_funcs, countof(js_texture2d_static_funcs));
 
   JS_SetPropertyStr(ctx, ogl_object, "Texture2D", texture2d_class);
+
+  JS_NewClassID(&js_arrays_class_id);
+  JS_NewClass(JS_GetRuntime(ctx), js_arrays_class_id, &js_arrays_class);
+
+  arrays_proto = JS_NewObject(ctx);
+  JS_SetPropertyFunctionList(ctx, arrays_proto, js_arrays_proto_funcs, countof(js_arrays_proto_funcs));
+  JS_SetClassProto(ctx, js_arrays_class_id, arrays_proto);
+
+  arrays_class = JS_NewCFunction2(ctx, js_arrays_constructor, "Arrays", 0, JS_CFUNC_constructor, 0);
+  /* set proto.constructor and ctor.prototype */
+  JS_SetConstructor(ctx, arrays_class, arrays_proto);
+  JS_SetPropertyFunctionList(ctx, arrays_class, js_arrays_static_funcs, countof(js_arrays_static_funcs));
+
+  JS_SetPropertyStr(ctx, ogl_object, "Arrays", arrays_class);
 
   if(m) {
     JS_SetModuleExport(ctx, m, "ogl", ogl_object);
