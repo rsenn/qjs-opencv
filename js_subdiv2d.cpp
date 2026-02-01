@@ -91,27 +91,45 @@ js_subdiv2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
       int32_t edge;
       JSPointData<float> dstpt;
       JS_ToInt32(ctx, &edge, argv[0]);
+
       if(argc > 1)
         js_point_read(ctx, argv[1], &dstpt);
+
       ret = JS_NewInt32(ctx, s->edgeDst(edge, argc > 1 ? &dstpt : nullptr));
+
+      if(argc > 1)
+        js_point_write(ctx, argv[1], dstpt);
+
       break;
     }
 
     case SUBDIV2D_EDGE_ORG: {
       int32_t edge;
       JSPointData<float> orgpt;
+
       if(argc > 1)
         js_point_read(ctx, argv[1], &orgpt);
+
       ret = JS_NewInt32(ctx, s->edgeOrg(edge, argc > 1 ? &orgpt : nullptr));
+
+      if(argc > 1)
+        js_point_write(ctx, argv[1], orgpt);
+
       break;
     }
 
     case SUBDIV2D_FIND_NEAREST: {
       JSPointData<float> pt, nearestPt;
       js_point_read(ctx, argv[0], &pt);
+
       if(argc > 1)
         js_point_read(ctx, argv[1], &nearestPt);
+
       ret = JS_NewInt32(ctx, s->findNearest(pt, argc > 1 ? &nearestPt : nullptr));
+
+      if(argc > 1)
+        js_point_write(ctx, argv[1], nearestPt);
+
       break;
     }
 
@@ -161,11 +179,14 @@ js_subdiv2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
     case SUBDIV2D_GET_VORONOI_FACET_LIST: {
       std::vector<int> idx;
       JSContoursData<float> facetList;
-      std::vector<JSPointData<float>> facetCenters;
+      JSContourData<float> facetCenters;
+
       js_array_to(ctx, argv[0], idx);
-      js_array_to(ctx, argv[1], facetList);
-      js_array_to(ctx, argv[2], facetCenters);
+
       s->getVoronoiFacetList(idx, facetList, facetCenters);
+
+      js_array_copy(ctx, argv[1], facetList);
+      js_array_copy(ctx, argv[2], facetCenters);
       break;
     }
 

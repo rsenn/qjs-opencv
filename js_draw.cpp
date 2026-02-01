@@ -747,6 +747,27 @@ js_clip_line(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
   return JS_NewBool(ctx, result);
 }
 
+static JSValue
+js_fill_convex_poly(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+  JSInputOutputArray img = js_cv_inputoutputarray(ctx, argv[0]);
+  JSContourData<float> points;
+  cv::Scalar color;
+  int32_t lineType = cv::LINE_8, shift = 0;
+
+  js_value_to(ctx, argv[1], points);
+
+  js_color_read(ctx, argv[2], &color);
+
+  if(argc > 3)
+    JS_ToInt32(ctx, &lineType, argv[3]);
+
+  if(argc > 4)
+    JS_ToInt32(ctx, &shift, argv[4]);
+
+  cv::fillConvexPoly(img, points, color, lineType, shift);
+  return JS_UNDEFINED;
+}
+
 JSValue draw_proto = JS_UNDEFINED, draw_class = JS_UNDEFINED;
 thread_local JSClassID js_draw_class_id = 0;
 
@@ -791,6 +812,7 @@ const JSCFunctionListEntry js_draw_global_funcs[] = {
     JS_CFUNC_DEF("getFontScaleFromHeight", 2, &js_get_font_scale_from_height),
     JS_CFUNC_DEF("loadFont", 1, &js_load_font),
     JS_CFUNC_DEF("clipLine", 3, &js_clip_line),
+    JS_CFUNC_DEF("fillConvexPoly", 3, js_fill_convex_poly),
 };
 
 static JSValue

@@ -28,7 +28,7 @@ function main(input = './samples/samples/data/notes.png') {
   let bw = new Mat(),
     gray2 = new Mat(gray.size, gray.type);
 
-  bitwise_not(gray, gray2); 
+  bitwise_not(gray, gray2);
 
   adaptiveThreshold(gray2, bw, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY, 15, -2);
 

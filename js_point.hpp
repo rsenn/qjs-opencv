@@ -130,6 +130,7 @@ js_point_write(JSContext* ctx, JSValueConst out, const JSPointData<T>& in) {
     args[1] = y;
     JS_Call(ctx, out, JS_UNDEFINED, 2, args);
   }
+
   JS_FreeValue(ctx, x);
   JS_FreeValue(ctx, y);
 }
