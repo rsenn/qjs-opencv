@@ -366,7 +366,7 @@ js_mat_initialize(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
       sizes.push_back(cols);
       index += 2;
     } else {
-      JS_ThrowTypeError(ctx, "argument %d must one of: Array, cv.Size, Number, TypedArray", index + 1);
+      JS_ThrowTypeError(ctx, "argument %d must be one of: Array, cv.Size, Number, TypedArray", index + 1);
       return FALSE;
     }
 
