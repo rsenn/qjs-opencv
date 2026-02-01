@@ -18,7 +18,7 @@ function main(filename = 'smarties.png') {
   for(const [x, y, radius] of circles) {
     const center = new Point(x, y);
 
-   // drawCircle(src, center, 1, [0, 255, 255], 3, LINE_AA);
+    // drawCircle(src, center, 1, [0, 255, 255], 3, LINE_AA);
     drawCircle(src, center, radius, [255, 0, 255], 3, LINE_AA);
   }
 
