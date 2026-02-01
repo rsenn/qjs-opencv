@@ -154,7 +154,7 @@ function main(cam = 0) {
 
         const nz = countNonZero(match_mask);
 
-        //console.log('nz', nz);
+     console.log('',{H: [...H], nz});
 
         if(nz > 15) H_prev = H;
         else resetH();
