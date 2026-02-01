@@ -428,11 +428,13 @@ js_feature2d_fast(JSContext* ctx, JSValueConst new_target, int argc, JSValueCons
   BOOL nonmaxSuppression = TRUE;
   int32_t type = FastFeatureDetector::TYPE_9_16;
 
-  if(argc >= 1)
+  if(argc > 0)
     JS_ToInt32(ctx, &threshold, argv[0]);
-  if(argc >= 2)
+
+  if(argc > 1)
     nonmaxSuppression = JS_ToBool(ctx, argv[1]);
-  if(argc >= 3)
+
+  if(argc > 2)
     JS_ToInt32(ctx, &type, argv[2]);
 
   fast = FastFeatureDetector::create(threshold, nonmaxSuppression, FastFeatureDetector::DetectorType(type));
@@ -962,9 +964,11 @@ js_feature2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
         JSOutputArray descriptors = js_cv_outputarray(ctx, argv[2]);
         std::vector<JSKeyPointData> keypoints;
 
+        js_value_to(ctx, argv[1], keypoints);
+
         ptr->compute(image, keypoints, descriptors);
 
-        js_array_copy(ctx, argv[1], keypoints.data(), keypoints.data() + keypoints.size());
+    //js_array_copy(ctx, argv[1], keypoints.data(), keypoints.data() + keypoints.size());
         break;
       }
 
