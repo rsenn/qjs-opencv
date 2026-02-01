@@ -1,6 +1,6 @@
 #include "js_cv.hpp"
 #include "js_umat.hpp"
-#include "js_affine3.hpp"
+#include "js_size.hpp"
 #include "jsbindings.hpp"
 #include "util.hpp"
 #include <quickjs.h>
@@ -86,6 +86,106 @@ js_buffer_finalizer(JSRuntime* rt, JSValue val) {
 }
 
 enum {
+  BUFFER_UNBIND = 0,
+};
+
+static JSValue
+js_buffer_function(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  JSValue ret = JS_UNDEFINED;
+
+  try {
+    switch(magic) {
+      case BUFFER_UNBIND: {
+        int32_t target = -1;
+        JS_ToInt32(ctx, &target, argv[0]);
+        cv::ogl::Buffer::unbind(cv::ogl::Buffer::Target(target));
+        break;
+      }
+    }
+  } catch(const cv::Exception& e) { ret = js_cv_throw(ctx, e); }
+
+  return ret;
+}
+
+enum {
+  BUFFER_ID = 0,
+  BUFFER_CHANNELS,
+  BUFFER_COLS,
+  BUFFER_ROWS,
+  BUFFER_DEPTH,
+  BUFFER_ELEMSIZE,
+  BUFFER_ELEMSIZE1,
+  BUFFER_EMPTY,
+  BUFFER_SIZE,
+  BUFFER_TYPE,
+};
+
+static JSValue
+js_buffer_get(JSContext* ctx, JSValueConst this_val, int magic) {
+  JSBufferData* b;
+  JSValue ret = JS_UNDEFINED;
+
+  if(!(b = js_buffer_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  try {
+    switch(magic) {
+      case BUFFER_ID: {
+        ret = JS_NewInt32(ctx, b->bufId());
+        break;
+      }
+
+      case BUFFER_CHANNELS: {
+        ret = JS_NewUint32(ctx, b->channels());
+        break;
+      }
+
+      case BUFFER_COLS: {
+        ret = JS_NewUint32(ctx, b->cols());
+        break;
+      }
+
+      case BUFFER_ROWS: {
+        ret = JS_NewUint32(ctx, b->rows());
+        break;
+      }
+
+      case BUFFER_DEPTH: {
+        ret = JS_NewUint32(ctx, b->depth());
+        break;
+      }
+
+      case BUFFER_ELEMSIZE: {
+        ret = JS_NewUint32(ctx, b->elemSize());
+        break;
+      }
+
+      case BUFFER_ELEMSIZE1: {
+        ret = JS_NewUint32(ctx, b->elemSize1());
+        break;
+      }
+
+      case BUFFER_EMPTY: {
+        ret = JS_NewBool(ctx, b->empty());
+        break;
+      }
+
+      case BUFFER_SIZE: {
+        ret = js_size_new(ctx, b->size());
+        break;
+      }
+
+      case BUFFER_TYPE: {
+        ret = JS_NewInt32(ctx, b->type());
+        break;
+      }
+    }
+  } catch(const cv::Exception& e) { ret = js_cv_throw(ctx, e); }
+
+  return ret;
+}
+
+enum {
   BUFFER_BIND = 0,
 };
 
@@ -118,10 +218,20 @@ static JSClassDef js_buffer_class = {
 
 static const JSCFunctionListEntry js_buffer_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("bind", 1, js_buffer_method, BUFFER_BIND),
+    JS_CGETSET_MAGIC_DEF("id", js_buffer_get, 0, BUFFER_ID),
+    JS_CGETSET_MAGIC_DEF("channels", js_buffer_get, 0, BUFFER_CHANNELS),
+    JS_CGETSET_MAGIC_DEF("cols", js_buffer_get, 0, BUFFER_COLS),
+    JS_CGETSET_MAGIC_DEF("rows", js_buffer_get, 0, BUFFER_ROWS),
+    JS_CGETSET_MAGIC_DEF("depth", js_buffer_get, 0, BUFFER_DEPTH),
+    JS_CGETSET_MAGIC_DEF("elemSize", js_buffer_get, 0, BUFFER_ELEMSIZE),
+    JS_CGETSET_MAGIC_DEF("elemSize1", js_buffer_get, 0, BUFFER_ELEMSIZE1),
+    JS_CGETSET_MAGIC_DEF("empty", js_buffer_get, 0, BUFFER_EMPTY),
+    JS_CGETSET_MAGIC_DEF("size", js_buffer_get, 0, BUFFER_SIZE),
+    JS_CGETSET_MAGIC_DEF("type", js_buffer_get, 0, BUFFER_TYPE),
 };
 
 static const JSCFunctionListEntry js_buffer_static_funcs[] = {
-    JS_PROP_INT32_DEF("ARRAY_BUFFER", cv::ogl::Buffer::ARRAY_BUFFER, JS_PROP_CONFIGURABLE),
+    JS_CFUNC_MAGIC_DEF("unbind", 1, js_buffer_function, BUFFER_UNBIND),
 
 };
 
@@ -144,11 +254,54 @@ static JSValue
 js_texture2d_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   JSTexture2DData* tx;
   JSValue obj = JS_UNDEFINED, proto;
+  JSSizeData<int> asize;
+  int i = 0;
+  cv::ogl::Texture2D::Format format;
+  int32_t atexId = -1;
+  bool autoRelease = false;
 
   if(!(tx = js_allocate<JSTexture2DData>(ctx)))
     return JS_EXCEPTION;
 
-  new(tx) JSTexture2DData();
+  if(i < argc) {
+    if(JS_IsNumber(argv[i])) {
+      asize.width = js_value_to<uint32_t>(ctx, argv[i++]);
+      asize.height = js_value_to<uint32_t>(ctx, argv[i++]);
+    } else if(!js_size_read(ctx, argv[i], &asize)) {
+      i++;
+    } else {
+      JS_ThrowTypeError(ctx, "argument 1 must be Number or cv::Size");
+      goto fail;
+    }
+  }
+
+  if(argc == 0) {
+    new(tx) JSTexture2DData();
+  } else if(i) {
+
+    if(i < argc)
+      format = cv::ogl::Texture2D::Format(js_value_to<int32_t>(ctx, argv[i++]));
+
+    if(i < argc && JS_IsNumber(argv[i]))
+      atexId = js_value_to<int32_t>(ctx, argv[i++]);
+
+    if(i < argc)
+      autoRelease = js_value_to<BOOL>(ctx, argv[i++]);
+
+    if(atexId != -1)
+      new(tx) JSTexture2DData(asize, format, atexId, autoRelease);
+    else
+      new(tx) JSTexture2DData(asize, format, autoRelease);
+
+  } else {
+
+    JSInputArray arr = js_input_array(ctx, argv[i++]);
+
+    if(i < argc)
+      autoRelease = js_value_to<BOOL>(ctx, argv[i++]);
+
+    new(tx) JSTexture2DData(arr, autoRelease);
+  }
 
   /* using new_target to get the prototype is necessary when the class is extended. */
   proto = JS_GetPropertyStr(ctx, new_target, "prototype");
@@ -171,35 +324,67 @@ fail:
   return JS_EXCEPTION;
 }
 
-/*static JSValue
-js_texture2d_new(JSContext* ctx, const JSTexture2DData& arg) {
-  JSTexture2DData* ptr;
+enum {
+  TEXTURE2D_ID = 0,
+  TEXTURE2D_COLS,
+  TEXTURE2D_ROWS,
+  TEXTURE2D_EMPTY,
+  TEXTURE2D_SIZE,
+  TEXTURE2D_FORMAT,
+};
 
-  if(!(ptr = js_allocate<JSTexture2DData>(ctx)))
+static JSValue
+js_texture2d_get(JSContext* ctx, JSValueConst this_val, int magic) {
+  JSTexture2DData* tx;
+  JSValue ret = JS_UNDEFINED;
+
+  if(!(tx = js_texture2d_data2(ctx, this_val)))
     return JS_EXCEPTION;
 
-  new(ptr) JSTexture2DData();
+  try {
+    switch(magic) {
+      case TEXTURE2D_ID: {
+        ret = JS_NewUint32(ctx, tx->texId());
+        break;
+      }
 
-  JSValue obj = JS_NewObjectProtoClass(ctx, texture2d_proto, js_texture2d_class_id);
+      case TEXTURE2D_COLS: {
+        ret = JS_NewUint32(ctx, tx->cols());
+        break;
+      }
 
-  JS_SetOpaque(obj, ptr);
+      case TEXTURE2D_ROWS: {
+        ret = JS_NewUint32(ctx, tx->rows());
+        break;
+      }
 
-  return obj;
-}*/
+      case TEXTURE2D_EMPTY: {
+        ret = JS_NewBool(ctx, tx->empty());
+        break;
+      }
 
-static void
-js_texture2d_finalizer(JSRuntime* rt, JSValue val) {
-  JSTexture2DData* tx;
+      case TEXTURE2D_SIZE: {
+        ret = js_size_new(ctx, tx->size());
+        break;
+      }
 
-  if((tx = js_texture2d_data(val))) {
-    tx->~Texture2D();
+      case TEXTURE2D_FORMAT: {
+        ret = JS_NewInt32(ctx, tx->format());
+        break;
+      }
+    }
+  } catch(const cv::Exception& e) { ret = js_cv_throw(ctx, e); }
 
-    js_deallocate(rt, tx);
-  }
+  return ret;
 }
 
 enum {
   TEXTURE2D_BIND = 0,
+  TEXTURE2D_COPY_FROM,
+  TEXTURE2D_COPY_TO,
+  TEXTURE2D_CREATE,
+  TEXTURE2D_RELEASE,
+  TEXTURE2D_SET_AUTO_RELEASE,
 };
 
 static JSValue
@@ -216,10 +401,86 @@ js_texture2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
         tx->bind();
         break;
       }
+
+      case TEXTURE2D_COPY_FROM: {
+        JSInputArray arr = js_input_array(ctx, argv[0]);
+        bool autoRelease = false;
+
+        if(argc > 1)
+          autoRelease = js_value_to<BOOL>(ctx, argv[1]);
+
+        tx->copyFrom(arr, autoRelease);
+        break;
+      }
+
+      case TEXTURE2D_COPY_TO: {
+        JSOutputArray arr = js_cv_outputarray(ctx, argv[0]);
+        int32_t ddepth = CV_32F;
+        bool autoRelease = false;
+
+        if(argc > 1)
+          ddepth = js_value_to<int32_t>(ctx, argv[1]);
+
+        if(argc > 2)
+          autoRelease = js_value_to<BOOL>(ctx, argv[2]);
+
+        tx->copyTo(arr, ddepth, autoRelease);
+        break;
+      }
+
+      case TEXTURE2D_CREATE: {
+        JSSizeData<int> asize;
+        cv::ogl::Texture2D::Format format;
+        bool autoRelease = false;
+        int i = 0;
+
+        if(i < argc) {
+          if(JS_IsNumber(argv[i])) {
+            asize.width = js_value_to<uint32_t>(ctx, argv[i++]);
+            asize.height = js_value_to<uint32_t>(ctx, argv[i++]);
+          } else if(!js_size_read(ctx, argv[i], &asize)) {
+            i++;
+          } else {
+            ret = JS_ThrowTypeError(ctx, "argument 1 must be Number or cv::Size");
+            break;
+          }
+        }
+
+        if(i < argc)
+          format = cv::ogl::Texture2D::Format(js_value_to<int32_t>(ctx, argv[i++]));
+
+        if(i < argc)
+          autoRelease = js_value_to<BOOL>(ctx, argv[i++]);
+
+        tx->create(asize, format, autoRelease);
+        break;
+      }
+
+      case TEXTURE2D_RELEASE: {
+        tx->release();
+        break;
+      }
+      case TEXTURE2D_SET_AUTO_RELEASE: {
+        bool autoRelease = js_value_to<BOOL>(ctx, argv[0]);
+
+        tx->setAutoRelease(autoRelease);
+        break;
+      }
     }
   } catch(const cv::Exception& e) { ret = js_cv_throw(ctx, e); }
 
   return ret;
+}
+
+static void
+js_texture2d_finalizer(JSRuntime* rt, JSValue val) {
+  JSTexture2DData* tx;
+
+  if((tx = js_texture2d_data(val))) {
+    tx->~Texture2D();
+
+    js_deallocate(rt, tx);
+  }
 }
 
 static JSClassDef js_texture2d_class = {
@@ -229,9 +490,25 @@ static JSClassDef js_texture2d_class = {
 
 static const JSCFunctionListEntry js_texture2d_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("bind", 0, js_texture2d_method, TEXTURE2D_BIND),
+    JS_CFUNC_MAGIC_DEF("copyFrom", 1, js_texture2d_method, TEXTURE2D_COPY_FROM),
+    JS_CFUNC_MAGIC_DEF("copyTo", 1, js_texture2d_method, TEXTURE2D_COPY_TO),
+    JS_CFUNC_MAGIC_DEF("create", 2, js_texture2d_method, TEXTURE2D_CREATE),
+    JS_CFUNC_MAGIC_DEF("release", 0, js_texture2d_method, TEXTURE2D_RELEASE),
+    JS_CFUNC_MAGIC_DEF("setAutoRelease", 1, js_texture2d_method, TEXTURE2D_SET_AUTO_RELEASE),
+    JS_CGETSET_MAGIC_DEF("id", js_texture2d_get, 0, TEXTURE2D_ID),
+    JS_CGETSET_MAGIC_DEF("cols", js_texture2d_get, 0, TEXTURE2D_COLS),
+    JS_CGETSET_MAGIC_DEF("rows", js_texture2d_get, 0, TEXTURE2D_ROWS),
+    JS_CGETSET_MAGIC_DEF("empty", js_texture2d_get, 0, TEXTURE2D_EMPTY),
+    JS_CGETSET_MAGIC_DEF("size", js_texture2d_get, 0, TEXTURE2D_SIZE),
+    JS_CGETSET_MAGIC_DEF("format", js_texture2d_get, 0, TEXTURE2D_FORMAT),
 };
 
-static const JSCFunctionListEntry js_texture2d_static_funcs[] = {};
+static const JSCFunctionListEntry js_texture2d_static_funcs[] = {
+    JS_PROP_INT32_DEF("NONE", cv::ogl::Texture2D::NONE, JS_PROP_CONFIGURABLE),
+    JS_PROP_INT32_DEF("DEPTH_COMPONENT", cv::ogl::Texture2D::DEPTH_COMPONENT, JS_PROP_CONFIGURABLE),
+    JS_PROP_INT32_DEF("RGB", cv::ogl::Texture2D::RGB, JS_PROP_CONFIGURABLE),
+    JS_PROP_INT32_DEF("RGBA", cv::ogl::Texture2D::RGBA, JS_PROP_CONFIGURABLE),
+};
 
 enum {
   OPENGL_CONVERT_FROM_GL_TEXTURE_2D = 0,
@@ -255,6 +532,7 @@ js_opengl_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
         cv::ogl::convertFromGLTexture2D(*tx, dst);
         break;
       }
+
       case OPENGL_CONVERT_TO_GL_TEXTURE_2D: {
         JSInputArray src = js_input_array(ctx, argv[0]);
         JSTexture2DData* tx;
@@ -271,10 +549,8 @@ js_opengl_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
   return ret;
 }
 
-js_function_list_t js_opengl_ogl_funcs{
-    JS_CFUNC_MAGIC_DEF("convertFromGLTexture2D", 2, js_opengl_func, OPENGL_CONVERT_FROM_GL_TEXTURE_2D),
-    JS_CFUNC_MAGIC_DEF("convertToGLTexture2D", 2, js_opengl_func, OPENGL_CONVERT_TO_GL_TEXTURE_2D)
-};
+js_function_list_t js_opengl_ogl_funcs{JS_CFUNC_MAGIC_DEF("convertFromGLTexture2D", 2, js_opengl_func, OPENGL_CONVERT_FROM_GL_TEXTURE_2D),
+                                       JS_CFUNC_MAGIC_DEF("convertToGLTexture2D", 2, js_opengl_func, OPENGL_CONVERT_TO_GL_TEXTURE_2D)};
 
 /*js_function_list_t js_opengl_static_funcs{
     JS_OBJECT_DEF("ogl", js_opengl_ogl_funcs.data(), int(js_opengl_ogl_funcs.size()), JS_PROP_C_W_E),
