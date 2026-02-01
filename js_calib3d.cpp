@@ -174,8 +174,10 @@ js_calib3d_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
     }
 
     case FIND_HOMOGRAPHY: {
-      JSContourData<double> src; /* = js_input_array(ctx, argv[0])*/;
-      JSContourData<double> dst; /*= js_input_array(ctx, argv[1])*/;
+      JSContourData<double> src; /* = js_input_array(ctx, argv[0])*/
+      ;
+      JSContourData<double> dst; /*= js_input_array(ctx, argv[1])*/
+      ;
 
       js_array_to(ctx, argv[0], src);
       js_array_to(ctx, argv[1], dst);

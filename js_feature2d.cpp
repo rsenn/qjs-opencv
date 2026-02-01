@@ -968,7 +968,7 @@ js_feature2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 
         ptr->compute(image, keypoints, descriptors);
 
-    //js_array_copy(ctx, argv[1], keypoints.data(), keypoints.data() + keypoints.size());
+        // js_array_copy(ctx, argv[1], keypoints.data(), keypoints.data() + keypoints.size());
         break;
       }
 

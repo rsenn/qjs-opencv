@@ -416,18 +416,30 @@ js_cv_getticks(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
   return ret;
 }
 
+enum {
+  BITWISE_AND=0,
+  BITWISE_OR,
+  BITWISE_XOR,
+  BITWISE_NOT,
+};
+
 static JSValue
 js_cv_bitwise(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSInputOutputArray src = js_cv_inputoutputarray(ctx, argv[0]);
-  JSInputArray other = js_input_array(ctx, argv[1]);
+  JSInputArray other;
   JSInputOutputArray dst = src;
 
-  if(argc > 2)
-    dst = js_umat_or_mat(ctx, argv[2]);
+  int i = 1;
+
+  if(magic != BITWISE_NOT)
+    if(i < argc)
+      other = js_input_array(ctx, argv[i++]);
+
+          if(i < argc) dst = js_umat_or_mat(ctx, argv[i++]);
 
   JSInputArray mask = cv::noArray();
-  if(argc > 3)
-    mask = js_input_array(ctx, argv[3]);
+  if(i < argc)
+    mask = js_input_array(ctx, argv[i++]);
 
   std::string s_str, o_str, d_str;
 
@@ -435,15 +447,14 @@ js_cv_bitwise(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
   o_str = dump(other);
   d_str = dump(dst);
 
-  // printf("js_cv_bitwise %s src=%s other=%s dst=%s\n", ((const char*[]){"cv::bitwise_and",
-  // "cv::bitwise_or", "cv::bitwise_xor", "cv::bitwise_not"})[magic], s_str.c_str(),
-  // o_str.c_str(), d_str.c_str());
+  // printf("js_cv_bitwise %s src=%s other=%s dst=%s\n", ((const char*[]){"cv::bitwise_and", "cv::bitwise_or", "cv::bitwise_xor", "cv::bitwise_not"})[magic],
+  // s_str.c_str(), o_str.c_str(), d_str.c_str());
 
   switch(magic) {
-    case 0: cv::bitwise_and(src, other, dst, mask); break;
-    case 1: cv::bitwise_or(src, other, dst, mask); break;
-    case 2: cv::bitwise_xor(src, other, dst, mask); break;
-    case 3: cv::bitwise_not(src, dst, mask); break;
+    case BITWISE_AND: cv::bitwise_and(src, other, dst, mask); break;
+    case BITWISE_OR: cv::bitwise_or(src, other, dst, mask); break;
+    case BITWISE_XOR: cv::bitwise_xor(src, other, dst, mask); break;
+    case BITWISE_NOT: cv::bitwise_not(src, dst, mask); break;
     default: return JS_EXCEPTION;
   }
 
@@ -1411,10 +1422,10 @@ js_function_list_t js_cv_static_funcs{
     JS_CFUNC_MAGIC_DEF("getTickCount", 0, js_cv_getticks, 0),
     JS_CFUNC_MAGIC_DEF("getTickFrequency", 0, js_cv_getticks, 1),
     JS_CFUNC_MAGIC_DEF("getCPUTickCount", 0, js_cv_getticks, 2),
-    JS_CFUNC_MAGIC_DEF("bitwise_and", 3, js_cv_bitwise, 0),
-    JS_CFUNC_MAGIC_DEF("bitwise_or", 3, js_cv_bitwise, 1),
-    JS_CFUNC_MAGIC_DEF("bitwise_xor", 3, js_cv_bitwise, 2),
-    JS_CFUNC_MAGIC_DEF("bitwise_not", 2, js_cv_bitwise, 3),
+    JS_CFUNC_MAGIC_DEF("bitwise_and", 3, js_cv_bitwise, BITWISE_AND),
+    JS_CFUNC_MAGIC_DEF("bitwise_or", 3, js_cv_bitwise, BITWISE_OR),
+    JS_CFUNC_MAGIC_DEF("bitwise_xor", 3, js_cv_bitwise, BITWISE_XOR),
+    JS_CFUNC_MAGIC_DEF("bitwise_not", 2, js_cv_bitwise, BITWISE_NOT),
     JS_CFUNC_MAGIC_DEF("countNonZero", 1, js_cv_mat_functions, MAT_COUNTNONZERO),
     JS_CFUNC_MAGIC_DEF("findNonZero", 1, js_cv_mat_functions, MAT_FINDNONZERO),
     JS_CFUNC_MAGIC_DEF("hconcat", 2, js_cv_mat_functions, MAT_HCONCAT),
