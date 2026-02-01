@@ -30,7 +30,12 @@ js_buffer_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValue
   if(!(tx = js_allocate<JSBufferData>(ctx)))
     return JS_EXCEPTION;
 
-  new(tx) JSBufferData();
+  try {
+    new(tx) JSBufferData();
+  } catch(const cv::Exception& e) {
+    js_cv_throw(ctx, e);
+    goto fail;
+  }
 
   /* using new_target to get the prototype is necessary when the class is extended. */
   proto = JS_GetPropertyStr(ctx, new_target, "prototype");
@@ -53,7 +58,7 @@ fail:
   return JS_EXCEPTION;
 }
 
-static JSValue
+/*static JSValue
 js_buffer_new(JSContext* ctx, const JSBufferData& arg) {
   JSBufferData* ptr;
 
@@ -67,7 +72,7 @@ js_buffer_new(JSContext* ctx, const JSBufferData& arg) {
   JS_SetOpaque(obj, ptr);
 
   return obj;
-}
+}*/
 
 static void
 js_buffer_finalizer(JSRuntime* rt, JSValue val) {
@@ -166,7 +171,7 @@ fail:
   return JS_EXCEPTION;
 }
 
-static JSValue
+/*static JSValue
 js_texture2d_new(JSContext* ctx, const JSTexture2DData& arg) {
   JSTexture2DData* ptr;
 
@@ -180,7 +185,7 @@ js_texture2d_new(JSContext* ctx, const JSTexture2DData& arg) {
   JS_SetOpaque(obj, ptr);
 
   return obj;
-}
+}*/
 
 static void
 js_texture2d_finalizer(JSRuntime* rt, JSValue val) {
@@ -268,17 +273,21 @@ js_opengl_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
 
 js_function_list_t js_opengl_ogl_funcs{
     JS_CFUNC_MAGIC_DEF("convertFromGLTexture2D", 2, js_opengl_func, OPENGL_CONVERT_FROM_GL_TEXTURE_2D),
-    JS_CFUNC_MAGIC_DEF("convertToGLTexture2D", 2, js_opengl_func, OPENGL_CONVERT_TO_GL_TEXTURE_2D),
-    //JS_CTOR_DEF("Buffer", 0, js_buffer_constructor),
-    // JS_CTOR_DEF("Texture2D", 0, js_texture2d_constructor)
+    JS_CFUNC_MAGIC_DEF("convertToGLTexture2D", 2, js_opengl_func, OPENGL_CONVERT_TO_GL_TEXTURE_2D)
 };
 
-  js_function_list_t js_opengl_static_funcs{
+/*js_function_list_t js_opengl_static_funcs{
     JS_OBJECT_DEF("ogl", js_opengl_ogl_funcs.data(), int(js_opengl_ogl_funcs.size()), JS_PROP_C_W_E),
-};
+};*/
+
+static JSValue ogl_object;
 
 extern "C" int
 js_opengl_init(JSContext* ctx, JSModuleDef* m) {
+
+  ogl_object = JS_NewObjectProto(ctx, JS_NULL);
+
+  JS_SetPropertyFunctionList(ctx, ogl_object, js_opengl_ogl_funcs.data(), js_opengl_ogl_funcs.size());
 
   JS_NewClassID(&js_buffer_class_id);
   JS_NewClass(JS_GetRuntime(ctx), js_buffer_class_id, &js_buffer_class);
@@ -292,6 +301,8 @@ js_opengl_init(JSContext* ctx, JSModuleDef* m) {
   JS_SetConstructor(ctx, buffer_class, buffer_proto);
   JS_SetPropertyFunctionList(ctx, buffer_class, js_buffer_static_funcs, countof(js_buffer_static_funcs));
 
+  JS_SetPropertyStr(ctx, ogl_object, "Buffer", buffer_class);
+
   JS_NewClassID(&js_texture2d_class_id);
   JS_NewClass(JS_GetRuntime(ctx), js_texture2d_class_id, &js_texture2d_class);
 
@@ -304,8 +315,10 @@ js_opengl_init(JSContext* ctx, JSModuleDef* m) {
   JS_SetConstructor(ctx, texture2d_class, texture2d_proto);
   JS_SetPropertyFunctionList(ctx, texture2d_class, js_texture2d_static_funcs, countof(js_texture2d_static_funcs));
 
+  JS_SetPropertyStr(ctx, ogl_object, "Texture2D", texture2d_class);
+
   if(m) {
-    JS_SetModuleExportList(ctx, m, js_opengl_static_funcs.data(), js_opengl_static_funcs.size());
+    JS_SetModuleExport(ctx, m, "ogl", ogl_object);
   }
 
   return 0;
@@ -313,7 +326,7 @@ js_opengl_init(JSContext* ctx, JSModuleDef* m) {
 
 extern "C" void
 js_opengl_export(JSContext* ctx, JSModuleDef* m) {
-  JS_AddModuleExportList(ctx, m, js_opengl_static_funcs.data(), js_opengl_static_funcs.size());
+  JS_AddModuleExport(ctx, m, "ogl");
 }
 
 #if defined(JS_CV_MODULE)
