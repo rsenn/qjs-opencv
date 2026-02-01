@@ -1,3 +1,4 @@
+
 #include "js_mat.hpp"
 #include "cutils.h"
 #include "js_cv.hpp"
@@ -61,6 +62,7 @@ enum {
   METHOD_LOCATE_ROI,
   METHOD_PTR,
   METHOD_TOTAL,
+  METHOD_INV,
 };
 enum { MAT_EXPR_AND = 0, MAT_EXPR_OR, MAT_EXPR_XOR, MAT_EXPR_MUL, MAT_EXPR_DIV, MAT_EXPR_SHL, MAT_EXPR_SHR };
 enum { MAT_ITERATOR_KEYS, MAT_ITERATOR_VALUES, MAT_ITERATOR_ENTRIES };
@@ -657,6 +659,18 @@ js_mat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
 
         ret = js_value_from(ctx, os.str());
 
+        break;
+      }
+
+      case METHOD_INV: {
+        int32_t method = cv::DECOMP_LU;
+
+        if(argc > 0)
+          method = js_value_to<int32_t>(ctx, argv[0]);
+
+        cv::Mat inverse = m->inv(method);
+
+        ret = js_mat_wrap(ctx, inverse);
         break;
       }
     }
@@ -1895,6 +1909,8 @@ const JSCFunctionListEntry js_mat_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("step1", 0, js_mat_funcs, METHOD_STEP1),
     JS_CFUNC_MAGIC_DEF("locateROI", 0, js_mat_funcs, METHOD_LOCATE_ROI),
     JS_CFUNC_MAGIC_DEF("ptr", 0, js_mat_funcs, METHOD_PTR),
+
+    JS_CFUNC_MAGIC_DEF("inv", 1, js_mat_funcs, METHOD_INV),
 
     JS_CFUNC_MAGIC_DEF("and", 2, js_mat_expr, MAT_EXPR_AND),
     JS_CFUNC_MAGIC_DEF("or", 2, js_mat_expr, MAT_EXPR_OR),
