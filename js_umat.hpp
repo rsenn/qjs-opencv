@@ -78,7 +78,7 @@ js_input_array(JSContext* ctx, JSValueConst value) {
 
   if(js_contour_class_id) {
     JSContourData<double>* contour;
-    
+
     if((contour = js_contour_data(value))) {
       cv::Mat m = contour_getmat(*contour);
       return JSInputArray(m);
@@ -109,6 +109,7 @@ js_input_array(JSContext* ctx, JSValueConst value) {
     if(arr.size() >= 2 && arr.size() <= 4) {
       for(size_t i = 0; i < arr.size(); i++)
         scalar[i] = arr[i];
+      
       return JSInputArray(scalar);
     } else {
       return JSInputArray(arr);

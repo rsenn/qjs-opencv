@@ -174,8 +174,12 @@ js_calib3d_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
     }
 
     case FIND_HOMOGRAPHY: {
-      JSInputArray src = js_input_array(ctx, argv[0]);
-      JSInputArray dst = js_input_array(ctx, argv[1]);
+      JSContourData<double> src; /* = js_input_array(ctx, argv[0])*/;
+      JSContourData<double> dst; /*= js_input_array(ctx, argv[1])*/;
+
+      js_array_to(ctx, argv[0], src);
+      js_array_to(ctx, argv[1], dst);
+
       cv::Mat mat;
       JSOutputArray mask = cv::noArray();
       int32_t method = 0;
@@ -206,6 +210,7 @@ js_calib3d_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
 
         if(argc > 5)
           JS_ToInt32(ctx, &maxIters, argv[5]);
+
         if(argc > 6)
           JS_ToFloat64(ctx, &confidence, argv[6]);
 
