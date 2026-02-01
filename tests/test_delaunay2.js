@@ -91,7 +91,7 @@ function paint_voronoi(img, subdiv) {
 
     ifacets[0] = ifacet;
 
-    drawPolylines(img, [ifacet], true, Scalar(0, 0, 255), 1, LINE_AA, 0);
+    drawPolylines(img, ifacets, true, Scalar(0, 0, 255), 1, LINE_AA, 0);
     drawCircle(img, centers[i], 3, Scalar(0, 0, 255), FILLED, LINE_AA, 0);
   }
 }
