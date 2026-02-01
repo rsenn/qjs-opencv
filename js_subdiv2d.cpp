@@ -92,9 +92,6 @@ js_subdiv2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
       JSPointData<float> dstpt;
       JS_ToInt32(ctx, &edge, argv[0]);
 
-      if(argc > 1)
-        js_point_read(ctx, argv[1], &dstpt);
-
       ret = JS_NewInt32(ctx, s->edgeDst(edge, argc > 1 ? &dstpt : nullptr));
 
       if(argc > 1)
@@ -106,9 +103,7 @@ js_subdiv2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
     case SUBDIV2D_EDGE_ORG: {
       int32_t edge;
       JSPointData<float> orgpt;
-
-      if(argc > 1)
-        js_point_read(ctx, argv[1], &orgpt);
+      JS_ToInt32(ctx, &edge, argv[0]);
 
       ret = JS_NewInt32(ctx, s->edgeOrg(edge, argc > 1 ? &orgpt : nullptr));
 
@@ -121,9 +116,6 @@ js_subdiv2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
     case SUBDIV2D_FIND_NEAREST: {
       JSPointData<float> pt, nearestPt;
       js_point_read(ctx, argv[0], &pt);
-
-      if(argc > 1)
-        js_point_read(ctx, argv[1], &nearestPt);
 
       ret = JS_NewInt32(ctx, s->findNearest(pt, argc > 1 ? &nearestPt : nullptr));
 
@@ -232,10 +224,11 @@ js_subdiv2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
         js_ref(ctx, "edge", argv[1], val);
         JS_FreeValue(ctx, val);
       }
+
       if(argc > 2) {
         JSValue val = JS_NewInt32(ctx, vertex);
 
-        js_ref(ctx, "vertex", argv[1], val);
+        js_ref(ctx, "vertex", argv[2], val);
         JS_FreeValue(ctx, val);
       }
 

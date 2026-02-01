@@ -43,7 +43,13 @@ function locate_point(/*Mat&*/ img, /*Subdiv2D&*/ subdiv, /*Point2f*/ fp, /*Scal
   let e0 = 0,
     vertex = 0;
 
-  subdiv.locate(fp, e0, vertex);
+  subdiv.locate(
+    fp,
+    v => (e0 = v),
+    v => (vertex = v),
+  );
+
+  //console.log('locate_point', { e0, vertex });
 
   if(e0 > 0) {
     let e = e0;
@@ -63,7 +69,7 @@ function locate_point(/*Mat&*/ img, /*Subdiv2D&*/ subdiv, /*Point2f*/ fp, /*Scal
   draw_subdiv_point(img, fp, active_color);
 }
 
-function paint_voronoi(  img,   subdiv) {
+function paint_voronoi(img, subdiv) {
   let facets = [],
     centers = [];
 
@@ -85,8 +91,8 @@ function paint_voronoi(  img,   subdiv) {
 
     ifacets[0] = ifacet;
 
-    drawPolylines(img, [ifacet], true, Scalar(0,0,255), 1, LINE_AA, 0);
-    drawCircle(img, centers[i], 3, Scalar(0,0,255), FILLED, LINE_AA, 0);
+    drawPolylines(img, [ifacet], true, Scalar(0, 0, 255), 1, LINE_AA, 0);
+    drawCircle(img, centers[i], 3, Scalar(0, 0, 255), FILLED, LINE_AA, 0);
   }
 }
 
