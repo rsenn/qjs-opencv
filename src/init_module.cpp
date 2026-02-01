@@ -40,6 +40,7 @@ extern "C" int js_line_iterator_init(JSContext*, JSModuleDef*);
 extern "C" int js_fisheye_init(JSContext*, JSModuleDef*);
 extern "C" int js_matx_init(JSContext*, JSModuleDef*);
 extern "C" int js_aruco_init(JSContext*, JSModuleDef*);
+extern "C" int js_opengl_init(JSContext*, JSModuleDef*);
 
 extern "C" void js_clahe_export(JSContext*, JSModuleDef*);
 extern "C" void js_contour_export(JSContext*, JSModuleDef*);
@@ -79,6 +80,7 @@ extern "C" void js_line_iterator_export(JSContext*, JSModuleDef*);
 extern "C" void js_fisheye_export(JSContext*, JSModuleDef*);
 extern "C" void js_matx_export(JSContext*, JSModuleDef*);
 extern "C" void js_aruco_export(JSContext*, JSModuleDef*);
+extern "C" void js_opengl_export(JSContext*, JSModuleDef*);
 
 int
 js_opencv_init(JSContext* ctx, JSModuleDef* m) {
@@ -130,8 +132,9 @@ js_opencv_init(JSContext* ctx, JSModuleDef* m) {
   js_fisheye_init(ctx, m);
   // js_matx_init(ctx, m);
   js_aruco_init(ctx, m);
+  js_opengl_init(ctx, m);
 
-  return 0;
+    return 0;
 }
 
 #ifdef JS_OPENCV_MODULE
@@ -195,6 +198,7 @@ JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   js_fisheye_export(ctx, m);
   // js_matx_export(ctx, m);
   js_aruco_export(ctx, m);
+  js_opengl_export(ctx, m);
 
   return m;
 }
