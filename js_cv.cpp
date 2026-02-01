@@ -818,7 +818,16 @@ enum {
   OTHER_HSV2RGB,
   OTHER_RGB2HSV,
   OTHER_COLORCONVERT,
+  OTHER_FORMAT,
 };
+
+static JSValue
+js_cv_vector(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  int n = magic >> 16;
+  int type = magic & 0xffff;
+
+  return JS_UNDEFINED;
+}
 
 static JSValue
 js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
@@ -1318,6 +1327,44 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       ret = js_value_from(ctx, sca);
       break;
     }
+
+      /*case OTHER_FORMAT: {
+        const char* fmt;
+
+        if((fmt = JS_ToCString(ctx, argv[0]))) {
+          const char* x = fmt;
+
+          while(*x) {
+
+            if(*x == '%') {
+            again:
+              switch(*++x) {
+                case '%': break;
+                case 'l':
+                case 'z':
+                case 'j': goto again;
+
+                case 's': {
+                  break;
+                }
+                case 'c': {
+                  break;
+                }
+                case 'f': break;
+                case 'g': break;
+
+                case 's': {
+                  break;
+                }
+              }
+            }
+
+            ++x;
+          }
+        }
+
+        break;
+      }*/
   }
 
   return ret;
@@ -1431,6 +1478,34 @@ js_function_list_t js_cv_static_funcs{
     JS_CFUNC_MAGIC_DEF("HSVtoRGB", 1, js_cv_other, OTHER_HSV2RGB),
     JS_CFUNC_MAGIC_DEF("RGBtoHSV", 1, js_cv_other, OTHER_RGB2HSV),
     JS_CFUNC_MAGIC_DEF("colorConvert", 2, js_cv_other, OTHER_COLORCONVERT),
+    JS_CFUNC_MAGIC_DEF("format", 1, js_cv_other, OTHER_FORMAT),
+};
+
+#define VEC_TYPE(n, type) (((n) << 8) | (type))
+
+js_function_list_t js_cv_constructors{
+    JS_CFUNC_MAGIC_DEF("Vec2b", 0, js_cv_vector, VEC_TYPE(2, TYPEDARRAY_BITS_8 | TYPEDARRAY_UNSIGNED)),
+    JS_CFUNC_MAGIC_DEF("Vec3b", 0, js_cv_vector, VEC_TYPE(3, TYPEDARRAY_BITS_8 | TYPEDARRAY_UNSIGNED)),
+    JS_CFUNC_MAGIC_DEF("Vec4b", 0, js_cv_vector, VEC_TYPE(4, TYPEDARRAY_BITS_8 | TYPEDARRAY_UNSIGNED)),
+    JS_CFUNC_MAGIC_DEF("Vec2s", 0, js_cv_vector, VEC_TYPE(2, TYPEDARRAY_BITS_16 | TYPEDARRAY_SIGNED)),
+    JS_CFUNC_MAGIC_DEF("Vec3s", 0, js_cv_vector, VEC_TYPE(3, TYPEDARRAY_BITS_16 | TYPEDARRAY_SIGNED)),
+    JS_CFUNC_MAGIC_DEF("Vec4s", 0, js_cv_vector, VEC_TYPE(4, TYPEDARRAY_BITS_16 | TYPEDARRAY_SIGNED)),
+    JS_CFUNC_MAGIC_DEF("Vec2w", 0, js_cv_vector, VEC_TYPE(2, TYPEDARRAY_BITS_16 | TYPEDARRAY_UNSIGNED)),
+    JS_CFUNC_MAGIC_DEF("Vec3w", 0, js_cv_vector, VEC_TYPE(3, TYPEDARRAY_BITS_16 | TYPEDARRAY_UNSIGNED)),
+    JS_CFUNC_MAGIC_DEF("Vec4w", 0, js_cv_vector, VEC_TYPE(4, TYPEDARRAY_BITS_16 | TYPEDARRAY_UNSIGNED)),
+    JS_CFUNC_MAGIC_DEF("Vec2i", 0, js_cv_vector, VEC_TYPE(2, TYPEDARRAY_BITS_32 | TYPEDARRAY_SIGNED)),
+    JS_CFUNC_MAGIC_DEF("Vec3i", 0, js_cv_vector, VEC_TYPE(3, TYPEDARRAY_BITS_32 | TYPEDARRAY_SIGNED)),
+    JS_CFUNC_MAGIC_DEF("Vec4i", 0, js_cv_vector, VEC_TYPE(4, TYPEDARRAY_BITS_32 | TYPEDARRAY_SIGNED)),
+    JS_CFUNC_MAGIC_DEF("Vec6i", 0, js_cv_vector, VEC_TYPE(6, TYPEDARRAY_BITS_32 | TYPEDARRAY_SIGNED)),
+    JS_CFUNC_MAGIC_DEF("Vec8i", 0, js_cv_vector, VEC_TYPE(8, TYPEDARRAY_BITS_32 | TYPEDARRAY_SIGNED)),
+    JS_CFUNC_MAGIC_DEF("Vec2f", 0, js_cv_vector, VEC_TYPE(2, TYPEDARRAY_BITS_32 | TYPEDARRAY_FLOATING_POINT)),
+    JS_CFUNC_MAGIC_DEF("Vec3f", 0, js_cv_vector, VEC_TYPE(3, TYPEDARRAY_BITS_32 | TYPEDARRAY_FLOATING_POINT)),
+    JS_CFUNC_MAGIC_DEF("Vec4f", 0, js_cv_vector, VEC_TYPE(4, TYPEDARRAY_BITS_32 | TYPEDARRAY_FLOATING_POINT)),
+    JS_CFUNC_MAGIC_DEF("Vec6f", 0, js_cv_vector, VEC_TYPE(6, TYPEDARRAY_BITS_32 | TYPEDARRAY_FLOATING_POINT)),
+    JS_CFUNC_MAGIC_DEF("Vec2d", 0, js_cv_vector, VEC_TYPE(2, TYPEDARRAY_BITS_64 | TYPEDARRAY_FLOATING_POINT)),
+    JS_CFUNC_MAGIC_DEF("Vec3d", 0, js_cv_vector, VEC_TYPE(3, TYPEDARRAY_BITS_64 | TYPEDARRAY_FLOATING_POINT)),
+    JS_CFUNC_MAGIC_DEF("Vec4d", 0, js_cv_vector, VEC_TYPE(4, TYPEDARRAY_BITS_64 | TYPEDARRAY_FLOATING_POINT)),
+    JS_CFUNC_MAGIC_DEF("Vec6d", 0, js_cv_vector, VEC_TYPE(6, TYPEDARRAY_BITS_64 | TYPEDARRAY_FLOATING_POINT)),
 };
 
 js_function_list_t js_cv_constants{
@@ -1992,6 +2067,7 @@ js_cv_init(JSContext* ctx, JSModuleDef* m) {
     JS_SetModuleExport(ctx, m, "Exception", exception_class);
     JS_SetModuleExportList(ctx, m, js_cv_static_funcs.data(), js_cv_static_funcs.size());
     JS_SetModuleExportList(ctx, m, js_cv_constants.data(), js_cv_constants.size());
+    JS_SetModuleExportList(ctx, m, js_cv_constructors.data(), js_cv_constructors.size());
   }
 
   /*cv_class = JS_NewObject(ctx);
@@ -2026,6 +2102,7 @@ js_cv_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "Exception");
   JS_AddModuleExportList(ctx, m, js_cv_static_funcs.data(), js_cv_static_funcs.size());
   JS_AddModuleExportList(ctx, m, js_cv_constants.data(), js_cv_constants.size());
+  JS_AddModuleExportList(ctx, m, js_cv_constructors.data(), js_cv_constructors.size());
   JS_AddModuleExport(ctx, m, "default");
 }
 

@@ -280,7 +280,7 @@ js_point_inside(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
   JSPointData<double>* s = js_point_data2(ctx, this_val);
   JSRectData<double> r = js_rect_get(ctx, argv[0]);
   bool retval;
-  
+
   if(!s /*|| !r*/)
     return JS_EXCEPTION;
 
