@@ -46,6 +46,15 @@
       .getset = {.get = {.getter_magic = fgetter}, .set = {.setter_magic = fsetter}} \
     } \
   }
+#define JS_CFUNC_SPECIAL_MAGIC_DEF(n, len, cp, func1, magic_num) \
+  { \
+    .name = n, .prop_flags = JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE, .def_type = JS_DEF_CFUNC, .magic = magic_num, .u = { \
+      .func = {.length = len, .cproto = JS_CFUNC_##cp, {.constructor_magic = func1}} \
+    } \
+  }
+
+#define JS_CTOR_MAGIC_DEF(n, len, func1, magic_num) \
+     JS_CFUNC_SPECIAL_MAGIC_DEF(n, len, constructor_or_func_magic, func1, magic_num)
 
 #define JS_CONSTANT(name) JS_PROP_INT32_DEF(#name, name, 0)
 #define JS_CV_CONSTANT(name) JS_PROP_INT32_DEF(#name, cv::name, JS_PROP_ENUMERABLE)
