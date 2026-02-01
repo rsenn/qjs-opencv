@@ -60,6 +60,24 @@ js_subdiv2d_finalizer(JSRuntime* rt, JSValue val) {
   js_deallocate(rt, s);
 }
 
+enum {
+  SUBDIV2D_EDGE_DST = 077,
+  SUBDIV2D_EDGE_ORG,
+  SUBDIV2D_FIND_NEAREST,
+  SUBDIV2D_GET_EDGE,
+  SUBDIV2D_GET_EDGE_LIST,
+  SUBDIV2D_GET_LEADING_EDGE_LIST,
+  SUBDIV2D_GET_TRIANGLE_LIST,
+  SUBDIV2D_GET_VERTEX,
+  SUBDIV2D_GET_VORONOI_FACET_LIST,
+  SUBDIV2D_INIT_DELAUNAY,
+  SUBDIV2D_INSERT,
+  SUBDIV2D_LOCATE,
+  SUBDIV2D_NEXT_EDGE,
+  SUBDIV2D_ROTATE_EDGE,
+  SUBDIV2D_SYM_EDGE,
+};
+
 static JSValue
 js_subdiv2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   cv::Subdiv2D* s;
@@ -69,8 +87,7 @@ js_subdiv2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
     return JS_EXCEPTION;
 
   switch(magic) {
-    // int Subdiv2D::edgeDst(int edge, Point2f *dstpt = 0) const
-    case 0: {
+    case SUBDIV2D_EDGE_DST: {
       int32_t edge;
       JSPointData<float> dstpt;
       JS_ToInt32(ctx, &edge, argv[0]);
@@ -79,8 +96,8 @@ js_subdiv2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
       ret = JS_NewInt32(ctx, s->edgeDst(edge, argc > 1 ? &dstpt : nullptr));
       break;
     }
-    // int Subdiv2D::edgeOrg(int edge, Point2f *orgpt = 0) const
-    case 1: {
+
+    case SUBDIV2D_EDGE_ORG: {
       int32_t edge;
       JSPointData<float> orgpt;
       if(argc > 1)
@@ -88,8 +105,8 @@ js_subdiv2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
       ret = JS_NewInt32(ctx, s->edgeOrg(edge, argc > 1 ? &orgpt : nullptr));
       break;
     }
-    // int Subdiv2D::findNearest(Point2f pt, Point2f *nearestPt = 0)
-    case 2: {
+
+    case SUBDIV2D_FIND_NEAREST: {
       JSPointData<float> pt, nearestPt;
       js_point_read(ctx, argv[0], &pt);
       if(argc > 1)
@@ -97,38 +114,37 @@ js_subdiv2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
       ret = JS_NewInt32(ctx, s->findNearest(pt, argc > 1 ? &nearestPt : nullptr));
       break;
     }
-    // int Subdiv2D::getEdge(int edge, int nextEdgeType) const
-    case 3: {
+
+    case SUBDIV2D_GET_EDGE: {
       int32_t edge, nextEdgeType;
       JS_ToInt32(ctx, &edge, argv[0]);
       JS_ToInt32(ctx, &nextEdgeType, argv[1]);
       ret = JS_NewInt32(ctx, s->getEdge(edge, nextEdgeType));
       break;
     }
-    // void Subdiv2D::getEdgeList(std::vector<Vec4f> &edgeList) const
-    case 4: {
+
+    case SUBDIV2D_GET_EDGE_LIST: {
       std::vector<cv::Vec4f> edgeList;
       js_array_to(ctx, argv[0], edgeList);
       s->getEdgeList(edgeList);
       break;
     }
-    // void Subdiv2D::getLeadingEdgeList(std::vector<int> &leadingEdgeList) const
-    case 5: {
+
+    case SUBDIV2D_GET_LEADING_EDGE_LIST: {
       std::vector<int> leadingEdgeList;
       js_array_to(ctx, argv[0], leadingEdgeList);
       s->getLeadingEdgeList(leadingEdgeList);
       break;
     }
-    // void Subdiv2D::getTriangleList(std::vector<Vec6f> &triangleList) const
-    case 6: {
+
+    case SUBDIV2D_GET_TRIANGLE_LIST: {
       std::vector<cv::Vec6f> triangleList;
       js_array_to(ctx, argv[0], triangleList);
       s->getTriangleList(triangleList);
       break;
-      break;
     }
-    // Point2f Subdiv2D::getVertex(int vertex, int *firstEdge = 0) const
-    case 7: {
+
+    case SUBDIV2D_GET_VERTEX: {
       int32_t vertex, firstEdge = 0;
       JS_ToInt32(ctx, &vertex, argv[0]);
 
@@ -141,9 +157,8 @@ js_subdiv2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
       }
       break;
     }
-    // void Subdiv2D::getVoronoiFacetList(const std::vector<int> &idx,
-    // std::vector<std::vector<Point2f>> &facetList, std::vector<Point2f> &facetCenters)
-    case 8: {
+
+    case SUBDIV2D_GET_VORONOI_FACET_LIST: {
       std::vector<int> idx;
       JSContoursData<float> facetList;
       std::vector<JSPointData<float>> facetCenters;
@@ -153,16 +168,15 @@ js_subdiv2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
       s->getVoronoiFacetList(idx, facetList, facetCenters);
       break;
     }
-    // void Subdiv2D::initDelaunay(Rect rect)
-    case 9: {
+
+    case SUBDIV2D_INIT_DELAUNAY: {
       JSRectData<int> rect;
       js_rect_read(ctx, argv[0], &rect);
       s->initDelaunay(rect);
       break;
     }
-      // int Subdiv2D::insert(Point2f pt)
-      // void Subdiv2D::insert(const std::vector<Point2f> &ptvec)
-    case 10: {
+
+    case SUBDIV2D_INSERT: {
       JSPointData<float> pt;
       if(!js_point_read(ctx, argv[0], &pt)) {
         std::vector<JSPointData<float>> ptvec;
@@ -174,8 +188,7 @@ js_subdiv2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
       break;
     }
 
-    // int Subdiv2D::locate(Point2f pt, int &edge, int &vertex)
-    case 11: {
+    case SUBDIV2D_LOCATE: {
       JSPointData<float> pt;
       js_point_read(ctx, argv[0], &pt);
       int32_t edge = 0, vertex = 0;
@@ -192,23 +205,23 @@ js_subdiv2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
       }
       break;
     }
-    // int Subdiv2D::nextEdge(int edge) const
-    case 12: {
+
+    case SUBDIV2D_NEXT_EDGE: {
       int32_t edge;
       JS_ToInt32(ctx, &edge, argv[0]);
       ret = JS_NewInt32(ctx, s->nextEdge(edge));
       break;
     }
-    // int Subdiv2D::rotateEdge(int edge, int rotate) const
-    case 13: {
+
+    case SUBDIV2D_ROTATE_EDGE: {
       int32_t edge, rotate;
       JS_ToInt32(ctx, &edge, argv[0]);
       JS_ToInt32(ctx, &rotate, argv[1]);
       ret = JS_NewInt32(ctx, s->rotateEdge(edge, rotate));
       break;
     }
-    // int Subdiv2D::symEdge(int edge) const
-    case 14: {
+
+    case SUBDIV2D_SYM_EDGE: {
       int32_t edge;
       JS_ToInt32(ctx, &edge, argv[0]);
       ret = JS_NewInt32(ctx, s->symEdge(edge));
@@ -225,21 +238,21 @@ JSClassDef js_subdiv2d_class = {
 };
 
 const JSCFunctionListEntry js_subdiv2d_proto_funcs[] = {
-    JS_CFUNC_MAGIC_DEF("edgeDst", 1, js_subdiv2d_method, 0),
-    JS_CFUNC_MAGIC_DEF("edgeOrg", 1, js_subdiv2d_method, 1),
-    JS_CFUNC_MAGIC_DEF("findNearest", 1, js_subdiv2d_method, 2),
-    JS_CFUNC_MAGIC_DEF("getEdge", 2, js_subdiv2d_method, 3),
-    JS_CFUNC_MAGIC_DEF("getEdgeList", 1, js_subdiv2d_method, 4),
-    JS_CFUNC_MAGIC_DEF("getLeadingEdgeList", 1, js_subdiv2d_method, 5),
-    JS_CFUNC_MAGIC_DEF("getTriangleList", 1, js_subdiv2d_method, 6),
-    JS_CFUNC_MAGIC_DEF("getVertex", 1, js_subdiv2d_method, 7),
-    JS_CFUNC_MAGIC_DEF("getVoronoiFacetList", 3, js_subdiv2d_method, 8),
-    JS_CFUNC_MAGIC_DEF("initDelaunay", 1, js_subdiv2d_method, 9),
-    JS_CFUNC_MAGIC_DEF("insert", 1, js_subdiv2d_method, 10),
-    JS_CFUNC_MAGIC_DEF("locate", 3, js_subdiv2d_method, 11),
-    JS_CFUNC_MAGIC_DEF("nextEdge", 1, js_subdiv2d_method, 12),
-    JS_CFUNC_MAGIC_DEF("rotateEdge", 2, js_subdiv2d_method, 13),
-    JS_CFUNC_MAGIC_DEF("symEdge", 1, js_subdiv2d_method, 14),
+    JS_CFUNC_MAGIC_DEF("edgeDst", 1, js_subdiv2d_method, SUBDIV2D_EDGE_DST),
+    JS_CFUNC_MAGIC_DEF("edgeOrg", 1, js_subdiv2d_method, SUBDIV2D_EDGE_ORG),
+    JS_CFUNC_MAGIC_DEF("findNearest", 1, js_subdiv2d_method, SUBDIV2D_FIND_NEAREST),
+    JS_CFUNC_MAGIC_DEF("getEdge", 2, js_subdiv2d_method, SUBDIV2D_GET_EDGE),
+    JS_CFUNC_MAGIC_DEF("getEdgeList", 1, js_subdiv2d_method, SUBDIV2D_GET_EDGE_LIST),
+    JS_CFUNC_MAGIC_DEF("getLeadingEdgeList", 1, js_subdiv2d_method, SUBDIV2D_GET_LEADING_EDGE_LIST),
+    JS_CFUNC_MAGIC_DEF("getTriangleList", 1, js_subdiv2d_method, SUBDIV2D_GET_TRIANGLE_LIST),
+    JS_CFUNC_MAGIC_DEF("getVertex", 1, js_subdiv2d_method, SUBDIV2D_GET_VERTEX),
+    JS_CFUNC_MAGIC_DEF("getVoronoiFacetList", 3, js_subdiv2d_method, SUBDIV2D_GET_VORONOI_FACET_LIST),
+    JS_CFUNC_MAGIC_DEF("initDelaunay", 1, js_subdiv2d_method, SUBDIV2D_INIT_DELAUNAY),
+    JS_CFUNC_MAGIC_DEF("insert", 1, js_subdiv2d_method, SUBDIV2D_INSERT),
+    JS_CFUNC_MAGIC_DEF("locate", 3, js_subdiv2d_method, SUBDIV2D_LOCATE),
+    JS_CFUNC_MAGIC_DEF("nextEdge", 1, js_subdiv2d_method, SUBDIV2D_NEXT_EDGE),
+    JS_CFUNC_MAGIC_DEF("rotateEdge", 2, js_subdiv2d_method, SUBDIV2D_ROTATE_EDGE),
+    JS_CFUNC_MAGIC_DEF("symEdge", 1, js_subdiv2d_method, SUBDIV2D_SYM_EDGE),
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Subdiv2D", JS_PROP_CONFIGURABLE),
 };
 
