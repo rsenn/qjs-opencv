@@ -210,8 +210,10 @@ js_fast_line_detector_constructor(JSContext* ctx, JSValue parent, const char* na
 extern "C" JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   JSModuleDef* m;
+  
   if(!(m = JS_NewCModule(ctx, module_name, &js_fast_line_detector_init)))
     return NULL;
+
   js_fast_line_detector_export(ctx, m);
   return m;
 }
