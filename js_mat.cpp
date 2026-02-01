@@ -1611,6 +1611,12 @@ js_mat_class_create(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
       ret = js_mat_wrap(ctx, cv::Mat::ones(sizes.size(), sizes.data(), type));
       break;
     }
+
+    case 2: {
+      if(sizes.size() == 2)
+        ret = js_mat_wrap(ctx, cv::Mat::eye(sizes[0], sizes[1], type));
+      break;
+    }
   }
 
   return ret;
@@ -1934,6 +1940,7 @@ const JSCFunctionListEntry js_mat_static_funcs[] = {
     JS_CFUNC_MAGIC_DEF("xor", 3, js_mat_class_func, 6),
     JS_CFUNC_MAGIC_DEF("zeros", 1, js_mat_class_create, 0),
     JS_CFUNC_MAGIC_DEF("ones", 1, js_mat_class_create, 1),
+    JS_CFUNC_MAGIC_DEF("eye", 1, js_mat_class_create, 2),
     JS_PROP_INT32_DEF("CV_8U", CV_MAKETYPE(CV_8U, 1), JS_PROP_ENUMERABLE),
 };
 

@@ -16,6 +16,7 @@
 #include <opencv2/features2d.hpp>
 
 typedef cv::Ptr<cv::Feature2D> JSFeature2DData;
+typedef cv::Ptr<cv::DescriptorMatcher> JSDescriptorMatcherData;
 
 #ifdef USE_FEATURE2D
 #include <opencv2/xfeatures2d.hpp>
@@ -35,6 +36,124 @@ using cv::SIFT;
 using cv::SimpleBlobDetector;
 
 static SimpleBlobDetector::Params simple_blob_params;
+
+typedef cv::Ptr<cv::DescriptorMatcher> JSDescriptorMatcherData;
+
+extern "C" {
+thread_local JSValue descriptor_matcher_proto = JS_UNDEFINED, descriptor_matcher_class = JS_UNDEFINED, descriptor_matcher_params_proto = JS_UNDEFINED;
+thread_local JSClassID js_descriptor_matcher_class_id = 0;
+}
+
+JSDescriptorMatcherData*
+js_descriptor_matcher_data(JSValueConst val) {
+  return static_cast<JSDescriptorMatcherData*>(JS_GetOpaque(val, js_descriptor_matcher_class_id));
+}
+
+JSDescriptorMatcherData*
+js_descriptor_matcher_data2(JSContext* ctx, JSValueConst val) {
+  return static_cast<JSDescriptorMatcherData*>(JS_GetOpaque2(ctx, val, js_descriptor_matcher_class_id));
+}
+
+enum {
+  DESCRIPTOR_MATCHER_BF = 0,
+  DESCRIPTOR_MATCHER_FLANN_BASED,
+};
+
+static JSValue
+js_descriptor_matcher_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[], int magic) {
+  JSDescriptorMatcherData* dm;
+  JSValue obj = JS_UNDEFINED, proto;
+
+  if(!(dm = js_allocate<JSDescriptorMatcherData>(ctx)))
+    return JS_EXCEPTION;
+
+  switch(magic) {
+    case DESCRIPTOR_MATCHER_BF: {
+      int32_t normType = cv::NORM_L2;
+      bool crossCheck = false;
+
+      if(argc > 0)
+        normType = js_value_to<int32_t>(ctx, argv[0]);
+      if(argc > 1)
+        crossCheck = js_value_to<BOOL>(ctx, argv[1]);
+
+      new(dm) JSDescriptorMatcherData(new cv::BFMatcher(normType, crossCheck));
+      break;
+    }
+    case DESCRIPTOR_MATCHER_FLANN_BASED: {
+      new(dm) JSDescriptorMatcherData(new cv::FlannBasedMatcher());
+      break;
+    }
+  }
+
+  /* using new_target to get the prototype is necessary when the class is extended. */
+  /*proto = JS_GetPropertyStr(ctx, new_target, "prototype");
+  if(JS_IsException(proto))
+    goto fail;*/
+
+  obj = JS_NewObjectProtoClass(ctx, descriptor_matcher_proto, js_descriptor_matcher_class_id);
+  // JS_FreeValue(ctx, proto);
+
+  if(JS_IsException(obj))
+    goto fail;
+
+  JS_SetOpaque(obj, dm);
+
+  return obj;
+
+fail:
+  js_deallocate(ctx, dm);
+  JS_FreeValue(ctx, obj);
+  return JS_EXCEPTION;
+}
+
+void
+js_descriptor_matcher_finalizer(JSRuntime* rt, JSValue val) {
+  JSDescriptorMatcherData* dm;
+
+  if((dm = js_descriptor_matcher_data(val))) {
+    cv::Algorithm* ptr = dm->get();
+
+    ptr->~Algorithm();
+
+    js_deallocate(rt, dm);
+  }
+}
+
+enum {
+  DESCRIPTOR_MATCHER_GETNUMBEROFDESCRIPTOR_MATCHERS,
+  DESCRIPTOR_MATCHER_ITERATE,
+  DESCRIPTOR_MATCHER_GETLABELS,
+  DESCRIPTOR_MATCHER_GETLABELCONTOURMASK,
+
+};
+
+static JSValue
+js_descriptor_matcher_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  JSDescriptorMatcherData* dm;
+  JSValue ret = JS_UNDEFINED;
+
+  if(!(dm = js_descriptor_matcher_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  cv::BFMatcher* bfm;
+  cv::FlannBasedMatcher* flm;
+
+  switch(magic) {}
+
+  return ret;
+}
+
+JSClassDef js_descriptor_matcher_class = {
+    .class_name = "DescriptorMatcher",
+    .finalizer = js_descriptor_matcher_finalizer,
+};
+
+const JSCFunctionListEntry js_descriptor_matcher_proto_funcs[] = {
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "DescriptorMatcher", JS_PROP_CONFIGURABLE),
+};
+
+const JSCFunctionListEntry js_descriptor_matcher_static_funcs[] = {};
 
 extern "C" {
 thread_local JSValue feature2d_proto = JS_UNDEFINED, feature2d_class = JS_UNDEFINED;
@@ -1010,6 +1129,11 @@ static JSConstructor js_feature2d_classes[] = {
     JSConstructor(js_feature2d_vgg, "VGG", js_feature2d_vgg_static_funcs),
 };
 
+const JSCFunctionListEntry js_feature2d_global_funcs[] = {
+    JS_CTOR_MAGIC_DEF("BFMatcher", 0, js_descriptor_matcher_constructor, DESCRIPTOR_MATCHER_BF),
+    JS_CTOR_MAGIC_DEF("FlannBasedMatcher", 0, js_descriptor_matcher_constructor, DESCRIPTOR_MATCHER_FLANN_BASED),
+};
+
 extern "C" int
 js_feature2d_init(JSContext* ctx, JSModuleDef* m) {
 
@@ -1025,6 +1149,20 @@ js_feature2d_init(JSContext* ctx, JSModuleDef* m) {
   JS_SetPropertyFunctionList(ctx, feature2d_class, js_feature2d_static_funcs, countof(js_feature2d_static_funcs));
   JS_SetConstructor(ctx, feature2d_class, feature2d_proto);
 
+  JS_NewClassID(&js_descriptor_matcher_class_id);
+  JS_NewClass(JS_GetRuntime(ctx), js_descriptor_matcher_class_id, &js_descriptor_matcher_class);
+
+  descriptor_matcher_proto = JS_NewObject(ctx);
+  JS_SetPropertyFunctionList(ctx, descriptor_matcher_proto, js_descriptor_matcher_proto_funcs, countof(js_descriptor_matcher_proto_funcs));
+  JS_SetClassProto(ctx, js_descriptor_matcher_class_id, descriptor_matcher_proto);
+
+  // descriptor_matcher_class = JS_NewCFunction2(ctx, js_descriptor_matcher_constructor, "DescriptorMatcher", 0, JS_CFUNC_constructor, 0);
+  descriptor_matcher_class = JS_NewObjectProto(ctx, JS_NULL);
+
+  /* set proto.constructor and ctor.prototype */
+  JS_SetConstructor(ctx, descriptor_matcher_class, descriptor_matcher_proto);
+  JS_SetPropertyFunctionList(ctx, descriptor_matcher_class, js_descriptor_matcher_static_funcs, countof(js_descriptor_matcher_static_funcs));
+
   for(auto& cl : js_feature2d_classes)
     cl.create(ctx);
 
@@ -1033,6 +1171,8 @@ js_feature2d_init(JSContext* ctx, JSModuleDef* m) {
 
     for(const auto& cl : js_feature2d_classes)
       cl.set_export(ctx, m);
+
+    JS_SetModuleExportList(ctx, m, js_feature2d_global_funcs, countof(js_feature2d_global_funcs));
   }
 
   return 0;
@@ -1050,6 +1190,8 @@ js_feature2d_export(JSContext* ctx, JSModuleDef* m) {
 
   for(const auto& cl : js_feature2d_classes)
     cl.add_export(ctx, m);
+
+  JS_AddModuleExportList(ctx, m, js_feature2d_global_funcs, countof(js_feature2d_global_funcs));
 }
 
 extern "C" JSModuleDef*
