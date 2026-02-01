@@ -36,7 +36,7 @@ bitwise_not(gray, gray2);
   console.log('gray2.size', gray2.size);
   console.log('gray2.channels', gray2.channels);*/
 
-  adaptiveThreshold(gray, bw, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY, 15, -2);
+  adaptiveThreshold(gray2, bw, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY, 15, -2);
 
   // Show binary image
   show_wait_destroy('binary', bw);

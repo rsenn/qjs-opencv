@@ -417,7 +417,7 @@ js_cv_getticks(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
 }
 
 enum {
-  BITWISE_AND=0,
+  BITWISE_AND = 0,
   BITWISE_OR,
   BITWISE_XOR,
   BITWISE_NOT,
@@ -426,16 +426,15 @@ enum {
 static JSValue
 js_cv_bitwise(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSInputOutputArray src = js_cv_inputoutputarray(ctx, argv[0]);
-  JSInputArray other;
-  JSInputOutputArray dst = src;
-
+  JSInputOutputArray other = cv::noArray(), dst = src;
   int i = 1;
 
   if(magic != BITWISE_NOT)
     if(i < argc)
-      other = js_input_array(ctx, argv[i++]);
+      other = js_cv_inputoutputarray(ctx, argv[i++]);
 
-          if(i < argc) dst = js_umat_or_mat(ctx, argv[i++]);
+  if(i < argc)
+    dst = js_cv_inputoutputarray(ctx, argv[i++]);
 
   JSInputArray mask = cv::noArray();
   if(i < argc)
