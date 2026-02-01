@@ -1,4 +1,5 @@
 #include "js_cv.hpp"
+#include "js_mat.hpp"
 #include "js_umat.hpp"
 #include "js_size.hpp"
 #include "jsbindings.hpp"
@@ -237,8 +238,14 @@ js_buffer_get(JSContext* ctx, JSValueConst this_val, int magic) {
 
 enum {
   BUFFER_BIND = 0,
+  BUFFER_CLONE,
+  BUFFER_COPY_FROM,
+  BUFFER_COPY_TO,
+  BUFFER_CREATE,
   BUFFER_RELEASE,
   BUFFER_SET_AUTO_RELEASE,
+  BUFFER_MAP_HOST,
+  BUFFER_UNMAP_HOST,
 };
 
 static JSValue
@@ -257,6 +264,76 @@ js_buffer_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
         b->bind(cv::ogl::Buffer::Target(target));
         break;
       }
+
+      case BUFFER_CLONE: {
+        cv::ogl::Buffer::Target target = cv::ogl::Buffer::ARRAY_BUFFER;
+        bool autoRelease = false;
+        int i = 0;
+
+        if(i < argc)
+          target = cv::ogl::Buffer::Target(js_value_to<int32_t>(ctx, argv[i++]));
+
+        if(i < argc)
+          autoRelease = js_value_to<BOOL>(ctx, argv[i++]);
+
+        b->clone(target, autoRelease);
+        break;
+      }
+
+      case BUFFER_COPY_FROM: {
+        JSInputArray arr = js_input_array(ctx, argv[0]);
+        cv::ogl::Buffer::Target target = cv::ogl::Buffer::ARRAY_BUFFER;
+        bool autoRelease = false;
+
+        if(argc > 1)
+          target = cv::ogl::Buffer::Target(js_value_to<int32_t>(ctx, argv[1]));
+
+        if(argc > 2)
+          autoRelease = js_value_to<BOOL>(ctx, argv[2]);
+
+        b->copyFrom(arr, target, autoRelease);
+        break;
+      }
+
+      case BUFFER_COPY_TO: {
+        JSOutputArray arr = js_cv_outputarray(ctx, argv[0]);
+
+        b->copyTo(arr);
+        break;
+      }
+
+      case BUFFER_CREATE: {
+        JSSizeData<int> asize;
+        int32_t atype;
+        cv::ogl::Buffer::Target target = cv::ogl::Buffer::ARRAY_BUFFER;
+        bool autoRelease = false;
+        int i = 0;
+
+        if(i < argc) {
+          if(JS_IsNumber(argv[i])) {
+            asize.height = js_value_to<uint32_t>(ctx, argv[i++]);
+            asize.width = js_value_to<uint32_t>(ctx, argv[i++]);
+          } else if(!js_size_read(ctx, argv[i], &asize)) {
+            i++;
+          } else {
+            ret = JS_ThrowTypeError(ctx, "argument 1 must be Number or cv::Size");
+            break;
+          }
+        }
+
+        if(i < argc)
+          atype = js_value_to<int32_t>(ctx, argv[i++]);
+
+        if(i < argc && JS_IsNumber(argv[i]))
+          target = cv::ogl::Buffer::Target(js_value_to<int32_t>(ctx, argv[i++]));
+
+        if(i < argc)
+          autoRelease = js_value_to<BOOL>(ctx, argv[i++]);
+
+        b->create(asize, atype, target, autoRelease);
+        break;
+      }
+
       case BUFFER_RELEASE: {
         b->release();
         break;
@@ -268,6 +345,16 @@ js_buffer_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
           autoRelease = js_value_to<BOOL>(ctx, argv[0]);
 
         b->setAutoRelease(autoRelease);
+        break;
+      }
+
+      case BUFFER_MAP_HOST: {
+        ret = js_mat_wrap(ctx, b->mapHost(cv::ogl::Buffer::Access(js_value_to<int32_t>(ctx, argv[0]))));
+        break;
+      }
+
+      case BUFFER_UNMAP_HOST: {
+        b->unmapHost();
         break;
       }
     }
@@ -283,11 +370,17 @@ static JSClassDef js_buffer_class = {
 
 static const JSCFunctionListEntry js_buffer_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("bind", 1, js_buffer_method, BUFFER_BIND),
+    JS_CFUNC_MAGIC_DEF("clone", 0, js_buffer_method, BUFFER_CLONE),
+    JS_CFUNC_MAGIC_DEF("copyFrom", 1, js_buffer_method, BUFFER_COPY_FROM),
+    JS_CFUNC_MAGIC_DEF("copyTo", 1, js_buffer_method, BUFFER_COPY_TO),
+    JS_CFUNC_MAGIC_DEF("create", 2, js_buffer_method, BUFFER_CREATE),
 
-    // XXX: TODO: clone(), copyFrom(), copyTo(), create(), [un]map{Device,Host}()
+    // XXX: TODO: [un]mapDevice()
 
     JS_CFUNC_MAGIC_DEF("release", 0, js_buffer_method, BUFFER_RELEASE),
     JS_CFUNC_MAGIC_DEF("setAutoRelease", 1, js_buffer_method, BUFFER_SET_AUTO_RELEASE),
+    JS_CFUNC_MAGIC_DEF("mapHost", 1, js_buffer_method, BUFFER_MAP_HOST),
+    JS_CFUNC_MAGIC_DEF("unmapHost", 0, js_buffer_method, BUFFER_UNMAP_HOST),
 
     JS_CGETSET_MAGIC_DEF("id", js_buffer_get, 0, BUFFER_ID),
     JS_CGETSET_MAGIC_DEF("channels", js_buffer_get, 0, BUFFER_CHANNELS),
@@ -512,8 +605,8 @@ js_texture2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 
         if(i < argc) {
           if(JS_IsNumber(argv[i])) {
-            asize.width = js_value_to<uint32_t>(ctx, argv[i++]);
             asize.height = js_value_to<uint32_t>(ctx, argv[i++]);
+            asize.width = js_value_to<uint32_t>(ctx, argv[i++]);
           } else if(!js_size_read(ctx, argv[i], &asize)) {
             i++;
           } else {
