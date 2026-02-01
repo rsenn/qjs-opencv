@@ -1154,10 +1154,9 @@ js_mat_set(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[])
 
 static JSValue
 js_mat_set_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  JSMatData* m = js_mat_data2(ctx, this_val);
-  /*std::vector<bool> defined;*/
+  JSMatData* m;
 
-  if(!m)
+  if(!(m = js_mat_data2(ctx, this_val))
     return JS_EXCEPTION;
 
   JSInputArray mask = cv::noArray();
