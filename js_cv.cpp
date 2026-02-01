@@ -823,13 +823,26 @@ enum {
 
 static JSValue
 js_cv_vector(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
-  int n = magic >> 16;
-  TypedArrayType type(TypedArrayValue  ( magic & 0xffff));
+  int n = magic >> 8;
+  TypedArrayType type(TypedArrayValue(magic & 0xffff));
+  std::vector<JSValue> args;
 
+  if(argc > n)
+    argc = n;
 
-  std::string ctor_name = type.constructor_name();
+  for(int i = 0; i < argc; i++)
+    args.push_back(argv[i]);
 
-  return JS_UNDEFINED;
+  for(int i = argc; i < n; i++)
+    args.push_back(JS_UNDEFINED);
+
+  JSValue ctor = js_typedarray_ctor(ctx, type);
+  JSValue of = JS_GetPropertyStr(ctx, ctor, "of");
+  JSValue ret = JS_Call(ctx, of, ctor, args.size(), args.data());
+
+  JS_FreeValue(ctx, of);
+  JS_FreeValue(ctx, ctor);
+  return ret;
 }
 
 static JSValue

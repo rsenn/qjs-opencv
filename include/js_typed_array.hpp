@@ -268,6 +268,15 @@ js_typedarray_new(JSContext* ctx, JSValueConst buffer, uint32_t byteOffset, uint
 }
 
 static inline JSValue
+js_typedarray_ctor(JSContext* ctx, TypedArrayType type) {
+  JSValue global, ctor, ret;
+  global = JS_GetGlobalObject(ctx);
+  ctor = JS_GetPropertyStr(ctx, global, type.constructor_name().c_str());
+  JS_FreeValue(ctx, global);
+  return ctor;
+}
+
+static inline JSValue
 js_typedarray_new(JSContext* ctx, JSValueConst buffer, uint32_t byteOffset, uint32_t length, const TypedArrayType& props) {
   auto range = js_arraybuffer_range(ctx, buffer);
   assert(byteOffset + length * props.byte_size <= range.size());
