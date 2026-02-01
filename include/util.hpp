@@ -49,7 +49,7 @@
 #define JS_CFUNC_SPECIAL_MAGIC_DEF(n, len, cp, func1, magic_num) \
   { \
     .name = n, .prop_flags = JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE, .def_type = JS_DEF_CFUNC, .magic = magic_num, .u = { \
-      .func = {.length = len, .cproto = JS_CFUNC_##cp, {.constructor_magic = func1}} \
+      .func = {.length = len, .cproto = JS_CFUNC_##cp, .cfunc = {.constructor_magic = func1}} \
     } \
   }
 
