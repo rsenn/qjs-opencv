@@ -237,6 +237,8 @@ js_buffer_get(JSContext* ctx, JSValueConst this_val, int magic) {
 
 enum {
   BUFFER_BIND = 0,
+  BUFFER_RELEASE,
+  BUFFER_SET_AUTO_RELEASE,
 };
 
 static JSValue
@@ -255,6 +257,19 @@ js_buffer_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
         b->bind(cv::ogl::Buffer::Target(target));
         break;
       }
+      case BUFFER_RELEASE: {
+        b->release();
+        break;
+      }
+
+      case BUFFER_SET_AUTO_RELEASE: {
+        bool autoRelease = false;
+        if(argc > 0)
+          autoRelease = js_value_to<BOOL>(ctx, argv[0]);
+
+        b->setAutoRelease(autoRelease);
+        break;
+      }
     }
   } catch(const cv::Exception& e) { ret = js_cv_throw(ctx, e); }
 
@@ -268,6 +283,12 @@ static JSClassDef js_buffer_class = {
 
 static const JSCFunctionListEntry js_buffer_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("bind", 1, js_buffer_method, BUFFER_BIND),
+
+    // XXX: TODO: clone(), copyFrom(), copyTo(), create(), [un]map{Device,Host}()
+
+    JS_CFUNC_MAGIC_DEF("release", 0, js_buffer_method, BUFFER_RELEASE),
+    JS_CFUNC_MAGIC_DEF("setAutoRelease", 1, js_buffer_method, BUFFER_SET_AUTO_RELEASE),
+
     JS_CGETSET_MAGIC_DEF("id", js_buffer_get, 0, BUFFER_ID),
     JS_CGETSET_MAGIC_DEF("channels", js_buffer_get, 0, BUFFER_CHANNELS),
     JS_CGETSET_MAGIC_DEF("cols", js_buffer_get, 0, BUFFER_COLS),
@@ -775,6 +796,7 @@ enum {
   OPENGL_CONVERT_FROM_GL_TEXTURE_2D = 0,
   OPENGL_CONVERT_TO_GL_TEXTURE_2D,
   OPENGL_MAP_GL_BUFFER,
+  OPENGL_RENDER,
   OPENGL_UNMAP_GL_BUFFER,
 };
 
@@ -821,6 +843,49 @@ js_opengl_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
         break;
       }
 
+      case OPENGL_RENDER: {
+        JSTexture2DData* tx;
+        JSArraysData* ar;
+
+        if((tx = js_texture2d_data(argv[0]))) {
+          JSRectData<double> wndRect(0, 0, 1, 1), texRect(0, 0, 1, 1);
+
+          if(argc > 1)
+            js_rect_read(ctx, argv[1], &wndRect);
+
+          if(argc > 2)
+            js_rect_read(ctx, argv[2], &texRect);
+
+          cv::ogl::render(*tx, wndRect, texRect);
+        } else if((ar = js_arrays_data(argv[0]))) {
+          int32_t mode = cv::ogl::POINTS;
+          cv::Scalar color = cv::Scalar::all(255);
+
+          if(argc <= 1 || JS_IsNumber(argv[1])) {
+
+            if(argc > 1)
+              mode = js_value_to<int32_t>(ctx, argv[1]);
+
+            if(argc > 2)
+              js_value_to(ctx, argv[2], color);
+
+            cv::ogl::render(*ar, mode, color);
+          } else {
+            JSInputArray indices = js_input_array(ctx, argv[1]);
+
+            if(argc > 2)
+              mode = js_value_to<int32_t>(ctx, argv[2]);
+
+            if(argc > 3)
+              js_value_to(ctx, argv[3], color);
+
+            cv::ogl::render(*ar, indices, mode, color);
+          }
+        }
+
+        break;
+      }
+
       case OPENGL_UNMAP_GL_BUFFER: {
         JSUMatData* um;
 
@@ -840,7 +905,8 @@ js_function_list_t js_opengl_ogl_funcs{
     JS_CFUNC_MAGIC_DEF("convertFromGLTexture2D", 2, js_opengl_func, OPENGL_CONVERT_FROM_GL_TEXTURE_2D),
     JS_CFUNC_MAGIC_DEF("convertToGLTexture2D", 2, js_opengl_func, OPENGL_CONVERT_TO_GL_TEXTURE_2D),
     JS_CFUNC_MAGIC_DEF("mapGLBuffer", 1, js_opengl_func, OPENGL_MAP_GL_BUFFER),
-    // XXX: TODO: render() function
+    JS_CFUNC_MAGIC_DEF("render", 1, js_opengl_func, OPENGL_RENDER),
+    // XXX: TODO: setGIDevice() function
     JS_CFUNC_MAGIC_DEF("unmapGLBuffer", 1, js_opengl_func, OPENGL_UNMAP_GL_BUFFER),
     JS_PROP_INT32_DEF("POINTS", cv::ogl::POINTS, JS_PROP_CONFIGURABLE),
     JS_PROP_INT32_DEF("LINES", cv::ogl::LINES, JS_PROP_CONFIGURABLE),
