@@ -1,4 +1,5 @@
 #include "js_alloc.hpp"
+#include "js_cv.hpp"
 #include "js_size.hpp"
 #include "js_umat.hpp"
 #include "jsbindings.hpp"
