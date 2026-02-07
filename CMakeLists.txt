@@ -9,7 +9,8 @@ set(DISABLE_WERROR TRUE CACHE BOOL "Disable -Werror flag" FORCE)
 set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "build type")
 
 if(CACHE{CMAKE_BUILD_TYPE})
-  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release MinSizeRel RelWithDebInfo)
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release MinSizeRel
+                                               RelWithDebInfo)
 endif(CACHE{CMAKE_BUILD_TYPE})
 
 set(QUICKJS_SOURCES_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/quickjs)
@@ -39,7 +40,8 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/JSBindings.cmake)
 if(UNIX AND NOT APPLE)
   include(GNUInstallDirs)
 elseif(NOT DEFINED CMAKE_INSTALL_LIBDIR)
-  set(CMAKE_INSTALL_LIBDIR "" CACHE PATH "Specify the output directory for libraries (default is lib)")
+  set(CMAKE_INSTALL_LIBDIR ""
+      CACHE PATH "Specify the output directory for libraries (default is lib)")
 endif()
 
 message(STATUS "Finding QuickJS...")
@@ -88,7 +90,8 @@ if(HAVE_LIBDL)
   # message("Found dlfcn library: ${LIBDL}")
 endif(HAVE_LIBDL)
 
-check_library_exists(json-cpp ZN4YAML6detail9node_data9reset_mapEv /usr JSON_CPP)
+check_library_exists(json-cpp ZN4YAML6detail9node_data9reset_mapEv /usr
+                     JSON_CPP)
 
 check_include_def(X11/X.h)
 check_library_exists(X11 XOpenDisplay /usr/lib HAVE_LIBX11)
@@ -107,7 +110,8 @@ link_directories(${OPENCV_LIBDIR})
 #set(CMAKE_INSTALL_RPATH "${OPENCV_LIB_DIR}" CACHE PATH "Build with install rpath" FORCE)
 set(CMAKE_INSTALL_RPATH "${OPENCV_LIBDIR}")
 
-include_directories(include ${OPENCV_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR} lsd/include)
+include_directories(include ${OPENCV_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}
+                    lsd/include)
 
 include(CheckIncludeFileCXX)
 
@@ -131,7 +135,8 @@ endif(HAVE_OPENCV2_FREETYPE_HPP AND OPENCV_FREETYPE)
 
 if(USE_FEATURE2D)
   add_definitions(-DUSE_FEATURE2D=1)
-  set(OPENCV_XFEATURES2D_LIBRARY opencv_xfeatures2d CACHE STRING "x features 2d library")
+  set(OPENCV_XFEATURES2D_LIBRARY opencv_xfeatures2d
+      CACHE STRING "x features 2d library")
   set(FEATURE2D_SOURCE js_feature2d.cpp)
 
   check_include_file_cxx(opencv2/xfeatures2d.hpp HAVE_OPENCV2_XFEATURES2D_HPP)
@@ -143,7 +148,8 @@ endif()
 if(USE_BARCODE)
   add_definitions(-DUSE_BARCODE=1)
   set(BARCODE_SOURCE js_barcode_detector.cpp)
-  check_library_exists(opencv_barcode _ZN2cv7barcode15BarcodeDetectorD1Ev "${OPENCV_LIBDIR}" OPENCV_BARCODE)
+  check_library_exists(opencv_barcode _ZN2cv7barcode15BarcodeDetectorD1Ev
+                       "${OPENCV_LIBDIR}" OPENCV_BARCODE)
 
   check_include_file_cxx(opencv2/barcode.hpp HAVE_OPENCV2_BARCODE_HPP)
   if(HAVE_OPENCV2_BARCODE_HPP)
@@ -152,7 +158,8 @@ if(USE_BARCODE)
 endif()
 
 check_include_cxx_def(opencv2/ximgproc.hpp HAVE_OPENCV2_XIMGPROC_HPP)
-check_include_cxx_def(opencv2/ximgproc/find_ellipses.hpp HAVE_OPENCV2_XIMGPROC_FIND_ELLIPSES_HPP)
+check_include_cxx_def(opencv2/ximgproc/find_ellipses.hpp
+                      HAVE_OPENCV2_XIMGPROC_FIND_ELLIPSES_HPP)
 
 
 
@@ -168,7 +175,8 @@ if(HAVE_OPENCV2_XIMGPROC_FIND_ELLIPSES_HPP)
 endif(HAVE_OPENCV2_XIMGPROC_FIND_ELLIPSES_HPP)
 
 include(CheckCXXSymbolExists)
-check_cxx_symbol_exists(cv::AffineFeature opencv2/features2d.hpp HAVE_OPENCV_AFFINE_FEATURE)
+check_cxx_symbol_exists(cv::AffineFeature opencv2/features2d.hpp
+                        HAVE_OPENCV_AFFINE_FEATURE)
 
 check_include_file_cxx(opencv2/objdetect/charuco_detector.hpp HAVE_OPENCV2_CHARUCO_DETECTOR_HPP)
 if(HAVE_OPENCV2_CHARUCO_DETECTOR_HPP)
@@ -254,8 +262,8 @@ if(USE_LIBCAMERA OR USE_LCCV)
   include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/libcamera.cmake)
 endif(USE_LIBCAMERA OR USE_LCCV)
 
-file(GLOB OPENCV_SOURCES js_*.[ch]pp ${FEATURE2D_SOURCE} include/*.hpp src/*.cpp gifenc/gifenc.c algorithms/*.cpp
-     lsd/src/*.cpp)
+file(GLOB OPENCV_SOURCES js_*.[ch]pp ${FEATURE2D_SOURCE} include/*.hpp
+     src/*.cpp gifenc/gifenc.c algorithms/*.cpp lsd/src/*.cpp)
 #dump(OPENCV_SOURCES)
 
 if(USE_LCCV)
@@ -269,7 +277,8 @@ endif(USE_LCCV)
 #list(REMOVE_ITEM OPENCV_SOURCES init_module.cpp)
 #list(REMOVE_ITEM OPENCV_SOURCES js.hpp js.cpp)
 
-set(CMAKE_CXX11_EXTENSION_COMPILE_OPTION "${CXX_STANDARD_FLAG}" CACHE STRING "" FORCE)
+set(CMAKE_CXX11_EXTENSION_COMPILE_OPTION "${CXX_STANDARD_FLAG}" CACHE STRING ""
+                                                                      FORCE)
 
 #if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/LCCV")
 if(USE_LCCV)
@@ -278,9 +287,10 @@ if(USE_LCCV)
   add_subdirectory(LCCV)
   include_directories(LCCV/include)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -fvisibility=hidden")
-  set(LCCV_LIBRARIES "${CMAKE_CURRENT_BINARY_DIR}/LCCV/liblccv.a" camera camera-base event event_pthreads
-                     Threads::Threads)
-  set(LCCV_LIBRARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/LCCV" CACHE PATH "liblccv library directory")
+  set(LCCV_LIBRARIES "${CMAKE_CURRENT_BINARY_DIR}/LCCV/liblccv.a" camera
+                     camera-base event event_pthreads Threads::Threads)
+  set(LCCV_LIBRARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/LCCV"
+      CACHE PATH "liblccv library directory")
 
   link_directories(${LCCV_LIBRARY_DIR})
   list(APPEND jsbindings_LINK_DIRECTORIES ${LCCV_LIBRARY_DIR})
@@ -298,9 +308,17 @@ endif(USE_LCCV)
 #make_module(opencv init_module.cpp)
 
 list(APPEND jsbindings_LINK_DIRECTORIES ${OPENCV_LIBDIR})
-list(APPEND jsbindings_LIBRARIES ${QUICKJS_LIBRARY} ${PNG_LIBRARIES} ${OPENCV_XIMGPROC_LIBRARY}
-     ${OPENCV_XFEATURES2D_LIBRARY} ${OPENCV_FREETYPE_LIBRARY} ${OPENCV_BGSEGM_LIBRARY} ${OPENCV_EXTRA_LIBRARIES}
-     ${OPENCV_LIBRARIES})
+list(
+  APPEND
+  jsbindings_LIBRARIES
+  ${QUICKJS_LIBRARY}
+  ${PNG_LIBRARIES}
+  ${OPENCV_XIMGPROC_LIBRARY}
+  ${OPENCV_XFEATURES2D_LIBRARY}
+  ${OPENCV_FREETYPE_LIBRARY}
+  ${OPENCV_BGSEGM_LIBRARY}
+  ${OPENCV_EXTRA_LIBRARIES}
+  ${OPENCV_LIBRARIES})
 
 if(USE_LIBCAMERA OR USE_LCCV)
   list(APPEND jsbindings_LIBRARIES ${pkgcfg_lib_LIBCAMERA_camera})
