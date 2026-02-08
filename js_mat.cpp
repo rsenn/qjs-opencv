@@ -700,9 +700,9 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
   JSValue ret = JS_UNDEFINED;
   JSColorData<double> color;
   double value = 0;
-  JSMatData *input, *output, *other;
+  JSMatData *input, *output = nullptr, *other = nullptr;
   double scale = 1.0;
-  // std::array<uint8_t, 4> arr;
+  std::array<double, 4> arr;
 
   if((input = js_mat_data2(ctx, this_val)) == nullptr)
     return JS_EXCEPTION;
@@ -713,7 +713,7 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
   if(JS_IsNumber(argv[0])) {
     JS_ToFloat64(ctx, &value, argv[0]);
   } else if((other = js_mat_data_nothrow(argv[0])) == nullptr) {
-    // js_array_to(ctx, argv[0], arr);
+    js_array_to(ctx, argv[0], arr);
     js_color_read(ctx, argv[0], &color);
   }
 
@@ -736,7 +736,6 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
     cv::Mat& mat = *input;
 
     if(mat.channels() == 1) {
-
       if(mat.depth() == 0) {
         switch(magic) {
           case MAT_EXPR_AND: mat &= (uchar)value; break;
