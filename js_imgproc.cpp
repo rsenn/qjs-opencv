@@ -2364,7 +2364,6 @@ js_function_list_t js_imgproc_static_funcs{
     JS_CV_CONSTANT(GC_PR_BGD),
     JS_CV_CONSTANT(GC_PR_FGD),
 
-
 };
 
 extern "C" int

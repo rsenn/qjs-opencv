@@ -47,7 +47,8 @@ enum {
   PROP_ELEMSIZE1
 };
 enum {
-  METHOD_COL = 0,
+  METHOD_CREATE = 0,
+  METHOD_COL,
   METHOD_ROW,
   METHOD_COL_RANGE,
   METHOD_ROW_RANGE,
@@ -467,19 +468,29 @@ js_mat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
   if(argc > 0) {
     JS_ToInt64(ctx, &i, argv[0]);
     pt = js_point_get(ctx, argv[0]);
-    if(argc > 1) {
+
+    if(argc > 1) 
       JS_ToInt64(ctx, &i2, argv[1]);
-    }
   }
 
   try {
     switch(magic) {
+      case METHOD_CREATE: {
+        m->~JSMatData();
+
+        if(!js_mat_initialize(ctx, this_val, argc, argv))
+          ret = JS_EXCEPTION;
+
+        break;
+      }
       case METHOD_TOTAL: {
         if(argc == 0) {
           ret = JS_NewInt64(ctx, m->total());
         } else {
           int32_t start, end = INT_MAX;
+        
           JS_ToInt32(ctx, &start, argv[0]);
+         
           if(argc > 1)
             JS_ToInt32(ctx, &end, argv[1]);
 
@@ -1890,6 +1901,9 @@ const JSCFunctionListEntry js_mat_proto_funcs[] = {
     JS_CGETSET_MAGIC_DEF("elemSize1", js_mat_get_props, NULL, PROP_ELEMSIZE1),
     JS_CGETSET_DEF("buffer", js_mat_buffer, NULL),
     JS_CGETSET_DEF("array", js_mat_array, NULL),
+
+    JS_CFUNC_MAGIC_DEF("create", 1, js_mat_funcs, METHOD_CREATE),
+
     JS_CFUNC_MAGIC_DEF("total", 0, js_mat_funcs, METHOD_TOTAL),
     JS_CFUNC_MAGIC_DEF("col", 1, js_mat_funcs, METHOD_COL),
     JS_CFUNC_MAGIC_DEF("row", 1, js_mat_funcs, METHOD_ROW),

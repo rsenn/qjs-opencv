@@ -65,7 +65,7 @@ class GCApplication {
     this.image = _image;
     this.winName = _winName;
 
-    this.mask = new Mat(this.image.size, CV_8UC1);
+    this.mask.create(this.image.size, CV_8UC1);
     this.reset();
   }
 
@@ -148,25 +148,30 @@ class GCApplication {
   mouseClick(event, x, y, flags, user) {
     // TODO add bad args check
     switch (event) {
-      case EVENT_LBUTTONDOWN: // set rect or GC_BGD(GC_FGD) labels
-        {
-          let isb = (flags & BGD_KEY) != 0,
-            isf = (flags & FGD_KEY) != 0;
-          if(this.rectState == GCApplication.NOT_SET && !isb && !isf) {
-            this.rectState = GCApplication.IN_PROCESS;
-            this.rect = new Rect(x, y, 1, 1);
-          }
-          if((isb || isf) && this.rectState == GCApplication.SET) this.lblsState = GCApplication.IN_PROCESS;
+      // set rect or GC_BGD(GC_FGD) labels
+      case EVENT_LBUTTONDOWN: {
+        let isb = (flags & BGD_KEY) != 0,
+          isf = (flags & FGD_KEY) != 0;
+
+        if(this.rectState == GCApplication.NOT_SET && !isb && !isf) {
+          this.rectState = GCApplication.IN_PROCESS;
+          this.rect = new Rect(x, y, 1, 1);
         }
+
+        if((isb || isf) && this.rectState == GCApplication.SET) this.lblsState = GCApplication.IN_PROCESS;
+
         break;
-      case EVENT_RBUTTONDOWN: // set GC_PR_BGD(GC_PR_FGD) labels
-        {
-          let isb = (flags & BGD_KEY) != 0,
-            isf = (flags & FGD_KEY) != 0;
-          if((isb || isf) && this.rectState == GCApplication.SET) this.prLblsState = GCApplication.IN_PROCESS;
-        }
+      }
+
+      // set GC_PR_BGD(GC_PR_FGD) labels
+      case EVENT_RBUTTONDOWN: {
+        let isb = (flags & BGD_KEY) != 0,
+          isf = (flags & FGD_KEY) != 0;
+        if((isb || isf) && this.rectState == GCApplication.SET) this.prLblsState = GCApplication.IN_PROCESS;
         break;
-      case EVENT_LBUTTONUP:
+      }
+
+      case EVENT_LBUTTONUP: {
         if(this.rectState == GCApplication.IN_PROCESS) {
           if(this.rect.x == x || this.rect.y == y) {
             this.rectState = GCApplication.NOT_SET;
@@ -176,8 +181,10 @@ class GCApplication {
             this.setRectInMask();
             assert(this.bgdPxls.empty && this.fgdPxls.empty && this.prBgdPxls.empty && this.prFgdPxls.empty);
           }
+       
           this.showImage();
         }
+
         if(this.lblsState == GCApplication.IN_PROCESS) {
           this.setLblsInMask(flags, new Point(x, y), false);
           this.lblsState = GCApplication.SET;
@@ -189,8 +196,13 @@ class GCApplication {
             this.showImage();
           }
         }
+
+        console.log('rect', this.rect);
+
         break;
-      case EVENT_RBUTTONUP:
+      }
+
+      case EVENT_RBUTTONUP: {
         if(this.prLblsState == GCApplication.IN_PROCESS) {
           this.setLblsInMask(flags, new Point(x, y), true);
           this.prLblsState = GCApplication.SET;
@@ -200,7 +212,9 @@ class GCApplication {
           this.showImage();
         }
         break;
-      case EVENT_MOUSEMOVE:
+      }
+
+      case EVENT_MOUSEMOVE: {
         if(this.rectState == GCApplication.IN_PROCESS) {
           this.rect = new Rect(new Point(this.rect.x, this.rect.y), new Point(x, y));
           assert(this.bgdPxls.empty && this.fgdPxls.empty && this.prBgdPxls.empty && this.prFgdPxls.empty);
@@ -212,21 +226,32 @@ class GCApplication {
           this.setLblsInMask(flags, new Point(x, y), true);
           this.showImage();
         }
+
         break;
+      }
     }
   }
 
   nextIter() {
     const { image, mask, rect, bgdModel, fgdModel } = this;
-    if(this.isInitialized) grabCut(image, mask, rect, bgdModel, fgdModel, 1);
-    else {
+
+    if(this.isInitialized) {
+      grabCut(image, mask, rect, bgdModel, fgdModel, 1);
+    } else {
       if(this.rectState != GCApplication.SET) return this.iterCount;
 
-      if(this.lblsState == GCApplication.SET || this.prLblsState == GCApplication.SET) grabCut(image, mask, rect, bgdModel, fgdModel, 1, GC_INIT_WITH_MASK);
-      else grabCut(image, mask, rect, bgdModel, fgdModel, 1, GC_INIT_WITH_RECT);
+      if(this.lblsState == GCApplication.SET || this.prLblsState == GCApplication.SET) {
+        grabCut(image, mask, rect, bgdModel, fgdModel, 1, GC_INIT_WITH_MASK);
+      } else {
+
+
+        
+        grabCut(image, mask, rect, bgdModel, fgdModel, 1, GC_INIT_WITH_RECT);
+      }
 
       this.isInitialized = true;
     }
+
     this.iterCount++;
 
     this.bgdPxls.length = 0;
@@ -238,12 +263,12 @@ class GCApplication {
   }
 
   /*private:
-    setRectInMask();
+     setRectInMask();
      setLblsInMask( flags, p, isPr);*/
 
   winName;
   image;
-  mask;
+  mask = new Mat();
   bgdModel;
   fgdModel;
 
@@ -260,9 +285,12 @@ class GCApplication {
   iterCount = 0;
 }
 
-let gcapp = new GCApplication();
+const gcapp = new GCApplication();
 
 function on_mouse(event, x, y, flags, param) {
+  if(event) 
+    console.log('on_mouse', console.config({ compact: true }), { event, x, y, flags });
+
   gcapp.mouseClick(event, x, y, flags, param);
 }
 
@@ -295,28 +323,37 @@ function main(input) {
 
     switch (c) {
       case '\x1b':
-      case 113:
+      case 113: {
         console.log('Exiting ...');
         destroyWindow(winName);
         return 0;
+      }
 
       case 'r':
+      case 114: {
         console.log('RESET');
         gcapp.reset();
         gcapp.showImage();
         break;
+      }
 
       case 'n':
-        const iterCount = gcapp.getIterCount();
+      case 233: {
+        const { iterCount } = gcapp;
 
         console.log('<', iterCount, '... ');
 
         const newIterCount = gcapp.nextIter();
+
         if(newIterCount > iterCount) {
           gcapp.showImage();
           console.log(iterCount, '>');
-        } else console.log('rect must be determined>');
+        } else {
+          console.log('rect must be determined>');
+        }
+
         break;
+      }
     }
   }
 
