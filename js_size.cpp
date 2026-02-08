@@ -383,8 +383,9 @@ js_size_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
       int32_t align = 0;
       int r;
 
-      if((r = js_rect_read(ctx, argv[0], &other)) <= 0)
-        return JS_ThrowTypeError(ctx, "argument 1 must be cv.Size");
+      if(argc > 0)
+        if((r = js_rect_read(ctx, argv[0], &other)) <= 0)
+          return JS_ThrowTypeError(ctx, "argument 1 must be cv.Rect");
 
       if(argc > 1)
         JS_ToInt32(ctx, &align, argv[1]);
