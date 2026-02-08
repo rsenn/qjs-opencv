@@ -50,7 +50,7 @@ function main(...args) {
   let boxes = rect.hsplit(...util.range(0, rect.width, step));
   // console.log('boxes', boxes);
 
-  style.draw(mat, str, new Point(1, 0), colors[0], -1, LINE_8);
+  style.draw(mat, str, new Point(1, 0), colors[0], -1, LINE_AA);
 
   let gray = new Mat();
   cvtColor(mat, gray, COLOR_BGR2GRAY);
@@ -69,7 +69,7 @@ function main(...args) {
   namedWindow('out', WINDOW_NORMAL);
   let winsize = new Size(rect.width, Math.max(mat.cols / 1.77777, rect.height));
   console.log('winsize', winsize);
-  resizeWindow('out', ...mat.size.mul(1.13));
+  resizeWindow('out', ...mat.size.mul(1));
   imshow('out', mat);
   waitKey(-1);
 
