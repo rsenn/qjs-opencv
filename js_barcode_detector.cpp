@@ -151,7 +151,9 @@ js_barcode_detector_method(JSContext* ctx, JSValueConst this_val, int argc, JSVa
 
       std::copy(decoded_type.begin(), decoded_type.end(), decoded.begin());
 
+      js_array_clear(ctx, argv[2]);
       js_array_copy(ctx, argv[2], decoded);
+      js_array_clear(ctx, argv[3]);
       js_array_copy(ctx, argv[3], points);
 
       break;

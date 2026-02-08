@@ -76,6 +76,7 @@ js_calib3d_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
 
       BOOL result = cv::findChessboardCorners(image, pattern_size, corners, flags);
 
+      js_array_clear(ctx, argv[2]);
       js_array_copy(ctx, argv[2], corners);
 
       ret = JS_NewBool(ctx, result);
@@ -97,6 +98,7 @@ js_calib3d_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
       BOOL result =
           argc > 3 ? cv::findChessboardCornersSB(image, pattern_size, corners, flags, meta) : cv::findChessboardCornersSB(image, pattern_size, corners);
 
+      js_array_clear(ctx, argv[2]);
       js_array_copy(ctx, argv[2], corners);
 
       ret = JS_NewBool(ctx, result);
