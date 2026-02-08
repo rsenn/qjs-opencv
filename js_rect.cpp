@@ -56,9 +56,8 @@ js_rect_wrap(JSContext* ctx, const JSRectData<double>& rect) {
   return js_rect_new(ctx, rect_proto, rect.x, rect.y, rect.width, rect.height);
 }
 
-static JSValue
-js_rect_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
-  JSRectData<double> r;
+static int
+js_rect_arguments(JSContext* ctx, int argc, JSValueConst argv[], JSRectData<double>& r) {
   int i = 0;
   bool got_position(false), got_size(false);
 
@@ -101,7 +100,8 @@ js_rect_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueCo
           i++;
         } else {
           i++;
-          return JS_ThrowTypeError(ctx, "argument %d is no Number|Point|Size", i);
+          JS_ThrowTypeError(ctx, "argument %d is no Number|Point|Size", i);
+          return -1;
         }
 
         if(got_position && got_size)
@@ -109,6 +109,18 @@ js_rect_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueCo
       }
     }
   }
+
+  return i;
+}
+
+static JSValue
+js_rect_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
+  JSRectData<double> r;
+
+  int i;
+
+  if((i = js_rect_arguments(ctx, argc, argv, r)) < 0)
+    return JS_EXCEPTION;
 
   JSValue proto = JS_GetPropertyStr(ctx, new_target, "prototype");
   if(JS_IsException(proto))
