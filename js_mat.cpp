@@ -1942,7 +1942,7 @@ const JSCFunctionListEntry js_mat_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("xor", 3, js_mat_expr, MAT_EXPR_XOR),
     JS_CFUNC_MAGIC_DEF("add", 3, js_mat_expr, MAT_EXPR_ADD),
     JS_CFUNC_MAGIC_DEF("sub", 3, js_mat_expr, MAT_EXPR_SUB),
-  JS_CFUNC_MAGIC_DEF("mul", 3, js_mat_expr, MAT_EXPR_MUL),
+    JS_CFUNC_MAGIC_DEF("mul", 3, js_mat_expr, MAT_EXPR_MUL),
     JS_CFUNC_MAGIC_DEF("div", 3, js_mat_expr, MAT_EXPR_DIV),
 
     JS_CFUNC_MAGIC_DEF("zero", 2, js_mat_fill, 0),
