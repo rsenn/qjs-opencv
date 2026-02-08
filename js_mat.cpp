@@ -65,7 +65,7 @@ enum {
   METHOD_TOTAL,
   METHOD_INV,
 };
-enum { MAT_EXPR_AND = 0, MAT_EXPR_OR, MAT_EXPR_XOR, MAT_EXPR_MUL, MAT_EXPR_DIV, MAT_EXPR_SHL, MAT_EXPR_SHR };
+enum { MAT_EXPR_AND = 0, MAT_EXPR_OR, MAT_EXPR_XOR, MAT_EXPR_MUL, MAT_EXPR_DIV, MAT_EXPR_SHL, MAT_EXPR_SHR, MAT_EXPR_ADD, MAT_EXPR_SUB };
 enum { MAT_ITERATOR_KEYS, MAT_ITERATOR_VALUES, MAT_ITERATOR_ENTRIES };
 extern "C" {
 thread_local JSValue mat_proto = JS_UNDEFINED, mat_class = JS_UNDEFINED, mat_iterator_proto = JS_UNDEFINED, mat_iterator_class = JS_UNDEFINED;
@@ -741,6 +741,8 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
           case MAT_EXPR_AND: mat &= (uchar)value; break;
           case MAT_EXPR_OR: cv::bitwise_or(mat, cv::Scalar(value, value, value, value), mat); break;
           case MAT_EXPR_XOR: mat ^= (uchar)value; break;
+          case MAT_EXPR_ADD: mat = mat + value; break;
+          case MAT_EXPR_SUB: mat = mat - value; break;
           case MAT_EXPR_MUL: mat = mat * value; break;
           case MAT_EXPR_DIV: mat = mat / value; break;
         }
@@ -749,6 +751,8 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
           case MAT_EXPR_AND: mat &= value; break;
           case MAT_EXPR_OR: cv::bitwise_or(mat, cv::Scalar(value, value, value, value), mat); break;
           case MAT_EXPR_XOR: mat ^= value; break;
+          case MAT_EXPR_ADD: mat += value; break;
+          case MAT_EXPR_SUB: mat -= value; break;
           case MAT_EXPR_MUL: mat *= value; break;
           case MAT_EXPR_DIV: mat /= value; break;
         }
@@ -764,6 +768,8 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
         case MAT_EXPR_AND: expr = mat & scalar; break;
         case MAT_EXPR_OR: expr = mat | scalar; break;
         case MAT_EXPR_XOR: expr = mat ^ scalar; break;
+        case MAT_EXPR_ADD: expr = mat + scalar; break;
+        case MAT_EXPR_SUB: expr = mat - scalar; break;
         case MAT_EXPR_MUL: expr = mat.mul(scalar, scale); break;
         case MAT_EXPR_DIV: expr = mat / scalar; break;
       }
@@ -789,6 +795,8 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
           case MAT_EXPR_AND: (*input) &= (*other); break;
           case MAT_EXPR_OR: (*input) |= (*other); break;
           case MAT_EXPR_XOR: (*input) ^= (*other); break;
+          case MAT_EXPR_ADD: (*input) += (*other); break;
+          case MAT_EXPR_SUB: (*input) -= (*other); break;
           case MAT_EXPR_MUL: (*input) *= (*other); break;
           case MAT_EXPR_DIV: (*input) /= (*other); break;
         }
@@ -797,6 +805,8 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
           case MAT_EXPR_AND: (*output) = (*input) & (*other); break;
           case MAT_EXPR_OR: (*output) = (*input) | (*other); break;
           case MAT_EXPR_XOR: (*output) = (*input) ^ (*other); break;
+          case MAT_EXPR_ADD: (*output) = (*input) + (*other); break;
+          case MAT_EXPR_SUB: (*output) = (*input) - (*other); break;
           case MAT_EXPR_MUL: (*output) = (*input) * (*other); break;
           case MAT_EXPR_DIV: (*output) = (*input) / (*other); break;
         }
@@ -1552,7 +1562,7 @@ js_mat_getumat(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
 
 static JSValue
 js_mat_class_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
-  JSValueConst *v = argv, *e = &argv[argc];
+  /*JSValueConst *v = argv, *e = &argv[argc];
   JSMatData result;
   JSMatData *prev, *mat;
 
@@ -1566,15 +1576,16 @@ js_mat_class_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
       JSMatData const &a = *prev, &b = *mat;
 
       switch(magic) {
-        case 0: result = a + b; break;
-        case 1: result = a - b; break;
-        case 2: result = a * b; break;
-        case 3: result = a / b; break;
-        case 4: result = a & b; break;
-        case 5: result = a | b; break;
-        case 6: result = a ^ b; break;
+
+        case MAT_EXPR_ADD: result = a + b; break;
+        case MAT_EXPR_SUB: result = a - b; break;
+        case MAT_EXPR_MUL: result = a * b; break;
+        case MAT_EXPR_DIV: result = a / b; break;
+        case MAT_EXPR_AND: result = a & b; break;
+        case MAT_EXPR_OR: result = a | b; break;
+        case MAT_EXPR_XOR: result = a ^ b; break;
       }
-      
+
       prev = &result;
     } else {
       prev = mat;
@@ -1583,7 +1594,9 @@ js_mat_class_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
     }
   }
 
-  return js_mat_wrap(ctx, result);
+  return js_mat_wrap(ctx, result);*/
+
+  return js_mat_expr(ctx, argv[0], argc - 1, argv + 1, magic);
 }
 
 static JSValue
@@ -1927,7 +1940,9 @@ const JSCFunctionListEntry js_mat_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("and", 2, js_mat_expr, MAT_EXPR_AND),
     JS_CFUNC_MAGIC_DEF("or", 2, js_mat_expr, MAT_EXPR_OR),
     JS_CFUNC_MAGIC_DEF("xor", 3, js_mat_expr, MAT_EXPR_XOR),
-    JS_CFUNC_MAGIC_DEF("mul", 3, js_mat_expr, MAT_EXPR_MUL),
+    JS_CFUNC_MAGIC_DEF("add", 3, js_mat_expr, MAT_EXPR_ADD),
+    JS_CFUNC_MAGIC_DEF("sub", 3, js_mat_expr, MAT_EXPR_SUB),
+  JS_CFUNC_MAGIC_DEF("mul", 3, js_mat_expr, MAT_EXPR_MUL),
     JS_CFUNC_MAGIC_DEF("div", 3, js_mat_expr, MAT_EXPR_DIV),
 
     JS_CFUNC_MAGIC_DEF("zero", 2, js_mat_fill, 0),
@@ -1959,13 +1974,13 @@ const JSCFunctionListEntry js_mat_iterator_proto_funcs[] = {
 
 const JSCFunctionListEntry js_mat_static_funcs[] = {
     JS_CFUNC_DEF("getRotationMatrix2D", 3, js_mat_getrotationmatrix2d),
-    JS_CFUNC_MAGIC_DEF("add", 2, js_mat_class_func, 0),
-    JS_CFUNC_MAGIC_DEF("sub", 2, js_mat_class_func, 1),
-    JS_CFUNC_MAGIC_DEF("mul", 2, js_mat_class_func, 2),
-    JS_CFUNC_MAGIC_DEF("div", 2, js_mat_class_func, 3),
-    JS_CFUNC_MAGIC_DEF("and", 2, js_mat_class_func, 4),
-    JS_CFUNC_MAGIC_DEF("or", 2, js_mat_class_func, 5),
-    JS_CFUNC_MAGIC_DEF("xor", 3, js_mat_class_func, 6),
+    JS_CFUNC_MAGIC_DEF("add", 2, js_mat_class_func, MAT_EXPR_ADD),
+    JS_CFUNC_MAGIC_DEF("sub", 2, js_mat_class_func, MAT_EXPR_SUB),
+    JS_CFUNC_MAGIC_DEF("mul", 2, js_mat_class_func, MAT_EXPR_MUL),
+    JS_CFUNC_MAGIC_DEF("div", 2, js_mat_class_func, MAT_EXPR_DIV),
+    JS_CFUNC_MAGIC_DEF("and", 2, js_mat_class_func, MAT_EXPR_AND),
+    JS_CFUNC_MAGIC_DEF("or", 2, js_mat_class_func, MAT_EXPR_OR),
+    JS_CFUNC_MAGIC_DEF("xor", 3, js_mat_class_func, MAT_EXPR_XOR),
     JS_CFUNC_MAGIC_DEF("zeros", 1, js_mat_class_create, 0),
     JS_CFUNC_MAGIC_DEF("ones", 1, js_mat_class_create, 1),
     JS_CFUNC_MAGIC_DEF("eye", 1, js_mat_class_create, 2),
