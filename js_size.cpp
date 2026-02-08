@@ -377,8 +377,6 @@ js_size_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
     }
 
     case SIZE_METHOD_ALIGN: {
-      /* JSSizeData<double> sz;
-       JSPointData<double> pt[2];*/
       JSRectData<double> other, rect;
       int32_t align = 0;
       int r;
