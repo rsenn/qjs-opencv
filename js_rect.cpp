@@ -74,7 +74,10 @@ js_rect_arguments(JSContext* ctx, int argc, JSValueConst argv[], JSRectData<doub
           }
 
           i += 2;
-        } else if(js_point_read(ctx, argv[i], &p)) {
+          continue;
+        }
+
+        if(js_point_read(ctx, argv[i], &p)) {
           if(!got_position) {
             r.x = p.x;
             r.y = p.y;
@@ -86,18 +89,21 @@ js_rect_arguments(JSContext* ctx, int argc, JSValueConst argv[], JSRectData<doub
             r.y = fmin(p.y, r.y);
             got_size = true;
           }
+        }
 
-          i++;
-        } else if(js_size_read(ctx, argv[i], &s)) {
+        if(js_size_read(ctx, argv[i], &s)) {
           r.width = s.width;
           r.height = s.height;
           got_size = true;
-          i++;
         } else {
           i++;
+          continue;
+        }
+
+        /*i++;
           JS_ThrowTypeError(ctx, "argument %d is no Number|Point|Size", i);
           return -1;
-        }
+        }*/
 
         if(got_position && got_size)
           break;
