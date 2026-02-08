@@ -116,7 +116,6 @@ js_rect_arguments(JSContext* ctx, int argc, JSValueConst argv[], JSRectData<doub
 static JSValue
 js_rect_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   JSRectData<double> r;
-
   int i;
 
   if((i = js_rect_arguments(ctx, argc, argv, r)) < 0)
