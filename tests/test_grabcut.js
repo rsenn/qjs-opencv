@@ -1,5 +1,7 @@
 import { assert } from 'assert';
-import { CV_8UC1, CV_8UC3, Contour, EVENT_FLAG_CTRLKEY, EVENT_FLAG_SHIFTKEY, EVENT_LBUTTONDOWN, EVENT_LBUTTONUP, EVENT_MOUSEMOVE, EVENT_RBUTTONDOWN, EVENT_RBUTTONUP, GC_BGD, GC_FGD, GC_INIT_WITH_MASK, GC_INIT_WITH_RECT, GC_PR_BGD, GC_PR_FGD, IMREAD_COLOR, Mat, Point, Rect, Scalar, WINDOW_AUTOSIZE, addWeighted, copyTo, destroyWindow, drawCircle, grabCut, imread, imshow, namedWindow, setMouseCallback, waitKey, } from 'opencv';
+import { CV_8UC1, CV_8UC3, Contour, EVENT_FLAG_CTRLKEY, EVENT_FLAG_SHIFTKEY, EVENT_LBUTTONDOWN, EVENT_LBUTTONUP, EVENT_MOUSEMOVE, EVENT_RBUTTONDOWN, EVENT_RBUTTONUP, GC_BGD, GC_FGD, GC_INIT_WITH_MASK, GC_INIT_WITH_RECT, GC_PR_BGD, GC_PR_FGD, IMREAD_COLOR, Mat, Point, Rect, Scalar, WINDOW_AUTOSIZE, addWeighted, copyTo, destroyWindow, drawCircle, drawRect, grabCut, imread, imshow, namedWindow, setMouseCallback, waitKey, } from 'opencv';
+
+const C = console.config({ compact: true });
 
 function help(...argv) {
   console.log('\nThis program demonstrates GrabCut segmentation -- select an object in a region\n' + 'and then grabcut will attempt to segment it out.\n' + 'Call:\n', argv[0], ' <image_name>\n');
@@ -35,6 +37,8 @@ function getBinMask(/*const Mat&*/ comMask, /*Mat& */ binMask) {
   if(binMask.empty || binMask.rows != comMask.rows || binMask.cols != comMask.cols) binMask.create(comMask.size, CV_8UC1);
   binMask = comMask & 1;
 }
+
+//const { NOT_SET, IN_PROCESS, SET } = GCApplication;
 
 class GCApplication {
   static NOT_SET = 0;
@@ -91,7 +95,7 @@ class GCApplication {
     for(let pt of this.prFgdPxls) drawCircle(res, pt, GCApplication.radius, PINK, GCApplication.thickness);
 
     if(this.rectState == GCApplication.IN_PROCESS || this.rectState == GCApplication.SET)
-      drawRectangle(res, new Point(this.rect.x, this.rect.y), new Point(this.rect.x + this.rect.width, this.rect.y + this.rect.height), GREEN, 2);
+      drawRect(res, new Point(this.rect.x, this.rect.y), new Point(this.rect.x + this.rect.width, this.rect.y + this.rect.height), GREEN, 2);
 
     imshow(this.winName, res);
   }
@@ -130,11 +134,12 @@ class GCApplication {
     }
 
     if(flags & BGD_KEY) {
-      bpxls.push_back(p);
+      bpxls.push(p);
       drawCircle(this.mask, p, GCApplication.radius, bvalue, GCApplication.thickness);
     }
+    
     if(flags & FGD_KEY) {
-      fpxls.push_back(p);
+      fpxls.push(p);
       drawCircle(this.mask, p, GCApplication.radius, fvalue, GCApplication.thickness);
     }
   }
@@ -168,6 +173,7 @@ class GCApplication {
         let isb = (flags & BGD_KEY) != 0,
           isf = (flags & FGD_KEY) != 0;
         if((isb || isf) && this.rectState == GCApplication.SET) this.prLblsState = GCApplication.IN_PROCESS;
+        
         break;
       }
 
@@ -179,10 +185,15 @@ class GCApplication {
             this.rect = new Rect(new Point(this.rect.x, this.rect.y), new Point(x, y));
             this.rectState = GCApplication.SET;
             this.setRectInMask();
-            assert(this.bgdPxls.empty && this.fgdPxls.empty && this.prBgdPxls.empty && this.prFgdPxls.empty);
+
+            assert(this.bgdPxls.length == 0 && this.fgdPxls.length == 0 && this.prBgdPxls.length == 0 && this.prFgdPxls.length == 0);
           }
-       
+
           this.showImage();
+        }
+
+        if(this.rectState == GCApplication.SET) {
+          console.log('rect', C, this.rect);
         }
 
         if(this.lblsState == GCApplication.IN_PROCESS) {
@@ -190,14 +201,10 @@ class GCApplication {
           this.lblsState = GCApplication.SET;
           this.nextIter();
           this.showImage();
-        } else {
-          if(this.rectState == GCApplication.SET) {
-            this.nextIter();
-            this.showImage();
-          }
+        } else if(this.rectState == GCApplication.SET) {
+          this.nextIter();
+          this.showImage();
         }
-
-        console.log('rect', this.rect);
 
         break;
       }
@@ -217,7 +224,7 @@ class GCApplication {
       case EVENT_MOUSEMOVE: {
         if(this.rectState == GCApplication.IN_PROCESS) {
           this.rect = new Rect(new Point(this.rect.x, this.rect.y), new Point(x, y));
-          assert(this.bgdPxls.empty && this.fgdPxls.empty && this.prBgdPxls.empty && this.prFgdPxls.empty);
+          assert(this.bgdPxls.length == 0 && this.fgdPxls.length == 0 && this.prBgdPxls.length == 0 && this.prFgdPxls.length == 0);
           this.showImage();
         } else if(this.lblsState == GCApplication.IN_PROCESS) {
           this.setLblsInMask(flags, new Point(x, y), false);
@@ -243,9 +250,6 @@ class GCApplication {
       if(this.lblsState == GCApplication.SET || this.prLblsState == GCApplication.SET) {
         grabCut(image, mask, rect, bgdModel, fgdModel, 1, GC_INIT_WITH_MASK);
       } else {
-
-
-        
         grabCut(image, mask, rect, bgdModel, fgdModel, 1, GC_INIT_WITH_RECT);
       }
 
@@ -269,13 +273,13 @@ class GCApplication {
   winName;
   image;
   mask = new Mat();
-  bgdModel;
-  fgdModel;
+  bgdModel = new Mat();
+  fgdModel = new Mat();
 
-  rectState;
-  lblsState;
-  prLblsState;
-  isInitialized;
+  rectState = GCApplication.NOT_SET;
+  lblsState = GCApplication.NOT_SET;
+  prLblsState = GCApplication.NOT_SET;
+  isInitialized = false;
 
   rect;
   fgdPxls = new Contour();
@@ -288,8 +292,7 @@ class GCApplication {
 const gcapp = new GCApplication();
 
 function on_mouse(event, x, y, flags, param) {
-  if(event) 
-    console.log('on_mouse', console.config({ compact: true }), { event, x, y, flags });
+  if(event) console.log('on_mouse', C, { event, x, y, flags });
 
   gcapp.mouseClick(event, x, y, flags, param);
 }
@@ -319,7 +322,7 @@ function main(input) {
   gcapp.showImage();
 
   for(;;) {
-    const c = waitKey(0);
+    const c = waitKey(1000);
 
     switch (c) {
       case '\x1b':
@@ -353,6 +356,11 @@ function main(input) {
         }
 
         break;
+      }
+
+
+      default: {
+        console.log('keycode', c);
       }
     }
   }
