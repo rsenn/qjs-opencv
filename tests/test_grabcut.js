@@ -262,6 +262,9 @@ class GCApplication {
       this.isInitialized = true;
     }
 
+    console.log('bgdModel', C, bgdModel.size);
+    console.log('fgdModel', C, fgdModel.size);
+
     this.iterCount++;
 
     this.bgdPxls.length = 0;
