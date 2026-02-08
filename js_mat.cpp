@@ -1564,6 +1564,7 @@ js_mat_class_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
 
     if(prev) {
       JSMatData const &a = *prev, &b = *mat;
+
       switch(magic) {
         case 0: result = a + b; break;
         case 1: result = a - b; break;
@@ -1573,6 +1574,7 @@ js_mat_class_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
         case 5: result = a | b; break;
         case 6: result = a ^ b; break;
       }
+      
       prev = &result;
     } else {
       prev = mat;
