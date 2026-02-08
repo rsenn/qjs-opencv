@@ -20,6 +20,8 @@ JSModuleDef* js_init_module_rect(JSContext*, const char*);
 JSValue js_rect_new(JSContext* ctx, JSValueConst proto, double x, double y, double w, double h);
 }
 
+int js_rect_arguments(JSContext* ctx, int argc, JSValueConst argv[], JSRectData<double>& r);
+
 static inline JSValue
 js_rect_new(JSContext* ctx, JSValueConst proto, const JSRectData<double>& rect) {
   return js_rect_new(ctx, proto, rect.x, rect.y, rect.width, rect.height);

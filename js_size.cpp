@@ -377,25 +377,16 @@ js_size_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
     }
 
     case SIZE_METHOD_ALIGN: {
-      JSSizeData<double> sz;
-      JSPointData<double> pt[2];
+      /* JSSizeData<double> sz;
+       JSPointData<double> pt[2];*/
       JSRectData<double> other, rect;
       int32_t align = 0;
+      int r;
 
-      if(!js_size_read(ctx, argv[0], &sz))
+      if((r = js_rect_arguments(ctx, argc, argv, other)) <= 0)
         return JS_ThrowTypeError(ctx, "argument 1 must be cv.Size");
 
-      JS_ToInt32(ctx, &align, argv[1]);
-
-      js_point_read(ctx, argv[0], &pt[0]);
-
-      other.x = pt[0].x;
-      other.y = pt[0].y;
-      other.width = sz.width;
-      other.height = sz.height;
-
-      pt[1].x = pt[0].x + sz.width;
-      pt[1].y = pt[0].y + sz.height;
+      JS_ToInt32(ctx, &align, argv[r]);
 
       rect.width = size.width;
       rect.height = size.height;

@@ -56,7 +56,7 @@ js_rect_wrap(JSContext* ctx, const JSRectData<double>& rect) {
   return js_rect_new(ctx, rect_proto, rect.x, rect.y, rect.width, rect.height);
 }
 
-static int
+int
 js_rect_arguments(JSContext* ctx, int argc, JSValueConst argv[], JSRectData<double>& r) {
   int i = 0;
   bool got_position(false), got_size(false);
