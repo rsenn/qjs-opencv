@@ -555,7 +555,7 @@ js_line_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
       rect.width = std::max(ln->x1, ln->x2) - rect.x;
       rect.height = std::max(ln->y1, ln->y2) - rect.y;
 
-      ret = js_rect_new(ctx, rect);
+      ret = js_rect_wrap(ctx, rect);
       break;
     }
   }

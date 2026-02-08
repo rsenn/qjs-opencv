@@ -427,7 +427,7 @@ js_size_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
         }
       }
 
-      ret = js_rect_new(ctx, rect);
+      ret = js_rect_wrap(ctx, rect);
       break;
     }
   }

@@ -22,15 +22,15 @@ JSValue js_rect_new(JSContext* ctx, JSValueConst proto, double x, double y, doub
 
 int js_rect_arguments(JSContext* ctx, int argc, JSValueConst argv[], JSRectData<double>& r);
 
-static inline JSValue
+/*static inline JSValue
 js_rect_new(JSContext* ctx, JSValueConst proto, const JSRectData<double>& rect) {
   return js_rect_new(ctx, proto, rect.x, rect.y, rect.width, rect.height);
-}
+}*/
 
-static inline JSValue
+/*static inline JSValue
 js_rect_new(JSContext* ctx, const JSRectData<double>& rect) {
   return js_rect_new(ctx, rect_proto, rect);
-}
+}*/
 
 static inline JSValue
 js_rect_new(JSContext* ctx, double x, double y, double w, double h) {

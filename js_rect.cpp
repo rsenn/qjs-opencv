@@ -40,12 +40,7 @@ js_rect_new(JSContext* ctx, JSValueConst proto, double x, double y, double w, do
 
   JSValue ret = JS_NewObjectProtoClass(ctx, proto, js_rect_class_id);
 
-  new(s) JSRectData<double>();
-
-  s->x = x <= DBL_EPSILON ? 0 : x;
-  s->y = y <= DBL_EPSILON ? 0 : y;
-  s->width = w <= DBL_EPSILON ? 0 : w;
-  s->height = h <= DBL_EPSILON ? 0 : h;
+  new(s) JSRectData<double>(x, y, w, h);
 
   JS_SetOpaque(ret, s);
   return ret;

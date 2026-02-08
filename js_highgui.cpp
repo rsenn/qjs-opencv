@@ -441,7 +441,7 @@ js_cv_select_roi(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
   rect = cv::selectROI(winname, image, showCrosshair, fromCenter);
 
   if(rect.width > 0 && rect.height > 0)
-    ret = js_rect_new(ctx, rect);
+    ret = js_rect_wrap(ctx, rect);
   else
     ret = JS_NULL;
 

@@ -179,13 +179,13 @@ js_rotated_rect_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
   switch(magic) {
     case ROTATED_RECT_METHOD_BOUNDING_RECT: {
       JSRectData<int> rect = rr->boundingRect();
-      ret = js_rect_new(ctx, rect);
+      ret = js_rect_wrap(ctx, rect);
       break;
     }
 
     case ROTATED_RECT_METHOD_BOUNDING_RECT2F: {
       JSRectData<float> rect = rr->boundingRect2f();
-      ret = js_rect_new(ctx, rect);
+      ret = js_rect_wrap(ctx, rect);
       break;
     }
 
