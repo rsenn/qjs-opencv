@@ -727,14 +727,14 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
   if(argc > 1)
     output = js_mat_data2(ctx, argv[1]);
 
-  if(output == nullptr)
-    output = input;
+  /*  if(output == nullptr)
+      output = input;*/
 
   cv::MatExpr expr;
   // cv::Mat tmp(input->rows, input->cols, input->type());
+  cv::Mat tmp(mat.rows, mat.cols, mat.type);
 
   if(other == nullptr) {
-    cv::Mat tmp(mat.rows, mat.cols, mat.type);
     cv::Mat& mat = *input;
 
     if(!scalar) {
@@ -780,8 +780,10 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       tmp = expr;
     }
 
-    *output = tmp;
-    ret = js_mat_wrap(ctx, tmp);
+    if(output)
+      *output = tmp;
+    else
+      ret = js_mat_wrap(ctx, tmp);
   } else {
 
     if(input->rows != other->rows || input->cols != other->cols) {
@@ -792,7 +794,7 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       ret = JS_ThrowInternalError(ctx, "Mat channels mismatch");
     } else {
 
-      if(input == output) {
+      if(output == nullptr || output == input) {
         switch(magic) {
           case MAT_EXPR_AND: (*input) &= (*other); break;
           case MAT_EXPR_OR: (*input) |= (*other); break;
