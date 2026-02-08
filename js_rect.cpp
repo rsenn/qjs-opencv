@@ -1,3 +1,4 @@
+
 #include "js_rect.hpp"
 #include "js_alloc.hpp"
 #include "include/js_array.hpp"
@@ -50,70 +51,63 @@ js_rect_new(JSContext* ctx, JSValueConst proto, double x, double y, double w, do
 }
 
 JSValue
-js_rect_new(JSContext* ctx, double x, double y, double w, double h) {
-  return js_rect_new(ctx, rect_proto, x, y, w, h);
-}
-
-JSValue
 js_rect_wrap(JSContext* ctx, const JSRectData<double>& rect) {
-  return js_rect_new(ctx, rect.x, rect.y, rect.width, rect.height);
+  return js_rect_new(ctx, rect_proto, rect.x, rect.y, rect.width, rect.height);
 }
 
 static JSValue
 js_rect_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
-  double x = 0, y = 0, w = 0, h = 0;
-  JSRectData<double> rect = {0, 0, 0, 0};
-  int optind = 0;
-  JSValue proto;
-
-  proto = JS_GetPropertyStr(ctx, new_target, "prototype");
-  if(JS_IsException(proto))
-    return JS_EXCEPTION;
+  JSRectData<double> rect;
+  int i = 0;
+  BOOL got_position = FALSE;
 
   if(argc > 0) {
-    if(!js_rect_read(ctx, argv[0], &rect)) {
-      JSPointData<double> point, point2;
+    if(!js_value_to(ctx, argv[0], rect)) {
+      JSPointData<double> point;
       JSSizeData<double> size;
-      while(optind < argc) {
-        if(JS_IsNumber(argv[optind]) && JS_IsNumber(argv[optind + 1])) {
-          if(optind == 0) {
-            JS_ToFloat64(ctx, &x, argv[optind]);
-            JS_ToFloat64(ctx, &y, argv[optind + 1]);
-          } else {
-            JS_ToFloat64(ctx, &w, argv[optind]);
-            JS_ToFloat64(ctx, &h, argv[optind + 1]);
-          }
-          optind += 2;
-        } else if(js_point_read(ctx, argv[optind], optind == 0 ? &point : &point2)) {
-          if(optind == 0) {
-            x = point.x;
-            y = point.y;
-          } else {
-            w = fabs(point2.x - x);
-            h = fabs(point2.y - y);
-            x = fmin(point2.x, x);
-            y = fmin(point2.y, y);
-          }
-          optind++;
-        }
 
-        else if(js_size_read(ctx, argv[optind], &size)) {
-          w = size.width;
-          h = size.height;
-          optind++;
+      while(i < argc) {
+        if(JS_IsNumber(argv[i]) && JS_IsNumber(argv[i + 1])) {
+          if(!got_position) {
+            JS_ToFloat64(ctx, &rect.x, argv[i]);
+            JS_ToFloat64(ctx, &rect.y, argv[i + 1]);
+            got_position = TRUE;
+          } else {
+            JS_ToFloat64(ctx, &rect.width, argv[i]);
+            JS_ToFloat64(ctx, &rect.height, argv[i + 1]);
+          }
+
+          i += 2;
+        } else if(js_point_read(ctx, argv[i], &point)) {
+          if(!got_position) {
+            rect.x = point.x;
+            rect.y = point.y;
+            got_position = TRUE;
+          } else {
+            rect.width = fabs(point.x - rect.x);
+            rect.height = fabs(point.y - rect.y);
+            rect.x = fmin(point.x, rect.x);
+            rect.y = fmin(point.y, rect.y);
+          }
+
+          i++;
+        } else if(js_size_read(ctx, argv[i], &size)) {
+          rect.width = size.width;
+          rect.height = size.height;
+          i++;
         } else {
-          optind++;
+          i++;
+          return JS_ThrowTypeError(ctx, "argument %d is no Number|Point|Size", i);
         }
       }
-    } else {
-      x = rect.x;
-      y = rect.y;
-      w = rect.width;
-      h = rect.height;
     }
   }
 
-  return js_rect_new(ctx, proto, x, y, w, h);
+  JSValue proto = JS_GetPropertyStr(ctx, new_target, "prototype");
+  if(JS_IsException(proto))
+    return JS_EXCEPTION;
+
+  return js_rect_new(ctx, proto, rect);
 }
 
 JSRectData<double>*

@@ -17,14 +17,28 @@ JSRectData<double>* js_rect_data2(JSContext*, JSValueConst val);
 JSValue js_rect_wrap(JSContext*, const JSRectData<double>&);
 int js_rect_init(JSContext*, JSModuleDef*);
 JSModuleDef* js_init_module_rect(JSContext*, const char*);
+JSValue js_rect_new(JSContext* ctx, JSValueConst proto, double x, double y, double w, double h);
 }
 
-JSValue js_rect_new(JSContext* ctx, double x, double y, double w, double h);
+static inline JSValue
+js_rect_new(JSContext* ctx, JSValueConst proto, const JSRectData<double>& rect) {
+  return js_rect_new(ctx, proto, rect.x, rect.y, rect.width, rect.height);
+}
+
+static inline JSValue
+js_rect_new(JSContext* ctx, const JSRectData<double>& rect) {
+  return js_rect_new(ctx, rect_proto, rect);
+}
+
+static inline JSValue
+js_rect_new(JSContext* ctx, double x, double y, double w, double h) {
+  return js_rect_new(ctx, rect_proto, x, y, w, h);
+}
 
 template<class T>
 static inline JSValue
-js_rect_new(JSContext* ctx, const JSRectData<T>& rect) {
-  return js_rect_new(ctx, rect.x, rect.y, rect.width, rect.height);
+js_rect_new(JSContext* ctx, JSValueConst proto, const JSRectData<T>& rect) {
+  return js_rect_new(ctx, proto, rect.x, rect.y, rect.width, rect.height);
 }
 
 template<class T>

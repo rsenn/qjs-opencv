@@ -68,8 +68,8 @@ js_size_write(JSContext* ctx, JSValueConst out, const JSSizeData<T>& in) {
     JS_SetPropertyUint32(ctx, out, 0, width);
     JS_SetPropertyUint32(ctx, out, 1, height);
   } else if(JS_IsObject(out)) {
-    JS_SetPropertyStr(ctx, out, "x", width);
-    JS_SetPropertyStr(ctx, out, "y", height);
+    JS_SetPropertyStr(ctx, out, "width", width);
+    JS_SetPropertyStr(ctx, out, "height", height);
   } else if(js_is_function(ctx, out)) {
     JSValueConst args[2];
     args[0] = width;
