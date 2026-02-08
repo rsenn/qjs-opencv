@@ -1,5 +1,5 @@
 import { assert } from 'assert';
-import { CV_8UC1, CV_8UC3, Contour, EVENT_FLAG_CTRLKEY, EVENT_FLAG_SHIFTKEY, EVENT_LBUTTONDOWN, EVENT_LBUTTONUP, EVENT_MOUSEMOVE, EVENT_RBUTTONDOWN, EVENT_RBUTTONUP, GC_BGD, GC_FGD, GC_INIT_WITH_MASK, GC_INIT_WITH_RECT, GC_PR_BGD, GC_PR_FGD, IMREAD_COLOR, Mat, Point, Rect, Scalar, WINDOW_AUTOSIZE, addWeighted, copyTo, destroyWindow, drawCircle, drawRect, grabCut, imread, imshow, namedWindow, setMouseCallback, waitKeyEx } from 'opencv';
+import { CV_8UC1, CV_8UC3, Contour, EVENT_FLAG_CTRLKEY, EVENT_FLAG_SHIFTKEY, EVENT_LBUTTONDOWN, EVENT_LBUTTONUP, EVENT_MOUSEMOVE, EVENT_RBUTTONDOWN, EVENT_RBUTTONUP, GC_BGD, GC_FGD, GC_INIT_WITH_MASK, GC_INIT_WITH_RECT, GC_PR_BGD, GC_PR_FGD, IMREAD_COLOR, Mat, Point, Rect, Scalar, WINDOW_AUTOSIZE, addWeighted, copyTo, destroyWindow, drawCircle, drawRect, grabCut, imread, imshow, namedWindow, setMouseCallback, waitKeyEx, } from 'opencv';
 
 const C = console.config({ compact: true });
 
@@ -36,9 +36,11 @@ function getBinMask(/*const Mat&*/ comMask, /*Mat& */ binMask) {
 
   if(binMask.empty || !binMask.size.equals(comMask.size)) binMask.create(comMask.size, CV_8UC1);
 
-  comMask.and(Scalar(1));
+  //comMask.and(Scalar(1));
 
-  binMask = comMask & 1;
+  comMask.and(Scalar(1), binMask);
+
+  //binMask = comMask & 1;
 }
 
 //const { NOT_SET, IN_PROCESS, SET } = GCApplication;
@@ -81,7 +83,7 @@ class GCApplication {
 
     const res = new Mat();
     const binMask = new Mat();
-  
+
     this.image.copyTo(res);
 
     if(this.isInitialized) {
@@ -337,7 +339,7 @@ function main(input) {
         return 0;
       }
 
-      case 'r':      {
+      case 'r': {
         console.log('RESET');
         gcapp.reset();
         gcapp.showImage();
@@ -362,8 +364,9 @@ function main(input) {
         break;
       }
 
-case '':
-case '\xff': break;
+      case '':
+      case '\xff':
+        break;
 
       default: {
         console.log('keycode', c, `char '${ch}'`);
