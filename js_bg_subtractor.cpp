@@ -220,7 +220,10 @@ js_bg_subtractor_finalizer(JSRuntime* rt, JSValue val) {
   js_deallocate<JSBackgroundSubtractorData>(rt, s);
 }
 
-enum { METHOD_APPLY = 0, METHOD_GET_BACKGROUND_IMAGE };
+enum {
+  METHOD_APPLY = 0,
+  METHOD_GET_BACKGROUND_IMAGE,
+};
 
 static JSValue
 js_bg_subtractor_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {

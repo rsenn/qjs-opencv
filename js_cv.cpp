@@ -29,7 +29,12 @@
 #include <string>
 #include <vector>
 
-enum { HIER_NEXT = 0, HIER_PREV, HIER_CHILD, HIER_PARENT };
+enum {
+  HIER_NEXT = 0,
+  HIER_PREV,
+  HIER_CHILD,
+  HIER_PARENT,
+};
 
 enum { DISPLAY_OVERLAY };
 
@@ -267,7 +272,12 @@ js_cv_add_weighted(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
   return JS_UNDEFINED;
 }
 
-enum { MAT_COUNTNONZERO = 0, MAT_FINDNONZERO, MAT_HCONCAT, MAT_VCONCAT };
+enum {
+  MAT_COUNTNONZERO = 0,
+  MAT_FINDNONZERO,
+  MAT_HCONCAT,
+  MAT_VCONCAT,
+};
 
 static JSValue
 js_cv_mat_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
@@ -460,7 +470,18 @@ js_cv_bitwise(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
   return JS_UNDEFINED;
 }
 
-enum { MATH_ABSDIFF = 0, MATH_ADD, MATH_COMPARE, MATH_DIVIDE, MATH_GEMM, MATH_MAX, MATH_MIN, MATH_MULTIPLY, MATH_SOLVE, MATH_SUBTRACT };
+enum {
+  MATH_ABSDIFF = 0,
+  MATH_ADD,
+  MATH_COMPARE,
+  MATH_DIVIDE,
+  MATH_GEMM,
+  MATH_MAX,
+  MATH_MIN,
+  MATH_MULTIPLY,
+  MATH_SOLVE,
+  MATH_SUBTRACT,
+};
 
 static JSValue
 js_cv_math(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {

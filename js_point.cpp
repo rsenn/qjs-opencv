@@ -243,7 +243,10 @@ js_point_adjacent(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
   return ret;
 }
 
-enum { POINT_PROP_X = 0, POINT_PROP_Y };
+enum {
+  POINT_PROP_X = 0,
+  POINT_PROP_Y,
+};
 
 static JSValue
 js_point_get_xy(JSContext* ctx, JSValueConst this_val, int magic) {
@@ -470,14 +473,14 @@ js_point_arith(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
 
 static JSValue
 js_point_to_string(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
-  JSPointData<double>* s = js_point_data2(ctx, this_val);
+  JSPointData<double>* s;
   std::ostringstream os;
   JSValue xv, yv;
   const char* delim = ",";
   double x = -1, y = -1;
 
-  /* if(!s)
-     return JS_EXCEPTION;*/
+  if(!(s = js_point_data2(ctx, this_val)))
+    return JS_EXCEPTION;
 
   if(argc > 0)
     delim = JS_ToCString(ctx, argv[0]);
@@ -516,10 +519,7 @@ js_point_to_string(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
 static JSValue
 js_point_to_array(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSPointData<double>* s = js_point_data2(ctx, this_val);
-  std::array<double, 2> arr;
-
-  arr[0] = s->x;
-  arr[1] = s->y;
+  std::array<double, 2> arr{s->x, s->y};
 
   return js_array_from(ctx, arr.cbegin(), arr.cend());
 }
@@ -742,23 +742,21 @@ const JSCFunctionListEntry js_point_static_funcs[] = {
 int
 js_point_init(JSContext* ctx, JSModuleDef* m) {
 
-  if(js_point_class_id == 0) {
-    /* create the Point class */
-    JS_NewClassID(&js_point_class_id);
-    JS_NewClass(JS_GetRuntime(ctx), js_point_class_id, &js_point_class);
+  /* create the Point class */
+  JS_NewClassID(&js_point_class_id);
+  JS_NewClass(JS_GetRuntime(ctx), js_point_class_id, &js_point_class);
 
-    point_proto = JS_NewObject(ctx);
-    JS_SetPropertyFunctionList(ctx, point_proto, js_point_proto_funcs, countof(js_point_proto_funcs));
-    JS_SetClassProto(ctx, js_point_class_id, point_proto);
+  point_proto = JS_NewObject(ctx);
+  JS_SetPropertyFunctionList(ctx, point_proto, js_point_proto_funcs, countof(js_point_proto_funcs));
+  JS_SetClassProto(ctx, js_point_class_id, point_proto);
 
-    point_class = JS_NewCFunction2(ctx, js_point_constructor, "Point", 0, JS_CFUNC_constructor, 0);
+  point_class = JS_NewCFunction2(ctx, js_point_constructor, "Point", 0, JS_CFUNC_constructor, 0);
 
-    /* set proto.constructor and ctor.prototype */
-    JS_SetPropertyFunctionList(ctx, point_class, js_point_static_funcs, countof(js_point_static_funcs));
-    JS_SetConstructor(ctx, point_class, point_proto);
+  /* set proto.constructor and ctor.prototype */
+  JS_SetPropertyFunctionList(ctx, point_class, js_point_static_funcs, countof(js_point_static_funcs));
+  JS_SetConstructor(ctx, point_class, point_proto);
 
-    // js_object_inspect(ctx, point_proto, js_point_inspect);
-  }
+  // js_object_inspect(ctx, point_proto, js_point_inspect);
 
   if(m)
     JS_SetModuleExport(ctx, m, "Point", point_class);

@@ -98,7 +98,9 @@ js_white_balancer_finalizer(JSRuntime* rt, JSValue val) {
   js_deallocate<JSWhiteBalancerData>(rt, wb);
 }
 
-enum { BALANCE_WHITE = 0 };
+enum {
+  BALANCE_WHITE = 0,
+};
 
 static JSValue
 js_white_balancer_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {

@@ -30,17 +30,18 @@ thread_local JSClassID js_rect_class_id = 0;
 
 extern "C" JSValue
 js_rect_new(JSContext* ctx, JSValueConst proto, double x, double y, double w, double h) {
-  JSValue ret;
   JSRectData<double>* s;
 
   if(JS_IsUndefined(rect_proto))
     js_rect_init(ctx, NULL);
 
-  ret = JS_NewObjectProtoClass(ctx, proto, js_rect_class_id);
+  if(!(s = js_allocate<JSRectData<double>>(ctx)))
+    return JS_EXCEPTION;
 
-  s = js_allocate<JSRectData<double>>(ctx);
+  JSValue ret = JS_NewObjectProtoClass(ctx, proto, js_rect_class_id);
 
   new(s) JSRectData<double>();
+
   s->x = x <= DBL_EPSILON ? 0 : x;
   s->y = y <= DBL_EPSILON ? 0 : y;
   s->width = w <= DBL_EPSILON ? 0 : w;
@@ -332,7 +333,13 @@ js_rect_to_source(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
   return JS_NewString(ctx, os.str().c_str());
 }
 
-enum { FUNC_EQUALS = 0, FUNC_ROUND, FUNC_TOOBJECT, FUNC_TOARRAY, FUNC_CONTOUR };
+enum {
+  FUNC_EQUALS = 0,
+  FUNC_ROUND,
+  FUNC_TOOBJECT,
+  FUNC_TOARRAY,
+  FUNC_CONTOUR,
+};
 
 static JSValue
 js_rect_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
@@ -347,7 +354,9 @@ js_rect_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
   switch(magic) {
     case FUNC_EQUALS: {
       js_rect_read(ctx, argv[0], &other);
+
       bool equals = rect.x == other.x && rect.y == other.y && rect.width == other.width && rect.height == other.height;
+
       ret = JS_NewBool(ctx, equals);
       break;
     }
@@ -355,8 +364,10 @@ js_rect_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
     case FUNC_ROUND: {
       double x, y, width, height, f;
       int32_t precision = 0;
+
       if(argc > 0)
         JS_ToInt32(ctx, &precision, argv[0]);
+
       f = std::pow(10, precision);
       x = std::round(rect.x * f) / f;
       y = std::round(rect.y * f) / f;
@@ -384,7 +395,7 @@ js_rect_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
     }
 
     case FUNC_CONTOUR: {
-      JSContourData<double> c = {
+      JSContourData<double> c{
           JSPointData<double>(rect.x, rect.y),
           JSPointData<double>(rect.x + rect.width, rect.y),
           JSPointData<double>(rect.x + rect.width, rect.y + rect.height),
@@ -411,7 +422,18 @@ js_rect_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
   return obj;
 }
 
-enum { METHOD_CONTAINS = 0, METHOD_BR, METHOD_TL, METHOD_SIZE, METHOD_INSET, METHOD_OUTSET, METHOD_HSPLIT, METHOD_VSPLIT, METHOD_MERGE, METHOD_CLONE };
+enum {
+  METHOD_CONTAINS = 0,
+  METHOD_BR,
+  METHOD_TL,
+  METHOD_SIZE,
+  METHOD_INSET,
+  METHOD_OUTSET,
+  METHOD_HSPLIT,
+  METHOD_VSPLIT,
+  METHOD_MERGE,
+  METHOD_CLONE,
+};
 
 static JSValue
 js_rect_method(JSContext* ctx, JSValueConst rect, int argc, JSValueConst argv[], int magic) {
@@ -441,6 +463,7 @@ js_rect_method(JSContext* ctx, JSValueConst rect, int argc, JSValueConst argv[],
 
     case METHOD_INSET: {
       JSRectData<double> rect = *s;
+
       if(argc >= 1) {
         double n;
         JS_ToFloat64(ctx, &n, argv[0]);
@@ -475,6 +498,7 @@ js_rect_method(JSContext* ctx, JSValueConst rect, int argc, JSValueConst argv[],
 
     case METHOD_OUTSET: {
       JSRectData<double> rect = *s;
+
       if(argc >= 1) {
         double n;
         JS_ToFloat64(ctx, &n, argv[0]);
@@ -503,6 +527,7 @@ js_rect_method(JSContext* ctx, JSValueConst rect, int argc, JSValueConst argv[],
         rect.y -= t;
         rect.height += t + b;
       }
+
       ret = js_rect_wrap(ctx, rect);
       break;
     }
@@ -513,17 +538,22 @@ js_rect_method(JSContext* ctx, JSValueConst rect, int argc, JSValueConst argv[],
       auto args = argument_range(argc, argv);
       JSRectData<double>* prev;
       std::vector<double> breakpoints;
+
       for(JSValueConst const& arg : args) {
         double d;
         js_value_to(ctx, arg, d);
+
         if(d < 0)
           d = s->width + d;
+
         if(d > 0 && d < s->width)
           breakpoints.push_back(d);
       }
+
       std::sort(breakpoints.begin(), breakpoints.end());
       rects.push_back(*s);
       prev = &rects.back();
+
       for(double h : breakpoints) {
         // printf("hsplit h=%lf\n", h);
         prev->width = h - (prev->x - x1);
@@ -532,6 +562,7 @@ js_rect_method(JSContext* ctx, JSValueConst rect, int argc, JSValueConst argv[],
         prev = &rects.back();
         prev->width = s->width - h;
       }
+
       ret = js_array_from(ctx, rects);
       break;
     }
@@ -574,10 +605,11 @@ js_rect_method(JSContext* ctx, JSValueConst rect, int argc, JSValueConst argv[],
 
     case METHOD_MERGE: {
       double x1 = s->x, x2 = s->x + s->width, y1 = s->y, y2 = s->y + s->height;
-      size_t i;
-      for(i = 0; i < argc; i++) {
+
+      for(size_t i = 0; i < argc; i++) {
         JSRectData<double> rect;
         js_rect_read(ctx, argv[i], &rect);
+
         if(x1 > rect.x)
           x1 = rect.x;
         if(x2 < rect.x + rect.width)
@@ -625,11 +657,14 @@ js_rect_from(JSContext* ctx, JSValueConst rect, int argc, JSValueConst argv[]) {
   if(JS_IsString(argv[0])) {
     const char* str = JS_ToCString(ctx, argv[0]);
     char* endptr = nullptr;
+
     for(size_t i = 0; i < 4; i++) {
       while(!isdigit(*str) && *str != '-' && *str != '+' && !(*str == '.' && isdigit(str[1])))
         str++;
+
       if(*str == '\0')
         break;
+
       array[i] = strtod(str, &endptr);
       str = endptr;
     }
@@ -645,12 +680,14 @@ js_rect_from(JSContext* ctx, JSValueConst rect, int argc, JSValueConst argv[]) {
 
 void
 js_rect_finalizer(JSRuntime* rt, JSValue val) {
-  JSRectData<double>* s = static_cast<JSRectData<double>*>(JS_GetOpaque(val, js_rect_class_id));
-  /* Note: 's' can be NULL in case JS_SetOpaque() was not called */
+  JSRectData<double>* s;
 
-  // s->~JSRectData<double>();
-  if(s)
+  /* Note: 's' can be NULL in case JS_SetOpaque() was not called */
+  if((s = static_cast<JSRectData<double>*>(JS_GetOpaque(val, js_rect_class_id)))) {
+    s->~JSRectData<double>();
+
     js_deallocate(rt, s);
+  }
 }
 
 JSClassDef js_rect_class = {
@@ -696,22 +733,20 @@ const JSCFunctionListEntry js_rect_static_funcs[] = {
 extern "C" int
 js_rect_init(JSContext* ctx, JSModuleDef* m) {
 
-  if(js_rect_class_id == 0) {
-    /* create the Rect class */
-    JS_NewClassID(&js_rect_class_id);
-    JS_NewClass(JS_GetRuntime(ctx), js_rect_class_id, &js_rect_class);
+  /* create the Rect class */
+  JS_NewClassID(&js_rect_class_id);
+  JS_NewClass(JS_GetRuntime(ctx), js_rect_class_id, &js_rect_class);
 
-    rect_proto = JS_NewObject(ctx);
-    JS_SetPropertyFunctionList(ctx, rect_proto, js_rect_proto_funcs, countof(js_rect_proto_funcs));
-    JS_SetClassProto(ctx, js_rect_class_id, rect_proto);
+  rect_proto = JS_NewObject(ctx);
+  JS_SetPropertyFunctionList(ctx, rect_proto, js_rect_proto_funcs, countof(js_rect_proto_funcs));
+  JS_SetClassProto(ctx, js_rect_class_id, rect_proto);
 
-    rect_class = JS_NewCFunction2(ctx, js_rect_constructor, "Rect", 0, JS_CFUNC_constructor, 0);
-    /* set proto.constructor and ctor.prototype */
-    JS_SetConstructor(ctx, rect_class, rect_proto);
-    JS_SetPropertyFunctionList(ctx, rect_class, js_rect_static_funcs, countof(js_rect_static_funcs));
+  rect_class = JS_NewCFunction2(ctx, js_rect_constructor, "Rect", 0, JS_CFUNC_constructor, 0);
+  /* set proto.constructor and ctor.prototype */
+  JS_SetConstructor(ctx, rect_class, rect_proto);
+  JS_SetPropertyFunctionList(ctx, rect_class, js_rect_static_funcs, countof(js_rect_static_funcs));
 
-    // js_object_inspect(ctx, rect_proto, js_rect_inspect);
-  }
+  // js_object_inspect(ctx, rect_proto, js_rect_inspect);
 
   if(m)
     JS_SetModuleExport(ctx, m, "Rect", rect_class);

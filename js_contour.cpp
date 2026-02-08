@@ -1385,7 +1385,14 @@ js_contour_intersect(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
   return ret;
 }
 
-enum { PROP_ASPECT_RATIO = 0, PROP_EXTENT, PROP_SOLIDITY, PROP_EQUIVALENT_DIAMETER, PROP_ORIENTATION, PROP_BOUNDING_RECT };
+enum {
+  PROP_ASPECT_RATIO = 0,
+  PROP_EXTENT,
+  PROP_SOLIDITY,
+  PROP_EQUIVALENT_DIAMETER,
+  PROP_ORIENTATION,
+  PROP_BOUNDING_RECT,
+};
 
 static JSValue
 js_contour_get(JSContext* ctx, JSValueConst this_val, int magic) {

@@ -15,7 +15,16 @@
 #include <opencv2/core/types.hpp>
 #include <utility>
 
-enum { PROP_A = 0, PROP_B, PROP_SLOPE, PROP_PIVOT, PROP_TO, PROP_ANGLE, PROP_ASPECT, PROP_LENGTH };
+enum {
+  PROP_A = 0,
+  PROP_B,
+  PROP_SLOPE,
+  PROP_PIVOT,
+  PROP_TO,
+  PROP_ANGLE,
+  PROP_ASPECT,
+  PROP_LENGTH,
+};
 
 extern "C" {
 thread_local JSValue line_proto = JS_UNDEFINED, line_class = JS_UNDEFINED;

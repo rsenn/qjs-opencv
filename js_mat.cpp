@@ -65,7 +65,17 @@ enum {
   METHOD_TOTAL,
   METHOD_INV,
 };
-enum { MAT_EXPR_AND = 0, MAT_EXPR_OR, MAT_EXPR_XOR, MAT_EXPR_MUL, MAT_EXPR_DIV, MAT_EXPR_SHL, MAT_EXPR_SHR, MAT_EXPR_ADD, MAT_EXPR_SUB };
+enum {
+  MAT_EXPR_AND = 0,
+  MAT_EXPR_OR,
+  MAT_EXPR_XOR,
+  MAT_EXPR_MUL,
+  MAT_EXPR_DIV,
+  MAT_EXPR_SHL,
+  MAT_EXPR_SHR,
+  MAT_EXPR_ADD,
+  MAT_EXPR_SUB,
+};
 enum { MAT_ITERATOR_KEYS, MAT_ITERATOR_VALUES, MAT_ITERATOR_ENTRIES };
 extern "C" {
 thread_local JSValue mat_proto = JS_UNDEFINED, mat_class = JS_UNDEFINED, mat_iterator_proto = JS_UNDEFINED, mat_iterator_class = JS_UNDEFINED;
@@ -582,7 +592,7 @@ js_mat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
         cv::Size wholeSize;
         cv::Point ofs;
         m->locateROI(wholeSize, ofs);
-        
+
         if(argc > 0)
           js_size_write(ctx, argv[0], wholeSize);
 
@@ -1290,7 +1300,8 @@ js_mat_get_props(JSContext* ctx, JSValueConst this_val, int magic) {
       } else {
         std::vector<int> sizes;
 
-        for(int i = 0; i < m->size.dims(); ++i) sizes.push_back(m->size[i]);
+        for(int i = 0; i < m->size.dims(); ++i)
+          sizes.push_back(m->size[i]);
 
         ret = js_array_from(ctx, sizes);
       }
