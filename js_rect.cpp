@@ -57,43 +57,43 @@ js_rect_wrap(JSContext* ctx, const JSRectData<double>& rect) {
 
 static JSValue
 js_rect_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
-  JSRectData<double> rect;
+  JSRectData<double> r;
   int i = 0;
   BOOL got_position = FALSE;
 
   if(argc > 0) {
-    if(!js_value_to(ctx, argv[0], rect)) {
-      JSPointData<double> point;
-      JSSizeData<double> size;
+    if(!js_value_to(ctx, argv[0], r)) {
+      JSPointData<double> p;
+      JSSizeData<double> s;
 
       while(i < argc) {
         if(JS_IsNumber(argv[i]) && JS_IsNumber(argv[i + 1])) {
           if(!got_position) {
-            JS_ToFloat64(ctx, &rect.x, argv[i]);
-            JS_ToFloat64(ctx, &rect.y, argv[i + 1]);
+            JS_ToFloat64(ctx, &r.x, argv[i]);
+            JS_ToFloat64(ctx, &r.y, argv[i + 1]);
             got_position = TRUE;
           } else {
-            JS_ToFloat64(ctx, &rect.width, argv[i]);
-            JS_ToFloat64(ctx, &rect.height, argv[i + 1]);
+            JS_ToFloat64(ctx, &r.width, argv[i]);
+            JS_ToFloat64(ctx, &r.height, argv[i + 1]);
           }
 
           i += 2;
-        } else if(js_point_read(ctx, argv[i], &point)) {
+        } else if(js_point_read(ctx, argv[i], &p)) {
           if(!got_position) {
-            rect.x = point.x;
-            rect.y = point.y;
+            r.x = p.x;
+            r.y = p.y;
             got_position = TRUE;
           } else {
-            rect.width = fabs(point.x - rect.x);
-            rect.height = fabs(point.y - rect.y);
-            rect.x = fmin(point.x, rect.x);
-            rect.y = fmin(point.y, rect.y);
+            r.width = fabs(p.x - r.x);
+            r.height = fabs(p.y - r.y);
+            r.x = fmin(p.x, r.x);
+            r.y = fmin(p.y, r.y);
           }
 
           i++;
-        } else if(js_size_read(ctx, argv[i], &size)) {
-          rect.width = size.width;
-          rect.height = size.height;
+        } else if(js_size_read(ctx, argv[i], &s)) {
+          r.width = s.width;
+          r.height = s.height;
           i++;
         } else {
           i++;
@@ -107,7 +107,7 @@ js_rect_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueCo
   if(JS_IsException(proto))
     return JS_EXCEPTION;
 
-  return js_rect_new(ctx, proto, rect);
+  return js_rect_new(ctx, proto, r);
 }
 
 JSRectData<double>*
