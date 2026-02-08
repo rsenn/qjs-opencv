@@ -469,7 +469,7 @@ js_mat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
     JS_ToInt64(ctx, &i, argv[0]);
     pt = js_point_get(ctx, argv[0]);
 
-    if(argc > 1) 
+    if(argc > 1)
       JS_ToInt64(ctx, &i2, argv[1]);
   }
 
@@ -488,9 +488,9 @@ js_mat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
           ret = JS_NewInt64(ctx, m->total());
         } else {
           int32_t start, end = INT_MAX;
-        
+
           JS_ToInt32(ctx, &start, argv[0]);
-         
+
           if(argc > 1)
             JS_ToInt32(ctx, &end, argv[1]);
 
@@ -702,7 +702,7 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
   double value = 0;
   JSMatData *input, *output, *other;
   double scale = 1.0;
-  std::array<uint8_t, 4> arr;
+  //std::array<uint8_t, 4> arr;
 
   if((input = js_mat_data2(ctx, this_val)) == nullptr)
     return JS_EXCEPTION;
@@ -712,9 +712,8 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
 
   if(JS_IsNumber(argv[0])) {
     JS_ToFloat64(ctx, &value, argv[0]);
-
   } else if((other = js_mat_data_nothrow(argv[0])) == nullptr) {
-    js_array_to(ctx, argv[0], arr);
+    //js_array_to(ctx, argv[0], arr);
     js_color_read(ctx, argv[0], &color);
   }
 
@@ -731,7 +730,7 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
     output = input;
 
   cv::MatExpr expr;
-  cv::Mat tmp(input->rows, input->cols, input->type());
+  //cv::Mat tmp(input->rows, input->cols, input->type());
 
   if(other == nullptr) {
     cv::Mat& mat = *input;
@@ -759,6 +758,7 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       std::array<double, 4> arr;
 
       js_array_to(ctx, argv[0], arr);
+
       auto& scalar = *reinterpret_cast<cv::Scalar*>(&arr);
 
       switch(magic) {
@@ -768,7 +768,8 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
         case MAT_EXPR_MUL: expr = mat.mul(scalar, scale); break;
         case MAT_EXPR_DIV: expr = mat / scalar; break;
       }
-      tmp = static_cast<cv::Mat>(expr);
+
+      cv::Mat tmp(expr);
 
       *output = tmp;
       // ret = js_mat_wrap(ctx, tmp);

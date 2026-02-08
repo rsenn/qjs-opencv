@@ -1,5 +1,5 @@
 import { assert } from 'assert';
-import { CV_8UC1, CV_8UC3, Contour, EVENT_FLAG_CTRLKEY, EVENT_FLAG_SHIFTKEY, EVENT_LBUTTONDOWN, EVENT_LBUTTONUP, EVENT_MOUSEMOVE, EVENT_RBUTTONDOWN, EVENT_RBUTTONUP, GC_BGD, GC_FGD, GC_INIT_WITH_MASK, GC_INIT_WITH_RECT, GC_PR_BGD, GC_PR_FGD, IMREAD_COLOR, Mat, Point, Rect, Scalar, WINDOW_AUTOSIZE, addWeighted, copyTo, destroyWindow, drawCircle, drawRect, grabCut, imread, imshow, namedWindow, setMouseCallback, waitKey, } from 'opencv';
+import { CV_8UC1, CV_8UC3, Contour, EVENT_FLAG_CTRLKEY, EVENT_FLAG_SHIFTKEY, EVENT_LBUTTONDOWN, EVENT_LBUTTONUP, EVENT_MOUSEMOVE, EVENT_RBUTTONDOWN, EVENT_RBUTTONUP, GC_BGD, GC_FGD, GC_INIT_WITH_MASK, GC_INIT_WITH_RECT, GC_PR_BGD, GC_PR_FGD, IMREAD_COLOR, Mat, Point, Rect, Scalar, WINDOW_AUTOSIZE, addWeighted, copyTo, destroyWindow, drawCircle, drawRect, grabCut, imread, imshow, namedWindow, setMouseCallback, waitKeyEx } from 'opencv';
 
 const C = console.config({ compact: true });
 
@@ -34,7 +34,10 @@ const FGD_KEY = EVENT_FLAG_SHIFTKEY;
 function getBinMask(/*const Mat&*/ comMask, /*Mat& */ binMask) {
   if(comMask.empty || comMask.type != CV_8UC1) throw new Error('comMask is empty or has incorrect type (not CV_8UC1)');
 
-  if(binMask.empty || binMask.rows != comMask.rows || binMask.cols != comMask.cols) binMask.create(comMask.size, CV_8UC1);
+  if(binMask.empty || !binMask.size.equals(comMask.size)) binMask.create(comMask.size, CV_8UC1);
+
+  comMask.and(Scalar(1));
+
   binMask = comMask & 1;
 }
 
@@ -74,25 +77,26 @@ class GCApplication {
   }
 
   showImage() {
-    if(this.image.empty || this.winName.empty) return;
+    if(!this.image || this.image.empty || !this.winName) return;
 
     const res = new Mat();
     const binMask = new Mat();
+  
     this.image.copyTo(res);
 
     if(this.isInitialized) {
       getBinMask(this.mask, binMask);
 
-      const black = new Mat(binMask.rows, binMask.cols, CV_8UC3, Scalar(0, 0, 0));
+      const black = new Mat(binMask.size, CV_8UC3, Scalar(0, 0, 0));
       black.setTo(Scalar(255, 255, 255), binMask);
 
       addWeighted(black, 0.5, res, 0.5, 0.0, res);
     }
 
-    for(let pt of this.bgdPxls) drawCircle(res, pt, GCApplication.radius, BLUE, GCApplication.thickness);
-    for(let pt of this.fgdPxls) drawCircle(res, pt, GCApplication.radius, RED, GCApplication.thickness);
-    for(let pt of this.prBgdPxls) drawCircle(res, pt, GCApplication.radius, LIGHTBLUE, GCApplication.thickness);
-    for(let pt of this.prFgdPxls) drawCircle(res, pt, GCApplication.radius, PINK, GCApplication.thickness);
+    for(const pt of this.bgdPxls) drawCircle(res, pt, GCApplication.radius, BLUE, GCApplication.thickness);
+    for(const pt of this.fgdPxls) drawCircle(res, pt, GCApplication.radius, RED, GCApplication.thickness);
+    for(const pt of this.prBgdPxls) drawCircle(res, pt, GCApplication.radius, LIGHTBLUE, GCApplication.thickness);
+    for(const pt of this.prFgdPxls) drawCircle(res, pt, GCApplication.radius, PINK, GCApplication.thickness);
 
     if(this.rectState == GCApplication.IN_PROCESS || this.rectState == GCApplication.SET)
       drawRect(res, new Point(this.rect.x, this.rect.y), new Point(this.rect.x + this.rect.width, this.rect.y + this.rect.height), GREEN, 2);
@@ -122,24 +126,24 @@ class GCApplication {
     let bvalue, fvalue;
 
     if(!isPr) {
-      bpxls = this.bgdPxls;
-      fpxls = this.fgdPxls;
+      bpxls = 'bgdPxls';
+      fpxls = 'fgdPxls';
       bvalue = GC_BGD;
       fvalue = GC_FGD;
     } else {
-      bpxls = this.prBgdPxls;
-      fpxls = this.prFgdPxls;
+      bpxls = 'prBgdPxls';
+      fpxls = 'prFgdPxls';
       bvalue = GC_PR_BGD;
       fvalue = GC_PR_FGD;
     }
 
     if(flags & BGD_KEY) {
-      bpxls.push(p);
+      this[bpxls].push(p);
       drawCircle(this.mask, p, GCApplication.radius, bvalue, GCApplication.thickness);
     }
-    
+
     if(flags & FGD_KEY) {
-      fpxls.push(p);
+      this[fpxls].push(p);
       drawCircle(this.mask, p, GCApplication.radius, fvalue, GCApplication.thickness);
     }
   }
@@ -173,7 +177,7 @@ class GCApplication {
         let isb = (flags & BGD_KEY) != 0,
           isf = (flags & FGD_KEY) != 0;
         if((isb || isf) && this.rectState == GCApplication.SET) this.prLblsState = GCApplication.IN_PROCESS;
-        
+
         break;
       }
 
@@ -292,7 +296,7 @@ class GCApplication {
 const gcapp = new GCApplication();
 
 function on_mouse(event, x, y, flags, param) {
-  if(event) console.log('on_mouse', C, { event, x, y, flags });
+  //if(event) console.log('on_mouse', C, { event, x, y, flags });
 
   gcapp.mouseClick(event, x, y, flags, param);
 }
@@ -322,45 +326,47 @@ function main(input) {
   gcapp.showImage();
 
   for(;;) {
-    const c = waitKey(1000);
+    const k = waitKeyEx(0);
+    const c = k & 0xff;
+    const ch = String.fromCodePoint(c);
 
-    switch (c) {
-      case '\x1b':
-      case 113: {
+    switch (ch) {
+      case '\x1b': {
         console.log('Exiting ...');
         destroyWindow(winName);
         return 0;
       }
 
-      case 'r':
-      case 114: {
+      case 'r':      {
         console.log('RESET');
         gcapp.reset();
         gcapp.showImage();
         break;
       }
 
-      case 'n':
-      case 233: {
+      case 'n': {
         const { iterCount } = gcapp;
 
-        console.log('<', iterCount, '... ');
+        process.stdout.puts('<', iterCount, '... ');
 
         const newIterCount = gcapp.nextIter();
 
         if(newIterCount > iterCount) {
           gcapp.showImage();
-          console.log(iterCount, '>');
+          process.stdout.puts(iterCount, '>');
         } else {
-          console.log('rect must be determined>');
+          process.stdout.puts('rect must be determined>');
         }
 
+        process.stdout.puts('\n');
         break;
       }
 
+case '':
+case '\xff': break;
 
       default: {
-        console.log('keycode', c);
+        console.log('keycode', c, `char '${ch}'`);
       }
     }
   }

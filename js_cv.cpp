@@ -1290,7 +1290,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
     }
 
     case OTHER_SCALAR: {
-      cv::Scalar sca;
+      std::array<double, 4> sca;
 
       if(argc == 1 && js_is_array(ctx, argv[0])) {
         js_value_to(ctx, argv[0], sca);
@@ -1299,7 +1299,8 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
           sca[i] = i < argc && JS_IsNumber(argv[i]) ? js_value_to<double>(ctx, argv[i]) : 0;
       }
 
-      ret = js_value_from(ctx, sca);
+      // ret = JS_NewArray(ctx);
+      ret = js_array_from(ctx, sca);
       break;
     }
 

@@ -342,4 +342,10 @@ js_array_copy(JSContext* ctx, JSValueConst array, const Container& v) {
   js_array<typename Container::value_type>::copy_sequence(ctx, array, v.begin(), v.end());
 }
 
+template<class T, size_t N>
+static inline int
+js_value_to(JSContext* ctx, JSValueConst value, std::array<T, N>& in) {
+  return js_array_to(ctx, value, in);
+}
+
 #endif /* defined(JS_ARRAY_HPP) */
