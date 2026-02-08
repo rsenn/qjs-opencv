@@ -698,11 +698,12 @@ js_mat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
 static JSValue
 js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSValue ret = JS_UNDEFINED;
-  JSColorData<double> color;
+  // JSColorData<double> color;
   double value = 0;
   JSMatData *input, *output = nullptr, *other = nullptr;
   double scale = 1.0;
   std::array<double, 4> arr;
+  BOOL scalar = FALSE;
 
   if((input = js_mat_data2(ctx, this_val)) == nullptr)
     return JS_EXCEPTION;
@@ -710,11 +711,11 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
   if(argc < 1)
     return JS_EXCEPTION;
 
-  if(JS_IsNumber(argv[0])) {
+  if((scalar = !JS_IsNumber(argv[0]))) {
     JS_ToFloat64(ctx, &value, argv[0]);
   } else if((other = js_mat_data_nothrow(argv[0])) == nullptr) {
     js_array_to(ctx, argv[0], arr);
-    js_color_read(ctx, argv[0], &color);
+    // js_color_read(ctx, argv[0], &color);
   }
 
   if(magic == 3 && argc > 1) {
@@ -733,34 +734,36 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
   // cv::Mat tmp(input->rows, input->cols, input->type());
 
   if(other == nullptr) {
+    cv::Mat tmp(mat.rows, mat.cols, mat.type);
     cv::Mat& mat = *input;
 
-    if(mat.channels() == 1) {
+    if(!scalar) {
+      mat.copyTo(tmp);
+
       if(mat.depth() == 0) {
         switch(magic) {
-          case MAT_EXPR_AND: mat &= (uchar)value; break;
-          case MAT_EXPR_OR: cv::bitwise_or(mat, cv::Scalar(value, value, value, value), mat); break;
-          case MAT_EXPR_XOR: mat ^= (uchar)value; break;
-          case MAT_EXPR_ADD: mat = mat + value; break;
-          case MAT_EXPR_SUB: mat = mat - value; break;
-          case MAT_EXPR_MUL: mat = mat * value; break;
-          case MAT_EXPR_DIV: mat = mat / value; break;
+          case MAT_EXPR_AND: tmp &= (uchar)value; break;
+          case MAT_EXPR_OR: cv::bitwise_or(mat, cv::Scalar(value, value, value, value), tmp); break;
+          case MAT_EXPR_XOR: tmp ^= (uchar)value; break;
+          case MAT_EXPR_ADD: tmp = mat + value; break;
+          case MAT_EXPR_SUB: tmp = mat - value; break;
+          case MAT_EXPR_MUL: tmp = mat * value; break;
+          case MAT_EXPR_DIV: tmp = mat / value; break;
         }
       } else {
         switch(magic) {
-          case MAT_EXPR_AND: mat &= value; break;
-          case MAT_EXPR_OR: cv::bitwise_or(mat, cv::Scalar(value, value, value, value), mat); break;
-          case MAT_EXPR_XOR: mat ^= value; break;
-          case MAT_EXPR_ADD: mat += value; break;
-          case MAT_EXPR_SUB: mat -= value; break;
-          case MAT_EXPR_MUL: mat *= value; break;
-          case MAT_EXPR_DIV: mat /= value; break;
+          case MAT_EXPR_AND: tmp &= value; break;
+          case MAT_EXPR_OR: cv::bitwise_or(mat, cv::Scalar(value, value, value, value), tmp); break;
+          case MAT_EXPR_XOR: tmp ^= value; break;
+          case MAT_EXPR_ADD: tmp += value; break;
+          case MAT_EXPR_SUB: tmp -= value; break;
+          case MAT_EXPR_MUL: tmp *= value; break;
+          case MAT_EXPR_DIV: tmp /= value; break;
         }
       }
     } else {
-      std::array<double, 4> arr;
-
-      js_array_to(ctx, argv[0], arr);
+      /*std::array<double, 4> arr;
+      js_array_to(ctx, argv[0], arr);*/
 
       auto& scalar = *reinterpret_cast<cv::Scalar*>(&arr);
 
@@ -774,12 +777,11 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
         case MAT_EXPR_DIV: expr = mat / scalar; break;
       }
 
-      cv::Mat tmp(expr);
-
-      *output = tmp;
-      // ret = js_mat_wrap(ctx, tmp);
+      tmp = expr;
     }
 
+    *output = tmp;
+    ret = js_mat_wrap(ctx, tmp);
   } else {
 
     if(input->rows != other->rows || input->cols != other->cols) {
