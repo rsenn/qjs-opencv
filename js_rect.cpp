@@ -59,7 +59,7 @@ static JSValue
 js_rect_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   JSRectData<double> r;
   int i = 0;
-  BOOL got_position = FALSE, got_size=FALSE;
+  bool got_position(false), got_size(false);
 
   if(argc > 0) {
     if(!js_value_to(ctx, argv[0], r)) {
@@ -71,11 +71,11 @@ js_rect_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueCo
           if(!got_position) {
             JS_ToFloat64(ctx, &r.x, argv[i]);
             JS_ToFloat64(ctx, &r.y, argv[i + 1]);
-            got_position = TRUE;
+            got_position = true;
           } else {
             JS_ToFloat64(ctx, &r.width, argv[i]);
             JS_ToFloat64(ctx, &r.height, argv[i + 1]);
-            got_size=TRUE;
+            got_size = true;
           }
 
           i += 2;
@@ -83,29 +83,29 @@ js_rect_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueCo
           if(!got_position) {
             r.x = p.x;
             r.y = p.y;
-            got_position = TRUE;
+            got_position = true;
           } else {
             r.width = fabs(p.x - r.x);
             r.height = fabs(p.y - r.y);
             r.x = fmin(p.x, r.x);
             r.y = fmin(p.y, r.y);
-            got_size=TRUE;
+            got_size = true;
           }
 
           i++;
         } else if(js_size_read(ctx, argv[i], &s)) {
           r.width = s.width;
           r.height = s.height;
-            got_size=TRUE;
+          got_size = true;
           i++;
         } else {
           i++;
           return JS_ThrowTypeError(ctx, "argument %d is no Number|Point|Size", i);
         }
-        
-        if(got_position && got_size) break;
-      }
 
+        if(got_position && got_size)
+          break;
+      }
     }
   }
 
