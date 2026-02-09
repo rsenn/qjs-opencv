@@ -128,8 +128,8 @@ js_barcode_detector_method(JSContext* ctx, JSValueConst this_val, int argc, JSVa
       js_array_clear(ctx, argv[2]);
       js_array_copy(ctx, argv[2], decoded_info);
 
-      //std::vector<int32_t> decoded(decoded_type.size());
-      //std::copy(decoded_type.begin(), decoded_type.end(), decoded.begin());
+      // std::vector<int32_t> decoded(decoded_type.size());
+      // std::copy(decoded_type.begin(), decoded_type.end(), decoded.begin());
 
       js_array_clear(ctx, argv[3]);
       js_array_copy(ctx, argv[3], decoded_type);
@@ -148,8 +148,8 @@ js_barcode_detector_method(JSContext* ctx, JSValueConst this_val, int argc, JSVa
 
       js_array_copy(ctx, argv[1], decoded_info);
 
-      //std::vector<int32_t> decoded(decoded_type.size());
-      //std::copy(decoded_type.begin(), decoded_type.end(), decoded.begin());
+      // std::vector<int32_t> decoded(decoded_type.size());
+      // std::copy(decoded_type.begin(), decoded_type.end(), decoded.begin());
 
       js_array_clear(ctx, argv[2]);
       js_array_copy(ctx, argv[2], decoded_type);

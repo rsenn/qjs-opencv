@@ -2121,7 +2121,7 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
         cv::HuMoments(moments, &hu[0]);
 
         if(JS_IsArray(ctx, argv[1])) {
-      js_array_clear(ctx, argv[1]);
+          js_array_clear(ctx, argv[1]);
           js_array_copy(ctx, argv[1], hu.begin(), hu.end());
         }
 

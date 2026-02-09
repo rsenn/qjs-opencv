@@ -1,7 +1,15 @@
-import { Mat, Scalar, FONT_HERSHEY_SIMPLEX, createBackgroundSubtractorMOG2, createBackgroundSubtractorKNN, VideoCapture, Point, drawRect, putText, imshow, waitKey, CAP_PROP_POS_FRAMES } from 'opencv';
+import { Mat, Scalar, FONT_HERSHEY_SIMPLEX, createBackgroundSubtractorCNT, createBackgroundSubtractorGMG, createBackgroundSubtractorGSOC, createBackgroundSubtractorKNN, createBackgroundSubtractorLSBP, createBackgroundSubtractorMOG, createBackgroundSubtractorMOG2, VideoCapture, Point, drawRect, putText, imshow, waitKey, CAP_PROP_POS_FRAMES, } from 'opencv';
 
 function main(input, algo = 'MOG2') {
-  const pBackSub = algo == 'MOG2' ? createBackgroundSubtractorMOG2() : createBackgroundSubtractorKNN();
+  const pBackSub = {
+    CNT: createBackgroundSubtractorCNT,
+    GMG: createBackgroundSubtractorGMG,
+    GSOC: createBackgroundSubtractorGSOC,
+    KNN: createBackgroundSubtractorKNN,
+    LSBP: createBackgroundSubtractorLSBP,
+    MOG: createBackgroundSubtractorMOG,
+    MOG2: createBackgroundSubtractorMOG2,
+  }[algo]();
 
   const capture = new VideoCapture(input);
 
