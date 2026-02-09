@@ -5,7 +5,7 @@
 #include "js_umat.hpp"
 
 #ifdef USE_BARCODE
-#include <opencv2/barcode.hpp>
+#include <opencv2/objdetect/barcode.hpp>
 
 typedef cv::barcode::BarcodeDetector JSBarcodeDetectorClass;
 typedef JSBarcodeDetectorClass JSBarcodeDetectorData;
@@ -120,7 +120,7 @@ js_barcode_detector_method(JSContext* ctx, JSValueConst this_val, int argc, JSVa
       JSInputArray img = js_input_array(ctx, argv[0]);
       JSInputArray points = js_input_array(ctx, argv[1]);
       std::vector<std::string> decoded_info;
-      std::vector<cv::barcode::BarcodeType> decoded_type;
+      std::vector<cv::barcode::Result::BarcodeType> decoded_type;
 
       BOOL result = wb->decode(img, points, decoded_info, decoded_type);
       ret = JS_NewBool(ctx, result);
@@ -139,7 +139,7 @@ js_barcode_detector_method(JSContext* ctx, JSValueConst this_val, int argc, JSVa
     case METHOD_DETECT_AND_DECODE: {
       JSInputArray img = js_input_array(ctx, argv[0]);
       std::vector<std::string> decoded_info;
-      std::vector<cv::barcode::BarcodeType> decoded_type;
+      std::vector<cv::barcode::Result::BarcodeType> decoded_type;
       std::vector<cv::Point2f> points;
 
       BOOL result = wb->detectAndDecode(img, decoded_info, decoded_type, points);
@@ -181,7 +181,7 @@ const JSCFunctionListEntry js_barcode_detector_barcode_funcs[] = {
     JS_PROP_INT32_DEF("EAN_13", cv::barcode::EAN_13, JS_PROP_ENUMERABLE),
     JS_PROP_INT32_DEF("UPC_A", cv::barcode::UPC_A, JS_PROP_ENUMERABLE),
     JS_PROP_INT32_DEF("UPC_E", cv::barcode::UPC_E, JS_PROP_ENUMERABLE),
-    JS_PROP_INT32_DEF("UPC_EAN_EXTENSION", cv::barcode::UPC_EAN_EXTENSION, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("UPC_EAN_EXTENSION", cv::barcode::Result::UPC_EAN_EXTENSION, JS_PROP_ENUMERABLE),
 };
 
 const JSCFunctionListEntry js_barcode_detector_static_funcs[] = {
