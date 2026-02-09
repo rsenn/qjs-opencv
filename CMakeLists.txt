@@ -148,7 +148,7 @@ endif()
 if(USE_BARCODE)
   add_definitions(-DUSE_BARCODE=1)
   set(BARCODE_SOURCE js_barcode_detector.cpp)
-  check_library_exists(opencv_barcode _ZN2cv7barcode15BarcodeDetectorD1Ev
+  check_library_exists(opencv_objdetect _ZN2cv7barcode15BarcodeDetectorC1Ev
                        "${OPENCV_LIBDIR}" OPENCV_BARCODE)
 
   check_include_file_cxx(opencv2/barcode.hpp HAVE_OPENCV2_BARCODE_HPP)
@@ -200,7 +200,7 @@ else(HAVE_OPENCV2_BGSEGM_HPP AND OPENCV_BGSEGM)
 endif(HAVE_OPENCV2_BGSEGM_HPP AND OPENCV_BGSEGM)]]
 set(OPENCV_BGSEGM_LIBRARY opencv_bgsegm)
 if(USE_BARCODE)
-  list(APPEND OPENCV_EXTRA_LIBRARIES opencv_barcode)
+  list(APPEND OPENCV_EXTRA_LIBRARIES opencv_objdetect)
 endif(USE_BARCODE)
 list(APPEND OPENCV_EXTRA_LIBRARIES opencv_xphoto)
 
