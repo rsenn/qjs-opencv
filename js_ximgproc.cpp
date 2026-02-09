@@ -1511,11 +1511,11 @@ const JSCFunctionListEntry js_segmentation_strategy_static_funcs[] = {};
 enum {
   CREATE_GRAPH_SEGMENTATION,
   CREATE_SELECTIVE_SEARCH_SEGMENTATION,
-  CREATE_SELECTIVE_SEARCH_SEGMENTATION_STRATEGY_COLOR,
-  CREATE_SELECTIVE_SEARCH_SEGMENTATION_STRATEGY_FILL,
-  CREATE_SELECTIVE_SEARCH_SEGMENTATION_STRATEGY_MULTIPLE,
-  CREATE_SELECTIVE_SEARCH_SEGMENTATION_STRATEGY_SIZE,
-  CREATE_SELECTIVE_SEARCH_SEGMENTATION_STRATEGY_TEXTURE,
+  CREATE_SEGMENTATION_STRATEGY_COLOR,
+  CREATE_SEGMENTATION_STRATEGY_FILL,
+  CREATE_SEGMENTATION_STRATEGY_MULTIPLE,
+  CREATE_SEGMENTATION_STRATEGY_SIZE,
+  CREATE_SEGMENTATION_STRATEGY_TEXTURE,
 };
 
 static JSValue
@@ -1549,31 +1549,49 @@ js_segmentation_function(JSContext* ctx, JSValueConst this_val, int argc, JSValu
       break;
     }
 
-    case CREATE_SELECTIVE_SEARCH_SEGMENTATION_STRATEGY_COLOR: {
-      ret = js_search_segmentation_wrap(ctx, selective_search_segmentation_proto, cv::ximgproc::segmentation::createSelectiveSearchSegmentationStrategyColor());
+    case CREATE_SEGMENTATION_STRATEGY_COLOR: {
+      ret = js_segmentation_strategy_wrap(ctx, segmentation_strategy_proto, cv::ximgproc::segmentation::createSelectiveSearchSegmentationStrategyColor());
       break;
     }
 
-    case CREATE_SELECTIVE_SEARCH_SEGMENTATION_STRATEGY_FILL: {
-      ret = js_search_segmentation_wrap(ctx, selective_search_segmentation_proto, cv::ximgproc::segmentation::createSelectiveSearchSegmentationStrategyFill());
+    case CREATE_SEGMENTATION_STRATEGY_FILL: {
+      ret = js_segmentation_strategy_wrap(ctx, segmentation_strategy_proto, cv::ximgproc::segmentation::createSelectiveSearchSegmentationStrategyFill());
       break;
     }
 
-    case CREATE_SELECTIVE_SEARCH_SEGMENTATION_STRATEGY_MULTIPLE: {
-      ret = js_search_segmentation_wrap(ctx,
-                                        selective_search_segmentation_proto,
-                                        cv::ximgproc::segmentation::createSelectiveSearchSegmentationStrategyMultiple());
+    case CREATE_SEGMENTATION_STRATEGY_MULTIPLE: {
+      std::array<JSSegmentationStrategyData*, 4> args;
+
+      const int n = std::min(argc, 4);
+
+      for(int i = 0; i < n; ++i) {
+        args[i] = js_segmentation_strategy_data(argv[i]);
+
+        if(!args[i])
+          return JS_ThrowTypeError(ctx, "argument %d must be SelectiveSearchSegmentationStrategy", i + 1);
+      }
+
+      JSSegmentationStrategyData ptr;
+
+      switch(n) {
+        case 0: ptr = cv::ximgproc::segmentation::createSelectiveSearchSegmentationStrategyMultiple(); break;
+        case 1: ptr = cv::ximgproc::segmentation::createSelectiveSearchSegmentationStrategyMultiple(*args[0]); break;
+        case 2: ptr = cv::ximgproc::segmentation::createSelectiveSearchSegmentationStrategyMultiple(*args[0], *args[1]); break;
+        case 3: ptr = cv::ximgproc::segmentation::createSelectiveSearchSegmentationStrategyMultiple(*args[0], *args[1], *args[2]); break;
+        case 4: ptr = cv::ximgproc::segmentation::createSelectiveSearchSegmentationStrategyMultiple(*args[0], *args[1], *args[2], *args[3]); break;
+      }
+
+      ret = js_segmentation_strategy_wrap(ctx, segmentation_strategy_proto, ptr);
       break;
     }
 
-    case CREATE_SELECTIVE_SEARCH_SEGMENTATION_STRATEGY_SIZE: {
-      ret = js_search_segmentation_wrap(ctx, selective_search_segmentation_proto, cv::ximgproc::segmentation::createSelectiveSearchSegmentationStrategySize());
+    case CREATE_SEGMENTATION_STRATEGY_SIZE: {
+      ret = js_segmentation_strategy_wrap(ctx, segmentation_strategy_proto, cv::ximgproc::segmentation::createSelectiveSearchSegmentationStrategySize());
       break;
     }
 
-    case CREATE_SELECTIVE_SEARCH_SEGMENTATION_STRATEGY_TEXTURE: {
-      ret =
-          js_search_segmentation_wrap(ctx, selective_search_segmentation_proto, cv::ximgproc::segmentation::createSelectiveSearchSegmentationStrategyTexture());
+    case CREATE_SEGMENTATION_STRATEGY_TEXTURE: {
+      ret = js_segmentation_strategy_wrap(ctx, segmentation_strategy_proto, cv::ximgproc::segmentation::createSelectiveSearchSegmentationStrategyTexture());
       break;
     }
   }
@@ -1937,12 +1955,11 @@ js_ximgproc_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
 js_function_list_t js_ximgproc_segmentation_funcs{
     JS_CFUNC_MAGIC_DEF("createGraphSegmentation)", 0, js_segmentation_function, CREATE_GRAPH_SEGMENTATION),
     JS_CFUNC_MAGIC_DEF("createSelectiveSearchSegmentation)", 0, js_segmentation_function, CREATE_SELECTIVE_SEARCH_SEGMENTATION),
-    JS_CFUNC_MAGIC_DEF("createSelectiveSearchSegmentationStrategyColor)", 0, js_segmentation_function, CREATE_SELECTIVE_SEARCH_SEGMENTATION_STRATEGY_COLOR),
-    JS_CFUNC_MAGIC_DEF("createSelectiveSearchSegmentationStrategyFill)", 0, js_segmentation_function, CREATE_SELECTIVE_SEARCH_SEGMENTATION_STRATEGY_FILL),
-    JS_CFUNC_MAGIC_DEF(
-        "createSelectiveSearchSegmentationStrategyMultiple)", 0, js_segmentation_function, CREATE_SELECTIVE_SEARCH_SEGMENTATION_STRATEGY_MULTIPLE),
-    JS_CFUNC_MAGIC_DEF("createSelectiveSearchSegmentationStrategySize)", 0, js_segmentation_function, CREATE_SELECTIVE_SEARCH_SEGMENTATION_STRATEGY_SIZE),
-    JS_CFUNC_MAGIC_DEF("createSelectiveSearchSegmentationStrategyTexture)", 0, js_segmentation_function, CREATE_SELECTIVE_SEARCH_SEGMENTATION_STRATEGY_TEXTURE),
+    JS_CFUNC_MAGIC_DEF("createSelectiveSearchSegmentationStrategyColor)", 0, js_segmentation_function, CREATE_SEGMENTATION_STRATEGY_COLOR),
+    JS_CFUNC_MAGIC_DEF("createSelectiveSearchSegmentationStrategyFill)", 0, js_segmentation_function, CREATE_SEGMENTATION_STRATEGY_FILL),
+    JS_CFUNC_MAGIC_DEF("createSelectiveSearchSegmentationStrategyMultiple)", 0, js_segmentation_function, CREATE_SEGMENTATION_STRATEGY_MULTIPLE),
+    JS_CFUNC_MAGIC_DEF("createSelectiveSearchSegmentationStrategySize)", 0, js_segmentation_function, CREATE_SEGMENTATION_STRATEGY_SIZE),
+    JS_CFUNC_MAGIC_DEF("createSelectiveSearchSegmentationStrategyTexture)", 0, js_segmentation_function, CREATE_SEGMENTATION_STRATEGY_TEXTURE),
 };
 
 js_function_list_t js_ximgproc_ximgproc_funcs{
