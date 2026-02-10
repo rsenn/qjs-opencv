@@ -1358,17 +1358,17 @@ JSClassDef js_search_segmentation_class = {
 };
 
 const JSCFunctionListEntry js_search_segmentation_proto_funcs[] = {
-    JS_CFUNC_MAGIC_DEF("addGraphSegmentation)", 0, js_search_segmentation_method, SEARCH_SEGMENTATION_ADD_GRAPH_SEGMENTATION),
-    JS_CFUNC_MAGIC_DEF("addImage)", 0, js_search_segmentation_method, SEARCH_SEGMENTATION_ADD_IMAGE),
-    JS_CFUNC_MAGIC_DEF("addStrategy)", 0, js_search_segmentation_method, SEARCH_SEGMENTATION_ADD_STRATEGY),
-    JS_CFUNC_MAGIC_DEF("clearGraphSegmentations)", 0, js_search_segmentation_method, SEARCH_SEGMENTATION_CLEAR_GRAPH_SEGMENTATIONS),
-    JS_CFUNC_MAGIC_DEF("clearImages)", 0, js_search_segmentation_method, SEARCH_SEGMENTATION_CLEAR_IMAGES),
-    JS_CFUNC_MAGIC_DEF("clearStrategies)", 0, js_search_segmentation_method, SEARCH_SEGMENTATION_CLEAR_STRATEGIES),
-    JS_CFUNC_MAGIC_DEF("process)", 0, js_search_segmentation_method, SEARCH_SEGMENTATION_PROCESS),
-    JS_CFUNC_MAGIC_DEF("setBaseImage)", 0, js_search_segmentation_method, SEARCH_SEGMENTATION_SET_BASE_IMAGE),
-    JS_CFUNC_MAGIC_DEF("switchToSelectiveSearchFast)", 0, js_search_segmentation_method, SEARCH_SEGMENTATION_SWITCH_TO_SELECTIVE_SEARCH_FAST),
-    JS_CFUNC_MAGIC_DEF("switchToSelectiveSearchQuality)", 0, js_search_segmentation_method, SEARCH_SEGMENTATION_SWITCH_TO_SELECTIVE_SEARCH_QUALITY),
-    JS_CFUNC_MAGIC_DEF("switchToSingleStrategy)", 0, js_search_segmentation_method, SEARCH_SEGMENTATION_SWITCH_TO_SINGLE_STRATEGY),
+    JS_CFUNC_MAGIC_DEF("addGraphSegmentation", 0, js_search_segmentation_method, SEARCH_SEGMENTATION_ADD_GRAPH_SEGMENTATION),
+    JS_CFUNC_MAGIC_DEF("addImage", 0, js_search_segmentation_method, SEARCH_SEGMENTATION_ADD_IMAGE),
+    JS_CFUNC_MAGIC_DEF("addStrategy", 0, js_search_segmentation_method, SEARCH_SEGMENTATION_ADD_STRATEGY),
+    JS_CFUNC_MAGIC_DEF("clearGraphSegmentations", 0, js_search_segmentation_method, SEARCH_SEGMENTATION_CLEAR_GRAPH_SEGMENTATIONS),
+    JS_CFUNC_MAGIC_DEF("clearImages", 0, js_search_segmentation_method, SEARCH_SEGMENTATION_CLEAR_IMAGES),
+    JS_CFUNC_MAGIC_DEF("clearStrategies", 0, js_search_segmentation_method, SEARCH_SEGMENTATION_CLEAR_STRATEGIES),
+    JS_CFUNC_MAGIC_DEF("process", 0, js_search_segmentation_method, SEARCH_SEGMENTATION_PROCESS),
+    JS_CFUNC_MAGIC_DEF("setBaseImage", 0, js_search_segmentation_method, SEARCH_SEGMENTATION_SET_BASE_IMAGE),
+    JS_CFUNC_MAGIC_DEF("switchToSelectiveSearchFast", 0, js_search_segmentation_method, SEARCH_SEGMENTATION_SWITCH_TO_SELECTIVE_SEARCH_FAST),
+    JS_CFUNC_MAGIC_DEF("switchToSelectiveSearchQuality", 0, js_search_segmentation_method, SEARCH_SEGMENTATION_SWITCH_TO_SELECTIVE_SEARCH_QUALITY),
+    JS_CFUNC_MAGIC_DEF("switchToSingleStrategy", 0, js_search_segmentation_method, SEARCH_SEGMENTATION_SWITCH_TO_SINGLE_STRATEGY),
 
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "SelectiveSearchSegmentation", JS_PROP_CONFIGURABLE),
 };
@@ -1520,11 +1520,7 @@ enum {
 
 static JSValue
 js_segmentation_function(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
-  JSGraphSegmentationData* gs;
   JSValue ret = JS_UNDEFINED;
-
-  if(!(gs = js_graph_segmentation_data2(ctx, this_val)))
-    return JS_EXCEPTION;
 
   switch(magic) {
     case CREATE_GRAPH_SEGMENTATION: {
@@ -1953,13 +1949,13 @@ js_ximgproc_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
 }
 
 js_function_list_t js_ximgproc_segmentation_funcs{
-    JS_CFUNC_MAGIC_DEF("createGraphSegmentation)", 0, js_segmentation_function, CREATE_GRAPH_SEGMENTATION),
-    JS_CFUNC_MAGIC_DEF("createSelectiveSearchSegmentation)", 0, js_segmentation_function, CREATE_SELECTIVE_SEARCH_SEGMENTATION),
-    JS_CFUNC_MAGIC_DEF("createSelectiveSearchSegmentationStrategyColor)", 0, js_segmentation_function, CREATE_SEGMENTATION_STRATEGY_COLOR),
-    JS_CFUNC_MAGIC_DEF("createSelectiveSearchSegmentationStrategyFill)", 0, js_segmentation_function, CREATE_SEGMENTATION_STRATEGY_FILL),
-    JS_CFUNC_MAGIC_DEF("createSelectiveSearchSegmentationStrategyMultiple)", 0, js_segmentation_function, CREATE_SEGMENTATION_STRATEGY_MULTIPLE),
-    JS_CFUNC_MAGIC_DEF("createSelectiveSearchSegmentationStrategySize)", 0, js_segmentation_function, CREATE_SEGMENTATION_STRATEGY_SIZE),
-    JS_CFUNC_MAGIC_DEF("createSelectiveSearchSegmentationStrategyTexture)", 0, js_segmentation_function, CREATE_SEGMENTATION_STRATEGY_TEXTURE),
+    JS_CFUNC_MAGIC_DEF("createGraphSegmentation", 0, js_segmentation_function, CREATE_GRAPH_SEGMENTATION),
+    JS_CFUNC_MAGIC_DEF("createSelectiveSearchSegmentation", 0, js_segmentation_function, CREATE_SELECTIVE_SEARCH_SEGMENTATION),
+    JS_CFUNC_MAGIC_DEF("createSelectiveSearchSegmentationStrategyColor", 0, js_segmentation_function, CREATE_SEGMENTATION_STRATEGY_COLOR),
+    JS_CFUNC_MAGIC_DEF("createSelectiveSearchSegmentationStrategyFill", 0, js_segmentation_function, CREATE_SEGMENTATION_STRATEGY_FILL),
+    JS_CFUNC_MAGIC_DEF("createSelectiveSearchSegmentationStrategyMultiple", 0, js_segmentation_function, CREATE_SEGMENTATION_STRATEGY_MULTIPLE),
+    JS_CFUNC_MAGIC_DEF("createSelectiveSearchSegmentationStrategySize", 0, js_segmentation_function, CREATE_SEGMENTATION_STRATEGY_SIZE),
+    JS_CFUNC_MAGIC_DEF("createSelectiveSearchSegmentationStrategyTexture", 0, js_segmentation_function, CREATE_SEGMENTATION_STRATEGY_TEXTURE),
 };
 
 js_function_list_t js_ximgproc_ximgproc_funcs{
