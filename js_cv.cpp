@@ -1427,6 +1427,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       ret = JS_NewFloat64(ctx, cvFloor(js_value_to<double>(ctx, argv[0])));
       break;
     }
+
     case OTHER_CVCEIL: {
       ret = JS_NewFloat64(ctx, cvCeil(js_value_to<double>(ctx, argv[0])));
       break;
@@ -1444,8 +1445,6 @@ JSClassDef js_cv_class = {
     .class_name = "cv",
     .finalizer = js_cv_finalizer,
 };
-
-typedef std::vector<JSCFunctionListEntry> js_function_list_t;
 
 js_function_list_t js_cv_static_funcs{
     JS_CFUNC_DEF("imdecode", 1, js_cv_imdecode),

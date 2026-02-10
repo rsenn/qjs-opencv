@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <opencv2/highgui.hpp>
 #include <vector>
+#include <map>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -24,7 +25,15 @@
 
 enum { DISPLAY_OVERLAY };
 
+struct Trackbar {
+  int32_t value;
+  JSValue name, window, count;
+  JSValueConst handler;
+  JSContext* ctx;
+};
+
 static std::vector<cv::String> window_list;
+static std::map<cv::String, std::map<cv::String, Trackbar*>> trackbar_list;
 
 static JSValue
 js_cv_display_overlay(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
@@ -181,23 +190,15 @@ js_cv_destroy_all_windows(JSContext* ctx, JSValueConst this_val, int argc, JSVal
 
 static JSValue
 js_cv_create_trackbar(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  const char *name, *window;
   int32_t ret, count;
-  struct Trackbar {
-    int32_t value;
-    JSValue name, window, count;
-    JSValueConst handler;
-    JSContext* ctx;
-  };
-  Trackbar* userdata;
 
-  name = JS_ToCString(ctx, argv[0]);
-  window = JS_ToCString(ctx, argv[1]);
+  const char* name = JS_ToCString(ctx, argv[0]);
+  const char* window = JS_ToCString(ctx, argv[1]);
 
   if(name == nullptr || window == nullptr)
     return JS_EXCEPTION;
 
-  userdata = js_allocate<Trackbar>(ctx);
+  Trackbar* userdata = js_allocate<Trackbar>(ctx);
 
   JS_ToInt32(ctx, &userdata->value, argv[2]);
   JS_ToInt32(ctx, &count, argv[3]);
@@ -206,33 +207,63 @@ js_cv_create_trackbar(JSContext* ctx, JSValueConst this_val, int argc, JSValueCo
   userdata->window = JS_NewString(ctx, window);
   userdata->count = JS_NewInt32(ctx, count);
   userdata->handler = JS_DupValue(ctx, argv[4]);
-  userdata->ctx = ctx;
+  userdata->ctx = JS_DupContext(ctx);
 
   /*JSValue str = JS_ToString(ctx, userdata->handler);
   std::cout << "handler: " << JS_ToCString(ctx, str) << std::endl;*/
 
-  ret = cv::createTrackbar(
-      name,
-      window,
-      &userdata->value,
-      count,
-      [](int newValue, void* ptr) {
-        Trackbar const& data = *static_cast<Trackbar*>(ptr);
+  auto& trackbars = trackbar_list[cv::String(window)];
+  auto it = trackbars.find(cv::String(name));
 
-        if(js_is_function(data.ctx, data.handler)) {
-          JSValueConst argv[] = {JS_NewInt32(data.ctx, newValue), data.count, data.name, data.window};
+  if(it != trackbars.end()) {
+    JS_FreeValue(ctx, (*it).second->name);
+    JS_FreeValue(ctx, (*it).second->window);
+    JS_FreeValue(ctx, (*it).second->count);
+    JS_FreeValue(ctx, (*it).second->handler);
+    JS_FreeContext((*it).second->ctx);
 
-          JS_Call(data.ctx, data.handler, JS_UNDEFINED, 4, argv);
-        }
-      },
-      userdata);
+    trackbars.erase(it);
+  }
+
+  try {
+    ret = cv::createTrackbar(
+        name,
+        window,
+        &userdata->value,
+        count,
+        [](int newValue, void* ptr) {
+          Trackbar const& data = *static_cast<Trackbar*>(ptr);
+
+          if(js_is_function(data.ctx, data.handler)) {
+            JSValueConst argv[] = {
+                JS_NewInt32(data.ctx, newValue),
+                data.count,
+                data.name,
+                data.window,
+            };
+
+            JS_Call(data.ctx, data.handler, JS_UNDEFINED, 4, argv);
+          }
+        },
+        userdata);
+  } catch(const cv::Exception& e) {
+    JS_FreeValue(ctx, userdata->name);
+    JS_FreeValue(ctx, userdata->window);
+    JS_FreeValue(ctx, userdata->count);
+    JS_FreeValue(ctx, userdata->handler);
+    JS_FreeContext(userdata->ctx);
+
+    js_deallocate(ctx, userdata);
+    return js_cv_throw(ctx, e);
+  }
+
+  trackbars[cv::String(name)] = userdata;
 
   return JS_NewInt32(ctx, ret);
 }
 
 static JSValue
 js_cv_create_button(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  const char* bar_name;
   int32_t ret, type;
   bool initial_button_state = false;
 
@@ -242,14 +273,13 @@ js_cv_create_button(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
     JSValueConst callback;
     JSContext* ctx;
   };
-  Button* userdata;
 
-  bar_name = JS_ToCString(ctx, argv[0]);
+  const char* bar_name = JS_ToCString(ctx, argv[0]);
 
   if(bar_name == nullptr)
     return JS_EXCEPTION;
 
-  userdata = js_allocate<Button>(ctx);
+  Button* userdata = js_allocate<Button>(ctx);
   userdata->callback = JS_DupValue(ctx, argv[1]);
 
   JS_ToInt32(ctx, &type, argv[2]);
@@ -257,7 +287,6 @@ js_cv_create_button(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 
   userdata->bar_name = JS_NewString(ctx, bar_name);
   userdata->type = JS_NewInt32(ctx, type);
-
   userdata->ctx = ctx;
 
   // initial_button_state = JS_ToBool(ctx, argv[4]);
@@ -270,6 +299,7 @@ js_cv_create_button(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
         bar_name,
         [](int state, void* ptr) {
           Button const& data = *static_cast<Button*>(ptr);
+
           if(js_is_function(data.ctx, data.callback)) {
             JSValueConst argv[] = {JS_NewInt32(data.ctx, state), data.bar_name, data.type};
             JS_Call(data.ctx, data.callback, JS_UNDEFINED, 3, argv);
@@ -285,10 +315,8 @@ js_cv_create_button(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 
 static JSValue
 js_cv_get_trackbar_pos(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  const char *name, *window;
-
-  name = JS_ToCString(ctx, argv[0]);
-  window = JS_ToCString(ctx, argv[1]);
+  const char* name = JS_ToCString(ctx, argv[0]);
+  const char* window = JS_ToCString(ctx, argv[1]);
 
   if(name == nullptr || window == nullptr)
     return JS_EXCEPTION;
@@ -298,11 +326,10 @@ js_cv_get_trackbar_pos(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
 
 static JSValue
 js_cv_set_trackbar(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
-  const char *name, *window;
   int32_t val;
 
-  name = JS_ToCString(ctx, argv[0]);
-  window = JS_ToCString(ctx, argv[1]);
+  const char* name = JS_ToCString(ctx, argv[0]);
+  const char* window = JS_ToCString(ctx, argv[1]);
 
   if(name == nullptr || window == nullptr)
     return JS_EXCEPTION;
@@ -329,39 +356,40 @@ js_cv_get_mouse_wheel_delta(JSContext* ctx, JSValueConst this_val, int argc, JSV
 
 static JSValue
 js_cv_set_mouse_callback(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  const char* name;
   struct MouseHandler {
     JSValue window;
     JSValueConst handler;
     JSContext* ctx;
   };
-  MouseHandler* userdata;
 
-  userdata = js_allocate<MouseHandler>(ctx);
+  MouseHandler* userdata = js_allocate<MouseHandler>(ctx);
 
-  name = JS_ToCString(ctx, argv[0]);
+  const char* name = JS_ToCString(ctx, argv[0]);
 
   userdata->window = JS_DupValue(ctx, argv[0]);
   userdata->handler = JS_DupValue(ctx, argv[1]);
   userdata->ctx = ctx;
 
-  cv::setMouseCallback(
-      name,
-      [](int event, int x, int y, int flags, void* ptr) {
-        MouseHandler const& data = *static_cast<MouseHandler*>(ptr);
+  try {
+    cv::setMouseCallback(
+        name,
+        [](int event, int x, int y, int flags, void* ptr) {
+          MouseHandler const& data = *static_cast<MouseHandler*>(ptr);
 
-        if(js_is_function(data.ctx, data.handler)) {
-          JSValueConst argv[] = {
-              JS_NewInt32(data.ctx, event),
-              JS_NewInt32(data.ctx, x),
-              JS_NewInt32(data.ctx, y),
-              JS_NewInt32(data.ctx, flags),
-          };
+          if(js_is_function(data.ctx, data.handler)) {
+            JSValueConst argv[] = {
+                JS_NewInt32(data.ctx, event),
+                JS_NewInt32(data.ctx, x),
+                JS_NewInt32(data.ctx, y),
+                JS_NewInt32(data.ctx, flags),
+            };
 
-          JS_Call(data.ctx, data.handler, JS_UNDEFINED, 4, argv);
-        }
-      },
-      userdata);
+            JS_Call(data.ctx, data.handler, JS_UNDEFINED, 4, argv);
+          }
+        },
+        userdata);
+  } catch(const cv::Exception& exception) { return js_cv_throw(ctx, exception); }
+
   return JS_UNDEFINED;
 }
 
@@ -410,12 +438,13 @@ js_cv_imshow(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
 
   if(image.empty())
     return JS_ThrowInternalError(ctx, "Empty image");
-  cv::_InputArray input_array(image);
 
-  /*  if(input_array.isUMat())
-      input_array.getUMat().addref();
-    else if(input_array.isMat())
-      input_array.getMat().addref();*/
+  /*cv::_InputArray input_array(image);
+
+  if(input_array.isUMat())
+    input_array.getUMat().addref();
+  else if(input_array.isMat())
+    input_array.getMat().addref();*/
 
   cv::imshow(winname, image);
 
@@ -478,8 +507,6 @@ static JSValue
 js_cv_start_window_thread(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   return JS_NewInt32(ctx, cv::startWindowThread());
 }
-
-typedef std::vector<JSCFunctionListEntry> js_function_list_t;
 
 js_function_list_t js_highgui_static_funcs{
     JS_CFUNC_DEF("imshow", 2, js_cv_imshow),
