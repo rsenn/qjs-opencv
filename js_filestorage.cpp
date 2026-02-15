@@ -23,7 +23,7 @@ js_filestorage_constructor(JSContext* ctx, JSValueConst new_target, int argc, JS
   if(argc == 0) {
     new(fs) JSFileStorageData();
   } else {
-    const char *filename, *encoding;
+    const char *filename = 0, *encoding = 0;
     int32_t flags = 0;
 
     if(!(filename = JS_ToCString(ctx, argv[0])))
