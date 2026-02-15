@@ -56,7 +56,12 @@ enum {
   METHOD_ONES
 };
 
-enum { UMAT_EXPR_AND = 0, UMAT_EXPR_OR, UMAT_EXPR_XOR, UMAT_EXPR_MUL };
+enum {
+  UMAT_EXPR_AND = 0,
+  UMAT_EXPR_OR,
+  UMAT_EXPR_XOR,
+  UMAT_EXPR_MUL,
+};
 enum { UMAT_ITERATOR_KEYS, UMAT_ITERATOR_VALUES, UMAT_ITERATOR_ENTRIES };
 extern "C" {
 
@@ -149,8 +154,7 @@ js_umat_dump(JSUMatData* const s) {
   bool inList = posList != umat_list.cend();
   bool inFreed = std::find(umat_freed.cbegin(), umat_freed.cend(), s) != umat_freed.cend();
   const auto u = s->u;
-  std::cerr << " UMat"
-            << "[" << (posList - umat_list.cbegin()) << "]=" << static_cast<void*>(s);
+  std::cerr << " UMat" << "[" << (posList - umat_list.cbegin()) << "]=" << static_cast<void*>(s);
 
   if(inList)
     std::cerr << ", inList=" << (inList ? "true" : "false");

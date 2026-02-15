@@ -138,6 +138,7 @@ js_subdiv2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
 
       s->getEdgeList(edgeList);
 
+      js_array_clear(ctx, argv[0]);
       js_array_copy(ctx, argv[0], edgeList);
       break;
     }
@@ -147,6 +148,7 @@ js_subdiv2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
 
       s->getLeadingEdgeList(leadingEdgeList);
 
+      js_array_clear(ctx, argv[0]);
       js_array_copy(ctx, argv[0], leadingEdgeList);
       break;
     }
@@ -156,6 +158,7 @@ js_subdiv2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
 
       s->getTriangleList(triangleList);
 
+      js_array_clear(ctx, argv[0]);
       js_array_copy(ctx, argv[0], triangleList);
       break;
     }
@@ -184,7 +187,9 @@ js_subdiv2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
 
       s->getVoronoiFacetList(idx, facetList, facetCenters);
 
+      js_array_clear(ctx, argv[1]);
       js_array_copy(ctx, argv[1], facetList);
+      js_array_clear(ctx, argv[2]);
       js_array_copy(ctx, argv[2], facetCenters);
       break;
     }

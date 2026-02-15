@@ -77,25 +77,27 @@ js_array_clear(JSContext* ctx, const JSValueConst& arr) {
 template<class T> class js_array {
 public:
   static int64_t to_vector(JSContext* ctx, JSValueConst arr, std::vector<T>& out) {
-    /*  if(!js_is_array(ctx, arr))
-        return -1;*/
+    /*if(!js_is_array(ctx, arr))
+      return -1;*/
 
     int64_t i, n = js_array_length(ctx, arr);
 
-    out.reserve(out.size() + n);
+    if(n != -1ll) {
+      out.reserve(out.size() + n);
 
-    for(i = 0; i < n; i++) {
-      T value;
-      JSValue item = JS_GetPropertyUint32(ctx, arr, (uint32_t)i);
+      for(i = 0; i < n; i++) {
+        T value;
+        JSValue item = JS_GetPropertyUint32(ctx, arr, (uint32_t)i);
 
-      if(!js_value_to(ctx, item, value)) {
+        if(!js_value_to(ctx, item, value)) {
+          JS_FreeValue(ctx, item);
+          out.clear();
+          return -1;
+        }
+
+        out.push_back(value);
         JS_FreeValue(ctx, item);
-        out.clear();
-        return -1;
       }
-
-      out.push_back(value);
-      JS_FreeValue(ctx, item);
     }
 
     return n;
@@ -107,18 +109,20 @@ public:
 
     int64_t i, n = js_array_length(ctx, arr);
 
-    if(n > N)
-      n = N;
+    if(n != -1ll) {
+      if(n > N)
+        n = N;
 
-    for(i = 0; i < n; i++) {
-      JSValue item = JS_GetPropertyUint32(ctx, arr, (uint32_t)i);
+      for(i = 0; i < n; i++) {
+        JSValue item = JS_GetPropertyUint32(ctx, arr, (uint32_t)i);
 
-      js_value_to<T>(ctx, item, out[i]);
+        js_value_to<T>(ctx, item, out[i]);
 
-      JS_FreeValue(ctx, item);
+        JS_FreeValue(ctx, item);
+      }
     }
 
-    return N;
+    return n;
   }
 
   template<class Container> static JSValue from(JSContext* ctx, const Container& in) {
@@ -340,6 +344,12 @@ template<class Container>
 static inline void
 js_array_copy(JSContext* ctx, JSValueConst array, const Container& v) {
   js_array<typename Container::value_type>::copy_sequence(ctx, array, v.begin(), v.end());
+}
+
+template<class T, size_t N>
+static inline int
+js_value_to(JSContext* ctx, JSValueConst value, std::array<T, N>& in) {
+  return js_array_to(ctx, value, in);
 }
 
 #endif /* defined(JS_ARRAY_HPP) */

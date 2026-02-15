@@ -1001,6 +1001,9 @@ js_function_list_t js_opengl_ogl_funcs{
     JS_CFUNC_MAGIC_DEF("render", 1, js_opengl_func, OPENGL_RENDER),
     // XXX: TODO: setGIDevice() function
     JS_CFUNC_MAGIC_DEF("unmapGLBuffer", 1, js_opengl_func, OPENGL_UNMAP_GL_BUFFER),
+
+    // XXX: TODO: setOpenGlDrawCallback etc.
+
     JS_PROP_INT32_DEF("POINTS", cv::ogl::POINTS, JS_PROP_CONFIGURABLE),
     JS_PROP_INT32_DEF("LINES", cv::ogl::LINES, JS_PROP_CONFIGURABLE),
     JS_PROP_INT32_DEF("LINE_LOOP", cv::ogl::LINE_LOOP, JS_PROP_CONFIGURABLE),

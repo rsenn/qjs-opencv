@@ -2121,6 +2121,7 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
         cv::HuMoments(moments, &hu[0]);
 
         if(JS_IsArray(ctx, argv[1])) {
+          js_array_clear(ctx, argv[1]);
           js_array_copy(ctx, argv[1], hu.begin(), hu.end());
         }
 
@@ -2353,6 +2354,16 @@ js_function_list_t js_imgproc_static_funcs{
     JS_CV_CONSTANT(MORPH_TOPHAT),
     JS_CV_CONSTANT(MORPH_BLACKHAT),
     JS_CV_CONSTANT(MORPH_HITMISS),
+
+    /* grabCut() */
+    JS_CV_CONSTANT(GC_BGD),
+    JS_CV_CONSTANT(GC_EVAL),
+    JS_CV_CONSTANT(GC_EVAL_FREEZE_MODEL),
+    JS_CV_CONSTANT(GC_FGD),
+    JS_CV_CONSTANT(GC_INIT_WITH_MASK),
+    JS_CV_CONSTANT(GC_INIT_WITH_RECT),
+    JS_CV_CONSTANT(GC_PR_BGD),
+    JS_CV_CONSTANT(GC_PR_FGD),
 
 };
 

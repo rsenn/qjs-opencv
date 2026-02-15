@@ -944,7 +944,14 @@ f2d->getDefaultName().c_str()), JS_PROP_ENUMERABLE);
   return obj;
 }*/
 
-enum { METHOD_CLEAR = 0, METHOD_COMPUTE, METHOD_DETECT, METHOD_DETECTANDCOMPUTE, METHOD_WRITE, METHOD_READ };
+enum {
+  METHOD_CLEAR = 0,
+  METHOD_COMPUTE,
+  METHOD_DETECT,
+  METHOD_DETECTANDCOMPUTE,
+  METHOD_WRITE,
+  METHOD_READ,
+};
 
 static JSValue
 js_feature2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {

@@ -88,12 +88,14 @@ macro(check_opt_none_flag)
   check_c_compiler_flag("-O0" OPT_CXX_OPT_NONE)
   if(OPT_C_OPT_NONE)
     if(NOT "${CMAKE_C_FLAGS_DEBUG}" MATCHES "-O0")
-      set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0" CACHE STRING "C compiler options")
+      set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0"
+          CACHE STRING "C compiler options")
     endif(NOT "${CMAKE_C_FLAGS_DEBUG}" MATCHES "-O0")
   endif(OPT_C_OPT_NONE)
   if(OPT_CXX_OPT_NONE)
     if(NOT "${CMAKE_CXX_FLAGS_DEBUG}" MATCHES "-O0")
-      set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0" CACHE STRING "C++ compiler options")
+      set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0"
+          CACHE STRING "C++ compiler options")
     endif(NOT "${CMAKE_CXX_FLAGS_DEBUG}" MATCHES "-O0")
   endif(OPT_CXX_OPT_NONE)
 endmacro(check_opt_none_flag)
@@ -103,12 +105,14 @@ macro(check_debug_gdb_flag)
   check_c_compiler_flag("-ggdb" OPT_CXX_G_GDB)
   if(OPT_C_G_GDB)
     if(NOT "${CMAKE_C_FLAGS_DEBUG}" MATCHES "-ggdb")
-      set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -ggdb" CACHE STRING "C compiler options")
+      set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -ggdb"
+          CACHE STRING "C compiler options")
     endif(NOT "${CMAKE_C_FLAGS_DEBUG}" MATCHES "-ggdb")
   endif(OPT_C_G_GDB)
   if(OPT_CXX_G_GDB)
     if(NOT "${CMAKE_CXX_FLAGS_DEBUG}" MATCHES "-ggdb")
-      set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -ggdb" CACHE STRING "C++ compiler options")
+      set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -ggdb"
+          CACHE STRING "C++ compiler options")
     endif(NOT "${CMAKE_CXX_FLAGS_DEBUG}" MATCHES "-ggdb")
   endif(OPT_CXX_G_GDB)
 endmacro(check_debug_gdb_flag)
@@ -132,7 +136,8 @@ macro(check_c_standard_flag)
         endif(NOT C_STANDARD_NAME STREQUAL "")
 
         set(C_STANDARD_VALUE "${C_STANDARD}" CACHE STRING "C standard")
-        set(C_STANDARD_FLAG "-std=${C_STANDARD}" CACHE STRING "C standard argument")
+        set(C_STANDARD_FLAG "-std=${C_STANDARD}" CACHE STRING
+                                                       "C standard argument")
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${C_STANDARD_FLAG}")
         break()
       endif(C_STANDARD_${C_STANDARD_NUM})
@@ -158,14 +163,18 @@ macro(check_cxx_standard_flag)
 
     try_compile(
       CXX_STANDARD_${CXX_STANDARD_NUM} SOURCE_DIR
-      "${CMAKE_CURRENT_SOURCE_DIR}" BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}" SOURCE_FROM_CONTENT
-      "cxx_standard_${CXX_STANDARD_NUM}.cpp" "int main() { return 0; }"
-      CMAKE_FLAGS "-DCMAKE_CXX_FLAGS:STRING=${CMAKE_CXX_FLAGS} -std=${CXX_STANDARD}"
-      COMPILE_DEFINITIONS "-std=${CXX_STANDARD}" LOG_DESCRIPTION "cxx_standard_${CXX_STANDARD_NUM}"
+      "${CMAKE_CURRENT_SOURCE_DIR}" BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}"
+      SOURCE_FROM_CONTENT "cxx_standard_${CXX_STANDARD_NUM}.cpp"
+      "int main() { return 0; }"
+      CMAKE_FLAGS
+        "-DCMAKE_CXX_FLAGS:STRING=${CMAKE_CXX_FLAGS} -std=${CXX_STANDARD}"
+      COMPILE_DEFINITIONS "-std=${CXX_STANDARD}" LOG_DESCRIPTION
+                          "cxx_standard_${CXX_STANDARD_NUM}"
       OUTPUT_VARIABLE OUT)
 
     if(NOT CXX_STANDARD_${CXX_STANDARD_NUM})
-      message(STATUS "Checking for C++ standard flag: -std=${CXX_STANDARD}: failed")
+      message(
+        STATUS "Checking for C++ standard flag: -std=${CXX_STANDARD}: failed")
       continue()
     endif(NOT CXX_STANDARD_${CXX_STANDARD_NUM})
 
@@ -179,19 +188,23 @@ macro(check_cxx_standard_flag)
         add_definitions(-D"${CXX_STANDARD_NAME}")
       endif(NOT CXX_STANDARD_NAME STREQUAL "")
 
-      set(CXX_STANDARD_VALUE "${CXX_STANDARD}" CACHE STRING "C++ standard" FORCE)
-      set(CXX_STANDARD_FLAG "-std=${CXX_STANDARD}" CACHE STRING "C++ standard argument" FORCE)
+      set(CXX_STANDARD_VALUE "${CXX_STANDARD}" CACHE STRING "C++ standard"
+                                                     FORCE)
+      set(CXX_STANDARD_FLAG "-std=${CXX_STANDARD}"
+          CACHE STRING "C++ standard argument" FORCE)
       set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX_STANDARD_FLAG}")
       message(STATUS "Checking for C++ standard flag: -std=${CXX_STANDARD}: OK")
       break()
     endif(CXX_STANDARD_${CXX_STANDARD_NUM})
   endforeach()
 
-  string(REGEX REPLACE "c\\+\\+" "" CXX_STANDARD_VERSION "${CXX_STANDARD_VALUE}")
+  string(REGEX REPLACE "c\\+\\+" "" CXX_STANDARD_VERSION
+                       "${CXX_STANDARD_VALUE}")
   # add_definitions(-DCXX_STANDARD=${CXX_STANDARD_VERSION})
 
   if(NOT "${CMAKE_CXX_FLAGS}" MATCHES ".*CXX_STAND.*")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCXX_STANDARD=${CXX_STANDARD_VERSION}")
+    set(CMAKE_CXX_FLAGS
+        "${CMAKE_CXX_FLAGS} -DCXX_STANDARD=${CXX_STANDARD_VERSION}")
   endif(NOT "${CMAKE_CXX_FLAGS}" MATCHES ".*CXX_STAND.*")
 
   message("C++ standard: ${CXX_STANDARD_VALUE}")

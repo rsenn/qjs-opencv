@@ -66,7 +66,10 @@ js_clahe_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
   return obj;
 }
 
-enum { METHOD_APPLY = 0, METHOD_COLLECT_GARBAGE };
+enum {
+  METHOD_APPLY = 0,
+  METHOD_COLLECT_GARBAGE,
+};
 
 static JSValue
 js_clahe_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
@@ -96,7 +99,10 @@ js_clahe_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
   return ret;
 }
 
-enum { PROP_CLIP_LIMIT = 0, PROP_TILES_GRID_SIZE };
+enum {
+  PROP_CLIP_LIMIT = 0,
+  PROP_TILES_GRID_SIZE,
+};
 
 static JSValue
 js_clahe_getter(JSContext* ctx, JSValueConst this_val, int magic) {

@@ -134,7 +134,9 @@ js_keypoint_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   return obj;
 }
 
-enum { METHOD_HASH = 0 };
+enum {
+  METHOD_HASH = 0,
+};
 
 static JSValue
 js_keypoint_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
@@ -154,7 +156,14 @@ js_keypoint_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
   return ret;
 }
 
-enum { PROP_ANGLE = 0, PROP_CLASS_ID, PROP_OCTAVE, PROP_PT, PROP_RESPONSE, PROP_SIZE };
+enum {
+  PROP_ANGLE = 0,
+  PROP_CLASS_ID,
+  PROP_OCTAVE,
+  PROP_PT,
+  PROP_RESPONSE,
+  PROP_SIZE,
+};
 
 static JSValue
 js_keypoint_getter(JSContext* ctx, JSValueConst this_val, int magic) {

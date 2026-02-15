@@ -47,7 +47,8 @@ enum {
   PROP_ELEMSIZE1
 };
 enum {
-  METHOD_COL = 0,
+  METHOD_CREATE = 0,
+  METHOD_COL,
   METHOD_ROW,
   METHOD_COL_RANGE,
   METHOD_ROW_RANGE,
@@ -64,7 +65,17 @@ enum {
   METHOD_TOTAL,
   METHOD_INV,
 };
-enum { MAT_EXPR_AND = 0, MAT_EXPR_OR, MAT_EXPR_XOR, MAT_EXPR_MUL, MAT_EXPR_DIV, MAT_EXPR_SHL, MAT_EXPR_SHR };
+enum {
+  MAT_EXPR_AND = 0,
+  MAT_EXPR_OR,
+  MAT_EXPR_XOR,
+  MAT_EXPR_MUL,
+  MAT_EXPR_DIV,
+  MAT_EXPR_SHL,
+  MAT_EXPR_SHR,
+  MAT_EXPR_ADD,
+  MAT_EXPR_SUB,
+};
 enum { MAT_ITERATOR_KEYS, MAT_ITERATOR_VALUES, MAT_ITERATOR_ENTRIES };
 extern "C" {
 thread_local JSValue mat_proto = JS_UNDEFINED, mat_class = JS_UNDEFINED, mat_iterator_proto = JS_UNDEFINED, mat_iterator_class = JS_UNDEFINED;
@@ -230,8 +241,7 @@ js_mat_dump(JSMatData* const s) {
   bool inList = posList != mat_list.cend();
   bool inFreed = std::find(mat_freed.cbegin(), mat_freed.cend(), s) != mat_freed.cend();
   const auto u = s->u;
-  std::cerr << " mat"
-            << "[" << (posList - mat_list.cbegin()) << "]=" << static_cast<void*>(s);
+  std::cerr << " mat" << "[" << (posList - mat_list.cbegin()) << "]=" << static_cast<void*>(s);
 
   if(inList)
     std::cerr << ", inList=" << (inList ? "true" : "false");
@@ -468,19 +478,29 @@ js_mat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
   if(argc > 0) {
     JS_ToInt64(ctx, &i, argv[0]);
     pt = js_point_get(ctx, argv[0]);
-    if(argc > 1) {
+
+    if(argc > 1)
       JS_ToInt64(ctx, &i2, argv[1]);
-    }
   }
 
   try {
     switch(magic) {
+      case METHOD_CREATE: {
+        m->~JSMatData();
+
+        if(!js_mat_initialize(ctx, this_val, argc, argv))
+          ret = JS_EXCEPTION;
+
+        break;
+      }
       case METHOD_TOTAL: {
         if(argc == 0) {
           ret = JS_NewInt64(ctx, m->total());
         } else {
           int32_t start, end = INT_MAX;
+
           JS_ToInt32(ctx, &start, argv[0]);
+
           if(argc > 1)
             JS_ToInt32(ctx, &end, argv[1]);
 
@@ -572,8 +592,12 @@ js_mat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
         cv::Size wholeSize;
         cv::Point ofs;
         m->locateROI(wholeSize, ofs);
-        js_size_write(ctx, argv[0], wholeSize);
-        js_point_write(ctx, argv[0], ofs);
+
+        if(argc > 0)
+          js_size_write(ctx, argv[0], wholeSize);
+
+        if(argc > 1)
+          js_point_write(ctx, argv[1], ofs);
         break;
       }
 
@@ -688,11 +712,12 @@ js_mat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
 static JSValue
 js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSValue ret = JS_UNDEFINED;
-  JSColorData<double> color;
+  // JSColorData<double> color;
   double value = 0;
-  JSMatData *input, *output, *other;
+  JSMatData *input, *output = nullptr, *other = nullptr;
   double scale = 1.0;
-  std::array<uint8_t, 4> arr;
+  std::array<double, 4> arr;
+  BOOL scalar = FALSE;
 
   if((input = js_mat_data2(ctx, this_val)) == nullptr)
     return JS_EXCEPTION;
@@ -700,12 +725,11 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
   if(argc < 1)
     return JS_EXCEPTION;
 
-  if(JS_IsNumber(argv[0])) {
+  if((scalar = !JS_IsNumber(argv[0]))) {
     JS_ToFloat64(ctx, &value, argv[0]);
-
   } else if((other = js_mat_data_nothrow(argv[0])) == nullptr) {
     js_array_to(ctx, argv[0], arr);
-    js_color_read(ctx, argv[0], &color);
+    // js_color_read(ctx, argv[0], &color);
   }
 
   if(magic == 3 && argc > 1) {
@@ -717,53 +741,59 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
   if(argc > 1)
     output = js_mat_data2(ctx, argv[1]);
 
-  if(output == nullptr)
-    output = input;
+  /*  if(output == nullptr)
+      output = input;*/
 
   cv::MatExpr expr;
-  cv::Mat tmp(input->rows, input->cols, input->type());
+
+  cv::Mat const& mat = *input;
+  cv::Mat tmp(mat.rows, mat.cols, mat.type());
 
   if(other == nullptr) {
-    cv::Mat& mat = *input;
-
-    if(mat.channels() == 1) {
+    if(!scalar) {
+      mat.copyTo(tmp);
 
       if(mat.depth() == 0) {
         switch(magic) {
-          case MAT_EXPR_AND: mat &= (uchar)value; break;
-          case MAT_EXPR_OR: cv::bitwise_or(mat, cv::Scalar(value, value, value, value), mat); break;
-          case MAT_EXPR_XOR: mat ^= (uchar)value; break;
-          case MAT_EXPR_MUL: mat = mat * value; break;
-          case MAT_EXPR_DIV: mat = mat / value; break;
+          case MAT_EXPR_AND: tmp &= (uchar)value; break;
+          case MAT_EXPR_OR: cv::bitwise_or(mat, cv::Scalar(value, value, value, value), tmp); break;
+          case MAT_EXPR_XOR: tmp ^= (uchar)value; break;
+          case MAT_EXPR_ADD: tmp = mat + value; break;
+          case MAT_EXPR_SUB: tmp = mat - value; break;
+          case MAT_EXPR_MUL: tmp = mat * value; break;
+          case MAT_EXPR_DIV: tmp = mat / value; break;
         }
       } else {
         switch(magic) {
-          case MAT_EXPR_AND: mat &= value; break;
-          case MAT_EXPR_OR: cv::bitwise_or(mat, cv::Scalar(value, value, value, value), mat); break;
-          case MAT_EXPR_XOR: mat ^= value; break;
-          case MAT_EXPR_MUL: mat *= value; break;
-          case MAT_EXPR_DIV: mat /= value; break;
+          case MAT_EXPR_AND: tmp &= value; break;
+          case MAT_EXPR_OR: cv::bitwise_or(mat, cv::Scalar(value, value, value, value), tmp); break;
+          case MAT_EXPR_XOR: tmp ^= value; break;
+          case MAT_EXPR_ADD: tmp += value; break;
+          case MAT_EXPR_SUB: tmp -= value; break;
+          case MAT_EXPR_MUL: tmp *= value; break;
+          case MAT_EXPR_DIV: tmp /= value; break;
         }
       }
     } else {
-      std::array<double, 4> arr;
-
-      js_array_to(ctx, argv[0], arr);
       auto& scalar = *reinterpret_cast<cv::Scalar*>(&arr);
 
       switch(magic) {
         case MAT_EXPR_AND: expr = mat & scalar; break;
         case MAT_EXPR_OR: expr = mat | scalar; break;
         case MAT_EXPR_XOR: expr = mat ^ scalar; break;
+        case MAT_EXPR_ADD: expr = mat + scalar; break;
+        case MAT_EXPR_SUB: expr = mat - scalar; break;
         case MAT_EXPR_MUL: expr = mat.mul(scalar, scale); break;
         case MAT_EXPR_DIV: expr = mat / scalar; break;
       }
-      tmp = static_cast<cv::Mat>(expr);
 
-      *output = tmp;
-      // ret = js_mat_wrap(ctx, tmp);
+      tmp = expr;
     }
 
+    if(output)
+      *output = tmp;
+    else
+      ret = js_mat_wrap(ctx, tmp);
   } else {
 
     if(input->rows != other->rows || input->cols != other->cols) {
@@ -774,21 +804,25 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       ret = JS_ThrowInternalError(ctx, "Mat channels mismatch");
     } else {
 
-      if(input == output) {
+      if(output == nullptr) {
         switch(magic) {
-          case MAT_EXPR_AND: (*input) &= (*other); break;
-          case MAT_EXPR_OR: (*input) |= (*other); break;
-          case MAT_EXPR_XOR: (*input) ^= (*other); break;
-          case MAT_EXPR_MUL: (*input) *= (*other); break;
-          case MAT_EXPR_DIV: (*input) /= (*other); break;
+          case MAT_EXPR_AND: mat &= (*other); break;
+          case MAT_EXPR_OR: mat |= (*other); break;
+          case MAT_EXPR_XOR: mat ^= (*other); break;
+          case MAT_EXPR_ADD: mat += (*other); break;
+          case MAT_EXPR_SUB: mat -= (*other); break;
+          case MAT_EXPR_MUL: mat *= (*other); break;
+          case MAT_EXPR_DIV: mat /= (*other); break;
         }
       } else {
         switch(magic) {
-          case MAT_EXPR_AND: (*output) = (*input) & (*other); break;
-          case MAT_EXPR_OR: (*output) = (*input) | (*other); break;
-          case MAT_EXPR_XOR: (*output) = (*input) ^ (*other); break;
-          case MAT_EXPR_MUL: (*output) = (*input) * (*other); break;
-          case MAT_EXPR_DIV: (*output) = (*input) / (*other); break;
+          case MAT_EXPR_AND: (*output) = mat & (*other); break;
+          case MAT_EXPR_OR: (*output) = mat | (*other); break;
+          case MAT_EXPR_XOR: (*output) = mat ^ (*other); break;
+          case MAT_EXPR_ADD: (*output) = mat + (*other); break;
+          case MAT_EXPR_SUB: (*output) = mat - (*other); break;
+          case MAT_EXPR_MUL: (*output) = mat * (*other); break;
+          case MAT_EXPR_DIV: (*output) = mat / (*other); break;
         }
       }
     }
@@ -1542,7 +1576,7 @@ js_mat_getumat(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
 
 static JSValue
 js_mat_class_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
-  JSValueConst *v = argv, *e = &argv[argc];
+  /*JSValueConst *v = argv, *e = &argv[argc];
   JSMatData result;
   JSMatData *prev, *mat;
 
@@ -1554,15 +1588,18 @@ js_mat_class_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
 
     if(prev) {
       JSMatData const &a = *prev, &b = *mat;
+
       switch(magic) {
-        case 0: result = a + b; break;
-        case 1: result = a - b; break;
-        case 2: result = a * b; break;
-        case 3: result = a / b; break;
-        case 4: result = a & b; break;
-        case 5: result = a | b; break;
-        case 6: result = a ^ b; break;
+
+        case MAT_EXPR_ADD: result = a + b; break;
+        case MAT_EXPR_SUB: result = a - b; break;
+        case MAT_EXPR_MUL: result = a * b; break;
+        case MAT_EXPR_DIV: result = a / b; break;
+        case MAT_EXPR_AND: result = a & b; break;
+        case MAT_EXPR_OR: result = a | b; break;
+        case MAT_EXPR_XOR: result = a ^ b; break;
       }
+
       prev = &result;
     } else {
       prev = mat;
@@ -1571,7 +1608,9 @@ js_mat_class_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
     }
   }
 
-  return js_mat_wrap(ctx, result);
+  return js_mat_wrap(ctx, result);*/
+
+  return js_mat_expr(ctx, argv[0], argc - 1, argv + 1, magic);
 }
 
 static JSValue
@@ -1891,6 +1930,9 @@ const JSCFunctionListEntry js_mat_proto_funcs[] = {
     JS_CGETSET_MAGIC_DEF("elemSize1", js_mat_get_props, NULL, PROP_ELEMSIZE1),
     JS_CGETSET_DEF("buffer", js_mat_buffer, NULL),
     JS_CGETSET_DEF("array", js_mat_array, NULL),
+
+    JS_CFUNC_MAGIC_DEF("create", 1, js_mat_funcs, METHOD_CREATE),
+
     JS_CFUNC_MAGIC_DEF("total", 0, js_mat_funcs, METHOD_TOTAL),
     JS_CFUNC_MAGIC_DEF("col", 1, js_mat_funcs, METHOD_COL),
     JS_CFUNC_MAGIC_DEF("row", 1, js_mat_funcs, METHOD_ROW),
@@ -1912,6 +1954,8 @@ const JSCFunctionListEntry js_mat_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("and", 2, js_mat_expr, MAT_EXPR_AND),
     JS_CFUNC_MAGIC_DEF("or", 2, js_mat_expr, MAT_EXPR_OR),
     JS_CFUNC_MAGIC_DEF("xor", 3, js_mat_expr, MAT_EXPR_XOR),
+    JS_CFUNC_MAGIC_DEF("add", 3, js_mat_expr, MAT_EXPR_ADD),
+    JS_CFUNC_MAGIC_DEF("sub", 3, js_mat_expr, MAT_EXPR_SUB),
     JS_CFUNC_MAGIC_DEF("mul", 3, js_mat_expr, MAT_EXPR_MUL),
     JS_CFUNC_MAGIC_DEF("div", 3, js_mat_expr, MAT_EXPR_DIV),
 
@@ -1944,13 +1988,13 @@ const JSCFunctionListEntry js_mat_iterator_proto_funcs[] = {
 
 const JSCFunctionListEntry js_mat_static_funcs[] = {
     JS_CFUNC_DEF("getRotationMatrix2D", 3, js_mat_getrotationmatrix2d),
-    JS_CFUNC_MAGIC_DEF("add", 2, js_mat_class_func, 0),
-    JS_CFUNC_MAGIC_DEF("sub", 2, js_mat_class_func, 1),
-    JS_CFUNC_MAGIC_DEF("mul", 2, js_mat_class_func, 2),
-    JS_CFUNC_MAGIC_DEF("div", 2, js_mat_class_func, 3),
-    JS_CFUNC_MAGIC_DEF("and", 2, js_mat_class_func, 4),
-    JS_CFUNC_MAGIC_DEF("or", 2, js_mat_class_func, 5),
-    JS_CFUNC_MAGIC_DEF("xor", 3, js_mat_class_func, 6),
+    JS_CFUNC_MAGIC_DEF("add", 2, js_mat_class_func, MAT_EXPR_ADD),
+    JS_CFUNC_MAGIC_DEF("sub", 2, js_mat_class_func, MAT_EXPR_SUB),
+    JS_CFUNC_MAGIC_DEF("mul", 2, js_mat_class_func, MAT_EXPR_MUL),
+    JS_CFUNC_MAGIC_DEF("div", 2, js_mat_class_func, MAT_EXPR_DIV),
+    JS_CFUNC_MAGIC_DEF("and", 2, js_mat_class_func, MAT_EXPR_AND),
+    JS_CFUNC_MAGIC_DEF("or", 2, js_mat_class_func, MAT_EXPR_OR),
+    JS_CFUNC_MAGIC_DEF("xor", 3, js_mat_class_func, MAT_EXPR_XOR),
     JS_CFUNC_MAGIC_DEF("zeros", 1, js_mat_class_create, 0),
     JS_CFUNC_MAGIC_DEF("ones", 1, js_mat_class_create, 1),
     JS_CFUNC_MAGIC_DEF("eye", 1, js_mat_class_create, 2),

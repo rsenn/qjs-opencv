@@ -13,8 +13,20 @@
 #include <ostream>
 #include <string>
 
-enum js_size_fit_t { JS_SIZE_FIT_WIDTH = 1, JS_SIZE_FIT_HEIGHT = 2, JS_SIZE_FIT_INSIDE, JS_SIZE_FIT_OUTSIDE };
-enum { SIZE_PROP_WIDTH, SIZE_PROP_HEIGHT, SIZE_PROP_ASPECT, SIZE_PROP_EMPTY, SIZE_PROP_AREA };
+enum js_size_fit_t {
+  JS_SIZE_FIT_WIDTH = 1,
+  JS_SIZE_FIT_HEIGHT = 2,
+  JS_SIZE_FIT_INSIDE,
+  JS_SIZE_FIT_OUTSIDE,
+};
+
+enum {
+  SIZE_PROP_WIDTH,
+  SIZE_PROP_HEIGHT,
+  SIZE_PROP_ASPECT,
+  SIZE_PROP_EMPTY,
+  SIZE_PROP_AREA,
+};
 
 extern "C" {
 thread_local JSValue size_proto = JS_UNDEFINED, size_class = JS_UNDEFINED;
@@ -64,12 +76,11 @@ js_size_fit(const JSSizeData<T>& size, const JSSizeData<T>& to, js_size_fit_t mo
 static JSValue
 js_size_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   JSSizeData<double> size, *s;
-  JSValue obj = JS_UNDEFINED;
-  JSValue proto;
+  JSValue proto, obj = JS_UNDEFINED;
 
-  s = js_allocate<JSSizeData<double>>(ctx);
-  if(!s)
+  if(!(s = js_allocate<JSSizeData<double>>(ctx)))
     return JS_EXCEPTION;
+
   new(s) JSSizeData<double>();
 
   if(argc > 0) {
@@ -78,6 +89,7 @@ js_size_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueCo
     } else {
       if(JS_ToFloat64(ctx, &size.width, argv[0]))
         goto fail;
+
       if(argc < 2 || JS_ToFloat64(ctx, &size.height, argv[1]))
         goto fail;
 
@@ -90,12 +102,16 @@ js_size_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueCo
   proto = JS_GetPropertyStr(ctx, new_target, "prototype");
   if(JS_IsException(proto))
     goto fail;
+
   obj = JS_NewObjectProtoClass(ctx, proto, js_size_class_id);
   JS_FreeValue(ctx, proto);
+
   if(JS_IsException(obj))
     goto fail;
+
   JS_SetOpaque(obj, s);
   return obj;
+
 fail:
   js_deallocate(ctx, s);
   JS_FreeValue(ctx, obj);
@@ -177,14 +193,18 @@ static JSValue
 js_size_set(JSContext* ctx, JSValueConst this_val, JSValueConst val, int magic) {
   JSSizeData<double>* s;
   double v;
+
   if(!(s = js_size_data2(ctx, this_val)))
     return JS_EXCEPTION;
+
   if(JS_ToFloat64(ctx, &v, val))
     return JS_EXCEPTION;
+
   if(magic == 0)
     s->width = v;
   else
     s->height = v;
+
   return JS_UNDEFINED;
 }
 
@@ -193,6 +213,7 @@ js_size_to_string(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
   JSSizeData<double> size, *s;
   std::ostringstream os;
   const char* delim = "×";
+
   if((s = js_size_data(this_val)) == nullptr) {
     js_size_read(ctx, this_val, &size);
   } else {
@@ -211,11 +232,13 @@ static JSValue
 js_size_to_source(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSSizeData<double> size, *s;
   std::ostringstream os;
+
   if((s = js_size_data(this_val)) == nullptr) {
     js_size_read(ctx, this_val, &size);
   } else {
     size = *s;
   }
+
   os << "{width:" << size.width << ",height:" << size.height << "}";
 
   return JS_NewString(ctx, os.str().c_str());
@@ -259,12 +282,14 @@ js_size_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
     case SIZE_METHOD_EQUALS: {
       JSSizeData<double> other, *arg;
       bool equals = false;
+
       if(argc > 0) {
         if((arg = js_size_data(argv[0]))) {
           equals = s->width == arg->width && s->height == arg->height;
         } else if(js_size_read(ctx, argv[0], &other)) {
           equals = s->width == other.width && s->height == other.height;
         }
+
         ret = JS_NewBool(ctx, equals);
       }
       break;
@@ -273,8 +298,10 @@ js_size_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
     case SIZE_METHOD_ROUND: {
       double width, height, f;
       int32_t precision = 0;
+
       if(argc > 0)
         JS_ToInt32(ctx, &precision, argv[0]);
+
       f = std::pow(10, precision);
       width = std::round(size.width * f) / f;
       height = std::round(size.height * f) / f;
@@ -285,8 +312,10 @@ js_size_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
     case SIZE_METHOD_FLOOR: {
       double width, height, f;
       int32_t precision = 0;
+
       if(argc > 0)
         JS_ToInt32(ctx, &precision, argv[0]);
+
       f = std::pow(10, precision);
       width = std::floor(size.width * f) / f;
       height = std::floor(size.height * f) / f;
@@ -297,8 +326,10 @@ js_size_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
     case SIZE_METHOD_CEIL: {
       double width, height, f;
       int32_t precision = 0;
+
       if(argc > 0)
         JS_ToInt32(ctx, &precision, argv[0]);
+
       f = std::pow(10, precision);
       width = std::ceil(size.width * f) / f;
       height = std::ceil(size.height * f) / f;
@@ -346,26 +377,16 @@ js_size_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
     }
 
     case SIZE_METHOD_ALIGN: {
-
-      JSSizeData<double> sz;
-      JSPointData<double> pt[2];
       JSRectData<double> other, rect;
       int32_t align = 0;
+      int r;
 
-      if(!js_size_read(ctx, argv[0], &sz))
-        return JS_ThrowTypeError(ctx, "argument 1 must be cv.Size");
+      if(argc > 0)
+        if((r = js_rect_read(ctx, argv[0], &other)) <= 0)
+          return JS_ThrowTypeError(ctx, "argument 1 must be cv.Rect");
 
-      JS_ToInt32(ctx, &align, argv[1]);
-
-      js_point_read(ctx, argv[0], &pt[0]);
-
-      other.x = pt[0].x;
-      other.y = pt[0].y;
-      other.width = sz.width;
-      other.height = sz.height;
-
-      pt[1].x = pt[0].x + sz.width;
-      pt[1].y = pt[0].y + sz.height;
+      if(argc > 1)
+        JS_ToInt32(ctx, &align, argv[1]);
 
       rect.width = size.width;
       rect.height = size.height;
@@ -373,7 +394,6 @@ js_size_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
       switch(align & ALIGN_HORIZONTAL) {
         case ALIGN_LEFT: {
           rect.x = other.x;
-
           break;
         }
 
@@ -404,8 +424,8 @@ js_size_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
           break;
         }
       }
-      ret = js_rect_new(ctx, rect);
 
+      ret = js_rect_wrap(ctx, rect);
       break;
     }
   }
@@ -474,6 +494,7 @@ static JSValue
 js_size_div(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSSizeData<double> size, other, *s, *a = nullptr;
   JSValue ret = JS_EXCEPTION;
+
   if((s = js_size_data2(ctx, this_val)) != nullptr) {
     size = *s;
 
@@ -525,28 +546,36 @@ js_size_from(JSContext* ctx, JSValueConst size, int argc, JSValueConst argv[]) {
   if(JS_IsString(argv[0])) {
     const char* str = JS_ToCString(ctx, argv[0]);
     char* endptr = nullptr;
+
     for(size_t i = 0; i < 2; i++) {
       while(!isdigit(*str) && *str != '-' && *str != '+' && !(*str == '.' && isdigit(str[1])))
         str++;
+
       if(*str == '\0')
         break;
+
       array[i] = strtod(str, &endptr);
       str = endptr;
     }
   } else if(js_is_array(ctx, argv[0])) {
     js_array_to<double, 2>(ctx, argv[0], array);
   }
+
   if(array[0] > 0 && array[1] > 0)
     ret = js_size_new(ctx, array[0], array[1]);
+
   return ret;
 }
 
 void
 js_size_finalizer(JSRuntime* rt, JSValue val) {
-  JSSizeData<double>* s = static_cast<JSSizeData<double>*>(JS_GetOpaque(val, js_size_class_id));
+  JSSizeData<double>* s;
+
   /* Note: 's' can be NULL in case JS_SetOpaque() was not called */
-  if(s)
+  if((s = static_cast<JSSizeData<double>*>(JS_GetOpaque(val, js_size_class_id)))) {
+    s->~JSSizeData<double>();
     js_deallocate(rt, s);
+  }
 }
 
 JSClassDef js_size_class = {
@@ -586,24 +615,21 @@ const JSCFunctionListEntry js_size_static_funcs[] = {JS_CFUNC_DEF("from", 1, js_
 
 int
 js_size_init(JSContext* ctx, JSModuleDef* m) {
+  /* create the Size class */
+  JS_NewClassID(&js_size_class_id);
+  JS_NewClass(JS_GetRuntime(ctx), js_size_class_id, &js_size_class);
 
-  if(js_size_class_id == 0) {
-    /* create the Size class */
-    JS_NewClassID(&js_size_class_id);
-    JS_NewClass(JS_GetRuntime(ctx), js_size_class_id, &js_size_class);
+  size_proto = JS_NewObject(ctx);
+  JS_SetPropertyFunctionList(ctx, size_proto, js_size_proto_funcs, countof(js_size_proto_funcs));
 
-    size_proto = JS_NewObject(ctx);
-    JS_SetPropertyFunctionList(ctx, size_proto, js_size_proto_funcs, countof(js_size_proto_funcs));
+  JS_SetClassProto(ctx, js_size_class_id, size_proto);
 
-    JS_SetClassProto(ctx, js_size_class_id, size_proto);
+  size_class = JS_NewCFunction2(ctx, js_size_constructor, "Size", 0, JS_CFUNC_constructor, 0);
+  /* set proto.constructor and ctor.prototype */
+  JS_SetConstructor(ctx, size_class, size_proto);
+  JS_SetPropertyFunctionList(ctx, size_class, js_size_static_funcs, countof(js_size_static_funcs));
 
-    size_class = JS_NewCFunction2(ctx, js_size_constructor, "Size", 0, JS_CFUNC_constructor, 0);
-    /* set proto.constructor and ctor.prototype */
-    JS_SetConstructor(ctx, size_class, size_proto);
-    JS_SetPropertyFunctionList(ctx, size_class, js_size_static_funcs, countof(js_size_static_funcs));
-
-    // js_object_inspect(ctx, size_proto, js_size_inspect);
-  }
+  // js_object_inspect(ctx, size_proto, js_size_inspect);
 
   if(m)
     JS_SetModuleExport(ctx, m, "Size", size_class);
@@ -626,8 +652,10 @@ js_size_export(JSContext* ctx, JSModuleDef* m) {
 extern "C" JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   JSModuleDef* m;
+
   if(!(m = JS_NewCModule(ctx, module_name, &js_size_init)))
     return NULL;
+
   js_size_export(ctx, m);
   return m;
 }

@@ -5,8 +5,7 @@ import { Window } from '../js/cvHighGUI.js';
 import { Console } from 'console';
 import { COLOR_BGR2GRAY, Contour, CV_8UC3, cvtColor, drawRect, FILLED, imshow, imwrite, LINE_8, LINE_AA, Mat, namedWindow, Point, Rect, resizeWindow, Size, THRESH_BINARY_INV, threshold, waitKey, WINDOW_NORMAL, } from 'opencv';
 
-function main(...argv) {
-  const args = argv.slice(1);
+function main(...args) {
   globalThis.console = new Console({
     inspectOptions: {
       colors: true,
@@ -70,7 +69,7 @@ function main(...argv) {
   namedWindow('out', WINDOW_NORMAL);
   let winsize = new Size(rect.width, Math.max(mat.cols / 1.77777, rect.height));
   console.log('winsize', winsize);
-  resizeWindow('out', ...mat.size);
+  resizeWindow('out', ...mat.size.mul(1));
   imshow('out', mat);
   waitKey(-1);
 
@@ -116,7 +115,9 @@ function main(...argv) {
     const PointReducer = list => {
       let first = new Point(...list.shift());
       let rect = new Rect(first.x, first.y, 0, 0);
+      
       console.log('rect', rect);
+
       return list.reduce((a, o) => {
         if(a.x1 > o.x) a.x1 = o.x;
         if(a.x2 < o.x) a.x2 = o.x;
@@ -153,7 +154,6 @@ function main(...argv) {
     );
   }
 
-  //  console.log('bits',util.bitfieldToArray(bf).reduce((s,v) => s+(v|0).toString(), ''));
   function Grayscale(src) {
     let m = new Mat();
     cvtColor(src, m, COLOR_BGR2GRAY);
@@ -221,4 +221,4 @@ function main(...argv) {
   //  waitKey(-1);
 }
 
-main(...process.argv.slice(1));
+main(...scriptArgs.slice(1));

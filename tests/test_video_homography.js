@@ -77,7 +77,7 @@ function main(cam = 0) {
 
   if(!capture.isOpened()) {
     //help(av);
-    console.log('capture device ' + args[1] + ' failed to open!');
+    console.log('capture device ' + cam + ' failed to open!');
     return 1;
   }
 

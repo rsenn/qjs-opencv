@@ -1,4 +1,5 @@
 #include "js_alloc.hpp"
+#include "js_cv.hpp"
 #include "js_size.hpp"
 #include "js_umat.hpp"
 #include "jsbindings.hpp"
@@ -165,8 +166,10 @@ js_video_writer_method(JSContext* ctx, JSValueConst video_writer, int argc, JSVa
 
     case VIDEO_WRITER_METHOD_WRITE: {
       JSInputArray mat = js_input_array(ctx, argv[0]);
+      try {
+        vw->write(mat);
+      } catch(const cv::Exception& e) { ret = js_cv_throw(ctx, e); }
 
-      vw->write(mat);
       break;
     }
 

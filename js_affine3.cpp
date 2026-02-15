@@ -11,7 +11,16 @@
 #include <cstdlib>
 #include <utility>*/
 
-enum { PROP_A = 0, PROP_B, PROP_SLOPE, PROP_PIVOT, PROP_TO, PROP_ANGLE, PROP_ASPECT, PROP_LENGTH };
+enum {
+  PROP_A = 0,
+  PROP_B,
+  PROP_SLOPE,
+  PROP_PIVOT,
+  PROP_TO,
+  PROP_ANGLE,
+  PROP_ASPECT,
+  PROP_LENGTH,
+};
 typedef cv::Affine3<double>::Vec3 vector_type;
 typedef cv::Affine3<double>::Mat3 mat3_type;
 

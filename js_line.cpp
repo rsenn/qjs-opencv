@@ -15,7 +15,16 @@
 #include <opencv2/core/types.hpp>
 #include <utility>
 
-enum { PROP_A = 0, PROP_B, PROP_SLOPE, PROP_PIVOT, PROP_TO, PROP_ANGLE, PROP_ASPECT, PROP_LENGTH };
+enum {
+  PROP_A = 0,
+  PROP_B,
+  PROP_SLOPE,
+  PROP_PIVOT,
+  PROP_TO,
+  PROP_ANGLE,
+  PROP_ASPECT,
+  PROP_LENGTH,
+};
 
 extern "C" {
 thread_local JSValue line_proto = JS_UNDEFINED, line_class = JS_UNDEFINED;
@@ -546,7 +555,7 @@ js_line_methods(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
       rect.width = std::max(ln->x1, ln->x2) - rect.x;
       rect.height = std::max(ln->y1, ln->y2) - rect.y;
 
-      ret = js_rect_new(ctx, rect);
+      ret = js_rect_wrap(ctx, rect);
       break;
     }
   }

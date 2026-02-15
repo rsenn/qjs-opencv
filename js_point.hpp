@@ -8,11 +8,21 @@ template<class T> using JSPointData = cv::Point_<T>;
 
 template<typename T> struct point_traits {};
 
-template<> struct point_traits<uint16_t> { static const int type = CV_16UC2; };
-template<> struct point_traits<int16_t> { static const int type = CV_16SC2; };
-template<> struct point_traits<int32_t> { static const int type = CV_32SC2; };
-template<> struct point_traits<float> { static const int type = CV_32FC2; };
-template<> struct point_traits<double> { static const int type = CV_64FC2; };
+template<> struct point_traits<uint16_t> {
+  static const int type = CV_16UC2;
+};
+template<> struct point_traits<int16_t> {
+  static const int type = CV_16SC2;
+};
+template<> struct point_traits<int32_t> {
+  static const int type = CV_32SC2;
+};
+template<> struct point_traits<float> {
+  static const int type = CV_32FC2;
+};
+template<> struct point_traits<double> {
+  static const int type = CV_64FC2;
+};
 
 extern "C" int js_point_init(JSContext*, JSModuleDef*);
 
@@ -56,6 +66,7 @@ static inline int
 js_point_read(JSContext* ctx, JSValueConst point, JSPointData<T>* out) {
   int ret = 1;
   JSValue x = JS_UNDEFINED, y = JS_UNDEFINED;
+
   if(JS_IsArray(ctx, point)) {
     x = JS_GetPropertyUint32(ctx, point, 0);
     y = JS_GetPropertyUint32(ctx, point, 1);
@@ -63,6 +74,7 @@ js_point_read(JSContext* ctx, JSValueConst point, JSPointData<T>* out) {
     x = JS_GetPropertyStr(ctx, point, "x");
     y = JS_GetPropertyStr(ctx, point, "y");
   }
+
   if(JS_IsNumber(x) && JS_IsNumber(y)) {
     ret &= js_number_read(ctx, x, &out->x);
     ret &= js_number_read(ctx, y, &out->y);

@@ -9,6 +9,7 @@
 #ifdef HAVE_OPENCV2_XIMGPROC_FIND_ELLIPSES_HPP
 #include <opencv2/ximgproc/find_ellipses.hpp>
 #endif
+#include <opencv2/ximgproc/segmentation.hpp>
 
 /**
  * Wrapping https://docs.opencv.org/4.7.0/d9/d29/namespacecv_1_1ximgproc.html
@@ -1007,6 +1008,593 @@ const JSCFunctionListEntry js_edgeboxes_proto_funcs[] = {
 
 const JSCFunctionListEntry js_edgeboxes_static_funcs[] = {};
 
+typedef cv::Ptr<cv::ximgproc::segmentation::GraphSegmentation> JSGraphSegmentationData;
+
+extern "C" {
+thread_local JSValue graph_segmentation_proto = JS_UNDEFINED, graph_segmentation_class = JS_UNDEFINED, graph_segmentation_params_proto = JS_UNDEFINED;
+thread_local JSClassID js_graph_segmentation_class_id = 0;
+}
+
+JSGraphSegmentationData*
+js_graph_segmentation_data(JSValueConst val) {
+  return static_cast<JSGraphSegmentationData*>(JS_GetOpaque(val, js_graph_segmentation_class_id));
+}
+
+JSGraphSegmentationData*
+js_graph_segmentation_data2(JSContext* ctx, JSValueConst val) {
+  return static_cast<JSGraphSegmentationData*>(JS_GetOpaque2(ctx, val, js_graph_segmentation_class_id));
+}
+
+JSValue
+js_graph_segmentation_wrap(JSContext* ctx, JSValueConst proto, const JSGraphSegmentationData& arg) {
+  JSGraphSegmentationData* gs;
+
+  if(!(gs = js_allocate<JSGraphSegmentationData>(ctx)))
+    return JS_EXCEPTION;
+
+  JSValue obj = JS_NewObjectProtoClass(ctx, proto, js_graph_segmentation_class_id);
+  JS_FreeValue(ctx, proto);
+
+  if(JS_IsException(obj))
+    goto fail;
+
+  *gs = arg;
+
+  JS_SetOpaque(obj, gs);
+
+  return obj;
+
+fail:
+  js_deallocate(ctx, gs);
+  JS_FreeValue(ctx, obj);
+  return JS_EXCEPTION;
+}
+
+static JSValue
+js_graph_segmentation_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
+  JSGraphSegmentationData* gs;
+  JSValue obj = JS_UNDEFINED, proto;
+
+  if(!(gs = js_allocate<JSGraphSegmentationData>(ctx)))
+    return JS_EXCEPTION;
+
+  /* using new_target to get the prototype is necessary when the class is extended. */
+  proto = JS_GetPropertyStr(ctx, new_target, "prototype");
+  if(JS_IsException(proto))
+    goto fail;
+
+  obj = JS_NewObjectProtoClass(ctx, proto, js_graph_segmentation_class_id);
+  JS_FreeValue(ctx, proto);
+
+  if(JS_IsException(obj))
+    goto fail;
+
+  JS_SetOpaque(obj, gs);
+
+  return obj;
+
+fail:
+  js_deallocate(ctx, gs);
+  JS_FreeValue(ctx, obj);
+  return JS_EXCEPTION;
+}
+
+void
+js_graph_segmentation_finalizer(JSRuntime* rt, JSValue val) {
+  JSGraphSegmentationData* gs;
+
+  if((gs = js_graph_segmentation_data(val))) {
+    cv::Algorithm* ptr = gs->get();
+
+    ptr->~Algorithm();
+
+    js_deallocate(rt, gs);
+  }
+}
+
+enum {
+
+};
+
+static JSValue
+js_graph_segmentation_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  JSGraphSegmentationData* gs;
+  JSValue ret = JS_UNDEFINED;
+
+  if(!(gs = js_graph_segmentation_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  switch(magic) {}
+
+  return ret;
+}
+
+JSClassDef js_graph_segmentation_class = {
+    .class_name = "GraphSegmentation",
+    .finalizer = js_graph_segmentation_finalizer,
+};
+
+const JSCFunctionListEntry js_graph_segmentation_proto_funcs[] = {
+
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "GraphSegmentation", JS_PROP_CONFIGURABLE),
+};
+
+const JSCFunctionListEntry js_graph_segmentation_static_funcs[] = {};
+
+typedef cv::Ptr<cv::ximgproc::segmentation::SelectiveSearchSegmentation> JSSelectiveSearchSegmentationData;
+typedef cv::Ptr<cv::ximgproc::segmentation::SelectiveSearchSegmentationStrategy> JSSegmentationStrategyData;
+
+extern "C" {
+thread_local JSValue selective_search_segmentation_proto = JS_UNDEFINED, selective_search_segmentation_class = JS_UNDEFINED,
+                     selective_search_segmentation_params_proto = JS_UNDEFINED;
+thread_local JSClassID js_search_segmentation_class_id = 0;
+
+thread_local JSValue segmentation_strategy_proto = JS_UNDEFINED, segmentation_strategy_class = JS_UNDEFINED, segmentation_strategy_params_proto = JS_UNDEFINED;
+thread_local JSClassID js_segmentation_strategy_class_id = 0;
+}
+
+JSSelectiveSearchSegmentationData*
+js_search_segmentation_data(JSValueConst val) {
+  return static_cast<JSSelectiveSearchSegmentationData*>(JS_GetOpaque(val, js_search_segmentation_class_id));
+}
+
+JSSelectiveSearchSegmentationData*
+js_search_segmentation_data2(JSContext* ctx, JSValueConst val) {
+  return static_cast<JSSelectiveSearchSegmentationData*>(JS_GetOpaque2(ctx, val, js_search_segmentation_class_id));
+}
+
+JSSegmentationStrategyData*
+js_segmentation_strategy_data(JSValueConst val) {
+  return static_cast<JSSegmentationStrategyData*>(JS_GetOpaque(val, js_segmentation_strategy_class_id));
+}
+
+JSSegmentationStrategyData*
+js_segmentation_strategy_data2(JSContext* ctx, JSValueConst val) {
+  return static_cast<JSSegmentationStrategyData*>(JS_GetOpaque2(ctx, val, js_segmentation_strategy_class_id));
+}
+
+template<class T>
+JSValue
+js_search_segmentation_wrap(JSContext* ctx, JSValueConst proto, const cv::Ptr<T>& arg) {
+  cv::Ptr<T>* sss;
+
+  if(!(sss = js_allocate<cv::Ptr<T>>(ctx)))
+    return JS_EXCEPTION;
+
+  JSValue obj = JS_NewObjectProtoClass(ctx, proto, js_search_segmentation_class_id);
+  JS_FreeValue(ctx, proto);
+
+  if(JS_IsException(obj))
+    goto fail;
+
+  new(sss) cv::Ptr<T>(arg);
+
+  JS_SetOpaque(obj, sss);
+
+  return obj;
+
+fail:
+  js_deallocate(ctx, sss);
+  JS_FreeValue(ctx, obj);
+  return JS_EXCEPTION;
+}
+
+static JSValue
+js_search_segmentation_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
+  JSSelectiveSearchSegmentationData* sss;
+  JSValue obj = JS_UNDEFINED, proto;
+
+  if(!(sss = js_allocate<JSSelectiveSearchSegmentationData>(ctx)))
+    return JS_EXCEPTION;
+
+  /* using new_target to get the prototype is necessary when the class is extended. */
+  proto = JS_GetPropertyStr(ctx, new_target, "prototype");
+  if(JS_IsException(proto))
+    goto fail;
+
+  obj = JS_NewObjectProtoClass(ctx, proto, js_search_segmentation_class_id);
+  JS_FreeValue(ctx, proto);
+
+  if(JS_IsException(obj))
+    goto fail;
+
+  JS_SetOpaque(obj, sss);
+
+  return obj;
+
+fail:
+  js_deallocate(ctx, sss);
+  JS_FreeValue(ctx, obj);
+  return JS_EXCEPTION;
+}
+
+void
+js_search_segmentation_finalizer(JSRuntime* rt, JSValue val) {
+  JSSelectiveSearchSegmentationData* sss;
+
+  if((sss = js_search_segmentation_data(val))) {
+    cv::Algorithm* ptr = sss->get();
+
+    ptr->~Algorithm();
+
+    js_deallocate(rt, sss);
+  }
+}
+
+enum {
+  SEARCH_SEGMENTATION_ADD_GRAPH_SEGMENTATION = 0,
+  SEARCH_SEGMENTATION_ADD_IMAGE,
+  SEARCH_SEGMENTATION_ADD_STRATEGY,
+  SEARCH_SEGMENTATION_CLEAR_GRAPH_SEGMENTATIONS,
+  SEARCH_SEGMENTATION_CLEAR_IMAGES,
+  SEARCH_SEGMENTATION_CLEAR_STRATEGIES,
+  SEARCH_SEGMENTATION_PROCESS,
+  SEARCH_SEGMENTATION_SET_BASE_IMAGE,
+  SEARCH_SEGMENTATION_SWITCH_TO_SELECTIVE_SEARCH_FAST,
+  SEARCH_SEGMENTATION_SWITCH_TO_SELECTIVE_SEARCH_QUALITY,
+  SEARCH_SEGMENTATION_SWITCH_TO_SINGLE_STRATEGY,
+
+};
+
+static JSValue
+js_search_segmentation_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  JSSelectiveSearchSegmentationData* sss;
+  JSValue ret = JS_UNDEFINED;
+
+  if(!(sss = js_search_segmentation_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  switch(magic) {
+    case SEARCH_SEGMENTATION_ADD_GRAPH_SEGMENTATION: {
+
+      JSGraphSegmentationData* graph_segmentation;
+
+      if(!(graph_segmentation = js_graph_segmentation_data2(ctx, argv[0])))
+        return JS_ThrowTypeError(ctx, "Argument 1 must be a GraphSegmentation");
+
+      sss->get()->addGraphSegmentation(*graph_segmentation);
+      break;
+    }
+
+    case SEARCH_SEGMENTATION_ADD_IMAGE: {
+      JSInputArray image = js_input_array(ctx, argv[0]);
+
+      sss->get()->addImage(image);
+      break;
+    }
+
+    case SEARCH_SEGMENTATION_ADD_STRATEGY: {
+      JSSegmentationStrategyData* search_strategy;
+
+      if(!(search_strategy = js_segmentation_strategy_data2(ctx, argv[0])))
+        return JS_ThrowTypeError(ctx, "Argument 1 must be a SelectiveSearchSegmentationStrategy");
+
+      sss->get()->addStrategy(*search_strategy);
+      break;
+    }
+
+    case SEARCH_SEGMENTATION_CLEAR_GRAPH_SEGMENTATIONS: {
+      sss->get()->clearGraphSegmentations();
+      break;
+    }
+
+    case SEARCH_SEGMENTATION_CLEAR_IMAGES: {
+      sss->get()->clearImages();
+      break;
+    }
+
+    case SEARCH_SEGMENTATION_CLEAR_STRATEGIES: {
+      sss->get()->clearStrategies();
+      break;
+    }
+
+    case SEARCH_SEGMENTATION_PROCESS: {
+      std::vector<cv::Rect> rects;
+
+      js_array_to(ctx, argv[0], rects);
+
+      sss->get()->process(rects);
+
+      break;
+    }
+
+    case SEARCH_SEGMENTATION_SET_BASE_IMAGE: {
+      JSInputArray image = js_input_array(ctx, argv[0]);
+
+      sss->get()->setBaseImage(image);
+      break;
+    }
+
+    case SEARCH_SEGMENTATION_SWITCH_TO_SELECTIVE_SEARCH_FAST: {
+      int32_t base_k = -150, inc_k = 150;
+      double sigma = 0.8;
+
+      if(argc > 0)
+        JS_ToInt32(ctx, &base_k, argv[0]);
+      if(argc > 1)
+        JS_ToInt32(ctx, &inc_k, argv[1]);
+      if(argc > 2)
+        JS_ToFloat64(ctx, &sigma, argv[2]);
+
+      sss->get()->switchToSelectiveSearchFast(base_k, inc_k, sigma);
+      break;
+    }
+
+    case SEARCH_SEGMENTATION_SWITCH_TO_SELECTIVE_SEARCH_QUALITY: {
+      int32_t base_k = -150, inc_k = 150;
+      double sigma = 0.8;
+
+      if(argc > 0)
+        JS_ToInt32(ctx, &base_k, argv[0]);
+      if(argc > 1)
+        JS_ToInt32(ctx, &inc_k, argv[1]);
+      if(argc > 2)
+        JS_ToFloat64(ctx, &sigma, argv[2]);
+
+      sss->get()->switchToSelectiveSearchQuality(base_k, inc_k, sigma);
+      break;
+    }
+
+    case SEARCH_SEGMENTATION_SWITCH_TO_SINGLE_STRATEGY: {
+      int32_t k = 200;
+      double sigma = 0.8;
+
+      if(argc > 0)
+        JS_ToInt32(ctx, &k, argv[0]);
+      if(argc > 1)
+        JS_ToFloat64(ctx, &sigma, argv[1]);
+
+      sss->get()->switchToSingleStrategy(k, sigma);
+      break;
+    }
+  }
+
+  return ret;
+}
+
+JSClassDef js_search_segmentation_class = {
+    .class_name = "SelectiveSearchSegmentation",
+    .finalizer = js_search_segmentation_finalizer,
+};
+
+const JSCFunctionListEntry js_search_segmentation_proto_funcs[] = {
+    JS_CFUNC_MAGIC_DEF("addGraphSegmentation", 0, js_search_segmentation_method, SEARCH_SEGMENTATION_ADD_GRAPH_SEGMENTATION),
+    JS_CFUNC_MAGIC_DEF("addImage", 0, js_search_segmentation_method, SEARCH_SEGMENTATION_ADD_IMAGE),
+    JS_CFUNC_MAGIC_DEF("addStrategy", 0, js_search_segmentation_method, SEARCH_SEGMENTATION_ADD_STRATEGY),
+    JS_CFUNC_MAGIC_DEF("clearGraphSegmentations", 0, js_search_segmentation_method, SEARCH_SEGMENTATION_CLEAR_GRAPH_SEGMENTATIONS),
+    JS_CFUNC_MAGIC_DEF("clearImages", 0, js_search_segmentation_method, SEARCH_SEGMENTATION_CLEAR_IMAGES),
+    JS_CFUNC_MAGIC_DEF("clearStrategies", 0, js_search_segmentation_method, SEARCH_SEGMENTATION_CLEAR_STRATEGIES),
+    JS_CFUNC_MAGIC_DEF("process", 0, js_search_segmentation_method, SEARCH_SEGMENTATION_PROCESS),
+    JS_CFUNC_MAGIC_DEF("setBaseImage", 0, js_search_segmentation_method, SEARCH_SEGMENTATION_SET_BASE_IMAGE),
+    JS_CFUNC_MAGIC_DEF("switchToSelectiveSearchFast", 0, js_search_segmentation_method, SEARCH_SEGMENTATION_SWITCH_TO_SELECTIVE_SEARCH_FAST),
+    JS_CFUNC_MAGIC_DEF("switchToSelectiveSearchQuality", 0, js_search_segmentation_method, SEARCH_SEGMENTATION_SWITCH_TO_SELECTIVE_SEARCH_QUALITY),
+    JS_CFUNC_MAGIC_DEF("switchToSingleStrategy", 0, js_search_segmentation_method, SEARCH_SEGMENTATION_SWITCH_TO_SINGLE_STRATEGY),
+
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "SelectiveSearchSegmentation", JS_PROP_CONFIGURABLE),
+};
+
+const JSCFunctionListEntry js_search_segmentation_static_funcs[] = {};
+
+template<class T>
+JSValue
+js_segmentation_strategy_wrap(JSContext* ctx, JSValueConst proto, const cv::Ptr<T>& arg) {
+  cv::Ptr<T>* ssss;
+
+  if(!(ssss = js_allocate<cv::Ptr<T>>(ctx)))
+    return JS_EXCEPTION;
+
+  JSValue obj = JS_NewObjectProtoClass(ctx, proto, js_segmentation_strategy_class_id);
+  JS_FreeValue(ctx, proto);
+
+  if(JS_IsException(obj))
+    goto fail;
+
+  new(ssss) cv::Ptr<T>(arg);
+
+  JS_SetOpaque(obj, ssss);
+
+  return obj;
+
+fail:
+  js_deallocate(ctx, ssss);
+  JS_FreeValue(ctx, obj);
+  return JS_EXCEPTION;
+}
+
+static JSValue
+js_segmentation_strategy_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
+  JSSegmentationStrategyData* ssss;
+  JSValue obj = JS_UNDEFINED, proto;
+
+  if(!(ssss = js_allocate<JSSegmentationStrategyData>(ctx)))
+    return JS_EXCEPTION;
+
+  /* using new_target to get the prototype is necessary when the class is extended. */
+  proto = JS_GetPropertyStr(ctx, new_target, "prototype");
+  if(JS_IsException(proto))
+    goto fail;
+
+  obj = JS_NewObjectProtoClass(ctx, proto, js_segmentation_strategy_class_id);
+  JS_FreeValue(ctx, proto);
+
+  if(JS_IsException(obj))
+    goto fail;
+
+  JS_SetOpaque(obj, ssss);
+
+  return obj;
+
+fail:
+  js_deallocate(ctx, ssss);
+  JS_FreeValue(ctx, obj);
+  return JS_EXCEPTION;
+}
+
+void
+js_segmentation_strategy_finalizer(JSRuntime* rt, JSValue val) {
+  JSSegmentationStrategyData* ssss;
+
+  if((ssss = js_segmentation_strategy_data(val))) {
+    cv::Algorithm* ptr = ssss->get();
+
+    ptr->~Algorithm();
+
+    js_deallocate(rt, ssss);
+  }
+}
+
+enum {
+  SELECTIVE_SEARCH_SEGMENTATION_GET = 0,
+  SELECTIVE_SEARCH_SEGMENTATION_MERGE,
+  SELECTIVE_SEARCH_SEGMENTATION_SET_IMAGE,
+};
+
+static JSValue
+js_segmentation_strategy_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  JSSegmentationStrategyData* ssss;
+  JSValue ret = JS_UNDEFINED;
+
+  if(!(ssss = js_segmentation_strategy_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  switch(magic) {
+    case SELECTIVE_SEARCH_SEGMENTATION_GET: {
+      int32_t r1, r2;
+      JS_ToInt32(ctx, &r1, argv[0]);
+      JS_ToInt32(ctx, &r2, argv[1]);
+
+      ret = JS_NewFloat64(ctx, ssss->get()->get(r1, r2));
+      break;
+    }
+
+    case SELECTIVE_SEARCH_SEGMENTATION_MERGE: {
+      int32_t r1, r2;
+      JS_ToInt32(ctx, &r1, argv[0]);
+      JS_ToInt32(ctx, &r2, argv[1]);
+
+      ssss->get()->merge(r1, r2);
+      break;
+    }
+
+    case SELECTIVE_SEARCH_SEGMENTATION_SET_IMAGE: {
+      JSInputArray img = js_input_array(ctx, argv[0]);
+      JSInputArray regions = js_input_array(ctx, argv[1]);
+      JSInputArray sizes = js_input_array(ctx, argv[2]);
+      int32_t image_id = -1;
+
+      if(argc > 3)
+        JS_ToInt32(ctx, &image_id, argv[3]);
+
+      ssss->get()->setImage(img, regions, sizes);
+      break;
+    }
+  }
+
+  return ret;
+}
+
+JSClassDef js_segmentation_strategy_class = {
+    .class_name = "SelectiveSearchSegmentationStrategy",
+    .finalizer = js_segmentation_strategy_finalizer,
+};
+
+const JSCFunctionListEntry js_segmentation_strategy_proto_funcs[] = {
+    JS_CFUNC_MAGIC_DEF("get", 2, js_segmentation_strategy_method, SELECTIVE_SEARCH_SEGMENTATION_GET),
+    JS_CFUNC_MAGIC_DEF("merge", 2, js_segmentation_strategy_method, SELECTIVE_SEARCH_SEGMENTATION_MERGE),
+    JS_CFUNC_MAGIC_DEF("setImage", 3, js_segmentation_strategy_method, SELECTIVE_SEARCH_SEGMENTATION_SET_IMAGE),
+
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "SelectiveSearchSegmentationStrategy", JS_PROP_CONFIGURABLE),
+};
+
+const JSCFunctionListEntry js_segmentation_strategy_static_funcs[] = {};
+
+enum {
+  CREATE_GRAPH_SEGMENTATION,
+  CREATE_SELECTIVE_SEARCH_SEGMENTATION,
+  CREATE_SEGMENTATION_STRATEGY_COLOR,
+  CREATE_SEGMENTATION_STRATEGY_FILL,
+  CREATE_SEGMENTATION_STRATEGY_MULTIPLE,
+  CREATE_SEGMENTATION_STRATEGY_SIZE,
+  CREATE_SEGMENTATION_STRATEGY_TEXTURE,
+};
+
+static JSValue
+js_segmentation_function(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  JSValue ret = JS_UNDEFINED;
+
+  switch(magic) {
+    case CREATE_GRAPH_SEGMENTATION: {
+      double sigma = 0.5, k = 300;
+      int32_t min_size = 100;
+
+      if(argc > 0)
+        JS_ToFloat64(ctx, &sigma, argv[0]);
+
+      if(argc > 1)
+        JS_ToFloat64(ctx, &k, argv[1]);
+
+      if(argc > 2)
+        JS_ToInt32(ctx, &min_size, argv[2]);
+
+      ret = js_graph_segmentation_wrap(ctx, graph_segmentation_proto, cv::ximgproc::segmentation::createGraphSegmentation(sigma, k, min_size));
+      break;
+    }
+
+    case CREATE_SELECTIVE_SEARCH_SEGMENTATION: {
+      ret = js_search_segmentation_wrap(ctx, selective_search_segmentation_proto, cv::ximgproc::segmentation::createSelectiveSearchSegmentation());
+      break;
+    }
+
+    case CREATE_SEGMENTATION_STRATEGY_COLOR: {
+      ret = js_segmentation_strategy_wrap(ctx, segmentation_strategy_proto, cv::ximgproc::segmentation::createSelectiveSearchSegmentationStrategyColor());
+      break;
+    }
+
+    case CREATE_SEGMENTATION_STRATEGY_FILL: {
+      ret = js_segmentation_strategy_wrap(ctx, segmentation_strategy_proto, cv::ximgproc::segmentation::createSelectiveSearchSegmentationStrategyFill());
+      break;
+    }
+
+    case CREATE_SEGMENTATION_STRATEGY_MULTIPLE: {
+      std::array<JSSegmentationStrategyData*, 4> args;
+
+      const int n = std::min(argc, 4);
+
+      for(int i = 0; i < n; ++i) {
+        args[i] = js_segmentation_strategy_data(argv[i]);
+
+        if(!args[i])
+          return JS_ThrowTypeError(ctx, "argument %d must be SelectiveSearchSegmentationStrategy", i + 1);
+      }
+
+      JSSegmentationStrategyData ptr;
+
+      switch(n) {
+        case 0: ptr = cv::ximgproc::segmentation::createSelectiveSearchSegmentationStrategyMultiple(); break;
+        case 1: ptr = cv::ximgproc::segmentation::createSelectiveSearchSegmentationStrategyMultiple(*args[0]); break;
+        case 2: ptr = cv::ximgproc::segmentation::createSelectiveSearchSegmentationStrategyMultiple(*args[0], *args[1]); break;
+        case 3: ptr = cv::ximgproc::segmentation::createSelectiveSearchSegmentationStrategyMultiple(*args[0], *args[1], *args[2]); break;
+        case 4: ptr = cv::ximgproc::segmentation::createSelectiveSearchSegmentationStrategyMultiple(*args[0], *args[1], *args[2], *args[3]); break;
+      }
+
+      ret = js_segmentation_strategy_wrap(ctx, segmentation_strategy_proto, ptr);
+      break;
+    }
+
+    case CREATE_SEGMENTATION_STRATEGY_SIZE: {
+      ret = js_segmentation_strategy_wrap(ctx, segmentation_strategy_proto, cv::ximgproc::segmentation::createSelectiveSearchSegmentationStrategySize());
+      break;
+    }
+
+    case CREATE_SEGMENTATION_STRATEGY_TEXTURE: {
+      ret = js_segmentation_strategy_wrap(ctx, segmentation_strategy_proto, cv::ximgproc::segmentation::createSelectiveSearchSegmentationStrategyTexture());
+      break;
+    }
+  }
+
+  return ret;
+}
+
 enum {
   XIMGPROC_ANISOTROPIC_DIFFUSION,
   XIMGPROC_EDGE_PRESERVING_FILTER,
@@ -1360,6 +1948,16 @@ js_ximgproc_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
   return ret;
 }
 
+js_function_list_t js_ximgproc_segmentation_funcs{
+    JS_CFUNC_MAGIC_DEF("createGraphSegmentation", 0, js_segmentation_function, CREATE_GRAPH_SEGMENTATION),
+    JS_CFUNC_MAGIC_DEF("createSelectiveSearchSegmentation", 0, js_segmentation_function, CREATE_SELECTIVE_SEARCH_SEGMENTATION),
+    JS_CFUNC_MAGIC_DEF("createSelectiveSearchSegmentationStrategyColor", 0, js_segmentation_function, CREATE_SEGMENTATION_STRATEGY_COLOR),
+    JS_CFUNC_MAGIC_DEF("createSelectiveSearchSegmentationStrategyFill", 0, js_segmentation_function, CREATE_SEGMENTATION_STRATEGY_FILL),
+    JS_CFUNC_MAGIC_DEF("createSelectiveSearchSegmentationStrategyMultiple", 0, js_segmentation_function, CREATE_SEGMENTATION_STRATEGY_MULTIPLE),
+    JS_CFUNC_MAGIC_DEF("createSelectiveSearchSegmentationStrategySize", 0, js_segmentation_function, CREATE_SEGMENTATION_STRATEGY_SIZE),
+    JS_CFUNC_MAGIC_DEF("createSelectiveSearchSegmentationStrategyTexture", 0, js_segmentation_function, CREATE_SEGMENTATION_STRATEGY_TEXTURE),
+};
+
 js_function_list_t js_ximgproc_ximgproc_funcs{
     /* Extended Image Processing */
     JS_CFUNC_MAGIC_DEF("anisotropicDiffusion", 5, js_ximgproc_func, XIMGPROC_ANISOTROPIC_DIFFUSION),
@@ -1412,10 +2010,13 @@ js_function_list_t js_ximgproc_ximgproc_funcs{
     JS_PROP_INT32_DEF("BINARIZATION_SAUVOLA", cv::ximgproc::BINARIZATION_SAUVOLA, JS_PROP_ENUMERABLE),
     JS_PROP_INT32_DEF("BINARIZATION_WOLF", cv::ximgproc::BINARIZATION_WOLF, JS_PROP_ENUMERABLE),
     JS_PROP_INT32_DEF("BINARIZATION_NICK", cv::ximgproc::BINARIZATION_NICK, JS_PROP_ENUMERABLE),
+
+    JS_OBJECT_DEF("segmentation", js_ximgproc_segmentation_funcs.data(), int(js_ximgproc_segmentation_funcs.size()), JS_PROP_ENUMERABLE),
+
 };
 
 js_function_list_t js_ximgproc_static_funcs{
-    JS_OBJECT_DEF("ximgproc", js_ximgproc_ximgproc_funcs.data(), int(js_ximgproc_ximgproc_funcs.size()), JS_PROP_C_W_E),
+    JS_OBJECT_DEF("ximgproc", js_ximgproc_ximgproc_funcs.data(), int(js_ximgproc_ximgproc_funcs.size()), JS_PROP_ENUMERABLE),
 };
 
 extern "C" int
@@ -1483,6 +2084,39 @@ js_ximgproc_init(JSContext* ctx, JSModuleDef* m) {
   /* set proto.constructor and ctor.prototype */
   JS_SetConstructor(ctx, edgeboxes_class, edgeboxes_proto);
   JS_SetPropertyFunctionList(ctx, edgeboxes_class, js_edgeboxes_static_funcs, countof(js_edgeboxes_static_funcs));
+
+  JS_NewClassID(&js_graph_segmentation_class_id);
+  JS_NewClass(JS_GetRuntime(ctx), js_graph_segmentation_class_id, &js_graph_segmentation_class);
+
+  graph_segmentation_proto = JS_NewObject(ctx);
+  JS_SetPropertyFunctionList(ctx, graph_segmentation_proto, js_graph_segmentation_proto_funcs, countof(js_graph_segmentation_proto_funcs));
+  JS_SetClassProto(ctx, js_graph_segmentation_class_id, graph_segmentation_proto);
+
+  graph_segmentation_class = JS_NewCFunction2(ctx, js_graph_segmentation_constructor, "GraphSegmentation", 0, JS_CFUNC_constructor, 0);
+  /* set proto.constructor and ctor.prototype */
+  JS_SetConstructor(ctx, graph_segmentation_class, graph_segmentation_proto);
+  JS_SetPropertyFunctionList(ctx, graph_segmentation_class, js_graph_segmentation_static_funcs, countof(js_graph_segmentation_static_funcs));
+
+  JS_NewClassID(&js_search_segmentation_class_id);
+  JS_NewClass(JS_GetRuntime(ctx), js_search_segmentation_class_id, &js_search_segmentation_class);
+
+  selective_search_segmentation_proto = JS_NewObject(ctx);
+  JS_SetPropertyFunctionList(ctx, selective_search_segmentation_proto, js_search_segmentation_proto_funcs, countof(js_search_segmentation_proto_funcs));
+  JS_SetClassProto(ctx, js_search_segmentation_class_id, selective_search_segmentation_proto);
+
+  selective_search_segmentation_class = JS_NewCFunction2(ctx, js_search_segmentation_constructor, "SelectiveSearchSegmentation", 0, JS_CFUNC_constructor, 0);
+  /* set proto.constructor and ctor.prototype */
+  JS_SetConstructor(ctx, selective_search_segmentation_class, selective_search_segmentation_proto);
+  JS_SetPropertyFunctionList(ctx, selective_search_segmentation_class, js_search_segmentation_static_funcs, countof(js_search_segmentation_static_funcs));
+
+  segmentation_strategy_proto = JS_NewObject(ctx);
+  JS_SetPropertyFunctionList(ctx, segmentation_strategy_proto, js_segmentation_strategy_proto_funcs, countof(js_segmentation_strategy_proto_funcs));
+  JS_SetClassProto(ctx, js_segmentation_strategy_class_id, segmentation_strategy_proto);
+
+  segmentation_strategy_class = JS_NewCFunction2(ctx, js_segmentation_strategy_constructor, "SelectiveSearchSegmentationStrategy", 0, JS_CFUNC_constructor, 0);
+  /* set proto.constructor and ctor.prototype */
+  JS_SetConstructor(ctx, segmentation_strategy_class, segmentation_strategy_proto);
+  JS_SetPropertyFunctionList(ctx, segmentation_strategy_class, js_segmentation_strategy_static_funcs, countof(js_segmentation_strategy_static_funcs));
 
   if(m) {
     JS_SetModuleExport(ctx, m, "EdgeDrawing", edge_drawing_class);

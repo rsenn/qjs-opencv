@@ -252,7 +252,9 @@ js_contour_boundingrect(JSContext* ctx, JSValueConst this_val, int argc, JSValue
     JSContourData<double>& pts = *v;
     JSPointData<double> tl, br;
     size_t i, n = pts.size();
+
     tl = br = pts[0];
+
     for(i = 1; i < n; ++i) {
       if(tl.x > pts[i].x)
         tl.x = pts[i].x;
@@ -263,6 +265,7 @@ js_contour_boundingrect(JSContext* ctx, JSValueConst this_val, int argc, JSValue
       if(br.y < pts[i].y)
         br.y = pts[i].y;
     }
+
     ret = js_rect_new(ctx, tl.x, tl.y, br.x - tl.x, br.y - tl.y);
   }
 
@@ -1385,7 +1388,14 @@ js_contour_intersect(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
   return ret;
 }
 
-enum { PROP_ASPECT_RATIO = 0, PROP_EXTENT, PROP_SOLIDITY, PROP_EQUIVALENT_DIAMETER, PROP_ORIENTATION, PROP_BOUNDING_RECT };
+enum {
+  PROP_ASPECT_RATIO = 0,
+  PROP_EXTENT,
+  PROP_SOLIDITY,
+  PROP_EQUIVALENT_DIAMETER,
+  PROP_ORIENTATION,
+  PROP_BOUNDING_RECT,
+};
 
 static JSValue
 js_contour_get(JSContext* ctx, JSValueConst this_val, int magic) {

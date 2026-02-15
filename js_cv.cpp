@@ -29,7 +29,12 @@
 #include <string>
 #include <vector>
 
-enum { HIER_NEXT = 0, HIER_PREV, HIER_CHILD, HIER_PARENT };
+enum {
+  HIER_NEXT = 0,
+  HIER_PREV,
+  HIER_CHILD,
+  HIER_PARENT,
+};
 
 enum { DISPLAY_OVERLAY };
 
@@ -267,7 +272,12 @@ js_cv_add_weighted(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
   return JS_UNDEFINED;
 }
 
-enum { MAT_COUNTNONZERO = 0, MAT_FINDNONZERO, MAT_HCONCAT, MAT_VCONCAT };
+enum {
+  MAT_COUNTNONZERO = 0,
+  MAT_FINDNONZERO,
+  MAT_HCONCAT,
+  MAT_VCONCAT,
+};
 
 static JSValue
 js_cv_mat_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
@@ -460,7 +470,18 @@ js_cv_bitwise(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
   return JS_UNDEFINED;
 }
 
-enum { MATH_ABSDIFF = 0, MATH_ADD, MATH_COMPARE, MATH_DIVIDE, MATH_GEMM, MATH_MAX, MATH_MIN, MATH_MULTIPLY, MATH_SOLVE, MATH_SUBTRACT };
+enum {
+  MATH_ABSDIFF = 0,
+  MATH_ADD,
+  MATH_COMPARE,
+  MATH_DIVIDE,
+  MATH_GEMM,
+  MATH_MAX,
+  MATH_MIN,
+  MATH_MULTIPLY,
+  MATH_SOLVE,
+  MATH_SUBTRACT,
+};
 
 static JSValue
 js_cv_math(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
@@ -1290,7 +1311,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
     }
 
     case OTHER_SCALAR: {
-      cv::Scalar sca;
+      std::array<double, 4> sca;
 
       if(argc == 1 && js_is_array(ctx, argv[0])) {
         js_value_to(ctx, argv[0], sca);
@@ -1299,7 +1320,8 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
           sca[i] = i < argc && JS_IsNumber(argv[i]) ? js_value_to<double>(ctx, argv[i]) : 0;
       }
 
-      ret = js_value_from(ctx, sca);
+      // ret = JS_NewArray(ctx);
+      ret = js_array_from(ctx, sca);
       break;
     }
 
@@ -1405,6 +1427,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       ret = JS_NewFloat64(ctx, cvFloor(js_value_to<double>(ctx, argv[0])));
       break;
     }
+
     case OTHER_CVCEIL: {
       ret = JS_NewFloat64(ctx, cvCeil(js_value_to<double>(ctx, argv[0])));
       break;
@@ -1422,8 +1445,6 @@ JSClassDef js_cv_class = {
     .class_name = "cv",
     .finalizer = js_cv_finalizer,
 };
-
-typedef std::vector<JSCFunctionListEntry> js_function_list_t;
 
 js_function_list_t js_cv_static_funcs{
     JS_CFUNC_DEF("imdecode", 1, js_cv_imdecode),
