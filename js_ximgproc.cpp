@@ -1,7 +1,7 @@
 #include "js_cv.hpp"
 #include "js_umat.hpp"
 #include "js_contour.hpp"
-#include "jsbindings.hpp"
+#include "include/jsbindings.hpp"
 #include <quickjs.h>
 
 #ifdef HAVE_OPENCV2_XIMGPROC_HPP

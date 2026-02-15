@@ -4,7 +4,7 @@
 #include "js_alloc.hpp"
 #include "js_line.hpp"
 #include "js_point.hpp"
-#include "jsbindings.hpp"
+#include "include/jsbindings.hpp"
 #include <opencv2/core/types.hpp>
 #include <quickjs.h>
 #include <cassert>

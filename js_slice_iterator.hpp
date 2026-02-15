@@ -2,7 +2,7 @@
 #define JS_SLICE_ITERATOR_HPP
 
 #include "js_typed_array.hpp"
-#include "jsbindings.hpp"
+#include "include/jsbindings.hpp"
 #include <quickjs.h>
 #include "include/util.hpp"
 #include <stddef.h>

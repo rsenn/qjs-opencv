@@ -1,7 +1,7 @@
 #ifndef JS_AFFINE3_HPP
 #define JS_AFFINE3_HPP
 
-#include "jsbindings.hpp"
+#include "include/jsbindings.hpp"
 #include <quickjs.h>
 #include <array>
 #include <opencv2/core/affine.hpp>

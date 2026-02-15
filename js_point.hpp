@@ -1,7 +1,7 @@
 #ifndef JS_POINT_HPP
 #define JS_POINT_HPP
 
-#include "jsbindings.hpp"
+#include "include/jsbindings.hpp"
 #include <quickjs.h>
 
 template<class T> using JSPointData = cv::Point_<T>;

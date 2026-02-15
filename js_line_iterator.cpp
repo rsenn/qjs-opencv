@@ -5,7 +5,7 @@
 #include "js_rect.hpp"
 #include "js_line_iterator.hpp"
 #include "js_typed_array.hpp"
-#include "jsbindings.hpp"
+#include "include/jsbindings.hpp"
 #include <opencv2/imgproc.hpp>
 #include <quickjs.h>
 #include <cstdint>

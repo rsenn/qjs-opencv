@@ -2,7 +2,7 @@
 #include "js_alloc.hpp"
 #include "include/js_array.hpp"
 #include "js_typed_array.hpp"
-#include "jsbindings.hpp"
+#include "include/jsbindings.hpp"
 #include "include/util.hpp"
 #include <quickjs.h>
 /*#include <algorithm>

@@ -4,7 +4,7 @@
 #include "js_rect.hpp"
 #include "js_size.hpp"
 #include "js_typed_array.hpp"
-#include "jsbindings.hpp"
+#include "include/jsbindings.hpp"
 #include "include/util.hpp"
 #include "include/geometry.hpp"
 #include <quickjs.h>

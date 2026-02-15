@@ -1,7 +1,7 @@
 #ifndef JS_LIBCAMERA_APP_HPP
 #define JS_LIBCAMERA_APP_HPP 1
 
-#include "jsbindings.hpp"
+#include "include/jsbindings.hpp"
 #include <quickjs.h>
 
 extern "C" {

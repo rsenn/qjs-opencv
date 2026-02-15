@@ -3,7 +3,7 @@
 #include "include/js_array.hpp"
 #include "js_line.hpp"
 #include "js_umat.hpp"
-#include "jsbindings.hpp"
+#include "include/jsbindings.hpp"
 #include <opencv2/core/cvstd_wrapper.hpp>
 #include <opencv2/core/mat.inl.hpp>
 #include <opencv2/core/matx.hpp>

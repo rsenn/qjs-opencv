@@ -2,10 +2,10 @@
 #define JS_ARRAY_HPP
 
 #include "cutils.h"
-#include "js_mat.hpp"
-#include "js_point.hpp"
-#include "js_rect.hpp"
-#include "js_line.hpp"
+#include "../js_mat.hpp"
+#include "../js_point.hpp"
+#include "../js_rect.hpp"
+#include "../js_line.hpp"
 #include "jsbindings.hpp"
 #include <opencv2/core/mat.hpp>
 #include <opencv2/core/mat.inl.hpp>

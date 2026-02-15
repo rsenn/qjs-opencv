@@ -1,7 +1,7 @@
 #ifndef JS_KEYPOINT_HPP
 #define JS_KEYPOINT_HPP
 
-#include "jsbindings.hpp"
+#include "include/jsbindings.hpp"
 #include <quickjs.h>
 #include <stddef.h>
 #include <cstdint>

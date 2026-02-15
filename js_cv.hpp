@@ -1,7 +1,7 @@
 #ifndef JS_CV_HPP
 #define JS_CV_HPP
 
-#include "jsbindings.hpp"
+#include "include/jsbindings.hpp"
 #include <quickjs.h>
 
 extern "C" JSValue cv_class;

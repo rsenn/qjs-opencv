@@ -4,7 +4,7 @@
 #include "js_rect.hpp"
 #include "js_size.hpp"
 #include "js_umat.hpp"
-#include "jsbindings.hpp"
+#include "include/jsbindings.hpp"
 #include <opencv2/core/cvstd.hpp>
 #include <opencv2/core/mat.hpp>
 #include <opencv2/core/mat.inl.hpp>

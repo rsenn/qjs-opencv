@@ -2,7 +2,7 @@
 #define JS_SIZE_HPP
 
 #include <opencv2/core/types.hpp>
-#include "jsbindings.hpp"
+#include "include/jsbindings.hpp"
 #include <quickjs.h>
 
 template<class T> using JSSizeData = cv::Size_<T>;

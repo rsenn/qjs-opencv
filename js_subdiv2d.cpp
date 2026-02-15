@@ -3,7 +3,7 @@
 #include "include/js_array.hpp"
 #include "js_contour.hpp"
 #include "js_rect.hpp"
-#include "jsbindings.hpp"
+#include "include/jsbindings.hpp"
 #include <opencv2/core/matx.hpp>
 #include <quickjs.h>
 #include <stddef.h>

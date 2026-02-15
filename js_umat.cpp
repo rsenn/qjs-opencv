@@ -5,7 +5,7 @@
 #include "js_point.hpp"
 #include "js_rect.hpp"
 #include "js_size.hpp"
-#include "jsbindings.hpp"
+#include "include/jsbindings.hpp"
 #include <opencv2/core/mat.hpp>
 #include <opencv2/core/mat.inl.hpp>
 #include <opencv2/core/types.hpp>

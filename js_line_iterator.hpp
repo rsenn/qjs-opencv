@@ -1,7 +1,7 @@
 #ifndef JS_LINE_ITERATOR_HPP
 #define JS_LINE_ITERATOR_HPP
 
-#include "jsbindings.hpp"
+#include "include/jsbindings.hpp"
 #include <opencv2/imgproc.hpp>
 
 typedef cv::LineIterator JSLineIteratorData;

@@ -1,7 +1,7 @@
 #ifndef JS_MAT_HPP
 #define JS_MAT_HPP
 
-#include "jsbindings.hpp"
+#include "include/jsbindings.hpp"
 #include <quickjs.h>
 #include <cstdint>
 

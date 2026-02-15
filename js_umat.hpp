@@ -7,7 +7,7 @@
 #include "js_line.hpp"
 #include "js_mat.hpp"
 #include "js_typed_array.hpp"
-#include "jsbindings.hpp"
+#include "include/jsbindings.hpp"
 #include <opencv2/core/mat.hpp>
 #include <opencv2/core/mat.inl.hpp>
 #include <opencv2/core/matx.hpp>

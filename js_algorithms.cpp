@@ -1,5 +1,5 @@
 
-#include "jsbindings.hpp"
+#include "include/jsbindings.hpp"
 #include "js_umat.hpp"
 #include <opencv2/core.hpp>
 #include "algorithms/dominant_colors_grabber.hpp"

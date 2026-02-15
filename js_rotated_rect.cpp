@@ -2,7 +2,7 @@
 #include "js_rotated_rect.hpp"
 #include "js_rect.hpp"
 #include "js_size.hpp"
-#include "jsbindings.hpp"
+#include "include/jsbindings.hpp"
 #include <opencv2/core/types.hpp>
 #include <quickjs.h>
 #include <stddef.h>

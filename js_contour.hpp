@@ -2,10 +2,10 @@
 #define JS_CONTOUR_HPP
 
 #include "include/geometry.hpp"
-#include "js_alloc.hpp"
+#include "include/js_alloc.hpp"
 #include "js_point.hpp"
 #include "include/js_array.hpp"
-#include "jsbindings.hpp"
+#include "include/jsbindings.hpp"
 #include <quickjs.h>
 #include <cstdint>
 #include <new>

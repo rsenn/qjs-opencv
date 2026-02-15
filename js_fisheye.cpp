@@ -1,7 +1,7 @@
 #include "js_cv.hpp"
 #include "js_umat.hpp"
 #include "js_affine3.hpp"
-#include "jsbindings.hpp"
+#include "include/jsbindings.hpp"
 #include <quickjs.h>
 
 #include <opencv2/core.hpp>

@@ -4,7 +4,7 @@
 #include "js_point.hpp"
 #include "include/js_array.hpp"
 #include "js_typed_array.hpp"
-#include "jsbindings.hpp"
+#include "include/jsbindings.hpp"
 #include "include/line.hpp"
 #include "include/geometry.hpp"
 #include <quickjs.h>

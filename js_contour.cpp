@@ -10,7 +10,7 @@
 #include "js_rotated_rect.hpp"
 #include "js_typed_array.hpp"
 #include "js_umat.hpp"
-#include "jsbindings.hpp"
+#include "include/jsbindings.hpp"
 #include "include/psimpl.hpp"
 #include <quickjs.h>
 #include "include/util.hpp"

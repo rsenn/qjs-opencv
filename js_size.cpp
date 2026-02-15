@@ -2,7 +2,7 @@
 #include "js_alloc.hpp"
 #include "include/js_array.hpp"
 #include "js_rect.hpp"
-#include "jsbindings.hpp"
+#include "include/jsbindings.hpp"
 #include <quickjs.h>
 #include <array>
 #include <cctype>

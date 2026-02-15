@@ -1,7 +1,7 @@
 #ifndef JS_MATX_HPP
 #define JS_MATX_HPP
 
-#include "jsbindings.hpp"
+#include "include/jsbindings.hpp"
 #include "util.hpp"
 #include "js_alloc.hpp"
 #include <quickjs.h>

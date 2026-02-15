@@ -1,5 +1,5 @@
 #include "js_alloc.hpp"
-#include "jsbindings.hpp"
+#include "include/jsbindings.hpp"
 #include <opencv2/core/utility.hpp>
 #include <opencv2/core/version.hpp>
 #include <quickjs.h>

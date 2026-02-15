@@ -2,7 +2,7 @@
 #include "js_mat.hpp"
 #include "js_point.hpp"
 #include "js_size.hpp"
-#include "jsbindings.hpp"
+#include "include/jsbindings.hpp"
 #include <quickjs.h>
 #include <stddef.h>
 #include <new>

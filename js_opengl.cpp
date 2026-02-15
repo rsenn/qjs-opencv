@@ -2,7 +2,7 @@
 #include "js_mat.hpp"
 #include "js_umat.hpp"
 #include "js_size.hpp"
-#include "jsbindings.hpp"
+#include "include/jsbindings.hpp"
 #include "util.hpp"
 #include <quickjs.h>
 

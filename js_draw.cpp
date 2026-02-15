@@ -10,7 +10,7 @@
 #include "js_size.hpp"
 #include "js_umat.hpp"
 #include "js_keypoint.hpp"
-#include "jsbindings.hpp"
+#include "include/jsbindings.hpp"
 #include <opencv2/features2d.hpp>
 #include <opencv2/imgproc.hpp>
 #include <quickjs.h>

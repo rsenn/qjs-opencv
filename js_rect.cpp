@@ -6,7 +6,7 @@
 #include "js_size.hpp"
 #include "js_typed_array.hpp"
 #include "js_contour.hpp"
-#include "jsbindings.hpp"
+#include "include/jsbindings.hpp"
 #include <quickjs.h>
 #include "include/util.hpp"
 #include <float.h>

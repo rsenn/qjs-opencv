@@ -6,7 +6,7 @@
 #include "js_umat.hpp"
 #include "js_filenode.hpp"
 #include "js_filestorage.hpp"
-#include "jsbindings.hpp"
+#include "include/jsbindings.hpp"
 #include <quickjs.h>
 #include <cstring>
 #include <cstdint>

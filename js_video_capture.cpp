@@ -1,6 +1,6 @@
 #include "js_alloc.hpp"
 #include "js_mat.hpp"
-#include "jsbindings.hpp"
+#include "include/jsbindings.hpp"
 #include <opencv2/core.hpp>
 #include <opencv2/core/cvstd.hpp>
 #include <opencv2/core/mat.inl.hpp>

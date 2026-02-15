@@ -1,6 +1,6 @@
 #include "js_cv.hpp"
 #include "js_umat.hpp"
-#include "jsbindings.hpp"
+#include "include/jsbindings.hpp"
 #include <quickjs.h>
 
 #include <opencv2/objdetect/charuco_detector.hpp>

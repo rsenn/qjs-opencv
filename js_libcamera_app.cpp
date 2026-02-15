@@ -1,7 +1,7 @@
 #include "js_libcamera_app.hpp"
 #include "js_alloc.hpp"
 #include "js_mat.hpp"
-#include "jsbindings.hpp"
+#include "include/jsbindings.hpp"
 #include <opencv2/core.hpp>
 #include <quickjs.h>
 
