@@ -1,5 +1,5 @@
 #include "js_commandlineparser.hpp"
-#include "js_mat.hpp"
+#include "js_cv.hpp"
 #include "include/js_alloc.hpp"
 #include "include/js_array.hpp"
 #include "include/jsbindings.hpp"
@@ -28,21 +28,30 @@ js_commandlineparser_constructor(JSContext* ctx, JSValueConst new_target, int ar
   } else {
     std::vector<cv::String> args;
     const char* keys = 0;
+    int i = 0;
 
-    js_array_to(ctx, argv[0], args);
+    if(js_is_array(ctx, argv[i])) {
+      js_array_to(ctx, argv[i++], args);
+    } else {
+      JSValue sa = js_global_get(ctx, "scriptArgs");
+      js_array_to(ctx, sa, args);
+      JS_FreeValue(ctx, sa);
+    }
 
     std::vector<const char*> stra;
+    stra.resize(args.size() + 1);
+    std::transform(args.begin(), args.end(), stra.begin(), [](const std::string& str) -> const char* { return str.c_str(); });
+    stra[args.size()] = nullptr;
 
-    stra.resize(args.size());
+    if(i < argc)
+      keys = JS_ToCString(ctx, argv[i]);
 
-    std::transform(args.begin(), args.end(), stra.begin(),  [](const std::string& str) -> const char* {
-      return str.c_str();
-    });
-
-    if(argc > 1)
-      keys = JS_ToCString(ctx, argv[1]);
-
-    new(clp) JSCommandLineParserData(stra.size(), stra.data(), keys);
+    try {
+      new(clp) JSCommandLineParserData(args.size(), stra.data(), keys);
+    } catch(const std::exception& e) {
+      js_cv_throw(ctx, e);
+      goto fail;
+    }
   }
 
   /* using new_target to get the prototype is necessary when the class is extended. */
@@ -103,6 +112,12 @@ js_commandlineparser_set(JSContext* ctx, JSValueConst this_val, JSValueConst val
 
 enum {
   METHOD_ABOUT,
+  METHOD_CHECK,
+  METHOD_GET,
+  METHOD_GET_PATH_TO_APPLICATION,
+  METHOD_HAS,
+  METHOD_PRINT_ERRORS,
+  METHOD_PRINT_MESSAGE,
 };
 
 static JSValue
@@ -113,7 +128,75 @@ js_commandlineparser_method(JSContext* ctx, JSValueConst this_val, int argc, JSV
   if(!(clp = js_commandlineparser_data2(ctx, this_val)))
     return JS_EXCEPTION;
 
-  switch(magic) {}
+  try {
+    switch(magic) {
+      case METHOD_ABOUT: {
+        cv::String message;
+        js_value_to(ctx, argv[0], message);
+
+        clp->about(message);
+        break;
+      }
+
+      case METHOD_CHECK: {
+        ret = JS_NewBool(ctx, clp->check());
+        break;
+      }
+
+      case METHOD_GET: {
+        BOOL space_delete = TRUE;
+        cv::String s;
+
+        if(argc > 1)
+          space_delete = JS_ToBool(ctx, argv[1]);
+
+        if(JS_IsNumber(argv[0])) {
+          int32_t index = -1;
+          JS_ToInt32(ctx, &index, argv[0]);
+
+          s = clp->get<cv::String>(index, space_delete);
+        } else {
+          const char* name;
+
+          name = JS_ToCString(ctx, argv[0]);
+
+          s = clp->get<cv::String>(name, space_delete);
+
+          JS_FreeCString(ctx, name);
+        }
+
+        ret = JS_NewString(ctx, s.c_str());
+        break;
+      }
+
+      case METHOD_GET_PATH_TO_APPLICATION: {
+        cv::String s = clp->getPathToApplication();
+        ret = JS_NewString(ctx, s.c_str());
+        break;
+      }
+
+      case METHOD_HAS: {
+        const char* name;
+
+        name = JS_ToCString(ctx, argv[0]);
+
+        ret = JS_NewBool(ctx, clp->has(name));
+
+        JS_FreeCString(ctx, name);
+        break;
+      }
+
+      case METHOD_PRINT_ERRORS: {
+        clp->printErrors();
+        break;
+      }
+
+      case METHOD_PRINT_MESSAGE: {
+        clp->printMessage();
+        break;
+      }
+    }
+  } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 
   return ret;
 }
@@ -136,6 +219,13 @@ JSClassDef js_commandlineparser_class = {
 };
 
 JSCFunctionListEntry js_commandlineparser_proto_funcs[] = {
+    JS_CFUNC_MAGIC_DEF("about", 1, js_commandlineparser_method, METHOD_ABOUT),
+    JS_CFUNC_MAGIC_DEF("check", 0, js_commandlineparser_method, METHOD_CHECK),
+    JS_CFUNC_MAGIC_DEF("get", 1, js_commandlineparser_method, METHOD_GET),
+    JS_CFUNC_MAGIC_DEF("getPathToApplication", 0, js_commandlineparser_method, METHOD_GET_PATH_TO_APPLICATION),
+    JS_CFUNC_MAGIC_DEF("has", 1, js_commandlineparser_method, METHOD_HAS),
+    JS_CFUNC_MAGIC_DEF("printErrors", 0, js_commandlineparser_method, METHOD_PRINT_ERRORS),
+    JS_CFUNC_MAGIC_DEF("printMessage", 0, js_commandlineparser_method, METHOD_PRINT_MESSAGE),
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "CommandLineParser", JS_PROP_CONFIGURABLE),
 };
 

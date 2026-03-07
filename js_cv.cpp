@@ -427,6 +427,19 @@ js_cv_getticks(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
   return ret;
 }
 
+static JSValue
+js_cv_cpu(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  JSValue ret = JS_UNDEFINED;
+
+  switch(magic) {
+    case 0: ret = JS_NewInt32(ctx, cv::getNumberOfCPUs()); break;
+    case 1: ret = JS_NewString(ctx, cv::getCPUFeaturesLine().c_str()); break;
+    default: ret = JS_EXCEPTION;
+  }
+
+  return ret;
+}
+
 enum {
   BITWISE_AND = 0,
   BITWISE_OR,
@@ -1447,6 +1460,68 @@ JSClassDef js_cv_class = {
     .finalizer = js_cv_finalizer,
 };
 
+static JSValue
+js_cv_samples_function(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  JSValue ret = JS_UNDEFINED;
+
+  switch(magic) {
+    case 0: {
+      const char* relative_path = JS_ToCString(ctx, argv[0]);
+      BOOL required = FALSE, silentMode = FALSE;
+
+      if(argc > 1)
+        required = JS_ToBool(ctx, argv[1]);
+      if(argc > 2)
+        silentMode = JS_ToBool(ctx, argv[2]);
+
+      ret = JS_NewString(ctx, cv::samples::findFile(relative_path, required, silentMode).c_str());
+
+      JS_FreeCString(ctx, relative_path);
+      break;
+    }
+
+    case 1: {
+      const char* relative_path = JS_ToCString(ctx, argv[0]);
+      BOOL silentMode = FALSE;
+
+      if(argc > 1)
+        silentMode = JS_ToBool(ctx, argv[1]);
+
+      ret = JS_NewString(ctx, cv::samples::findFileOrKeep(relative_path, silentMode).c_str());
+
+      JS_FreeCString(ctx, relative_path);
+      break;
+    }
+
+    case 2: {
+      const char* path = JS_ToCString(ctx, argv[0]);
+
+      cv::samples::addSamplesDataSearchPath(path);
+
+      JS_FreeCString(ctx, path);
+      break;
+    }
+
+    case 3: {
+      const char* path = JS_ToCString(ctx, argv[0]);
+
+      cv::samples::addSamplesDataSearchSubDirectory(path);
+
+      JS_FreeCString(ctx, path);
+      break;
+    }
+  }
+
+  return ret;
+}
+
+js_function_list_t js_cv_samples_funcs{
+    JS_CFUNC_MAGIC_DEF("findFile", 1, js_cv_samples_function, 0),
+    JS_CFUNC_MAGIC_DEF("findFileOrKeep", 1, js_cv_samples_function, 1),
+    JS_CFUNC_MAGIC_DEF("addSamplesDataSearchPath", 1, js_cv_samples_function, 2),
+    JS_CFUNC_MAGIC_DEF("addSamplesDataSearchSubDirectory", 1, js_cv_samples_function, 3),
+};
+
 js_function_list_t js_cv_static_funcs{
     JS_CFUNC_DEF("imdecode", 1, js_cv_imdecode),
     JS_CFUNC_DEF("imencode", 1, js_cv_imencode),
@@ -1460,6 +1535,8 @@ js_function_list_t js_cv_static_funcs{
     JS_CFUNC_MAGIC_DEF("getTickCount", 0, js_cv_getticks, 0),
     JS_CFUNC_MAGIC_DEF("getTickFrequency", 0, js_cv_getticks, 1),
     JS_CFUNC_MAGIC_DEF("getCPUTickCount", 0, js_cv_getticks, 2),
+    JS_CFUNC_MAGIC_DEF("getNumberOfCPUs", 0, js_cv_cpu, 0),
+    JS_CFUNC_MAGIC_DEF("getCPUFeaturesLine", 0, js_cv_cpu, 1),
     JS_CFUNC_MAGIC_DEF("bitwise_and", 3, js_cv_bitwise, BITWISE_AND),
     JS_CFUNC_MAGIC_DEF("bitwise_or", 3, js_cv_bitwise, BITWISE_OR),
     JS_CFUNC_MAGIC_DEF("bitwise_xor", 3, js_cv_bitwise, BITWISE_XOR),
@@ -1548,6 +1625,9 @@ js_function_list_t js_cv_static_funcs{
     JS_CFUNC_MAGIC_DEF("cvRound", 1, js_cv_other, OTHER_CVROUND),
     JS_CFUNC_MAGIC_DEF("cvFloor", 1, js_cv_other, OTHER_CVFLOOR),
     JS_CFUNC_MAGIC_DEF("cvCeil", 1, js_cv_other, OTHER_CVCEIL),
+
+    JS_OBJECT_DEF("samples", js_cv_samples_funcs.data(), int(js_cv_samples_funcs.size()), JS_PROP_C_W_E),
+
 };
 
 #define VEC_TYPE(n, type) (((n) << 8) | (type))
@@ -2076,37 +2156,6 @@ js_function_list_t js_cv_constants{
 
     JS_CV_CONSTANT(RANSAC),
 };
-
-JSValue
-js_cv_throw(JSContext* ctx, const cv::Exception& e) {
-  const char *msg, *what = e.what(), *loc = 0;
-  size_t loclen;
-
-  if((msg = strstr(what, "/opencv")))
-    what = msg + 1;
-
-  /*if((msg = strstr(what, "/opencv"))) {
-    loc = msg + 1;
-    if((what = strstr(loc, ": "))) {
-      loclen = what - loc;
-      what += 2;
-    }
-  }
-
-  if((msg = strstr(what, "error: ("))) {
-    if((msg = strstr(msg, ") ")))
-      what = msg + 2;
-  }*/
-
-  JSValue ret = JS_NewError(ctx);
-
-  if(loc)
-    JS_DefinePropertyValueStr(ctx, ret, "location", JS_NewStringLen(ctx, loc, loclen), JS_PROP_CONFIGURABLE | JS_PROP_ENUMERABLE);
-
-  JS_DefinePropertyValueStr(ctx, ret, "message", JS_NewString(ctx, what), JS_PROP_CONFIGURABLE);
-
-  return JS_Throw(ctx, ret);
-}
 
 /*JSClassDef js_exception_class = {
     .class_name = "Exception",
