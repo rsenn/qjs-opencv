@@ -651,6 +651,13 @@ js_value_to(JSContext* ctx, JSValueConst value, std::string& out) {
   return 1;
 }
 
+/*static inline int
+js_value_to(JSContext* ctx, JSValueConst value, const char*& out) {
+  const char* str = JS_ToCString(ctx, &len, value);
+  out = str;
+  return 1;
+}*/
+
 template<class T, int N>
 static inline int
 js_value_to(JSContext* ctx, JSValueConst value, cv::Vec<T, N>& in) {
