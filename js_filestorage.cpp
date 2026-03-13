@@ -242,7 +242,7 @@ js_filestorage_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCo
 
   switch(magic) {
     case METHOD_OPEN: {
-      const char *filename, *encoding;
+      const char *filename, *encoding = 0;
       int32_t flags = 0;
 
       if(!(filename = JS_ToCString(ctx, argv[0])))
