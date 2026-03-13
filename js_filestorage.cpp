@@ -35,7 +35,10 @@ js_filestorage_constructor(JSContext* ctx, JSValueConst new_target, int argc, JS
     if(argc > 2)
       encoding = JS_ToCString(ctx, argv[2]);
 
-    new(fs) JSFileStorageData(filename, flags, encoding);
+    if(encoding)
+      new(fs) JSFileStorageData(filename, flags, encoding);
+    else
+      new(fs) JSFileStorageData(filename, flags);
 
     JS_FreeCString(ctx, filename);
     if(encoding)
