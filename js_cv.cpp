@@ -1142,13 +1142,27 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
 
     case OTHER_NORM: {
       int32_t normType = cv::NORM_L2;
-      JSInputArray mask = cv::noArray();
+      JSInputArray src2 = cv::noArray(), mask = cv::noArray();
+      int i = 1;
+      bool two_mats = false;
 
-      if(argc >= 2)
-        JS_ToInt32(ctx, &normType, argv[1]);
-      if(argc >= 3)
-        mask = js_umat_or_mat(ctx, argv[2]);
-      ret = JS_NewFloat64(ctx, cv::norm(src, normType, mask));
+      if(argc > i && JS_IsObject(argv[i])) {
+        src2 = js_input_array(ctx, argv[i++]);
+        two_mats = true;
+      }
+
+      if(argc > i && JS_IsNumber(argv[i])) {
+        JS_ToInt32(ctx, &normType, argv[i++]);
+      }
+
+      if(argc > i && JS_IsObject(argv[i]))
+        mask = js_umat_or_mat(ctx, argv[i++]);
+
+      if(two_mats)
+        ret = JS_NewFloat64(ctx, cv::norm(src, src2, normType, mask));
+      else
+        ret = JS_NewFloat64(ctx, cv::norm(src, normType, mask));
+
       break;
     }
 

@@ -603,7 +603,7 @@ js_mat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
       }
 
       case METHOD_PTR: {
-        uchar* ptr;
+        uchar* ptr = 0;
         std::ostringstream os;
 
         if(argc == 2) {
@@ -726,10 +726,11 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
   if(argc < 1)
     return JS_EXCEPTION;
 
-  if((scalar = !JS_IsNumber(argv[0]))) {
+  if(JS_IsNumber(argv[0])) {
     JS_ToFloat64(ctx, &value, argv[0]);
   } else if((other = js_mat_data_nothrow(argv[0])) == nullptr) {
     js_array_to(ctx, argv[0], arr);
+    scalar = TRUE;
     // js_color_read(ctx, argv[0], &color);
   }
 

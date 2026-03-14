@@ -1,4 +1,6 @@
-import { BindMethods, BindMethodsTo, Define, FindKey, Lookup, Modulo, WeakAssign, WeakMapper, Mat, Rect, Size, VideoCapture, IMREAD_IGNORE_ORIENTATION, INTER_CUBIC, imread, resize } from 'opencv';
+import { BindMethods, BindMethodsTo, Define, FindKey, Lookup, Modulo, WeakAssign, WeakMapper } from './cvUtils.js';
+import { Mat, Rect, Size, VideoCapture, IMREAD_IGNORE_ORIENTATION, INTER_CUBIC, imread, resize } from 'opencv';
+import * as cv from 'opencv';
 
 const Crop = (() => {
   const mapper = WeakMapper(() => new Mat());

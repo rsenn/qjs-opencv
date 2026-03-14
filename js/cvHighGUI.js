@@ -59,7 +59,7 @@ export class Window {
   #handleKey(scancode) {
     const mods = scancode >> 16;
     const keycode = scancode & 0xffff;
-    const ev = { key: String.fromCharCode(keycode & 0xff), keycode, scancode, mods };
+    const ev = { key: String.fromCodePoint(keycode), keycode, scancode, mods };
     if(typeof this.onkey == 'function') this.onkey(ev);
   }
 
