@@ -27,12 +27,10 @@ function main(...argv) {
   console.log('CAP_PROP_AUDIO_TOTAL_CHANNELS: ' + cap.get(CAP_PROP_AUDIO_TOTAL_CHANNELS));
   console.log('CAP_PROP_AUDIO_TOTAL_STREAMS: ' + cap.get(CAP_PROP_AUDIO_TOTAL_STREAMS));
 
-  for(let i = 0; i < numberOfChannels; i++) audioData.push([]);
-
   let numberOfSamples = 0;
   let numberOfFrames = 0;
 
-  //audioData.resize(numberOfChannels);
+  for(let i = 0; i < numberOfChannels; i++) audioData.push([]);
 
   for(;;) {
     if(cap.grab()) {
