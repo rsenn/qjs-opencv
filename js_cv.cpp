@@ -609,7 +609,8 @@ enum {
   CORE_SORTIDX,
   CORE_SQRT,
   CORE_TRANSFORM,
-  CORE_TRANSPOSE
+  CORE_TRANSPOSE,
+  CORE_DEPTH_TO_STRING,
 };
 
 static JSValue
@@ -819,6 +820,20 @@ js_cv_core(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[],
 
     case CORE_TRANSPOSE: {
       cv::transpose(src, dst);
+      break;
+    }
+
+    case CORE_DEPTH_TO_STRING: {
+      int32_t depth = -1;
+      const char* s;
+
+      JS_ToInt32(ctx, &depth, argv[0]);
+
+      if((s = cv::depthToString(depth)))
+        ret = JS_NewString(ctx, s);
+      else
+        ret = JS_NULL;
+
       break;
     }
   }
@@ -1583,6 +1598,7 @@ js_function_list_t js_cv_static_funcs{
     JS_CFUNC_MAGIC_DEF("sqrt", 2, js_cv_core, CORE_SQRT),
     JS_CFUNC_MAGIC_DEF("transform", 3, js_cv_core, CORE_TRANSFORM),
     JS_CFUNC_MAGIC_DEF("transpose", 2, js_cv_core, CORE_TRANSPOSE),
+    JS_CFUNC_MAGIC_DEF("depthToString", 1, js_cv_core, CORE_DEPTH_TO_STRING),
 
     JS_CFUNC_MAGIC_DEF("calcCovarMatrix", 4, js_cv_other, OTHER_CALC_COVAR_MATRIX),
     JS_CFUNC_MAGIC_DEF("cartToPolar", 4, js_cv_other, OTHER_CART_TO_POLAR),
@@ -2021,6 +2037,18 @@ js_function_list_t js_cv_constants{
     JS_CV_CONSTANT(CAP_PROP_WB_TEMPERATURE),
     JS_CV_CONSTANT(CAP_PROP_CODEC_PIXEL_FORMAT),
 
+    JS_CV_CONSTANT(CAP_PROP_AUDIO_STREAM),
+    JS_CV_CONSTANT(CAP_PROP_AUDIO_POS),
+    JS_CV_CONSTANT(CAP_PROP_AUDIO_SAMPLES_PER_SECOND),
+    JS_CV_CONSTANT(CAP_PROP_AUDIO_SHIFT_NSEC),
+    JS_CV_CONSTANT(CAP_PROP_AUDIO_SHIFT_NSEC),
+    JS_CV_CONSTANT(CAP_PROP_AUDIO_DATA_DEPTH),
+    JS_CV_CONSTANT(CAP_PROP_AUDIO_SAMPLES_PER_SECOND),
+    JS_CV_CONSTANT(CAP_PROP_AUDIO_BASE_INDEX),
+    JS_CV_CONSTANT(CAP_PROP_AUDIO_TOTAL_CHANNELS),
+    JS_CV_CONSTANT(CAP_PROP_AUDIO_TOTAL_STREAMS),
+    JS_CV_CONSTANT(CAP_PROP_AUDIO_SYNCHRONIZE),
+
     JS_CV_CONSTANT(VIDEOWRITER_PROP_QUALITY),
     JS_CV_CONSTANT(VIDEOWRITER_PROP_FRAMEBYTES),
     JS_CV_CONSTANT(VIDEOWRITER_PROP_NSTRIPES),
@@ -2155,6 +2183,7 @@ js_function_list_t js_cv_constants{
     JS_CV_CONSTANT(ADAPTIVE_THRESH_GAUSSIAN_C),
 
     JS_CV_CONSTANT(RANSAC),
+
 };
 
 /*JSClassDef js_exception_class = {
