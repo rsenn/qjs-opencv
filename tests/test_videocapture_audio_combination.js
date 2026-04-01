@@ -1,6 +1,6 @@
 import { CommandLineParser, Mat, VideoCapture, CAP_ANY, CAP_PROP_AUDIO_BASE_INDEX, CAP_PROP_AUDIO_DATA_DEPTH, CAP_PROP_AUDIO_SAMPLES_PER_SECOND, CAP_PROP_AUDIO_STREAM, CAP_PROP_AUDIO_TOTAL_CHANNELS, CAP_PROP_AUDIO_TOTAL_STREAMS, CAP_PROP_VIDEO_STREAM, waitKey, imshow, depthToString, CV_16S, } from 'opencv';
 
-function main(...argv) {
+function main() {
   const parser = new CommandLineParser(scriptArgs, '{@audio||}');
   const file = parser.get('@audio');
 
@@ -62,7 +62,7 @@ function main(...argv) {
 }
 
 try {
-  main(...scriptArgs.slice(1));
+  main();
 } catch(e) {
   console.log('error', e);
 }
