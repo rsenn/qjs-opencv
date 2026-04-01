@@ -8,11 +8,11 @@ function main(...argv) {
     return 1;
   }
 
-  let videoFrame = new Mat();
-  let audioFrame = new Mat();
-  let audioData = [];
-  let cap = new VideoCapture();
-  let params = [CAP_PROP_AUDIO_STREAM, 0, CAP_PROP_VIDEO_STREAM, 0, CAP_PROP_AUDIO_DATA_DEPTH, CV_16S];
+  const videoFrame = new Mat();
+  const audioFrame = new Mat();
+  const audioData = [];
+  const cap = new VideoCapture();
+  const params = [CAP_PROP_AUDIO_STREAM, 0, CAP_PROP_VIDEO_STREAM, 0, CAP_PROP_AUDIO_DATA_DEPTH, CV_16S];
 
   cap.open(file, CAP_ANY, params);
   if(!cap.isOpened()) {
@@ -20,8 +20,8 @@ function main(...argv) {
     return -1;
   }
 
-  let audioBaseIndex = cap.get(CAP_PROP_AUDIO_BASE_INDEX);
-  let numberOfChannels = cap.get(CAP_PROP_AUDIO_TOTAL_CHANNELS);
+  const audioBaseIndex = cap.get(CAP_PROP_AUDIO_BASE_INDEX);
+  const numberOfChannels = cap.get(CAP_PROP_AUDIO_TOTAL_CHANNELS);
   console.log('CAP_PROP_AUDIO_DATA_DEPTH: ' + depthToString(cap.get(CAP_PROP_AUDIO_DATA_DEPTH)));
   console.log('CAP_PROP_AUDIO_SAMPLES_PER_SECOND: ' + cap.get(CAP_PROP_AUDIO_SAMPLES_PER_SECOND));
   console.log('CAP_PROP_AUDIO_TOTAL_CHANNELS: ' + cap.get(CAP_PROP_AUDIO_TOTAL_CHANNELS));
@@ -37,7 +37,6 @@ function main(...argv) {
   for(;;) {
     if(cap.grab()) {
       cap.retrieve(videoFrame);
-      console.log('videoFrame: ' + videoFrame);
 
       for(let nCh = 0; nCh < numberOfChannels; nCh++) {
         cap.retrieve(audioFrame, audioBaseIndex + nCh);
@@ -46,6 +45,7 @@ function main(...argv) {
         numberOfSamples += audioFrame.cols;
         console.log('Number of audio samples: ' + numberOfSamples);
       }
+
       if(false && !videoFrame.empty) {
         numberOfFrames++;
 
