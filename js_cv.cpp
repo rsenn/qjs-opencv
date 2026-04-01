@@ -826,8 +826,12 @@ js_cv_core(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[],
     case CORE_DEPTH_TO_STRING: {
       int32_t depth = -1;
       const char* s;
+      JSMatData* m;
 
-      JS_ToInt32(ctx, &depth, argv[0]);
+      if(JS_IsObject(argv[0]) && (m = js_mat_data(argv[0])))
+        depth = m->depth();
+      else
+        JS_ToInt32(ctx, &depth, argv[0]);
 
       if((s = cv::depthToString(depth)))
         ret = JS_NewString(ctx, s);
