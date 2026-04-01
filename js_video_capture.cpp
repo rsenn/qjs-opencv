@@ -1,4 +1,5 @@
 #include "js_alloc.hpp"
+#include "js_array.hpp"
 #include "js_mat.hpp"
 #include "include/jsbindings.hpp"
 #include <opencv2/core.hpp>
@@ -30,6 +31,7 @@ static bool
 js_video_capture_open(JSContext* ctx, JSVideoCaptureData* s, int argc, JSValueConst argv[]) {
   int32_t camID = -1, apiPreference = cv::CAP_ANY;
   cv::String filename;
+     std::vector<int> params;
 
   filename = JS_ToCString(ctx, argv[0]);
 
@@ -41,12 +43,15 @@ js_video_capture_open(JSContext* ctx, JSVideoCaptureData* s, int argc, JSValueCo
     filename = "";
   }
 
+  if(argc > 2) 
+    js_array_to(ctx, argv[2], params);
+
   std::cerr << "VideoCapture.open filename='" << filename << "', camID=" << camID << ", apiPreference=" << apiPreference << std::endl;
 
   if(filename.empty())
-    return s->open(camID, apiPreference);
+    return s->open(camID, apiPreference, params);
 
-  return s->open(filename, apiPreference);
+  return s->open(filename, apiPreference,params);
 }
 
 static JSValue
