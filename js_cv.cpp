@@ -1112,12 +1112,12 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       double minVal, maxVal;
       JSPointData<int> minLoc, maxLoc;
       std::array<JSValueConst, 4> results;
-    
+
       if(argc >= 6)
         mask = js_umat_or_mat(ctx, argv[5]);
-    
+
       cv::minMaxLoc(src, &minVal, &maxVal, &minLoc, &maxLoc, mask);
-    
+
       results[0] = JS_NewFloat64(ctx, minVal);
       results[1] = JS_NewFloat64(ctx, maxVal);
       results[2] = js_point_new(ctx, minLoc);
@@ -1126,7 +1126,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       for(size_t i = 0; i < 4; i++)
         if(js_is_function(ctx, argv[i + 1]))
           JS_Call(ctx, argv[i + 1], JS_NULL, 1, &results[i]);
-   
+
       ret = js_array<JSValue>::from_sequence(ctx, const_cast<JSValue*>(&results[0]), const_cast<JSValue*>(&results[4]));
       break;
     }

@@ -41,6 +41,11 @@ js_commandlineparser_constructor(JSContext* ctx, JSValueConst new_target, int ar
     std::vector<const char*> stra;
     stra.resize(args.size() + 1);
     std::transform(args.begin(), args.end(), stra.begin(), [](const std::string& str) -> const char* { return str.c_str(); });
+
+    for(size_t j = 0; j < args.size(); ++j) {
+      stra[j] = js_strdup(ctx, stra[j]);
+    }
+
     stra[args.size()] = nullptr;
 
     if(i < argc)
