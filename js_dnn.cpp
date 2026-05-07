@@ -131,7 +131,6 @@ const JSCFunctionListEntry js_net_proto_funcs[] = {
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Net", JS_PROP_CONFIGURABLE),
 };
 
-const JSCFunctionListEntry js_net_static_funcs[] = {};
 
 using JSImage2BlobParamsData = cv::dnn::Image2BlobParams;
 
@@ -436,8 +435,6 @@ const JSCFunctionListEntry js_imageblob2params_proto_funcs[] = {
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Image2BlobParams", JS_PROP_CONFIGURABLE),
 };
 
-const JSCFunctionListEntry js_imageblob2params_static_funcs[] = {};
-
 enum {
   DNN_IMAGE2BLOBPARAMS,
   DNN_IMAGEPADDINGMODE,
@@ -550,7 +547,7 @@ js_dnn_init(JSContext* ctx, JSModuleDef* m) {
   imageblob2params_class = JS_NewCFunction2(ctx, js_imageblob2params_constructor, "Image2BlobParams", 0, JS_CFUNC_constructor, 0);
   /* set proto.constructor and ctor.prototype */
   JS_SetConstructor(ctx, imageblob2params_class, imageblob2params_proto);
-  JS_SetPropertyFunctionList(ctx, imageblob2params_class, js_imageblob2params_static_funcs, countof(js_imageblob2params_static_funcs));
+
 
   if(m) {
     JS_SetModuleExport(ctx, m, "dnn", dnn_object);
@@ -559,8 +556,6 @@ js_dnn_init(JSContext* ctx, JSModuleDef* m) {
 
     JS_SetPropertyStr(ctx, dnn_object, "Net", net_class);
     JS_SetPropertyStr(ctx, dnn_object, "Image2BlobParams", imageblob2params_class);
-
-    // JS_SetModuleExportList(ctx, m, js_dnn_static_funcs, countof(js_dnn_static_funcs));
   }
 
   return 0;
