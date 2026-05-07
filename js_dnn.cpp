@@ -440,10 +440,10 @@ enum {
   DNN_BLOBFROMIMAGESWITHPARAMS,
   DNN_BLOBFROMIMAGEWITHPARAMS,
   DNN_ENABLEMODELDIAGNOSTICS,
-  DNN_GETAVAILABLEBACKENDS,
-  DNN_GETAVAILABLETARGETS,
-  DNN_GETLAYERFACTORYIMPL,
-  DNN_GETLAYERFACTORYMUTEX,
+  /*  DNN_GETAVAILABLEBACKENDS,
+    DNN_GETAVAILABLETARGETS,
+    DNN_GETLAYERFACTORYIMPL,
+    DNN_GETLAYERFACTORYMUTEX,*/
   DNN_IMAGESFROMBLOB,
   DNN_NMSBOXES,
   DNN_NMSBOXESBATCHED,
@@ -497,59 +497,169 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
         if(argc > argi)
           js_value_to(ctx, argv[argi++], ddepth);
 
-        if(blobArg) {
+        if(blobArg)
           cv::dnn::blobFromImage(image, blob, scalefactor, size, mean, swapRB, crop, ddepth);
-        } else {
-          /*cv::Mat m = cv::dnn::blobFromImage(image, scalefactor, size, mean, swapRB, crop, ddepth);
-          ret = js_mat_wrap(ctx, m);*/
-
+        else
           ret = js_value_from(ctx, cv::dnn::blobFromImage(image, scalefactor, size, mean, swapRB, crop, ddepth));
-        }
 
         break;
       }
 
       case DNN_BLOBFROMIMAGES: {
+        JSInputArray images = js_input_array(ctx, argv[0]);
+        JSOutputArray blob;
+        double scalefactor = 1.0;
+        cv::Size size;
+        cv::Scalar mean;
+        bool swapRB = false, crop = false;
+        int32_t ddepth = CV_32F;
+        int argi = 1;
+        bool blobArg = false;
+
+        if(argc > argi && JS_IsObject(argv[argi])) {
+          blob = js_cv_outputarray(ctx, argv[argi++]);
+          blobArg = true;
+        }
+
+        if(argc > argi)
+          js_value_to(ctx, argv[argi++], scalefactor);
+        if(argc > argi)
+          js_value_to(ctx, argv[argi++], size);
+        if(argc > argi)
+          js_value_to(ctx, argv[argi++], mean);
+        if(argc > argi)
+          js_value_to(ctx, argv[argi++], swapRB);
+        if(argc > argi)
+          js_value_to(ctx, argv[argi++], crop);
+        if(argc > argi)
+          js_value_to(ctx, argv[argi++], ddepth);
+
+        if(blobArg)
+          cv::dnn::blobFromImages(images, blob, scalefactor, size, mean, swapRB, crop, ddepth);
+        else
+          ret = js_value_from(ctx, cv::dnn::blobFromImages(images, scalefactor, size, mean, swapRB, crop, ddepth));
+
         break;
       }
 
       case DNN_BLOBFROMIMAGESWITHPARAMS: {
+        JSInputArray images = js_input_array(ctx, argv[0]);
+        JSOutputArray blob;
+        cv::dnn::Image2BlobParams* i2bp;
+        bool blobArg = false;
+        int argi = 1;
+
+        if(argc > argi) {
+          if(JS_IsObject(argv[argi]) && !(i2bp = js_imageblob2params_data(argv[argi]))) {
+            blob = js_cv_outputarray(ctx, argv[argi++]);
+            blobArg = true;
+          }
+        }
+
+        if(argc > argi)
+          if((i2bp = js_imageblob2params_data(argv[argi])))
+            argi++;
+
+        if(blobArg)
+          cv::dnn::blobFromImagesWithParams(images, blob, i2bp ? *i2bp : cv::dnn::Image2BlobParams());
+        else
+          ret = js_value_from(ctx, cv::dnn::blobFromImagesWithParams(images, i2bp ? *i2bp : cv::dnn::Image2BlobParams()));
+
         break;
       }
 
       case DNN_BLOBFROMIMAGEWITHPARAMS: {
+        JSInputArray image = js_input_array(ctx, argv[0]);
+        JSOutputArray blob;
+        cv::dnn::Image2BlobParams* i2bp;
+        bool blobArg = false;
+        int argi = 1;
+
+        if(argc > argi) {
+          if(JS_IsObject(argv[argi]) && !(i2bp = js_imageblob2params_data(argv[argi]))) {
+            blob = js_cv_outputarray(ctx, argv[argi++]);
+            blobArg = true;
+          }
+        }
+
+        if(argc > argi)
+          if((i2bp = js_imageblob2params_data(argv[argi])))
+            argi++;
+
+        if(blobArg)
+          cv::dnn::blobFromImageWithParams(image, blob, i2bp ? *i2bp : cv::dnn::Image2BlobParams());
+        else
+          ret = js_value_from(ctx, cv::dnn::blobFromImageWithParams(image, i2bp ? *i2bp : cv::dnn::Image2BlobParams()));
+
         break;
       }
 
       case DNN_ENABLEMODELDIAGNOSTICS: {
+        bool isDiagnosticsMode = false;
+
+        if(argc > 0)
+          js_value_to(ctx, argv[0], isDiagnosticsMode);
+
+        cv::dnn::enableModelDiagnostics(isDiagnosticsMode);
         break;
       }
 
-      case DNN_GETAVAILABLEBACKENDS: {
-        break;
-      }
+        /*      case DNN_GETAVAILABLEBACKENDS: {
+                break;
+              }
 
-      case DNN_GETAVAILABLETARGETS: {
-        break;
-      }
+              case DNN_GETAVAILABLETARGETS: {
+                break;
+              }
 
-      case DNN_GETLAYERFACTORYIMPL: {
-        break;
-      }
+              case DNN_GETLAYERFACTORYIMPL: {
+                break;
+              }
 
-      case DNN_GETLAYERFACTORYMUTEX: {
-        break;
-      }
+              case DNN_GETLAYERFACTORYMUTEX: {
+                break;
+              }*/
 
       case DNN_IMAGESFROMBLOB: {
+        JSInputArray blob = js_input_array(ctx, argv[0]);
+        JSOutputArray images = js_cv_outputarray(ctx, argv[1]);
+
+        cv::dnn::imagesFromBlob(blob.getMat(), images);
         break;
       }
 
       case DNN_NMSBOXESBATCHED: {
+        std::vector<cv::Rect> bboxes;
+        std::vector<float> scores;
+        double score_threshold, nms_threshold, eta = 1.0;
+        std::vector<int> class_ids, indices;
+        int32_t top_k = 0;
+
+        js_value_to(ctx, argv[0], bboxes);
+        js_value_to(ctx, argv[1], scores);
+        js_value_to(ctx, argv[2], class_ids);
+        js_value_to(ctx, argv[3], score_threshold);
+        js_value_to(ctx, argv[4], nms_threshold);
+        js_value_to(ctx, argv[5], indices);
+        js_value_to(ctx, argv[6], eta);
+        js_value_to(ctx, argv[7], top_k);
+
+        cv::dnn::NMSBoxesBatched(bboxes, scores, class_ids, score_threshold, nms_threshold, indices, eta, top_k);
         break;
       }
 
       case DNN_READNETFROMCAFFE: {
+
+        if(js_is_arraybuffer(ctx, argv[0])) {
+
+        } else {
+          std::string prototxt, caffeeModel;
+
+          js_value_to(ctx, argv[0], prototxt);
+          js_value_to(ctx, argv[1], caffeeModel);
+
+          ret = js_net_new(ctx, cv::dnn::readNetFromCaffe(prototxt, caffeeModel));
+        }
         break;
       }
 
@@ -652,10 +762,10 @@ const JSCFunctionListEntry js_dnn_dnn_funcs[] = {
     JS_CFUNC_MAGIC_DEF("blobFromImagesWithParams", 0, js_dnn_func, DNN_BLOBFROMIMAGESWITHPARAMS),
     JS_CFUNC_MAGIC_DEF("blobFromImageWithParams", 0, js_dnn_func, DNN_BLOBFROMIMAGEWITHPARAMS),
     JS_CFUNC_MAGIC_DEF("enableModelDiagnostics", 0, js_dnn_func, DNN_ENABLEMODELDIAGNOSTICS),
-    JS_CFUNC_MAGIC_DEF("getAvailableBackends", 0, js_dnn_func, DNN_GETAVAILABLEBACKENDS),
+/*    JS_CFUNC_MAGIC_DEF("getAvailableBackends", 0, js_dnn_func, DNN_GETAVAILABLEBACKENDS),
     JS_CFUNC_MAGIC_DEF("getAvailableTargets", 0, js_dnn_func, DNN_GETAVAILABLETARGETS),
     JS_CFUNC_MAGIC_DEF("getLayerFactoryImpl", 0, js_dnn_func, DNN_GETLAYERFACTORYIMPL),
-    JS_CFUNC_MAGIC_DEF("getLayerFactoryMutex", 0, js_dnn_func, DNN_GETLAYERFACTORYMUTEX),
+    JS_CFUNC_MAGIC_DEF("getLayerFactoryMutex", 0, js_dnn_func, DNN_GETLAYERFACTORYMUTEX),*/
     JS_CFUNC_MAGIC_DEF("imagesFromBlob", 0, js_dnn_func, DNN_IMAGESFROMBLOB),
     JS_CFUNC_MAGIC_DEF("NMSBoxes", 0, js_dnn_func, DNN_NMSBOXES),
     JS_CFUNC_MAGIC_DEF("NMSBoxesBatched", 0, js_dnn_func, DNN_NMSBOXESBATCHED),
