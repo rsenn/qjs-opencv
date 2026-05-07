@@ -3,12 +3,15 @@
 #include "include/jsbindings.hpp"
 #include <quickjs.h>
 
-#include <opencv2/objdetect/chdnn_detector.hpp>
+#include <opencv2/dnn.hpp>
 
 enum {
-  DNN_DRAW_DETECTED_CORNERS_CHDNN = 0,
-  DNN_DRAW_DETECTED_DIAMONDS,
-  DNN_DRAW_DETECTED_MARKERS,
+  DNN_LAYOUT_NCHW,
+  DNN_IMAGE2BLOBPARAMS,
+  DNN_IMAGEPADDINGMODE,
+  DNN_NET,
+  DNN_NMSBOXES,
+  DNN_READNET,
 };
 
 static JSValue
@@ -16,67 +19,19 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
   JSValue ret = JS_UNDEFINED;
 
   try {
-    switch(magic) {
-      case DNN_DRAW_DETECTED_CORNERS_CHDNN: {
-        JSInputOutputArray image = js_cv_inputoutputarray(ctx, argv[0]);
-        JSInputArray chdnnCorners = js_input_array(ctx, argv[1]);
-        JSInputArray chdnnIds = cv::noArray();
-
-        if(argc > 2)
-          chdnnIds = js_input_array(ctx, argv[2]);
-
-        JSColorData<double> cornerColor{255, 0, 0};
-
-        if(argc > 3)
-          js_color_read(ctx, argv[3], &cornerColor);
-
-        cv::dnn::drawDetectedCornersChdnn(image, chdnnCorners, chdnnIds, cornerColor);
-        break;
-      }
-
-      case DNN_DRAW_DETECTED_DIAMONDS: {
-        JSInputOutputArray image = js_cv_inputoutputarray(ctx, argv[0]);
-        JSInputArray diamondCorners = js_input_array(ctx, argv[1]);
-        JSInputArray diamondIds = cv::noArray();
-
-        if(argc > 2)
-          diamondIds = js_input_array(ctx, argv[2]);
-
-        JSColorData<double> borderColor{0, 0, 255};
-
-        if(argc > 3)
-          js_color_read(ctx, argv[3], &borderColor);
-
-        cv::dnn::drawDetectedDiamonds(image, diamondCorners, diamondIds, borderColor);
-        break;
-      }
-
-      case DNN_DRAW_DETECTED_MARKERS: {
-        JSInputOutputArray image = js_cv_inputoutputarray(ctx, argv[0]);
-        JSInputArray corners = js_input_array(ctx, argv[1]);
-        JSInputArray ids = cv::noArray();
-
-        if(argc > 2)
-          ids = js_input_array(ctx, argv[2]);
-
-        JSColorData<double> borderColor{0, 0, 255};
-
-        if(argc > 3)
-          js_color_read(ctx, argv[3], &borderColor);
-
-        cv::dnn::drawDetectedMarkers(image, corners, ids, borderColor);
-        break;
-      }
-    }
+    switch(magic) {}
   } catch(const cv::Exception& e) { ret = js_cv_throw(ctx, e); }
 
   return ret;
 }
 
 js_function_list_t js_dnn_dnn_funcs{
-    JS_CFUNC_MAGIC_DEF("drawDetectedCornersChdnn", 2, js_dnn_func, DNN_DRAW_DETECTED_CORNERS_CHDNN),
-    JS_CFUNC_MAGIC_DEF("drawDetectedDiamonds", 2, js_dnn_func, DNN_DRAW_DETECTED_DIAMONDS),
-    JS_CFUNC_MAGIC_DEF("drawDetectedMarkers", 2, js_dnn_func, DNN_DRAW_DETECTED_MARKERS),
+    JS_PROP_INT32_DEF("DNN_LAYOUT_NCHW", cv::dnn::DNN_LAYOUT_NCHW, JS_PROP_ENUMERABLE),
+    JS_CFUNC_MAGIC_DEF("Image2BlobParams", 0, js_dnn_func, "DNN_IMAGE2BLOBPARAMS"),
+    JS_CFUNC_MAGIC_DEF("ImagePaddingMode", 0, js_dnn_func, "DNN_IMAGEPADDINGMODE"),
+    JS_CFUNC_MAGIC_DEF("Net", 0, js_dnn_func, "DNN_NET"),
+    JS_CFUNC_MAGIC_DEF("NMSBoxes", 0, js_dnn_func, "DNN_NMSBOXES"),
+    JS_CFUNC_MAGIC_DEF("readNet", 0, js_dnn_func, "DNN_READNET"),
 };
 
 js_function_list_t js_dnn_static_funcs{
