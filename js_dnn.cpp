@@ -440,9 +440,9 @@ enum {
   DNN_BLOBFROMIMAGESWITHPARAMS,
   DNN_BLOBFROMIMAGEWITHPARAMS,
   DNN_ENABLEMODELDIAGNOSTICS,
-  /*  DNN_GETAVAILABLEBACKENDS,
-    DNN_GETAVAILABLETARGETS,
-    DNN_GETLAYERFACTORYIMPL,
+  DNN_GETAVAILABLEBACKENDS,
+  DNN_GETAVAILABLETARGETS,
+  /*DNN_GETLAYERFACTORYIMPL,
     DNN_GETLAYERFACTORYMUTEX,*/
   DNN_IMAGESFROMBLOB,
   DNN_NMSBOXES,
@@ -604,21 +604,43 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
         break;
       }
 
-        /*      case DNN_GETAVAILABLEBACKENDS: {
-                break;
-              }
+      case DNN_GETAVAILABLEBACKENDS: {
+        auto backends = cv::dnn::getAvailableBackends();
 
-              case DNN_GETAVAILABLETARGETS: {
-                break;
-              }
+        typedef std::vector<int32_t> int_pair_t;
+        std::vector<int_pair_t> out;
+        out.resize(backends.size());
 
-              case DNN_GETLAYERFACTORYIMPL: {
-                break;
-              }
+        std::transform(backends.begin(), backends.end(), out.begin(), [](const std::pair<cv::dnn::Backend, cv::dnn::Target>& arg) -> int_pair_t {
+          int_pair_t r{int32_t(arg.first), int32_t(arg.second)};
+          return r;
+        });
 
-              case DNN_GETLAYERFACTORYMUTEX: {
-                break;
-              }*/
+        ret = js_value_from(ctx, out);
+        break;
+      }
+
+      case DNN_GETAVAILABLETARGETS: {
+        int32_t backend = -1;
+        js_value_to(ctx, argv[0], backend);
+
+        auto targets = cv::dnn::getAvailableTargets(cv::dnn::Backend(backend));
+        std::vector<int32_t> out;
+        out.resize(targets.size());
+
+        std::transform(targets.begin(), targets.end(), out.begin(), [](const cv::dnn::Target& arg) -> int32_t { return int32_t(arg); });
+
+        ret = js_value_from(ctx, out);
+        break;
+      }
+
+        /*case DNN_GETLAYERFACTORYIMPL: {
+          break;
+        }
+
+        case DNN_GETLAYERFACTORYMUTEX: {
+          break;
+          }*/
 
       case DNN_IMAGESFROMBLOB: {
         JSInputArray blob = js_input_array(ctx, argv[0]);
@@ -1041,10 +1063,10 @@ const JSCFunctionListEntry js_dnn_dnn_funcs[] = {
     JS_CFUNC_MAGIC_DEF("blobFromImagesWithParams", 1, js_dnn_func, DNN_BLOBFROMIMAGESWITHPARAMS),
     JS_CFUNC_MAGIC_DEF("blobFromImageWithParams", 1, js_dnn_func, DNN_BLOBFROMIMAGEWITHPARAMS),
     JS_CFUNC_MAGIC_DEF("enableModelDiagnostics", 1, js_dnn_func, DNN_ENABLEMODELDIAGNOSTICS),
-    /*    JS_CFUNC_MAGIC_DEF("getAvailableBackends", 0, js_dnn_func, DNN_GETAVAILABLEBACKENDS),
-        JS_CFUNC_MAGIC_DEF("getAvailableTargets", 0, js_dnn_func, DNN_GETAVAILABLETARGETS),
-        JS_CFUNC_MAGIC_DEF("getLayerFactoryImpl", 0, js_dnn_func, DNN_GETLAYERFACTORYIMPL),
-        JS_CFUNC_MAGIC_DEF("getLayerFactoryMutex", 0, js_dnn_func, DNN_GETLAYERFACTORYMUTEX),*/
+    /*JS_CFUNC_MAGIC_DEF("getAvailableBackends", 0, js_dnn_func, DNN_GETAVAILABLEBACKENDS),
+      JS_CFUNC_MAGIC_DEF("getAvailableTargets", 0, js_dnn_func, DNN_GETAVAILABLETARGETS),
+      JS_CFUNC_MAGIC_DEF("getLayerFactoryImpl", 0, js_dnn_func, DNN_GETLAYERFACTORYIMPL),
+      JS_CFUNC_MAGIC_DEF("getLayerFactoryMutex", 0, js_dnn_func, DNN_GETLAYERFACTORYMUTEX),*/
     JS_CFUNC_MAGIC_DEF("imagesFromBlob", 2, js_dnn_func, DNN_IMAGESFROMBLOB),
     JS_CFUNC_MAGIC_DEF("NMSBoxes", 5, js_dnn_func, DNN_NMSBOXES),
     JS_CFUNC_MAGIC_DEF("NMSBoxesBatched", 6, js_dnn_func, DNN_NMSBOXESBATCHED),
