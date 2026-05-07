@@ -649,9 +649,36 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       }
 
       case DNN_READNETFROMCAFFE: {
+        int argi = 0;
 
-        if(js_is_arraybuffer(ctx, argv[0])) {
+        if(js_is_arraybuffer(ctx, argv[argi])) {
+          size_t size, size2;
+          uint8_t* ptr = JS_GetArrayBuffer(ctx, &size2, argv[argi++]);
 
+          if(argc > argi && JS_IsNumber(argv[argi])) {
+            js_value_to(ctx, argv[argi++], size);
+
+            if(size > size2)
+              size = size2;
+          } else
+            size = size2;
+
+          size_t msize, msize2;
+          uint8_t* mptr;
+
+          if(argc > argi) {
+            mptr = JS_GetArrayBuffer(ctx, &msize2, argv[argi++]);
+
+            if(argc > argi && JS_IsNumber(argv[argi])) {
+              js_value_to(ctx, argv[argi++], msize);
+
+              if(msize > msize2)
+                msize = msize2;
+            } else
+              msize = msize2;
+          }
+
+          ret = js_net_new(ctx, cv::dnn::readNetFromCaffe(reinterpret_cast<const char*>(ptr), size, reinterpret_cast<const char*>(mptr), msize));
         } else {
           std::string prototxt, caffeeModel;
 
@@ -660,50 +687,278 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
 
           ret = js_net_new(ctx, cv::dnn::readNetFromCaffe(prototxt, caffeeModel));
         }
+
         break;
       }
-
       case DNN_READNETFROMDARKNET: {
+        int argi = 0;
+
+        if(js_is_arraybuffer(ctx, argv[argi])) {
+          size_t size, size2;
+          uint8_t* ptr = JS_GetArrayBuffer(ctx, &size2, argv[argi++]);
+
+          if(argc > argi && JS_IsNumber(argv[argi])) {
+            js_value_to(ctx, argv[argi++], size);
+
+            if(size > size2)
+              size = size2;
+          } else
+            size = size2;
+
+          size_t msize, msize2;
+          uint8_t* mptr;
+
+          if(argc > argi) {
+            mptr = JS_GetArrayBuffer(ctx, &msize2, argv[argi++]);
+
+            if(argc > argi && JS_IsNumber(argv[argi])) {
+              js_value_to(ctx, argv[argi++], msize);
+
+              if(msize > msize2)
+                msize = msize2;
+            } else
+              msize = msize2;
+          }
+
+          ret = js_net_new(ctx, cv::dnn::readNetFromDarknet(reinterpret_cast<const char*>(ptr), size, reinterpret_cast<const char*>(mptr), msize));
+        } else {
+          std::string prototxt, darknetModel;
+
+          js_value_to(ctx, argv[0], prototxt);
+          js_value_to(ctx, argv[1], darknetModel);
+
+          ret = js_net_new(ctx, cv::dnn::readNetFromDarknet(prototxt, darknetModel));
+        }
+
         break;
       }
 
       case DNN_READNETFROMMODELOPTIMIZER: {
+        int argi = 0;
+
+        if(js_is_arraybuffer(ctx, argv[argi])) {
+          size_t size, size2;
+          uint8_t* ptr = JS_GetArrayBuffer(ctx, &size2, argv[argi++]);
+
+          if(argc > argi && JS_IsNumber(argv[argi])) {
+            js_value_to(ctx, argv[argi++], size);
+
+            if(size > size2)
+              size = size2;
+          } else
+            size = size2;
+
+          size_t msize, msize2;
+          uint8_t* mptr;
+
+          if(argc > argi) {
+            mptr = JS_GetArrayBuffer(ctx, &msize2, argv[argi++]);
+
+            if(argc > argi && JS_IsNumber(argv[argi])) {
+              js_value_to(ctx, argv[argi++], msize);
+
+              if(msize > msize2)
+                msize = msize2;
+            } else
+              msize = msize2;
+          }
+
+          ret = js_net_new(ctx, cv::dnn::readNetFromModelOptimizer(reinterpret_cast<const uchar*>(ptr), size, reinterpret_cast<const uchar*>(mptr), msize));
+        } else {
+          std::string prototxt, modeloptimizerModel;
+
+          js_value_to(ctx, argv[0], prototxt);
+          js_value_to(ctx, argv[1], modeloptimizerModel);
+
+          ret = js_net_new(ctx, cv::dnn::readNetFromModelOptimizer(prototxt, modeloptimizerModel));
+        }
+
         break;
       }
 
       case DNN_READNETFROMONNX: {
+        int argi = 0;
+
+        if(js_is_arraybuffer(ctx, argv[argi])) {
+          size_t size, size2;
+          uint8_t* ptr = JS_GetArrayBuffer(ctx, &size2, argv[argi++]);
+
+          if(argc > argi && JS_IsNumber(argv[argi])) {
+            js_value_to(ctx, argv[argi++], size);
+
+            if(size > size2)
+              size = size2;
+          } else
+            size = size2;
+
+          ret = js_net_new(ctx, cv::dnn::readNetFromONNX(reinterpret_cast<const char*>(ptr), size));
+        } else {
+          std::string onnxFile;
+
+          js_value_to(ctx, argv[0], onnxFile);
+
+          ret = js_net_new(ctx, cv::dnn::readNetFromONNX(onnxFile));
+        }
+
         break;
       }
-
       case DNN_READNETFROMTENSORFLOW: {
+        int argi = 0;
+
+        if(js_is_arraybuffer(ctx, argv[argi])) {
+          size_t size, size2;
+          uint8_t* ptr = JS_GetArrayBuffer(ctx, &size2, argv[argi++]);
+
+          if(argc > argi && JS_IsNumber(argv[argi])) {
+            js_value_to(ctx, argv[argi++], size);
+
+            if(size > size2)
+              size = size2;
+          } else
+            size = size2;
+
+          size_t msize, msize2;
+          uint8_t* mptr;
+
+          if(argc > argi) {
+            mptr = JS_GetArrayBuffer(ctx, &msize2, argv[argi++]);
+
+            if(argc > argi && JS_IsNumber(argv[argi])) {
+              js_value_to(ctx, argv[argi++], msize);
+
+              if(msize > msize2)
+                msize = msize2;
+            } else
+              msize = msize2;
+          }
+
+          ret = js_net_new(ctx, cv::dnn::readNetFromTensorflow(reinterpret_cast<const char*>(ptr), size, reinterpret_cast<const char*>(mptr), msize));
+        } else {
+          std::string prototxt, tensorflowModel;
+
+          js_value_to(ctx, argv[0], prototxt);
+          js_value_to(ctx, argv[1], tensorflowModel);
+
+          ret = js_net_new(ctx, cv::dnn::readNetFromTensorflow(prototxt, tensorflowModel));
+        }
+
         break;
       }
 
       case DNN_READNETFROMTFLITE: {
+        int argi = 0;
+
+        if(js_is_arraybuffer(ctx, argv[argi])) {
+          size_t size, size2;
+          uint8_t* ptr = JS_GetArrayBuffer(ctx, &size2, argv[argi++]);
+
+          if(argc > argi && JS_IsNumber(argv[argi])) {
+            js_value_to(ctx, argv[argi++], size);
+
+            if(size > size2)
+              size = size2;
+          } else
+            size = size2;
+
+          ret = js_net_new(ctx, cv::dnn::readNetFromTFLite(reinterpret_cast<const char*>(ptr), size));
+        } else {
+          std::string model;
+
+          js_value_to(ctx, argv[0], model);
+
+          ret = js_net_new(ctx, cv::dnn::readNetFromTFLite(model));
+        }
+
         break;
       }
 
       case DNN_READNETFROMTORCH: {
+        std::string model;
+        bool isBinary = true, evaluate = true;
+
+        js_value_to(ctx, argv[0], model);
+
+        if(argc > 1)
+          js_value_to(ctx, argv[1], isBinary);
+        if(argc > 2)
+          js_value_to(ctx, argv[2], evaluate);
+
+        ret = js_net_new(ctx, cv::dnn::readNetFromTorch(model, isBinary, evaluate));
         break;
       }
 
       case DNN_READTENSORFROMONNX: {
+        std::string path;
+
+        js_value_to(ctx, argv[0], path);
+
+        ret = js_value_from(ctx, cv::dnn::readTensorFromONNX(path));
         break;
       }
 
       case DNN_READTORCHBLOB: {
+        std::string filename;
+        bool isBinary = true;
+
+        js_value_to(ctx, argv[0], filename);
+
+        if(argc > 1)
+          js_value_to(ctx, argv[1], isBinary);
+
+        ret = js_value_from(ctx, cv::dnn::readTorchBlob(filename, isBinary));
         break;
       }
 
       case DNN_SHRINKCAFFEMODEL: {
+        std::string src, dst;
+        std::vector<cv::String> layersTypes;
+
+        js_value_to(ctx, argv[0], src);
+        js_value_to(ctx, argv[1], dst);
+        if(argc > 2)
+          js_value_to(ctx, argv[2], layersTypes);
+
+        cv::dnn::shrinkCaffeModel(src, dst, layersTypes);
+
         break;
       }
 
       case DNN_SOFTNMSBOXES: {
+        std::vector<cv::Rect> bboxes;
+        std::vector<float> scores, updated_scores;
+        double score_threshold, nms_threshold, sigma = 0.5;
+        std::vector<int> indices;
+        int32_t method = int32_t(cv::dnn::SoftNMSMethod::SOFTNMS_GAUSSIAN);
+        size_t top_k = 0;
+
+        js_array_to(ctx, argv[0], bboxes);
+        js_array_to(ctx, argv[1], scores);
+
+        js_value_to(ctx, argv[3], score_threshold);
+        js_value_to(ctx, argv[4], nms_threshold);
+
+        if(argc > 5)
+          js_array_to(ctx, argv[5], indices);
+        if(argc > 6)
+          js_value_to(ctx, argv[6], top_k);
+        if(argc > 7)
+          js_value_to(ctx, argv[7], sigma);
+        if(argc > 8)
+          js_value_to(ctx, argv[8], method);
+
+        cv::dnn::softNMSBoxes(bboxes, scores, updated_scores, score_threshold, nms_threshold, indices, top_k, sigma, cv::dnn::SoftNMSMethod(method));
+
+        js_array_copy(ctx, argv[2], updated_scores);
         break;
       }
 
       case DNN_WRITETEXTGRAPH: {
+        std::string model, output;
+
+        js_value_to(ctx, argv[0], model);
+        js_value_to(ctx, argv[1], output);
+
+        cv::dnn::writeTextGraph(model, output);
         break;
       }
 
@@ -714,18 +969,13 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
         std::vector<int> indices;
         int32_t top_k = 0;
 
-        js_array_to(ctx, argv[0], bboxes);
-        js_array_to(ctx, argv[1], scores);
-
+        js_value_to(ctx, argv[0], bboxes);
+        js_value_to(ctx, argv[1], scores);
         js_value_to(ctx, argv[2], score_threshold);
         js_value_to(ctx, argv[3], nms_threshold);
-
-        if(argc > 4)
-          js_array_to(ctx, argv[4], indices);
-        if(argc > 5)
-          js_value_to(ctx, argv[5], eta);
-        if(argc > 6)
-          js_value_to(ctx, argv[6], top_k);
+        js_value_to(ctx, argv[4], indices);
+        js_value_to(ctx, argv[5], eta);
+        js_value_to(ctx, argv[6], top_k);
 
         cv::dnn::NMSBoxes(bboxes, scores, score_threshold, nms_threshold, indices, eta, top_k);
         break;
@@ -755,36 +1005,62 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
 }
 
 const JSCFunctionListEntry js_dnn_dnn_funcs[] = {
+    JS_PROP_INT32_DEF("DNN_BACKEND_DEFAULT", cv::dnn::DNN_BACKEND_DEFAULT, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("DNN_BACKEND_HALIDE", cv::dnn::DNN_BACKEND_HALIDE, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("DNN_BACKEND_INFERENCE_ENGINE", cv::dnn::DNN_BACKEND_INFERENCE_ENGINE, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("DNN_BACKEND_OPENCV", cv::dnn::DNN_BACKEND_OPENCV, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("DNN_BACKEND_VKCOM", cv::dnn::DNN_BACKEND_VKCOM, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("DNN_BACKEND_CUDA", cv::dnn::DNN_BACKEND_CUDA, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("DNN_BACKEND_WEBNN", cv::dnn::DNN_BACKEND_WEBNN, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("DNN_BACKEND_TIMVX", cv::dnn::DNN_BACKEND_TIMVX, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("DNN_BACKEND_CANN", cv::dnn::DNN_BACKEND_CANN, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("DNN_TARGET_CPU", cv::dnn::DNN_TARGET_CPU, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("DNN_TARGET_OPENCL", cv::dnn::DNN_TARGET_OPENCL, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("DNN_TARGET_OPENCL_FP16", cv::dnn::DNN_TARGET_OPENCL_FP16, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("DNN_TARGET_MYRIAD", cv::dnn::DNN_TARGET_MYRIAD, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("DNN_TARGET_VULKAN", cv::dnn::DNN_TARGET_VULKAN, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("DNN_TARGET_FPGA", cv::dnn::DNN_TARGET_FPGA, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("DNN_TARGET_CUDA", cv::dnn::DNN_TARGET_CUDA, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("DNN_TARGET_CUDA_FP16", cv::dnn::DNN_TARGET_CUDA_FP16, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("DNN_TARGET_HDDL", cv::dnn::DNN_TARGET_HDDL, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("DNN_TARGET_NPU", cv::dnn::DNN_TARGET_NPU, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("DNN_TARGET_CPU_FP16", cv::dnn::DNN_TARGET_CPU_FP16, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("DNN_LAYOUT_UNKNOWN", cv::dnn::DNN_LAYOUT_UNKNOWN, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("DNN_LAYOUT_ND", cv::dnn::DNN_LAYOUT_ND, JS_PROP_ENUMERABLE),
     JS_PROP_INT32_DEF("DNN_LAYOUT_NCHW", cv::dnn::DNN_LAYOUT_NCHW, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("DNN_LAYOUT_NCDHW", cv::dnn::DNN_LAYOUT_NCDHW, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("DNN_LAYOUT_NHWC", cv::dnn::DNN_LAYOUT_NHWC, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("DNN_LAYOUT_NDHWC", cv::dnn::DNN_LAYOUT_NDHWC, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("DNN_LAYOUT_PLANAR", cv::dnn::DNN_LAYOUT_PLANAR, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("DNN_PMODE_NULL", cv::dnn::DNN_PMODE_NULL, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("DNN_PMODE_CROP_CENTER", cv::dnn::DNN_PMODE_CROP_CENTER, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("DNN_PMODE_LETTERBOX", cv::dnn::DNN_PMODE_LETTERBOX, JS_PROP_ENUMERABLE),
 
-    JS_CFUNC_MAGIC_DEF("blobFromImage", 0, js_dnn_func, DNN_BLOBFROMIMAGE),
-    JS_CFUNC_MAGIC_DEF("blobFromImages", 0, js_dnn_func, DNN_BLOBFROMIMAGES),
-    JS_CFUNC_MAGIC_DEF("blobFromImagesWithParams", 0, js_dnn_func, DNN_BLOBFROMIMAGESWITHPARAMS),
-    JS_CFUNC_MAGIC_DEF("blobFromImageWithParams", 0, js_dnn_func, DNN_BLOBFROMIMAGEWITHPARAMS),
-    JS_CFUNC_MAGIC_DEF("enableModelDiagnostics", 0, js_dnn_func, DNN_ENABLEMODELDIAGNOSTICS),
-/*    JS_CFUNC_MAGIC_DEF("getAvailableBackends", 0, js_dnn_func, DNN_GETAVAILABLEBACKENDS),
-    JS_CFUNC_MAGIC_DEF("getAvailableTargets", 0, js_dnn_func, DNN_GETAVAILABLETARGETS),
-    JS_CFUNC_MAGIC_DEF("getLayerFactoryImpl", 0, js_dnn_func, DNN_GETLAYERFACTORYIMPL),
-    JS_CFUNC_MAGIC_DEF("getLayerFactoryMutex", 0, js_dnn_func, DNN_GETLAYERFACTORYMUTEX),*/
-    JS_CFUNC_MAGIC_DEF("imagesFromBlob", 0, js_dnn_func, DNN_IMAGESFROMBLOB),
-    JS_CFUNC_MAGIC_DEF("NMSBoxes", 0, js_dnn_func, DNN_NMSBOXES),
-    JS_CFUNC_MAGIC_DEF("NMSBoxesBatched", 0, js_dnn_func, DNN_NMSBOXESBATCHED),
-    JS_CFUNC_MAGIC_DEF("readNet", 0, js_dnn_func, DNN_READNET),
-    JS_CFUNC_MAGIC_DEF("readNetFromCaffe", 0, js_dnn_func, DNN_READNETFROMCAFFE),
-    JS_CFUNC_MAGIC_DEF("readNetFromDarknet", 0, js_dnn_func, DNN_READNETFROMDARKNET),
-    JS_CFUNC_MAGIC_DEF("readNetFromModelOptimizer", 0, js_dnn_func, DNN_READNETFROMMODELOPTIMIZER),
-    JS_CFUNC_MAGIC_DEF("readNetFromONNX", 0, js_dnn_func, DNN_READNETFROMONNX),
-    JS_CFUNC_MAGIC_DEF("readNetFromTensorflow", 0, js_dnn_func, DNN_READNETFROMTENSORFLOW),
-    JS_CFUNC_MAGIC_DEF("readNetFromTFLite", 0, js_dnn_func, DNN_READNETFROMTFLITE),
-    JS_CFUNC_MAGIC_DEF("readNetFromTorch", 0, js_dnn_func, DNN_READNETFROMTORCH),
-    JS_CFUNC_MAGIC_DEF("readTensorFromONNX", 0, js_dnn_func, DNN_READTENSORFROMONNX),
-    JS_CFUNC_MAGIC_DEF("readTorchBlob", 0, js_dnn_func, DNN_READTORCHBLOB),
-    JS_CFUNC_MAGIC_DEF("shrinkCaffeModel", 0, js_dnn_func, DNN_SHRINKCAFFEMODEL),
-    JS_CFUNC_MAGIC_DEF("softNMSBoxes", 0, js_dnn_func, DNN_SOFTNMSBOXES),
-    JS_CFUNC_MAGIC_DEF("writeTextGraph", 0, js_dnn_func, DNN_WRITETEXTGRAPH),
-
+    JS_CFUNC_MAGIC_DEF("blobFromImage", 1, js_dnn_func, DNN_BLOBFROMIMAGE),
+    JS_CFUNC_MAGIC_DEF("blobFromImages", 1, js_dnn_func, DNN_BLOBFROMIMAGES),
+    JS_CFUNC_MAGIC_DEF("blobFromImagesWithParams", 1, js_dnn_func, DNN_BLOBFROMIMAGESWITHPARAMS),
+    JS_CFUNC_MAGIC_DEF("blobFromImageWithParams", 1, js_dnn_func, DNN_BLOBFROMIMAGEWITHPARAMS),
+    JS_CFUNC_MAGIC_DEF("enableModelDiagnostics", 1, js_dnn_func, DNN_ENABLEMODELDIAGNOSTICS),
+    /*    JS_CFUNC_MAGIC_DEF("getAvailableBackends", 0, js_dnn_func, DNN_GETAVAILABLEBACKENDS),
+        JS_CFUNC_MAGIC_DEF("getAvailableTargets", 0, js_dnn_func, DNN_GETAVAILABLETARGETS),
+        JS_CFUNC_MAGIC_DEF("getLayerFactoryImpl", 0, js_dnn_func, DNN_GETLAYERFACTORYIMPL),
+        JS_CFUNC_MAGIC_DEF("getLayerFactoryMutex", 0, js_dnn_func, DNN_GETLAYERFACTORYMUTEX),*/
+    JS_CFUNC_MAGIC_DEF("imagesFromBlob", 2, js_dnn_func, DNN_IMAGESFROMBLOB),
     JS_CFUNC_MAGIC_DEF("NMSBoxes", 5, js_dnn_func, DNN_NMSBOXES),
+    JS_CFUNC_MAGIC_DEF("NMSBoxesBatched", 6, js_dnn_func, DNN_NMSBOXESBATCHED),
     JS_CFUNC_MAGIC_DEF("readNet", 1, js_dnn_func, DNN_READNET),
+    JS_CFUNC_MAGIC_DEF("readNetFromCaffe", 1, js_dnn_func, DNN_READNETFROMCAFFE),
+    JS_CFUNC_MAGIC_DEF("readNetFromDarknet", 1, js_dnn_func, DNN_READNETFROMDARKNET),
+    JS_CFUNC_MAGIC_DEF("readNetFromModelOptimizer", 1, js_dnn_func, DNN_READNETFROMMODELOPTIMIZER),
+    JS_CFUNC_MAGIC_DEF("readNetFromONNX", 1, js_dnn_func, DNN_READNETFROMONNX),
+    JS_CFUNC_MAGIC_DEF("readNetFromTensorflow", 1, js_dnn_func, DNN_READNETFROMTENSORFLOW),
+    JS_CFUNC_MAGIC_DEF("readNetFromTFLite", 1, js_dnn_func, DNN_READNETFROMTFLITE),
+    JS_CFUNC_MAGIC_DEF("readNetFromTorch", 1, js_dnn_func, DNN_READNETFROMTORCH),
+    JS_CFUNC_MAGIC_DEF("readTensorFromONNX", 1, js_dnn_func, DNN_READTENSORFROMONNX),
+    JS_CFUNC_MAGIC_DEF("readTorchBlob", 1, js_dnn_func, DNN_READTORCHBLOB),
+    JS_CFUNC_MAGIC_DEF("shrinkCaffeModel", 1, js_dnn_func, DNN_SHRINKCAFFEMODEL),
+    JS_CFUNC_MAGIC_DEF("softNMSBoxes", 1, js_dnn_func, DNN_SOFTNMSBOXES),
+    JS_CFUNC_MAGIC_DEF("writeTextGraph", 2, js_dnn_func, DNN_WRITETEXTGRAPH),
 };
 
 const JSCFunctionListEntry js_dnn_static_funcs[] = {
