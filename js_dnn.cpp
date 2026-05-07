@@ -14,33 +14,33 @@ thread_local JSClassID js_net_class_id, js_imageblob2params_class_id;
 }
 
 static JSValue
-js_net_wrap(JSContext* ctx, JSValueConst proto, JSNetData* fn) {
+js_net_wrap(JSContext* ctx, JSValueConst proto, JSNetData* ib2p) {
   JSValue ret = JS_NewObjectProtoClass(ctx, proto, js_net_class_id);
-  JS_SetOpaque(ret, fn);
+  JS_SetOpaque(ret, ib2p);
   return ret;
 }
 
 JSValue
 js_net_new(JSContext* ctx, JSValueConst proto) {
-  JSNetData* fn = js_allocate<JSNetData>(ctx);
+  JSNetData* ib2p = js_allocate<JSNetData>(ctx);
 
-  new(fn) JSNetData();
+  new(ib2p) JSNetData();
 
-  return js_net_wrap(ctx, proto, fn);
+  return js_net_wrap(ctx, proto, ib2p);
 }
 
 JSValue
 js_net_new(JSContext* ctx, JSValueConst proto, const JSNetData& other) {
-  JSNetData* fn = js_allocate<JSNetData>(ctx);
+  JSNetData* ib2p = js_allocate<JSNetData>(ctx);
 
-  new(fn) JSNetData(other);
+  new(ib2p) JSNetData(other);
 
-  return js_net_wrap(ctx, proto, fn);
+  return js_net_wrap(ctx, proto, ib2p);
 }
 
 JSValue
-js_net_new(JSContext* ctx, const JSNetData& fn) {
-  return js_net_new(ctx, net_proto, fn);
+js_net_new(JSContext* ctx, const JSNetData& ib2p) {
+  return js_net_new(ctx, net_proto, ib2p);
 }
 
 static JSValue
@@ -108,8 +108,8 @@ js_net_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
 void
 js_net_finalizer(JSRuntime* rt, JSValue val) {
   JSNetData* dn;
-  /* Note: 'dn' can be NULL in case JS_SetOpaque() was not called */
 
+  /* Note: 'dn' can be NULL in case JS_SetOpaque() was not called */
   if((dn = js_net_data(val))) {
     dn->~JSNetData();
 
@@ -133,33 +133,33 @@ const JSCFunctionListEntry js_net_proto_funcs[] = {
 };
 
 static JSValue
-js_imageblob2params_wrap(JSContext* ctx, JSValueConst proto, JSImage2BlobParamsData* fn) {
+js_imageblob2params_wrap(JSContext* ctx, JSValueConst proto, JSImage2BlobParamsData* ib2p) {
   JSValue ret = JS_NewObjectProtoClass(ctx, proto, js_imageblob2params_class_id);
-  JS_SetOpaque(ret, fn);
+  JS_SetOpaque(ret, ib2p);
   return ret;
 }
 
 JSValue
 js_imageblob2params_new(JSContext* ctx, JSValueConst proto) {
-  JSImage2BlobParamsData* fn = js_allocate<JSImage2BlobParamsData>(ctx);
+  JSImage2BlobParamsData* ib2p = js_allocate<JSImage2BlobParamsData>(ctx);
 
-  new(fn) JSImage2BlobParamsData();
+  new(ib2p) JSImage2BlobParamsData();
 
-  return js_imageblob2params_wrap(ctx, proto, fn);
+  return js_imageblob2params_wrap(ctx, proto, ib2p);
 }
 
 JSValue
 js_imageblob2params_new(JSContext* ctx, JSValueConst proto, const JSImage2BlobParamsData& other) {
-  JSImage2BlobParamsData* fn = js_allocate<JSImage2BlobParamsData>(ctx);
+  JSImage2BlobParamsData* ib2p = js_allocate<JSImage2BlobParamsData>(ctx);
 
-  new(fn) JSImage2BlobParamsData(other);
+  new(ib2p) JSImage2BlobParamsData(other);
 
-  return js_imageblob2params_wrap(ctx, proto, fn);
+  return js_imageblob2params_wrap(ctx, proto, ib2p);
 }
 
 JSValue
-js_imageblob2params_new(JSContext* ctx, const JSImage2BlobParamsData& fn) {
-  return js_imageblob2params_new(ctx, imageblob2params_proto, fn);
+js_imageblob2params_new(JSContext* ctx, const JSImage2BlobParamsData& ib2p) {
+  return js_imageblob2params_new(ctx, imageblob2params_proto, ib2p);
 }
 
 static JSValue
@@ -242,53 +242,53 @@ enum {
 
 static JSValue
 js_imageblob2params_get(JSContext* ctx, JSValueConst this_val, int magic) {
-  JSImage2BlobParamsData* fn;
+  JSImage2BlobParamsData* ib2p;
   JSValue ret = JS_UNDEFINED;
 
-  if(!(fn = js_imageblob2params_data2(ctx, this_val)))
+  if(!(ib2p = js_imageblob2params_data2(ctx, this_val)))
     return JS_EXCEPTION;
 
   switch(magic) {
     case IMAGEBLOB2PARAMS_BORDERVALUE: {
-      ret = js_value_from(ctx, fn->borderValue);
+      ret = js_value_from(ctx, ib2p->borderValue);
       break;
     }
 
     case IMAGEBLOB2PARAMS_DATALAYOUT: {
-      ret = js_value_from(ctx, fn->datalayout);
+      ret = js_value_from(ctx, ib2p->datalayout);
       break;
     }
 
     case IMAGEBLOB2PARAMS_DDEPTH: {
-      ret = js_value_from(ctx, fn->ddepth);
+      ret = js_value_from(ctx, ib2p->ddepth);
       break;
     }
 
     case IMAGEBLOB2PARAMS_MEAN: {
-      ret = js_value_from(ctx, fn->mean);
+      ret = js_value_from(ctx, ib2p->mean);
       break;
     }
 
     case IMAGEBLOB2PARAMS_PADDINGMODE: {
-      ret = js_value_from(ctx, fn->paddingmode);
+      ret = js_value_from(ctx, ib2p->paddingmode);
       break;
     }
 
     case IMAGEBLOB2PARAMS_SCALEFACTOR: {
 
-      ret = js_value_from(ctx, fn->scalefactor);
+      ret = js_value_from(ctx, ib2p->scalefactor);
 
       break;
     }
 
     case IMAGEBLOB2PARAMS_SIZE: {
-      ret = js_value_from(ctx, fn->size);
+      ret = js_value_from(ctx, ib2p->size);
 
       break;
     }
 
     case IMAGEBLOB2PARAMS_SWAPRB: {
-      ret = js_value_from(ctx, fn->swapRB);
+      ret = js_value_from(ctx, ib2p->swapRB);
 
       break;
     }
@@ -299,14 +299,14 @@ js_imageblob2params_get(JSContext* ctx, JSValueConst this_val, int magic) {
 
 static JSValue
 js_imageblob2params_set(JSContext* ctx, JSValueConst this_val, JSValueConst val, int magic) {
-  JSImage2BlobParamsData* fn;
+  JSImage2BlobParamsData* ib2p;
 
-  if(!(fn = js_imageblob2params_data2(ctx, this_val)))
+  if(!(ib2p = js_imageblob2params_data2(ctx, this_val)))
     return JS_EXCEPTION;
 
   switch(magic) {
     case IMAGEBLOB2PARAMS_BORDERVALUE: {
-      js_value_to(ctx, val, fn->borderValue);
+      js_value_to(ctx, val, ib2p->borderValue);
       break;
     }
 
@@ -314,39 +314,39 @@ js_imageblob2params_set(JSContext* ctx, JSValueConst this_val, JSValueConst val,
       int32_t datalayout;
       js_value_to(ctx, val, datalayout);
 
-      fn->datalayout = cv::dnn::DataLayout(datalayout);
+      ib2p->datalayout = cv::dnn::DataLayout(datalayout);
       break;
     }
 
     case IMAGEBLOB2PARAMS_DDEPTH: {
-      js_value_to(ctx, val, fn->ddepth);
+      js_value_to(ctx, val, ib2p->ddepth);
       break;
     }
 
     case IMAGEBLOB2PARAMS_MEAN: {
-      js_value_to(ctx, val, fn->mean);
+      js_value_to(ctx, val, ib2p->mean);
       break;
     }
 
     case IMAGEBLOB2PARAMS_PADDINGMODE: {
       int32_t paddingmode;
       js_value_to(ctx, val, paddingmode);
-      fn->paddingmode = cv::dnn::ImagePaddingMode(paddingmode);
+      ib2p->paddingmode = cv::dnn::ImagePaddingMode(paddingmode);
       break;
     }
 
     case IMAGEBLOB2PARAMS_SCALEFACTOR: {
-      js_value_to(ctx, val, fn->scalefactor);
+      js_value_to(ctx, val, ib2p->scalefactor);
       break;
     }
 
     case IMAGEBLOB2PARAMS_SIZE: {
-      js_value_to(ctx, val, fn->size);
+      js_value_to(ctx, val, ib2p->size);
       break;
     }
 
     case IMAGEBLOB2PARAMS_SWAPRB: {
-      js_value_to(ctx, val, fn->swapRB);
+      js_value_to(ctx, val, ib2p->swapRB);
       break;
     }
   }
@@ -399,13 +399,13 @@ js_imageblob2params_method(JSContext* ctx, JSValueConst this_val, int argc, JSVa
 
 void
 js_imageblob2params_finalizer(JSRuntime* rt, JSValue val) {
-  JSImage2BlobParamsData* dn;
-  /* Note: 'dn' can be NULL in case JS_SetOpaque() was not called */
+  JSImage2BlobParamsData* ib2p;
+  /* Note: 'ib2p' can be NULL in case JS_SetOpaque() was not called */
 
-  if((dn = js_imageblob2params_data(val))) {
-    dn->~JSImage2BlobParamsData();
+  if((ib2p = js_imageblob2params_data(val))) {
+    ib2p->~JSImage2BlobParamsData();
 
-    js_deallocate(rt, dn);
+    js_deallocate(rt, ib2p);
   }
 }
 
@@ -656,11 +656,13 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
         js_value_to(ctx, argv[2], class_ids);
         js_value_to(ctx, argv[3], score_threshold);
         js_value_to(ctx, argv[4], nms_threshold);
-        js_value_to(ctx, argv[5], indices);
+        // js_value_to(ctx, argv[5], indices);
         js_value_to(ctx, argv[6], eta);
         js_value_to(ctx, argv[7], top_k);
 
         cv::dnn::NMSBoxesBatched(bboxes, scores, class_ids, score_threshold, nms_threshold, indices, eta, top_k);
+
+        js_array_copy(ctx, argv[5], indices);
         break;
       }
 
@@ -706,6 +708,7 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
 
         break;
       }
+
       case DNN_READNETFROMDARKNET: {
         int argi = 0;
 
@@ -818,6 +821,7 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
 
         break;
       }
+
       case DNN_READNETFROMTENSORFLOW: {
         int argi = 0;
 
@@ -989,11 +993,13 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
         js_value_to(ctx, argv[1], scores);
         js_value_to(ctx, argv[2], score_threshold);
         js_value_to(ctx, argv[3], nms_threshold);
-        js_value_to(ctx, argv[4], indices);
+        // js_value_to(ctx, argv[4], indices);
         js_value_to(ctx, argv[5], eta);
         js_value_to(ctx, argv[6], top_k);
 
         cv::dnn::NMSBoxes(bboxes, scores, score_threshold, nms_threshold, indices, eta, top_k);
+
+        js_array_copy(ctx, argv[4], indices);
         break;
       }
 
