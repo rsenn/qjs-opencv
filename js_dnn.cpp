@@ -133,8 +133,312 @@ const JSCFunctionListEntry js_net_proto_funcs[] = {
 
 const JSCFunctionListEntry js_net_static_funcs[] = {};
 
+using JSImage2BlobParamsData = cv::dnn::Image2BlobParams;
+
+extern "C" {
+thread_local JSValue imageblob2params_proto, imageblob2params_class;
+thread_local JSClassID js_imageblob2params_class_id;
+}
+
+static JSValue
+js_imageblob2params_wrap(JSContext* ctx, JSValueConst proto, JSImage2BlobParamsData* fn) {
+  JSValue ret = JS_NewObjectProtoClass(ctx, proto, js_imageblob2params_class_id);
+  JS_SetOpaque(ret, fn);
+  return ret;
+}
+
+JSValue
+js_imageblob2params_new(JSContext* ctx, JSValueConst proto) {
+  JSImage2BlobParamsData* fn = js_allocate<JSImage2BlobParamsData>(ctx);
+
+  new(fn) JSImage2BlobParamsData();
+
+  return js_imageblob2params_wrap(ctx, proto, fn);
+}
+
+JSValue
+js_imageblob2params_new(JSContext* ctx, JSValueConst proto, const JSImage2BlobParamsData& other) {
+  JSImage2BlobParamsData* fn = js_allocate<JSImage2BlobParamsData>(ctx);
+
+  new(fn) JSImage2BlobParamsData(other);
+
+  return js_imageblob2params_wrap(ctx, proto, fn);
+}
+
+JSValue
+js_imageblob2params_new(JSContext* ctx, const JSImage2BlobParamsData& fn) {
+  return js_imageblob2params_new(ctx, imageblob2params_proto, fn);
+}
+
+static JSValue
+js_imageblob2params_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
+  JSImage2BlobParamsData* dn;
+  JSValue obj = JS_UNDEFINED, proto;
+
+  if(!(dn = js_allocate<JSImage2BlobParamsData>(ctx)))
+    return JS_EXCEPTION;
+
+  if(argc > 0) {
+    cv::Scalar scalefactor, mean;
+    cv::Size size;
+    bool swapRB = false;
+    int32_t ddepth = CV_32F, datalayout = cv::dnn::DNN_LAYOUT_NCHW, mode = cv::dnn::DNN_PMODE_NULL;
+    cv::Scalar borderValue{0.0};
+
+    js_value_to(ctx, argv[0], scalefactor);
+    if(argc > 1)
+      js_value_to(ctx, argv[1], size);
+    if(argc > 2)
+      js_value_to(ctx, argv[2], mean);
+    if(argc > 3)
+      js_value_to(ctx, argv[3], swapRB);
+    if(argc > 4)
+      js_value_to(ctx, argv[4], ddepth);
+    if(argc > 5)
+      js_value_to(ctx, argv[5], datalayout);
+    if(argc > 6)
+      js_value_to(ctx, argv[6], mode);
+    if(argc > 7)
+      js_value_to(ctx, argv[7], borderValue);
+
+    new(dn) JSImage2BlobParamsData(scalefactor, size, mean, swapRB, ddepth, cv::dnn::DataLayout(datalayout), cv::dnn::ImagePaddingMode(mode), borderValue);
+  } else {
+    new(dn) JSImage2BlobParamsData();
+  }
+
+  /* using new_target to get the prototype is necessary when the class is extended. */
+  proto = JS_GetPropertyStr(ctx, new_target, "prototype");
+  if(JS_IsException(proto))
+    goto fail;
+
+  obj = JS_NewObjectProtoClass(ctx, proto, js_imageblob2params_class_id);
+  JS_FreeValue(ctx, proto);
+
+  if(JS_IsException(obj))
+    goto fail;
+
+  JS_SetOpaque(obj, dn);
+
+  return obj;
+
+fail:
+  js_deallocate(ctx, dn);
+  JS_FreeValue(ctx, obj);
+  return JS_EXCEPTION;
+}
+
+JSImage2BlobParamsData*
+js_imageblob2params_data(JSValueConst val) {
+  return static_cast<JSImage2BlobParamsData*>(JS_GetOpaque(val, js_imageblob2params_class_id));
+}
+
+JSImage2BlobParamsData*
+js_imageblob2params_data2(JSContext* ctx, JSValueConst val) {
+  return static_cast<JSImage2BlobParamsData*>(JS_GetOpaque2(ctx, val, js_imageblob2params_class_id));
+}
+
 enum {
-  DNN_LAYOUT_NCHW,
+  IMAGEBLOB2PARAMS_BORDERVALUE,
+  IMAGEBLOB2PARAMS_DATALAYOUT,
+  IMAGEBLOB2PARAMS_DDEPTH,
+  IMAGEBLOB2PARAMS_MEAN,
+  IMAGEBLOB2PARAMS_PADDINGMODE,
+  IMAGEBLOB2PARAMS_SCALEFACTOR,
+  IMAGEBLOB2PARAMS_SIZE,
+  IMAGEBLOB2PARAMS_SWAPRB,
+};
+
+static JSValue
+js_imageblob2params_get(JSContext* ctx, JSValueConst this_val, int magic) {
+  JSImage2BlobParamsData* fn;
+  JSValue ret = JS_UNDEFINED;
+
+  if(!(fn = js_imageblob2params_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  switch(magic) {
+    case IMAGEBLOB2PARAMS_BORDERVALUE: {
+      ret = js_value_from(ctx, fn->borderValue);
+      break;
+    }
+
+    case IMAGEBLOB2PARAMS_DATALAYOUT: {
+      ret = js_value_from(ctx, fn->datalayout);
+      break;
+    }
+
+    case IMAGEBLOB2PARAMS_DDEPTH: {
+      ret = js_value_from(ctx, fn->ddepth);
+      break;
+    }
+
+    case IMAGEBLOB2PARAMS_MEAN: {
+      ret = js_value_from(ctx, fn->mean);
+      break;
+    }
+
+    case IMAGEBLOB2PARAMS_PADDINGMODE: {
+      ret = js_value_from(ctx, fn->paddingmode);
+      break;
+    }
+
+    case IMAGEBLOB2PARAMS_SCALEFACTOR: {
+
+      ret = js_value_from(ctx, fn->scalefactor);
+
+      break;
+    }
+
+    case IMAGEBLOB2PARAMS_SIZE: {
+      ret = js_value_from(ctx, fn->size);
+
+      break;
+    }
+
+    case IMAGEBLOB2PARAMS_SWAPRB: {
+      ret = js_value_from(ctx, fn->swapRB);
+
+      break;
+    }
+  }
+
+  return ret;
+}
+
+static JSValue
+js_imageblob2params_set(JSContext* ctx, JSValueConst this_val, JSValueConst val, int magic) {
+  JSImage2BlobParamsData* fn;
+
+  if(!(fn = js_imageblob2params_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  switch(magic) {
+    case IMAGEBLOB2PARAMS_BORDERVALUE: {
+      js_value_to(ctx, val, fn->borderValue);
+      break;
+    }
+
+    case IMAGEBLOB2PARAMS_DATALAYOUT: {
+      int32_t datalayout;
+      js_value_to(ctx, val, datalayout);
+
+      fn->datalayout = cv::dnn::DataLayout(datalayout);
+      break;
+    }
+
+    case IMAGEBLOB2PARAMS_DDEPTH: {
+      js_value_to(ctx, val, fn->ddepth);
+      break;
+    }
+
+    case IMAGEBLOB2PARAMS_MEAN: {
+      js_value_to(ctx, val, fn->mean);
+      break;
+    }
+
+    case IMAGEBLOB2PARAMS_PADDINGMODE: {
+      int32_t paddingmode;
+      js_value_to(ctx, val, paddingmode);
+      fn->paddingmode = cv::dnn::ImagePaddingMode(paddingmode);
+      break;
+    }
+
+    case IMAGEBLOB2PARAMS_SCALEFACTOR: {
+      js_value_to(ctx, val, fn->scalefactor);
+      break;
+    }
+
+    case IMAGEBLOB2PARAMS_SIZE: {
+      js_value_to(ctx, val, fn->size);
+      break;
+    }
+
+    case IMAGEBLOB2PARAMS_SWAPRB: {
+      js_value_to(ctx, val, fn->swapRB);
+      break;
+    }
+  }
+
+  return JS_UNDEFINED;
+}
+
+enum {
+  IMAGEBLOB2PARAMS_BLOBRECTSTOIMAGERECTS,
+  IMAGEBLOB2PARAMS_BLOBRECTTOIMAGERECT,
+};
+
+static JSValue
+js_imageblob2params_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  JSImage2BlobParamsData* dn;
+  JSValue ret = JS_UNDEFINED;
+
+  if(!(dn = js_imageblob2params_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  switch(magic) {
+    case IMAGEBLOB2PARAMS_BLOBRECTSTOIMAGERECTS: {
+      std::vector<cv::Rect> rBlob, rImg;
+      cv::Size size;
+
+      js_value_to(ctx, argv[0], rBlob);
+      js_value_to(ctx, argv[2], size);
+
+      dn->blobRectsToImageRects(rBlob, rImg, size);
+
+      js_array_copy(ctx, argv[1], rImg);
+
+      break;
+    }
+
+    case IMAGEBLOB2PARAMS_BLOBRECTTOIMAGERECT: {
+      cv::Rect rBlob;
+      cv::Size size;
+
+      js_value_to(ctx, argv[0], rBlob);
+      js_value_to(ctx, argv[1], size);
+
+      ret = js_value_from(ctx, dn->blobRectToImageRect(rBlob, size));
+      break;
+    }
+  }
+
+  return ret;
+}
+
+void
+js_imageblob2params_finalizer(JSRuntime* rt, JSValue val) {
+  JSImage2BlobParamsData* dn;
+  /* Note: 'dn' can be NULL in case JS_SetOpaque() was not called */
+
+  if((dn = js_imageblob2params_data(val))) {
+    dn->~JSImage2BlobParamsData();
+
+    js_deallocate(rt, dn);
+  }
+}
+
+JSClassDef js_imageblob2params_class = {
+    .class_name = "Image2BlobParams",
+    .finalizer = js_imageblob2params_finalizer,
+};
+
+const JSCFunctionListEntry js_imageblob2params_proto_funcs[] = {
+    JS_CFUNC_MAGIC_DEF("blobRectsToImageRects", 3, js_imageblob2params_method, IMAGEBLOB2PARAMS_BLOBRECTSTOIMAGERECTS),
+    JS_CFUNC_MAGIC_DEF("blobRectToImageRect", 2, js_imageblob2params_method, IMAGEBLOB2PARAMS_BLOBRECTTOIMAGERECT),
+    JS_CGETSET_MAGIC_DEF("borderValue", js_imageblob2params_get, js_imageblob2params_set, IMAGEBLOB2PARAMS_BORDERVALUE),
+    JS_CGETSET_MAGIC_DEF("datalayout", js_imageblob2params_get, js_imageblob2params_set, IMAGEBLOB2PARAMS_DATALAYOUT),
+    JS_CGETSET_MAGIC_DEF("ddepth", js_imageblob2params_get, js_imageblob2params_set, IMAGEBLOB2PARAMS_DDEPTH),
+    JS_CGETSET_MAGIC_DEF("mean", js_imageblob2params_get, js_imageblob2params_set, IMAGEBLOB2PARAMS_MEAN),
+    JS_CGETSET_MAGIC_DEF("paddingmode", js_imageblob2params_get, js_imageblob2params_set, IMAGEBLOB2PARAMS_PADDINGMODE),
+    JS_CGETSET_MAGIC_DEF("scalefactor", js_imageblob2params_get, js_imageblob2params_set, IMAGEBLOB2PARAMS_SCALEFACTOR),
+    JS_CGETSET_MAGIC_DEF("size", js_imageblob2params_get, js_imageblob2params_set, IMAGEBLOB2PARAMS_SIZE),
+    JS_CGETSET_MAGIC_DEF("swapRB", js_imageblob2params_get, js_imageblob2params_set, IMAGEBLOB2PARAMS_SWAPRB),
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Image2BlobParams", JS_PROP_CONFIGURABLE),
+};
+
+const JSCFunctionListEntry js_imageblob2params_static_funcs[] = {};
+
+enum {
   DNN_IMAGE2BLOBPARAMS,
   DNN_IMAGEPADDINGMODE,
   DNN_NET,
@@ -149,9 +453,6 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
   try {
     switch(magic) {
 
-      case DNN_LAYOUT_NCHW: {
-        break;
-      }
       case DNN_IMAGE2BLOBPARAMS: {
         break;
       }
@@ -161,9 +462,31 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       case DNN_NET: {
         break;
       }
+
       case DNN_NMSBOXES: {
+        std::vector<cv::Rect> bboxes;
+        std::vector<float> scores;
+        double score_threshold, nms_threshold, eta = 1.0;
+        std::vector<int> indices;
+        int32_t top_k = 0;
+
+        js_array_to(ctx, argv[0], bboxes);
+        js_array_to(ctx, argv[1], scores);
+
+        js_value_to(ctx, argv[2], score_threshold);
+        js_value_to(ctx, argv[3], nms_threshold);
+
+        if(argc > 4)
+          js_array_to(ctx, argv[4], indices);
+        if(argc > 5)
+          js_value_to(ctx, argv[5], eta);
+        if(argc > 6)
+          js_value_to(ctx, argv[6], top_k);
+
+        cv::dnn::NMSBoxes(bboxes, scores, score_threshold, nms_threshold, indices, eta, top_k);
         break;
       }
+
       case DNN_READNET: {
         const char *model, *config, *framework;
 
@@ -189,12 +512,10 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
 
 const JSCFunctionListEntry js_dnn_dnn_funcs[] = {
     JS_PROP_INT32_DEF("DNN_LAYOUT_NCHW", cv::dnn::DNN_LAYOUT_NCHW, JS_PROP_ENUMERABLE),
-    JS_CFUNC_MAGIC_DEF("Image2BlobParams", 0, js_dnn_func, DNN_IMAGE2BLOBPARAMS),
-    JS_CFUNC_MAGIC_DEF("ImagePaddingMode", 0, js_dnn_func, DNN_IMAGEPADDINGMODE),
-    //
-    //      JS_CFUNC_MAGIC_DEF("Net", 0, js_dnn_func, DNN_NET),
-    JS_CFUNC_MAGIC_DEF("NMSBoxes", 0, js_dnn_func, DNN_NMSBOXES),
-    JS_CFUNC_MAGIC_DEF("readNet", 0, js_dnn_func, DNN_READNET),
+    // JS_CFUNC_MAGIC_DEF("Image2BlobParams", 0, js_dnn_func, DNN_IMAGE2BLOBPARAMS),
+    // JS_CFUNC_MAGIC_DEF("ImagePaddingMode", 0, js_dnn_func, DNN_IMAGEPADDINGMODE),
+    JS_CFUNC_MAGIC_DEF("NMSBoxes", 5, js_dnn_func, DNN_NMSBOXES),
+    JS_CFUNC_MAGIC_DEF("readNet", 1, js_dnn_func, DNN_READNET),
 };
 
 const JSCFunctionListEntry js_dnn_static_funcs[] = {
@@ -218,7 +539,18 @@ js_dnn_init(JSContext* ctx, JSModuleDef* m) {
   JS_SetConstructor(ctx, net_class, net_proto);
   JS_SetPropertyFunctionList(ctx, net_class, js_net_static_funcs, countof(js_net_static_funcs));
 
-  // js_object_inspect(ctx, net_proto, js_net_inspect);
+  /* create the Image2BlobParams class */
+  JS_NewClassID(&js_imageblob2params_class_id);
+  JS_NewClass(JS_GetRuntime(ctx), js_imageblob2params_class_id, &js_imageblob2params_class);
+
+  imageblob2params_proto = JS_NewObject(ctx);
+  JS_SetPropertyFunctionList(ctx, imageblob2params_proto, js_imageblob2params_proto_funcs, countof(js_imageblob2params_proto_funcs));
+  JS_SetClassProto(ctx, js_imageblob2params_class_id, imageblob2params_proto);
+
+  imageblob2params_class = JS_NewCFunction2(ctx, js_imageblob2params_constructor, "Image2BlobParams", 0, JS_CFUNC_constructor, 0);
+  /* set proto.constructor and ctor.prototype */
+  JS_SetConstructor(ctx, imageblob2params_class, imageblob2params_proto);
+  JS_SetPropertyFunctionList(ctx, imageblob2params_class, js_imageblob2params_static_funcs, countof(js_imageblob2params_static_funcs));
 
   if(m) {
     JS_SetModuleExport(ctx, m, "dnn", dnn_object);
@@ -226,8 +558,9 @@ js_dnn_init(JSContext* ctx, JSModuleDef* m) {
     JS_SetPropertyFunctionList(ctx, dnn_object, js_dnn_static_funcs, countof(js_dnn_static_funcs));
 
     JS_SetPropertyStr(ctx, dnn_object, "Net", net_class);
+    JS_SetPropertyStr(ctx, dnn_object, "Image2BlobParams", imageblob2params_class);
 
-    //    JS_SetModuleExportList(ctx, m, js_dnn_static_funcs, countof(js_dnn_static_funcs));
+    // JS_SetModuleExportList(ctx, m, js_dnn_static_funcs, countof(js_dnn_static_funcs));
   }
 
   return 0;
