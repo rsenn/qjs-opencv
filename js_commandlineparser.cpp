@@ -42,17 +42,18 @@ js_commandlineparser_constructor(JSContext* ctx, JSValueConst new_target, int ar
     stra.resize(args.size() + 1);
     std::transform(args.begin(), args.end(), stra.begin(), [](const std::string& str) -> const char* { return str.c_str(); });
 
-    for(size_t j = 0; j < args.size(); ++j) {
-      stra[j] = js_strdup(ctx, stra[j]);
-    }
-
     stra[args.size()] = nullptr;
+
+    const char** strb = static_cast<const char**>(js_malloc(ctx, sizeof(char*) * stra.size()));
+
+    for(size_t j = 0; j < stra.size(); ++j)
+      strb[j] = stra[j] ? js_strdup(ctx, stra[j]) : nullptr;
 
     if(i < argc)
       keys = JS_ToCString(ctx, argv[i]);
 
     try {
-      new(clp) JSCommandLineParserData(args.size(), stra.data(), keys);
+      new(clp) JSCommandLineParserData(args.size(), strb, keys);
     } catch(const std::exception& e) {
       js_cv_throw(ctx, e);
       goto fail;
