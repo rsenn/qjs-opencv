@@ -38,13 +38,14 @@ js_commandlineparser_constructor(JSContext* ctx, JSValueConst new_target, int ar
       JS_FreeValue(ctx, sa);
     }
 
+    size_t argc = args.size();
     std::vector<const char*> stra;
-    stra.resize(args.size() + 1);
+    stra.resize(argc + 1);
     std::transform(args.begin(), args.end(), stra.begin(), [](const std::string& str) -> const char* { return str.c_str(); });
 
-    stra[args.size()] = nullptr;
+    stra[argc] = nullptr;
 
-    const char** strb = static_cast<const char**>(js_mallocz(ctx, sizeof(char*) * (args.size() + 16)));
+    const char** strb = static_cast<const char**>(js_mallocz(ctx, sizeof(const char*) * (argc + 16)));
 
     for(size_t j = 0; j < stra.size(); ++j)
       strb[j] = stra[j] ? js_strdup(ctx, stra[j]) : nullptr;
@@ -53,7 +54,7 @@ js_commandlineparser_constructor(JSContext* ctx, JSValueConst new_target, int ar
       keys = JS_ToCString(ctx, argv[i]);
 
     try {
-      new(clp) JSCommandLineParserData(args.size(), strb, keys);
+      new(clp) JSCommandLineParserData(argc, strb, keys);
     } catch(const std::exception& e) {
       js_cv_throw(ctx, e);
       goto fail;
