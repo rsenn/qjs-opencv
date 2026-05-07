@@ -6,10 +6,11 @@
 #include <opencv2/dnn.hpp>
 
 using JSNetData = cv::dnn::Net;
+using JSImage2BlobParamsData = cv::dnn::Image2BlobParams;
 
 extern "C" {
-thread_local JSValue dnn_object, net_proto, net_class;
-thread_local JSClassID js_net_class_id;
+thread_local JSValue dnn_object, net_proto, net_class, imageblob2params_proto, imageblob2params_class;
+thread_local JSClassID js_net_class_id, js_imageblob2params_class_id;
 }
 
 static JSValue
@@ -130,13 +131,6 @@ const JSCFunctionListEntry js_net_proto_funcs[] = {
 
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Net", JS_PROP_CONFIGURABLE),
 };
-
-using JSImage2BlobParamsData = cv::dnn::Image2BlobParams;
-
-extern "C" {
-thread_local JSValue imageblob2params_proto, imageblob2params_class;
-thread_local JSClassID js_imageblob2params_class_id;
-}
 
 static JSValue
 js_imageblob2params_wrap(JSContext* ctx, JSValueConst proto, JSImage2BlobParamsData* fn) {
@@ -1117,13 +1111,13 @@ js_dnn_init(JSContext* ctx, JSModuleDef* m) {
   /* set proto.constructor and ctor.prototype */
   JS_SetConstructor(ctx, imageblob2params_class, imageblob2params_proto);
 
+  JS_SetPropertyStr(ctx, dnn_object, "Net", net_class);
+  JS_SetPropertyStr(ctx, dnn_object, "Image2BlobParams", imageblob2params_class);
+
+  JS_SetPropertyFunctionList(ctx, dnn_object, js_dnn_dnn_funcs, countof(js_dnn_dnn_funcs));
+
   if(m) {
     JS_SetModuleExport(ctx, m, "dnn", dnn_object);
-
-    JS_SetPropertyFunctionList(ctx, dnn_object, js_dnn_static_funcs, countof(js_dnn_static_funcs));
-
-    JS_SetPropertyStr(ctx, dnn_object, "Net", net_class);
-    JS_SetPropertyStr(ctx, dnn_object, "Image2BlobParams", imageblob2params_class);
   }
 
   return 0;
@@ -1132,7 +1126,6 @@ js_dnn_init(JSContext* ctx, JSModuleDef* m) {
 extern "C" void
 js_dnn_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "dnn");
-  // JS_AddModuleExportList(ctx, m, js_dnn_static_funcs, countof(js_dnn_static_funcs));
 }
 
 #if defined(JS_CV_MODULE)
