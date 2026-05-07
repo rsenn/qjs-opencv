@@ -131,7 +131,6 @@ const JSCFunctionListEntry js_net_proto_funcs[] = {
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Net", JS_PROP_CONFIGURABLE),
 };
 
-
 using JSImage2BlobParamsData = cv::dnn::Image2BlobParams;
 
 extern "C" {
@@ -436,11 +435,31 @@ const JSCFunctionListEntry js_imageblob2params_proto_funcs[] = {
 };
 
 enum {
-  DNN_IMAGE2BLOBPARAMS,
-  DNN_IMAGEPADDINGMODE,
-  DNN_NET,
+  DNN_BLOBFROMIMAGE,
+  DNN_BLOBFROMIMAGES,
+  DNN_BLOBFROMIMAGESWITHPARAMS,
+  DNN_BLOBFROMIMAGEWITHPARAMS,
+  DNN_ENABLEMODELDIAGNOSTICS,
+  DNN_GETAVAILABLEBACKENDS,
+  DNN_GETAVAILABLETARGETS,
+  DNN_GETLAYERFACTORYIMPL,
+  DNN_GETLAYERFACTORYMUTEX,
+  DNN_IMAGESFROMBLOB,
   DNN_NMSBOXES,
+  DNN_NMSBOXESBATCHED,
   DNN_READNET,
+  DNN_READNETFROMCAFFE,
+  DNN_READNETFROMDARKNET,
+  DNN_READNETFROMMODELOPTIMIZER,
+  DNN_READNETFROMONNX,
+  DNN_READNETFROMTENSORFLOW,
+  DNN_READNETFROMTFLITE,
+  DNN_READNETFROMTORCH,
+  DNN_READTENSORFROMONNX,
+  DNN_READTORCHBLOB,
+  DNN_SHRINKCAFFEMODEL,
+  DNN_SOFTNMSBOXES,
+  DNN_WRITETEXTGRAPH,
 };
 
 static JSValue
@@ -449,14 +468,132 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
 
   try {
     switch(magic) {
+      case DNN_BLOBFROMIMAGE: {
+        JSInputArray image = js_input_array(ctx, argv[0]);
+        JSOutputArray blob;
+        double scalefactor = 1.0;
+        cv::Size size;
+        cv::Scalar mean;
+        bool swapRB = false, crop = false;
+        int32_t ddepth = CV_32F;
+        int argi = 1;
+        bool blobArg = false;
 
-      case DNN_IMAGE2BLOBPARAMS: {
+        if(argc > argi && JS_IsObject(argv[argi])) {
+          blob = js_cv_outputarray(ctx, argv[argi++]);
+          blobArg = true;
+        }
+
+        if(argc > argi)
+          js_value_to(ctx, argv[argi++], scalefactor);
+        if(argc > argi)
+          js_value_to(ctx, argv[argi++], size);
+        if(argc > argi)
+          js_value_to(ctx, argv[argi++], mean);
+        if(argc > argi)
+          js_value_to(ctx, argv[argi++], swapRB);
+        if(argc > argi)
+          js_value_to(ctx, argv[argi++], crop);
+        if(argc > argi)
+          js_value_to(ctx, argv[argi++], ddepth);
+
+        if(blobArg) {
+          cv::dnn::blobFromImage(image, blob, scalefactor, size, mean, swapRB, crop, ddepth);
+        } else {
+          /*cv::Mat m = cv::dnn::blobFromImage(image, scalefactor, size, mean, swapRB, crop, ddepth);
+          ret = js_mat_wrap(ctx, m);*/
+
+          ret = js_value_from(ctx, cv::dnn::blobFromImage(image, scalefactor, size, mean, swapRB, crop, ddepth));
+        }
+
         break;
       }
-      case DNN_IMAGEPADDINGMODE: {
+
+      case DNN_BLOBFROMIMAGES: {
         break;
       }
-      case DNN_NET: {
+
+      case DNN_BLOBFROMIMAGESWITHPARAMS: {
+        break;
+      }
+
+      case DNN_BLOBFROMIMAGEWITHPARAMS: {
+        break;
+      }
+
+      case DNN_ENABLEMODELDIAGNOSTICS: {
+        break;
+      }
+
+      case DNN_GETAVAILABLEBACKENDS: {
+        break;
+      }
+
+      case DNN_GETAVAILABLETARGETS: {
+        break;
+      }
+
+      case DNN_GETLAYERFACTORYIMPL: {
+        break;
+      }
+
+      case DNN_GETLAYERFACTORYMUTEX: {
+        break;
+      }
+
+      case DNN_IMAGESFROMBLOB: {
+        break;
+      }
+
+      case DNN_NMSBOXESBATCHED: {
+        break;
+      }
+
+      case DNN_READNETFROMCAFFE: {
+        break;
+      }
+
+      case DNN_READNETFROMDARKNET: {
+        break;
+      }
+
+      case DNN_READNETFROMMODELOPTIMIZER: {
+        break;
+      }
+
+      case DNN_READNETFROMONNX: {
+        break;
+      }
+
+      case DNN_READNETFROMTENSORFLOW: {
+        break;
+      }
+
+      case DNN_READNETFROMTFLITE: {
+        break;
+      }
+
+      case DNN_READNETFROMTORCH: {
+        break;
+      }
+
+      case DNN_READTENSORFROMONNX: {
+        break;
+      }
+
+      case DNN_READTORCHBLOB: {
+        break;
+      }
+
+      case DNN_SHRINKCAFFEMODEL: {
+        break;
+      }
+
+      case DNN_SOFTNMSBOXES: {
+        break;
+      }
+
+      case DNN_WRITETEXTGRAPH: {
         break;
       }
 
@@ -509,8 +646,33 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
 
 const JSCFunctionListEntry js_dnn_dnn_funcs[] = {
     JS_PROP_INT32_DEF("DNN_LAYOUT_NCHW", cv::dnn::DNN_LAYOUT_NCHW, JS_PROP_ENUMERABLE),
-    // JS_CFUNC_MAGIC_DEF("Image2BlobParams", 0, js_dnn_func, DNN_IMAGE2BLOBPARAMS),
-    // JS_CFUNC_MAGIC_DEF("ImagePaddingMode", 0, js_dnn_func, DNN_IMAGEPADDINGMODE),
+
+    JS_CFUNC_MAGIC_DEF("blobFromImage", 0, js_dnn_func, DNN_BLOBFROMIMAGE),
+    JS_CFUNC_MAGIC_DEF("blobFromImages", 0, js_dnn_func, DNN_BLOBFROMIMAGES),
+    JS_CFUNC_MAGIC_DEF("blobFromImagesWithParams", 0, js_dnn_func, DNN_BLOBFROMIMAGESWITHPARAMS),
+    JS_CFUNC_MAGIC_DEF("blobFromImageWithParams", 0, js_dnn_func, DNN_BLOBFROMIMAGEWITHPARAMS),
+    JS_CFUNC_MAGIC_DEF("enableModelDiagnostics", 0, js_dnn_func, DNN_ENABLEMODELDIAGNOSTICS),
+    JS_CFUNC_MAGIC_DEF("getAvailableBackends", 0, js_dnn_func, DNN_GETAVAILABLEBACKENDS),
+    JS_CFUNC_MAGIC_DEF("getAvailableTargets", 0, js_dnn_func, DNN_GETAVAILABLETARGETS),
+    JS_CFUNC_MAGIC_DEF("getLayerFactoryImpl", 0, js_dnn_func, DNN_GETLAYERFACTORYIMPL),
+    JS_CFUNC_MAGIC_DEF("getLayerFactoryMutex", 0, js_dnn_func, DNN_GETLAYERFACTORYMUTEX),
+    JS_CFUNC_MAGIC_DEF("imagesFromBlob", 0, js_dnn_func, DNN_IMAGESFROMBLOB),
+    JS_CFUNC_MAGIC_DEF("NMSBoxes", 0, js_dnn_func, DNN_NMSBOXES),
+    JS_CFUNC_MAGIC_DEF("NMSBoxesBatched", 0, js_dnn_func, DNN_NMSBOXESBATCHED),
+    JS_CFUNC_MAGIC_DEF("readNet", 0, js_dnn_func, DNN_READNET),
+    JS_CFUNC_MAGIC_DEF("readNetFromCaffe", 0, js_dnn_func, DNN_READNETFROMCAFFE),
+    JS_CFUNC_MAGIC_DEF("readNetFromDarknet", 0, js_dnn_func, DNN_READNETFROMDARKNET),
+    JS_CFUNC_MAGIC_DEF("readNetFromModelOptimizer", 0, js_dnn_func, DNN_READNETFROMMODELOPTIMIZER),
+    JS_CFUNC_MAGIC_DEF("readNetFromONNX", 0, js_dnn_func, DNN_READNETFROMONNX),
+    JS_CFUNC_MAGIC_DEF("readNetFromTensorflow", 0, js_dnn_func, DNN_READNETFROMTENSORFLOW),
+    JS_CFUNC_MAGIC_DEF("readNetFromTFLite", 0, js_dnn_func, DNN_READNETFROMTFLITE),
+    JS_CFUNC_MAGIC_DEF("readNetFromTorch", 0, js_dnn_func, DNN_READNETFROMTORCH),
+    JS_CFUNC_MAGIC_DEF("readTensorFromONNX", 0, js_dnn_func, DNN_READTENSORFROMONNX),
+    JS_CFUNC_MAGIC_DEF("readTorchBlob", 0, js_dnn_func, DNN_READTORCHBLOB),
+    JS_CFUNC_MAGIC_DEF("shrinkCaffeModel", 0, js_dnn_func, DNN_SHRINKCAFFEMODEL),
+    JS_CFUNC_MAGIC_DEF("softNMSBoxes", 0, js_dnn_func, DNN_SOFTNMSBOXES),
+    JS_CFUNC_MAGIC_DEF("writeTextGraph", 0, js_dnn_func, DNN_WRITETEXTGRAPH),
+
     JS_CFUNC_MAGIC_DEF("NMSBoxes", 5, js_dnn_func, DNN_NMSBOXES),
     JS_CFUNC_MAGIC_DEF("readNet", 1, js_dnn_func, DNN_READNET),
 };
@@ -534,7 +696,6 @@ js_dnn_init(JSContext* ctx, JSModuleDef* m) {
   net_class = JS_NewCFunction2(ctx, js_net_constructor, "Net", 0, JS_CFUNC_constructor, 0);
   /* set proto.constructor and ctor.prototype */
   JS_SetConstructor(ctx, net_class, net_proto);
-  JS_SetPropertyFunctionList(ctx, net_class, js_net_static_funcs, countof(js_net_static_funcs));
 
   /* create the Image2BlobParams class */
   JS_NewClassID(&js_imageblob2params_class_id);
@@ -547,7 +708,6 @@ js_dnn_init(JSContext* ctx, JSModuleDef* m) {
   imageblob2params_class = JS_NewCFunction2(ctx, js_imageblob2params_constructor, "Image2BlobParams", 0, JS_CFUNC_constructor, 0);
   /* set proto.constructor and ctor.prototype */
   JS_SetConstructor(ctx, imageblob2params_class, imageblob2params_proto);
-
 
   if(m) {
     JS_SetModuleExport(ctx, m, "dnn", dnn_object);
