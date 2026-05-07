@@ -100,7 +100,84 @@ js_net_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
   if(!(dn = js_net_data2(ctx, this_val)))
     return JS_EXCEPTION;
 
-  switch(magic) {}
+  switch(magic) {
+    case DNN_NET_FORWARD: {
+      if(argc == 0 || JS_IsString(argv[0])) {
+        cv::String name;
+
+        if(argc > 0)
+          js_value_to(ctx, argv[0], name);
+
+        ret = js_mat_wrap(ctx, dn->forward(name));
+      } else {
+        std::vector<cv::Mat> outputBlobs;
+        cv::String outputName;
+
+        if(argc == 1) {
+          dn->forward(outputBlobs);
+        } else if(JS_IsString(argv[1])) {
+          js_value_to(ctx, argv[1], outputName);
+
+          dn->forward(outputBlobs, outputName);
+
+          js_array_copy(ctx, argv[0], outputBlobs);
+        } else if(JS_IsObject(argv[1])) {
+          std::vector<cv::String> outBlobNames;
+
+          js_value_to(ctx, argv[1], outBlobNames);
+
+          dn->forward(outputBlobs, outBlobNames);
+
+          js_array_copy(ctx, argv[0], outputBlobs);
+        }
+      }
+
+      break;
+    }
+
+    case DNN_NET_GETUNCONNECTEDOUTLAYERSNAMES: {
+      std::vector<cv::String> names = dn->getUnconnectedOutLayersNames();
+
+      ret = js_value_from(ctx, names);
+      break;
+    }
+
+    case DNN_NET_SETINPUT: {
+      JSInputArray blob;
+      cv::String name;
+      double scalefactor = 1.0;
+      cv::Scalar mean;
+
+      blob = js_input_array(ctx, argv[0]);
+
+      if(argc > 1)
+        js_value_to(ctx, argv[1], name);
+      if(argc > 2)
+        js_value_to(ctx, argv[2], scalefactor);
+      if(argc > 3)
+        js_value_to(ctx, argv[3], mean);
+
+      dn->setInput(blob, name, scalefactor, mean);
+      break;
+    }
+
+    case DNN_NET_SETPREFERABLEBACKEND: {
+      int32_t backendId = -1;
+      js_value_to(ctx, argv[0], backendId);
+
+      dn->setPreferableBackend(backendId);
+      break;
+    }
+
+    case DNN_NET_SETPREFERABLETARGET: {
+      int32_t targetId = -1;
+      js_value_to(ctx, argv[0], targetId);
+
+      dn->setPreferableTarget(targetId);
+
+      break;
+    }
+  }
 
   return ret;
 }
@@ -657,8 +734,10 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
         js_value_to(ctx, argv[3], score_threshold);
         js_value_to(ctx, argv[4], nms_threshold);
         // js_value_to(ctx, argv[5], indices);
-        js_value_to(ctx, argv[6], eta);
-        js_value_to(ctx, argv[7], top_k);
+        if(argc > 6)
+          js_value_to(ctx, argv[6], eta);
+        if(argc > 7)
+          js_value_to(ctx, argv[7], top_k);
 
         cv::dnn::NMSBoxesBatched(bboxes, scores, class_ids, score_threshold, nms_threshold, indices, eta, top_k);
 
@@ -994,8 +1073,11 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
         js_value_to(ctx, argv[2], score_threshold);
         js_value_to(ctx, argv[3], nms_threshold);
         // js_value_to(ctx, argv[4], indices);
-        js_value_to(ctx, argv[5], eta);
-        js_value_to(ctx, argv[6], top_k);
+
+        if(argc > 5)
+          js_value_to(ctx, argv[5], eta);
+        if(argc > 6)
+          js_value_to(ctx, argv[6], top_k);
 
         cv::dnn::NMSBoxes(bboxes, scores, score_threshold, nms_threshold, indices, eta, top_k);
 
@@ -1004,7 +1086,7 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       }
 
       case DNN_READNET: {
-        const char *model, *config, *framework;
+        const char *model = 0, *config = 0, *framework = 0;
 
         if(argc > 0)
           model = JS_ToCString(ctx, argv[0]);

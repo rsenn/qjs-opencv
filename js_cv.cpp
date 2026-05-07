@@ -846,7 +846,8 @@ js_cv_core(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[],
 }
 
 enum {
-  OTHER_CALC_COVAR_MATRIX = 0,
+  OTHER_TRANSPOSE_ND = 0,
+  OTHER_CALC_COVAR_MATRIX,
   OTHER_CART_TO_POLAR,
   OTHER_DETERMINANT,
   OTHER_EIGEN,
@@ -919,6 +920,16 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
   JSInputOutputArray src = argc >= 1 ? js_cv_inputoutputarray(ctx, argv[0]) : cv::noArray();
 
   switch(magic) {
+    case OTHER_TRANSPOSE_ND: {
+      JSOutputArray dst = js_cv_outputarray(ctx, argv[2]);
+      std::vector<int> order;
+
+      js_value_to(ctx, argv[1], order);
+
+      cv::transposeND(src, order, dst);
+      break;
+    }
+
     case OTHER_MEAN: {
       cv::Scalar mean;
       JSInputArray mask = cv::noArray();
@@ -1623,6 +1634,7 @@ js_function_list_t js_cv_static_funcs{
     JS_CFUNC_MAGIC_DEF("transpose", 2, js_cv_core, CORE_TRANSPOSE),
     JS_CFUNC_MAGIC_DEF("depthToString", 1, js_cv_core, CORE_DEPTH_TO_STRING),
 
+    JS_CFUNC_MAGIC_DEF("transposeND", 3, js_cv_other, OTHER_TRANSPOSE_ND),
     JS_CFUNC_MAGIC_DEF("calcCovarMatrix", 4, js_cv_other, OTHER_CALC_COVAR_MATRIX),
     JS_CFUNC_MAGIC_DEF("cartToPolar", 4, js_cv_other, OTHER_CART_TO_POLAR),
     JS_CFUNC_MAGIC_DEF("checkRange", 1, js_cv_other, OTHER_CHECK_RANGE),

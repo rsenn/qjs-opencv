@@ -100,12 +100,12 @@ static inline std::vector<int>
 js_mat_sizes(const JSMatData& mat) {
   const cv::MatSize size(mat.size);
   std::vector<int> sizes;
+
   if(mat.dims == 2) {
     sizes.push_back(mat.rows);
     sizes.push_back(mat.cols);
-  } else {
+  } else if(size.dims() > 0)
     std::copy(&size[0], &size[size.dims()], std::back_inserter(sizes));
-  }
 
   return sizes;
 }
@@ -1298,6 +1298,10 @@ js_mat_get_props(JSContext* ctx, JSValueConst this_val, int magic) {
     case PROP_SIZE: {
       if(m->cols != -1 && m->rows != -1) {
         ret = js_size_new(ctx, m->cols, m->rows);
+
+        for(int i = 0; i < m->size.dims(); ++i)
+          JS_DefinePropertyValueUint32(ctx, ret, i, JS_NewInt32(ctx, m->size[i]), JS_PROP_CONFIGURABLE);
+
       } else {
         std::vector<int> sizes;
 
@@ -1351,11 +1355,10 @@ js_mat_get_props(JSContext* ctx, JSValueConst this_val, int magic) {
 static JSValue
 js_mat_tostring(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   cv::Mat* m = js_mat_data2(ctx, this_val);
-  int x, y;
-
+  int x, y, i = 0;
   std::ostringstream os;
   std::string str;
-  int i = 0;
+
   if(!m)
     return JS_EXCEPTION;
 
@@ -1369,8 +1372,10 @@ js_mat_tostring(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
   }
 
   if(m->depth() == CV_8U || m->channels() > 1) {
-    os << ", ";
     const char* tstr;
+
+    os << ", ";
+
     switch(m->depth() & 7) {
       case CV_8U: tstr = "CV_8U"; break;
       case CV_8S: tstr = "CV_8S"; break;
@@ -1383,12 +1388,14 @@ js_mat_tostring(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
     os << tstr << 'C' << m->channels() << ")" /*<< std::endl*/;
   } else {
     os << "Mat[";
+
     for(y = 0; y < m->rows; y++) {
       os << "\n  ";
 
       for(x = 0; x < m->cols; x++) {
         if(x > 0)
           os << ',';
+
         if(m->type() == CV_32FC1)
           os << m->at<float>(y, x);
         else
@@ -1398,12 +1405,15 @@ js_mat_tostring(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
 
     os << ']' /*<< std::endl*/;
   }
-  os << ' ';
-  os << (void*)m->elemSize();
-  os << "x";
-  os << (void*)m->total();
-  os << " @";
-  os << (void*)m->ptr();
+
+  if(m->cols && m->rows) {
+    os << ' ';
+    os << (void*)m->elemSize();
+    os << "x";
+    os << (void*)m->total();
+    os << " @";
+    os << (void*)m->ptr();
+  }
 
   str = os.str();
 
@@ -1531,11 +1541,14 @@ js_mat_reshape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
 
     if(js_is_array(ctx, argv[0])) {
       js_array_to(ctx, argv[0], newshape);
+
       if(argc >= 2 && JS_IsNumber(argv[1])) {
         uint32_t ndims;
         JS_ToUint32(ctx, &ndims, argv[1]);
+
         if(ndims > newshape.size())
           return JS_EXCEPTION;
+
         mat = m->reshape(cn, ndims, &newshape[0]);
       } else {
         mat = m->reshape(cn, newshape);
@@ -1544,6 +1557,7 @@ js_mat_reshape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
       JS_ToInt32(ctx, &rows, argv[0]);
       mat = m->reshape(cn, rows);
     }
+
     ret = js_mat_wrap(ctx, mat);
   }
 

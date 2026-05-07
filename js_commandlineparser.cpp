@@ -27,7 +27,7 @@ js_commandlineparser_constructor(JSContext* ctx, JSValueConst new_target, int ar
     new(clp) JSCommandLineParserData(*other);
   } else {
     std::vector<cv::String> args;
-    const char* keys = 0;
+    cv::String keys;
     int i = 0;
 
     if(js_is_array(ctx, argv[i])) {
@@ -51,7 +51,7 @@ js_commandlineparser_constructor(JSContext* ctx, JSValueConst new_target, int ar
       strb[j] = stra[j] ? js_strdup(ctx, stra[j]) : nullptr;
 
     if(i < argc)
-      keys = JS_ToCString(ctx, argv[i]);
+      js_value_to(ctx, argv[i], keys);
 
     try {
       new(clp) JSCommandLineParserData(argc, strb, keys);
