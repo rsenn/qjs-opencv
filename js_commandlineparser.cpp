@@ -44,7 +44,7 @@ js_commandlineparser_constructor(JSContext* ctx, JSValueConst new_target, int ar
 
     stra[args.size()] = nullptr;
 
-    const char** strb = static_cast<const char**>(js_malloc(ctx, sizeof(char*) * stra.size()));
+    const char** strb = static_cast<const char**>(js_mallocz(ctx, sizeof(char*) * (args.size() + 16)));
 
     for(size_t j = 0; j < stra.size(); ++j)
       strb[j] = stra[j] ? js_strdup(ctx, stra[j]) : nullptr;
