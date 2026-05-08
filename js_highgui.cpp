@@ -61,7 +61,9 @@ js_cv_named_window(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
   if(argc > 1)
     JS_ToInt32(ctx, &flags, argv[1]);
 
-  cv::namedWindow(name, flags);
+  try {
+    cv::namedWindow(name, flags);
+  } catch(const std::exception& e) { return js_cv_throw(ctx, e); }
 
   if(std::find(window_list.cbegin(), window_list.cend(), name) == window_list.cend())
     window_list.push_back(name);
@@ -246,7 +248,7 @@ js_cv_create_trackbar(JSContext* ctx, JSValueConst this_val, int argc, JSValueCo
           }
         },
         userdata);
-  } catch(const cv::Exception& e) {
+  } catch(const std::exception& e) {
     JS_FreeValue(ctx, userdata->name);
     JS_FreeValue(ctx, userdata->window);
     JS_FreeValue(ctx, userdata->count);
@@ -308,7 +310,7 @@ js_cv_create_button(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
         userdata,
         type,
         initial_button_state);
-  } catch(const cv::Exception& exception) { return js_cv_throw(ctx, exception); }
+  } catch(const std::exception& e) { return js_cv_throw(ctx, e); }
 
   return JS_NewInt32(ctx, ret);
 }
@@ -388,7 +390,7 @@ js_cv_set_mouse_callback(JSContext* ctx, JSValueConst this_val, int argc, JSValu
           }
         },
         userdata);
-  } catch(const cv::Exception& exception) { return js_cv_throw(ctx, exception); }
+  } catch(const std::exception& e) { return js_cv_throw(ctx, e); }
 
   return JS_UNDEFINED;
 }
@@ -410,8 +412,8 @@ js_cv_wait_key(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
   if(argc > 0 && magic != POLL_KEY)
     JS_ToInt32(ctx, &delay, argv[0]);
 
-  switch(magic) {
-
+  try {
+    switch(magic) {
     case WAIT_KEY: {
       key.i = cv::waitKey(delay);
       break;
@@ -427,6 +429,7 @@ js_cv_wait_key(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
       break;
     }
   }
+  } catch(const std::exception& e) { return js_cv_throw(ctx, e); }
 
   return JS_NewInt32(ctx, key.i);
 }
@@ -446,7 +449,9 @@ js_cv_imshow(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
   else if(input_array.isMat())
     input_array.getMat().addref();*/
 
+  try {
   cv::imshow(winname, image);
+  } catch(const std::exception& e) { return js_cv_throw(ctx, e); }
 
   return JS_UNDEFINED;
 }
