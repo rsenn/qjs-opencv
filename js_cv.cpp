@@ -1405,9 +1405,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
     case OTHER_HSV2RGB: {
       cv::Scalar v = {0, 0, 0, 255};
 
-      if(argc == 1 && js_is_array(ctx, argv[0]))
-        js_value_to(ctx, argv[0], v);
-      else
+      if(argc > 1 || js_scalar_read(ctx, argv[0], v) < 3)
         for(int i = 0; i < 4 && i < argc; ++i)
           js_number_read(ctx, argv[i], &v[i]);
 
@@ -1423,9 +1421,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
     case OTHER_RGB2HSV: {
       cv::Scalar v = {0, 0, 0, 255};
 
-      if(argc == 1 && js_is_array(ctx, argv[0]))
-        js_value_to(ctx, argv[0], v);
-      else
+      if(argc > 1 || js_scalar_read(ctx, argv[0], v) < 3)
         for(int i = 0; i < 4 && i < argc; ++i)
           js_number_read(ctx, argv[i], &v[i]);
 
@@ -1443,9 +1439,8 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
 
       js_value_to(ctx, argv[i++], flag);
 
-      if(i < argc && js_is_array(ctx, argv[i]))
-        js_value_to(ctx, argv[i++], v);
-      else
+      if(i < argc && js_scalar_read(ctx, argv[i], v) >= 3) {
+      } else
         for(; i < 4 && i < argc; ++i)
           js_number_read(ctx, argv[i], &v[i]);
 

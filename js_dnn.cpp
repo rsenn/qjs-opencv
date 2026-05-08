@@ -147,12 +147,11 @@ js_net_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
       dn->forward(vecOfVecOfBlobs, outputNames);
 
       js_array_copy(ctx, argv[0], vecOfVecOfBlobs);
-
       break;
     }
 
     case DNN_NET_GETUNCONNECTEDOUTLAYERSNAMES: {
-      std::vector<cv::String> names = dn->getUnconnectedOutLayersNames();
+      std::vector<std::string> names = dn->getUnconnectedOutLayersNames();
 
       ret = js_value_from(ctx, names);
       break;
@@ -171,7 +170,7 @@ js_net_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
       if(argc > 2)
         js_value_to(ctx, argv[2], scalefactor);
       if(argc > 3)
-        js_value_to(ctx, argv[3], mean);
+        js_scalar_read(ctx, argv[3], mean);
 
       dn->setInput(blob, name, scalefactor, mean);
       break;
@@ -271,11 +270,11 @@ js_imageblob2params_constructor(JSContext* ctx, JSValueConst new_target, int arg
     int32_t ddepth = CV_32F, datalayout = cv::dnn::DNN_LAYOUT_NCHW, mode = cv::dnn::DNN_PMODE_NULL;
     cv::Scalar borderValue{0.0};
 
-    js_value_to(ctx, argv[0], scalefactor);
+    js_scalar_read(ctx, argv[0], scalefactor);
     if(argc > 1)
       js_value_to(ctx, argv[1], size);
     if(argc > 2)
-      js_value_to(ctx, argv[2], mean);
+      js_scalar_read(ctx, argv[2], mean);
     if(argc > 3)
       js_value_to(ctx, argv[3], swapRB);
     if(argc > 4)
@@ -285,7 +284,7 @@ js_imageblob2params_constructor(JSContext* ctx, JSValueConst new_target, int arg
     if(argc > 6)
       js_value_to(ctx, argv[6], mode);
     if(argc > 7)
-      js_value_to(ctx, argv[7], borderValue);
+      js_scalar_read(ctx, argv[7], borderValue);
 
     new(dn) JSImage2BlobParamsData(scalefactor, size, mean, swapRB, ddepth, cv::dnn::DataLayout(datalayout), cv::dnn::ImagePaddingMode(mode), borderValue);
   } else {
@@ -418,7 +417,7 @@ js_imageblob2params_set(JSContext* ctx, JSValueConst this_val, JSValueConst val,
     }
 
     case IMAGEBLOB2PARAMS_MEAN: {
-      js_value_to(ctx, val, ib2p->mean);
+      js_scalar_read(ctx, val, ib2p->mean);
       break;
     }
 
@@ -430,7 +429,7 @@ js_imageblob2params_set(JSContext* ctx, JSValueConst this_val, JSValueConst val,
     }
 
     case IMAGEBLOB2PARAMS_SCALEFACTOR: {
-      js_value_to(ctx, val, ib2p->scalefactor);
+      js_scalar_read(ctx, val, ib2p->scalefactor);
       break;
     }
 
@@ -577,7 +576,7 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
         if(argc > argi)
           js_value_to(ctx, argv[argi++], size);
         if(argc > argi)
-          js_value_to(ctx, argv[argi++], mean);
+          js_scalar_read(ctx, argv[argi++], mean);
         if(argc > argi)
           js_value_to(ctx, argv[argi++], swapRB);
         if(argc > argi)
@@ -614,7 +613,7 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
         if(argc > argi)
           js_value_to(ctx, argv[argi++], size);
         if(argc > argi)
-          js_value_to(ctx, argv[argi++], mean);
+          js_scalar_read(ctx, argv[argi++], mean);
         if(argc > argi)
           js_value_to(ctx, argv[argi++], swapRB);
         if(argc > argi)

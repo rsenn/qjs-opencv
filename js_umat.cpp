@@ -639,9 +639,10 @@ js_umat_set_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
     js_value_to(ctx, argv[0], value);
     m->setTo(cv::Scalar(value));
 
-  } else if(js_is_array(ctx, argv[0])) {
+  } else /*if(js_is_array(ctx, argv[0]))*/ {
     cv::Scalar s;
-    size_t n = js_array_to(ctx, argv[0], s);
+    size_t n = js_scalar_read(ctx, argv[0], s);
+
     if(n >= m->channels()) {
       m->setTo(s);
       return JS_UNDEFINED;

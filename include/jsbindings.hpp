@@ -930,23 +930,29 @@ js_function_invoke(JSContext* ctx, JSValueConst this_obj, const char* method, in
  *  @{
  */
 template<class T>
-static inline BOOL
+static inline int
 js_scalar_read(JSContext* ctx, JSValueConst obj, cv::Scalar_<T>& scalar) {
+  int i = 0;
+
   if(JS_IsObject(obj)) {
-    for(size_t i = 0; i < 4; ++i) {
+    for(; i < 4; ++i) {
       JSValue item = JS_GetPropertyUint32(ctx, obj, i);
+
+      if(JS_IsException(item))
+        break;
+
       js_value_to(ctx, item, scalar[i]);
       JS_FreeValue(ctx, item);
     }
 
-    return TRUE;
+    return i;
   }
 
   std::string s;
   js_value_to(ctx, obj, s);
   std::string::value_type const *p = s.data(), *e = s.data() + s.size();
 
-  for(size_t i = 0; i < 4; ++i) {
+  for(; i < 4 && p != e; ++i) {
     /*while(p != e && *p != '+' && *p != '-' && !std::isdigit(*p) && *p != '.') ++p;*/
 
     while(p != e) {
@@ -961,7 +967,7 @@ js_scalar_read(JSContext* ctx, JSValueConst obj, cv::Scalar_<T>& scalar) {
     }
   }
 
-  return TRUE;
+  return i;
 }
 
 template<class T>

@@ -1208,7 +1208,7 @@ js_mat_set_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
   } else {
     cv::Scalar input;
 
-    js_value_to(ctx, argv[0], input);
+    js_scalar_read(ctx, argv[0], input);
 
     m->setTo(input, mask);
   }

@@ -345,31 +345,7 @@ template<class T, int N>
 static inline T const*
 end(cv::Vec<T, N> const& v) {
   return &v[N];
-}
-
-/*template<class T>
-static inline typename T::value_type const*
-begin(const T& obj) {
-  return obj.begin();
-}
-
-template<class T>
-static inline typename T::value_type*
-begin(T& obj) {
-  return obj.begin();
-}
-
-template<class T>
-static inline typename T::value_type const*
-end(const T& obj) {
-  return obj.end();
-}
-
-template<class T>
-static inline typename T::value_type*
-end(T& obj) {
-  return obj.end();
-}*/
+} 
 
 template<class T>
 static inline T*
@@ -392,7 +368,13 @@ begin(std::vector<T> const& v) {
 template<class T>
 static inline T const*
 end(std::vector<T> const& v) {
-  return &v[v.size()];
+  return &v.data()[v.size()];
+}
+
+template<class T>
+static inline T const*
+end(std::basic_string<T> const& v) {
+  return &v.data()[v.size()];
 }
 
 static inline uint8_t*
