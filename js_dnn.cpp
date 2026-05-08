@@ -110,25 +110,28 @@ js_net_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
 
         ret = js_mat_wrap(ctx, dn->forward(name));
       } else {
-        std::vector<cv::Mat> outputBlobs;
+        std::vector<cv::Mat> vecOfBlobs;
         cv::String outputName;
 
         if(argc == 1) {
-          dn->forward(outputBlobs);
+          dn->forward(vecOfBlobs);
+
+          js_array_copy(ctx, argv[0], vecOfBlobs);
         } else if(JS_IsString(argv[1])) {
           js_value_to(ctx, argv[1], outputName);
 
-          dn->forward(outputBlobs, outputName);
+          dn->forward(vecOfBlobs, outputName);
 
-          js_array_copy(ctx, argv[0], outputBlobs);
+          js_array_copy(ctx, argv[0], vecOfBlobs);
         } else if(JS_IsObject(argv[1])) {
-          std::vector<cv::String> outBlobNames;
+          std::vector<cv::String> outputNames;
+          std::vector<std::vector<cv::Mat>> vecOfVecOfBlobs;
 
-          js_value_to(ctx, argv[1], outBlobNames);
+          js_value_to(ctx, argv[1], outputNames);
 
-          dn->forward(outputBlobs, outBlobNames);
+          dn->forward(vecOfVecOfBlobs, outputNames);
 
-          js_array_copy(ctx, argv[0], outputBlobs);
+          js_array_copy(ctx, argv[0], vecOfVecOfBlobs);
         }
       }
 

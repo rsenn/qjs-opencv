@@ -312,7 +312,10 @@ static JSValue
 js_rect_to_string(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSRectData<double> rect, *s;
   std::ostringstream os;
-  std::array<const char*, 3> delims = {",", "∣" /*｜⧸⦁⎮∥∣⸾⼁❘❙⟊⍿⎸⏐｜│￨︲︱❘|｜*/, "×" /*"𝅃🅧𝚡🅧🅇𝘹𝚡𝘹𝐱ꭗ𝐗𝑿𝅃𝅃xˣₓ⒳Ⓧⓧ✕✘✗⨉⨯⨂✖⨻⦁⋅⊗⊠∗×⨯×"*/};
+  std::array<const char*, 3> delims = {
+      ",",
+      "∣" /*｜⧸⦁⎮∥∣⸾⼁❘❙⟊⍿⎸⏐｜│￨︲︱❘|｜*/,
+      "×" /*"𝅃🅧𝚡🅧🅇𝘹𝚡𝘹𝐱ꭗ𝐗𝑿𝅃𝅃xˣₓ⒳Ⓧⓧ✕✘✗⨉⨯⨂✖⨻⦁⋅⊗⊠∗×⨯×"*/};
 
   for(size_t i = 0; i < argc; i++) {
     delims[i] = JS_ToCString(ctx, argv[i]);
