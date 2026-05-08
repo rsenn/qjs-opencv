@@ -10,6 +10,7 @@
 #include <array>
 #include <string>
 #include <vector>
+#include <charconv>
 
 namespace cv {
 class CLAHE;
@@ -978,6 +979,46 @@ js_arguments_to(JSContext* ctx, int argc, JSValueConst argv[], std::vector<T>& o
 
   return r;
 }
+
+/** @defgroup scalar
+ *  @{
+ */
+template<class T>
+static inline BOOL
+js_scalar_read(JSContext* ctx, JSValueConst obj, cv::Scalar_<T>& scalar) {
+  if(JS_IsObject(obj)) {
+    for(size_t i = 0; i < 4; i++) {
+      JSValue item = JS_GetPropertyUint32(ctx, obj, i);
+      js_value_to(ctx, item, scalar[i]);
+      JS_FreeValue(ctx, item);
+    }
+
+    return TRUE;
+  }
+
+  std::string s;
+
+  js_value_to(ctx, obj, s);
+
+  auto start = s.begin(), end = s.end();
+
+  for(int i = 0; i < 4; ++i) {
+    while(start != end && *start != '+' && *start != '-' && !std::isdigit(*start) && *start != '.')
+      ++start;
+
+    auto [ptr, ec] = std::from_chars(start, end, scalar[i]);
+
+    if(ptr == start || ptr == end)
+      break;
+
+    start = ptr;
+  }
+
+  return FALSE;
+}
+/**
+ *  @}
+ */
 
 class JSOutputArgument : public JSInputOutputArray {
 public:
