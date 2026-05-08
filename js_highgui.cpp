@@ -414,21 +414,21 @@ js_cv_wait_key(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
 
   try {
     switch(magic) {
-    case WAIT_KEY: {
-      key.i = cv::waitKey(delay);
-      break;
-    }
+      case WAIT_KEY: {
+        key.i = cv::waitKey(delay);
+        break;
+      }
 
-    case WAIT_KEY_EX: {
-      key.i = cv::waitKeyEx(delay);
-      break;
-    }
+      case WAIT_KEY_EX: {
+        key.i = cv::waitKeyEx(delay);
+        break;
+      }
 
-    case POLL_KEY: {
-      key.i = cv::pollKey();
-      break;
+      case POLL_KEY: {
+        key.i = cv::pollKey();
+        break;
+      }
     }
-  }
   } catch(const std::exception& e) { return js_cv_throw(ctx, e); }
 
   return JS_NewInt32(ctx, key.i);
@@ -450,7 +450,7 @@ js_cv_imshow(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
     input_array.getMat().addref();*/
 
   try {
-  cv::imshow(winname, image);
+    cv::imshow(winname, image);
   } catch(const std::exception& e) { return js_cv_throw(ctx, e); }
 
   return JS_UNDEFINED;
