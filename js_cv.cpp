@@ -1374,72 +1374,86 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
     }
 
     case OTHER_SCALAR: {
-      std::array<double, 4> sca;
+      cv::Scalar v;
 
-      if(argc == 1 && js_is_array(ctx, argv[0])) {
-        js_value_to(ctx, argv[0], sca);
-      } else {
-        for(int i = 0; i < 4 && i < argc; ++i)
-          sca[i] = i < argc && JS_IsNumber(argv[i]) ? js_value_to<double>(ctx, argv[i]) : 0;
+      if(argc >= 1 && js_is_arraybuffer(ctx, argv[0])) {
+        ArrayBufferProps ab = js_arraybuffer_props(ctx, argv[0]);
+        uint32_t offset = 0;
+
+        if(argc > 1)
+          if(js_number_read(ctx, argv[1], &offset))
+            offset *= sizeof(double);
+
+        if(ab.len - offset < 4 * sizeof(double))
+          return JS_ThrowRangeError(ctx, "cv::Scalar not enough bytes left in buffer %" PRId32, int32_t(ab.len - offset));
+
+        ret = js_typedarray<double>::from_buffer(ctx, argv[0], offset, 4);
+        break;
       }
 
-      // ret = JS_NewArray(ctx);
-      ret = js_array_from(ctx, sca);
+      if(argc == 1 && !JS_IsNumber(argv[0]))
+        if(js_scalar_read(ctx, argv[0], v))
+          break;
+
+      for(int i = 0; i < 4 && i < argc; ++i)
+        js_number_read(ctx, argv[i], &v[i]);
+
+      ret = js_typedarray_from(ctx, *reinterpret_cast<std::array<double, 4>*>(&v));
       break;
     }
 
     case OTHER_HSV2RGB: {
-      cv::Scalar sca = {0, 0, 0, 255};
+      cv::Scalar v = {0, 0, 0, 255};
 
       if(argc == 1 && js_is_array(ctx, argv[0]))
-        js_value_to(ctx, argv[0], sca);
+        js_value_to(ctx, argv[0], v);
       else
         for(int i = 0; i < 4 && i < argc; ++i)
-          sca[i] = i < argc && JS_IsNumber(argv[i]) ? js_value_to<double>(ctx, argv[i]) : 0;
+          js_number_read(ctx, argv[i], &v[i]);
 
-      double a = sca[3];
+      double a = v[3];
 
-      sca = hsv_to_rgb(sca);
-      sca[3] = a;
+      v = hsv_to_rgb(v);
+      v[3] = a;
 
-      ret = js_value_from(ctx, sca);
+      ret = js_value_from(ctx, v);
       break;
     }
 
     case OTHER_RGB2HSV: {
-      cv::Scalar sca = {0, 0, 0, 255};
+      cv::Scalar v = {0, 0, 0, 255};
 
       if(argc == 1 && js_is_array(ctx, argv[0]))
-        js_value_to(ctx, argv[0], sca);
+        js_value_to(ctx, argv[0], v);
       else
         for(int i = 0; i < 4 && i < argc; ++i)
-          sca[i] = i < argc && JS_IsNumber(argv[i]) ? js_value_to<double>(ctx, argv[i]) : 0;
+          js_number_read(ctx, argv[i], &v[i]);
 
-      double a = sca[3];
-      sca = rgb_to_hsv(sca);
-      sca[3] = a;
+      double a = v[3];
+      v = rgb_to_hsv(v);
+      v[3] = a;
 
-      ret = js_value_from(ctx, sca);
+      ret = js_value_from(ctx, v);
       break;
     }
 
     case OTHER_COLORCONVERT: {
-      cv::Scalar sca = {0, 0, 0, 255};
+      cv::Scalar v = {0, 0, 0, 255};
       int32_t flag = 0, i = 0;
 
       js_value_to(ctx, argv[i++], flag);
 
       if(i < argc && js_is_array(ctx, argv[i]))
-        js_value_to(ctx, argv[i++], sca);
+        js_value_to(ctx, argv[i++], v);
       else
         for(; i < 4 && i < argc; ++i)
-          sca[i] = i < argc && JS_IsNumber(argv[i]) ? js_value_to<double>(ctx, argv[i]) : 0;
+          js_number_read(ctx, argv[i], &v[i]);
 
-      double a = sca[3];
-      sca = color_convert(sca, flag);
-      sca[3] = a;
+      double a = v[3];
+      v = color_convert(v, flag);
+      v[3] = a;
 
-      ret = js_value_from(ctx, sca);
+      ret = js_value_from(ctx, v);
       break;
     }
 
@@ -1509,12 +1523,19 @@ JSClassDef js_cv_class = {
     .finalizer = js_cv_finalizer,
 };
 
+enum {
+  SAMPLES_FINDFILE,
+  SAMPLES_FINDFILEORKEEP,
+  SAMPLES_ADDSAMPLESDATASEARCHPATH,
+  SAMPLES_ADDSAMPLESDATASEARCHSUBDIRECTORY,
+};
+
 static JSValue
 js_cv_samples_function(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSValue ret = JS_UNDEFINED;
 
   switch(magic) {
-    case 0: {
+    case SAMPLES_FINDFILE: {
       const char* relative_path = JS_ToCString(ctx, argv[0]);
       BOOL required = FALSE, silentMode = FALSE;
 
@@ -1529,7 +1550,7 @@ js_cv_samples_function(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
       break;
     }
 
-    case 1: {
+    case SAMPLES_FINDFILEORKEEP: {
       const char* relative_path = JS_ToCString(ctx, argv[0]);
       BOOL silentMode = FALSE;
 
@@ -1542,7 +1563,7 @@ js_cv_samples_function(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
       break;
     }
 
-    case 2: {
+    case SAMPLES_ADDSAMPLESDATASEARCHPATH: {
       const char* path = JS_ToCString(ctx, argv[0]);
 
       cv::samples::addSamplesDataSearchPath(path);
@@ -1551,7 +1572,7 @@ js_cv_samples_function(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
       break;
     }
 
-    case 3: {
+    case SAMPLES_ADDSAMPLESDATASEARCHSUBDIRECTORY: {
       const char* path = JS_ToCString(ctx, argv[0]);
 
       cv::samples::addSamplesDataSearchSubDirectory(path);
@@ -1565,10 +1586,10 @@ js_cv_samples_function(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
 }
 
 js_function_list_t js_cv_samples_funcs{
-    JS_CFUNC_MAGIC_DEF("findFile", 1, js_cv_samples_function, 0),
-    JS_CFUNC_MAGIC_DEF("findFileOrKeep", 1, js_cv_samples_function, 1),
-    JS_CFUNC_MAGIC_DEF("addSamplesDataSearchPath", 1, js_cv_samples_function, 2),
-    JS_CFUNC_MAGIC_DEF("addSamplesDataSearchSubDirectory", 1, js_cv_samples_function, 3),
+    JS_CFUNC_MAGIC_DEF("findFile", 1, js_cv_samples_function, SAMPLES_FINDFILE),
+    JS_CFUNC_MAGIC_DEF("findFileOrKeep", 1, js_cv_samples_function, SAMPLES_FINDFILEORKEEP),
+    JS_CFUNC_MAGIC_DEF("addSamplesDataSearchPath", 1, js_cv_samples_function, SAMPLES_ADDSAMPLESDATASEARCHPATH),
+    JS_CFUNC_MAGIC_DEF("addSamplesDataSearchSubDirectory", 1, js_cv_samples_function, SAMPLES_ADDSAMPLESDATASEARCHSUBDIRECTORY),
 };
 
 js_function_list_t js_cv_static_funcs{
