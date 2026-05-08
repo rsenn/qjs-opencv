@@ -677,40 +677,6 @@ js_value_to(JSContext* ctx, JSValueConst value) {
   return ret;
 }
 
-template<class T>
-static inline int
-js_value_to(JSContext* ctx, JSValueConst value, cv::Scalar_<T>& scalar) {
-  scalar = cv::Scalar_<T>();
-
-  if(js_is_array(ctx, value))
-    return js_array_to(ctx, value, scalar);
-
-  std::string s;
-  size_t pos = 0, i = 0;
-
-  js_value_to(ctx, value, s);
-
-  for(; i < 4; ++i) {
-    std::string t = s.substr(pos);
-    size_t j = 0;
-
-    if(t.size() == 0)
-      break;
-
-    scalar[i] = std::stod(t, &j);
-
-    if(j == 0)
-      break;
-
-    while(j < t.size() && t[j] != '+' && t[j] != '-' && !std::isdigit(t[j]) && t[j] != '.')
-      j++;
-
-    pos += j;
-  }
-
-  return i;
-}
-
 template<class T, typename std::enable_if<std::is_integral<T>::value || std::is_floating_point<T>::value, T>::type* = nullptr>
 static inline JSValue
 js_value_from(JSContext* ctx, const T& in) {
@@ -997,25 +963,38 @@ js_scalar_read(JSContext* ctx, JSValueConst obj, cv::Scalar_<T>& scalar) {
   }
 
   std::string s;
-
   js_value_to(ctx, obj, s);
-
-  auto start = s.begin(), end = s.end();
+  std::string::value_type const *p = s.data(), *e = s.data() + s.size();
 
   for(int i = 0; i < 4; ++i) {
-    while(start != end && *start != '+' && *start != '-' && !std::isdigit(*start) && *start != '.')
-      ++start;
+    /*while(p != e && *p != '+' && *p != '-' && !std::isdigit(*p) && *p != '.') ++p;*/
 
-    auto [ptr, ec] = std::from_chars(start, end, scalar[i]);
+    while(p != e) {
+      auto [q, ec] = std::from_chars(p, e, scalar[i]);
 
-    if(ptr == start || ptr == end)
-      break;
+      if(q == p) {
+        ++p;
+        continue;
+      }
 
-    start = ptr;
+      p = q;
+    }
   }
 
-  return FALSE;
+  return TRUE;
 }
+
+template<class T>
+static inline int
+js_value_to(JSContext* ctx, JSValueConst value, cv::Scalar_<T>& scalar) {
+  scalar = cv::Scalar_<T>();
+
+  /*if(js_is_array(ctx, value))
+    return js_array_to(ctx, value, scalar);*/
+
+  return js_scalar_read(ctx, value, scalar);
+}
+
 /**
  *  @}
  */
