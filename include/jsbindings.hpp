@@ -829,6 +829,7 @@ js_atom_is_index(JSContext* ctx, JSAtom atom, uint32_t* pval = nullptr) {
   if(atom & (1U << 31)) {
     if(pval)
       *pval = atom & (~(1U << 31));
+
     return TRUE;
   }
 
@@ -916,12 +917,67 @@ js_function_name(JSContext* ctx, JSValueConst value) {
 
 static inline JSValue
 js_function_invoke(JSContext* ctx, JSValueConst this_obj, const char* method, int argc, JSValueConst argv[]) {
-  JSAtom atom;
-  JSValue ret;
-  atom = JS_NewAtom(ctx, method);
-  ret = JS_Invoke(ctx, this_obj, atom, argc, argv);
+  JSAtom atom = JS_NewAtom(ctx, method);
+  JSValue ret = JS_Invoke(ctx, this_obj, atom, argc, argv);
   JS_FreeAtom(ctx, atom);
   return ret;
+}
+/**
+ *  @}
+ */
+
+/** @defgroup scalar
+ *  @{
+ */
+template<class T>
+static inline BOOL
+js_scalar_read(JSContext* ctx, JSValueConst obj, cv::Scalar_<T>& scalar) {
+  if(JS_IsObject(obj)) {
+    for(size_t i = 0; i < 4; ++i) {
+      JSValue item = JS_GetPropertyUint32(ctx, obj, i);
+      js_value_to(ctx, item, scalar[i]);
+      JS_FreeValue(ctx, item);
+    }
+
+    return TRUE;
+  }
+
+  std::string s;
+  js_value_to(ctx, obj, s);
+  std::string::value_type const *p = s.data(), *e = s.data() + s.size();
+
+  for(size_t i = 0; i < 4; ++i) {
+    /*while(p != e && *p != '+' && *p != '-' && !std::isdigit(*p) && *p != '.') ++p;*/
+
+    while(p != e) {
+      auto [q, ec] = std::from_chars(p, e, scalar[i]);
+
+      if(q == p) {
+        ++p;
+        continue;
+      }
+
+      p = q;
+    }
+  }
+
+  return TRUE;
+}
+
+template<class T>
+static inline JSValue
+js_scalar_new(JSContext* ctx, const cv::Scalar_<T>& scalar) {
+  JSValue ret = JS_NewArray(ctx);
+  js_array_copy(ctx, ret, scalar);
+  return ret;
+}
+
+template<class T>
+static inline int
+js_value_to(JSContext* ctx, JSValueConst value, cv::Scalar_<T>& scalar) {
+  scalar = cv::Scalar_<T>();
+
+  return js_scalar_read(ctx, value, scalar);
 }
 /**
  *  @}
@@ -945,59 +1001,6 @@ js_arguments_to(JSContext* ctx, int argc, JSValueConst argv[], std::vector<T>& o
 
   return r;
 }
-
-/** @defgroup scalar
- *  @{
- */
-template<class T>
-static inline BOOL
-js_scalar_read(JSContext* ctx, JSValueConst obj, cv::Scalar_<T>& scalar) {
-  if(JS_IsObject(obj)) {
-    for(size_t i = 0; i < 4; i++) {
-      JSValue item = JS_GetPropertyUint32(ctx, obj, i);
-      js_value_to(ctx, item, scalar[i]);
-      JS_FreeValue(ctx, item);
-    }
-
-    return TRUE;
-  }
-
-  std::string s;
-  js_value_to(ctx, obj, s);
-  std::string::value_type const *p = s.data(), *e = s.data() + s.size();
-
-  for(int i = 0; i < 4; ++i) {
-    /*while(p != e && *p != '+' && *p != '-' && !std::isdigit(*p) && *p != '.') ++p;*/
-
-    while(p != e) {
-      auto [q, ec] = std::from_chars(p, e, scalar[i]);
-
-      if(q == p) {
-        ++p;
-        continue;
-      }
-
-      p = q;
-    }
-  }
-
-  return TRUE;
-}
-
-template<class T>
-static inline int
-js_value_to(JSContext* ctx, JSValueConst value, cv::Scalar_<T>& scalar) {
-  scalar = cv::Scalar_<T>();
-
-  /*if(js_is_array(ctx, value))
-    return js_array_to(ctx, value, scalar);*/
-
-  return js_scalar_read(ctx, value, scalar);
-}
-
-/**
- *  @}
- */
 
 class JSOutputArgument : public JSInputOutputArray {
 public:
