@@ -651,13 +651,6 @@ js_value_to(JSContext* ctx, JSValueConst value, std::string& out) {
   return 1;
 }
 
-/*static inline int
-js_value_to(JSContext* ctx, JSValueConst value, const char*& out) {
-  const char* str = JS_ToCString(ctx, &len, value);
-  out = str;
-  return 1;
-}*/
-
 template<class T, int N>
 static inline int
 js_value_to(JSContext* ctx, JSValueConst value, cv::Vec<T, N>& in) {
@@ -683,11 +676,39 @@ js_value_to(JSContext* ctx, JSValueConst value) {
   return ret;
 }
 
-/*template<class T>
+template<class T>
 static inline int
-js_value_to(JSContext* ctx, JSValueConst value, Line<T>& in) {
-  return js_array_to(ctx, value, reinterpret_cast<std::array<T, 4>*>(&in));
-}*/
+js_value_to(JSContext* ctx, JSValueConst value, cv::Scalar_<T>& scalar) {
+  scalar = cv::Scalar_<T>();
+
+  if(js_is_array(ctx, value))
+    return js_array_to(ctx, value, scalar);
+
+  std::string s;
+  size_t pos = 0, i = 0;
+
+  js_value_to(ctx, value, s);
+
+  for(; i < 4; ++i) {
+    std::string t = s.substr(pos);
+    size_t j = 0;
+
+    if(t.size() == 0)
+      break;
+
+    scalar[i] = std::stod(t, &j);
+
+    if(j == 0)
+      break;
+
+    while(j < t.size() && t[j] != '+' && t[j] != '-' && !std::isdigit(t[j]) && t[j] != '.')
+      j++;
+
+    pos += j;
+  }
+
+  return i;
+}
 
 template<class T, typename std::enable_if<std::is_integral<T>::value || std::is_floating_point<T>::value, T>::type* = nullptr>
 static inline JSValue

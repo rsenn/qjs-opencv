@@ -42,44 +42,28 @@ js_array_length(JSContext* ctx, const JSValueConst& arr) {
 
 static inline int64_t
 js_array_truncate(JSContext* ctx, const JSValueConst& arr, int64_t len) {
-  int64_t newlen = -1;
-
   if(js_is_array(ctx, arr)) {
     int64_t top = js_array_length(ctx, arr);
+    int64_t newlen = std::min(top, len < 0 ? top + len : len);
 
-    newlen = std::min(top, len < 0 ? top + len : len);
+    JSValueConst args[] = {JS_NewInt64(ctx, newlen), JS_NewInt64(ctx, top - newlen)};
 
-    while(--top >= newlen)
-      JS_DeletePropertyInt64(ctx, arr, top, 0);
-
-    JS_SetPropertyStr(ctx, arr, "length", JS_NewInt64(ctx, newlen));
+    JSValue ret = js_function_invoke(ctx, arr, "splice", countof(args), args);
+    JS_FreeValue(ctx, ret);
+    return newlen;
   }
 
-  return newlen;
+  return -1;
 }
 
 static inline BOOL
 js_array_clear(JSContext* ctx, const JSValueConst& arr) {
-  int64_t newlen = -1;
-
-  if(js_is_array(ctx, arr)) {
-    int64_t top = js_array_length(ctx, arr);
-    JSValueConst args[] = {JS_NewInt64(ctx, 0), JS_NewInt64(ctx, top)};
-
-    JSValue ret = js_function_invoke(ctx, arr, "splice", countof(args), args);
-    JS_FreeValue(ctx, ret);
-    return TRUE;
-  }
-
-  return FALSE;
+  return js_array_truncate(ctx, arr, 0);
 }
 
 template<class T> class js_array {
 public:
   static int64_t to_vector(JSContext* ctx, JSValueConst arr, std::vector<T>& out) {
-    /*if(!js_is_array(ctx, arr))
-      return -1;*/
-
     int64_t i, n = js_array_length(ctx, arr);
 
     if(n != -1ll) {
@@ -104,9 +88,6 @@ public:
   }
 
   template<int N> static int64_t to_cvvector(JSContext* ctx, JSValueConst arr, cv::Vec<T, N>& out) {
-    /*if(!js_is_array(ctx, arr))
-      return -1;*/
-
     int64_t i, n = js_array_length(ctx, arr);
 
     if(n != -1ll) {
@@ -331,18 +312,21 @@ js_array_from(JSContext* ctx, const Container& v) {
 template<class Iterator>
 static inline typename std::enable_if<std::is_pointer<Iterator>::value, BOOL>::type
 js_array_copy(JSContext* ctx, JSValueConst array, const Iterator& start, const Iterator& end) {
+  js_array_clear(ctx, array);
   return js_array<typename std::remove_pointer<Iterator>::type>::copy_sequence(ctx, array, start, end);
 }
 
 template<class Iterator>
 static inline typename std::enable_if<Iterator::value_type, BOOL>::type
 js_array_copy(JSContext* ctx, JSValueConst array, const Iterator& start, const Iterator& end) {
+  js_array_clear(ctx, array);
   return js_array<typename Iterator::value_type>::copy_sequence(ctx, array, start, end);
 }
 
 template<class Container>
 static inline void
 js_array_copy(JSContext* ctx, JSValueConst array, const Container& v) {
+  js_array_clear(ctx, array);
   js_array<typename Container::value_type>::copy_sequence(ctx, array, v.begin(), v.end());
 }
 

@@ -86,6 +86,7 @@ js_net_data2(JSContext* ctx, JSValueConst val) {
 
 enum {
   DNN_NET_FORWARD,
+  DNN_NET_FORWARDALL,
   DNN_NET_GETUNCONNECTEDOUTLAYERSNAMES,
   DNN_NET_SETINPUT,
   DNN_NET_SETPREFERABLEBACKEND,
@@ -125,15 +126,27 @@ js_net_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
           js_array_copy(ctx, argv[0], vecOfBlobs);
         } else if(JS_IsObject(argv[1])) {
           std::vector<cv::String> outputNames;
-          std::vector<std::vector<cv::Mat>> vecOfVecOfBlobs;
 
           js_value_to(ctx, argv[1], outputNames);
 
-          dn->forward(vecOfVecOfBlobs, outputNames);
+          dn->forward(vecOfBlobs, outputNames);
 
-          js_array_copy(ctx, argv[0], vecOfVecOfBlobs);
+          js_array_copy(ctx, argv[0], vecOfBlobs);
         }
       }
+
+      break;
+    }
+
+    case DNN_NET_FORWARDALL: {
+      std::vector<cv::String> outputNames;
+      std::vector<std::vector<cv::Mat>> vecOfVecOfBlobs;
+
+      js_value_to(ctx, argv[1], outputNames);
+
+      dn->forward(vecOfVecOfBlobs, outputNames);
+
+      js_array_copy(ctx, argv[0], vecOfVecOfBlobs);
 
       break;
     }
@@ -204,6 +217,7 @@ JSClassDef js_net_class = {
 
 const JSCFunctionListEntry js_net_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("forward", 0, js_net_method, DNN_NET_FORWARD),
+    JS_CFUNC_MAGIC_DEF("forwardAll", 1, js_net_method, DNN_NET_FORWARDALL),
     JS_CFUNC_MAGIC_DEF("getUnconnectedOutLayersNames", 0, js_net_method, DNN_NET_GETUNCONNECTEDOUTLAYERSNAMES),
     JS_CFUNC_MAGIC_DEF("setInput", 0, js_net_method, DNN_NET_SETINPUT),
     JS_CFUNC_MAGIC_DEF("setPreferableBackend", 0, js_net_method, DNN_NET_SETPREFERABLEBACKEND),
@@ -736,7 +750,9 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
         js_value_to(ctx, argv[2], class_ids);
         js_value_to(ctx, argv[3], score_threshold);
         js_value_to(ctx, argv[4], nms_threshold);
+
         // js_value_to(ctx, argv[5], indices);
+
         if(argc > 6)
           js_value_to(ctx, argv[6], eta);
         if(argc > 7)
