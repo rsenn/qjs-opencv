@@ -48,7 +48,7 @@ template<class T> union JSLineData {
   /*operator array_type&() { return this->array; }
   operator array_type const &() const { return this->array; }*/
 
-  operator Line<T> const &() const { return *reinterpret_cast<Line<T> const*>(this); }
+  operator Line<T> const&() const { return *reinterpret_cast<Line<T> const*>(this); }
   operator Line<T>&() { return *reinterpret_cast<Line<T>*>(this); }
 };
 

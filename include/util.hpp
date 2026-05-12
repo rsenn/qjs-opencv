@@ -345,7 +345,7 @@ template<class T, int N>
 static inline T const*
 end(cv::Vec<T, N> const& v) {
   return &v[N];
-} 
+}
 
 template<class T>
 static inline T*

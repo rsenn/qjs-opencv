@@ -18,7 +18,9 @@ template<class T> struct point {
   typedef std::vector<type> vector_type;
 };
 
-template<class T> struct point_list { typedef std::vector<typename point<T>::type> type; };
+template<class T> struct point_list {
+  typedef std::vector<typename point<T>::type> type;
+};
 template<class T> struct contour {
   typedef T coord_type;
   typedef typename point<T>::type point_type;

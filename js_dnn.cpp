@@ -7,11 +7,14 @@
 
 using JSNetData = cv::dnn::Net;
 using JSImage2BlobParamsData = cv::dnn::Image2BlobParams;
+using JSLayerData = cv::Ptr<cv::dnn::Layer>;
 
 extern "C" {
-thread_local JSValue dnn_object, net_proto, net_class, imageblob2params_proto, imageblob2params_class;
-thread_local JSClassID js_net_class_id, js_imageblob2params_class_id;
+thread_local JSValue dnn_object, net_proto, net_class, imageblob2params_proto, imageblob2params_class, layer_proto, layer_class;
+thread_local JSClassID js_net_class_id, js_imageblob2params_class_id, js_layer_class_id;
 }
+
+static JSValue js_layer_wrap(JSContext* ctx, JSLayerData const& layer);
 
 static JSValue
 js_net_wrap(JSContext* ctx, JSValueConst proto, JSNetData* ib2p) {
@@ -91,6 +94,7 @@ enum {
   DNN_NET_SETINPUT,
   DNN_NET_SETPREFERABLEBACKEND,
   DNN_NET_SETPREFERABLETARGET,
+  DNN_NET_GETLAYER,
 };
 
 static JSValue
@@ -101,98 +105,119 @@ js_net_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
   if(!(dn = js_net_data2(ctx, this_val)))
     return JS_EXCEPTION;
 
-  switch(magic) {
-    case DNN_NET_FORWARD: {
-      if(argc == 0 || JS_IsString(argv[0])) {
-        cv::String name;
+  try {
+    switch(magic) {
+      case DNN_NET_FORWARD: {
+        if(argc == 0 || JS_IsString(argv[0])) {
+          cv::String name;
 
-        if(argc > 0)
-          js_value_to(ctx, argv[0], name);
+          if(argc > 0)
+            js_value_to(ctx, argv[0], name);
 
-        ret = js_mat_wrap(ctx, dn->forward(name));
-      } else {
-        std::vector<cv::Mat> vecOfBlobs;
-        cv::String outputName;
+          ret = js_mat_wrap(ctx, dn->forward(name));
+        } else {
+          std::vector<cv::Mat> vecOfBlobs;
+          cv::String outputName;
 
-        if(argc == 1) {
-          dn->forward(vecOfBlobs);
+          if(argc == 1) {
+            dn->forward(vecOfBlobs);
 
-          js_array_copy(ctx, argv[0], vecOfBlobs);
-        } else if(JS_IsString(argv[1])) {
-          js_value_to(ctx, argv[1], outputName);
+            js_array_copy(ctx, argv[0], vecOfBlobs);
+          } else if(JS_IsString(argv[1])) {
+            js_value_to(ctx, argv[1], outputName);
 
-          dn->forward(vecOfBlobs, outputName);
+            dn->forward(vecOfBlobs, outputName);
 
-          js_array_copy(ctx, argv[0], vecOfBlobs);
-        } else if(JS_IsObject(argv[1])) {
-          std::vector<cv::String> outputNames;
+            js_array_copy(ctx, argv[0], vecOfBlobs);
+          } else if(JS_IsObject(argv[1])) {
+            std::vector<cv::String> outputNames;
 
-          js_value_to(ctx, argv[1], outputNames);
+            js_value_to(ctx, argv[1], outputNames);
 
-          dn->forward(vecOfBlobs, outputNames);
+            dn->forward(vecOfBlobs, outputNames);
 
-          js_array_copy(ctx, argv[0], vecOfBlobs);
+            js_array_copy(ctx, argv[0], vecOfBlobs);
+          }
         }
+
+        break;
       }
 
-      break;
+      case DNN_NET_FORWARDALL: {
+        std::vector<cv::String> outputNames;
+        std::vector<std::vector<cv::Mat>> vecOfVecOfBlobs;
+
+        js_value_to(ctx, argv[1], outputNames);
+
+        dn->forward(vecOfVecOfBlobs, outputNames);
+
+        js_array_copy(ctx, argv[0], vecOfVecOfBlobs);
+        break;
+      }
+
+      case DNN_NET_GETUNCONNECTEDOUTLAYERSNAMES: {
+        std::vector<std::string> names = dn->getUnconnectedOutLayersNames();
+
+        ret = js_value_from(ctx, names);
+        break;
+      }
+
+      case DNN_NET_SETINPUT: {
+        JSInputArray blob;
+        cv::String name;
+        double scalefactor = 1.0;
+        cv::Scalar mean;
+
+        blob = js_input_array(ctx, argv[0]);
+
+        if(argc > 1)
+          js_value_to(ctx, argv[1], name);
+        if(argc > 2)
+          js_value_to(ctx, argv[2], scalefactor);
+        if(argc > 3)
+          js_scalar_read(ctx, argv[3], mean);
+
+        dn->setInput(blob, name, scalefactor, mean);
+        break;
+      }
+
+      case DNN_NET_SETPREFERABLEBACKEND: {
+        int32_t backendId = -1;
+        js_value_to(ctx, argv[0], backendId);
+
+        dn->setPreferableBackend(backendId);
+        break;
+      }
+
+      case DNN_NET_SETPREFERABLETARGET: {
+        int32_t targetId = -1;
+        js_value_to(ctx, argv[0], targetId);
+
+        dn->setPreferableTarget(targetId);
+
+        break;
+      }
+
+      case DNN_NET_GETLAYER: {
+        JSLayerData dl;
+
+        if(JS_IsString(argv[0])) {
+          cv::String name;
+          js_value_to(ctx, argv[0], name);
+
+          dl = dn->getLayer(name);
+        } else {
+          int32_t id;
+          js_value_to(ctx, argv[0], id);
+
+          dl = dn->getLayer(id);
+        }
+
+        ret = js_layer_wrap(ctx, dl);
+        break;
+      }
     }
-
-    case DNN_NET_FORWARDALL: {
-      std::vector<cv::String> outputNames;
-      std::vector<std::vector<cv::Mat>> vecOfVecOfBlobs;
-
-      js_value_to(ctx, argv[1], outputNames);
-
-      dn->forward(vecOfVecOfBlobs, outputNames);
-
-      js_array_copy(ctx, argv[0], vecOfVecOfBlobs);
-      break;
-    }
-
-    case DNN_NET_GETUNCONNECTEDOUTLAYERSNAMES: {
-      std::vector<std::string> names = dn->getUnconnectedOutLayersNames();
-
-      ret = js_value_from(ctx, names);
-      break;
-    }
-
-    case DNN_NET_SETINPUT: {
-      JSInputArray blob;
-      cv::String name;
-      double scalefactor = 1.0;
-      cv::Scalar mean;
-
-      blob = js_input_array(ctx, argv[0]);
-
-      if(argc > 1)
-        js_value_to(ctx, argv[1], name);
-      if(argc > 2)
-        js_value_to(ctx, argv[2], scalefactor);
-      if(argc > 3)
-        js_scalar_read(ctx, argv[3], mean);
-
-      dn->setInput(blob, name, scalefactor, mean);
-      break;
-    }
-
-    case DNN_NET_SETPREFERABLEBACKEND: {
-      int32_t backendId = -1;
-      js_value_to(ctx, argv[0], backendId);
-
-      dn->setPreferableBackend(backendId);
-      break;
-    }
-
-    case DNN_NET_SETPREFERABLETARGET: {
-      int32_t targetId = -1;
-      js_value_to(ctx, argv[0], targetId);
-
-      dn->setPreferableTarget(targetId);
-
-      break;
-    }
-  }
+  } catch(const cv::Exception& e) { ret = js_cv_throw(ctx, e); }
 
   return ret;
 }
@@ -221,6 +246,7 @@ const JSCFunctionListEntry js_net_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("setInput", 0, js_net_method, DNN_NET_SETINPUT),
     JS_CFUNC_MAGIC_DEF("setPreferableBackend", 0, js_net_method, DNN_NET_SETPREFERABLEBACKEND),
     JS_CFUNC_MAGIC_DEF("setPreferableTarget", 0, js_net_method, DNN_NET_SETPREFERABLETARGET),
+    JS_CFUNC_MAGIC_DEF("getLayer", 1, js_net_method, DNN_NET_GETLAYER),
 
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Net", JS_PROP_CONFIGURABLE),
 };
@@ -519,6 +545,219 @@ const JSCFunctionListEntry js_imageblob2params_proto_funcs[] = {
     JS_CGETSET_MAGIC_DEF("size", js_imageblob2params_get, js_imageblob2params_set, IMAGEBLOB2PARAMS_SIZE),
     JS_CGETSET_MAGIC_DEF("swapRB", js_imageblob2params_get, js_imageblob2params_set, IMAGEBLOB2PARAMS_SWAPRB),
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Image2BlobParams", JS_PROP_CONFIGURABLE),
+};
+
+static JSValue
+js_layer_wrap(JSContext* ctx, JSValueConst proto, JSLayerData const& layer) {
+  JSLayerData* dl = js_allocate<JSLayerData>(ctx);
+  JSValue ret = JS_NewObjectProtoClass(ctx, proto, js_layer_class_id);
+  *dl = layer;
+  JS_SetOpaque(ret, dl);
+  return ret;
+}
+
+static JSValue
+js_layer_wrap(JSContext* ctx, JSLayerData const& layer) {
+  return js_layer_wrap(ctx, layer_proto, layer);
+}
+
+static JSValue
+js_layer_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
+  JSLayerData* dl;
+  JSValue obj = JS_UNDEFINED, proto;
+
+  if(!(dl = js_allocate<JSLayerData>(ctx)))
+    return JS_EXCEPTION;
+
+  /*if(argc > 0) {
+    cv::Scalar scalefactor, mean;
+    cv::Size size;
+    bool swapRB = false;
+    int32_t ddepth = CV_32F, datalayout = cv::dnn::DNN_LAYOUT_NCHW, mode = cv::dnn::DNN_PMODE_NULL;
+    cv::Scalar borderValue{0.0};
+
+    js_scalar_read(ctx, argv[0], scalefactor);
+    if(argc > 1)
+      js_value_to(ctx, argv[1], size);
+    if(argc > 2)
+      js_scalar_read(ctx, argv[2], mean);
+    if(argc > 3)
+      js_value_to(ctx, argv[3], swapRB);
+    if(argc > 4)
+      js_value_to(ctx, argv[4], ddepth);
+    if(argc > 5)
+      js_value_to(ctx, argv[5], datalayout);
+    if(argc > 6)
+      js_value_to(ctx, argv[6], mode);
+    if(argc > 7)
+      js_scalar_read(ctx, argv[7], borderValue);
+
+    new(dl) JSLayerData(scalefactor, size, mean, swapRB, ddepth, cv::dnn::DataLayout(datalayout), cv::dnn::ImagePaddingMode(mode), borderValue);
+  } else*/
+  { new(dl) JSLayerData(); }
+
+  /* using new_target to get the prototype is necessary when the class is extended. */
+  proto = JS_GetPropertyStr(ctx, new_target, "prototype");
+  if(JS_IsException(proto))
+    goto fail;
+
+  obj = JS_NewObjectProtoClass(ctx, proto, js_layer_class_id);
+  JS_FreeValue(ctx, proto);
+
+  if(JS_IsException(obj))
+    goto fail;
+
+  JS_SetOpaque(obj, dl);
+
+  return obj;
+
+fail:
+  js_deallocate(ctx, dl);
+  JS_FreeValue(ctx, obj);
+  return JS_EXCEPTION;
+}
+
+JSLayerData*
+js_layer_data(JSValueConst val) {
+  return static_cast<JSLayerData*>(JS_GetOpaque(val, js_layer_class_id));
+}
+
+JSLayerData*
+js_layer_data2(JSContext* ctx, JSValueConst val) {
+  return static_cast<JSLayerData*>(JS_GetOpaque2(ctx, val, js_layer_class_id));
+}
+
+enum {
+  LAYER_BLOBS,
+  LAYER_NAME,
+  LAYER_PREFERABLETARGET,
+  LAYER_TYPE,
+};
+
+static JSValue
+js_layer_get(JSContext* ctx, JSValueConst this_val, int magic) {
+  JSLayerData* dl;
+  JSValue ret = JS_UNDEFINED;
+
+  if(!(dl = js_layer_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  switch(magic) {
+    case LAYER_BLOBS: {
+      ret = js_value_from(ctx, dl->get()->blobs);
+      break;
+    }
+
+    case LAYER_NAME: {
+      ret = js_value_from(ctx, dl->get()->name);
+      break;
+    }
+
+    case LAYER_PREFERABLETARGET: {
+      ret = js_value_from(ctx, dl->get()->preferableTarget);
+      break;
+    }
+
+    case LAYER_TYPE: {
+      ret = js_value_from(ctx, dl->get()->type);
+      break;
+    }
+  }
+
+  return ret;
+}
+
+static JSValue
+js_layer_set(JSContext* ctx, JSValueConst this_val, JSValueConst val, int magic) {
+  JSLayerData* dl;
+
+  if(!(dl = js_layer_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  switch(magic) {
+    case LAYER_BLOBS: {
+      js_value_to(ctx, val, dl->get()->blobs);
+      break;
+    }
+
+    case LAYER_NAME: {
+      js_value_to(ctx, val, dl->get()->name);
+      break;
+    }
+
+    case LAYER_PREFERABLETARGET: {
+      js_value_to(ctx, val, dl->get()->preferableTarget);
+      break;
+    }
+
+    case LAYER_TYPE: {
+      js_value_to(ctx, val, dl->get()->type);
+      break;
+    }
+  }
+
+  return JS_UNDEFINED;
+}
+
+enum {
+  LAYER_INPUTNAMETOINDEX,
+  LAYER_OUTPUTNAMETOINDEX,
+};
+
+static JSValue
+js_layer_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  JSLayerData* dl;
+  JSValue ret = JS_UNDEFINED;
+
+  if(!(dl = js_layer_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  switch(magic) {
+    case LAYER_INPUTNAMETOINDEX: {
+      cv::String name;
+      js_value_to(ctx, argv[0], name);
+
+      ret = JS_NewInt32(ctx, dl->get()->inputNameToIndex(name));
+      break;
+    }
+
+    case LAYER_OUTPUTNAMETOINDEX: {
+      cv::String name;
+      js_value_to(ctx, argv[0], name);
+
+      ret = JS_NewInt32(ctx, dl->get()->outputNameToIndex(name));
+      break;
+    }
+  }
+
+  return ret;
+}
+
+void
+js_layer_finalizer(JSRuntime* rt, JSValue val) {
+  JSLayerData* dl;
+  /* Note: 'dl' can be NULL in case JS_SetOpaque() was not called */
+
+  if((dl = js_layer_data(val))) {
+    dl->~JSLayerData();
+
+    js_deallocate(rt, dl);
+  }
+}
+
+JSClassDef js_layer_class = {
+    .class_name = "Layer",
+    .finalizer = js_layer_finalizer,
+};
+
+const JSCFunctionListEntry js_layer_proto_funcs[] = {
+    JS_CGETSET_MAGIC_DEF("blobs", js_layer_get, js_layer_set, LAYER_BLOBS),
+    JS_CGETSET_MAGIC_DEF("name", js_layer_get, js_layer_set, LAYER_NAME),
+    JS_CGETSET_MAGIC_DEF("preferableTarget", js_layer_get, js_layer_set, LAYER_PREFERABLETARGET),
+    JS_CGETSET_MAGIC_DEF("type", js_layer_get, js_layer_set, LAYER_TYPE),
+    JS_CFUNC_MAGIC_DEF("inputNameToIndex", 1, js_layer_method, LAYER_INPUTNAMETOINDEX),
+    JS_CFUNC_MAGIC_DEF("outputNameToIndex", 1, js_layer_method, LAYER_OUTPUTNAMETOINDEX),
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Layer", JS_PROP_CONFIGURABLE),
 };
 
 enum {
@@ -1217,8 +1456,21 @@ js_dnn_init(JSContext* ctx, JSModuleDef* m) {
   /* set proto.constructor and ctor.prototype */
   JS_SetConstructor(ctx, imageblob2params_class, imageblob2params_proto);
 
+  /* create the Layer class */
+  JS_NewClassID(&js_layer_class_id);
+  JS_NewClass(JS_GetRuntime(ctx), js_layer_class_id, &js_layer_class);
+
+  layer_proto = JS_NewObject(ctx);
+  JS_SetPropertyFunctionList(ctx, layer_proto, js_layer_proto_funcs, countof(js_layer_proto_funcs));
+  JS_SetClassProto(ctx, js_layer_class_id, layer_proto);
+
+  layer_class = JS_NewCFunction2(ctx, js_layer_constructor, "Layer", 0, JS_CFUNC_constructor, 0);
+  /* set proto.constructor and ctor.prototype */
+  JS_SetConstructor(ctx, layer_class, layer_proto);
+
   JS_SetPropertyStr(ctx, dnn_object, "Net", net_class);
   JS_SetPropertyStr(ctx, dnn_object, "Image2BlobParams", imageblob2params_class);
+  JS_SetPropertyStr(ctx, dnn_object, "Layer", layer_class);
 
   JS_SetPropertyFunctionList(ctx, dnn_object, js_dnn_dnn_funcs, countof(js_dnn_dnn_funcs));
 
