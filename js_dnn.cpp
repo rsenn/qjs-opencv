@@ -88,13 +88,55 @@ js_net_data2(JSContext* ctx, JSValueConst val) {
 }
 
 enum {
+  DNN_NET_EMPTY,
+};
+
+static JSValue
+js_net_get(JSContext* ctx, JSValueConst this_val, int magic) {
+  JSNetData* dn;
+  JSValue ret = JS_UNDEFINED;
+
+  if(!(dn = js_net_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  switch(magic) {
+    case DNN_NET_EMPTY: {
+      ret = js_value_from(ctx, dn->empty());
+      break;
+    }
+  }
+
+  return ret;
+}
+
+enum {
+  DNN_NET_CONNECT,
+  DNN_NET_DUMP,
+  DNN_NET_DUMPTOFILE,
+  DNN_NET_DUMPTOPBTXT,
+  DNN_NET_ENABLEFUSION,
+  DNN_NET_ENABLEWINOGRAD,
   DNN_NET_FORWARD,
   DNN_NET_FORWARDALL,
+  DNN_NET_GETUNCONNECTEDOUTLAYERS,
   DNN_NET_GETUNCONNECTEDOUTLAYERSNAMES,
   DNN_NET_SETINPUT,
+  DNN_NET_SETINPUTSNAMES,
+  DNN_NET_SETPARAM,
   DNN_NET_SETPREFERABLEBACKEND,
   DNN_NET_SETPREFERABLETARGET,
+  DNN_NET_GETINPUTDETAILS,
   DNN_NET_GETLAYER,
+  DNN_NET_GETLAYERNAMES,
+  DNN_NET_GETLAYERSCOUNT,
+  DNN_NET_GETLAYERID,
+  DNN_NET_GETLAYERTYPES,
+  DNN_NET_GETOUTPUTDETAILS,
+  DNN_NET_GETPARAM,
+  DNN_NET_GETPERFPROFILE,
+  DNN_NET_QUANTIZE,
+  DNN_NET_REGISTEROUTPUT,
+  DNN_NET_SETHALIDESCHEDULER,
 };
 
 static JSValue
@@ -107,6 +149,64 @@ js_net_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
 
   try {
     switch(magic) {
+      case DNN_NET_CONNECT: {
+        if(argc >= 4) {
+          int32_t outLayerId, inpLayerId;
+          uint32_t outNum, inpNum;
+
+          js_value_to(ctx, argv[0], outLayerId);
+
+          js_value_to(ctx, argv[1], outNum);
+
+          js_value_to(ctx, argv[2], inpLayerId);
+          js_value_to(ctx, argv[3], inpNum);
+
+          dn->connect(outLayerId, outNum, inpLayerId, inpNum);
+        } else {
+          cv::String outPin, inpPin;
+
+          js_value_to(ctx, argv[0], outPin);
+          js_value_to(ctx, argv[1], inpPin);
+
+          dn->connect(outPin, inpPin);
+        }
+
+        break;
+      }
+
+      case DNN_NET_DUMP: {
+        ret = js_value_from(ctx, dn->dump());
+        break;
+      }
+
+      case DNN_NET_DUMPTOFILE: {
+        cv::String path;
+        js_value_to(ctx, argv[0], path);
+        dn->dumpToFile(path);
+        break;
+      }
+
+      case DNN_NET_DUMPTOPBTXT: {
+        cv::String path;
+        js_value_to(ctx, argv[0], path);
+        dn->dumpToPbtxt(path);
+        break;
+      }
+
+      case DNN_NET_ENABLEFUSION: {
+        BOOL fusion = FALSE;
+        js_value_to(ctx, argv[0], fusion);
+        dn->enableFusion(fusion);
+        break;
+      }
+
+      case DNN_NET_ENABLEWINOGRAD: {
+        BOOL winograd = FALSE;
+        js_value_to(ctx, argv[0], winograd);
+        dn->enableWinograd(winograd);
+        break;
+      }
+
       case DNN_NET_FORWARD: {
         if(argc == 0 || JS_IsString(argv[0])) {
           cv::String name;
@@ -155,6 +255,11 @@ js_net_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
         break;
       }
 
+      case DNN_NET_GETUNCONNECTEDOUTLAYERS: {
+        ret = js_value_from(ctx, dn->getUnconnectedOutLayers());
+        break;
+      }
+
       case DNN_NET_GETUNCONNECTEDOUTLAYERSNAMES: {
         std::vector<std::string> names = dn->getUnconnectedOutLayersNames();
 
@@ -181,6 +286,35 @@ js_net_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
         break;
       }
 
+      case DNN_NET_SETINPUTSNAMES: {
+        std::vector<cv::String> names;
+        js_value_to(ctx, argv[0], names);
+
+        dn->setInputsNames(names);
+        break;
+      }
+
+      case DNN_NET_SETPARAM: {
+        int32_t numParam;
+
+        js_value_to(ctx, argv[1], numParam);
+        cv::Mat* blob = js_mat_data2(ctx, argv[2]);
+
+        if(JS_IsString(argv[0])) {
+          cv::String name;
+          js_value_to(ctx, argv[0], name);
+
+          dn->setParam(name, numParam, *blob);
+        } else {
+          int32_t id;
+          js_value_to(ctx, argv[0], id);
+
+          dn->setParam(id, numParam, *blob);
+        }
+
+        break;
+      }
+
       case DNN_NET_SETPREFERABLEBACKEND: {
         int32_t backendId = -1;
         js_value_to(ctx, argv[0], backendId);
@@ -195,6 +329,20 @@ js_net_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
 
         dn->setPreferableTarget(targetId);
 
+        break;
+      }
+
+      case DNN_NET_GETINPUTDETAILS: {
+        std::vector<float> scales;
+        std::vector<int> zeropoints;
+
+        dn->getInputDetails(scales, zeropoints);
+
+        js_array_clear(ctx, argv[0]);
+        js_array_copy(ctx, argv[0], scales);
+
+        js_array_clear(ctx, argv[1]);
+        js_array_copy(ctx, argv[1], zeropoints);
         break;
       }
 
@@ -214,6 +362,118 @@ js_net_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
         }
 
         ret = js_layer_wrap(ctx, dl);
+        break;
+      }
+
+      case DNN_NET_GETLAYERID: {
+        cv::String name;
+        js_value_to(ctx, argv[0], name);
+
+        ret = js_value_from(ctx, dn->getLayerId(name));
+        break;
+      }
+
+      case DNN_NET_GETLAYERNAMES: {
+        ret = js_value_from(ctx, dn->getLayerNames());
+        break;
+      }
+
+      case DNN_NET_GETLAYERSCOUNT: {
+        cv::String name;
+        js_value_to(ctx, argv[0], name);
+
+        ret = js_value_from(ctx, dn->getLayersCount(name));
+        break;
+      }
+
+      case DNN_NET_GETLAYERTYPES: {
+        std::vector<cv::String> types;
+
+        dn->getLayerTypes(types);
+
+        js_array_clear(ctx, argv[0]);
+        js_array_copy(ctx, argv[0], types);
+        break;
+      }
+
+      case DNN_NET_GETOUTPUTDETAILS: {
+        std::vector<float> scales;
+        std::vector<int> zeropoints;
+
+        dn->getOutputDetails(scales, zeropoints);
+
+        js_array_clear(ctx, argv[0]);
+        js_array_copy(ctx, argv[0], scales);
+
+        js_array_clear(ctx, argv[1]);
+        js_array_copy(ctx, argv[1], zeropoints);
+        break;
+      }
+
+      case DNN_NET_GETPARAM: {
+        int32_t numParam = 0;
+
+        if(argc > 1)
+          js_value_to(ctx, argv[1], numParam);
+
+        if(JS_IsString(argv[0])) {
+          cv::String name;
+          js_value_to(ctx, argv[0], name);
+
+          ret = js_value_from(ctx, dn->getParam(name, numParam));
+        } else {
+          int32_t id;
+          js_value_to(ctx, argv[0], id);
+
+          ret = js_value_from(ctx, dn->getParam(id, numParam));
+        }
+
+        break;
+      }
+
+      case DNN_NET_GETPERFPROFILE: {
+        std::vector<double> timings;
+
+        ret = js_value_from(ctx, dn->getPerfProfile(timings));
+
+        js_array_clear(ctx, argv[0]);
+        js_array_copy(ctx, argv[0], timings);
+        break;
+      }
+
+      case DNN_NET_QUANTIZE: {
+        JSInputArray calibData = js_input_array(ctx, argv[0]);
+        int32_t inputsDtype, outputsDtype;
+        BOOL perChannel = TRUE;
+
+        js_value_to(ctx, argv[1], inputsDtype);
+        js_value_to(ctx, argv[2], outputsDtype);
+
+        if(argc > 3)
+          js_value_to(ctx, argv[3], perChannel);
+
+        ret = js_net_new(ctx, dn->quantize(calibData, inputsDtype, outputsDtype, perChannel));
+        break;
+      }
+
+      case DNN_NET_REGISTEROUTPUT: {
+        cv::String outputName;
+        int32_t layerId, outputPort;
+
+        js_value_to(ctx, argv[0], outputName);
+        js_value_to(ctx, argv[1], layerId);
+        js_value_to(ctx, argv[2], outputPort);
+
+        ret = js_value_from(ctx, dn->registerOutput(outputName, layerId, outputPort));
+        break;
+      }
+
+      case DNN_NET_SETHALIDESCHEDULER: {
+        cv::String scheduler;
+
+        js_value_to(ctx, argv[0], scheduler);
+
+        dn->setHalideScheduler(scheduler);
         break;
       }
     }
@@ -240,13 +500,34 @@ JSClassDef js_net_class = {
 };
 
 const JSCFunctionListEntry js_net_proto_funcs[] = {
+    JS_CGETSET_MAGIC_DEF("empty", js_net_get, 0, DNN_NET_EMPTY),
+    JS_CFUNC_MAGIC_DEF("connect", 2, js_net_method, DNN_NET_CONNECT),
+    JS_CFUNC_MAGIC_DEF("dump", 0, js_net_method, DNN_NET_DUMP),
+    JS_CFUNC_MAGIC_DEF("dumpToFile", 1, js_net_method, DNN_NET_DUMPTOFILE),
+    JS_CFUNC_MAGIC_DEF("dumpToPbtxt", 1, js_net_method, DNN_NET_DUMPTOPBTXT),
+    JS_CFUNC_MAGIC_DEF("enableFusion", 1, js_net_method, DNN_NET_ENABLEFUSION),
+    JS_CFUNC_MAGIC_DEF("enableWinograd", 1, js_net_method, DNN_NET_ENABLEWINOGRAD),
     JS_CFUNC_MAGIC_DEF("forward", 0, js_net_method, DNN_NET_FORWARD),
     JS_CFUNC_MAGIC_DEF("forwardAll", 1, js_net_method, DNN_NET_FORWARDALL),
+    JS_CFUNC_MAGIC_DEF("getUnconnectedOutLayers", 0, js_net_method, DNN_NET_GETUNCONNECTEDOUTLAYERS),
     JS_CFUNC_MAGIC_DEF("getUnconnectedOutLayersNames", 0, js_net_method, DNN_NET_GETUNCONNECTEDOUTLAYERSNAMES),
+    JS_CFUNC_MAGIC_DEF("getInputDetails", 2, js_net_method, DNN_NET_GETINPUTDETAILS),
+    JS_CFUNC_MAGIC_DEF("getLayer", 1, js_net_method, DNN_NET_GETLAYER),
+    JS_CFUNC_MAGIC_DEF("getLayerId", 1, js_net_method, DNN_NET_GETLAYERID),
+    JS_CFUNC_MAGIC_DEF("getLayerNames", 0, js_net_method, DNN_NET_GETLAYERNAMES),
+    JS_CFUNC_MAGIC_DEF("getLayersCount", 1, js_net_method, DNN_NET_GETLAYERSCOUNT),
+    JS_CFUNC_MAGIC_DEF("getLayerTypes", 1, js_net_method, DNN_NET_GETLAYERTYPES),
+    JS_CFUNC_MAGIC_DEF("getOutputDetails", 2, js_net_method, DNN_NET_GETOUTPUTDETAILS),
+    JS_CFUNC_MAGIC_DEF("getParam", 2, js_net_method, DNN_NET_GETPARAM),
+    JS_CFUNC_MAGIC_DEF("getPerfProfile", 1, js_net_method, DNN_NET_GETPERFPROFILE),
+    JS_CFUNC_MAGIC_DEF("quantize", 3, js_net_method, DNN_NET_QUANTIZE),
+    JS_CFUNC_MAGIC_DEF("registerOuput", 3, js_net_method, DNN_NET_REGISTEROUTPUT),
+    JS_CFUNC_MAGIC_DEF("setHalideScheduler", 1, js_net_method, DNN_NET_SETHALIDESCHEDULER),
     JS_CFUNC_MAGIC_DEF("setInput", 0, js_net_method, DNN_NET_SETINPUT),
+    JS_CFUNC_MAGIC_DEF("setInputsNames", 1, js_net_method, DNN_NET_SETINPUTSNAMES),
+    JS_CFUNC_MAGIC_DEF("setParam", 3, js_net_method, DNN_NET_SETPARAM),
     JS_CFUNC_MAGIC_DEF("setPreferableBackend", 0, js_net_method, DNN_NET_SETPREFERABLEBACKEND),
     JS_CFUNC_MAGIC_DEF("setPreferableTarget", 0, js_net_method, DNN_NET_SETPREFERABLETARGET),
-    JS_CFUNC_MAGIC_DEF("getLayer", 1, js_net_method, DNN_NET_GETLAYER),
 
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Net", JS_PROP_CONFIGURABLE),
 };
