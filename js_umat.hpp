@@ -96,10 +96,13 @@ js_input_array(JSContext* ctx, JSValueConst value) {
       case TYPEDARRAY_INT16: return typed_input_array<int16_t>(props);
       case TYPEDARRAY_UINT32: JS_ThrowTypeError(ctx, "No cv::InputArray for uint32_t"); break;
       case TYPEDARRAY_INT32: return typed_input_array<int32_t>(props);
+      case TYPEDARRAY_FLOAT32 | TYPEDARRAY_SIGNED:
       case TYPEDARRAY_FLOAT32: return typed_input_array<float>(props);
+      case TYPEDARRAY_FLOAT64 | TYPEDARRAY_SIGNED:
       case TYPEDARRAY_FLOAT64: return typed_input_array<double>(props);
       case TYPEDARRAY_BIGUINT64: JS_ThrowTypeError(ctx, "No cv::InputArray for uint64_t"); break;
       case TYPEDARRAY_BIGINT64: JS_ThrowTypeError(ctx, "No cv::InputArray for int64_t"); break;
+      default: JS_ThrowTypeError(ctx, "No cv::InputArray for %s", JS_ToCString(ctx,  value)); break;
     }
   } else if(js_is_array(ctx, value)) {
     std::vector<double> arr;
