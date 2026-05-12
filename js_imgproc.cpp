@@ -2372,6 +2372,16 @@ js_function_list_t js_imgproc_static_funcs{
     JS_CV_CONSTANT(CC_STAT_HEIGHT),
     JS_CV_CONSTANT(CC_STAT_AREA),
     JS_CV_CONSTANT(CC_STAT_MAX),
+
+    /* connectedComponentsWithStats() */
+    JS_CV_CONSTANT(CCL_DEFAULT),
+    JS_CV_CONSTANT(CCL_WU),
+    JS_CV_CONSTANT(CCL_GRANA),
+    JS_CV_CONSTANT(CCL_BOLELLI),
+    JS_CV_CONSTANT(CCL_SAUF),
+    JS_CV_CONSTANT(CCL_BBDT),
+    JS_CV_CONSTANT(CCL_SPAGHETTI),
+
 };
 
 extern "C" int

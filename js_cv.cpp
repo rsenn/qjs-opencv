@@ -1023,7 +1023,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       }
 
       case OTHER_IN_RANGE: {
-        JSInputArray lowerb = cv::noArray(), upperb = cv::noArray();
+        JSInputArray lowerb = cv::Scalar(0, 0, 0, 0), upperb = cv::Scalar(0, 0, 0, 0);
         JSOutputArray dst = cv::noArray();
 
         if(argc >= 2)
