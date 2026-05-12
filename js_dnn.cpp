@@ -25,25 +25,25 @@ js_net_wrap(JSContext* ctx, JSValueConst proto, JSNetData* ib2p) {
 
 JSValue
 js_net_new(JSContext* ctx, JSValueConst proto) {
-  JSNetData* ib2p = js_allocate<JSNetData>(ctx);
+  JSNetData* dn = js_allocate<JSNetData>(ctx);
 
-  new(ib2p) JSNetData();
+  new(dn) JSNetData();
 
-  return js_net_wrap(ctx, proto, ib2p);
+  return js_net_wrap(ctx, proto, dn);
 }
 
 JSValue
 js_net_new(JSContext* ctx, JSValueConst proto, const JSNetData& other) {
-  JSNetData* ib2p = js_allocate<JSNetData>(ctx);
+  JSNetData* dn = js_allocate<JSNetData>(ctx);
 
-  new(ib2p) JSNetData(other);
+  new(dn) JSNetData(other);
 
-  return js_net_wrap(ctx, proto, ib2p);
+  return js_net_wrap(ctx, proto, dn);
 }
 
 JSValue
-js_net_new(JSContext* ctx, const JSNetData& ib2p) {
-  return js_net_new(ctx, net_proto, ib2p);
+js_net_new(JSContext* ctx, const JSNetData& dn) {
+  return js_net_new(ctx, net_proto, dn);
 }
 
 static JSValue
@@ -155,9 +155,7 @@ js_net_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
           uint32_t outNum, inpNum;
 
           js_value_to(ctx, argv[0], outLayerId);
-
           js_value_to(ctx, argv[1], outNum);
-
           js_value_to(ctx, argv[2], inpLayerId);
           js_value_to(ctx, argv[3], inpNum);
 
@@ -328,7 +326,6 @@ js_net_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
         js_value_to(ctx, argv[0], targetId);
 
         dn->setPreferableTarget(targetId);
-
         break;
       }
 
@@ -528,7 +525,6 @@ const JSCFunctionListEntry js_net_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("setParam", 3, js_net_method, DNN_NET_SETPARAM),
     JS_CFUNC_MAGIC_DEF("setPreferableBackend", 0, js_net_method, DNN_NET_SETPREFERABLEBACKEND),
     JS_CFUNC_MAGIC_DEF("setPreferableTarget", 0, js_net_method, DNN_NET_SETPREFERABLETARGET),
-
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Net", JS_PROP_CONFIGURABLE),
 };
 
@@ -675,21 +671,17 @@ js_imageblob2params_get(JSContext* ctx, JSValueConst this_val, int magic) {
     }
 
     case IMAGEBLOB2PARAMS_SCALEFACTOR: {
-
       ret = js_value_from(ctx, ib2p->scalefactor);
-
       break;
     }
 
     case IMAGEBLOB2PARAMS_SIZE: {
       ret = js_value_from(ctx, ib2p->size);
-
       break;
     }
 
     case IMAGEBLOB2PARAMS_SWAPRB: {
       ret = js_value_from(ctx, ib2p->swapRB);
-
       break;
     }
   }
@@ -832,7 +824,9 @@ static JSValue
 js_layer_wrap(JSContext* ctx, JSValueConst proto, JSLayerData const& layer) {
   JSLayerData* dl = js_allocate<JSLayerData>(ctx);
   JSValue ret = JS_NewObjectProtoClass(ctx, proto, js_layer_class_id);
+
   *dl = layer;
+
   JS_SetOpaque(ret, dl);
   return ret;
 }
@@ -850,32 +844,8 @@ js_layer_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueC
   if(!(dl = js_allocate<JSLayerData>(ctx)))
     return JS_EXCEPTION;
 
-  /*if(argc > 0) {
-    cv::Scalar scalefactor, mean;
-    cv::Size size;
-    bool swapRB = false;
-    int32_t ddepth = CV_32F, datalayout = cv::dnn::DNN_LAYOUT_NCHW, mode = cv::dnn::DNN_PMODE_NULL;
-    cv::Scalar borderValue{0.0};
-
-    js_scalar_read(ctx, argv[0], scalefactor);
-    if(argc > 1)
-      js_value_to(ctx, argv[1], size);
-    if(argc > 2)
-      js_scalar_read(ctx, argv[2], mean);
-    if(argc > 3)
-      js_value_to(ctx, argv[3], swapRB);
-    if(argc > 4)
-      js_value_to(ctx, argv[4], ddepth);
-    if(argc > 5)
-      js_value_to(ctx, argv[5], datalayout);
-    if(argc > 6)
-      js_value_to(ctx, argv[6], mode);
-    if(argc > 7)
-      js_scalar_read(ctx, argv[7], borderValue);
-
-    new(dl) JSLayerData(scalefactor, size, mean, swapRB, ddepth, cv::dnn::DataLayout(datalayout), cv::dnn::ImagePaddingMode(mode), borderValue);
-  } else*/
-  { new(dl) JSLayerData(); }
+  /* XXX: TODO: LayerParams */
+  new(dl) JSLayerData();
 
   /* using new_target to get the prototype is necessary when the class is extended. */
   proto = JS_GetPropertyStr(ctx, new_target, "prototype");
@@ -1017,8 +987,8 @@ js_layer_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
 void
 js_layer_finalizer(JSRuntime* rt, JSValue val) {
   JSLayerData* dl;
-  /* Note: 'dl' can be NULL in case JS_SetOpaque() was not called */
 
+  /* Note: 'dl' can be NULL in case JS_SetOpaque() was not called */
   if((dl = js_layer_data(val))) {
     dl->~JSLayerData();
 
