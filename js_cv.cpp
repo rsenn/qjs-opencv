@@ -110,14 +110,16 @@ js_cv_imread(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
   if(argc > 1)
     JS_ToInt32(ctx, &flags, argv[1]);
 
-  if(!strcasecmp(".png", (filename + len - 4)))
-    mat = png_read(filename);
-  else
-    mat = cv::imread(filename, flags);
+  try {
+    if(!strcasecmp(".png", (filename + len - 4)))
+      mat = png_read(filename);
+    else
+      mat = cv::imread(filename, flags);
 
-  JS_FreeCString(ctx, filename);
+    JS_FreeCString(ctx, filename);
 
-  return js_mat_wrap(ctx, mat);
+    return js_mat_wrap(ctx, mat);
+  } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 }
 
 static JSValue
