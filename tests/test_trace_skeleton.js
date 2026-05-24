@@ -1,4 +1,4 @@
-import * as std from 'std';
+import * as fs from 'fs';
 import { Mat, Point, Size, Rect, CV_8UC1, CV_8UC3, COLOR_BGR2GRAY, COLOR_GRAY2BGR, LINE_AA, LINE_8, FILLED, cvtColor, imread, imwrite, imshow, waitKey, skeletonization, pixelNeighborhood, pixelFindValue, traceSkeleton, drawLine, drawCircle, } from 'opencv';
 
 function hsv2bgr(h, s, v) {
@@ -123,15 +123,8 @@ function main(filename = 'tests/test_linesegmentdetector.jpg') {
     junctions: junctions.map(p => [p.x, p.y]),
   };
 
-  const fp = std.open(jsonOut, 'w');
-  if(!fp) {
-    console.log('failed to open', jsonOut, 'for writing');
-  } else {
-    fp.puts(JSON.stringify(data));
-    fp.puts('\n');
-    fp.close();
-    console.log('wrote', jsonOut);
-  }
+  fs.writeFileSync(jsonOut, JSON.stringify(data, null, 2) + '\n');
+  console.log('wrote', jsonOut);
 
   imshow('input | skeleton | traced', canvas);
   console.log('press any key to exit (q/Esc to quit)');
