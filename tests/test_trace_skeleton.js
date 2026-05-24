@@ -1,40 +1,19 @@
 import * as std from 'std';
-import {
-  Mat,
-  Point,
-  Size,
-  Rect,
-  CV_8UC1,
-  CV_8UC3,
-  COLOR_BGR2GRAY,
-  COLOR_GRAY2BGR,
-  LINE_AA,
-  LINE_8,
-  FILLED,
-  cvtColor,
-  imread,
-  imwrite,
-  imshow,
-  waitKey,
-  skeletonization,
-  pixelNeighborhood,
-  pixelFindValue,
-  traceSkeleton,
-  drawLine,
-  drawCircle,
-} from 'opencv';
+import { Mat, Point, Size, Rect, CV_8UC1, CV_8UC3, COLOR_BGR2GRAY, COLOR_GRAY2BGR, LINE_AA, LINE_8, FILLED, cvtColor, imread, imwrite, imshow, waitKey, skeletonization, pixelNeighborhood, pixelFindValue, traceSkeleton, drawLine, drawCircle, } from 'opencv';
 
 function hsv2bgr(h, s, v) {
   const c = v * s;
   const hp = (h % 360) / 60;
   const x = c * (1 - Math.abs((hp % 2) - 1));
-  let r = 0, g = 0, b = 0;
-  if(hp < 1)      [r, g, b] = [c, x, 0];
+  let r = 0,
+    g = 0,
+    b = 0;
+  if(hp < 1) [r, g, b] = [c, x, 0];
   else if(hp < 2) [r, g, b] = [x, c, 0];
   else if(hp < 3) [r, g, b] = [0, c, x];
   else if(hp < 4) [r, g, b] = [0, x, c];
   else if(hp < 5) [r, g, b] = [x, 0, c];
-  else            [r, g, b] = [c, 0, x];
+  else [r, g, b] = [c, 0, x];
   const m = v - c;
   return [Math.round((b + m) * 255), Math.round((g + m) * 255), Math.round((r + m) * 255), 255];
 }
@@ -60,11 +39,7 @@ function main(filename = 'tests/test_linesegmentdetector.jpg') {
 
   // Convenience seeds: endpoints (degree=1) and junctions (degree>=3).
   const endpoints = pixelFindValue(neighborhood, 1);
-  const junctions = [
-    ...pixelFindValue(neighborhood, 3),
-    ...pixelFindValue(neighborhood, 4),
-    ...pixelFindValue(neighborhood, 5),
-  ];
+  const junctions = [...pixelFindValue(neighborhood, 3), ...pixelFindValue(neighborhood, 4), ...pixelFindValue(neighborhood, 5)];
   console.log('endpoints:', endpoints.length, 'junctions:', junctions.length);
 
   // Stage 3: trace polylines. The 4-arg form also fills the internal
@@ -120,10 +95,8 @@ function main(filename = 'tests/test_linesegmentdetector.jpg') {
   }
 
   // Overlay endpoints (green) and junctions (red).
-  for(const p of endpoints)
-    drawCircle(traced, new Point(p.x, p.y), 2, [0, 255, 0, 255], 1, LINE_AA);
-  for(const p of junctions)
-    drawCircle(traced, new Point(p.x, p.y), 2, [0, 0, 255, 255], 1, LINE_AA);
+  for(const p of endpoints) drawCircle(traced, new Point(p.x, p.y), 2, [0, 255, 0, 255], 1, LINE_AA);
+  for(const p of junctions) drawCircle(traced, new Point(p.x, p.y), 2, [0, 0, 255, 255], 1, LINE_AA);
 
   traced.copyTo(canvas(new Rect(width * 2, 0, width, height)));
 
