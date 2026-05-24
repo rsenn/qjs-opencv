@@ -133,7 +133,7 @@ skeletonize_guohall(InputArray src) {
 /* 8-neighbour offsets. The layout is required to satisfy
  *   N8[i] + N8[(i + 4) & 7] == (0, 0)
  * so opposite directions differ by 4. */
-static constexpr std::array<cv::Point, 8> N8 = {
+static const std::array<cv::Point, 8> N8 {
     cv::Point(-1, -1),
     cv::Point(0, -1),
     cv::Point(1, -1),
