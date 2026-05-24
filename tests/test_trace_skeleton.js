@@ -1,3 +1,4 @@
+import * as std from 'std';
 import {
   Mat,
   Point,
@@ -12,6 +13,7 @@ import {
   FILLED,
   cvtColor,
   imread,
+  imwrite,
   imshow,
   waitKey,
   skeletonization,
@@ -124,6 +126,39 @@ function main(filename = 'tests/test_linesegmentdetector.jpg') {
     drawCircle(traced, new Point(p.x, p.y), 2, [0, 0, 255, 255], 1, LINE_AA);
 
   traced.copyTo(canvas(new Rect(width * 2, 0, width, height)));
+
+  // --- Output files ---
+  // Derive output names from the input basename, written into the cwd.
+  const base = filename.replace(/^.*\//, '').replace(/\.[^.]*$/, '');
+  const pngOut = base + '.skeleton.png';
+  const jsonOut = base + '.skeleton.json';
+
+  imwrite(pngOut, canvas);
+  console.log('wrote', pngOut);
+
+  const data = {
+    input: filename,
+    size: { width, height },
+    counts: {
+      contours: contours.length,
+      points: totalPoints,
+      endpoints: endpoints.length,
+      junctions: junctions.length,
+    },
+    contours: contours.map(c => c.map(p => [Math.round(p.x), Math.round(p.y)])),
+    endpoints: endpoints.map(p => [p.x, p.y]),
+    junctions: junctions.map(p => [p.x, p.y]),
+  };
+
+  const fp = std.open(jsonOut, 'w');
+  if(!fp) {
+    console.log('failed to open', jsonOut, 'for writing');
+  } else {
+    fp.puts(JSON.stringify(data));
+    fp.puts('\n');
+    fp.close();
+    console.log('wrote', jsonOut);
+  }
 
   imshow('input | skeleton | traced', canvas);
   console.log('press any key to exit (q/Esc to quit)');
