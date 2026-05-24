@@ -5,6 +5,7 @@
 #include "algorithms/dominant_colors_grabber.hpp"
 #include "algorithms/palette.hpp"
 #include "algorithms/pixel_neighborhood.hpp"
+#include "algorithms/skeleton_lines.hpp"
 #include "algorithms/skeletonization.hpp"
 #include "algorithms/trace_skeleton.hpp"
 #include <quickjs.h>
@@ -220,6 +221,122 @@ js_cv_palette_match(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   return JS_UNDEFINED;
 }
 
+/* -- skeleton_lines.hpp bindings -------------------------------------- */
+
+static JSValue
+js_cv_guohall_iteration(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+  JSMatData* mat;
+  int32_t iter = 0;
+
+  if(!(mat = js_mat_data2(ctx, argv[0])))
+    return JS_EXCEPTION;
+
+  if(argc >= 2)
+    JS_ToInt32(ctx, &iter, argv[1]);
+
+  skeleton_lines::guohall_iteration(*mat, iter);
+
+  return JS_UNDEFINED;
+}
+
+static JSValue
+js_cv_guohall_thinning(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+  JSMatData* mat;
+
+  if(!(mat = js_mat_data2(ctx, argv[0])))
+    return JS_EXCEPTION;
+
+  skeleton_lines::guohall_thinning(*mat);
+
+  return JS_UNDEFINED;
+}
+
+static JSValue
+js_cv_skeletonize_guohall(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+  JSInputOutputArray src, dst;
+  cv::Mat output;
+
+  src = js_umat_or_mat(ctx, argv[0]);
+  dst = js_umat_or_mat(ctx, argv[1]);
+
+  if(js_is_noarray(src) || js_is_noarray(dst))
+    return JS_ThrowInternalError(ctx, "src or dst not an array!");
+
+  output = skeleton_lines::skeletonize_guohall(src);
+  output.copyTo(dst);
+
+  return JS_UNDEFINED;
+}
+
+static JSValue
+js_cv_degree_map(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+  JSMatData* src;
+  JSOutputArray dst;
+
+  src = js_mat_data2(ctx, argv[0]);
+  dst = js_umat_or_mat(ctx, argv[1]);
+
+  if(src == nullptr || js_is_noarray(dst))
+    return JS_ThrowInternalError(ctx, "src or dst not an array!");
+
+  cv::Mat output = skeleton_lines::degree_map(*src);
+  dst.getMatRef() = output;
+
+  return JS_UNDEFINED;
+}
+
+static JSValue
+js_cv_trace_lines(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+  JSMatData* mat;
+
+  if(!(mat = js_mat_data2(ctx, argv[0])))
+    return JS_EXCEPTION;
+
+  std::vector<std::vector<cv::Point>> lines = skeleton_lines::trace_lines(*mat);
+
+  if(argc >= 2) {
+    if(!js_is_array(ctx, argv[1]))
+      return JS_ThrowTypeError(ctx, "argument 2 must be array");
+
+    js_contours_copy(ctx, argv[1], lines);
+
+    return JS_NewUint32(ctx, lines.size());
+  }
+
+  return js_contours_new(ctx, lines);
+}
+
+static JSValue
+js_cv_skeletonize_and_trace(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+  JSInputOutputArray src;
+  cv::Mat *skeleton_out = nullptr;
+  cv::Mat skel;
+
+  src = js_umat_or_mat(ctx, argv[0]);
+
+  if(js_is_noarray(src))
+    return JS_ThrowInternalError(ctx, "src not an array!");
+
+  if(argc > 2)
+    skeleton_out = js_mat_data(argv[2]);
+
+  std::vector<std::vector<cv::Point>> lines = skeleton_lines::skeletonize_and_trace(src, &skel);
+
+  if(skeleton_out)
+    skel.copyTo(*skeleton_out);
+
+  if(argc >= 2 && !JS_IsUndefined(argv[1])) {
+    if(!js_is_array(ctx, argv[1]))
+      return JS_ThrowTypeError(ctx, "argument 2 must be array");
+
+    js_contours_copy(ctx, argv[1], lines);
+
+    return JS_NewUint32(ctx, lines.size());
+  }
+
+  return js_contours_new(ctx, lines);
+}
+
 js_function_list_t js_algorithms_static_funcs{
     JS_CFUNC_DEF("skeletonization", 1, js_cv_skeletonization),
     JS_CFUNC_MAGIC_DEF("pixelNeighborhood", 2, js_cv_pixel_neighborhood, 0),
@@ -229,6 +346,12 @@ js_function_list_t js_algorithms_static_funcs{
     JS_CFUNC_DEF("paletteGenerate", 1, js_cv_palette_generate),
     JS_CFUNC_DEF("paletteApply", 2, js_cv_palette_apply),
     JS_CFUNC_DEF("paletteMatch", 3, js_cv_palette_match),
+    JS_CFUNC_DEF("guohallIteration", 2, js_cv_guohall_iteration),
+    JS_CFUNC_DEF("guohallThinning", 1, js_cv_guohall_thinning),
+    JS_CFUNC_DEF("skeletonizeGuohall", 2, js_cv_skeletonize_guohall),
+    JS_CFUNC_DEF("degreeMap", 2, js_cv_degree_map),
+    JS_CFUNC_DEF("traceLines", 1, js_cv_trace_lines),
+    JS_CFUNC_DEF("skeletonizeAndTrace", 1, js_cv_skeletonize_and_trace),
 };
 
 extern "C" int

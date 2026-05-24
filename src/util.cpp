@@ -66,10 +66,7 @@ operator<<(std::ostream& s, const JSCFunctionListEntry& entry) {
     case JS_DEF_PROP_INT32: s << "value = " << std::setw(9) << entry.u.i32 << ", "; break;
     case JS_DEF_PROP_INT64: s << "value = " << std::setw(9) << entry.u.i64 << ", "; break;
     case JS_DEF_PROP_DOUBLE: s << "value = " << std::setw(9) << entry.u.f64 << ", "; break;
-    case JS_DEF_PROP_UNDEFINED:
-      s << "value = " << std::setw(9) << "undefined"
-        << ", ";
-      break;
+    case JS_DEF_PROP_UNDEFINED: s << "value = " << std::setw(9) << "undefined" << ", "; break;
     case JS_DEF_PROP_STRING: s << "value = " << std::setw(9) << entry.u.str << ", "; break;
   }
   s << "flags = " << js_prop_flags(entry.prop_flags) << std::endl;

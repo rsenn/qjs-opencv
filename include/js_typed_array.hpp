@@ -19,7 +19,9 @@
 #include <type_traits>
 #include <vector>
 
-template<class T> struct number_type { static constexpr bool typed_array = false; };
+template<class T> struct number_type {
+  static constexpr bool typed_array = false;
+};
 
 template<> struct number_type<int8_t> {
   typedef int8_t value_type;
