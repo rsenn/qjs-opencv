@@ -6,16 +6,25 @@ Two thematic groups:
 
 | Group | Functions | Pipeline |
 |---|---|---|
-| Skeleton / line extraction | `skeletonization`, `pixelNeighborhood`, `pixelNeighborhoodCross`, `pixelFindValue`, `traceSkeleton` | binary mask → 1-px skeleton → degree map → ordered polylines |
+| Skeleton / line extraction (Zhang-Suen + greedy tracer) | `skeletonization`, `pixelNeighborhood`, `pixelNeighborhoodCross`, `pixelFindValue`, `traceSkeleton` | binary mask → 1-px skeleton → degree map → ordered polylines |
+| Skeleton / line extraction (Guo-Hall + topology tracer) | `guohallIteration`, `guohallThinning`, `skeletonizeGuohall`, `degreeMap`, `traceLines`, `skeletonizeAndTrace` | binary mask → Guo-Hall skeleton → degree map → polylines split at every junction |
 | Palette reduction | `paletteGenerate`, `paletteApply`, `paletteMatch` | image → dominant colors → indexed image → recolored image |
 
 All functions are static methods on the `cv` namespace:
 
 ```js
 import { skeletonization, pixelNeighborhood, traceSkeleton,
+         skeletonizeGuohall, traceLines, skeletonizeAndTrace,
          paletteGenerate, paletteApply, paletteMatch,
          Mat, CV_8UC1 } from 'opencv';
 ```
+
+The two skeleton/line groups produce subtly different results:
+
+- The **Zhang-Suen + greedy tracer** path (`skeletonization` → `traceSkeleton`) walks past junctions following a direction-biased heuristic, so a `+` or `Y` junction is emitted as one or two long polylines that cross the junction. It also collapses collinear runs (`simplify=true` is hard-coded), so output points are *not* every skeleton pixel.
+- The **Guo-Hall + topology tracer** path (`skeletonizeGuohall` → `traceLines`) cuts at every junction. The output is the edge set of the skeleton's topological graph: a junction with degree *k* shows up as the shared endpoint of exactly *k* polylines. Every skeleton pixel is kept.
+
+Use the first pipeline when you want long, smooth-looking curves; use the second when you need a faithful graph representation (e.g. for routing, simplification, SVG paths with explicit branches).
 
 ---
 
@@ -170,6 +179,206 @@ console.log(`${contours.length} polylines, ${contours.reduce((n, c) => n + c.len
 
 ---
 
+## `skeletonizeGuohall(src, dst)`
+
+Guo-Hall thinning. Same shape of API as `skeletonization` — different thinning predicate, intended to leave fewer staircase artefacts on diagonal strokes.
+
+- **`src`** — `cv.Mat` or `cv.UMat`. Any number of channels; multi-channel input is converted to grayscale internally.
+- **`dst`** — `cv.Mat` or `cv.UMat`. Receives a `CV_8UC1` image with foreground pixels at 255 and background at 0.
+- **Returns** — `undefined`.
+
+### Behavior
+
+Identical surface to `skeletonization`:
+
+1. Convert to grayscale if needed.
+2. Otsu threshold to 0/255.
+3. Guo-Hall thinning (two sub-iterations per round, iterated until idempotent).
+
+The deletion predicate differs from Zhang-Suen — Guo-Hall computes `C`, `min(N1, N2)`, and a sub-iteration-specific `m` mask, deleting a pixel when `C == 1`, `2 ≤ N ≤ 3`, and `m == 0`. In practice the produced skeleton has a more uniform 1-pixel width and fewer 2-pixel-wide "stairs" on diagonals.
+
+Source is not modified.
+
+### Example
+
+```js
+import { Mat, skeletonizeGuohall } from 'opencv';
+const skel = new Mat();
+skeletonizeGuohall(input, skel);
+```
+
+---
+
+## `guohallThinning(mat)`
+
+In-place Guo-Hall thinning primitive. Lower level than `skeletonizeGuohall` — assumes you've already produced a 0/255 binary `CV_8UC1` mask.
+
+- **`mat`** — `cv.Mat`, `CV_8UC1`, values in `{0, 255}`. Modified in place.
+- **Returns** — `undefined`.
+
+Useful when you want to control the binarization step yourself (e.g. adaptive threshold, manual mask construction) rather than the built-in Otsu in `skeletonizeGuohall`.
+
+### Example
+
+```js
+import { Mat, threshold, THRESH_BINARY, adaptiveThreshold,
+         ADAPTIVE_THRESH_GAUSSIAN_C, guohallThinning } from 'opencv';
+
+const mask = new Mat();
+adaptiveThreshold(gray, mask, 255, ADAPTIVE_THRESH_GAUSSIAN_C, THRESH_BINARY, 11, 2);
+guohallThinning(mask);   // mask is now a 1-pixel skeleton
+```
+
+---
+
+## `guohallIteration(mat, iter)`
+
+One sub-iteration of Guo-Hall thinning. Mostly for debugging / visualizing the thinning process.
+
+- **`mat`** — `cv.Mat`, `CV_8UC1`. **Foreground value must be 1**, not 255, because this is the inner-loop primitive and assumes the `/255` rescale has already happened.
+- **`iter`** — `0` or `1`. Selects which of the two sub-passes to apply (the two passes peel from opposite sides; both are needed for symmetry).
+- **Returns** — `undefined`.
+
+A single call modifies `mat` in place, removing the pixels that match the predicate for the chosen sub-iteration. Calling `guohallIteration(mat, 0)` then `guohallIteration(mat, 1)` repeatedly until `mat` stops changing is exactly what `guohallThinning` does internally.
+
+### Example
+
+```js
+import { guohallIteration, Mat } from 'opencv';
+
+// expects `bin01` to be CV_8UC1 with values 0 or 1
+let changed = true;
+while(changed) {
+  const before = bin01.clone();
+  guohallIteration(bin01, 0);
+  guohallIteration(bin01, 1);
+  changed = /* compare bin01 vs before */;
+}
+```
+
+---
+
+## `degreeMap(src, dst)`
+
+8-neighbour degree map of a binary skeleton. Equivalent in result to `pixelNeighborhood` — same output values (0..8) with the same per-pixel semantics — but uses row-pointer iteration internally, which is noticeably faster than the per-pixel `at<uchar>` walk in `pixelNeighborhood`.
+
+- **`src`** — `cv.Mat` only (not UMat). `CV_8UC1`.
+- **`dst`** — `cv.Mat` or `cv.UMat`. Replaced with a `CV_8UC1` image of the same size.
+- **Returns** — `undefined`.
+
+Unlike `pixelNeighborhood`, `degreeMap` zero-initializes the output, so background pixels are reliably 0 — safe to visualize directly without masking against `src`.
+
+The same `value → meaning` table applies:
+
+| value | meaning |
+|---|---|
+| 0 | background (or border) |
+| 1 | endpoint of a polyline |
+| 2 | mid-curve pixel |
+| ≥ 3 | branch / junction |
+
+### Example
+
+```js
+import { Mat, skeletonizeGuohall, degreeMap, pixelFindValue } from 'opencv';
+
+const skel = new Mat(), deg = new Mat();
+skeletonizeGuohall(input, skel);
+degreeMap(skel, deg);
+
+const endpoints = pixelFindValue(deg, 1);     // shares the pixelFindValue helper
+```
+
+---
+
+## `traceLines(src [, contoursOut])`
+
+Topology-aware line tracer. Walks the skeleton graph and emits one polyline per edge — every polyline starts and ends at a "special" pixel (degree 1 endpoint, or degree ≥ 3 junction). Junctions are shared: a junction of degree *k* appears as the start or end point of exactly *k* polylines.
+
+### Signatures
+
+```js
+const contours = traceLines(skel);            // (1) → cv.Contour[]
+const count    = traceLines(skel, arr);       // (2) writes into `arr`, returns count
+```
+
+- **`src`** — `cv.Mat`, `CV_8UC1`. Thinned skeleton (any non-zero foreground value).
+- **`contoursOut`** *(optional)* — existing JS array; polylines are pushed into it.
+
+Returns:
+- form (1): a fresh array of `cv.Contour`.
+- form (2): the number of polylines written.
+
+### Behavior
+
+Two passes:
+
+1. **Edges through special pixels.** Scan in row-major order for any pixel with degree ≠ 2. For each, walk every unused outgoing 8-direction along the degree-2 chain until reaching another special pixel. The reached pixel is included as the polyline's last point. A per-direction "used" bitmask prevents the other end of the edge from re-emitting it.
+2. **Pure loops.** Any remaining degree-2 component (a closed curve with no junctions or endpoints) is emitted as a single closed polyline.
+
+### Difference from `traceSkeleton`
+
+| | `traceSkeleton` | `traceLines` |
+|---|---|---|
+| Output type | `cv.Contour[]` (double points) | `cv.Contour[]` (int points, stored as double) |
+| Behavior at junctions | walks past with direction bias | splits — every junction is a polyline endpoint |
+| Simplification | collinear runs collapsed (forced) | every skeleton pixel kept |
+| Junction multiplicity | each junction visited once total | a degree-*k* junction appears in *k* polylines |
+| Closed loops | re-seeded as separate contours | first pass for special-bounded, second pass for pure loops |
+
+If you want every skeleton pixel and a faithful graph topology, use `traceLines`. If you want long smooth curves with fewer vertices, use `traceSkeleton`.
+
+### Example
+
+```js
+import { Mat, skeletonizeGuohall, traceLines } from 'opencv';
+
+const skel = new Mat();
+skeletonizeGuohall(input, skel);
+
+const lines = traceLines(skel);
+for(const line of lines) {
+  // line[0] and line[line.length - 1] are always degree-1 or degree-≥3 pixels
+  console.log(`edge of ${line.length} px, ${line[0].x},${line[0].y} → ${line[line.length-1].x},${line[line.length-1].y}`);
+}
+```
+
+---
+
+## `skeletonizeAndTrace(src [, contoursOut [, skeletonOut]])`
+
+One-shot wrapper: `skeletonizeGuohall` followed by `traceLines`.
+
+### Signatures
+
+```js
+const contours = skeletonizeAndTrace(src);                          // (1)
+const count    = skeletonizeAndTrace(src, arr);                     // (2)
+const count    = skeletonizeAndTrace(src, arr, skelOut);            // (3)
+```
+
+- **`src`** — `cv.Mat` or `cv.UMat`. Input image (any channels). Not modified.
+- **`contoursOut`** *(optional)* — existing JS array; polylines are pushed into it. Pass `undefined` to skip writing into an array while still asking for `skeletonOut`.
+- **`skeletonOut`** *(optional)* — `cv.Mat`. Receives the intermediate 0/255 Guo-Hall skeleton — handy for visualization or further processing without re-running the thinner.
+
+Returns the contour array (form 1) or the count of polylines written (forms 2–3).
+
+### Example
+
+```js
+import { Mat, skeletonizeAndTrace } from 'opencv';
+
+const skel = new Mat();
+const lines = skeletonizeAndTrace(input, undefined, skel);
+console.log(`${lines.length} polylines, skeleton in skel`);
+
+// or write into your own array:
+const out = [];
+const n = skeletonizeAndTrace(input, out, skel);
+```
+
+---
+
 ## `paletteGenerate(src [, mode [, count]])`
 
 Returns the dominant colors of an image as a JS array of `[B, G, R]` triplets.
@@ -258,11 +467,12 @@ paletteApply(indexed, recolored, palette);            // back to BGR
 
 ---
 
-## End-to-end pipeline
+## End-to-end pipelines
 
-The skeleton-tracing functions are designed to be chained:
+Either skeleton/line group chains the same way — pick the one that matches your needs:
 
 ```js
+// Zhang-Suen + greedy tracer (smooth curves, collinear pixels collapsed)
 import { Mat, COLOR_BGR2GRAY, cvtColor,
          skeletonization, pixelNeighborhood, traceSkeleton } from 'opencv';
 
@@ -277,6 +487,22 @@ pixelNeighborhood(skel, deg);                   // stage 2 — optional inspecti
 
 const contours = traceSkeleton(skel);           // stage 3
 // contours: Array<cv.Contour> with double-precision points
+```
+
+```js
+// Guo-Hall + topology tracer (every pixel, junction-cut)
+import { Mat, skeletonizeAndTrace, degreeMap } from 'opencv';
+
+const skel = new Mat();
+const lines = skeletonizeAndTrace(input, undefined, skel);
+// lines: Array<cv.Contour>, each polyline starts/ends at a special pixel
+
+// or do the two stages by hand if you want to see the degree map:
+import { skeletonizeGuohall, traceLines } from 'opencv';
+const deg = new Mat();
+skeletonizeGuohall(input, skel);
+degreeMap(skel, deg);
+const lines2 = traceLines(skel);
 ```
 
 For palette reduction:
