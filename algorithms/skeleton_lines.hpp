@@ -130,20 +130,6 @@ skeletonize_guohall(InputArray src) {
  * Topology-aware line tracer
  * ------------------------------------------------------------------------- */
 
-/* 8-neighbour offsets. The layout is required to satisfy
- *   N8[i] + N8[(i + 4) & 7] == (0, 0)
- * so opposite directions differ by 4. */
-static const std::array<cv::Point, 8> N8 {
-    cv::Point(-1, -1),
-    cv::Point(0, -1),
-    cv::Point(1, -1),
-    cv::Point(1, 0),
-    cv::Point(1, 1),
-    cv::Point(0, 1),
-    cv::Point(-1, 1),
-    cv::Point(-1, 0),
-};
-
 /**
  * Compute the 8-connected degree of every foreground pixel.
  * Border pixels (first/last row/column) are reported as degree 0.
@@ -183,6 +169,20 @@ degree_map(const cv::Mat& skel) {
  */
 static inline std::vector<std::vector<cv::Point>>
 trace_lines(const cv::Mat& skel) {
+  /* 8-neighbour offsets. The layout is required to satisfy
+   *   N8[i] + N8[(i + 4) & 7] == (0, 0)
+   * so opposite directions differ by 4. */
+  static const std::array<cv::Point, 8> N8 {
+      cv::Point(-1, -1),
+      cv::Point(0, -1),
+      cv::Point(1, -1),
+      cv::Point(1, 0),
+      cv::Point(1, 1),
+      cv::Point(0, 1),
+      cv::Point(-1, 1),
+      cv::Point(-1, 0),
+  };
+
   std::vector<std::vector<cv::Point>> lines;
 
   const cv::Mat deg = degree_map(skel);
