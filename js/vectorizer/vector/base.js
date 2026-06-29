@@ -25,17 +25,25 @@ export class VectorMethod {
   static label = 'Base';
   static description = '';
 
-  get id() { return this.constructor.id; }
-  get label() { return this.constructor.label; }
-  get description() { return this.constructor.description; }
+  get id() {
+    return this.constructor.id;
+  }
+  get label() {
+    return this.constructor.label;
+  }
+  get description() {
+    return this.constructor.description;
+  }
 
   // Override: declarative parameter schema.
-  paramsSpec() { return []; }
+  paramsSpec() {
+    return [];
+  }
 
   // Convenience: default param object derived from the spec.
   defaults() {
     const o = {};
-    for (const p of this.paramsSpec()) o[p.key] = p.default;
+    for(const p of this.paramsSpec()) o[p.key] = p.default;
     return o;
   }
 

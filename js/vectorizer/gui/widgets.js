@@ -8,10 +8,12 @@
 import { Palette } from './canvas.js';
 
 export class Hud {
-  constructor() { this.reset(); }
+  constructor() {
+    this.reset();
+  }
 
   reset() {
-    this.clicks = [];     // [{x,y}] left-button-downs this frame
+    this.clicks = []; // [{x,y}] left-button-downs this frame
     this.pointer = { x: 0, y: 0 };
     this.isDown = false;
   }
@@ -24,10 +26,10 @@ export class Hud {
   }
 
   _hit(x, y, w, h) {
-    for (let i = 0; i < this.clicks.length; i++) {
+    for(let i = 0; i < this.clicks.length; i++) {
       const c = this.clicks[i];
-      if (c.x >= x && c.x <= x + w && c.y >= y && c.y <= y + h) {
-        this.clicks.splice(i, 1);   // consume so only one widget reacts
+      if(c.x >= x && c.x <= x + w && c.y >= y && c.y <= y + h) {
+        this.clicks.splice(i, 1); // consume so only one widget reacts
         return true;
       }
     }
@@ -40,27 +42,27 @@ export class Hud {
   }
 
   button(cv, x, y, w, h, label, opts = {}) {
+    //console.log('HUD.button',console.config({compact: true}), { x,y, label, opts });
     const hovered = this.hover(x, y, w, h);
-    const base = opts.active ? Palette.accent : (hovered ? Palette.panel2 : Palette.panel);
+    const base = opts.active ? Palette.accent : hovered ? Palette.panel2 : Palette.panel;
     cv.rect(x, y, w, h, opts.color || base, true);
     cv.rect(x, y, w, h, Palette.line, false, 1);
     const scale = opts.scale || 0.5;
     const ts = cv.textSize(label, scale);
-    cv.text(label, x + (w - ts.w) / 2, y + (h + ts.h) / 2,
-      opts.active ? Palette.bg : Palette.text, scale);
+    console.log('HUD.button', console.config({ compact: true }), ts);
+    cv.text(label, x + (w - ts.w) / 2, y + /* (h - ts.h) / 2+*/ 20, /*opts.active ? Palette.bg :*/ Palette.text, scale);
     return !opts.disabled && this._hit(x, y, w, h);
   }
 
   toggle(cv, x, y, w, h, label, on) {
-    const clicked = this.button(cv, x, y, w, h, (on ? '[x] ' : '[ ] ') + label,
-      { active: !!on, scale: 0.45 });
+    const clicked = this.button(cv, x, y, w, h, (on ? '[x] ' : '[ ] ') + label, { active: !!on, scale: 0.45 });
     return clicked;
   }
 
   // A selectable row (used in lists). Returns true on click.
   row(cv, x, y, w, h, label, selected) {
     const hovered = this.hover(x, y, w, h);
-    cv.rect(x, y, w, h, selected ? Palette.accent2 : (hovered ? Palette.panel2 : Palette.panel), true);
+    cv.rect(x, y, w, h, selected ? Palette.accent2 : hovered ? Palette.panel2 : Palette.panel, true);
     cv.text(label, x + 8, y + h * 0.66, selected ? Palette.bg : Palette.text, 0.45);
     return this._hit(x, y, w, h);
   }

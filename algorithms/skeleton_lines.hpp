@@ -148,7 +148,8 @@ degree_map(const cv::Mat& skel) {
       if(!curr[x])
         continue;
 
-      int n = (prev[x - 1] != 0) + (prev[x] != 0) + (prev[x + 1] != 0) + (curr[x - 1] != 0) + (curr[x + 1] != 0) + (next[x - 1] != 0) + (next[x] != 0) + (next[x + 1] != 0);
+      int n = (prev[x - 1] != 0) + (prev[x] != 0) + (prev[x + 1] != 0) + (curr[x - 1] != 0) + (curr[x + 1] != 0) + (next[x - 1] != 0) + (next[x] != 0) +
+              (next[x + 1] != 0);
 
       drow[x] = static_cast<uchar>(n);
     }
@@ -172,7 +173,7 @@ trace_lines(const cv::Mat& skel) {
   /* 8-neighbour offsets. The layout is required to satisfy
    *   N8[i] + N8[(i + 4) & 7] == (0, 0)
    * so opposite directions differ by 4. */
-  static const std::array<cv::Point, 8> N8 {
+  static const std::array<cv::Point, 8> N8{
       cv::Point(-1, -1),
       cv::Point(0, -1),
       cv::Point(1, -1),

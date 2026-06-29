@@ -24,14 +24,14 @@ export class Pipeline {
   }
 
   // ---- Stage 1: LOAD -------------------------------------------------------
-  discover(uris) { return this.loader.discover(uris); }
+  discover(uris) {
+    return this.loader.discover(uris);
+  }
 
   // ---- Stage 2: ASSIGN -----------------------------------------------------
   // A default assignment so the user always has something to preview.
   autoAssign(defaultMethodId) {
-    for (const f of this.model.frames)
-      if (!this.model.assignments.has(f.id))
-        this.model.assign(f.id, defaultMethodId);
+    for(const f of this.model.frames) if(!this.model.assignments.has(f.id)) this.model.assign(f.id, defaultMethodId);
   }
 
   // ---- Stage 3: PROCESS ----------------------------------------------------
@@ -39,7 +39,7 @@ export class Pipeline {
   process(frameId, params) {
     const frame = this.model.frame(frameId);
     const methodId = this.model.assignments.get(frameId);
-    if (!frame || !methodId) return null;
+    if(!frame || !methodId) return null;
     const method = this.registry.get(methodId);
     const merged = Object.assign(method.defaults(), params || {});
     const vd = method.apply(frame.mat, merged, { width: frame.w, height: frame.h });
@@ -48,17 +48,24 @@ export class Pipeline {
   }
 
   // ---- Stage 4: PROJECT ----------------------------------------------------
-  composeSVG() { return this.composer.compose(this.model); }
+  composeSVG() {
+    return this.composer.compose(this.model);
+  }
 
   // ---- Stage gating --------------------------------------------------------
   canAdvance(fromStage) {
     const m = this.model;
     switch (fromStage) {
-      case Stage.LOAD:    return m.frames.length > 0;
-      case Stage.ASSIGN:  return m.frames.every((f) => m.assignments.has(f.id));
-      case Stage.PROCESS: return m.vectorizedFrames().length > 0;
-      case Stage.PROJECT: return true;
-      default:            return false;
+      case Stage.LOAD:
+        return m.frames.length > 0;
+      case Stage.ASSIGN:
+        return m.frames.every(f => m.assignments.has(f.id));
+      case Stage.PROCESS:
+        return m.vectorizedFrames().length > 0;
+      case Stage.PROJECT:
+        return true;
+      default:
+        return false;
     }
   }
 }

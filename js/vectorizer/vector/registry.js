@@ -27,24 +27,32 @@ export class Registry {
     return this;
   }
 
-  get(id) { return this._byId.get(id); }
-  has(id) { return this._byId.has(id); }
-  list() { return this._order.map((id) => this._byId.get(id)); }
-  first() { return this._byId.get(this._order[0]); }
+  get(id) {
+    return this._byId.get(id);
+  }
+  has(id) {
+    return this._byId.has(id);
+  }
+  list() {
+    return this._order.map(id => this._byId.get(id));
+  }
+  first() {
+    return this._byId.get(this._order[0]);
+  }
 }
 
 export function defaultRegistry() {
   const r = new Registry();
   // Order = order shown in the stage-2 method picker.
-  r.register(CannyContours)      // the required starter: Canny -> findContours
-   .register(ThresholdContours)  // filled regions from (adaptive) threshold
-   .register(PaletteRegions)     // posterized color-region "paint by numbers"
-   .register(LowPolyDelaunay)    // goodFeaturesToTrack + Subdiv2D triangulation
-   .register(HoughLines)         // probabilistic Hough line segments
-   .register(LSDLines)           // LineSegmentDetector
-   .register(FastLines)          // FastLineDetector
-   .register(Skeleton)           // morphological skeleton centerlines
-   .register(ShapeFit)           // fit ellipses / min-area rects to contours
-   .register(Stipple);           // intensity-driven dot stipple
+  r.register(CannyContours) // the required starter: Canny -> findContours
+    .register(ThresholdContours) // filled regions from (adaptive) threshold
+    .register(PaletteRegions) // posterized color-region "paint by numbers"
+    .register(LowPolyDelaunay) // goodFeaturesToTrack + Subdiv2D triangulation
+    .register(HoughLines) // probabilistic Hough line segments
+    .register(LSDLines) // LineSegmentDetector
+    .register(FastLines) // FastLineDetector
+    .register(Skeleton) // morphological skeleton centerlines
+    .register(ShapeFit) // fit ellipses / min-area rects to contours
+    .register(Stipple); // intensity-driven dot stipple
   return r;
 }

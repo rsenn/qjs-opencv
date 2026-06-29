@@ -9,7 +9,7 @@ import { Emitter } from './events.js';
 import { identity } from './geometry.js';
 
 let _seq = 0;
-const uid = (p) => `${p}${++_seq}`;
+const uid = p => `${p}${++_seq}`;
 
 export const Stage = { LOAD: 0, ASSIGN: 1, PROCESS: 2, PROJECT: 3 };
 
@@ -20,8 +20,8 @@ export class Model extends Emitter {
 
     // Stage 1 output: sources discovered on the CLI, and the frames the user
     // selected from them. A "frame" is { id, sourceId, label, mat, w, h }.
-    this.sources = [];     // { id, kind:'image'|'video', uri, frameCount }
-    this.frames = [];      // selected frames (mat = opaque cv.Mat handle)
+    this.sources = []; // { id, kind:'image'|'video', uri, frameCount }
+    this.frames = []; // selected frames (mat = opaque cv.Mat handle)
 
     // Stage 2 output: frameId -> methodId
     this.assignments = new Map();
@@ -36,7 +36,10 @@ export class Model extends Emitter {
     this.canvas = { width: 1280, height: 720, background: '#ffffff' };
   }
 
-  setStage(s) { this.stage = s; this.emit('stage', s); }
+  setStage(s) {
+    this.stage = s;
+    this.emit('stage', s);
+  }
 
   addSource(kind, uri, frameCount = 1) {
     const src = { id: uid('src'), kind, uri, frameCount };
@@ -53,7 +56,7 @@ export class Model extends Emitter {
   }
 
   removeFrame(id) {
-    this.frames = this.frames.filter((f) => f.id !== id);
+    this.frames = this.frames.filter(f => f.id !== id);
     this.assignments.delete(id);
     this.results.delete(id);
     this.placements.delete(id);
@@ -62,7 +65,7 @@ export class Model extends Emitter {
 
   assign(frameId, methodId) {
     this.assignments.set(frameId, methodId);
-    this.results.delete(frameId);          // params/result invalidated
+    this.results.delete(frameId); // params/result invalidated
     this.emit('assign', { frameId, methodId });
   }
 
@@ -77,10 +80,12 @@ export class Model extends Emitter {
     this.emit('placement', { frameId, placement: this.placements.get(frameId) });
   }
 
-  frame(id) { return this.frames.find((f) => f.id === id); }
+  frame(id) {
+    return this.frames.find(f => f.id === id);
+  }
 
   // Frames that have a usable vectorization result — the input to stage 4.
   vectorizedFrames() {
-    return this.frames.filter((f) => this.results.has(f.id));
+    return this.frames.filter(f => this.results.has(f.id));
   }
 }

@@ -9,7 +9,7 @@ import { identity } from './geometry.js';
 export class Composer {
   compose(model) {
     const placements = [];
-    for (const f of model.vectorizedFrames()) {
+    for(const f of model.vectorizedFrames()) {
       const res = model.results.get(f.id);
       const pl = model.placements.get(f.id) || { H: identity(), opacity: 1 };
       placements.push({

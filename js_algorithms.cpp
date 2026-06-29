@@ -1,4 +1,4 @@
-
+#include "js_cv.hpp"
 #include "include/jsbindings.hpp"
 #include "js_umat.hpp"
 #include <opencv2/core.hpp>
@@ -131,7 +131,9 @@ js_cv_palette_generate(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
   cs = color_space(mode & 1);
   dt = dist_type((mode >> 1) & 3);
 
-  palette = dcg.GetDomColors(src.getMat(), cs, dt, count);
+  try {
+    palette = dcg.GetDomColors(src.getMat(), cs, dt, count);
+  } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 
   result.resize(palette.size());
 
@@ -309,7 +311,7 @@ js_cv_trace_lines(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
 static JSValue
 js_cv_skeletonize_and_trace(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSInputOutputArray src;
-  cv::Mat *skeleton_out = nullptr;
+  cv::Mat* skeleton_out = nullptr;
   cv::Mat skel;
 
   src = js_umat_or_mat(ctx, argv[0]);

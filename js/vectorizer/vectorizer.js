@@ -29,15 +29,31 @@ import { App } from './gui/app.js';
 
 function parseArgs(argv) {
   const opts = { output: 'out.svg', method: 'canny', width: 1280, height: 720, paths: [] };
-  for (let i = 0; i < argv.length; i++) {
+  for(let i = 0; i < argv.length; i++) {
     const a = argv[i];
     switch (a) {
-      case '-o': case '--output': opts.output = argv[++i]; break;
-      case '-m': case '--method': opts.method = argv[++i]; break;
-      case '-W': case '--width':  opts.width  = +argv[++i]; break;
-      case '-H': case '--height': opts.height = +argv[++i]; break;
-      case '-h': case '--help':   opts.help = true; break;
-      default:                    opts.paths.push(a);
+      case '-o':
+      case '--output':
+        opts.output = argv[++i];
+        break;
+      case '-m':
+      case '--method':
+        opts.method = argv[++i];
+        break;
+      case '-W':
+      case '--width':
+        opts.width = +argv[++i];
+        break;
+      case '-H':
+      case '--height':
+        opts.height = +argv[++i];
+        break;
+      case '-h':
+      case '--help':
+        opts.help = true;
+        break;
+      default:
+        opts.paths.push(a);
     }
   }
   return opts;
@@ -53,7 +69,10 @@ function usage() {
 
 function main(...args) {
   const opts = parseArgs(args);
-  if (opts.help || opts.paths.length === 0) { usage(); return 0; }
+  if(opts.help || opts.paths.length === 0) {
+    usage();
+    return 0;
+  }
 
   const model = new Model();
   model.canvas.width = opts.width;
@@ -69,17 +88,20 @@ function main(...args) {
   // thumbnails without re-reading on every draw.
   const fallbackMethod = registry.has(opts.method) ? opts.method : registry.first().id;
   const sources = pipeline.discover(opts.paths);
-  if (!sources.length) { console.log('no usable image/video files found'); return 1; }
+  if(!sources.length) {
+    console.log('no usable image/video files found');
+    return 1;
+  }
 
-  for (const s of sources) {
+  for(const s of sources) {
     const src = model.addSource(s.kind, s.uri, s.frameCount);
     try {
       const prev = loader.extractFrame(src, 0);
       src._preview = prev;
       src._w = prev.cols ?? prev.width;
       src._h = prev.rows ?? prev.height;
-    } catch (e) {
-      console.log('preview failed for', s.uri, String(e && e.message || e));
+    } catch(e) {
+      console.log('preview failed for', s.uri, String((e && e.message) || e));
     }
   }
 
@@ -87,12 +109,12 @@ function main(...args) {
 
   // When the user hits Export, assign the default method to anything still
   // unassigned (defensive), then write the composed SVG.
-  app.onExport = (svg) => {
+  app.onExport = svg => {
     try {
       fs.writeFileSync(opts.output, svg);
       console.log('wrote', opts.output, `(${svg.length} bytes)`);
-    } catch (e) {
-      console.log('write failed:', String(e && e.message || e));
+    } catch(e) {
+      console.log('write failed:', String((e && e.message) || e));
     }
   };
 
@@ -109,6 +131,6 @@ function main(...args) {
 try {
   const argv = typeof scriptArgs !== 'undefined' ? scriptArgs.slice(1) : [];
   main(...argv);
-} catch (e) {
-  console.log('fatal:', String(e && e.stack || e));
+} catch(e) {
+  console.log('fatal:', String((e && e.stack) || e));
 }
