@@ -33,6 +33,7 @@ export class App {
     this.canvas = new Canvas(this.W, this.H);
     this.hud = new Hud();
     this.events = [];
+    this.onExport = null;
 
     this.stages = {
       [Stage.LOAD]: new LoadStage(),
@@ -68,7 +69,7 @@ export class App {
 
   goTo(s) {
     if(s < Stage.LOAD || s > Stage.PROJECT) return;
-    if(this.stage.leave) this.stage.leave(this);
+    if(this.stage['leave']) this.stage['leave'](this);
     this._enterStage(s);
   }
 
@@ -94,7 +95,7 @@ export class App {
 
       // --- trackbar polling -> stage ---
       const delta = this.trackbars.poll();
-      if(delta && this.stage.onParams) this.stage.onParams(this, delta);
+      if(delta && this.stage['onParams']) this.stage['onParams'](this, delta);
 
       imshow(WIN, this.canvas.mat);
       const key = waitKey(16);
@@ -102,7 +103,7 @@ export class App {
         running = false; // ESC
       else if(key === 9)
         this.next(); // TAB -> next
-      else if(this.stage.onKey) this.stage.onKey(this, key);
+      else if(this.stage['onKey']) this.stage['onKey'](this, key);
     }
     try {
       destroyWindow(WIN);

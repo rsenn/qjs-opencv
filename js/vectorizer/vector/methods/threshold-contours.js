@@ -45,10 +45,10 @@ export class ThresholdContours extends VectorMethod {
       threshold(gray, bin, p.thresh, 255, type);
     }
     const [contours, hierarchy] = findContours(bin, RETR_CCOMP, CHAIN_APPROX_SIMPLE);
-    let shapes = hierarchyToPaths(contours, hierarchy, {
+    let shapes = [...hierarchyToPaths(contours, hierarchy, {
       epsilon: p.epsilon,
       style: { stroke: null, fill: '#1a1a1a' },
-    });
+    })];
     if (p.minArea) shapes = shapes.filter((s) => approxPathArea(s) >= p.minArea);
     release(gray, bin);
     return create(meta.width, meta.height, { shapes });

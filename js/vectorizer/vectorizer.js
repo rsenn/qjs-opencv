@@ -129,7 +129,8 @@ function main(...args) {
 
 // qjs passes script args to main(); fall back to scriptArgs for other runtimes.
 try {
-  const argv = typeof scriptArgs !== 'undefined' ? scriptArgs.slice(1) : [];
+  const args = globalThis['scriptArgs'];
+  const argv = args ? args.slice(1) : [];
   main(...argv);
 } catch(e) {
   console.log('fatal:', String((e && e.stack) || e));

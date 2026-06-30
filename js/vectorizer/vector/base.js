@@ -26,13 +26,13 @@ export class VectorMethod {
   static description = '';
 
   get id() {
-    return this.constructor.id;
+    return this.constructor['id'];
   }
   get label() {
-    return this.constructor.label;
+    return this.constructor['label'];
   }
   get description() {
-    return this.constructor.description;
+    return this.constructor['description'];
   }
 
   // Override: declarative parameter schema.
