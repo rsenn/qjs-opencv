@@ -25,7 +25,13 @@ import { Pipeline } from './core/pipeline.js';
 import { Composer } from './core/composer.js';
 import { defaultRegistry } from './vector/registry.js';
 import { Loader } from './cv/loader.js';
+import { JobRunner } from './cv/jobs.js';
 import { App } from './gui/app.js';
+
+// Resolve the os.Worker entry script relative to this module.
+const WORKER_PATH = import.meta.url
+  .replace(/^file:\/\//, '')
+  .replace(/[^/]+$/, '') + 'vector/worker.js';
 
 function parseArgs(argv) {
   const opts = { output: 'out.svg', method: 'canny', width: 1280, height: 720, paths: [] };
@@ -67,7 +73,7 @@ function usage() {
   console.log('  <path> may be an image, a video, or a directory of either.');
 }
 
-function main(...args) {
+async function main(...args) {
   const opts = parseArgs(args);
   if(opts.help || opts.paths.length === 0) {
     usage();
@@ -105,7 +111,8 @@ function main(...args) {
     }
   }
 
-  const app = new App({ model, pipeline, registry });
+  const jobs = new JobRunner(WORKER_PATH);
+  const app = new App({ model, pipeline, registry, jobs });
 
   // When the user hits Export, assign the default method to anything still
   // unassigned (defensive), then write the composed SVG.
@@ -123,15 +130,18 @@ function main(...args) {
   // model's 'frames' event rather than assigning once up front.
   model.on('frames', () => pipeline.autoAssign(fallbackMethod));
 
-  app.run();
+  await app.run();
+  jobs.terminate();
   return 0;
 }
 
 // qjs passes script args to main(); fall back to scriptArgs for other runtimes.
-try {
-  const args = globalThis['scriptArgs'];
-  const argv = args ? args.slice(1) : [];
-  main(...argv);
-} catch(e) {
-  console.log('fatal:', String((e && e.stack) || e));
-}
+(async () => {
+  try {
+    const args = globalThis['scriptArgs'];
+    const argv = args ? args.slice(1) : [];
+    await main(...argv);
+  } catch(e) {
+    console.log('fatal:', String((e && e.stack) || e));
+  }
+})();

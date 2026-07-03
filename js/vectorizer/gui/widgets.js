@@ -49,8 +49,8 @@ export class Hud {
     cv.rect(x, y, w, h, Palette.line, false, 1);
     const scale = opts.scale || 0.5;
     const ts = cv.textSize(label, scale);
-    console.log('HUD.button', console.config({ compact: true }), ts);
-    cv.text(label, x + (w - ts.w) / 2, y + /* (h - ts.h) / 2+*/ 20, /*opts.active ? Palette.bg :*/ Palette.text, scale);
+    //console.log('HUD.button', console.config({ compact: true }), ts);
+    cv.text(label, x + (w - ts.w) / 2, y +  (h + ts.h) / 2, opts.active ? Palette.bg : Palette.text, scale);
     return !opts.disabled && this._hit(x, y, w, h);
   }
 

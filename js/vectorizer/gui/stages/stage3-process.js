@@ -17,7 +17,13 @@ import { drawVectorData } from '../../cv/raster.js';
 const FILL = typeof FILLED === 'number' ? FILLED : -1;
 
 export class ProcessStage {
-  constructor() { this.idx = 0; this.preview = null; }
+  constructor() {
+    this.idx = 0;
+    this.preview = null;
+    this.busy = false;       // a job is in flight or queued
+    this.progress = 0;       // 0..1 from the worker
+    this.lastError = null;   // last error message, if any
+  }
 
   _frame(app) {
     const frames = app.model.frames;
@@ -54,13 +60,33 @@ export class ProcessStage {
   }
 
   _run(app, frame, params) {
-    try {
-      const vd = app.pipeline.process(frame.id, params);
-      this._renderPreview(app, frame, vd);
-    } catch (e) {
-      console.log('vectorize error:', String(e && e.message || e));
-      this.preview = null;
-    }
+    const methodId = app.model.assignments.get(frame.id);
+    const method = app.registry.get(methodId);
+    if (!method) return;
+    const merged = Object.assign(method.defaults(), params || {});
+    this.busy = true;
+    this.progress = 0;
+    this.lastError = null;
+    app.jobs.run(
+      methodId,
+      frame.mat,
+      merged,
+      { width: frame.w, height: frame.h },
+      {
+        onProgress: (t) => { this.progress = t; },
+        onDone: (vd) => {
+          this.busy = false;
+          this.progress = 1;
+          app.model.setResult(frame.id, merged, vd);
+          this._renderPreview(app, frame, vd);
+        },
+        onError: (e) => {
+          this.busy = false;
+          this.lastError = e;
+          console.log('vectorize error:', e);
+        },
+      },
+    );
   }
 
   // Rasterize VectorData onto a white Mat sized to the frame, centered on its
@@ -96,9 +122,20 @@ export class ProcessStage {
 
     const rx = 32 + halfW;
     cv.panel(rx, top, halfW, ph, Palette.panel);
-    cv.text(this.preview ? `vectorized · ${this.preview.count} shapes` : 'vectorizing…',
-      rx + 8, top + 18, Palette.textDim, 0.4);
+    const status = this.lastError
+      ? `error: ${this.lastError.split('\n')[0]}`
+      : this.busy
+        ? `vectorizing… ${Math.round(this.progress * 100)}%`
+        : this.preview ? `vectorized · ${this.preview.count} shapes` : 'idle';
+    cv.text(status, rx + 8, top + 18, this.lastError ? Palette.danger : Palette.textDim, 0.4);
     if (this.preview) cv.paste(this.preview.mat, rx + 6, top + 24, halfW - 12, ph - 36);
+
+    // progress bar across the bottom of the preview pane
+    if (this.busy) {
+      const by = top + ph - 14, bx = rx + 6, bw = halfW - 12;
+      cv.rect(bx, by, bw, 6, Palette.panel2, true);
+      cv.rect(bx, by, Math.max(2, Math.round(bw * this.progress)), 6, Palette.accent || Palette.text, true);
+    }
 
     cv.text('Drag the trackbars under the window title to adjust the method.',
       16, app.H - 8, Palette.textDim, 0.4);

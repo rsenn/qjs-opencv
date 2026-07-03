@@ -7,6 +7,7 @@
 // Model and reads/writes trackbars through App helpers.
 
 import { namedWindow, destroyWindow, imshow, waitKey, WINDOW_AUTOSIZE } from 'opencv.so';
+import * as os from 'os';
 
 import { Stage } from '../core/model.js';
 import { Canvas, Palette } from './canvas.js';
@@ -23,10 +24,11 @@ const WIN = 'qjs-vectorizer';
 const TABS = ['1 · Load', '2 · Assign', '3 · Process', '4 · Project'];
 
 export class App {
-  constructor({ model, pipeline, registry }) {
+  constructor({ model, pipeline, registry, jobs }) {
     this.model = model;
     this.pipeline = pipeline;
     this.registry = registry;
+    this.jobs = jobs;
 
     this.W = 1180;
     this.H = 740;
@@ -80,7 +82,7 @@ export class App {
     this.goTo(this.model.stage - 1);
   }
 
-  run() {
+  async run() {
     let running = true;
     while(running) {
       // --- input snapshot ---
@@ -104,6 +106,9 @@ export class App {
       else if(key === 9)
         this.next(); // TAB -> next
       else if(this.stage['onKey']) this.stage['onKey'](this, key);
+
+      // pump qjs event loop so os.Worker messages (progress/done) fire.
+      await os.sleepAsync(0);
     }
     try {
       destroyWindow(WIN);

@@ -29,14 +29,18 @@ export class CannyContours extends VectorMethod {
   }
 
   apply(mat, p, meta) {
+    const tick = meta.onProgress || (() => {});
     const gray = toGray(mat);
     if (p.blur >= 3) {
       const k = p.blur % 2 ? p.blur : p.blur + 1;
       GaussianBlur(gray, gray, new Size(k, k), 0);
     }
+    tick(0.25);
     const edges = new Mat();
     Canny(gray, edges, p.thresh1, p.thresh2);
+    tick(0.55);
     const contours = findContours(edges, RETR_LIST, CHAIN_APPROX_SIMPLE)[0];
+    tick(0.75);
     const shapes = contoursToShapes(contours, {
       mode: 'stroke',
       epsilon: p.epsilon,

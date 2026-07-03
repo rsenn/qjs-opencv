@@ -40,6 +40,7 @@ export class PaletteRegions extends VectorMethod {
   }
 
   apply(mat, p, meta) {
+    const tick = meta.onProgress || (() => {});
     let src = mat;
     let smoothed = null;
     if (p.meanShift) {
@@ -47,8 +48,10 @@ export class PaletteRegions extends VectorMethod {
       pyrMeanShiftFiltering(mat, smoothed, p.spatial, p.color);
       src = smoothed;
     }
+    tick(0.15);
     const palette = paletteGenerate(src, p.colors);
     const idx = paletteMatch(src, palette);   // CV_8U single-channel index map
+    tick(0.25);
 
     const shapes = [];
     for (let k = 0; k < p.colors; k++) {
@@ -65,6 +68,7 @@ export class PaletteRegions extends VectorMethod {
       });
       shapes.push(...band);
       release(mask);
+      tick(0.25 + 0.7 * ((k + 1) / p.colors));
     }
     release(idx, palette, smoothed);
     // Largest regions first so small detail paints on top.

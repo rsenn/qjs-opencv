@@ -19,6 +19,9 @@ export class FastLines extends VectorMethod {
       { key: 'lengthThresh', label: 'Length thresh', type: 'int',   min: 5, max: 100, step: 1, default: 20 },
       { key: 'distThresh',   label: 'Dist thresh',   type: 'float', min: 0.5, max: 5, step: 0.1, default: 1.41 },
       { key: 'strokeW',      label: 'Stroke width',  type: 'float', min: 0.2, max: 3, step: 0.1, default: 0.9 },
+      { key: 'cannyTh1',      label: 'Canny threshold 1',  type: 'int', min: 0, max: 100, step: 1, default: 50 },
+    { key: 'cannyTh2',      label: 'Canny threshold 2',  type: 'int', min: 0, max: 100, step: 1, default: 50 },
+    { key: 'cannyAp',      label: 'Canny aperture',  type: 'int', min: 3, max: 7, step: 2, default: 3 },
     ];
   }
 
@@ -26,7 +29,7 @@ export class FastLines extends VectorMethod {
     const gray = toGray(mat);
     // Constructor args follow OpenCV's FastLineDetector(length_threshold,
     // distance_threshold, canny_th1, canny_th2, canny_aperture, do_merge).
-    const fld = new FastLineDetector(p.lengthThresh, p.distThresh, 50, 50, 3, false);
+    const fld = new FastLineDetector(p.lengthThresh, p.distThresh, p.cannyTh1, p.cannyTh2, p.cannyAp, false);
     const linesMat = new Mat();
     fld.detect(gray, linesMat);
     const rows = [];
