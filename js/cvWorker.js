@@ -100,8 +100,10 @@ function isTypedArray(v) {
 // Walk value; replace Mat / TypedArray / DataView with descriptors. Plain
 // objects and arrays are shallow-cloned so the caller's payload is untouched.
 export function encode(value) {
-  if (value === null || typeof value !== 'object') return value;
+  // qjs reports typeof mat === 'function', so the Mat check must run before
+  // the primitive short-circuit.
   if (value instanceof Mat) return matToShared(value);
+  if (value === null || typeof value !== 'object') return value;
   if (value instanceof DataView) return dataViewToShared(value);
   if (isTypedArray(value)) return typedArrayToShared(value);
   if (Array.isArray(value)) return value.map(encode);
