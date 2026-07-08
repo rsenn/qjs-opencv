@@ -1820,6 +1820,17 @@ js_imgproc_filter(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
       }
 
       case FILTER_PYR_MEAN_SHIFT_FILTERING: {
+        JSInputOutputArray dst = js_cv_inputoutputarray(ctx, argv[1]);
+        double sp, sr;
+        int32_t maxLevel = 1;
+
+        JS_ToFloat64(ctx, &sp, argv[2]);
+        JS_ToFloat64(ctx, &sr, argv[3]);
+
+        if(argc > 4)
+          JS_ToInt32(ctx, &maxLevel, argv[4]);
+
+        cv::pyrMeanShiftFiltering(src, dst, sp, sr, maxLevel);
         break;
       }
 

@@ -890,6 +890,7 @@ enum {
   OTHER_CVROUND,
   OTHER_CVCEIL,
   OTHER_CVFLOOR,
+  OTHER_KMEANS,
 };
 
 static JSValue
@@ -1058,6 +1059,34 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
         if(argc >= 3)
           dst = js_cv_outputarray(ctx, argv[2]);
         cv::LUT(src, lut, dst);
+        break;
+      }
+
+      case OTHER_KMEANS: {
+        JSInputOutputArray bestLabels = cv::noArray();
+        JSOutputArray centers = cv::noArray();
+        int32_t k = 0, attempts = 1, flags = cv::KMEANS_RANDOM_CENTERS;
+        std::vector<double> crit;
+        cv::TermCriteria criteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 10, 1.0);
+
+        JS_ToInt32(ctx, &k, argv[1]);
+
+        if(argc >= 3)
+          bestLabels = js_cv_inputoutputarray(ctx, argv[2]);
+        if(argc >= 4) {
+          js_array_to(ctx, argv[3], crit);
+
+          if(crit.size() >= 3)
+            criteria = cv::TermCriteria(int(crit[0]), int(crit[1]), crit[2]);
+        }
+        if(argc >= 5)
+          JS_ToInt32(ctx, &attempts, argv[4]);
+        if(argc >= 6)
+          JS_ToInt32(ctx, &flags, argv[5]);
+        if(argc >= 7)
+          centers = js_cv_outputarray(ctx, argv[6]);
+
+        ret = JS_NewFloat64(ctx, cv::kmeans(src, k, bestLabels, criteria, attempts, flags, centers));
         break;
       }
 
@@ -1664,6 +1693,7 @@ js_function_list_t js_cv_static_funcs{
     JS_CFUNC_MAGIC_DEF("eigenNonSymmetric", 3, js_cv_other, OTHER_EIGEN_NON_SYMMETRIC),
     JS_CFUNC_MAGIC_DEF("inRange", 4, js_cv_other, OTHER_IN_RANGE),
     JS_CFUNC_MAGIC_DEF("insertChannel", 3, js_cv_other, OTHER_INSERT_CHANNEL),
+    JS_CFUNC_MAGIC_DEF("kmeans", 3, js_cv_other, OTHER_KMEANS),
     JS_CFUNC_MAGIC_DEF("LUT", 3, js_cv_other, OTHER_LUT),
     JS_CFUNC_MAGIC_DEF("magnitude", 3, js_cv_other, OTHER_MAGNITUDE),
     JS_CFUNC_MAGIC_DEF("Mahalanobis", 3, js_cv_other, OTHER_MAHALANOBIS),
@@ -1997,6 +2027,12 @@ js_function_list_t js_cv_constants{
     JS_CV_CONSTANT(CHAIN_APPROX_SIMPLE),
     JS_CV_CONSTANT(CHAIN_APPROX_TC89_L1),
     JS_CV_CONSTANT(CHAIN_APPROX_TC89_KCOS),
+    JS_CV_CONSTANT(KMEANS_RANDOM_CENTERS),
+    JS_CV_CONSTANT(KMEANS_PP_CENTERS),
+    JS_CV_CONSTANT(KMEANS_USE_INITIAL_LABELS),
+    JS_PROP_INT32_DEF("TERM_CRITERIA_COUNT", cv::TermCriteria::COUNT, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("TERM_CRITERIA_MAX_ITER", cv::TermCriteria::MAX_ITER, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("TERM_CRITERIA_EPS", cv::TermCriteria::EPS, JS_PROP_ENUMERABLE),
     JS_CV_CONSTANT(BORDER_CONSTANT),
     JS_CV_CONSTANT(BORDER_REPLICATE),
     JS_CV_CONSTANT(BORDER_REFLECT),
