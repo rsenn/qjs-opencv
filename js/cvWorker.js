@@ -28,7 +28,14 @@ export function copyToShared(u8) {
 export function matToShared(mat) {
   const src = new Uint8Array(mat.buffer);
   const sab = copyToShared(src);
-  return { [TAG]: 'mat', rows: mat.rows, cols: mat.cols, type: mat.type, step: mat.step, sab };
+  return {
+    [TAG]: 'mat',
+    rows: mat.rows,
+    cols: mat.cols,
+    type: mat.type,
+    step: mat.step,
+    sab,
+  };
 }
 
 export function sharedToMat(d) {
@@ -51,23 +58,36 @@ export function newSharedMat(rows, cols, type) {
 // ---------- TypedArray ----------
 
 const TA_CTORS = {
-  Int8Array, Uint8Array, Uint8ClampedArray,
-  Int16Array, Uint16Array,
-  Int32Array, Uint32Array,
-  Float32Array, Float64Array,
+  Int8Array,
+  Uint8Array,
+  Uint8ClampedArray,
+  Int16Array,
+  Uint16Array,
+  Int32Array,
+  Uint32Array,
+  Float32Array,
+  Float64Array,
 };
-if (typeof BigInt64Array !== 'undefined') TA_CTORS.BigInt64Array = BigInt64Array;
-if (typeof BigUint64Array !== 'undefined') TA_CTORS.BigUint64Array = BigUint64Array;
+if(typeof BigInt64Array !== 'undefined')
+  TA_CTORS.BigInt64Array = BigInt64Array;
+if(typeof BigUint64Array !== 'undefined')
+  TA_CTORS.BigUint64Array = BigUint64Array;
 
 export function typedArrayToShared(ta) {
   const src = new Uint8Array(ta.buffer, ta.byteOffset, ta.byteLength);
   const sab = copyToShared(src);
-  return { [TAG]: 'ta', ctor: ta.constructor.name, byteOffset: 0, length: ta.length, sab };
+  return {
+    [TAG]: 'ta',
+    ctor: ta.constructor.name,
+    byteOffset: 0,
+    length: ta.length,
+    sab,
+  };
 }
 
 export function sharedToTypedArray(d) {
   const Ctor = TA_CTORS[d.ctor];
-  if (!Ctor) throw new TypeError(`unknown TypedArray ctor: ${d.ctor}`);
+  if(!Ctor) throw new TypeError(`unknown TypedArray ctor: ${d.ctor}`);
   return new Ctor(d.sab, d.byteOffset, d.length);
 }
 
@@ -102,30 +122,34 @@ function isTypedArray(v) {
 export function encode(value) {
   // qjs reports typeof mat === 'function', so the Mat check must run before
   // the primitive short-circuit.
-  if (value instanceof Mat) return matToShared(value);
-  if (value === null || typeof value !== 'object') return value;
-  if (value instanceof DataView) return dataViewToShared(value);
-  if (isTypedArray(value)) return typedArrayToShared(value);
-  if (Array.isArray(value)) return value.map(encode);
+  if(value instanceof Mat) return matToShared(value);
+  if(value === null || typeof value !== 'object') return value;
+  if(value instanceof DataView) return dataViewToShared(value);
+  if(isTypedArray(value)) return typedArrayToShared(value);
+  if(Array.isArray(value)) return value.map(encode);
   const out = {};
-  for (const k of Object.keys(value)) out[k] = encode(value[k]);
+  for(const k of Object.keys(value)) out[k] = encode(value[k]);
   return out;
 }
 
 // Inverse of encode: reconstruct Mat / TypedArray / DataView from descriptors.
 export function decode(value) {
-  if (value === null || typeof value !== 'object') return value;
-  if (TAG in value) {
+  if(value === null || typeof value !== 'object') return value;
+  if(TAG in value) {
     switch (value[TAG]) {
-      case 'mat': return sharedToMat(value);
-      case 'ta':  return sharedToTypedArray(value);
-      case 'dv':  return sharedToDataView(value);
-      default:    throw new TypeError(`unknown ${TAG} tag: ${value[TAG]}`);
+      case 'mat':
+        return sharedToMat(value);
+      case 'ta':
+        return sharedToTypedArray(value);
+      case 'dv':
+        return sharedToDataView(value);
+      default:
+        throw new TypeError(`unknown ${TAG} tag: ${value[TAG]}`);
     }
   }
-  if (Array.isArray(value)) return value.map(decode);
+  if(Array.isArray(value)) return value.map(decode);
   const out = {};
-  for (const k of Object.keys(value)) out[k] = decode(value[k]);
+  for(const k of Object.keys(value)) out[k] = decode(value[k]);
   return out;
 }
 
@@ -138,17 +162,21 @@ export class SharedChannel {
   constructor(endpoint) {
     this._ep = endpoint;
     this._handler = null;
-    endpoint.onmessage = (e) => {
-      if (!this._handler) return;
+    endpoint.onmessage = e => {
+      if(!this._handler) return;
       this._handler({ data: decode(e.data) });
     };
   }
   postMessage(msg) {
     this._ep.postMessage(encode(msg));
   }
-  set onmessage(fn) { this._handler = fn; }
-  get onmessage() { return this._handler; }
+  set onmessage(fn) {
+    this._handler = fn;
+  }
+  get onmessage() {
+    return this._handler;
+  }
   terminate() {
-    if (this._ep.terminate) this._ep.terminate();
+    if(this._ep.terminate) this._ep.terminate();
   }
 }
