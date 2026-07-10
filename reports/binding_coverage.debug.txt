@@ -1,0 +1,1895 @@
+OpenCV JS binding coverage report
+generated: 2026-07-10T21:55:36.384Z
+opencv.so: build/x86_64-linux-debug/opencv.so
+lib dir:   /opt/opencv-4.13.0-x86_64/lib
+
+library                           classes            functions          overall
+libopencv_alphamat.so             0/0          n/a  0/1        0.00%  0/1        0.00%
+libopencv_aruco.so                0/1        0.00%  0/15       0.00%  0/16       0.00%
+libopencv_bgsegm.so               0/1        0.00%  5/9       55.56%  5/10      50.00%
+libopencv_bioinspired.so          0/0          n/a  0/4        0.00%  0/4        0.00%
+libopencv_calib3d.so              0/3        0.00%  20/106    18.87%  20/109    18.35%
+libopencv_ccalib.so               0/4        0.00%  0/9        0.00%  0/13       0.00%
+libopencv_core.so                 10/58     17.24%  145/753   19.26%  155/811   19.11%
+libopencv_cvv.so                  0/0          n/a  0/0          n/a  0/0          n/a
+libopencv_datasets.so             0/0          n/a  0/37       0.00%  0/37       0.00%
+libopencv_dnn.so                  2/15      13.33%  33/172    19.19%  35/187    18.72%
+libopencv_dnn_objdetect.so        0/1        0.00%  0/0          n/a  0/1        0.00%
+libopencv_dnn_superres.so         0/1        0.00%  0/0          n/a  0/1        0.00%
+libopencv_dpm.so                  0/1        0.00%  0/1        0.00%  0/2        0.00%
+libopencv_face.so                 0/7        0.00%  0/40       0.00%  0/47       0.00%
+libopencv_features2d.so           0/8        0.00%  1/64       1.56%  1/72       1.39%
+libopencv_flann.so                0/11       0.00%  0/0          n/a  0/11       0.00%
+libopencv_freetype.so             0/1        0.00%  1/1      100.00%  1/2       50.00%
+libopencv_fuzzy.so                0/0          n/a  0/16       0.00%  0/16       0.00%
+libopencv_gapi.so                 0/57       0.00%  0/487      0.00%  0/544      0.00%
+libopencv_hdf.so                  0/0          n/a  0/1        0.00%  0/1        0.00%
+libopencv_hfs.so                  0/0          n/a  0/1        0.00%  0/1        0.00%
+libopencv_highgui.so              0/0          n/a  25/41     60.98%  25/41     60.98%
+libopencv_img_hash.so             0/1        0.00%  0/25       0.00%  0/26       0.00%
+libopencv_imgcodecs.so            0/4        0.00%  5/21      23.81%  5/25      20.00%
+libopencv_imgproc.so              2/5       40.00%  105/202   51.98%  107/207   51.69%
+libopencv_intensity_transform.so  0/0          n/a  0/6        0.00%  0/6        0.00%
+libopencv_line_descriptor.so      0/7        0.00%  0/8        0.00%  0/15       0.00%
+libopencv_mcc.so                  0/4        0.00%  0/4        0.00%  0/8        0.00%
+libopencv_ml.so                   0/4        0.00%  0/29       0.00%  0/33       0.00%
+libopencv_objdetect.so            0/19       0.00%  3/41       7.32%  3/60       5.00%
+libopencv_optflow.so              0/2        0.00%  0/64       0.00%  0/66       0.00%
+libopencv_phase_unwrapping.so     0/6        0.00%  0/1        0.00%  0/7        0.00%
+libopencv_photo.so                0/0          n/a  0/30       0.00%  0/30       0.00%
+libopencv_plot.so                 0/0          n/a  0/2        0.00%  0/2        0.00%
+libopencv_quality.so              0/3        0.00%  0/9        0.00%  0/12       0.00%
+libopencv_rapid.so                0/1        0.00%  0/3        0.00%  0/4        0.00%
+libopencv_reg.so                  0/9        0.00%  0/2        0.00%  0/11       0.00%
+libopencv_rgbd.so                 0/12       0.00%  0/40       0.00%  0/52       0.00%
+libopencv_saliency.so             0/4        0.00%  0/8        0.00%  0/12       0.00%
+libopencv_sfm.so                  0/0          n/a  0/32       0.00%  0/32       0.00%
+libopencv_shape.so                0/0          n/a  0/9        0.00%  0/9        0.00%
+libopencv_signal.so               0/0          n/a  0/1        0.00%  0/1        0.00%
+libopencv_stereo.so               0/0          n/a  0/10       0.00%  0/10       0.00%
+libopencv_stitching.so            0/8        0.00%  0/213      0.00%  0/221      0.00%
+libopencv_structured_light.so     0/5        0.00%  0/3        0.00%  0/8        0.00%
+libopencv_superres.so             0/1        0.00%  0/19       0.00%  0/20       0.00%
+libopencv_surface_matching.so     0/1        0.00%  0/25       0.00%  0/26       0.00%
+libopencv_text.so                 0/4        0.00%  0/41       0.00%  0/45       0.00%
+libopencv_tracking.so             0/29       0.00%  0/34       0.00%  0/63       0.00%
+libopencv_video.so                0/21       0.00%  2/24       8.33%  2/45       4.44%
+libopencv_videoio.so              2/4       50.00%  0/16       0.00%  2/20      10.00%
+libopencv_videostab.so            0/15       0.00%  0/34       0.00%  0/49       0.00%
+libopencv_wechat_qrcode.so        0/1        0.00%  0/5        0.00%  0/6        0.00%
+libopencv_xfeatures2d.so          0/2        0.00%  0/53       0.00%  0/55       0.00%
+libopencv_ximgproc.so             0/1        0.00%  34/89     38.20%  34/90     37.78%
+libopencv_xobjdetect.so           0/0          n/a  0/1        0.00%  0/1        0.00%
+libopencv_xphoto.so               0/0          n/a  4/11      36.36%  4/11      36.36%
+
+TOTAL classes:   16/342 (4.68%)
+TOTAL functions: 383/2873 (13.33%)
+TOTAL overall:   399/3215 (12.41%)
+
+--- libopencv_alphamat.so: not bound ---
+
+--- libopencv_aruco.so: not bound ---
+
+--- libopencv_bgsegm.so: bound (50.00%) ---
+  classes (0/1):
+    cv::bgsegm::SyntheticSequenceGenerator
+  functions (5/9):
+    cv::bgsegm::BackgroundSubtractorLSBPDesc::calcLocalSVDValues(cv::_OutputArray const&, cv::Mat const&)
+    cv::bgsegm::BackgroundSubtractorLSBPDesc::compute(cv::_OutputArray const&, cv::Mat const&, cv::Point_<int> const*)
+    cv::bgsegm::BackgroundSubtractorLSBPDesc::computeFromLocalSVDValues(cv::_OutputArray const&, cv::Mat const&, cv::Point_<int> const*)
+    cv::bgsegm::createBackgroundSubtractorCNT(int, bool, int, bool)
+    cv::bgsegm::createBackgroundSubtractorGMG(int, double)
+    cv::bgsegm::createBackgroundSubtractorGSOC(int, int, float, float, int, float, float, float, float, float, float)
+    cv::bgsegm::createBackgroundSubtractorLSBP(int, int, int, float, float, float, float, float, float, float, float, int, int)
+    cv::bgsegm::createBackgroundSubtractorMOG(int, int, double, double)
+    cv::bgsegm::createSyntheticSequenceGenerator(cv::_InputArray const&, cv::_InputArray const&, double, double, double, double)
+
+--- libopencv_bioinspired.so: not bound ---
+
+--- libopencv_calib3d.so: bound (18.35%) ---
+  classes (0/3):
+    cv::CirclesGridFinderParameters
+    cv::UsacParams
+    cv::internal::IntrinsicParams
+  functions (20/106):
+    cv::LMSolver::create(cv::Ptr<cv::LMSolver::Callback> const&, int)
+    cv::LMSolver::create(cv::Ptr<cv::LMSolver::Callback> const&, int, double)
+    cv::RQDecomp3x3(cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&)
+    cv::Rodrigues(cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&)
+    cv::StereoBM::create(int, int)
+    cv::StereoSGBM::create(int, int, int, int, int, int, int, int, int, int, int)
+    cv::calibrateCamera(cv::_InputArray const&, cv::_InputArray const&, cv::Size_<int>, cv::_InputOutputArray const&, cv::_InputOutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, int, cv::TermCriteria)
+    cv::calibrateCamera(cv::_InputArray const&, cv::_InputArray const&, cv::Size_<int>, cv::_InputOutputArray const&, cv::_InputOutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, int, cv::TermCriteria)
+    cv::calibrateCameraRO(cv::_InputArray const&, cv::_InputArray const&, cv::Size_<int>, int, cv::_InputOutputArray const&, cv::_InputOutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, int, cv::TermCriteria)
+    cv::calibrateCameraRO(cv::_InputArray const&, cv::_InputArray const&, cv::Size_<int>, int, cv::_InputOutputArray const&, cv::_InputOutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, int, cv::TermCriteria)
+    cv::calibrateHandEye(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::HandEyeCalibrationMethod)
+    cv::calibrateRobotWorldHandEye(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::RobotWorldHandEyeCalibrationMethod)
+    cv::calibrationMatrixValues(cv::_InputArray const&, cv::Size_<int>, double, double, double&, double&, double&, cv::Point_<double>&, double&)
+    cv::checkChessboard(cv::_InputArray const&, cv::Size_<int>)
+    cv::composeRT(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&)
+    cv::computeCorrespondEpilines(cv::_InputArray const&, int, cv::_InputArray const&, cv::_OutputArray const&)
+    cv::convertPointsFromHomogeneous(cv::_InputArray const&, cv::_OutputArray const&)
+    cv::convertPointsHomogeneous(cv::_InputArray const&, cv::_OutputArray const&)
+    cv::convertPointsToHomogeneous(cv::_InputArray const&, cv::_OutputArray const&)
+    cv::correctMatches(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&)
+    cv::createLMeDSPointSetRegistrator(cv::Ptr<cv::PointSetRegistrator::Callback> const&, int, double, int)
+    cv::createRANSACPointSetRegistrator(cv::Ptr<cv::PointSetRegistrator::Callback> const&, int, double, double, int)
+    cv::decomposeEssentialMat(cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&)
+    cv::decomposeHomographyMat(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&)
+    cv::decomposeProjectionMatrix(cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&)
+    cv::drawChessboardCorners(cv::_InputOutputArray const&, cv::Size_<int>, cv::_InputArray const&, bool)
+    cv::drawFrameAxes(cv::_InputOutputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, float, int)
+    cv::estimateAffine2D(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, cv::UsacParams const&)
+    cv::estimateAffine2D(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, int, double, unsigned long, double, unsigned long)
+    cv::estimateAffine3D(cv::_InputArray const&, cv::_InputArray const&, double*, bool)
+    cv::estimateAffine3D(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, double, double)
+    cv::estimateAffinePartial2D(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, int, double, unsigned long, double, unsigned long)
+    cv::estimateChessboardSharpness(cv::_InputArray const&, cv::Size_<int>, cv::_InputArray const&, float, bool, cv::_OutputArray const&)
+    cv::estimateTranslation2D(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, int, double, unsigned long, double, unsigned long)
+    cv::estimateTranslation3D(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, double, double)
+    cv::filterHomographyDecompByVisibleRefpoints(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, cv::_InputArray const&)
+    cv::filterSpeckles(cv::_InputOutputArray const&, double, int, double, cv::_InputOutputArray const&)
+    cv::find4QuadCornerSubpix(cv::_InputArray const&, cv::_InputOutputArray const&, cv::Size_<int>)
+    cv::findChessboardCorners(cv::_InputArray const&, cv::Size_<int>, cv::_OutputArray const&, int)
+    cv::findChessboardCornersSB(cv::_InputArray const&, cv::Size_<int>, cv::_OutputArray const&, int, cv::_OutputArray const&)
+    cv::findCirclesGrid(cv::_InputArray const&, cv::Size_<int>, cv::_OutputArray const&, int, cv::Ptr<cv::Feature2D> const&)
+    cv::findCirclesGrid(cv::_InputArray const&, cv::Size_<int>, cv::_OutputArray const&, int, cv::Ptr<cv::Feature2D> const&, cv::CirclesGridFinderParameters const&)
+    cv::findEssentialMat(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, cv::UsacParams const&)
+    cv::findEssentialMat(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, int, double, double, cv::_OutputArray const&)
+    cv::findEssentialMat(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, int, double, double, cv::_OutputArray const&)
+    cv::findEssentialMat(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, int, double, double, int, cv::_OutputArray const&)
+    cv::findEssentialMat(cv::_InputArray const&, cv::_InputArray const&, double, cv::Point_<double>, int, double, double, cv::_OutputArray const&)
+    cv::findEssentialMat(cv::_InputArray const&, cv::_InputArray const&, double, cv::Point_<double>, int, double, double, int, cv::_OutputArray const&)
+    cv::findFundamentalMat(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, cv::UsacParams const&)
+    cv::findFundamentalMat(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, int, double, double)
+    cv::findFundamentalMat(cv::_InputArray const&, cv::_InputArray const&, int, double, double, cv::_OutputArray const&)
+    cv::findFundamentalMat(cv::_InputArray const&, cv::_InputArray const&, int, double, double, int, cv::_OutputArray const&)
+    cv::findHomography(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, cv::UsacParams const&)
+    cv::findHomography(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, int, double)
+    cv::findHomography(cv::_InputArray const&, cv::_InputArray const&, int, double, cv::_OutputArray const&, int, double)
+    cv::fisheye::calibrate(cv::_InputArray const&, cv::_InputArray const&, cv::Size_<int> const&, cv::_InputOutputArray const&, cv::_InputOutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, int, cv::TermCriteria)
+    cv::fisheye::distortPoints(cv::_InputArray const&, cv::_OutputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, double)
+    cv::fisheye::distortPoints(cv::_InputArray const&, cv::_OutputArray const&, cv::_InputArray const&, cv::_InputArray const&, double)
+    cv::fisheye::estimateNewCameraMatrixForUndistortRectify(cv::_InputArray const&, cv::_InputArray const&, cv::Size_<int> const&, cv::_InputArray const&, cv::_OutputArray const&, double, cv::Size_<int> const&, double)
+    cv::fisheye::initUndistortRectifyMap(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::Size_<int> const&, int, cv::_OutputArray const&, cv::_OutputArray const&)
+    cv::fisheye::projectPoints(cv::_InputArray const&, cv::_OutputArray const&, cv::Affine3<double> const&, cv::_InputArray const&, cv::_InputArray const&, double, cv::_OutputArray const&)
+    cv::fisheye::projectPoints(cv::_InputArray const&, cv::_OutputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, double, cv::_OutputArray const&)
+    cv::fisheye::solvePnP(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, bool, int, cv::TermCriteria)
+    cv::fisheye::solvePnPRansac(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, bool, int, float, double, cv::_OutputArray const&, int, cv::TermCriteria)
+    cv::fisheye::stereoCalibrate(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputOutputArray const&, cv::_InputOutputArray const&, cv::_InputOutputArray const&, cv::_InputOutputArray const&, cv::Size_<int>, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, int, cv::TermCriteria)
+    cv::fisheye::stereoCalibrate(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputOutputArray const&, cv::_InputOutputArray const&, cv::_InputOutputArray const&, cv::_InputOutputArray const&, cv::Size_<int>, cv::_OutputArray const&, cv::_OutputArray const&, int, cv::TermCriteria)
+    cv::fisheye::stereoRectify(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::Size_<int> const&, cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, int, cv::Size_<int> const&, double, double)
+    cv::fisheye::undistortImage(cv::_InputArray const&, cv::_OutputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::Size_<int> const&)
+    cv::fisheye::undistortPoints(cv::_InputArray const&, cv::_OutputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::TermCriteria)
+    cv::getDefaultNewCameraMatrix(cv::_InputArray const&, cv::Size_<int>, bool)
+    cv::getOptimalNewCameraMatrix(cv::_InputArray const&, cv::_InputArray const&, cv::Size_<int>, double, cv::Size_<int>, cv::Rect_<int>*, bool)
+    cv::getValidDisparityROI(cv::Rect_<int>, cv::Rect_<int>, int, int, int)
+    cv::initCameraMatrix2D(cv::_InputArray const&, cv::_InputArray const&, cv::Size_<int>, double)
+    cv::initInverseRectificationMap(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::Size_<int> const&, int, cv::_OutputArray const&, cv::_OutputArray const&)
+    cv::initUndistortRectifyMap(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::Size_<int>, int, cv::_OutputArray const&, cv::_OutputArray const&)
+    cv::initWideAngleProjMap(cv::_InputArray const&, cv::_InputArray const&, cv::Size_<int>, int, int, cv::_OutputArray const&, cv::_OutputArray const&, cv::UndistortTypes, double)
+    cv::internal::ComputeHomography(cv::Mat, cv::Mat)
+    cv::internal::EstimateUncertainties(cv::_InputArray const&, cv::_InputArray const&, cv::internal::IntrinsicParams const&, cv::_InputArray const&, cv::_InputArray const&, cv::internal::IntrinsicParams&, cv::Vec<double, 2>&, double, int, double&)
+    cv::internal::NormalizePixels(cv::Mat const&, cv::internal::IntrinsicParams const&)
+    cv::matMulDeriv(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&)
+    cv::projectPoints(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, double)
+    cv::recoverPose(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, double, cv::Point_<double>, cv::_InputOutputArray const&)
+    cv::recoverPose(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_InputOutputArray const&)
+    cv::recoverPose(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, double, cv::_InputOutputArray const&, cv::_OutputArray const&)
+    cv::recoverPose(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, int, double, double, cv::_InputOutputArray const&)
+    cv::rectify3Collinear(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::Size_<int>, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, double, cv::Size_<int>, cv::Rect_<int>*, cv::Rect_<int>*, int)
+    cv::reprojectImageTo3D(cv::_InputArray const&, cv::_OutputArray const&, cv::_InputArray const&, bool, int)
+    cv::sampsonDistance(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&)
+    cv::solveP3P(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, int)
+    cv::solvePnP(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, bool, int)
+    cv::solvePnPGeneric(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, bool, cv::SolvePnPMethod, cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&)
+    cv::solvePnPRansac(cv::_InputArray const&, cv::_InputArray const&, cv::_InputOutputArray const&, cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::UsacParams const&)
+    cv::solvePnPRansac(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, bool, int, float, double, cv::_OutputArray const&, int)
+    cv::solvePnPRefineLM(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputOutputArray const&, cv::_InputOutputArray const&, cv::TermCriteria)
+    cv::solvePnPRefineVVS(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputOutputArray const&, cv::_InputOutputArray const&, cv::TermCriteria, double)
+    cv::stereoCalibrate(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputOutputArray const&, cv::_InputOutputArray const&, cv::_InputOutputArray const&, cv::_InputOutputArray const&, cv::Size_<int>, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, int, cv::TermCriteria)
+    cv::stereoCalibrate(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputOutputArray const&, cv::_InputOutputArray const&, cv::_InputOutputArray const&, cv::_InputOutputArray const&, cv::Size_<int>, cv::_InputOutputArray const&, cv::_InputOutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, int, cv::TermCriteria)
+    cv::stereoCalibrate(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputOutputArray const&, cv::_InputOutputArray const&, cv::_InputOutputArray const&, cv::_InputOutputArray const&, cv::Size_<int>, cv::_InputOutputArray const&, cv::_InputOutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, int, cv::TermCriteria)
+    cv::stereoRectify(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::Size_<int>, cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, int, double, cv::Size_<int>, cv::Rect_<int>*, cv::Rect_<int>*)
+    cv::stereoRectifyUncalibrated(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::Size_<int>, cv::_OutputArray const&, cv::_OutputArray const&, double)
+    cv::triangulatePoints(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&)
+    cv::undistort(cv::_InputArray const&, cv::_OutputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&)
+    cv::undistortImagePoints(cv::_InputArray const&, cv::_OutputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::TermCriteria)
+    cv::undistortPoints(cv::_InputArray const&, cv::_OutputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&)
+    cv::undistortPoints(cv::_InputArray const&, cv::_OutputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::TermCriteria)
+    cv::validateDisparity(cv::_InputOutputArray const&, cv::_InputArray const&, int, int, int)
+
+--- libopencv_ccalib.so: not bound ---
+
+--- libopencv_core.so: bound (19.11%) ---
+  classes (10/58):
+    cv::Algorithm
+    cv::AsyncArray
+    cv::AsyncPromise
+    cv::CommandLineParser
+    cv::Exception
+    cv::FileNode
+    cv::FileNodeIterator
+    cv::FileStorage
+    cv::FileStorage::Impl
+    cv::FileStorage::Impl::Base64Decoder
+    cv::LDA
+    cv::Mat
+    cv::MatExpr
+    cv::MatOp
+    cv::NAryMatIterator
+    cv::PCA
+    cv::RNG_MT19937
+    cv::RotatedRect
+    cv::SparseMat
+    cv::SparseMat::Hdr
+    cv::SparseMatConstIterator
+    cv::TLSDataContainer
+    cv::UMat
+    cv::UMatData
+    cv::UMatDataAutoLock
+    cv::_InputArray
+    cv::cuda::BufferPool
+    cv::cuda::Event
+    cv::cuda::GpuData
+    cv::cuda::GpuMat
+    cv::cuda::GpuMatND
+    cv::cuda::Stream
+    cv::instr::NodeData
+    cv::internal::WriteStructContext
+    cv::ocl::Context
+    cv::ocl::Device
+    cv::ocl::Image2D
+    cv::ocl::Kernel
+    cv::ocl::KernelArg
+    cv::ocl::Platform
+    cv::ocl::PlatformInfo
+    cv::ocl::Program
+    cv::ocl::ProgramSource
+    cv::ocl::Queue
+    cv::ocl::Timer
+    cv::ogl::Buffer
+    cv::ogl::Buffer::Impl
+    cv::ogl::Texture2D
+    cv::ogl::Texture2D::Impl
+    cv::plugin::impl::DynamicLib
+    cv::softdouble
+    cv::softfloat
+    cv::utils::BufferArea
+    cv::utils::fs::FileLock
+    cv::utils::trace::details::Region
+    cv::utils::trace::details::Region::Impl
+    cv::utils::trace::details::Region::LocationExtraData
+    cv::utils::trace::details::TraceManager
+  functions (145/753):
+    cv::Cholesky(double*, unsigned long, int, double*, unsigned long, int)
+    cv::Cholesky(float*, unsigned long, int, float*, unsigned long, int)
+    cv::CommandLineParser::Impl::apply_params(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::CommandLineParser::Impl::apply_params(int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >)
+    cv::CommandLineParser::Impl::sort_params()
+    cv::CommandLineParser::Impl::split_range_string(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, char, char) const
+    cv::CommandLineParser::Impl::split_string(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, char, bool) const
+    cv::ConjGradSolver::create(cv::Ptr<cv::MinProblemSolver::Function> const&, cv::TermCriteria)
+    cv::DefaultDeleter<CvMat>::operator()(CvMat*) const
+    cv::DefaultDeleter<CvMatND>::operator()(CvMatND*) const
+    cv::DefaultDeleter<CvMemStorage>::operator()(CvMemStorage*) const
+    cv::DefaultDeleter<CvSparseMat>::operator()(CvSparseMat*) const
+    cv::DefaultDeleter<_IplImage>::operator()(_IplImage*) const
+    cv::DownhillSolver::create(cv::Ptr<cv::MinProblemSolver::Function> const&, cv::_InputArray const&, cv::TermCriteria)
+    cv::Hamming::operator()(unsigned char const*, unsigned char const*, int) const
+    cv::KeyPoint::convert(std::vector<cv::Point_<float>, std::allocator<cv::Point_<float> > > const&, std::vector<cv::KeyPoint, std::allocator<cv::KeyPoint> >&, float, float, int, int)
+    cv::KeyPoint::convert(std::vector<cv::KeyPoint, std::allocator<cv::KeyPoint> > const&, std::vector<cv::Point_<float>, std::allocator<cv::Point_<float> > >&, std::vector<int, std::allocator<int> > const&)
+    cv::KeyPoint::hash() const
+    cv::KeyPoint::overlap(cv::KeyPoint const&, cv::KeyPoint const&)
+    cv::LU(double*, unsigned long, int, double*, unsigned long, int)
+    cv::LU(float*, unsigned long, int, float*, unsigned long, int)
+    cv::LUT(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&)
+    cv::Mahalanobis(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&)
+    cv::MatAllocator::copy(cv::UMatData*, cv::UMatData*, int, unsigned long const*, unsigned long const*, unsigned long const*, unsigned long const*, unsigned long const*, bool) const
+    cv::MatAllocator::download(cv::UMatData*, void*, int, unsigned long const*, unsigned long const*, unsigned long const*, unsigned long const*) const
+    cv::MatAllocator::getBufferPoolController(char const*) const
+    cv::MatAllocator::map(cv::UMatData*, cv::AccessFlag) const
+    cv::MatAllocator::unmap(cv::UMatData*) const
+    cv::MatAllocator::upload(cv::UMatData*, void const*, int, unsigned long const*, unsigned long const*, unsigned long const*, unsigned long const*) const
+    cv::MatConstIterator::lpos() const
+    cv::MatConstIterator::pos(int*) const
+    cv::MatConstIterator::pos() const
+    cv::MatConstIterator::seek(int const*, bool)
+    cv::MatConstIterator::seek(long, bool)
+    cv::MatSize::operator==(cv::MatSize const&) const
+    cv::MinProblemSolver::Function::getGradient(double const*, double*)
+    cv::MinProblemSolver::Function::getGradientEps() const
+    cv::PCABackProject(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&)
+    cv::PCACompute(cv::_InputArray const&, cv::_InputOutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, double)
+    cv::PCACompute(cv::_InputArray const&, cv::_InputOutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, int)
+    cv::PCACompute(cv::_InputArray const&, cv::_InputOutputArray const&, cv::_OutputArray const&, double)
+    cv::PCACompute(cv::_InputArray const&, cv::_InputOutputArray const&, cv::_OutputArray const&, int)
+    cv::PCAProject(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&)
+    cv::PSNR(cv::_InputArray const&, cv::_InputArray const&, double)
+    cv::RNG::fill(cv::_InputOutputArray const&, int, cv::_InputArray const&, cv::_InputArray const&, bool)
+    cv::RNG::gaussian(double)
+    cv::SVBackSubst(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&)
+    cv::SVD::backSubst(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&)
+    cv::SVD::backSubst(cv::_InputArray const&, cv::_OutputArray const&) const
+    cv::SVD::compute(cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, int)
+    cv::SVD::compute(cv::_InputArray const&, cv::_OutputArray const&, int)
+    cv::SVD::operator()(cv::_InputArray const&, int)
+    cv::SVDecomp(cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, int)
+    cv::_OutputArray::assign(cv::Mat const&) const
+    cv::_OutputArray::assign(cv::UMat const&) const
+    cv::_OutputArray::assign(std::vector<cv::Mat, std::allocator<cv::Mat> > const&) const
+    cv::_OutputArray::assign(std::vector<cv::UMat, std::allocator<cv::UMat> > const&) const
+    cv::_OutputArray::clear() const
+    cv::_OutputArray::create(cv::Size_<int>, int, int, bool, cv::_OutputArray::DepthMask) const
+    cv::_OutputArray::create(int, int const*, int, int, bool, cv::_OutputArray::DepthMask) const
+    cv::_OutputArray::create(int, int, int, int, bool, cv::_OutputArray::DepthMask) const
+    cv::_OutputArray::createSameSize(cv::_InputArray const&, int) const
+    cv::_OutputArray::fixedSize() const
+    cv::_OutputArray::fixedType() const
+    cv::_OutputArray::getGpuMatNDRef() const
+    cv::_OutputArray::getGpuMatRef() const
+    cv::_OutputArray::getGpuMatVecRef() const
+    cv::_OutputArray::getHostMemRef() const
+    cv::_OutputArray::getMatRef(int) const
+    cv::_OutputArray::getOGlBufferRef() const
+    cv::_OutputArray::getUMatRef(int) const
+    cv::_OutputArray::move(cv::Mat&) const
+    cv::_OutputArray::move(cv::UMat&) const
+    cv::_OutputArray::needed() const
+    cv::_OutputArray::reinterpret(int) const
+    cv::_OutputArray::release() const
+    cv::_OutputArray::setTo(cv::_InputArray const&, cv::_InputArray const&) const
+    cv::abs(cv::Mat const&)
+    cv::abs(cv::MatExpr const&)
+    cv::absdiff(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&)
+    cv::add(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, cv::_InputArray const&, int)
+    cv::addWeighted(cv::_InputArray const&, double, cv::_InputArray const&, double, double, cv::_OutputArray const&, int)
+    cv::allocSingletonBuffer(unsigned long)
+    cv::allocSingletonNewBuffer(unsigned long)
+    cv::batchDistance(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, int, cv::_OutputArray const&, int, int, cv::_InputArray const&, int, bool)
+    cv::bitwise_and(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, cv::_InputArray const&)
+    cv::bitwise_not(cv::_InputArray const&, cv::_OutputArray const&, cv::_InputArray const&)
+    cv::bitwise_or(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, cv::_InputArray const&)
+    cv::bitwise_xor(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, cv::_InputArray const&)
+    cv::borderInterpolate(int, int, int)
+    cv::broadcast(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&)
+    cv::calcCovarMatrix(cv::Mat const*, int, cv::Mat&, cv::Mat&, int, int)
+    cv::calcCovarMatrix(cv::_InputArray const&, cv::_OutputArray const&, cv::_InputOutputArray const&, int, int)
+    cv::cartToPolar(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, bool)
+    cv::cbrt(cv::softfloat const&)
+    cv::checkHardwareSupport(int)
+    cv::checkRange(cv::_InputArray const&, bool, cv::Point_<int>*, double, double)
+    cv::clearSeq(CvSeq*)
+    cv::compare(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, int)
+    cv::completeSymm(cv::_InputOutputArray const&, bool)
+    cv::convertFp16(cv::_InputArray const&, cv::_OutputArray const&)
+    cv::convertScaleAbs(cv::_InputArray const&, cv::_OutputArray const&, double, double)
+    cv::copyMakeBorder(cv::_InputArray const&, cv::_OutputArray const&, int, int, int, int, int, cv::Scalar_<double> const&)
+    cv::copyTo(cv::_InputArray const&, cv::_OutputArray const&, cv::_InputArray const&)
+    cv::cos(cv::softdouble const&)
+    cv::countNonZero(cv::_InputArray const&)
+    cv::cubeRoot(float)
+    cv::cuda::DeviceInfo::ECCEnabled() const
+    cv::cuda::DeviceInfo::asyncEngineCount() const
+    cv::cuda::DeviceInfo::canMapHostMemory() const
+    cv::cuda::DeviceInfo::clockRate() const
+    cv::cuda::DeviceInfo::computeMode() const
+    cv::cuda::DeviceInfo::concurrentKernels() const
+    cv::cuda::DeviceInfo::integrated() const
+    cv::cuda::DeviceInfo::isCompatible() const
+    cv::cuda::DeviceInfo::kernelExecTimeoutEnabled() const
+    cv::cuda::DeviceInfo::l2CacheSize() const
+    cv::cuda::DeviceInfo::majorVersion() const
+    cv::cuda::DeviceInfo::maxGridSize() const
+    cv::cuda::DeviceInfo::maxSurface1D() const
+    cv::cuda::DeviceInfo::maxSurface1DLayered() const
+    cv::cuda::DeviceInfo::maxSurface2D() const
+    cv::cuda::DeviceInfo::maxSurface2DLayered() const
+    cv::cuda::DeviceInfo::maxSurface3D() const
+    cv::cuda::DeviceInfo::maxSurfaceCubemap() const
+    cv::cuda::DeviceInfo::maxSurfaceCubemapLayered() const
+    cv::cuda::DeviceInfo::maxTexture1D() const
+    cv::cuda::DeviceInfo::maxTexture1DLayered() const
+    cv::cuda::DeviceInfo::maxTexture1DLinear() const
+    cv::cuda::DeviceInfo::maxTexture1DMipmap() const
+    cv::cuda::DeviceInfo::maxTexture2D() const
+    cv::cuda::DeviceInfo::maxTexture2DGather() const
+    cv::cuda::DeviceInfo::maxTexture2DLayered() const
+    cv::cuda::DeviceInfo::maxTexture2DLinear() const
+    cv::cuda::DeviceInfo::maxTexture2DMipmap() const
+    cv::cuda::DeviceInfo::maxTexture3D() const
+    cv::cuda::DeviceInfo::maxTextureCubemap() const
+    cv::cuda::DeviceInfo::maxTextureCubemapLayered() const
+    cv::cuda::DeviceInfo::maxThreadsDim() const
+    cv::cuda::DeviceInfo::maxThreadsPerBlock() const
+    cv::cuda::DeviceInfo::maxThreadsPerMultiProcessor() const
+    cv::cuda::DeviceInfo::memPitch() const
+    cv::cuda::DeviceInfo::memoryBusWidth() const
+    cv::cuda::DeviceInfo::memoryClockRate() const
+    cv::cuda::DeviceInfo::minorVersion() const
+    cv::cuda::DeviceInfo::multiProcessorCount() const
+    cv::cuda::DeviceInfo::name() const
+    cv::cuda::DeviceInfo::pciBusID() const
+    cv::cuda::DeviceInfo::pciDeviceID() const
+    cv::cuda::DeviceInfo::pciDomainID() const
+    cv::cuda::DeviceInfo::queryMemory(unsigned long&, unsigned long&) const
+    cv::cuda::DeviceInfo::regsPerBlock() const
+    cv::cuda::DeviceInfo::sharedMemPerBlock() const
+    cv::cuda::DeviceInfo::surfaceAlignment() const
+    cv::cuda::DeviceInfo::tccDriver() const
+    cv::cuda::DeviceInfo::textureAlignment() const
+    cv::cuda::DeviceInfo::texturePitchAlignment() const
+    cv::cuda::DeviceInfo::totalConstMem() const
+    cv::cuda::DeviceInfo::totalGlobalMem() const
+    cv::cuda::DeviceInfo::unifiedAddressing() const
+    cv::cuda::DeviceInfo::warpSize() const
+    cv::cuda::GpuMatND::operator cv::cuda::GpuMat() const
+    cv::cuda::HostMem::create(int, int, int)
+    cv::cuda::HostMem::createGpuMatHeader() const
+    cv::cuda::HostMem::getAllocator(cv::cuda::HostMem::AllocType)
+    cv::cuda::HostMem::release()
+    cv::cuda::HostMem::reshape(int, int) const
+    cv::cuda::TargetArchs::builtWith(cv::cuda::FeatureSet)
+    cv::cuda::TargetArchs::hasBin(int, int)
+    cv::cuda::TargetArchs::hasEqualOrGreaterBin(int, int)
+    cv::cuda::TargetArchs::hasEqualOrGreaterPtx(int, int)
+    cv::cuda::TargetArchs::hasEqualOrLessPtx(int, int)
+    cv::cuda::TargetArchs::hasPtx(int, int)
+    cv::cuda::createContinuous(int, int, int, cv::_OutputArray const&)
+    cv::cuda::deviceSupports(cv::cuda::FeatureSet)
+    cv::cuda::ensureSizeIsEnough(int, int, int, cv::_OutputArray const&)
+    cv::cuda::getCudaDriverApiErrorMessage[abi:cxx11](int)
+    cv::cuda::getCudaEnabledDeviceCount()
+    cv::cuda::getDevice()
+    cv::cuda::getInputMat(cv::_InputArray const&, cv::cuda::Stream&)
+    cv::cuda::getNppErrorMessage[abi:cxx11](int)
+    cv::cuda::getOutputMat(cv::_OutputArray const&, int, int, int, cv::cuda::Stream&)
+    cv::cuda::printCudaDeviceInfo(int)
+    cv::cuda::printShortCudaDeviceInfo(int)
+    cv::cuda::registerPageLocked(cv::Mat&)
+    cv::cuda::resetDevice()
+    cv::cuda::setBufferPoolConfig(int, unsigned long, int)
+    cv::cuda::setBufferPoolUsage(bool)
+    cv::cuda::setDevice(int)
+    cv::cuda::setGlDevice(int)
+    cv::cuda::syncOutput(cv::cuda::GpuMat const&, cv::_OutputArray const&, cv::cuda::Stream&)
+    cv::cuda::unregisterPageLocked(cv::Mat&)
+    cv::cuda::wrapStream(unsigned long)
+    cv::currentParallelFramework()
+    cv::cvarrToMat(void const*, bool, bool, int, cv::AutoBuffer<double, 136ul>*)
+    cv::dct(cv::_InputArray const&, cv::_OutputArray const&, int)
+    cv::depthToString(int)
+    cv::detail::check_failed_MatChannels(int, cv::detail::CheckContext const&)
+    cv::detail::check_failed_MatChannels(int, int, cv::detail::CheckContext const&)
+    cv::detail::check_failed_MatDepth(int, cv::detail::CheckContext const&)
+    cv::detail::check_failed_MatDepth(int, int, cv::detail::CheckContext const&)
+    cv::detail::check_failed_MatType(int, cv::detail::CheckContext const&)
+    cv::detail::check_failed_MatType(int, int, cv::detail::CheckContext const&)
+    cv::detail::check_failed_auto(cv::Size_<int>, cv::detail::CheckContext const&)
+    cv::detail::check_failed_auto(cv::Size_<int>, cv::Size_<int>, cv::detail::CheckContext const&)
+    cv::detail::check_failed_auto(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, cv::detail::CheckContext const&)
+    cv::detail::check_failed_auto(bool, bool, cv::detail::CheckContext const&)
+    cv::detail::check_failed_auto(double, cv::detail::CheckContext const&)
+    cv::detail::check_failed_auto(double, double, cv::detail::CheckContext const&)
+    cv::detail::check_failed_auto(float, cv::detail::CheckContext const&)
+    cv::detail::check_failed_auto(float, float, cv::detail::CheckContext const&)
+    cv::detail::check_failed_auto(int, cv::detail::CheckContext const&)
+    cv::detail::check_failed_auto(int, int, cv::detail::CheckContext const&)
+    cv::detail::check_failed_auto(unsigned long, cv::detail::CheckContext const&)
+    cv::detail::check_failed_auto(unsigned long, unsigned long, cv::detail::CheckContext const&)
+    cv::detail::check_failed_false(bool, cv::detail::CheckContext const&)
+    cv::detail::check_failed_true(bool, cv::detail::CheckContext const&)
+    cv::detail::depthToString_(int)
+    cv::detail::typeToString_[abi:cxx11](int)
+    cv::details::restoreFPDenormalsState(cv::details::FPDenormalsModeState const&)
+    cv::details::saveFPDenormalsState(cv::details::FPDenormalsModeState&)
+    cv::details::setFPDenormalsIgnoreHint(bool, cv::details::FPDenormalsModeState&)
+    cv::determinant(cv::_InputArray const&)
+    cv::dft(cv::_InputArray const&, cv::_OutputArray const&, int, int)
+    cv::directx::convertFromD3D10Texture2D(ID3D10Texture2D*, cv::_OutputArray const&)
+    cv::directx::convertFromD3D11Texture2D(ID3D11Texture2D*, cv::_OutputArray const&)
+    cv::directx::convertFromDirect3DSurface9(IDirect3DSurface9*, cv::_OutputArray const&, void*)
+    cv::directx::convertToD3D10Texture2D(cv::_InputArray const&, ID3D10Texture2D*)
+    cv::directx::convertToD3D11Texture2D(cv::_InputArray const&, ID3D11Texture2D*)
+    cv::directx::convertToDirect3DSurface9(cv::_InputArray const&, IDirect3DSurface9*, void*)
+    cv::directx::getTypeFromD3DFORMAT(int)
+    cv::directx::getTypeFromDXGI_FORMAT(int)
+    cv::directx::ocl::initializeContextFromD3D10Device(ID3D10Device*)
+    cv::directx::ocl::initializeContextFromD3D11Device(ID3D11Device*)
+    cv::directx::ocl::initializeContextFromDirect3DDevice9(IDirect3DDevice9*)
+    cv::directx::ocl::initializeContextFromDirect3DDevice9Ex(IDirect3DDevice9Ex*)
+    cv::divide(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, double, int)
+    cv::divide(double, cv::_InputArray const&, cv::_OutputArray const&, int)
+    cv::eigen(cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&)
+    cv::eigenNonSymmetric(cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&)
+    cv::error(cv::Exception const&)
+    cv::error(int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, char const*, char const*, int)
+    cv::exp(cv::softdouble const&)
+    cv::exp(cv::_InputArray const&, cv::_OutputArray const&)
+    cv::exp(cv::softfloat const&)
+    cv::extractChannel(cv::_InputArray const&, cv::_OutputArray const&, int)
+    cv::extractImageCOI(void const*, cv::_OutputArray const&, int)
+    cv::fastAtan2(float, float)
+    cv::fastFree(void*)
+    cv::fastMalloc(unsigned long)
+    cv::findNonZero(cv::_InputArray const&, cv::_OutputArray const&)
+    cv::flip(cv::_InputArray const&, cv::_OutputArray const&, int)
+    cv::flipND(cv::_InputArray const&, cv::_OutputArray const&, int)
+    cv::format[abi:cxx11](char const*, ...)
+    cv::gemm(cv::_InputArray const&, cv::_InputArray const&, double, cv::_InputArray const&, double, cv::_OutputArray const&, int)
+    cv::getAllocatorStatistics()
+    cv::getBuildInformation[abi:cxx11]()
+    cv::getCPUFeaturesLine[abi:cxx11]()
+    cv::getCPUTickCount()
+    cv::getDefaultAlgorithmHint()
+    cv::getHardwareFeatureName[abi:cxx11](int)
+    cv::getInitializationMutex()
+    cv::getNumThreads()
+    cv::getNumberOfCPUs()
+    cv::getOptimalDFTSize(int)
+    cv::getSeqElem(CvSeq const*, int)
+    cv::getThreadNum()
+    cv::getTickCount()
+    cv::getTickFrequency()
+    cv::getVersionMajor()
+    cv::getVersionMinor()
+    cv::getVersionRevision()
+    cv::getVersionString[abi:cxx11]()
+    cv::glob(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > >&, bool)
+    cv::hal::Cholesky(double*, unsigned long, int, double*, unsigned long, int)
+    cv::hal::Cholesky(float*, unsigned long, int, float*, unsigned long, int)
+    cv::hal::Cholesky32f(float*, unsigned long, int, float*, unsigned long, int)
+    cv::hal::Cholesky64f(double*, unsigned long, int, double*, unsigned long, int)
+    cv::hal::DCT2D::create(int, int, int, int)
+    cv::hal::DFT1D::create(int, int, int, int, bool*)
+    cv::hal::DFT2D::create(int, int, int, int, int, int, int)
+    cv::hal::LU(double*, unsigned long, int, double*, unsigned long, int)
+    cv::hal::LU(float*, unsigned long, int, float*, unsigned long, int)
+    cv::hal::LU32f(float*, unsigned long, int, float*, unsigned long, int)
+    cv::hal::LU64f(double*, unsigned long, int, double*, unsigned long, int)
+    cv::hal::QR32f(float*, unsigned long, int, int, int, float*, unsigned long, float*)
+    cv::hal::QR64f(double*, unsigned long, int, int, int, double*, unsigned long, double*)
+    cv::hal::SVD32f(float*, unsigned long, float*, float*, unsigned long, float*, unsigned long, int, int, int)
+    cv::hal::SVD64f(double*, unsigned long, double*, double*, unsigned long, double*, unsigned long, int, int, int)
+    cv::hal::absdiff16s(short const*, unsigned long, short const*, unsigned long, short*, unsigned long, int, int, void*)
+    cv::hal::absdiff16u(unsigned short const*, unsigned long, unsigned short const*, unsigned long, unsigned short*, unsigned long, int, int, void*)
+    cv::hal::absdiff32f(float const*, unsigned long, float const*, unsigned long, float*, unsigned long, int, int, void*)
+    cv::hal::absdiff32s(int const*, unsigned long, int const*, unsigned long, int*, unsigned long, int, int, void*)
+    cv::hal::absdiff64f(double const*, unsigned long, double const*, unsigned long, double*, unsigned long, int, int, void*)
+    cv::hal::absdiff8s(signed char const*, unsigned long, signed char const*, unsigned long, signed char*, unsigned long, int, int, void*)
+    cv::hal::absdiff8u(unsigned char const*, unsigned long, unsigned char const*, unsigned long, unsigned char*, unsigned long, int, int, void*)
+    cv::hal::add16s(short const*, unsigned long, short const*, unsigned long, short*, unsigned long, int, int, void*)
+    cv::hal::add16u(unsigned short const*, unsigned long, unsigned short const*, unsigned long, unsigned short*, unsigned long, int, int, void*)
+    cv::hal::add32f(float const*, unsigned long, float const*, unsigned long, float*, unsigned long, int, int, void*)
+    cv::hal::add32s(int const*, unsigned long, int const*, unsigned long, int*, unsigned long, int, int, void*)
+    cv::hal::add64f(double const*, unsigned long, double const*, unsigned long, double*, unsigned long, int, int, void*)
+    cv::hal::add8s(signed char const*, unsigned long, signed char const*, unsigned long, signed char*, unsigned long, int, int, void*)
+    cv::hal::add8u(unsigned char const*, unsigned long, unsigned char const*, unsigned long, unsigned char*, unsigned long, int, int, void*)
+    cv::hal::addRNGBias32f(float*, float const*, int)
+    cv::hal::addRNGBias64f(double*, double const*, int)
+    cv::hal::addWeighted16s(short const*, unsigned long, short const*, unsigned long, short*, unsigned long, int, int, void*)
+    cv::hal::addWeighted16u(unsigned short const*, unsigned long, unsigned short const*, unsigned long, unsigned short*, unsigned long, int, int, void*)
+    cv::hal::addWeighted32f(float const*, unsigned long, float const*, unsigned long, float*, unsigned long, int, int, void*)
+    cv::hal::addWeighted32s(int const*, unsigned long, int const*, unsigned long, int*, unsigned long, int, int, void*)
+    cv::hal::addWeighted64f(double const*, unsigned long, double const*, unsigned long, double*, unsigned long, int, int, void*)
+    cv::hal::addWeighted8s(signed char const*, unsigned long, signed char const*, unsigned long, signed char*, unsigned long, int, int, void*)
+    cv::hal::addWeighted8u(unsigned char const*, unsigned long, unsigned char const*, unsigned long, unsigned char*, unsigned long, int, int, void*)
+    cv::hal::and8u(unsigned char const*, unsigned long, unsigned char const*, unsigned long, unsigned char*, unsigned long, int, int, void*)
+    cv::hal::cartToPolar32f(float const*, float const*, float*, float*, int, bool)
+    cv::hal::cartToPolar64f(double const*, double const*, double*, double*, int, bool)
+    cv::hal::cmp16s(short const*, unsigned long, short const*, unsigned long, unsigned char*, unsigned long, int, int, void*)
+    cv::hal::cmp16u(unsigned short const*, unsigned long, unsigned short const*, unsigned long, unsigned char*, unsigned long, int, int, void*)
+    cv::hal::cmp32f(float const*, unsigned long, float const*, unsigned long, unsigned char*, unsigned long, int, int, void*)
+    cv::hal::cmp32s(int const*, unsigned long, int const*, unsigned long, unsigned char*, unsigned long, int, int, void*)
+    cv::hal::cmp64f(double const*, unsigned long, double const*, unsigned long, unsigned char*, unsigned long, int, int, void*)
+    cv::hal::cmp8s(signed char const*, unsigned long, signed char const*, unsigned long, unsigned char*, unsigned long, int, int, void*)
+    cv::hal::cmp8u(unsigned char const*, unsigned long, unsigned char const*, unsigned long, unsigned char*, unsigned long, int, int, void*)
+    cv::hal::cvt16f32f(cv::hfloat const*, float*, int)
+    cv::hal::cvt32f16f(float const*, cv::hfloat*, int)
+    cv::hal::div16s(short const*, unsigned long, short const*, unsigned long, short*, unsigned long, int, int, void*)
+    cv::hal::div16u(unsigned short const*, unsigned long, unsigned short const*, unsigned long, unsigned short*, unsigned long, int, int, void*)
+    cv::hal::div32f(float const*, unsigned long, float const*, unsigned long, float*, unsigned long, int, int, void*)
+    cv::hal::div32s(int const*, unsigned long, int const*, unsigned long, int*, unsigned long, int, int, void*)
+    cv::hal::div64f(double const*, unsigned long, double const*, unsigned long, double*, unsigned long, int, int, void*)
+    cv::hal::div8s(signed char const*, unsigned long, signed char const*, unsigned long, signed char*, unsigned long, int, int, void*)
+    cv::hal::div8u(unsigned char const*, unsigned long, unsigned char const*, unsigned long, unsigned char*, unsigned long, int, int, void*)
+    cv::hal::exp(double const*, double*, int)
+    cv::hal::exp(float const*, float*, int)
+    cv::hal::exp32f(float const*, float*, int)
+    cv::hal::exp64f(double const*, double*, int)
+    cv::hal::fastAtan2(float const*, float const*, float*, int, bool)
+    cv::hal::fastAtan32f(float const*, float const*, float*, int, bool)
+    cv::hal::fastAtan64f(double const*, double const*, double*, int, bool)
+    cv::hal::gemm32f(float const*, unsigned long, float const*, unsigned long, float, float const*, unsigned long, float, float*, unsigned long, int, int, int, int)
+    cv::hal::gemm32fc(float const*, unsigned long, float const*, unsigned long, float, float const*, unsigned long, float, float*, unsigned long, int, int, int, int)
+    cv::hal::gemm64f(double const*, unsigned long, double const*, unsigned long, double, double const*, unsigned long, double, double*, unsigned long, int, int, int, int)
+    cv::hal::gemm64fc(double const*, unsigned long, double const*, unsigned long, double, double const*, unsigned long, double, double*, unsigned long, int, int, int, int)
+    cv::hal::invSqrt(double const*, double*, int)
+    cv::hal::invSqrt(float const*, float*, int)
+    cv::hal::invSqrt32f(float const*, float*, int)
+    cv::hal::invSqrt64f(double const*, double*, int)
+    cv::hal::log(double const*, double*, int)
+    cv::hal::log(float const*, float*, int)
+    cv::hal::log32f(float const*, float*, int)
+    cv::hal::log64f(double const*, double*, int)
+    cv::hal::magnitude(double const*, double const*, double*, int)
+    cv::hal::magnitude(float const*, float const*, float*, int)
+    cv::hal::magnitude32f(float const*, float const*, float*, int)
+    cv::hal::magnitude64f(double const*, double const*, double*, int)
+    cv::hal::max16s(short const*, unsigned long, short const*, unsigned long, short*, unsigned long, int, int, void*)
+    cv::hal::max16u(unsigned short const*, unsigned long, unsigned short const*, unsigned long, unsigned short*, unsigned long, int, int, void*)
+    cv::hal::max32f(float const*, unsigned long, float const*, unsigned long, float*, unsigned long, int, int, void*)
+    cv::hal::max32s(int const*, unsigned long, int const*, unsigned long, int*, unsigned long, int, int, void*)
+    cv::hal::max64f(double const*, unsigned long, double const*, unsigned long, double*, unsigned long, int, int, void*)
+    cv::hal::max8s(signed char const*, unsigned long, signed char const*, unsigned long, signed char*, unsigned long, int, int, void*)
+    cv::hal::max8u(unsigned char const*, unsigned long, unsigned char const*, unsigned long, unsigned char*, unsigned long, int, int, void*)
+    cv::hal::merge16u(unsigned short const**, unsigned short*, int, int)
+    cv::hal::merge32s(int const**, int*, int, int)
+    cv::hal::merge64s(long const**, long*, int, int)
+    cv::hal::merge8u(unsigned char const**, unsigned char*, int, int)
+    cv::hal::min16s(short const*, unsigned long, short const*, unsigned long, short*, unsigned long, int, int, void*)
+    cv::hal::min16u(unsigned short const*, unsigned long, unsigned short const*, unsigned long, unsigned short*, unsigned long, int, int, void*)
+    cv::hal::min32f(float const*, unsigned long, float const*, unsigned long, float*, unsigned long, int, int, void*)
+    cv::hal::min32s(int const*, unsigned long, int const*, unsigned long, int*, unsigned long, int, int, void*)
+    cv::hal::min64f(double const*, unsigned long, double const*, unsigned long, double*, unsigned long, int, int, void*)
+    cv::hal::min8s(signed char const*, unsigned long, signed char const*, unsigned long, signed char*, unsigned long, int, int, void*)
+    cv::hal::min8u(unsigned char const*, unsigned long, unsigned char const*, unsigned long, unsigned char*, unsigned long, int, int, void*)
+    cv::hal::mul16s(short const*, unsigned long, short const*, unsigned long, short*, unsigned long, int, int, void*)
+    cv::hal::mul16u(unsigned short const*, unsigned long, unsigned short const*, unsigned long, unsigned short*, unsigned long, int, int, void*)
+    cv::hal::mul32f(float const*, unsigned long, float const*, unsigned long, float*, unsigned long, int, int, void*)
+    cv::hal::mul32s(int const*, unsigned long, int const*, unsigned long, int*, unsigned long, int, int, void*)
+    cv::hal::mul64f(double const*, unsigned long, double const*, unsigned long, double*, unsigned long, int, int, void*)
+    cv::hal::mul8s(signed char const*, unsigned long, signed char const*, unsigned long, signed char*, unsigned long, int, int, void*)
+    cv::hal::mul8u(unsigned char const*, unsigned long, unsigned char const*, unsigned long, unsigned char*, unsigned long, int, int, void*)
+    cv::hal::normHamming(unsigned char const*, unsigned char const*, int)
+    cv::hal::normHamming(unsigned char const*, unsigned char const*, int, int)
+    cv::hal::normHamming(unsigned char const*, int)
+    cv::hal::normHamming(unsigned char const*, int, int)
+    cv::hal::normL1_(float const*, float const*, int)
+    cv::hal::normL1_(unsigned char const*, unsigned char const*, int)
+    cv::hal::normL2Sqr_(float const*, float const*, int)
+    cv::hal::not8u(unsigned char const*, unsigned long, unsigned char const*, unsigned long, unsigned char*, unsigned long, int, int, void*)
+    cv::hal::or8u(unsigned char const*, unsigned long, unsigned char const*, unsigned long, unsigned char*, unsigned long, int, int, void*)
+    cv::hal::polarToCart32f(float const*, float const*, float*, float*, int, bool)
+    cv::hal::polarToCart64f(double const*, double const*, double*, double*, int, bool)
+    cv::hal::recip16s(short const*, unsigned long, short const*, unsigned long, short*, unsigned long, int, int, void*)
+    cv::hal::recip16u(unsigned short const*, unsigned long, unsigned short const*, unsigned long, unsigned short*, unsigned long, int, int, void*)
+    cv::hal::recip32f(float const*, unsigned long, float const*, unsigned long, float*, unsigned long, int, int, void*)
+    cv::hal::recip32s(int const*, unsigned long, int const*, unsigned long, int*, unsigned long, int, int, void*)
+    cv::hal::recip64f(double const*, unsigned long, double const*, unsigned long, double*, unsigned long, int, int, void*)
+    cv::hal::recip8s(signed char const*, unsigned long, signed char const*, unsigned long, signed char*, unsigned long, int, int, void*)
+    cv::hal::recip8u(unsigned char const*, unsigned long, unsigned char const*, unsigned long, unsigned char*, unsigned long, int, int, void*)
+    cv::hal::split16u(unsigned short const*, unsigned short**, int, int)
+    cv::hal::split32s(int const*, int**, int, int)
+    cv::hal::split64s(long const*, long**, int, int)
+    cv::hal::split8u(unsigned char const*, unsigned char**, int, int)
+    cv::hal::sqrt(double const*, double*, int)
+    cv::hal::sqrt(float const*, float*, int)
+    cv::hal::sqrt32f(float const*, float*, int)
+    cv::hal::sqrt64f(double const*, double*, int)
+    cv::hal::sub16s(short const*, unsigned long, short const*, unsigned long, short*, unsigned long, int, int, void*)
+    cv::hal::sub16u(unsigned short const*, unsigned long, unsigned short const*, unsigned long, unsigned short*, unsigned long, int, int, void*)
+    cv::hal::sub32f(float const*, unsigned long, float const*, unsigned long, float*, unsigned long, int, int, void*)
+    cv::hal::sub32s(int const*, unsigned long, int const*, unsigned long, int*, unsigned long, int, int, void*)
+    cv::hal::sub64f(double const*, unsigned long, double const*, unsigned long, double*, unsigned long, int, int, void*)
+    cv::hal::sub8s(signed char const*, unsigned long, signed char const*, unsigned long, signed char*, unsigned long, int, int, void*)
+    cv::hal::sub8u(unsigned char const*, unsigned long, unsigned char const*, unsigned long, unsigned char*, unsigned long, int, int, void*)
+    cv::hal::xor8u(unsigned char const*, unsigned long, unsigned char const*, unsigned long, unsigned char*, unsigned long, int, int, void*)
+    cv::hasNonZero(cv::_InputArray const&)
+    cv::haveOpenVX()
+    cv::hconcat(cv::Mat const*, unsigned long, cv::_OutputArray const&)
+    cv::hconcat(cv::_InputArray const&, cv::_OutputArray const&)
+    cv::hconcat(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&)
+    cv::idct(cv::_InputArray const&, cv::_OutputArray const&, int)
+    cv::idft(cv::_InputArray const&, cv::_OutputArray const&, int, int)
+    cv::inRange(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&)
+    cv::insertChannel(cv::_InputArray const&, cv::_InputOutputArray const&, int)
+    cv::insertImageCOI(cv::_InputArray const&, void*, int)
+    cv::instr::getFlags()
+    cv::instr::getTrace()
+    cv::instr::resetTrace()
+    cv::instr::setFlags(cv::instr::FLAGS)
+    cv::instr::setUseInstrumentation(bool)
+    cv::instr::useInstrumentation()
+    cv::invert(cv::_InputArray const&, cv::_OutputArray const&, int)
+    cv::ipp::getIppErrorLocation[abi:cxx11]()
+    cv::ipp::getIppFeatures()
+    cv::ipp::getIppStatus()
+    cv::ipp::getIppTopFeatures()
+    cv::ipp::getIppVersion[abi:cxx11]()
+    cv::ipp::setIppStatus(int, char const*, char const*, int)
+    cv::ipp::setUseIPP(bool)
+    cv::ipp::setUseIPP_NotExact(bool)
+    cv::ipp::useIPP()
+    cv::ipp::useIPP_NotExact()
+    cv::kmeans(cv::_InputArray const&, int, cv::_InputOutputArray const&, cv::TermCriteria, int, int, cv::_OutputArray const&)
+    cv::log(cv::softdouble const&)
+    cv::log(cv::_InputArray const&, cv::_OutputArray const&)
+    cv::log(cv::softfloat const&)
+    cv::magnitude(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&)
+    cv::max(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&)
+    cv::max(cv::Mat const&, cv::Mat const&)
+    cv::max(cv::Mat const&, cv::Mat const&, cv::Mat&)
+    cv::max(cv::Mat const&, double)
+    cv::max(cv::UMat const&, cv::UMat const&, cv::UMat&)
+    cv::max(double, cv::Mat const&)
+    cv::mean(cv::_InputArray const&, cv::_InputArray const&)
+    cv::meanStdDev(cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_InputArray const&)
+    cv::merge(cv::Mat const*, unsigned long, cv::_OutputArray const&)
+    cv::merge(cv::_InputArray const&, cv::_OutputArray const&)
+    cv::min(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&)
+    cv::min(cv::Mat const&, cv::Mat const&)
+    cv::min(cv::Mat const&, cv::Mat const&, cv::Mat&)
+    cv::min(cv::Mat const&, double)
+    cv::min(cv::UMat const&, cv::UMat const&, cv::UMat&)
+    cv::min(double, cv::Mat const&)
+    cv::minMaxIdx(cv::_InputArray const&, double*, double*, int*, int*, cv::_InputArray const&)
+    cv::minMaxLoc(cv::_InputArray const&, double*, double*, cv::Point_<int>*, cv::Point_<int>*, cv::_InputArray const&)
+    cv::minMaxLoc(cv::SparseMat const&, double*, double*, int*, int*)
+    cv::mixChannels(cv::Mat const*, unsigned long, cv::Mat*, unsigned long, int const*, unsigned long)
+    cv::mixChannels(cv::_InputArray const&, cv::_InputOutputArray const&, int const*, unsigned long)
+    cv::mixChannels(cv::_InputArray const&, cv::_InputOutputArray const&, std::vector<int, std::allocator<int> > const&)
+    cv::mulAdd(cv::softdouble const&, cv::softdouble const&, cv::softdouble const&)
+    cv::mulAdd(cv::softfloat const&, cv::softfloat const&, cv::softfloat const&)
+    cv::mulSpectrums(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, int, bool)
+    cv::mulTransposed(cv::_InputArray const&, cv::_OutputArray const&, bool, cv::_InputArray const&, double, int)
+    cv::multiply(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, double, int)
+    cv::noArray()
+    cv::norm(cv::_InputArray const&, cv::_InputArray const&, int, cv::_InputArray const&)
+    cv::norm(cv::_InputArray const&, int, cv::_InputArray const&)
+    cv::norm(cv::SparseMat const&, int)
+    cv::normalize(cv::_InputArray const&, cv::_InputOutputArray const&, double, double, int, int, cv::_InputArray const&)
+    cv::normalize(cv::SparseMat const&, cv::SparseMat&, double, int)
+    cv::ocl::Context::Impl::__init_buffer_pools()
+    cv::ocl::Context::Impl::getProg(cv::ocl::ProgramSource const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)
+    cv::ocl::Kernel::Impl::run(int, unsigned long*, unsigned long*, bool, long*, cv::ocl::Queue const&)
+    cv::ocl::OpenCLExecutionContext::bind() const
+    cv::ocl::OpenCLExecutionContext::cloneWithNewQueue(cv::ocl::Queue const&) const
+    cv::ocl::OpenCLExecutionContext::cloneWithNewQueue() const
+    cv::ocl::OpenCLExecutionContext::create(cv::ocl::Context const&, cv::ocl::Device const&)
+    cv::ocl::OpenCLExecutionContext::create(cv::ocl::Context const&, cv::ocl::Device const&, cv::ocl::Queue const&)
+    cv::ocl::OpenCLExecutionContext::create(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, void*, void*, void*)
+    cv::ocl::OpenCLExecutionContext::getContext() const
+    cv::ocl::OpenCLExecutionContext::getCurrent()
+    cv::ocl::OpenCLExecutionContext::getCurrentRef()
+    cv::ocl::OpenCLExecutionContext::getDevice() const
+    cv::ocl::OpenCLExecutionContext::getQueue() const
+    cv::ocl::OpenCLExecutionContext::release()
+    cv::ocl::OpenCLExecutionContext::setUseOpenCL(bool)
+    cv::ocl::OpenCLExecutionContext::useOpenCL() const
+    cv::ocl::internal::ProgramEntry::operator cv::ocl::ProgramSource&() const
+    cv::ocl::attachContext(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, void*, void*, void*)
+    cv::ocl::buildOptionsAddMatrixDescription(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, cv::_InputArray const&)
+    cv::ocl::checkOptimalVectorWidth(int const*, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::ocl::OclVectorStrategy)
+    cv::ocl::convertFromBuffer(void*, unsigned long, int, int, int, cv::UMat&)
+    cv::ocl::convertFromImage(void*, cv::UMat&)
+    cv::ocl::convertTypeStr(int, int, int, char*)
+    cv::ocl::convertTypeStr(int, int, int, char*, unsigned long)
+    cv::ocl::finish()
+    cv::ocl::getOpenCLAllocator()
+    cv::ocl::getOpenCLAllocatorStatistics()
+    cv::ocl::getOpenCLErrorString(int)
+    cv::ocl::getPlatfomsInfo(std::vector<cv::ocl::PlatformInfo, std::allocator<cv::ocl::PlatformInfo> >&)
+    cv::ocl::haveAmdBlas()
+    cv::ocl::haveAmdFft()
+    cv::ocl::haveOpenCL()
+    cv::ocl::haveSVM()
+    cv::ocl::internal::isCLBuffer(cv::UMat&)
+    cv::ocl::internal::isOpenCLForced()
+    cv::ocl::internal::isPerformanceCheckBypassed()
+    cv::ocl::isOpenCLActivated()
+    cv::ocl::kernelToStr[abi:cxx11](cv::_InputArray const&, int, char const*)
+    cv::ocl::memopTypeToStr(int)
+    cv::ocl::predictOptimalVectorWidth(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::ocl::OclVectorStrategy)
+    cv::ocl::predictOptimalVectorWidthMax(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&)
+    cv::ocl::setUseOpenCL(bool)
+    cv::ocl::typeToStr(int)
+    cv::ocl::useOpenCL()
+    cv::ocl::vecopTypeToStr(int)
+    cv::ogl::Arrays::bind() const
+    cv::ogl::Arrays::release()
+    cv::ogl::Arrays::resetColorArray()
+    cv::ogl::Arrays::resetNormalArray()
+    cv::ogl::Arrays::resetTexCoordArray()
+    cv::ogl::Arrays::resetVertexArray()
+    cv::ogl::Arrays::setAutoRelease(bool)
+    cv::ogl::Arrays::setColorArray(cv::_InputArray const&)
+    cv::ogl::Arrays::setNormalArray(cv::_InputArray const&)
+    cv::ogl::Arrays::setTexCoordArray(cv::_InputArray const&)
+    cv::ogl::Arrays::setVertexArray(cv::_InputArray const&)
+    cv::ogl::convertFromGLTexture2D(cv::ogl::Texture2D const&, cv::_OutputArray const&)
+    cv::ogl::convertToGLTexture2D(cv::_InputArray const&, cv::ogl::Texture2D&)
+    cv::ogl::mapGLBuffer(cv::ogl::Buffer const&, cv::AccessFlag)
+    cv::ogl::ocl::initializeContextFromGL()
+    cv::ogl::render(cv::ogl::Arrays const&, cv::_InputArray const&, int, cv::Scalar_<double>)
+    cv::ogl::render(cv::ogl::Arrays const&, int, cv::Scalar_<double>)
+    cv::ogl::render(cv::ogl::Texture2D const&, cv::Rect_<double>, cv::Rect_<double>)
+    cv::ogl::unmapGLBuffer(cv::UMat&)
+    cv::operator!=(cv::FileNodeIterator const&, cv::FileNodeIterator const&)
+    cv::operator!=(cv::Mat const&, cv::Mat const&)
+    cv::operator!=(cv::Mat const&, double)
+    cv::operator!=(double, cv::Mat const&)
+    cv::operator&(cv::Mat const&, cv::Scalar_<double> const&)
+    cv::operator&(cv::Mat const&, cv::Mat const&)
+    cv::operator&(cv::Scalar_<double> const&, cv::Mat const&)
+    cv::operator*(cv::Mat const&, cv::MatExpr const&)
+    cv::operator*(cv::Mat const&, cv::Mat const&)
+    cv::operator*(cv::Mat const&, double)
+    cv::operator*(cv::MatExpr const&, cv::Mat const&)
+    cv::operator*(cv::MatExpr const&, cv::MatExpr const&)
+    cv::operator*(cv::MatExpr const&, double)
+    cv::operator*(double, cv::Mat const&)
+    cv::operator*(double, cv::MatExpr const&)
+    cv::operator+(cv::Mat const&, cv::MatExpr const&)
+    cv::operator+(cv::Mat const&, cv::Scalar_<double> const&)
+    cv::operator+(cv::Mat const&, cv::Mat const&)
+    cv::operator+(cv::MatExpr const&, cv::Mat const&)
+    cv::operator+(cv::MatExpr const&, cv::Scalar_<double> const&)
+    cv::operator+(cv::MatExpr const&, cv::MatExpr const&)
+    cv::operator+(cv::Scalar_<double> const&, cv::Mat const&)
+    cv::operator+(cv::Scalar_<double> const&, cv::MatExpr const&)
+    cv::operator-(cv::Mat const&, cv::MatExpr const&)
+    cv::operator-(cv::Mat const&, cv::Scalar_<double> const&)
+    cv::operator-(cv::Mat const&, cv::Mat const&)
+    cv::operator-(cv::MatExpr const&, cv::Mat const&)
+    cv::operator-(cv::MatExpr const&, cv::Scalar_<double> const&)
+    cv::operator-(cv::MatExpr const&, cv::MatExpr const&)
+    cv::operator-(cv::Scalar_<double> const&, cv::Mat const&)
+    cv::operator-(cv::Scalar_<double> const&, cv::MatExpr const&)
+    cv::operator-(cv::Mat const&)
+    cv::operator-(cv::MatExpr const&)
+    cv::operator/(cv::Mat const&, cv::MatExpr const&)
+    cv::operator/(cv::Mat const&, cv::Mat const&)
+    cv::operator/(cv::Mat const&, double)
+    cv::operator/(cv::MatExpr const&, cv::Mat const&)
+    cv::operator/(cv::MatExpr const&, cv::MatExpr const&)
+    cv::operator/(cv::MatExpr const&, double)
+    cv::operator/(double, cv::Mat const&)
+    cv::operator/(double, cv::MatExpr const&)
+    cv::operator<(cv::Mat const&, cv::Mat const&)
+    cv::operator<(cv::Mat const&, double)
+    cv::operator<(double, cv::Mat const&)
+    cv::operator<<(cv::FileStorage&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::operator<=(cv::Mat const&, cv::Mat const&)
+    cv::operator<=(cv::Mat const&, double)
+    cv::operator<=(double, cv::Mat const&)
+    cv::operator==(cv::FileNodeIterator const&, cv::FileNodeIterator const&)
+    cv::operator==(cv::Mat const&, cv::Mat const&)
+    cv::operator==(cv::Mat const&, double)
+    cv::operator==(double, cv::Mat const&)
+    cv::operator>(cv::Mat const&, cv::Mat const&)
+    cv::operator>(cv::Mat const&, double)
+    cv::operator>(double, cv::Mat const&)
+    cv::operator>=(cv::Mat const&, cv::Mat const&)
+    cv::operator>=(cv::Mat const&, double)
+    cv::operator>=(double, cv::Mat const&)
+    cv::operator^(cv::Mat const&, cv::Scalar_<double> const&)
+    cv::operator^(cv::Mat const&, cv::Mat const&)
+    cv::operator^(cv::Scalar_<double> const&, cv::Mat const&)
+    cv::operator|(cv::Mat const&, cv::Scalar_<double> const&)
+    cv::operator|(cv::Mat const&, cv::Mat const&)
+    cv::operator|(cv::Scalar_<double> const&, cv::Mat const&)
+    cv::operator~(cv::Mat const&)
+    cv::parallel::setParallelForBackend(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, bool)
+    cv::parallel::setParallelForBackend(std::shared_ptr<cv::parallel::ParallelForAPI> const&, bool)
+    cv::parallel_for_(cv::Range const&, cv::ParallelLoopBody const&, double)
+    cv::patchNaNs(cv::_InputOutputArray const&, double)
+    cv::perspectiveTransform(cv::_InputArray const&, cv::_OutputArray const&, cv::_InputArray const&)
+    cv::phase(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, bool)
+    cv::polarToCart(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, bool)
+    cv::pow(cv::softdouble const&, cv::softdouble const&)
+    cv::pow(cv::_InputArray const&, double, cv::_OutputArray const&)
+    cv::pow(cv::softfloat const&, cv::softfloat const&)
+    cv::randShuffle(cv::_InputOutputArray const&, double, cv::RNG*)
+    cv::randn(cv::_InputOutputArray const&, cv::_InputArray const&, cv::_InputArray const&)
+    cv::randu(cv::_InputOutputArray const&, cv::_InputArray const&, cv::_InputArray const&)
+    cv::read(cv::FileNode const&, cv::Mat&, cv::Mat const&)
+    cv::read(cv::FileNode const&, cv::DMatch&, cv::DMatch const&)
+    cv::read(cv::FileNode const&, cv::KeyPoint&, cv::KeyPoint const&)
+    cv::read(cv::FileNode const&, cv::SparseMat&, cv::SparseMat const&)
+    cv::read(cv::FileNode const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::read(cv::FileNode const&, std::vector<cv::DMatch, std::allocator<cv::DMatch> >&)
+    cv::read(cv::FileNode const&, std::vector<cv::KeyPoint, std::allocator<cv::KeyPoint> >&)
+    cv::read(cv::FileNode const&, double&, double)
+    cv::read(cv::FileNode const&, float&, float)
+    cv::read(cv::FileNode const&, int&, int)
+    cv::read(cv::FileNode const&, long&, long)
+    cv::redirectError(int (*)(int, char const*, char const*, char const*, int, void*), void*, void**)
+    cv::reduce(cv::_InputArray const&, cv::_OutputArray const&, int, int, int)
+    cv::reduceArgMax(cv::_InputArray const&, cv::_OutputArray const&, int, bool)
+    cv::reduceArgMin(cv::_InputArray const&, cv::_OutputArray const&, int, bool)
+    cv::releaseTlsStorageThread()
+    cv::repeat(cv::_InputArray const&, int, int, cv::_OutputArray const&)
+    cv::repeat(cv::Mat const&, int, int)
+    cv::rotate(cv::_InputArray const&, cv::_OutputArray const&, int)
+    cv::samples::addSamplesDataSearchPath(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::samples::addSamplesDataSearchSubDirectory(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::samples::findFile(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, bool, bool)
+    cv::scalarToRawData(cv::Scalar_<double> const&, void*, int, int)
+    cv::scaleAdd(cv::_InputArray const&, double, cv::_InputArray const&, cv::_OutputArray const&)
+    cv::seqInsertSlice(CvSeq*, int, void const*)
+    cv::seqPop(CvSeq*, void*)
+    cv::seqPopFront(CvSeq*, void*)
+    cv::seqPush(CvSeq*, void const*)
+    cv::seqPushFront(CvSeq*, void const*)
+    cv::seqRemove(CvSeq*, int)
+    cv::seqRemoveSlice(CvSeq*, CvSlice)
+    cv::setBreakOnError(bool)
+    cv::setIdentity(cv::_InputOutputArray const&, cv::Scalar_<double> const&)
+    cv::setNumThreads(int)
+    cv::setRNGSeed(int)
+    cv::setUseOpenVX(bool)
+    cv::setUseOptimized(bool)
+    cv::sin(cv::softdouble const&)
+    cv::softfloat::operator cv::softdouble() const
+    cv::softdouble::operator cv::softfloat() const
+    cv::solve(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, int)
+    cv::solveCubic(cv::_InputArray const&, cv::_OutputArray const&)
+    cv::solveLP(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&)
+    cv::solveLP(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, double)
+    cv::solvePoly(cv::_InputArray const&, cv::_OutputArray const&, int)
+    cv::sort(cv::_InputArray const&, cv::_OutputArray const&, int)
+    cv::sortIdx(cv::_InputArray const&, cv::_OutputArray const&, int)
+    cv::split(cv::_InputArray const&, cv::_OutputArray const&)
+    cv::split(cv::Mat const&, cv::Mat*)
+    cv::sqrt(cv::softdouble const&)
+    cv::sqrt(cv::_InputArray const&, cv::_OutputArray const&)
+    cv::sqrt(cv::softfloat const&)
+    cv::subtract(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, cv::_InputArray const&, int)
+    cv::sum(cv::_InputArray const&)
+    cv::swap(cv::Mat&, cv::Mat&)
+    cv::swap(cv::UMat&, cv::UMat&)
+    cv::tempfile[abi:cxx11](char const*)
+    cv::terminate(int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, char const*, char const*, int)
+    cv::theRNG()
+    cv::trace(cv::_InputArray const&)
+    cv::transform(cv::_InputArray const&, cv::_OutputArray const&, cv::_InputArray const&)
+    cv::transpose(cv::_InputArray const&, cv::_OutputArray const&)
+    cv::transposeND(cv::_InputArray const&, std::vector<int, std::allocator<int> > const&, cv::_OutputArray const&)
+    cv::typeToString[abi:cxx11](int)
+    cv::useOpenVX()
+    cv::useOptimized()
+    cv::utils::addDataSearchPath(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::utils::addDataSearchSubDirectory(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::utils::dumpInputArrayOfArrays[abi:cxx11](cv::_InputArray const&)
+    cv::utils::dumpInputArray[abi:cxx11](cv::_InputArray const&)
+    cv::utils::dumpInputOutputArrayOfArrays[abi:cxx11](cv::_InputOutputArray const&)
+    cv::utils::dumpInputOutputArray[abi:cxx11](cv::_InputOutputArray const&)
+    cv::utils::dumpVectorOfDouble[abi:cxx11](std::vector<double, std::allocator<double> > const&)
+    cv::utils::dumpVectorOfInt[abi:cxx11](std::vector<int, std::allocator<int> > const&)
+    cv::utils::dumpVectorOfRect[abi:cxx11](std::vector<cv::Rect_<int>, std::allocator<cv::Rect_<int> > > const&)
+    cv::utils::findDataFile(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, char const*, std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > const*, std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > const*)
+    cv::utils::findDataFile(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, bool, char const*)
+    cv::utils::fs::canonical(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::utils::fs::createDirectories(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::utils::fs::createDirectory(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::utils::fs::exists(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::utils::fs::getCacheDirectoryForDownloads[abi:cxx11]()
+    cv::utils::fs::getCacheDirectory[abi:cxx11](char const*, char const*)
+    cv::utils::fs::getParent(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::utils::fs::getParent(std::__cxx11::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t> > const&)
+    cv::utils::fs::getcwd[abi:cxx11]()
+    cv::utils::fs::glob(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > >&, bool, bool)
+    cv::utils::fs::glob_relative(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > >&, bool, bool)
+    cv::utils::fs::isDirectory(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::utils::fs::join(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::utils::fs::remove_all(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::utils::getBinLocation(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)
+    cv::utils::getConfigurationParameterBool(char const*, bool)
+    cv::utils::getConfigurationParameterPaths(char const*, std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > const&)
+    cv::utils::getConfigurationParameterSizeT(char const*, unsigned long)
+    cv::utils::getConfigurationParameterString(char const*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::utils::getThreadID()
+    cv::utils::logging::getLogLevel()
+    cv::utils::logging::getLogTagLevel(char const*)
+    cv::utils::logging::internal::getGlobalLogTag()
+    cv::utils::logging::internal::replaceWriteLogMessage(void (*)(cv::utils::logging::LogLevel, char const*))
+    cv::utils::logging::internal::replaceWriteLogMessageEx(void (*)(cv::utils::logging::LogLevel, char const*, char const*, int, char const*, char const*))
+    cv::utils::logging::internal::writeLogMessage(cv::utils::logging::LogLevel, char const*)
+    cv::utils::logging::internal::writeLogMessageEx(cv::utils::logging::LogLevel, char const*, char const*, int, char const*, char const*)
+    cv::utils::logging::registerLogTag(cv::utils::logging::LogTag*)
+    cv::utils::logging::setLogLevel(cv::utils::logging::LogLevel)
+    cv::utils::logging::setLogTagLevel(char const*, cv::utils::logging::LogLevel)
+    cv::utils::trace::details::getTraceManager()
+    cv::utils::trace::details::traceArg(cv::utils::trace::details::TraceArg const&, char const*)
+    cv::utils::trace::details::traceArg(cv::utils::trace::details::TraceArg const&, double)
+    cv::utils::trace::details::traceArg(cv::utils::trace::details::TraceArg const&, int)
+    cv::utils::trace::details::traceArg(cv::utils::trace::details::TraceArg const&, long)
+    cv::va_intel::convertFromVASurface(void*, unsigned int, cv::Size_<int>, cv::_OutputArray const&)
+    cv::va_intel::convertToVASurface(void*, cv::_InputArray const&, unsigned int, cv::Size_<int>)
+    cv::va_intel::ocl::initializeContextFromVA(void*, bool)
+    cv::vconcat(cv::Mat const*, unsigned long, cv::_OutputArray const&)
+    cv::vconcat(cv::_InputArray const&, cv::_OutputArray const&)
+    cv::vconcat(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&)
+    cv::write(cv::FileStorage&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, cv::Mat const&)
+    cv::write(cv::FileStorage&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, cv::SparseMat const&)
+    cv::write(cv::FileStorage&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::vector<cv::DMatch, std::allocator<cv::DMatch> > const&)
+    cv::write(cv::FileStorage&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::vector<cv::KeyPoint, std::allocator<cv::KeyPoint> > const&)
+    cv::write(cv::FileStorage&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::write(cv::FileStorage&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, double)
+    cv::write(cv::FileStorage&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, float)
+    cv::write(cv::FileStorage&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, int)
+    cv::write(cv::FileStorage&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, long)
+    cv::writeScalar(cv::FileStorage&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::writeScalar(cv::FileStorage&, double)
+    cv::writeScalar(cv::FileStorage&, float)
+    cv::writeScalar(cv::FileStorage&, int)
+    cv::writeScalar(cv::FileStorage&, long)
+
+--- libopencv_datasets.so: not bound ---
+
+--- libopencv_dnn.so: bound (18.72%) ---
+  classes (2/15):
+    cv::MatConstIterator
+    cv::dnn::dnn4_v20251223::ClassificationModel
+    cv::dnn::dnn4_v20251223::DetectionModel
+    cv::dnn::dnn4_v20251223::DictValue
+    cv::dnn::dnn4_v20251223::Image2BlobParams
+    cv::dnn::dnn4_v20251223::KeypointsModel
+    cv::dnn::dnn4_v20251223::Layer
+    cv::dnn::dnn4_v20251223::Model
+    cv::dnn::dnn4_v20251223::Net
+    cv::dnn::dnn4_v20251223::Net::Impl
+    cv::dnn::dnn4_v20251223::SegmentationModel
+    cv::dnn::dnn4_v20251223::TextDetectionModel
+    cv::dnn::dnn4_v20251223::TextDetectionModel_DB
+    cv::dnn::dnn4_v20251223::TextDetectionModel_EAST
+    cv::dnn::dnn4_v20251223::TextRecognitionModel
+  functions (33/172):
+    cv::MatExpr::operator cv::Mat() const
+    cv::dnn::dnn4_v20251223::AbsLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::AccumLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::AcosLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::AcoshLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::ActivationLayerInt8::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::ArgLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::AsinLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::AsinhLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::AtanLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::AtanhLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::AttentionLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::BNLLLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::BatchNormLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::BatchNormLayerInt8::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::BlankLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::CeilLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::CeluLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::ChannelsPReLULayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::CompareLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::ConcatLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::ConstLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::ConvolutionLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::ConvolutionLayerInt8::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::CorrelationLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::CosLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::CoshLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::CropAndResizeLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::CropLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::CumSumLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::DataAugmentationLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::DeconvolutionLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::DepthToSpaceLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::DequantizeLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::DetectionOutputLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::Dict::get(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) const
+    cv::dnn::dnn4_v20251223::ELULayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::EinsumLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::EltwiseLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::EltwiseLayerInt8::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::ErfLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::ExpLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::ExpandLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::FlattenLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::FloorLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::FlowWarpLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::GRULayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::GatherElementsLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::GatherLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::GeluApproximationLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::GeluLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::GemmLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::GroupNormLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::HardSigmoidLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::HardSwishLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::InnerProductLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::InnerProductLayerInt8::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::InstanceNormLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::InterpLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::LRNLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::LSTMLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::LSTMLayer::inputNameToIndex(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >)
+    cv::dnn::dnn4_v20251223::LSTMLayer::outputNameToIndex(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::dnn::dnn4_v20251223::LayerFactory::createLayerInstance(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, cv::dnn::dnn4_v20251223::LayerParams&)
+    cv::dnn::dnn4_v20251223::LayerFactory::isLayerRegistered(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::dnn::dnn4_v20251223::LayerFactory::registerLayer(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, cv::Ptr<cv::dnn::dnn4_v20251223::Layer> (*)(cv::dnn::dnn4_v20251223::LayerParams&))
+    cv::dnn::dnn4_v20251223::LayerFactory::unregisterLayer(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::dnn::dnn4_v20251223::LayerNormLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::LogLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::MVNLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::MatMulLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::MaxUnpoolLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::MishLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::NMSBoxes(std::vector<cv::RotatedRect, std::allocator<cv::RotatedRect> > const&, std::vector<float, std::allocator<float> > const&, float, float, std::vector<int, std::allocator<int> >&, float, int)
+    cv::dnn::dnn4_v20251223::NMSBoxes(std::vector<cv::Rect_<double>, std::allocator<cv::Rect_<double> > > const&, std::vector<float, std::allocator<float> > const&, float, float, std::vector<int, std::allocator<int> >&, float, int)
+    cv::dnn::dnn4_v20251223::NMSBoxes(std::vector<cv::Rect_<int>, std::allocator<cv::Rect_<int> > > const&, std::vector<float, std::allocator<float> > const&, float, float, std::vector<int, std::allocator<int> >&, float, int)
+    cv::dnn::dnn4_v20251223::NMSBoxesBatched(std::vector<cv::Rect_<double>, std::allocator<cv::Rect_<double> > > const&, std::vector<float, std::allocator<float> > const&, std::vector<int, std::allocator<int> > const&, float, float, std::vector<int, std::allocator<int> >&, float, int)
+    cv::dnn::dnn4_v20251223::NMSBoxesBatched(std::vector<cv::Rect_<int>, std::allocator<cv::Rect_<int> > > const&, std::vector<float, std::allocator<float> > const&, std::vector<int, std::allocator<int> > const&, float, float, std::vector<int, std::allocator<int> >&, float, int)
+    cv::dnn::dnn4_v20251223::NaryEltwiseLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::NormalizeBBoxLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::NotLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::PaddingLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::PermuteLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::PoolingLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::PoolingLayerInt8::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::PowerLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::PriorBoxLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::ProposalLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::QuantizeLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::RNNLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::ReLU6Layer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::ReLULayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::ReciprocalLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::ReduceLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::RegionLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::ReorgLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::RequantizeLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::ReshapeLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::ResizeLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::RoundLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::ScaleLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::ScaleLayerInt8::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::ScatterLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::ScatterNDLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::SeluLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::ShiftLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::ShiftLayerInt8::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::ShrinkLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::ShuffleChannelLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::SigmoidLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::SignLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::SinLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::SinhLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::SliceLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::SoftmaxLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::SoftmaxLayerInt8::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::SoftplusLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::SoftsignLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::SpaceToDepthLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::SplitLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::SqrtLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::SwishLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::TanHLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::TanLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::ThresholdedReluLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::TileLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::TopKLayer::create(cv::dnn::dnn4_v20251223::LayerParams const&)
+    cv::dnn::dnn4_v20251223::blobFromImage(cv::_InputArray const&, cv::_OutputArray const&, double, cv::Size_<int> const&, cv::Scalar_<double> const&, bool, bool, int)
+    cv::dnn::dnn4_v20251223::blobFromImage(cv::_InputArray const&, double, cv::Size_<int> const&, cv::Scalar_<double> const&, bool, bool, int)
+    cv::dnn::dnn4_v20251223::blobFromImageWithParams(cv::_InputArray const&, cv::dnn::dnn4_v20251223::Image2BlobParams const&)
+    cv::dnn::dnn4_v20251223::blobFromImageWithParams(cv::_InputArray const&, cv::_OutputArray const&, cv::dnn::dnn4_v20251223::Image2BlobParams const&)
+    cv::dnn::dnn4_v20251223::blobFromImages(cv::_InputArray const&, cv::_OutputArray const&, double, cv::Size_<int>, cv::Scalar_<double> const&, bool, bool, int)
+    cv::dnn::dnn4_v20251223::blobFromImages(cv::_InputArray const&, double, cv::Size_<int>, cv::Scalar_<double> const&, bool, bool, int)
+    cv::dnn::dnn4_v20251223::blobFromImagesWithParams(cv::_InputArray const&, cv::dnn::dnn4_v20251223::Image2BlobParams const&)
+    cv::dnn::dnn4_v20251223::blobFromImagesWithParams(cv::_InputArray const&, cv::_OutputArray const&, cv::dnn::dnn4_v20251223::Image2BlobParams const&)
+    cv::dnn::dnn4_v20251223::enableModelDiagnostics(bool)
+    cv::dnn::dnn4_v20251223::getAvailableBackends()
+    cv::dnn::dnn4_v20251223::getAvailableTargets(cv::dnn::dnn4_v20251223::Backend)
+    cv::dnn::dnn4_v20251223::getInferenceEngineBackendType[abi:cxx11]()
+    cv::dnn::dnn4_v20251223::getInferenceEngineCPUType[abi:cxx11]()
+    cv::dnn::dnn4_v20251223::getInferenceEngineVPUType[abi:cxx11]()
+    cv::dnn::dnn4_v20251223::imagesFromBlob(cv::Mat const&, cv::_OutputArray const&)
+    cv::dnn::dnn4_v20251223::readNet(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<unsigned char, std::allocator<unsigned char> > const&)
+    cv::dnn::dnn4_v20251223::readNet(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::dnn::dnn4_v20251223::readNetFromCaffe(char const*, unsigned long, char const*, unsigned long)
+    cv::dnn::dnn4_v20251223::readNetFromCaffe(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::dnn::dnn4_v20251223::readNetFromCaffe(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<unsigned char, std::allocator<unsigned char> > const&)
+    cv::dnn::dnn4_v20251223::readNetFromDarknet(char const*, unsigned long, char const*, unsigned long)
+    cv::dnn::dnn4_v20251223::readNetFromDarknet(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::dnn::dnn4_v20251223::readNetFromDarknet(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<unsigned char, std::allocator<unsigned char> > const&)
+    cv::dnn::dnn4_v20251223::readNetFromModelOptimizer(unsigned char const*, unsigned long, unsigned char const*, unsigned long)
+    cv::dnn::dnn4_v20251223::readNetFromModelOptimizer(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::dnn::dnn4_v20251223::readNetFromModelOptimizer(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<unsigned char, std::allocator<unsigned char> > const&)
+    cv::dnn::dnn4_v20251223::readNetFromONNX(char const*, unsigned long)
+    cv::dnn::dnn4_v20251223::readNetFromONNX(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::dnn::dnn4_v20251223::readNetFromONNX(std::vector<unsigned char, std::allocator<unsigned char> > const&)
+    cv::dnn::dnn4_v20251223::readNetFromTFLite(char const*, unsigned long)
+    cv::dnn::dnn4_v20251223::readNetFromTFLite(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::dnn::dnn4_v20251223::readNetFromTFLite(std::vector<unsigned char, std::allocator<unsigned char> > const&)
+    cv::dnn::dnn4_v20251223::readNetFromTensorflow(char const*, unsigned long, char const*, unsigned long)
+    cv::dnn::dnn4_v20251223::readNetFromTensorflow(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::dnn::dnn4_v20251223::readNetFromTensorflow(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<unsigned char, std::allocator<unsigned char> > const&)
+    cv::dnn::dnn4_v20251223::readNetFromTorch(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, bool, bool)
+    cv::dnn::dnn4_v20251223::readTensorFromONNX(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::dnn::dnn4_v20251223::readTorchBlob(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, bool)
+    cv::dnn::dnn4_v20251223::releaseHDDLPlugin()
+    cv::dnn::dnn4_v20251223::resetMyriadDevice()
+    cv::dnn::dnn4_v20251223::setInferenceEngineBackendType(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::dnn::dnn4_v20251223::shrinkCaffeModel(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > const&)
+    cv::dnn::dnn4_v20251223::skipModelImport(bool)
+    cv::dnn::dnn4_v20251223::softNMSBoxes(std::vector<cv::Rect_<int>, std::allocator<cv::Rect_<int> > > const&, std::vector<float, std::allocator<float> > const&, std::vector<float, std::allocator<float> >&, float, float, std::vector<int, std::allocator<int> >&, unsigned long, float, cv::dnn::dnn4_v20251223::SoftNMSMethod)
+    cv::dnn::dnn4_v20251223::writeTextGraph(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+
+--- libopencv_dnn_objdetect.so: not bound ---
+
+--- libopencv_dnn_superres.so: not bound ---
+
+--- libopencv_dpm.so: not bound ---
+
+--- libopencv_face.so: not bound ---
+
+--- libopencv_features2d.so: bound (1.39%) ---
+  classes (0/8):
+    cv::BFMatcher
+    cv::BOWImgDescriptorExtractor
+    cv::BOWKMeansTrainer
+    cv::BOWTrainer
+    cv::DescriptorMatcher::DescriptorCollection
+    cv::FlannBasedMatcher
+    cv::SimpleBlobDetector::Params
+    cv::SimpleBlobDetectorImpl
+  functions (1/64):
+    cv::AGAST(cv::_InputArray const&, std::vector<cv::KeyPoint, std::allocator<cv::KeyPoint> >&, int, bool)
+    cv::AGAST(cv::_InputArray const&, std::vector<cv::KeyPoint, std::allocator<cv::KeyPoint> >&, int, bool, cv::AgastFeatureDetector::DetectorType)
+    cv::AKAZE::create(cv::AKAZE::DescriptorType, int, int, float, int, int, cv::KAZE::DiffusivityType, int)
+    cv::AKAZE::getDefaultName[abi:cxx11]() const
+    virtual thunk to cv::AKAZE::getDefaultName[abi:cxx11]() const
+    cv::AffineFeature::create(cv::Ptr<cv::Feature2D> const&, int, int, float, float)
+    cv::AffineFeature::getDefaultName[abi:cxx11]() const
+    virtual thunk to cv::AffineFeature::getDefaultName[abi:cxx11]() const
+    cv::AgastFeatureDetector::create(int, bool, cv::AgastFeatureDetector::DetectorType)
+    cv::AgastFeatureDetector::getDefaultName[abi:cxx11]() const
+    virtual thunk to cv::AgastFeatureDetector::getDefaultName[abi:cxx11]() const
+    cv::BRISK::create(std::vector<float, std::allocator<float> > const&, std::vector<int, std::allocator<int> > const&, float, float, std::vector<int, std::allocator<int> > const&)
+    cv::BRISK::create(int, int, std::vector<float, std::allocator<float> > const&, std::vector<int, std::allocator<int> > const&, float, float, std::vector<int, std::allocator<int> > const&)
+    cv::BRISK::create(int, int, float)
+    cv::BRISK::getDefaultName[abi:cxx11]() const
+    virtual thunk to cv::BRISK::getDefaultName[abi:cxx11]() const
+    cv::FAST(cv::_InputArray const&, std::vector<cv::KeyPoint, std::allocator<cv::KeyPoint> >&, int, bool)
+    cv::FAST(cv::_InputArray const&, std::vector<cv::KeyPoint, std::allocator<cv::KeyPoint> >&, int, bool, cv::FastFeatureDetector::DetectorType)
+    cv::FastFeatureDetector::create(int, bool, cv::FastFeatureDetector::DetectorType)
+    cv::FastFeatureDetector::getDefaultName[abi:cxx11]() const
+    virtual thunk to cv::FastFeatureDetector::getDefaultName[abi:cxx11]() const
+    cv::GFTTDetector::create(int, double, double, int, bool, double)
+    cv::GFTTDetector::create(int, double, double, int, int, bool, double)
+    cv::GFTTDetector::getDefaultName[abi:cxx11]() const
+    virtual thunk to cv::GFTTDetector::getDefaultName[abi:cxx11]() const
+    cv::KAZE::create(bool, bool, float, int, int, cv::KAZE::DiffusivityType)
+    cv::KAZE::getDefaultName[abi:cxx11]() const
+    virtual thunk to cv::KAZE::getDefaultName[abi:cxx11]() const
+    cv::KeyPointsFilter::removeDuplicated(std::vector<cv::KeyPoint, std::allocator<cv::KeyPoint> >&)
+    cv::KeyPointsFilter::removeDuplicatedSorted(std::vector<cv::KeyPoint, std::allocator<cv::KeyPoint> >&)
+    cv::KeyPointsFilter::retainBest(std::vector<cv::KeyPoint, std::allocator<cv::KeyPoint> >&, int)
+    cv::KeyPointsFilter::runByImageBorder(std::vector<cv::KeyPoint, std::allocator<cv::KeyPoint> >&, cv::Size_<int>, int)
+    cv::KeyPointsFilter::runByKeypointSize(std::vector<cv::KeyPoint, std::allocator<cv::KeyPoint> >&, float, float)
+    cv::KeyPointsFilter::runByPixelsMask(std::vector<cv::KeyPoint, std::allocator<cv::KeyPoint> >&, cv::Mat const&)
+    cv::KeyPointsFilter::runByPixelsMask2VectorPoint(std::vector<cv::KeyPoint, std::allocator<cv::KeyPoint> >&, std::vector<std::vector<cv::Point_<int>, std::allocator<cv::Point_<int> > >, std::allocator<std::vector<cv::Point_<int>, std::allocator<cv::Point_<int> > > > >&, cv::Mat const&)
+    cv::MSER::create(int, int, int, double, double, int, double, double, int)
+    cv::MSER::getDefaultName[abi:cxx11]() const
+    virtual thunk to cv::MSER::getDefaultName[abi:cxx11]() const
+    cv::ORB::create(int, float, int, int, int, int, cv::ORB::ScoreType, int, int)
+    cv::ORB::getDefaultName[abi:cxx11]() const
+    virtual thunk to cv::ORB::getDefaultName[abi:cxx11]() const
+    cv::SIFT::create(int, int, double, double, double, bool)
+    cv::SIFT::create(int, int, double, double, double, int, bool)
+    cv::SIFT::getDefaultName[abi:cxx11]() const
+    virtual thunk to cv::SIFT::getDefaultName[abi:cxx11]() const
+    cv::SimpleBlobDetector::create(cv::SimpleBlobDetector::Params const&)
+    cv::SimpleBlobDetector::getBlobContours() const
+    cv::SimpleBlobDetector::getDefaultName[abi:cxx11]() const
+    virtual thunk to cv::SimpleBlobDetector::getDefaultName[abi:cxx11]() const
+    int cv::agast_cornerScore<(cv::AgastFeatureDetector::DetectorType)0>(unsigned char const*, int const*, int)
+    int cv::agast_cornerScore<(cv::AgastFeatureDetector::DetectorType)1>(unsigned char const*, int const*, int)
+    int cv::agast_cornerScore<(cv::AgastFeatureDetector::DetectorType)2>(unsigned char const*, int const*, int)
+    int cv::agast_cornerScore<(cv::AgastFeatureDetector::DetectorType)3>(unsigned char const*, int const*, int)
+    cv::computeRecallPrecisionCurve(std::vector<std::vector<cv::DMatch, std::allocator<cv::DMatch> >, std::allocator<std::vector<cv::DMatch, std::allocator<cv::DMatch> > > > const&, std::vector<std::vector<unsigned char, std::allocator<unsigned char> >, std::allocator<std::vector<unsigned char, std::allocator<unsigned char> > > > const&, std::vector<cv::Point_<float>, std::allocator<cv::Point_<float> > >&)
+    int cv::cornerScore<12>(unsigned char const*, int const*, int)
+    int cv::cornerScore<16>(unsigned char const*, int const*, int)
+    int cv::cornerScore<8>(unsigned char const*, int const*, int)
+    cv::drawKeypoints(cv::_InputArray const&, std::vector<cv::KeyPoint, std::allocator<cv::KeyPoint> > const&, cv::_InputOutputArray const&, cv::Scalar_<double> const&, cv::DrawMatchesFlags)
+    cv::drawMatches(cv::_InputArray const&, std::vector<cv::KeyPoint, std::allocator<cv::KeyPoint> > const&, cv::_InputArray const&, std::vector<cv::KeyPoint, std::allocator<cv::KeyPoint> > const&, std::vector<cv::DMatch, std::allocator<cv::DMatch> > const&, cv::_InputOutputArray const&, cv::Scalar_<double> const&, cv::Scalar_<double> const&, std::vector<char, std::allocator<char> > const&, cv::DrawMatchesFlags)
+    cv::drawMatches(cv::_InputArray const&, std::vector<cv::KeyPoint, std::allocator<cv::KeyPoint> > const&, cv::_InputArray const&, std::vector<cv::KeyPoint, std::allocator<cv::KeyPoint> > const&, std::vector<cv::DMatch, std::allocator<cv::DMatch> > const&, cv::_InputOutputArray const&, int, cv::Scalar_<double> const&, cv::Scalar_<double> const&, std::vector<char, std::allocator<char> > const&, cv::DrawMatchesFlags)
+    cv::drawMatches(cv::_InputArray const&, std::vector<cv::KeyPoint, std::allocator<cv::KeyPoint> > const&, cv::_InputArray const&, std::vector<cv::KeyPoint, std::allocator<cv::KeyPoint> > const&, std::vector<std::vector<cv::DMatch, std::allocator<cv::DMatch> >, std::allocator<std::vector<cv::DMatch, std::allocator<cv::DMatch> > > > const&, cv::_InputOutputArray const&, cv::Scalar_<double> const&, cv::Scalar_<double> const&, std::vector<std::vector<char, std::allocator<char> >, std::allocator<std::vector<char, std::allocator<char> > > > const&, cv::DrawMatchesFlags)
+    cv::evaluateFeatureDetector(cv::Mat const&, cv::Mat const&, cv::Mat const&, std::vector<cv::KeyPoint, std::allocator<cv::KeyPoint> >*, std::vector<cv::KeyPoint, std::allocator<cv::KeyPoint> >*, float&, int&, cv::Ptr<cv::Feature2D> const&)
+    cv::getNearestPoint(std::vector<cv::Point_<float>, std::allocator<cv::Point_<float> > > const&, float)
+    cv::getRecall(std::vector<cv::Point_<float>, std::allocator<cv::Point_<float> > > const&, float)
+
+--- libopencv_flann.so: not bound ---
+
+--- libopencv_freetype.so: bound (50.00%) ---
+  classes (0/1):
+    cv::freetype::FreeType2Impl
+  functions (1/1):
+    cv::freetype::createFreeType2()
+
+--- libopencv_fuzzy.so: not bound ---
+
+--- libopencv_gapi.so: not bound ---
+
+--- libopencv_hdf.so: not bound ---
+
+--- libopencv_hfs.so: not bound ---
+
+--- libopencv_highgui.so: bound (60.98%) ---
+  functions (25/41):
+    cv::addText(cv::Mat const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, cv::Point_<int>, cv::QtFont const&)
+    cv::addText(cv::Mat const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, cv::Point_<int>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, int, cv::Scalar_<double>, int, int, int)
+    cv::createButton(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, void (*)(int, void*), void*, int, bool)
+    cv::createTrackbar(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, int*, int, void (*)(int, void*), void*)
+    cv::currentUIFramework[abi:cxx11]()
+    cv::destroyAllWindows()
+    cv::destroyWindow(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::displayOverlay(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, int)
+    cv::displayStatusBar(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, int)
+    cv::fontQt(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, int, cv::Scalar_<double>, int, int, int)
+    cv::getMouseWheelDelta(int)
+    cv::getTrackbarPos(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::getWindowImageRect(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::getWindowMutex()
+    cv::getWindowProperty(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, int)
+    cv::imshow(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, cv::_InputArray const&)
+    cv::imshow(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, cv::ogl::Texture2D const&)
+    cv::loadWindowParameters(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::moveWindow(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, int, int)
+    cv::namedWindow(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, int)
+    cv::pollKey()
+    cv::resizeWindow(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, cv::Size_<int> const&)
+    cv::resizeWindow(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, int, int)
+    cv::saveWindowParameters(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::selectROI(cv::_InputArray const&, bool, bool, bool)
+    cv::selectROI(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, cv::_InputArray const&, bool, bool, bool)
+    cv::selectROIs(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, cv::_InputArray const&, std::vector<cv::Rect_<int>, std::allocator<cv::Rect_<int> > >&, bool, bool, bool)
+    cv::setMouseCallback(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, void (*)(int, int, int, int, void*), void*)
+    cv::setOpenGlContext(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::setOpenGlDrawCallback(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, void (*)(void*), void*)
+    cv::setTrackbarMax(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, int)
+    cv::setTrackbarMin(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, int)
+    cv::setTrackbarPos(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, int)
+    cv::setWindowProperty(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, int, double)
+    cv::setWindowTitle(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::startLoop(int (*)(int, char**), int, char**)
+    cv::startWindowThread()
+    cv::stopLoop()
+    cv::updateWindow(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::waitKey(int)
+    cv::waitKeyEx(int)
+
+--- libopencv_img_hash.so: not bound ---
+
+--- libopencv_imgcodecs.so: bound (20.00%) ---
+  classes (0/4):
+    cv::Animation
+    cv::ImageCollection
+    cv::ImageCollection::Impl
+    cv::ImageCollection::iterator
+  functions (5/21):
+    cv::haveImageReader(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::haveImageWriter(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::imcount(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, int)
+    cv::imdecode(cv::_InputArray const&, int)
+    cv::imdecode(cv::_InputArray const&, int, cv::Mat*)
+    cv::imdecodeWithMetadata(cv::_InputArray const&, std::vector<int, std::allocator<int> >&, cv::_OutputArray const&, int)
+    cv::imdecodeanimation(cv::_InputArray const&, cv::Animation&, int, int)
+    cv::imdecodemulti(cv::_InputArray const&, int, std::vector<cv::Mat, std::allocator<cv::Mat> >&, cv::Range const&)
+    cv::imencode(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, cv::_InputArray const&, std::vector<unsigned char, std::allocator<unsigned char> >&, std::vector<int, std::allocator<int> > const&)
+    cv::imencodeWithMetadata(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, cv::_InputArray const&, std::vector<int, std::allocator<int> > const&, cv::_InputArray const&, std::vector<unsigned char, std::allocator<unsigned char> >&, std::vector<int, std::allocator<int> > const&)
+    cv::imencodeanimation(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, cv::Animation const&, std::vector<unsigned char, std::allocator<unsigned char> >&, std::vector<int, std::allocator<int> > const&)
+    cv::imencodemulti(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, cv::_InputArray const&, std::vector<unsigned char, std::allocator<unsigned char> >&, std::vector<int, std::allocator<int> > const&)
+    cv::imread(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, cv::_OutputArray const&, int)
+    cv::imread(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, int)
+    cv::imreadWithMetadata(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::vector<int, std::allocator<int> >&, cv::_OutputArray const&, int)
+    cv::imreadanimation(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, cv::Animation&, int, int)
+    cv::imreadmulti(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::vector<cv::Mat, std::allocator<cv::Mat> >&, int)
+    cv::imreadmulti(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::vector<cv::Mat, std::allocator<cv::Mat> >&, int, int, int)
+    cv::imwrite(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, cv::_InputArray const&, std::vector<int, std::allocator<int> > const&)
+    cv::imwriteWithMetadata(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, cv::_InputArray const&, std::vector<int, std::allocator<int> > const&, cv::_InputArray const&, std::vector<int, std::allocator<int> > const&)
+    cv::imwriteanimation(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, cv::Animation const&, std::vector<int, std::allocator<int> > const&)
+
+--- libopencv_imgproc.so: bound (51.69%) ---
+  classes (2/5):
+    cv::Moments
+    cv::Subdiv2D
+    cv::Subdiv2D::QuadEdge
+    cv::Subdiv2D::Vertex
+    cv::segmentation::IntelligentScissorsMB
+  functions (105/202):
+    cv::Canny(cv::_InputArray const&, cv::_OutputArray const&, double, double, int, bool)
+    cv::Canny(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, double, double, bool)
+    cv::EMD(cv::_InputArray const&, cv::_InputArray const&, int, cv::_InputArray const&, float*, cv::_OutputArray const&)
+    cv::EMD_legacy(cv::_InputArray const&, cv::_InputArray const&, int, cv::_InputArray const&, float*, cv::_OutputArray const&)
+    cv::GaussianBlur(cv::_InputArray const&, cv::_OutputArray const&, cv::Size_<int>, double, double, int, cv::AlgorithmHint)
+    cv::HoughCircles(cv::_InputArray const&, cv::_OutputArray const&, int, double, double, double, double, int, int)
+    cv::HoughLines(cv::_InputArray const&, cv::_OutputArray const&, double, double, int, double, double, double, double, bool)
+    cv::HoughLinesP(cv::_InputArray const&, cv::_OutputArray const&, double, double, int, double, double)
+    cv::HoughLinesPointSet(cv::_InputArray const&, cv::_OutputArray const&, int, int, double, double, double, double, double, double)
+    cv::HuMoments(cv::Moments const&, double*)
+    cv::HuMoments(cv::Moments const&, cv::_OutputArray const&)
+    cv::Laplacian(cv::_InputArray const&, cv::_OutputArray const&, int, int, double, double, int)
+    cv::LineIterator::init(cv::Mat const*, cv::Rect_<int>, cv::Point_<int>, cv::Point_<int>, int, bool)
+    cv::Scharr(cv::_InputArray const&, cv::_OutputArray const&, int, int, int, double, double, int)
+    cv::Sobel(cv::_InputArray const&, cv::_OutputArray const&, int, int, int, int, double, double, int)
+    cv::accumulate(cv::_InputArray const&, cv::_InputOutputArray const&, cv::_InputArray const&)
+    cv::accumulateProduct(cv::_InputArray const&, cv::_InputArray const&, cv::_InputOutputArray const&, cv::_InputArray const&)
+    cv::accumulateSquare(cv::_InputArray const&, cv::_InputOutputArray const&, cv::_InputArray const&)
+    cv::accumulateWeighted(cv::_InputArray const&, cv::_InputOutputArray const&, double, cv::_InputArray const&)
+    cv::adaptiveThreshold(cv::_InputArray const&, cv::_OutputArray const&, double, int, int, int, double)
+    cv::applyColorMap(cv::_InputArray const&, cv::_OutputArray const&, cv::_InputArray const&)
+    cv::applyColorMap(cv::_InputArray const&, cv::_OutputArray const&, int)
+    cv::approxPolyDP(cv::_InputArray const&, cv::_OutputArray const&, double, bool)
+    cv::approxPolyN(cv::_InputArray const&, cv::_OutputArray const&, int, float, bool)
+    cv::arcLength(cv::_InputArray const&, bool)
+    cv::arrowedLine(cv::_InputOutputArray const&, cv::Point_<int>, cv::Point_<int>, cv::Scalar_<double> const&, int, int, int, double)
+    cv::bilateralFilter(cv::_InputArray const&, cv::_OutputArray const&, int, double, double, int)
+    cv::blendLinear(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&)
+    cv::blur(cv::_InputArray const&, cv::_OutputArray const&, cv::Size_<int>, cv::Point_<int>, int)
+    cv::boundingRect(cv::_InputArray const&)
+    cv::boxFilter(cv::_InputArray const&, cv::_OutputArray const&, int, cv::Size_<int>, cv::Point_<int>, bool, int)
+    cv::boxPoints(cv::RotatedRect, cv::_OutputArray const&)
+    cv::buildPyramid(cv::_InputArray const&, cv::_OutputArray const&, int, int)
+    cv::calcBackProject(cv::Mat const*, int, int const*, cv::_InputArray const&, cv::_OutputArray const&, float const**, double, bool)
+    cv::calcBackProject(cv::Mat const*, int, int const*, cv::SparseMat const&, cv::_OutputArray const&, float const**, double, bool)
+    cv::calcBackProject(cv::_InputArray const&, std::vector<int, std::allocator<int> > const&, cv::_InputArray const&, cv::_OutputArray const&, std::vector<float, std::allocator<float> > const&, double)
+    cv::calcHist(cv::Mat const*, int, int const*, cv::_InputArray const&, cv::_OutputArray const&, int, int const*, float const**, bool, bool)
+    cv::calcHist(cv::Mat const*, int, int const*, cv::_InputArray const&, cv::SparseMat&, int, int const*, float const**, bool, bool)
+    cv::calcHist(cv::_InputArray const&, std::vector<int, std::allocator<int> > const&, cv::_InputArray const&, cv::_OutputArray const&, std::vector<int, std::allocator<int> > const&, std::vector<float, std::allocator<float> > const&, bool)
+    cv::circle(cv::_InputOutputArray const&, cv::Point_<int>, int, cv::Scalar_<double> const&, int, int, int)
+    cv::clipLine(cv::Rect_<int>, cv::Point_<int>&, cv::Point_<int>&)
+    cv::clipLine(cv::Size_<int>, cv::Point_<int>&, cv::Point_<int>&)
+    cv::clipLine(cv::Size_<long>, cv::Point_<long>&, cv::Point_<long>&)
+    cv::compareHist(cv::_InputArray const&, cv::_InputArray const&, int)
+    cv::compareHist(cv::SparseMat const&, cv::SparseMat const&, int)
+    cv::connectedComponents(cv::_InputArray const&, cv::_OutputArray const&, int, int)
+    cv::connectedComponents(cv::_InputArray const&, cv::_OutputArray const&, int, int, int)
+    cv::connectedComponentsWithStats(cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, int, int)
+    cv::connectedComponentsWithStats(cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, int, int, int)
+    cv::contourArea(cv::_InputArray const&, bool)
+    cv::convertMaps(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, int, bool)
+    cv::convexHull(cv::_InputArray const&, cv::_OutputArray const&, bool, bool)
+    cv::convexityDefects(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&)
+    cv::cornerEigenValsAndVecs(cv::_InputArray const&, cv::_OutputArray const&, int, int, int)
+    cv::cornerHarris(cv::_InputArray const&, cv::_OutputArray const&, int, int, double, int)
+    cv::cornerMinEigenVal(cv::_InputArray const&, cv::_OutputArray const&, int, int, int)
+    cv::cornerSubPix(cv::_InputArray const&, cv::_InputOutputArray const&, cv::Size_<int>, cv::Size_<int>, cv::TermCriteria)
+    void cv::cpu_baseline::GaussianBlurFixedPoint<unsigned int>(cv::Mat const&, cv::Mat&, unsigned int const*, int, unsigned int const*, int, int)
+    void cv::cpu_baseline::GaussianBlurFixedPoint<unsigned short>(cv::Mat const&, cv::Mat&, unsigned short const*, int, unsigned short const*, int, int)
+    cv::createCLAHE(double, cv::Size_<int>)
+    cv::createGeneralizedHoughBallard()
+    cv::createGeneralizedHoughGuil()
+    cv::createHanningWindow(cv::_OutputArray const&, cv::Size_<int>, int)
+    cv::createLineSegmentDetector(int, double, double, double, double, double, double, int)
+    cv::createMorphologyFilter(int, int, cv::_InputArray const&, cv::Point_<int>, int, int, cv::Scalar_<double> const&)
+    cv::cvtColor(cv::_InputArray const&, cv::_OutputArray const&, int, int, cv::AlgorithmHint)
+    cv::cvtColorTwoPlane(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, int, cv::AlgorithmHint)
+    cv::demosaicing(cv::_InputArray const&, cv::_OutputArray const&, int, int)
+    cv::dilate(cv::_InputArray const&, cv::_OutputArray const&, cv::_InputArray const&, cv::Point_<int>, int, int, cv::Scalar_<double> const&)
+    cv::distanceTransform(cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, int, int, int)
+    cv::distanceTransform(cv::_InputArray const&, cv::_OutputArray const&, int, int, int)
+    cv::divSpectrums(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, int, bool)
+    cv::drawContours(cv::_InputOutputArray const&, cv::_InputArray const&, int, cv::Scalar_<double> const&, int, int, cv::_InputArray const&, int, cv::Point_<int>)
+    cv::drawMarker(cv::_InputOutputArray const&, cv::Point_<int>, cv::Scalar_<double> const&, int, int, int, int)
+    cv::ellipse(cv::_InputOutputArray const&, cv::Point_<int>, cv::Size_<int>, double, double, double, cv::Scalar_<double> const&, int, int, int)
+    cv::ellipse(cv::_InputOutputArray const&, cv::RotatedRect const&, cv::Scalar_<double> const&, int, int)
+    cv::ellipse2Poly(cv::Point_<double>, cv::Size_<double>, int, int, int, int, std::vector<cv::Point_<double>, std::allocator<cv::Point_<double> > >&)
+    cv::ellipse2Poly(cv::Point_<int>, cv::Size_<int>, int, int, int, int, std::vector<cv::Point_<int>, std::allocator<cv::Point_<int> > >&)
+    cv::equalizeHist(cv::_InputArray const&, cv::_OutputArray const&)
+    cv::erode(cv::_InputArray const&, cv::_OutputArray const&, cv::_InputArray const&, cv::Point_<int>, int, int, cv::Scalar_<double> const&)
+    cv::fillConvexPoly(cv::_InputOutputArray const&, cv::Point_<int> const*, int, cv::Scalar_<double> const&, int, int)
+    cv::fillConvexPoly(cv::_InputOutputArray const&, cv::_InputArray const&, cv::Scalar_<double> const&, int, int)
+    cv::fillPoly(cv::_InputOutputArray const&, cv::Point_<int> const**, int const*, int, cv::Scalar_<double> const&, int, int, cv::Point_<int>)
+    cv::fillPoly(cv::_InputOutputArray const&, cv::_InputArray const&, cv::Scalar_<double> const&, int, int, cv::Point_<int>)
+    cv::filter2D(cv::_InputArray const&, cv::_OutputArray const&, int, cv::_InputArray const&, cv::Point_<int>, double, int)
+    cv::findContours(cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, int, int, cv::Point_<int>)
+    cv::findContours(cv::_InputArray const&, cv::_OutputArray const&, int, int, cv::Point_<int>)
+    cv::findContoursLinkRuns(cv::_InputArray const&, cv::_OutputArray const&)
+    cv::findContoursLinkRuns(cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&)
+    cv::findContours_legacy(cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, int, int, cv::Point_<int>)
+    cv::findContours_legacy(cv::_InputArray const&, cv::_OutputArray const&, int, int, cv::Point_<int>)
+    cv::fitEllipse(cv::_InputArray const&)
+    cv::fitEllipseAMS(cv::_InputArray const&)
+    cv::fitEllipseDirect(cv::_InputArray const&)
+    cv::fitLine(cv::_InputArray const&, cv::_OutputArray const&, int, double, double, double)
+    cv::floodFill(cv::_InputOutputArray const&, cv::Point_<int>, cv::Scalar_<double>, cv::Rect_<int>*, cv::Scalar_<double>, cv::Scalar_<double>, int)
+    cv::floodFill(cv::_InputOutputArray const&, cv::_InputOutputArray const&, cv::Point_<int>, cv::Scalar_<double>, cv::Rect_<int>*, cv::Scalar_<double>, cv::Scalar_<double>, int)
+    cv::getAffineTransform(cv::Point_<float> const*, cv::Point_<float> const*)
+    cv::getAffineTransform(cv::_InputArray const&, cv::_InputArray const&)
+    cv::getClosestEllipsePoints(cv::RotatedRect const&, cv::_InputArray const&, cv::_OutputArray const&)
+    cv::getDerivKernels(cv::_OutputArray const&, cv::_OutputArray const&, int, int, int, bool, int)
+    cv::getFontScaleFromHeight(int, int, int)
+    cv::getGaborKernel(cv::Size_<int>, double, double, double, double, double, int)
+    cv::getGaussianKernel(int, double, int)
+    cv::getPerspectiveTransform(cv::Point_<float> const*, cv::Point_<float> const*, int)
+    cv::getPerspectiveTransform(cv::_InputArray const&, cv::_InputArray const&, int)
+    cv::getRectSubPix(cv::_InputArray const&, cv::Size_<int>, cv::Point_<float>, cv::_OutputArray const&, int)
+    cv::getRotationMatrix2D_(cv::Point_<float>, double, double)
+    cv::getStructuringElement(int, cv::Size_<int>, cv::Point_<int>)
+    cv::getTextSize(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, int, double, int, int*)
+    cv::goodFeaturesToTrack(cv::_InputArray const&, cv::_OutputArray const&, int, double, double, cv::_InputArray const&, cv::_OutputArray const&, int, int, bool, double)
+    cv::goodFeaturesToTrack(cv::_InputArray const&, cv::_OutputArray const&, int, double, double, cv::_InputArray const&, int, bool, double)
+    cv::goodFeaturesToTrack(cv::_InputArray const&, cv::_OutputArray const&, int, double, double, cv::_InputArray const&, int, int, bool, double)
+    cv::grabCut(cv::_InputArray const&, cv::_InputOutputArray const&, cv::Rect_<int>, cv::_InputOutputArray const&, cv::_InputOutputArray const&, int, int)
+    cv::hal::Filter2D::create(unsigned char*, unsigned long, int, int, int, int, int, int, int, int, double, int, int, bool, bool)
+    cv::hal::Morph::create(int, int, int, int, int, int, unsigned char*, unsigned long, int, int, int, int, int, double const*, int, bool, bool)
+    cv::hal::SepFilter2D::create(int, int, int, unsigned char*, int, unsigned char*, int, int, int, double, int)
+    cv::hal::cvtBGR5x5toBGR(unsigned char const*, unsigned long, unsigned char*, unsigned long, int, int, int, bool, int)
+    cv::hal::cvtBGR5x5toGray(unsigned char const*, unsigned long, unsigned char*, unsigned long, int, int, int)
+    cv::hal::cvtBGRtoBGR(unsigned char const*, unsigned long, unsigned char*, unsigned long, int, int, int, int, int, bool)
+    cv::hal::cvtBGRtoBGR5x5(unsigned char const*, unsigned long, unsigned char*, unsigned long, int, int, int, bool, int)
+    cv::hal::cvtBGRtoGray(unsigned char const*, unsigned long, unsigned char*, unsigned long, int, int, int, int, bool)
+    cv::hal::cvtBGRtoHSV(unsigned char const*, unsigned long, unsigned char*, unsigned long, int, int, int, int, bool, bool, bool)
+    cv::hal::cvtBGRtoLab(unsigned char const*, unsigned long, unsigned char*, unsigned long, int, int, int, int, bool, bool, bool)
+    cv::hal::cvtBGRtoThreePlaneYUV(unsigned char const*, unsigned long, unsigned char*, unsigned long, int, int, int, bool, int, cv::AlgorithmHint)
+    cv::hal::cvtBGRtoTwoPlaneYUV(unsigned char const*, unsigned long, unsigned char*, unsigned char*, unsigned long, int, int, int, bool, int)
+    cv::hal::cvtBGRtoXYZ(unsigned char const*, unsigned long, unsigned char*, unsigned long, int, int, int, int, bool)
+    cv::hal::cvtBGRtoYUV(unsigned char const*, unsigned long, unsigned char*, unsigned long, int, int, int, int, bool, bool, cv::AlgorithmHint)
+    cv::hal::cvtGraytoBGR(unsigned char const*, unsigned long, unsigned char*, unsigned long, int, int, int, int)
+    cv::hal::cvtGraytoBGR5x5(unsigned char const*, unsigned long, unsigned char*, unsigned long, int, int, int)
+    cv::hal::cvtHSVtoBGR(unsigned char const*, unsigned long, unsigned char*, unsigned long, int, int, int, int, bool, bool, bool)
+    cv::hal::cvtLabtoBGR(unsigned char const*, unsigned long, unsigned char*, unsigned long, int, int, int, int, bool, bool, bool)
+    cv::hal::cvtMultipliedRGBAtoRGBA(unsigned char const*, unsigned long, unsigned char*, unsigned long, int, int)
+    cv::hal::cvtOnePlaneBGRtoYUV(unsigned char const*, unsigned long, unsigned char*, unsigned long, int, int, int, bool, int, int, cv::AlgorithmHint)
+    cv::hal::cvtOnePlaneYUVtoBGR(unsigned char const*, unsigned long, unsigned char*, unsigned long, int, int, int, bool, int, int, cv::AlgorithmHint)
+    cv::hal::cvtRGBAtoMultipliedRGBA(unsigned char const*, unsigned long, unsigned char*, unsigned long, int, int)
+    cv::hal::cvtThreePlaneYUVtoBGR(unsigned char const*, unsigned long, unsigned char*, unsigned long, int, int, int, bool, int, cv::AlgorithmHint)
+    cv::hal::cvtTwoPlaneYUVtoBGR(unsigned char const*, unsigned char const*, unsigned long, unsigned char*, unsigned long, int, int, int, bool, int, cv::AlgorithmHint)
+    cv::hal::cvtTwoPlaneYUVtoBGR(unsigned char const*, unsigned long, unsigned char*, unsigned long, int, int, int, bool, int, cv::AlgorithmHint)
+    cv::hal::cvtTwoPlaneYUVtoBGR(unsigned char const*, unsigned long, unsigned char const*, unsigned long, unsigned char*, unsigned long, int, int, int, bool, int, cv::AlgorithmHint)
+    cv::hal::cvtXYZtoBGR(unsigned char const*, unsigned long, unsigned char*, unsigned long, int, int, int, int, bool)
+    cv::hal::cvtYUVtoBGR(unsigned char const*, unsigned long, unsigned char*, unsigned long, int, int, int, int, bool, bool, cv::AlgorithmHint)
+    cv::hal::filter2D(int, int, int, unsigned char*, unsigned long, unsigned char*, unsigned long, int, int, int, int, int, int, unsigned char*, unsigned long, int, int, int, int, double, int, bool)
+    cv::hal::integral(int, int, int, unsigned char const*, unsigned long, unsigned char*, unsigned long, unsigned char*, unsigned long, unsigned char*, unsigned long, int, int, int)
+    cv::hal::morph(int, int, int, unsigned char*, unsigned long, unsigned char*, unsigned long, int, int, int, int, int, int, int, int, int, int, int, unsigned char*, unsigned long, int, int, int, int, int, double const*, int, bool)
+    cv::hal::resize(int, unsigned char const*, unsigned long, int, int, unsigned char*, unsigned long, int, int, double, double, int)
+    cv::hal::sepFilter2D(int, int, int, unsigned char*, unsigned long, unsigned char*, unsigned long, int, int, int, int, int, int, unsigned char*, int, unsigned char*, int, int, int, double, int)
+    cv::hal::warpAffine(int, unsigned char const*, unsigned long, int, int, unsigned char*, unsigned long, int, int, double const*, int, int, double const*)
+    cv::hal::warpAffineBlockline(int*, int*, short*, short*, int, int, int)
+    cv::hal::warpAffineBlocklineNN(int*, int*, short*, int, int, int)
+    cv::hal::warpPerspective(int, unsigned char const*, unsigned long, int, int, unsigned char*, unsigned long, int, int, double const*, int, int, double const*)
+    cv::hal::warpPerspectiveBlockline(double const*, short*, short*, double, double, double, int)
+    cv::hal::warpPerspectiveBlocklineNN(double const*, short*, double, double, double, int)
+    cv::integral(cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, int, int)
+    cv::integral(cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, int, int)
+    cv::integral(cv::_InputArray const&, cv::_OutputArray const&, int)
+    cv::intersectConvexConvex(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, bool)
+    cv::invertAffineTransform(cv::_InputArray const&, cv::_OutputArray const&)
+    cv::isContourConvex(cv::_InputArray const&)
+    cv::line(cv::_InputOutputArray const&, cv::Point_<int>, cv::Point_<int>, cv::Scalar_<double> const&, int, int, int)
+    cv::linearPolar(cv::_InputArray const&, cv::_OutputArray const&, cv::Point_<float>, double, int)
+    cv::logPolar(cv::_InputArray const&, cv::_OutputArray const&, cv::Point_<float>, double, int)
+    cv::matchShapes(cv::_InputArray const&, cv::_InputArray const&, int, double)
+    cv::matchTemplate(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, int, cv::_InputArray const&)
+    cv::medianBlur(cv::_InputArray const&, cv::_OutputArray const&, int)
+    cv::minAreaRect(cv::_InputArray const&)
+    cv::minEnclosingCircle(cv::_InputArray const&, cv::Point_<float>&, float&)
+    cv::minEnclosingConvexPolygon(cv::_InputArray const&, cv::_OutputArray const&, int)
+    cv::minEnclosingTriangle(cv::_InputArray const&, cv::_OutputArray const&)
+    cv::moments(cv::_InputArray const&, bool)
+    cv::morphologyEx(cv::_InputArray const&, cv::_OutputArray const&, int, cv::_InputArray const&, cv::Point_<int>, int, int, cv::Scalar_<double> const&)
+    void cv::opt_AVX2::GaussianBlurFixedPoint<unsigned int>(cv::Mat const&, cv::Mat&, unsigned int const*, int, unsigned int const*, int, int)
+    void cv::opt_AVX2::GaussianBlurFixedPoint<unsigned short>(cv::Mat const&, cv::Mat&, unsigned short const*, int, unsigned short const*, int, int)
+    void cv::opt_SSE4_1::GaussianBlurFixedPoint<unsigned int>(cv::Mat const&, cv::Mat&, unsigned int const*, int, unsigned int const*, int, int)
+    void cv::opt_SSE4_1::GaussianBlurFixedPoint<unsigned short>(cv::Mat const&, cv::Mat&, unsigned short const*, int, unsigned short const*, int, int)
+    cv::phaseCorrelate(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, double*)
+    cv::phaseCorrelateIterative(cv::_InputArray const&, cv::_InputArray const&, int, int)
+    cv::pointPolygonTest(cv::_InputArray const&, cv::Point_<float>, bool)
+    cv::polylines(cv::_InputOutputArray const&, cv::Point_<int> const* const*, int const*, int, bool, cv::Scalar_<double> const&, int, int, int)
+    cv::polylines(cv::_InputOutputArray const&, cv::_InputArray const&, bool, cv::Scalar_<double> const&, int, int, int)
+    cv::preCornerDetect(cv::_InputArray const&, cv::_OutputArray const&, int, int)
+    cv::putText(cv::_InputOutputArray const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, cv::Point_<int>, int, double, cv::Scalar_<double>, int, int, bool)
+    cv::pyrDown(cv::_InputArray const&, cv::_OutputArray const&, cv::Size_<int> const&, int)
+    cv::pyrMeanShiftFiltering(cv::_InputArray const&, cv::_OutputArray const&, double, double, int, cv::TermCriteria)
+    cv::pyrUp(cv::_InputArray const&, cv::_OutputArray const&, cv::Size_<int> const&, int)
+    cv::rectangle(cv::_InputOutputArray const&, cv::Rect_<int>, cv::Scalar_<double> const&, int, int, int)
+    cv::rectangle(cv::_InputOutputArray const&, cv::Point_<int>, cv::Point_<int>, cv::Scalar_<double> const&, int, int, int)
+    cv::remap(cv::_InputArray const&, cv::_OutputArray const&, cv::_InputArray const&, cv::_InputArray const&, int, int, cv::Scalar_<double> const&)
+    cv::resize(cv::_InputArray const&, cv::_OutputArray const&, cv::Size_<int>, double, double, int)
+    cv::rotatedRectangleIntersection(cv::RotatedRect const&, cv::RotatedRect const&, cv::_OutputArray const&)
+    cv::sepFilter2D(cv::_InputArray const&, cv::_OutputArray const&, int, cv::_InputArray const&, cv::_InputArray const&, cv::Point_<int>, double, int)
+    cv::spatialGradient(cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, int, int)
+    cv::sqrBoxFilter(cv::_InputArray const&, cv::_OutputArray const&, int, cv::Size_<int>, cv::Point_<int>, bool, int)
+    cv::stackBlur(cv::_InputArray const&, cv::_OutputArray const&, cv::Size_<int>)
+    cv::threshold(cv::_InputArray const&, cv::_OutputArray const&, double, double, int)
+    cv::thresholdWithMask(cv::_InputArray const&, cv::_InputOutputArray const&, cv::_InputArray const&, double, double, int)
+    cv::warpAffine(cv::_InputArray const&, cv::_OutputArray const&, cv::_InputArray const&, cv::Size_<int>, int, int, cv::Scalar_<double> const&)
+    cv::warpPerspective(cv::_InputArray const&, cv::_OutputArray const&, cv::_InputArray const&, cv::Size_<int>, int, int, cv::Scalar_<double> const&)
+    cv::warpPolar(cv::_InputArray const&, cv::_OutputArray const&, cv::Size_<int>, cv::Point_<float>, double, int)
+    cv::watershed(cv::_InputArray const&, cv::_InputOutputArray const&)
+    cv::wrapperEMD(cv::_InputArray const&, cv::_InputArray const&, int, cv::_InputArray const&, cv::Ptr<float>, cv::_OutputArray const&)
+    cv::wrapperEMD_legacy(cv::_InputArray const&, cv::_InputArray const&, int, cv::_InputArray const&, cv::Ptr<float>, cv::_OutputArray const&)
+
+--- libopencv_intensity_transform.so: not bound ---
+
+--- libopencv_line_descriptor.so: not bound ---
+
+--- libopencv_mcc.so: not bound ---
+
+--- libopencv_ml.so: not bound ---
+
+--- libopencv_objdetect.so: bound (5.00%) ---
+  classes (0/19):
+    cv::CascadeClassifier
+    cv::DetectionBasedTracker
+    cv::DetectionBasedTracker::InnerParameters
+    cv::DetectionBasedTracker::Parameters
+    cv::DetectionBasedTracker::SeparateDetectionWork
+    cv::GraphicalCodeDetector
+    cv::QRCodeDetector
+    cv::QRCodeDetectorAruco
+    cv::QRCodeDetectorAruco::Params
+    cv::QRCodeEncoder
+    cv::QRCodeEncoder::Params
+    cv::aruco::ArucoDetector
+    cv::aruco::Board
+    cv::aruco::CharucoBoard
+    cv::aruco::CharucoDetector
+    cv::aruco::Dictionary
+    cv::aruco::GridBoard
+    cv::aruco::RefineParameters
+    cv::barcode::BarcodeDetector
+  functions (3/41):
+    cv::FaceDetectorYN::create(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<unsigned char, std::allocator<unsigned char> > const&, cv::Size_<int> const&, float, float, int, int, int)
+    cv::FaceDetectorYN::create(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, cv::Size_<int> const&, float, float, int, int, int)
+    cv::FaceRecognizerSF::create(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<unsigned char, std::allocator<unsigned char> > const&, int, int)
+    cv::FaceRecognizerSF::create(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, int, int)
+    cv::HOGDescriptor::checkDetectorSize() const
+    cv::HOGDescriptor::compute(cv::_InputArray const&, std::vector<float, std::allocator<float> >&, cv::Size_<int>, cv::Size_<int>, std::vector<cv::Point_<int>, std::allocator<cv::Point_<int> > > const&) const
+    cv::HOGDescriptor::computeGradient(cv::_InputArray const&, cv::_InputOutputArray const&, cv::_InputOutputArray const&, cv::Size_<int>, cv::Size_<int>) const
+    cv::HOGDescriptor::copyTo(cv::HOGDescriptor&) const
+    cv::HOGDescriptor::detect(cv::_InputArray const&, std::vector<cv::Point_<int>, std::allocator<cv::Point_<int> > >&, std::vector<double, std::allocator<double> >&, double, cv::Size_<int>, cv::Size_<int>, std::vector<cv::Point_<int>, std::allocator<cv::Point_<int> > > const&) const
+    cv::HOGDescriptor::detect(cv::_InputArray const&, std::vector<cv::Point_<int>, std::allocator<cv::Point_<int> > >&, double, cv::Size_<int>, cv::Size_<int>, std::vector<cv::Point_<int>, std::allocator<cv::Point_<int> > > const&) const
+    cv::HOGDescriptor::detectMultiScale(cv::_InputArray const&, std::vector<cv::Rect_<int>, std::allocator<cv::Rect_<int> > >&, std::vector<double, std::allocator<double> >&, double, cv::Size_<int>, cv::Size_<int>, double, double, bool) const
+    cv::HOGDescriptor::detectMultiScale(cv::_InputArray const&, std::vector<cv::Rect_<int>, std::allocator<cv::Rect_<int> > >&, double, cv::Size_<int>, cv::Size_<int>, double, double, bool) const
+    cv::HOGDescriptor::detectMultiScaleROI(cv::_InputArray const&, std::vector<cv::Rect_<int>, std::allocator<cv::Rect_<int> > >&, std::vector<cv::DetectionROI, std::allocator<cv::DetectionROI> >&, double, int) const
+    cv::HOGDescriptor::detectROI(cv::_InputArray const&, std::vector<cv::Point_<int>, std::allocator<cv::Point_<int> > > const&, std::vector<cv::Point_<int>, std::allocator<cv::Point_<int> > >&, std::vector<double, std::allocator<double> >&, double, cv::Size_<int>, cv::Size_<int>) const
+    cv::HOGDescriptor::getDaimlerPeopleDetector()
+    cv::HOGDescriptor::getDefaultPeopleDetector()
+    cv::HOGDescriptor::getDescriptorSize() const
+    cv::HOGDescriptor::getWinSigma() const
+    cv::HOGDescriptor::groupRectangles(std::vector<cv::Rect_<int>, std::allocator<cv::Rect_<int> > >&, std::vector<double, std::allocator<double> >&, int, double) const
+    cv::HOGDescriptor::load(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::HOGDescriptor::read(cv::FileNode&)
+    cv::HOGDescriptor::save(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) const
+    cv::HOGDescriptor::setSVMDetector(cv::_InputArray const&)
+    cv::HOGDescriptor::write(cv::FileStorage&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) const
+    cv::aruco::Board::Impl::generateImage(cv::Size_<int>, cv::_OutputArray const&, int, int) const
+    cv::aruco::Board::Impl::matchImagePoints(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, cv::_OutputArray const&) const
+    cv::aruco::DetectorParameters::readDetectorParameters(cv::FileNode const&)
+    cv::aruco::DetectorParameters::writeDetectorParameters(cv::FileStorage&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::aruco::drawDetectedCornersCharuco(cv::_InputOutputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::Scalar_<double>)
+    cv::aruco::drawDetectedDiamonds(cv::_InputOutputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::Scalar_<double>)
+    cv::aruco::drawDetectedMarkers(cv::_InputOutputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::Scalar_<double>)
+    cv::aruco::extendDictionary(int, int, cv::aruco::Dictionary const&, int)
+    cv::aruco::generateImageMarker(cv::aruco::Dictionary const&, int, int, cv::_OutputArray const&, int)
+    cv::aruco::getPredefinedDictionary(cv::aruco::PredefinedDictionaryType)
+    cv::aruco::getPredefinedDictionary(int)
+    cv::createFaceDetectionMaskGenerator()
+    cv::groupRectangles(std::vector<cv::Rect_<int>, std::allocator<cv::Rect_<int> > >&, std::vector<int, std::allocator<int> >&, std::vector<double, std::allocator<double> >&, int, double)
+    cv::groupRectangles(std::vector<cv::Rect_<int>, std::allocator<cv::Rect_<int> > >&, std::vector<int, std::allocator<int> >&, int, double)
+    cv::groupRectangles(std::vector<cv::Rect_<int>, std::allocator<cv::Rect_<int> > >&, int, double)
+    cv::groupRectangles(std::vector<cv::Rect_<int>, std::allocator<cv::Rect_<int> > >&, int, double, std::vector<int, std::allocator<int> >*, std::vector<double, std::allocator<double> >*)
+    cv::groupRectangles_meanshift(std::vector<cv::Rect_<int>, std::allocator<cv::Rect_<int> > >&, std::vector<double, std::allocator<double> >&, std::vector<double, std::allocator<double> >&, double, cv::Size_<int>)
+
+--- libopencv_optflow.so: not bound ---
+
+--- libopencv_phase_unwrapping.so: not bound ---
+
+--- libopencv_photo.so: not bound ---
+
+--- libopencv_plot.so: not bound ---
+
+--- libopencv_quality.so: not bound ---
+
+--- libopencv_rapid.so: not bound ---
+
+--- libopencv_reg.so: not bound ---
+
+--- libopencv_rgbd.so: not bound ---
+
+--- libopencv_saliency.so: not bound ---
+
+--- libopencv_sfm.so: not bound ---
+
+--- libopencv_shape.so: not bound ---
+
+--- libopencv_signal.so: not bound ---
+
+--- libopencv_stereo.so: not bound ---
+
+--- libopencv_stitching.so: not bound ---
+
+--- libopencv_structured_light.so: not bound ---
+
+--- libopencv_superres.so: not bound ---
+
+--- libopencv_surface_matching.so: not bound ---
+
+--- libopencv_text.so: not bound ---
+
+--- libopencv_tracking.so: not bound ---
+
+--- libopencv_video.so: bound (4.44%) ---
+  classes (0/21):
+    cv::KalmanFilter
+    cv::Tracker
+    cv::TrackerDaSiamRPN
+    cv::TrackerDaSiamRPN::Params
+    cv::TrackerGOTURN
+    cv::TrackerGOTURN::Params
+    cv::TrackerMIL
+    cv::TrackerMIL::Params
+    cv::TrackerNano
+    cv::TrackerNano::Params
+    cv::TrackerVit
+    cv::TrackerVit::Params
+    cv::detail::tracking::ClfMilBoost
+    cv::detail::tracking::ClfMilBoost::Params
+    cv::detail::tracking::TrackerFeatureSet
+    cv::detail::tracking::TrackerModel
+    cv::detail::tracking::TrackerSampler
+    cv::detail::tracking::TrackerSamplerCSC
+    cv::detail::tracking::TrackerSamplerCSC::Params
+    cv::detail::tracking::TrackerStateEstimatorMILBoosting
+    cv::detail::tracking::TrackerStateEstimatorMILBoosting::TrackerMILTargetState
+  functions (2/24):
+    cv::CamShift(cv::_InputArray const&, cv::Rect_<int>&, cv::TermCriteria)
+    cv::DISOpticalFlow::create(int)
+    cv::FarnebackOpticalFlow::create(int, double, bool, int, int, int, double, int)
+    cv::SparsePyrLKOpticalFlow::create(cv::Size_<int>, int, cv::TermCriteria, int, double)
+    cv::VariationalRefinement::create()
+    cv::buildOpticalFlowPyramid(cv::_InputArray const&, cv::_OutputArray const&, cv::Size_<int>, int, bool, int, int, bool)
+    cv::calcOpticalFlowFarneback(cv::_InputArray const&, cv::_InputArray const&, cv::_InputOutputArray const&, double, int, int, int, int, double, int)
+    cv::calcOpticalFlowPyrLK(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputOutputArray const&, cv::_OutputArray const&, cv::_OutputArray const&, cv::Size_<int>, int, cv::TermCriteria, int, double)
+    cv::computeECC(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&)
+    cv::createBackgroundSubtractorKNN(int, double, bool)
+    cv::createBackgroundSubtractorMOG2(int, double, bool)
+    cv::detail::tracking::TrackerTargetState::getTargetHeight() const
+    cv::detail::tracking::TrackerTargetState::getTargetPosition() const
+    cv::detail::tracking::TrackerTargetState::getTargetWidth() const
+    cv::detail::tracking::TrackerTargetState::setTargetHeight(int)
+    cv::detail::tracking::TrackerTargetState::setTargetPosition(cv::Point_<float> const&)
+    cv::detail::tracking::TrackerTargetState::setTargetWidth(int)
+    cv::estimateRigidTransform(cv::_InputArray const&, cv::_InputArray const&, bool)
+    cv::findTransformECC(cv::_InputArray const&, cv::_InputArray const&, cv::_InputOutputArray const&, int, cv::TermCriteria, cv::_InputArray const&)
+    cv::findTransformECC(cv::_InputArray const&, cv::_InputArray const&, cv::_InputOutputArray const&, int, cv::TermCriteria, cv::_InputArray const&, int)
+    cv::findTransformECCWithMask(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_InputOutputArray const&, int, cv::TermCriteria, int)
+    cv::meanShift(cv::_InputArray const&, cv::Rect_<int>&, cv::TermCriteria)
+    cv::readOpticalFlow(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::writeOpticalFlow(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, cv::_InputArray const&)
+
+--- libopencv_videoio.so: bound (10.00%) ---
+  classes (2/4):
+    cv::AVIReadContainer
+    cv::AVIWriteContainer
+    cv::VideoCapture
+    cv::VideoWriter
+  functions (0/16):
+    cv::DefaultDeleter<CvCapture>::operator()(CvCapture*) const
+    cv::DefaultDeleter<CvVideoWriter>::operator()(CvVideoWriter*) const
+    cv::_InputArray::getMat(int) const
+    cv::icvExtractPattern(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, unsigned int*)
+    cv::videoio_registry::getBackendName[abi:cxx11](cv::VideoCaptureAPIs)
+    cv::videoio_registry::getBackends()
+    cv::videoio_registry::getCameraBackendPluginVersion[abi:cxx11](cv::VideoCaptureAPIs, int&, int&)
+    cv::videoio_registry::getCameraBackends()
+    cv::videoio_registry::getStreamBackendPluginVersion[abi:cxx11](cv::VideoCaptureAPIs, int&, int&)
+    cv::videoio_registry::getStreamBackends()
+    cv::videoio_registry::getStreamBufferedBackendPluginVersion[abi:cxx11](cv::VideoCaptureAPIs, int&, int&)
+    cv::videoio_registry::getStreamBufferedBackends()
+    cv::videoio_registry::getWriterBackendPluginVersion[abi:cxx11](cv::VideoCaptureAPIs, int&, int&)
+    cv::videoio_registry::getWriterBackends()
+    cv::videoio_registry::hasBackend(cv::VideoCaptureAPIs)
+    cv::videoio_registry::isBackendBuiltIn(cv::VideoCaptureAPIs)
+
+--- libopencv_videostab.so: not bound ---
+
+--- libopencv_wechat_qrcode.so: not bound ---
+
+--- libopencv_xfeatures2d.so: not bound ---
+
+--- libopencv_ximgproc.so: bound (37.78%) ---
+  classes (0/1):
+    cv::ximgproc::EdgeDrawing::Params
+  functions (34/89):
+    cv::ximgproc::AdaptiveManifoldFilter::create()
+    cv::ximgproc::BrightEdges(cv::Mat&, cv::Mat&, int, int, int)
+    cv::ximgproc::ContourFitting::distance(std::complex<double>, double)
+    cv::ximgproc::ContourFitting::estimateTransformation(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, double*, bool)
+    cv::ximgproc::ContourFitting::estimateTransformation(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, double&, bool)
+    cv::ximgproc::ContourFitting::fAlpha(double, double&, double&)
+    cv::ximgproc::ContourFitting::frequencyInit()
+    cv::ximgproc::ContourFitting::newtonRaphson(double, double)
+    cv::ximgproc::ContourFitting::setCtrSize(int)
+    cv::ximgproc::ContourFitting::setFDSize(int)
+    cv::ximgproc::EdgeDrawing::setParams(cv::ximgproc::EdgeDrawing::Params const&)
+    cv::ximgproc::FastHoughTransform(cv::_InputArray const&, cv::_OutputArray const&, int, int, int, int)
+    cv::ximgproc::GradientDericheX(cv::_InputArray const&, cv::_OutputArray const&, double, double)
+    cv::ximgproc::GradientDericheY(cv::_InputArray const&, cv::_OutputArray const&, double, double)
+    cv::ximgproc::GradientPaillouX(cv::_InputArray const&, cv::_OutputArray const&, double, double)
+    cv::ximgproc::GradientPaillouY(cv::_InputArray const&, cv::_OutputArray const&, double, double)
+    cv::ximgproc::HoughPoint2Line(cv::Point_<int> const&, cv::_InputArray const&, int, int, int)
+    cv::ximgproc::PeiLinNormalization(cv::_InputArray const&)
+    cv::ximgproc::PeiLinNormalization(cv::_InputArray const&, cv::_OutputArray const&)
+    cv::ximgproc::RadonTransform(cv::_InputArray const&, cv::_OutputArray const&, double, double, double, bool, bool)
+    cv::ximgproc::RidgeDetectionFilter::create(int, int, int, int, int, double, double, int)
+    cv::ximgproc::amFilter(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, double, double, bool)
+    cv::ximgproc::anisotropicDiffusion(cv::_InputArray const&, cv::_OutputArray const&, float, float, int)
+    cv::ximgproc::bilateralTextureFilter(cv::_InputArray const&, cv::_OutputArray const&, int, int, double, double)
+    cv::ximgproc::colorMatchTemplate(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&)
+    cv::ximgproc::computeBadPixelPercent(cv::_InputArray const&, cv::_InputArray const&, cv::Rect_<int>, int)
+    cv::ximgproc::computeMSE(cv::_InputArray const&, cv::_InputArray const&, cv::Rect_<int>)
+    cv::ximgproc::contourSampling(cv::_InputArray const&, cv::_OutputArray const&, int)
+    cv::ximgproc::covarianceEstimation(cv::_InputArray const&, cv::_OutputArray const&, int, int)
+    cv::ximgproc::createAMFilter(double, double, bool)
+    cv::ximgproc::createContourFitting(int, int)
+    cv::ximgproc::createDTFilter(cv::_InputArray const&, double, double, int, int)
+    cv::ximgproc::createDisparityWLSFilter(cv::Ptr<cv::StereoMatcher>)
+    cv::ximgproc::createDisparityWLSFilterGeneric(bool)
+    cv::ximgproc::createEdgeAwareInterpolator()
+    cv::ximgproc::createEdgeBoxes(float, float, float, float, int, float, float, float, float, float, float, float)
+    cv::ximgproc::createEdgeDrawing()
+    cv::ximgproc::createFastBilateralSolverFilter(cv::_InputArray const&, double, double, double, double, int, double)
+    cv::ximgproc::createFastGlobalSmootherFilter(cv::_InputArray const&, double, double, double, int)
+    cv::ximgproc::createFastLineDetector(int, float, double, double, int, bool)
+    cv::ximgproc::createGuidedFilter(cv::_InputArray const&, int, double, double)
+    cv::ximgproc::createQuaternionImage(cv::_InputArray const&, cv::_OutputArray const&)
+    cv::ximgproc::createRFFeatureGetter()
+    cv::ximgproc::createRICInterpolator()
+    cv::ximgproc::createRightMatcher(cv::Ptr<cv::StereoMatcher>)
+    cv::ximgproc::createScanSegment(int, int, int, int, bool)
+    cv::ximgproc::createStructuredEdgeDetection(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, cv::Ptr<cv::ximgproc::RFFeatureGetter const>)
+    cv::ximgproc::createSuperpixelLSC(cv::_InputArray const&, int, float)
+    cv::ximgproc::createSuperpixelSEEDS(int, int, int, int, int, int, int, bool)
+    cv::ximgproc::createSuperpixelSLIC(cv::_InputArray const&, int, int, float)
+    cv::ximgproc::dtFilter(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, double, double, int, int)
+    cv::ximgproc::edgePreservingFilter(cv::_InputArray const&, cv::_OutputArray const&, int, double)
+    cv::ximgproc::fastBilateralSolverFilter(cv::_InputArray const&, cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, double, double, double, double, int, double)
+    cv::ximgproc::fastGlobalSmootherFilter(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, double, double, double, int)
+    cv::ximgproc::findEllipses(cv::_InputArray const&, cv::_OutputArray const&, float, float, float)
+    cv::ximgproc::fourierDescriptor(cv::_InputArray const&, cv::_OutputArray const&, int, int)
+    cv::ximgproc::getDisparityVis(cv::_InputArray const&, cv::_OutputArray const&, double)
+    cv::ximgproc::guidedFilter(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, int, double, int, double)
+    cv::ximgproc::jointBilateralFilter(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, int, double, double, int)
+    cv::ximgproc::l0Smooth(cv::_InputArray const&, cv::_OutputArray const&, double, double)
+    cv::ximgproc::niBlackThreshold(cv::_InputArray const&, cv::_OutputArray const&, double, int, int, double, int, double)
+    cv::ximgproc::qconj(cv::_InputArray const&, cv::_OutputArray const&)
+    cv::ximgproc::qdft(cv::_InputArray const&, cv::_OutputArray const&, int, bool)
+    cv::ximgproc::qmultiply(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&)
+    cv::ximgproc::qunitary(cv::_InputArray const&, cv::_OutputArray const&)
+    cv::ximgproc::readGT(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, cv::_OutputArray const&)
+    cv::ximgproc::rl::createRLEImage(std::vector<cv::Point3_<int>, std::allocator<cv::Point3_<int> > > const&, cv::_OutputArray const&, cv::Size_<int>)
+    cv::ximgproc::rl::dilate(cv::_InputArray const&, cv::_OutputArray const&, cv::_InputArray const&, cv::Point_<int>)
+    cv::ximgproc::rl::erode(cv::_InputArray const&, cv::_OutputArray const&, cv::_InputArray const&, bool, cv::Point_<int>)
+    cv::ximgproc::rl::getStructuringElement(int, cv::Size_<int>)
+    cv::ximgproc::rl::isRLMorphologyPossible(cv::_InputArray const&)
+    cv::ximgproc::rl::morphologyEx(cv::_InputArray const&, cv::_OutputArray const&, int, cv::_InputArray const&, bool, cv::Point_<int>)
+    cv::ximgproc::rl::paint(cv::_InputOutputArray const&, cv::_InputArray const&, cv::Scalar_<double> const&)
+    cv::ximgproc::rl::threshold(cv::_InputArray const&, cv::_OutputArray const&, double, int)
+    cv::ximgproc::rollingGuidanceFilter(cv::_InputArray const&, cv::_OutputArray const&, int, double, double, int, int)
+    cv::ximgproc::segmentation::createGraphSegmentation(double, float, int)
+    cv::ximgproc::segmentation::createSelectiveSearchSegmentation()
+    cv::ximgproc::segmentation::createSelectiveSearchSegmentationStrategyColor()
+    cv::ximgproc::segmentation::createSelectiveSearchSegmentationStrategyFill()
+    cv::ximgproc::segmentation::createSelectiveSearchSegmentationStrategyMultiple(cv::Ptr<cv::ximgproc::segmentation::SelectiveSearchSegmentationStrategy>)
+    cv::ximgproc::segmentation::createSelectiveSearchSegmentationStrategyMultiple(cv::Ptr<cv::ximgproc::segmentation::SelectiveSearchSegmentationStrategy>, cv::Ptr<cv::ximgproc::segmentation::SelectiveSearchSegmentationStrategy>)
+    cv::ximgproc::segmentation::createSelectiveSearchSegmentationStrategyMultiple(cv::Ptr<cv::ximgproc::segmentation::SelectiveSearchSegmentationStrategy>, cv::Ptr<cv::ximgproc::segmentation::SelectiveSearchSegmentationStrategy>, cv::Ptr<cv::ximgproc::segmentation::SelectiveSearchSegmentationStrategy>)
+    cv::ximgproc::segmentation::createSelectiveSearchSegmentationStrategyMultiple(cv::Ptr<cv::ximgproc::segmentation::SelectiveSearchSegmentationStrategy>, cv::Ptr<cv::ximgproc::segmentation::SelectiveSearchSegmentationStrategy>, cv::Ptr<cv::ximgproc::segmentation::SelectiveSearchSegmentationStrategy>, cv::Ptr<cv::ximgproc::segmentation::SelectiveSearchSegmentationStrategy>)
+    cv::ximgproc::segmentation::createSelectiveSearchSegmentationStrategyMultiple()
+    cv::ximgproc::segmentation::createSelectiveSearchSegmentationStrategySize()
+    cv::ximgproc::segmentation::createSelectiveSearchSegmentationStrategyTexture()
+    cv::ximgproc::thinning(cv::_InputArray const&, cv::_OutputArray const&, int)
+    cv::ximgproc::transformFD(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, bool)
+    cv::ximgproc::weightedMedianFilter(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, int, double, int, cv::_InputArray const&)
+
+--- libopencv_xobjdetect.so: not bound ---
+
+--- libopencv_xphoto.so: bound (36.36%) ---
+  functions (4/11):
+    cv::xphoto::applyChannelGains(cv::_InputArray const&, cv::_OutputArray const&, float, float, float)
+    cv::xphoto::bm3dDenoising(cv::_InputArray const&, cv::_OutputArray const&, float, int, int, int, int, int, int, float, int, int, int)
+    cv::xphoto::bm3dDenoising(cv::_InputArray const&, cv::_InputOutputArray const&, cv::_OutputArray const&, float, int, int, int, int, int, int, float, int, int, int)
+    cv::xphoto::createGrayworldWB()
+    cv::xphoto::createLearningBasedWB(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+    cv::xphoto::createSimpleWB()
+    cv::xphoto::createTonemapDurand(float, float, float, float, float)
+    cv::xphoto::dctDenoising(cv::Mat const&, cv::Mat&, double, int)
+    cv::xphoto::inpaint(cv::Mat const&, cv::Mat const&, cv::Mat&, int)
+    cv::xphoto::oilPainting(cv::_InputArray const&, cv::_OutputArray const&, int, int)
+    cv::xphoto::oilPainting(cv::_InputArray const&, cv::_OutputArray const&, int, int, int)
