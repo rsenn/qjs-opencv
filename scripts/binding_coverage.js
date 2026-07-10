@@ -281,11 +281,12 @@ const ANSI_GREEN = '\x1b[32m';
 const ANSI_RED = '\x1b[31m';
 const ANSI_RESET = '\x1b[0m';
 
-function colorize(text, implemented) {
+function colorize(text, implemented, color) {
+  if(!color) return text;
   return (implemented ? ANSI_GREEN : ANSI_RED) + text + ANSI_RESET;
 }
 
-function renderText(report, verbose) {
+function renderText(report, verbose, color) {
   const lines = [];
   lines.push(`OpenCV JS binding coverage report`);
   lines.push(`generated: ${report.generatedAt}`);
@@ -322,11 +323,11 @@ function renderText(report, verbose) {
     if(!verbose && lib.overall.implemented === 0) continue;
     if(lib.classes.list.length) {
       lines.push(`  classes (${lib.classes.implemented}/${lib.classes.total}):`);
-      for(const c of lib.classes.list) lines.push(`    ${colorize(c.name, c.implemented)}`);
+      for(const c of lib.classes.list) lines.push(`    ${colorize(c.name, c.implemented, color)}`);
     }
     if(lib.functions.list.length) {
       lines.push(`  functions (${lib.functions.implemented}/${lib.functions.total}):`);
-      for(const f of lib.functions.list) lines.push(`    ${colorize(f.demangled, f.implemented)}`);
+      for(const f of lib.functions.list) lines.push(`    ${colorize(f.demangled, f.implemented, color)}`);
     }
   }
   return lines.join('\n') + '\n';
@@ -379,7 +380,8 @@ function main() {
   jsonOut.close();
   std.err.puts(`wrote ${opts.json}\n`);
 
-  const text = renderText(report, opts.verbose);
+  const color = opts.out ? false : os.isatty(1);
+  const text = renderText(report, opts.verbose, color);
   if(opts.out) {
     const f = std.open(opts.out, 'w');
     f.puts(text);

@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>OpenCV.js playground</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff;
+    --fg: #1a1a1a;
+    --panel: #f4f4f6;
+    --border: #d7d7dc;
+    --accent: #2563eb;
+    --ok: #1a7f37;
+    --err: #b3261e;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14161a;
+      --fg: #e6e6e6;
+      --panel: #1d2026;
+      --border: #33373f;
+      --accent: #5b9dff;
+      --ok: #4caf6c;
+      --err: #ff6b63;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+  }
+  header {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  header h1 {
+    font-size: 1rem;
+    margin: 0;
+    font-weight: 600;
+  }
+  #status {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+  }
+  #status.ok { color: var(--ok); }
+  #status.err { color: var(--err); }
+  main {
+    display: grid;
+    grid-template-columns: minmax(320px, 1fr) minmax(320px, 1fr);
+    gap: 1rem;
+    padding: 1rem;
+  }
+  @media (max-width: 900px) {
+    main { grid-template-columns: 1fr; }
+  }
+  .panel {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--panel);
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+  .panel h2 {
+    font-size: 0.85rem;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    opacity: 0.7;
+  }
+  .row {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  button, select, input[type=file] {
+    font: inherit;
+    font-size: 0.85rem;
+    padding: 0.35rem 0.6rem;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--fg);
+    cursor: pointer;
+  }
+  button.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+    font-weight: 600;
+  }
+  #dropzone {
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+    padding: 0.75rem;
+    text-align: center;
+    font-size: 0.8rem;
+    opacity: 0.75;
+  }
+  #dropzone.drag { border-color: var(--accent); opacity: 1; }
+  .canvases {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+  .canvas-box {
+    flex: 1;
+    min-width: 0;
+  }
+  .canvas-box span {
+    display: block;
+    font-size: 0.75rem;
+    opacity: 0.6;
+    margin-bottom: 0.25rem;
+  }
+  canvas {
+    max-width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background:
+      linear-gradient(45deg, #80808022 25%, transparent 25%),
+      linear-gradient(-45deg, #80808022 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #80808022 75%),
+      linear-gradient(-45deg, transparent 75%, #80808022 75%);
+    background-size: 16px 16px;
+    background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+  }
+  textarea#code {
+    width: 100%;
+    min-height: 260px;
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    line-height: 1.4;
+    padding: 0.6rem;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--fg);
+    resize: vertical;
+  }
+  #log {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 220px;
+    overflow: auto;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.5rem;
+    min-height: 2.5rem;
+  }
+  #log .err { color: var(--err); }
+  #log .ok { color: var(--ok); }
+  details summary { cursor: pointer; font-size: 0.8rem; opacity: 0.7; }
+  #buildInfo {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    white-space: pre-wrap;
+    max-height: 200px;
+    overflow: auto;
+  }
+  .full { grid-column: 1 / -1; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>OpenCV.js playground</h1>
+  <span id="status">loading opencv.js&hellip;</span>
+  <span style="font-size:0.75rem; opacity:0.6;">docs.opencv.org/4.13.0/opencv.js</span>
+</header>
+
+<main>
+
+  <section class="panel">
+    <h2>Image</h2>
+    <div class="row">
+      <input type="file" id="fileInput" accept="image/*">
+      <button id="loadSampleBtn">Try a sample image</button>
+      <button id="clearBtn">Clear</button>
+    </div>
+    <div id="dropzone">drop an image here, or use the file picker above</div>
+    <div class="canvases">
+      <div class="canvas-box">
+        <span>input</span>
+        <canvas id="srcCanvas"></canvas>
+      </div>
+      <div class="canvas-box">
+        <span>output</span>
+        <canvas id="dstCanvas"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Code</h2>
+    <div class="row">
+      <select id="exampleSelect"></select>
+      <button id="runBtn" class="primary">Run ▷</button>
+    </div>
+    <textarea id="code" spellcheck="false"></textarea>
+    <h2>Log</h2>
+    <div id="log"></div>
+  </section>
+
+  <section class="panel full">
+    <details>
+      <summary>cv.getBuildInformation()</summary>
+      <pre id="buildInfo">(not loaded yet)</pre>
+    </details>
+  </section>
+
+</main>
+
+<script>
+  const statusEl = document.getElementById('status');
+  const logEl = document.getElementById('log');
+  const codeEl = document.getElementById('code');
+  const runBtn = document.getElementById('runBtn');
+  const exampleSelect = document.getElementById('exampleSelect');
+  const srcCanvas = document.getElementById('srcCanvas');
+  const dstCanvas = document.getElementById('dstCanvas');
+  const fileInput = document.getElementById('fileInput');
+  const dropzone = document.getElementById('dropzone');
+
+  function setStatus(text, cls) {
+    statusEl.textContent = text;
+    statusEl.className = cls || '';
+  }
+
+  function log(...args) {
+    const line = document.createElement('div');
+    line.textContent = args.map(a => (typeof a === 'string' ? a : JSON.stringify(a))).join(' ');
+    logEl.appendChild(line);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+  function logOk(msg) { const d = document.createElement('div'); d.className = 'ok'; d.textContent = msg; logEl.appendChild(d); logEl.scrollTop = logEl.scrollHeight; }
+  function logErr(msg) { const d = document.createElement('div'); d.className = 'err'; d.textContent = msg; logEl.appendChild(d); logEl.scrollTop = logEl.scrollHeight; }
+
+  // OpenCV.js sometimes throws the *pointer* to a C++ exception instead of
+  // a JS Error (a known embind footgun). cv.exceptionFromPtr() decodes it.
+  function describeError(e) {
+    if (typeof e === 'number' && window.cv && cv.exceptionFromPtr) {
+      try {
+        return 'cv::Exception: ' + cv.exceptionFromPtr(e).msg;
+      } catch (_) {
+        return 'native exception (pointer ' + e + ')';
+      }
+    }
+    if (e && e.message) return e.message;
+    return String(e);
+  }
+
+  function drawImageToCanvas(img, canvas) {
+    canvas.width = img.naturalWidth || img.width;
+    canvas.height = img.naturalHeight || img.height;
+    canvas.getContext('2d').drawImage(img, 0, 0);
+  }
+
+  function loadImageFile(file) {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      drawImageToCanvas(img, srcCanvas);
+      URL.revokeObjectURL(url);
+      logOk('loaded ' + file.name + ' (' + img.naturalWidth + 'x' + img.naturalHeight + ')');
+    };
+    img.onerror = () => logErr('could not load ' + file.name);
+    img.src = url;
+  }
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) loadImageFile(fileInput.files[0]);
+  });
+
+  ['dragenter', 'dragover'].forEach(evt =>
+    dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.add('drag'); }));
+  ['dragleave', 'drop'].forEach(evt =>
+    dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.remove('drag'); }));
+  dropzone.addEventListener('drop', e => {
+    const file = e.dataTransfer.files[0];
+    if (file) loadImageFile(file);
+  });
+
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    for (const c of [srcCanvas, dstCanvas]) {
+      c.width = 0;
+      c.height = 0;
+    }
+  });
+
+  // Best-effort convenience sample; relies on the repo's own test assets and
+  // will silently no-op if the page isn't served from scripts/ inside the repo
+  // (e.g. opened directly via file:// in a browser that blocks canvas readback
+  // from cross-origin/file images).
+  document.getElementById('loadSampleBtn').addEventListener('click', () => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      drawImageToCanvas(img, srcCanvas);
+      logOk('loaded sample image');
+    };
+    img.onerror = () => logErr('could not load sample image (try the file picker or drag & drop instead)');
+    img.src = '../tests/box.png';
+  });
+
+  const examples = {
+    'Grayscale': `// cv.Mat basics: note that type()/channels()/depth() are METHODS in
+// OpenCV.js (unlike qjs-opencv, where they are properties without "()").
+const src = cv.imread(srcCanvas);
+const dst = new cv.Mat();
+cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY);
+cv.imshow(dstCanvas, dst);
+log('src type:', src.type(), 'channels:', src.channels());
+log('dst type:', dst.type(), 'channels:', dst.channels());
+src.delete();
+dst.delete();`,
+
+    'Canny edges': `const src = cv.imread(srcCanvas);
+const gray = new cv.Mat();
+const edges = new cv.Mat();
+cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+cv.GaussianBlur(gray, gray, new cv.Size(5, 5), 0);
+cv.Canny(gray, edges, 50, 150);
+cv.imshow(dstCanvas, edges);
+src.delete();
+gray.delete();
+edges.delete();`,
+
+    'Mat element access': `// Compare against qjs-opencv's generic mat.at(row, col) / mat.set(row, col, v).
+// OpenCV.js instead has a family of typed accessors: ucharAt / floatAt / ...
+const src = cv.imread(srcCanvas);
+log('rows', src.rows, 'cols', src.cols);
+log('pixel (0,0) via ucharAt:', src.ucharAt(0, 0), src.ucharAt(0, 1), src.ucharAt(0, 2), src.ucharAt(0, 3));
+log('flat data view length (data32F etc. mirror the Mat depth):', src.data.length);
+cv.imshow(dstCanvas, src);
+src.delete();`,
+
+    'Threshold': `const src = cv.imread(srcCanvas);
+const gray = new cv.Mat();
+const dst = new cv.Mat();
+cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+cv.threshold(gray, dst, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU);
+cv.imshow(dstCanvas, dst);
+src.delete();
+gray.delete();
+dst.delete();`,
+
+    'Contours': `const src = cv.imread(srcCanvas);
+const gray = new cv.Mat();
+const bin = new cv.Mat();
+cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+cv.threshold(gray, bin, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU);
+
+const contours = new cv.MatVector();
+const hierarchy = new cv.Mat();
+cv.findContours(bin, contours, hierarchy, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE);
+
+const dst = cv.Mat.zeros(src.rows, src.cols, cv.CV_8UC3);
+for (let i = 0; i < contours.size(); i++) {
+  const color = new cv.Scalar(Math.random() * 255, Math.random() * 255, Math.random() * 255);
+  cv.drawContours(dst, contours, i, color, 2);
+}
+log('found', contours.size(), 'contours');
+cv.imshow(dstCanvas, dst);
+
+// Every Mat/MatVector allocated above is a heap object in OpenCV.js and
+// must be freed manually -- there is no GC/finalizer for them.
+src.delete(); gray.delete(); bin.delete();
+contours.delete(); hierarchy.delete(); dst.delete();`,
+  };
+
+  for (const name of Object.keys(examples)) {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    exampleSelect.appendChild(opt);
+  }
+  exampleSelect.addEventListener('change', () => {
+    codeEl.value = examples[exampleSelect.value];
+  });
+  exampleSelect.value = 'Grayscale';
+  codeEl.value = examples['Grayscale'];
+
+  runBtn.addEventListener('click', () => {
+    if (!window.cvReady) {
+      logErr('opencv.js is not ready yet');
+      return;
+    }
+    if (!srcCanvas.width) {
+      logErr('load an image first');
+      return;
+    }
+    try {
+      const fn = new Function('cv', 'srcCanvas', 'dstCanvas', 'log', codeEl.value);
+      fn(cv, srcCanvas, dstCanvas, log);
+      logOk('done');
+    } catch (e) {
+      logErr(describeError(e));
+    }
+  });
+
+  window.cvReady = false;
+
+  function onOpenCvReady() {
+    cv['onRuntimeInitialized'] = () => {
+      window.cvReady = true;
+      setStatus('opencv.js ready (' + (cv.getBuildInformation ? 'loaded' : '?') + ')', 'ok');
+      try {
+        document.getElementById('buildInfo').textContent = cv.getBuildInformation();
+      } catch (e) {
+        document.getElementById('buildInfo').textContent = 'unavailable: ' + describeError(e);
+      }
+      logOk('opencv.js runtime initialized');
+    };
+  }
+</script>
+
+<script async src="https://docs.opencv.org/4.13.0/opencv.js" onload="onOpenCvReady();" onerror="document.getElementById('status').textContent='failed to load opencv.js'; document.getElementById('status').className='err';" type="text/javascript"></script>
+
+</body>
+</html>
