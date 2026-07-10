@@ -24,6 +24,8 @@
 //   --lib-dir=DIR      directory containing libopencv_*.so (default: /opt/opencv-4.13.0-x86_64/lib)
 //   --json=PATH        JSON report output path (default: ./binding_coverage.json)
 //   --out=PATH         human-readable report output path (default: stdout)
+//   --verbose          list missing classes/functions even for 0%-bound libraries
+//                      (JSON output always contains the full per-symbol lists)
 
 import * as std from 'std';
 import * as os from 'os';
@@ -39,9 +41,14 @@ function parseArgs(argv) {
     libDir: '/opt/opencv-4.13.0-x86_64/lib',
     json: './binding_coverage.json',
     out: null,
+    verbose: false,
   };
   for(let i = 1; i < argv.length; i++) {
     const a = argv[i];
+    if(a === '--verbose') {
+      opts.verbose = true;
+      continue;
+    }
     const m = /^--([a-z-]+)=(.*)$/.exec(a);
     if(!m) die(`unrecognized argument: ${a}`);
     const key = { 'opencv-so': 'opencvSo', 'lib-dir': 'libDir', json: 'json', out: 'out' }[m[1]];
@@ -270,7 +277,15 @@ function formatPct(p) {
   return p === null ? 'n/a' : `${p.toFixed(2)}%`;
 }
 
-function renderText(report) {
+const ANSI_GREEN = '\x1b[32m';
+const ANSI_RED = '\x1b[31m';
+const ANSI_RESET = '\x1b[0m';
+
+function colorize(text, implemented) {
+  return (implemented ? ANSI_GREEN : ANSI_RED) + text + ANSI_RESET;
+}
+
+function renderText(report, verbose) {
   const lines = [];
   lines.push(`OpenCV JS binding coverage report`);
   lines.push(`generated: ${report.generatedAt}`);
@@ -300,18 +315,18 @@ function renderText(report) {
 
   for(const name of names) {
     const lib = report.libraries[name];
-    const missingClasses = lib.classes.list.filter(c => !c.implemented).map(c => c.name);
-    const missingFns = lib.functions.list.filter(f => !f.implemented).map(f => f.demangled);
-    if(missingClasses.length === 0 && missingFns.length === 0) continue;
+    if(lib.overall.total === 0) continue;
     lines.push('');
-    lines.push(`--- ${name}: not bound ---`);
-    if(missingClasses.length) {
-      lines.push(`  classes (${missingClasses.length}):`);
-      for(const c of missingClasses) lines.push(`    ${c}`);
+    const header = lib.overall.implemented === 0 ? 'not bound' : `bound (${formatPct(lib.overall.percentage)})`;
+    lines.push(`--- ${name}: ${header} ---`);
+    if(!verbose && lib.overall.implemented === 0) continue;
+    if(lib.classes.list.length) {
+      lines.push(`  classes (${lib.classes.implemented}/${lib.classes.total}):`);
+      for(const c of lib.classes.list) lines.push(`    ${colorize(c.name, c.implemented)}`);
     }
-    if(missingFns.length) {
-      lines.push(`  functions (${missingFns.length}):`);
-      for(const f of missingFns) lines.push(`    ${f}`);
+    if(lib.functions.list.length) {
+      lines.push(`  functions (${lib.functions.implemented}/${lib.functions.total}):`);
+      for(const f of lib.functions.list) lines.push(`    ${colorize(f.demangled, f.implemented)}`);
     }
   }
   return lines.join('\n') + '\n';
@@ -364,7 +379,7 @@ function main() {
   jsonOut.close();
   std.err.puts(`wrote ${opts.json}\n`);
 
-  const text = renderText(report);
+  const text = renderText(report, opts.verbose);
   if(opts.out) {
     const f = std.open(opts.out, 'w');
     f.puts(text);
