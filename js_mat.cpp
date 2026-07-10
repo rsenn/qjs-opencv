@@ -468,6 +468,8 @@ fail2:
   return JS_EXCEPTION;
 }
 
+static JSValue js_mat_buffer(JSContext* ctx, JSValueConst this_val);
+
 static JSValue
 js_mat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSValue ret = JS_UNDEFINED;
@@ -602,92 +604,33 @@ js_mat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
       }
 
       case METHOD_PTR: {
-        uchar* ptr = 0;
-        std::ostringstream os;
+        // Like OpenCV.js: .ptr(...coords) returns a TypedArray (element type
+        // matching the Mat's depth) at the given position. Coordinates may be
+        // a strict prefix of the Mat's dimensions, in which case the array
+        // spans the whole remaining row/slice instead of a single element.
+        if(argc > m->dims)
+          return JS_ThrowRangeError(ctx, "expected at most %d coordinate(s), got %d", m->dims, argc);
 
-        if(argc == 2) {
-          uint32_t row = 0, col = 0;
+        uchar* ptr = m->data;
 
-          if(argc > 0)
-            JS_ToUint32(ctx, &row, argv[0]);
+        for(int i = 0; i < argc; i++) {
+          int32_t idx = 0;
 
-          if(argc > 1)
-            JS_ToUint32(ctx, &col, argv[1]);
+          if(JS_ToInt32(ctx, &idx, argv[i]))
+            return JS_EXCEPTION;
 
-          ptr = m->ptr<uchar>(row, col);
+          if(idx < 0 || idx >= m->size[i])
+            return JS_ThrowRangeError(ctx, "coordinate %d (%d) out of range [0,%d)", i, idx, m->size[i]);
 
-        } else if(argc == m->dims) {
-
-          switch(m->dims) {
-            case 1: {
-              cv::Vec<int, 1> vec;
-
-              js_value_to(ctx, argv[0], vec[0]);
-
-              ptr = m->ptr<uchar>(vec);
-              break;
-            }
-            case 2: {
-              cv::Vec<int, 2> vec;
-
-              js_value_to(ctx, argv[0], vec[0]);
-              js_value_to(ctx, argv[1], vec[1]);
-
-              ptr = m->ptr<uchar>(vec);
-              break;
-            }
-            case 3: {
-              cv::Vec<int, 3> vec;
-
-              js_value_to(ctx, argv[0], vec[0]);
-              js_value_to(ctx, argv[1], vec[1]);
-              js_value_to(ctx, argv[2], vec[2]);
-
-              ptr = m->ptr<uchar>(vec);
-              break;
-            }
-            case 4: {
-              cv::Vec<int, 4> vec;
-
-              js_value_to(ctx, argv[0], vec[0]);
-              js_value_to(ctx, argv[1], vec[1]);
-              js_value_to(ctx, argv[2], vec[2]);
-              js_value_to(ctx, argv[3], vec[3]);
-
-              ptr = m->ptr<uchar>(vec);
-              break;
-            }
-            case 5: {
-              cv::Vec<int, 5> vec;
-
-              js_value_to(ctx, argv[0], vec[0]);
-              js_value_to(ctx, argv[1], vec[1]);
-              js_value_to(ctx, argv[2], vec[2]);
-              js_value_to(ctx, argv[3], vec[3]);
-              js_value_to(ctx, argv[4], vec[4]);
-
-              ptr = m->ptr<uchar>(vec);
-              break;
-            }
-            case 6: {
-              cv::Vec<int, 6> vec;
-
-              js_value_to(ctx, argv[0], vec[0]);
-              js_value_to(ctx, argv[1], vec[1]);
-              js_value_to(ctx, argv[2], vec[2]);
-              js_value_to(ctx, argv[3], vec[3]);
-              js_value_to(ctx, argv[4], vec[4]);
-              js_value_to(ctx, argv[5], vec[5]);
-
-              ptr = m->ptr<uchar>(vec);
-              break;
-            }
-          }
+          ptr += size_t(idx) * m->step[i];
         }
 
-        os << static_cast<void*>(ptr);
+        const size_t span = (argc == 0) ? (m->total() * size_t(m->channels())) : size_t(m->step1(argc - 1));
 
-        ret = js_value_from(ctx, os.str());
+        TypedArrayType type(*m);
+        JSValue buffer = js_mat_buffer(ctx, this_val);
+
+        ret = js_typedarray_new(ctx, buffer, uint32_t(ptr - m->data), uint32_t(span), type);
 
         break;
       }
