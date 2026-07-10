@@ -701,6 +701,7 @@ js_umat_tostring(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
   if(um->depth() == CV_8U || um->channels() > 1) {
     os << ", ";
     const char* tstr;
+
     switch(um->depth() & 7) {
       case CV_8U: tstr = "CV_8U"; break;
       case CV_8S: tstr = "CV_8S"; break;
@@ -751,36 +752,7 @@ js_umat_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
   JS_DefinePropertyValueStr(ctx, obj, "channels", JS_NewUint32(ctx, umat->channels()), JS_PROP_ENUMERABLE);
   return obj;
 }
-/*static JSValue
-js_umat_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  cv::UMat* um = js_umat_data2(ctx, this_val);
-  int x, y;
-  std::ostringstream os;
-  std::string str;
-  int i = 0;
-  if(!um)
-    return JS_EXCEPTION;
-  int bytes = 1 << ((um->type() & 0x7) >> 1);
-  char sign = (um->type() & 0x7) >= 5 ? 'F' : (um->type() & 1) ? 'S' : 'U';
-  std::vector<std::string> sizeStrs = js_umat_dimensions(*um);
-  os << "UMat " << " [ ";
-  if(sizeStrs.size() || um->type()) {
-    os << "size: " COLOR_YELLOW "" << join(sizeStrs.cbegin(), sizeStrs.cend(), "" COLOR_NONE "*"
-COLOR_YELLOW "")
-       << "" COLOR_NONE ", ";
-    os << "type: " COLOR_YELLOW "CV_" << (bytes * 8) << sign << 'C' << um->channels() << ""
-COLOR_NONE ", "; os << "elemSize: " COLOR_YELLOW "" << um->elemSize() << "" COLOR_NONE ", "; os
-<< "elemSize1: " COLOR_YELLOW "" << um->elemSize1() << "" COLOR_NONE ", "; os << "total: "
-COLOR_YELLOW "" << um->total() << "" COLOR_NONE ", "; os << "dims: " COLOR_YELLOW "" << um->dims
-<< "" COLOR_NONE ""; } else { os << "empty";
-  }
-  if(um->u)
-    os << ", refcount: " COLOR_YELLOW "" << um->u->refcount;
-  os << "" COLOR_NONE " ]";
-  str = os.str();
-  return JS_NewStringLen(ctx, str.data(), str.size());
-}
-*/
+
 static JSValue
 js_umat_convert_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSUMatData *um, *output;
@@ -951,26 +923,6 @@ js_umat_class_create(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
   return ret;
 }
 
-/*static JSValue
-js_umat_create_vec(JSContext* ctx, int len, JSValue* vec) {
-  JSValue obj = JS_EXCEPTION;
-  int i;
-
-  obj = JS_NewArray(ctx);
-  if(!JS_IsException(obj)) {
-
-    for(i = 0; i < len; i++) {
-
-      if(JS_SetPropertyUint32(ctx, obj, i, vec[i]) < 0) {
-        JS_FreeValue(ctx, obj);
-        return JS_EXCEPTION;
-      }
-    }
-  }
-
-  return obj;
-}*/
-
 static JSValue
 js_umat_buffer(JSContext* ctx, JSValueConst this_val) {
   JSUMatData* um;
@@ -1096,7 +1048,7 @@ const JSCFunctionListEntry js_umat_proto_funcs[] = {JS_CGETSET_MAGIC_DEF("cols",
 const JSCFunctionListEntry js_umat_static_funcs[] = {
     JS_CFUNC_MAGIC_DEF("zeros", 1, js_umat_class_create, 0),
     JS_CFUNC_MAGIC_DEF("ones", 1, js_umat_class_create, 1),
-    JS_PROP_INT32_DEF("CV_8U", CV_MAKETYPE(CV_8U, 1), JS_PROP_ENUMERABLE),
+    // JS_PROP_INT32_DEF("CV_8U", CV_MAKETYPE(CV_8U, 1), JS_PROP_ENUMERABLE),
 };
 
 int

@@ -25,7 +25,7 @@ export function pointsOf(contour) {
 
 // Ensure a single-channel grayscale Mat (clone so the source is never touched).
 export function toGray(src) {
-  const ch = src.channels ?? (src.channels && src.channels()) ?? 3;
+  const ch = src.channels ? src.channels() : 3;
   if(ch === 1) return src.clone ? src.clone() : src;
   const gray = new Mat();
   cvtColor(src, gray, COLOR_BGR2GRAY);

@@ -26,12 +26,12 @@ function main(filename = 'tests/test_linesegmentdetector.jpg') {
     console.log('failed to load', filename);
     return 1;
   }
-  console.log('size:', input.size, 'channels:', input.channels);
+  console.log('size:', input.size, 'channels:', input.channels());
 
   // Stage 1: thinning. skeletonization() handles BGR->gray + Otsu internally.
   const skel = new Mat();
   skeletonization(input, skel);
-  console.log('skeleton: type=0x' + skel.type.toString(16), 'size=', skel.size);
+  console.log('skeleton: type=0x' + skel.type().toString(16), 'size=', skel.size);
 
   // Stage 2: 8-neighbour degree map. Source must be a cv.Mat (not UMat).
   const neighborhood = new Mat();
@@ -64,7 +64,7 @@ function main(filename = 'tests/test_linesegmentdetector.jpg') {
 
   // Panel 0: original image (force 3-channel if grayscale).
   let bgrInput;
-  if(input.channels === 1) {
+  if(input.channels() === 1) {
     bgrInput = new Mat();
     cvtColor(input, bgrInput, COLOR_GRAY2BGR);
   } else {

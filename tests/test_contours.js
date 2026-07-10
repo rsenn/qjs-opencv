@@ -7,9 +7,9 @@ function main(...args) {
   console.log('filename', filename);
   let input = imread(filename);
 
-  console.log('input.type', '0x' + input.type.toString(16));
-  console.log('input.depth', '0x' + input.depth.toString(16));
-  console.log('input.channels', '0x' + input.channels.toString(16));
+  console.log('input.type', '0x' + input.type().toString(16));
+  console.log('input.depth', '0x' + input.depth().toString(16));
+  console.log('input.channels', '0x' + input.channels().toString(16));
   console.log('input.elemSize1', input.elemSize1);
   console.log('input.total', input.total);
   console.log('input.at', input.at(0, 0));

@@ -74,7 +74,7 @@ export class Canvas {
   paste(src, x, y, w, h) {
     if(!src || src.empty) return;
     let img = src;
-    const ch = src.channels ?? 3;
+    const ch = src.channels() ?? 3;
     if(ch === 1) {
       img = new Mat();
       cvtColor(src, img, COLOR_GRAY2BGR);

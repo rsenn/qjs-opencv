@@ -28,8 +28,8 @@ function main(arg = 'tests/test_linesegmentdetector.jpg') {
 
   const gray = Grayscale(image);
 
-  const gray2 = new Mat(gray.size, gray.type);
-  const skel = new Mat(gray.size, gray.type);
+  const gray2 = new Mat(gray.size, gray.type());
+  const skel = new Mat(gray.size, gray.type());
 
   threshold(gray, gray2, 100, 255, THRESH_BINARY_INV);
 

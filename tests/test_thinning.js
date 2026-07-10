@@ -5,7 +5,7 @@ const [me] = scriptArgs;
 function main(file = 'opencv-logo.png') {
   const src = imread(file, IMREAD_COLOR);
 
-  const img = new Mat(src.rows + 2, src.cols + 2, src.type);
+  const img = new Mat(src.rows + 2, src.cols + 2, src.type());
 
   src.copyTo(img(new Rect(1, 1, src.cols, src.rows)));
 

@@ -32,7 +32,7 @@ const BGD_KEY = EVENT_FLAG_CTRLKEY;
 const FGD_KEY = EVENT_FLAG_SHIFTKEY;
 
 function getBinMask(/*const Mat&*/ comMask, /*Mat& */ binMask) {
-  if(comMask.empty || comMask.type != CV_8UC1) throw new Error('comMask is empty or has incorrect type (not CV_8UC1)');
+  if(comMask.empty || comMask.type() != CV_8UC1) throw new Error('comMask is empty or has incorrect type (not CV_8UC1)');
 
   if(binMask.empty || !binMask.size.equals(comMask.size)) binMask.create(comMask.size, CV_8UC1);
 

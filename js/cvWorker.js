@@ -32,7 +32,7 @@ export function matToShared(mat) {
     [TAG]: 'mat',
     rows: mat.rows,
     cols: mat.cols,
-    type: mat.type,
+    type: mat.type(),
     step: mat.step,
     sab,
   };
@@ -68,10 +68,8 @@ const TA_CTORS = {
   Float32Array,
   Float64Array,
 };
-if(typeof BigInt64Array !== 'undefined')
-  TA_CTORS.BigInt64Array = BigInt64Array;
-if(typeof BigUint64Array !== 'undefined')
-  TA_CTORS.BigUint64Array = BigUint64Array;
+if(typeof BigInt64Array !== 'undefined') TA_CTORS.BigInt64Array = BigInt64Array;
+if(typeof BigUint64Array !== 'undefined') TA_CTORS.BigUint64Array = BigUint64Array;
 
 export function typedArrayToShared(ta) {
   const src = new Uint8Array(ta.buffer, ta.byteOffset, ta.byteLength);
