@@ -195,6 +195,7 @@ inline OutputIterator
 transform_contours(InputIterator s, InputIterator e, OutputIterator o) {
   typedef typename std::iterator_traits<InputIterator>::value_type input_type;
   typedef typename std::iterator_traits<OutputIterator>::value_type output_type;
+
   o = std::transform(s, e, o, [](const input_type& p) -> output_type {
     output_type ret;
     ret.resize(p.size());
@@ -203,6 +204,7 @@ transform_contours(InputIterator s, InputIterator e, OutputIterator o) {
 
     return ret;
   });
+
   return o;
 }
 
