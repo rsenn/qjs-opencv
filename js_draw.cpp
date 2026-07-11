@@ -229,15 +229,8 @@ js_draw_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
     contours.resize(1);
 
     JSValue element = JS_GetPropertyUint32(ctx, argv[1], index);
-    JSContourData<double>* contour;
-
-    if((contour = js_contour_data(element))) {
-      std::copy(contour->begin(), contour->end(), std::back_inserter(contours[0]));
-    } else
-      js_array_to(ctx, element, contours[0]);
-
+    js_value_to(ctx, element, contours[0]);
     JS_FreeValue(ctx, element);
-
   } else {
     js_array_to(ctx, argv[1], contours);
   }

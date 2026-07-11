@@ -210,4 +210,27 @@ js_contours_new(JSContext* ctx, const JSContoursData<T>& contours) {
   return arr;
 }
 
+template<class T>
+static inline int
+js_value_to(JSContext* ctx, JSValueConst value, JSContourData<T>& out) {
+  JSContourData<double>* contour;
+
+  if((contour = js_contour_data(value))) {
+    size_t n = contour->size();
+
+    out.resize(n);
+    std::copy(contour->begin(), contour->end(), out.begin());
+    return n;
+  }
+
+  // WARN: slow
+  return js_array_to(ctx, value, out);
+}
+
+template<class T>
+static inline JSValue
+js_value_from(JSContext* ctx, const JSContourData<T>& contour) {
+  return js_contour_new<T>(ctx, contour);
+}
+
 #endif /* defined(JS_CONTOUR_HPP) */
