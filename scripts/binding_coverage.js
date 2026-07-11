@@ -361,7 +361,7 @@ function renderText(report, verbose, color) {
     }
     if(lib.functions.list.length) {
       lines.push(`  functions (${lib.functions.implemented}/${lib.functions.total}):`);
-      for(const f of lib.functions.list) lines.push(`    ${colorize(f.demangled, f.implemented, color)}`);
+      for(const f of lib.functions.list) lines.push(`    ${f.implemented ? ' ' : '*'}${colorize(f.demangled, f.implemented, color)}`);
     }
   }
   return lines.join('\n') + '\n';
