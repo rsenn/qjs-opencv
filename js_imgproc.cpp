@@ -981,27 +981,22 @@ js_cv_find_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 
   array_buffer = js_arraybuffer_from(ctx, begin(vec4i), end(vec4i));
 
-  /* if(contours_array)
-     js_array_copy<JSContoursData<double>>(ctx, argv[1], poly);
- */
-  {
-    size_t i, length = poly.size();
-    JSValue ctor = js_global_get(ctx, "Int32Array");
+  size_t i, length = poly.size();
+  JSValue ctor = js_global_get(ctx, "Int32Array");
 
-    for(i = 0; i < length; i++) {
-      if(contours_array) {
-        JSValue contour = js_contour_move(ctx, std::move(poly[i]));
-        JS_SetPropertyUint32(ctx, argv[1], i, contour);
-      }
-
-      if(hier_array) {
-        JSValue array = js_typedarray_new(ctx, array_buffer, i * sizeof(cv::Vec4i), 4, ctor);
-        JS_SetPropertyUint32(ctx, argv[2], i, array);
-      }
+  for(i = 0; i < length; i++) {
+    if(contours_array) {
+      JSValue contour = js_contour_move(ctx, std::move(poly[i]));
+      JS_SetPropertyUint32(ctx, argv[1], i, contour);
     }
 
-    JS_FreeValue(ctx, ctor);
+    if(hier_array) {
+      JSValue array = js_typedarray_new(ctx, array_buffer, i * sizeof(cv::Vec4i), 4, ctor);
+      JS_SetPropertyUint32(ctx, argv[2], i, array);
+    }
   }
+
+  JS_FreeValue(ctx, ctor);
 
   if(hier_callback) {
     JSValueConst tarray;
@@ -1012,54 +1007,7 @@ js_cv_find_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
     JS_Call(ctx, argv[2], JS_NULL, 1, &tarray);
   }
 
-  /*{
-    JSValue hier_arr = js_vector_vec4i_to_array(ctx, hier);
-    JSValue contours_obj = js_contours_new(ctx, poly);
-    ret = JS_NewObject(ctx);
-    JS_SetPropertyStr(ctx, ret, "hier", hier_arr);
-    JS_SetPropertyStr(ctx, ret, "contours", contours_obj);
-  }*/
-
   return ret;
-}
-
-static JSValue
-js_cv_draw_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  JSContoursData<int> contours;
-  JSColorData<double> color;
-  int32_t index = -1, thickness = 1, lineType = cv::LINE_8;
-
-  JSImageArgument mat(ctx, argv[0]);
-
-  if(js_is_noarray(mat))
-    return JS_ThrowInternalError(ctx, "mat not an array!");
-
-  if(!js_is_array(ctx, argv[1]))
-    return JS_ThrowInternalError(ctx, "argument 2 not an array!");
-
-  js_array_to(ctx, argv[1], contours);
-
-  JS_ToInt32(ctx, &index, argv[2]);
-
-  js_color_read(ctx, argv[3], &color);
-
-  if(argc > 4)
-    JS_ToInt32(ctx, &thickness, argv[4]);
-
-  if(argc > 5)
-    JS_ToInt32(ctx, &lineType, argv[5]);
-
-  cv::Scalar scalar = cv::Scalar(color);
-
-  if(mat.isMat()) {
-    cv::Mat& mref = mat.getMatRef();
-
-    cv::drawContours(mref, contours, index, scalar, thickness, lineType);
-  } else {
-    cv::drawContours(mat, contours, index, scalar, thickness, lineType);
-  }
-
-  return JS_UNDEFINED;
 }
 
 static JSValue
@@ -2249,7 +2197,6 @@ js_function_list_t js_imgproc_static_funcs{
     JS_CFUNC_DEF("Canny", 4, js_cv_canny),
     JS_CFUNC_DEF("cornerHarris", 5, js_cv_corner_harris),
     JS_CFUNC_DEF("goodFeaturesToTrack", 5, js_cv_good_features_to_track),
-    // JS_CFUNC_DEF("drawContours", 4, js_cv_draw_contours),
     JS_CFUNC_DEF("lineSegmentDetector", 2, js_cv_lsd),
 
     /* Histograms */

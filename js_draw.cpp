@@ -213,17 +213,16 @@ js_draw_contour(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
 
 static JSValue
 js_draw_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  JSInputOutputArray dst;
-  int i = 0, ret = -1;
+  JSInputOutputArray dst = js_cv_inputoutputarray(ctx, argv[0]);
   JSContoursData<int> contours;
   int32_t index = -1, line_type = cv::LINE_8;
   JSColorData<double> color;
-  JSPointData<int> offset{0, 0};
+  JSPointData<int> offset;
   std::vector<cv::Vec4i> hier;
   int32_t thickness = 1, maxLevel = INT_MAX;
   bool antialias = true;
 
-  if(js_is_noarray((dst = js_umat_or_mat(ctx, argv[0]))))
+  if(js_is_noarray(dst))
     return JS_EXCEPTION;
 
   js_value_to(ctx, argv[2], index);
@@ -257,7 +256,7 @@ js_draw_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
   if(argc > 8)
     js_point_read<int>(ctx, argv[8], &offset);
 
-  cv::Scalar scalar = cv::Scalar(color);
+  const auto scalar = cv::Scalar(color);
   // std::cerr << "draw_contours() contours.length=" << contours.size() << " index=" << index << " thickness=" << thickness << std::endl;
 
   try {
