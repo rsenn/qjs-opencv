@@ -942,10 +942,21 @@ js_cv_lsd(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) 
   return JS_UNDEFINED;
 }
 
+// Frees a std::vector<cv::Vec4i> heap-allocated (via js_mallocz) to back a
+// zero-copy ArrayBuffer -- same placement-new/free_func pattern as
+// js_mat_free_func, just with a real destructor call since (unlike cv::Mat)
+// the vector's cleanup isn't equivalent to a no-op release().
+static void
+js_vec4i_free_func(JSRuntime* rt, void* opaque, void* ptr) {
+  auto* vec = static_cast<std::vector<cv::Vec4i>*>(opaque);
+  vec->~vector();
+  js_free_rt(rt, vec);
+}
+
 static JSValue
 js_cv_find_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   cv::Mat* m = js_mat_data2(ctx, argv[0]);
-  JSValue array_buffer, ret = JS_UNDEFINED;
+  JSValue ret = JS_UNDEFINED;
   int32_t mode = cv::RETR_TREE;
   int32_t approx = cv::CHAIN_APPROX_SIMPLE;
   bool hier_callback, contours_array, hier_array, hier_mat;
@@ -953,7 +964,6 @@ js_cv_find_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 
   JSContoursData<int> contours;
   std::vector<cv::Vec4i> vec4i;
-  JSContoursData<double> poly;
   JSInputOutputArray hier(vec4i);
 
   hier_mat = /*hier.isUMat() || hier.isMat() || */ js_mat_data_nothrow(argv[2]);
@@ -963,8 +973,6 @@ js_cv_find_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 
   if(hier_mat)
     hier = js_cv_inputoutputarray(ctx, argv[2]);
-  /*else
-    hier = JSInputOutputArray(vec4i);*/
 
   if(argc > 3)
     JS_ToInt32(ctx, &mode, argv[3]);
@@ -973,38 +981,46 @@ js_cv_find_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 
   cv::findContours(*m, contours, hier, mode, approx, offset);
 
-  if(contours_array)
+  // Contours: convert int -> double points one contour at a time (no
+  // separate full-size "poly" copy held alongside `contours`), and skip the
+  // conversion entirely when the caller didn't pass an array to receive it.
+  if(contours_array) {
     js_array_truncate(ctx, argv[1], 0);
 
-  poly.resize(contours.size());
-  transform_contours(contours.begin(), contours.end(), poly.begin());
+    for(size_t i = 0; i < contours.size(); i++) {
+      JSContourData<double> poly(contours[i].size());
+      transform_points(contours[i].cbegin(), contours[i].cend(), poly.begin());
 
-  array_buffer = js_arraybuffer_from(ctx, begin(vec4i), end(vec4i));
-
-  size_t i, length = poly.size();
-  JSValue ctor = js_global_get(ctx, "Int32Array");
-
-  for(i = 0; i < length; i++) {
-    if(contours_array) {
-      JSValue contour = js_contour_move(ctx, std::move(poly[i]));
+      JSValue contour = js_contour_move(ctx, std::move(poly));
       JS_SetPropertyUint32(ctx, argv[1], i, contour);
-    }
-
-    if(hier_array) {
-      JSValue array = js_typedarray_new(ctx, array_buffer, i * sizeof(cv::Vec4i), 4, ctor);
-      JS_SetPropertyUint32(ctx, argv[2], i, array);
     }
   }
 
-  JS_FreeValue(ctx, ctor);
+  // Hierarchy: skip entirely unless someone asked for it. When they did,
+  // move vec4i to the heap once and hand out zero-copy Int32Array(4) views
+  // into a single ArrayBuffer, instead of copying it into an ArrayBuffer
+  // and then, for the callback case, copying it *again* element-by-element
+  // into a plain array (previously via js_array_from on raw int32_t*).
+  if(hier_array || hier_callback) {
+    auto* heap_vec = static_cast<std::vector<cv::Vec4i>*>(js_mallocz(ctx, sizeof(std::vector<cv::Vec4i>)));
+    new(heap_vec) std::vector<cv::Vec4i>(std::move(vec4i));
 
-  if(hier_callback) {
-    JSValueConst tarray;
-    int32_t *hstart, *hend;
-    hstart = reinterpret_cast<int32_t*>(&vec4i[0]);
-    hend = reinterpret_cast<int32_t*>(&vec4i[vec4i.size()]);
-    tarray = js_array_from(ctx, hstart, hend);
-    JS_Call(ctx, argv[2], JS_NULL, 1, &tarray);
+    JSValue array_buffer = js_arraybuffer_from(ctx, begin(*heap_vec), end(*heap_vec), *(JSFreeArrayBufferDataFunc*)&js_vec4i_free_func, (void*)heap_vec);
+    JSValue ctor = js_global_get(ctx, "Int32Array");
+    JSValue callback_arg = hier_callback ? JS_NewArray(ctx) : JS_UNDEFINED;
+
+    for(size_t i = 0; i < heap_vec->size(); i++) {
+      JSValue view = js_typedarray_new(ctx, array_buffer, i * sizeof(cv::Vec4i), 4, ctor);
+      JS_SetPropertyUint32(ctx, hier_array ? argv[2] : callback_arg, i, view);
+    }
+
+    if(hier_callback) {
+      JS_Call(ctx, argv[2], JS_NULL, 1, &callback_arg);
+      JS_FreeValue(ctx, callback_arg);
+    }
+
+    JS_FreeValue(ctx, ctor);
+    JS_FreeValue(ctx, array_buffer);
   }
 
   return ret;
