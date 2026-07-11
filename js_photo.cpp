@@ -14,6 +14,23 @@ enum {
   INPAINT,
 };
 
+/* pencilSketch/stylization/detailEnhance/edgePreservingFilter/fastNlMeansDenoisingColored
+ * all assume CV_8UC3 internally with no input validation of their own in this OpenCV
+ * build; a 4-channel (e.g. BGRA from a PNG with alpha) src corrupts the heap instead of
+ * throwing. cv.imread() in this project can return 4-channel Mats (custom PNG reader
+ * preserves alpha), so this boundary check is load-bearing, not speculative. */
+static bool
+js_photo_require_channels(JSContext* ctx, const JSInputArray& src, int channels, const char* fname) {
+  int n = src.channels();
+
+  if(n != channels) {
+    JS_ThrowTypeError(ctx, "%s: src must be a %d-channel image, got %d channels", fname, channels, n);
+    return false;
+  }
+
+  return true;
+}
+
 static JSValue
 js_photo_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSValue ret = JS_UNDEFINED;
@@ -22,6 +39,12 @@ js_photo_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
     switch(magic) {
       case PENCIL_SKETCH: {
         JSInputArray src = js_input_array(ctx, argv[0]);
+
+        if(!js_photo_require_channels(ctx, src, 3, "pencilSketch")) {
+          ret = JS_EXCEPTION;
+          break;
+        }
+
         JSOutputArray dst1 = js_cv_outputarray(ctx, argv[1]), dst2 = js_cv_outputarray(ctx, argv[2]);
         double sigma_s = 60, sigma_r = 0.07, shade_factor = 0.02;
 
@@ -38,6 +61,12 @@ js_photo_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
 
       case STYLIZATION: {
         JSInputArray src = js_input_array(ctx, argv[0]);
+
+        if(!js_photo_require_channels(ctx, src, 3, "stylization")) {
+          ret = JS_EXCEPTION;
+          break;
+        }
+
         JSOutputArray dst = js_cv_outputarray(ctx, argv[1]);
         double sigma_s = 60, sigma_r = 0.45;
 
@@ -52,6 +81,12 @@ js_photo_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
 
       case DETAIL_ENHANCE: {
         JSInputArray src = js_input_array(ctx, argv[0]);
+
+        if(!js_photo_require_channels(ctx, src, 3, "detailEnhance")) {
+          ret = JS_EXCEPTION;
+          break;
+        }
+
         JSOutputArray dst = js_cv_outputarray(ctx, argv[1]);
         double sigma_s = 10, sigma_r = 0.15;
 
@@ -66,6 +101,12 @@ js_photo_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
 
       case EDGE_PRESERVING_FILTER: {
         JSInputArray src = js_input_array(ctx, argv[0]);
+
+        if(!js_photo_require_channels(ctx, src, 3, "edgePreservingFilter")) {
+          ret = JS_EXCEPTION;
+          break;
+        }
+
         JSOutputArray dst = js_cv_outputarray(ctx, argv[1]);
         int32_t flags = cv::RECURS_FILTER;
         double sigma_s = 60, sigma_r = 0.4;
@@ -100,6 +141,12 @@ js_photo_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
 
       case FAST_NL_MEANS_DENOISING_COLORED: {
         JSInputArray src = js_input_array(ctx, argv[0]);
+
+        if(!js_photo_require_channels(ctx, src, 3, "fastNlMeansDenoisingColored")) {
+          ret = JS_EXCEPTION;
+          break;
+        }
+
         JSOutputArray dst = js_cv_outputarray(ctx, argv[1]);
         double h = 3, hColor = 3;
         int32_t templateWindowSize = 7, searchWindowSize = 21;
@@ -119,6 +166,13 @@ js_photo_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
 
       case INPAINT: {
         JSInputArray src = js_input_array(ctx, argv[0]);
+        int32_t srcChannels = src.channels();
+
+        if(srcChannels != 1 && srcChannels != 3) {
+          ret = JS_ThrowTypeError(ctx, "inpaint: src must be a 1- or 3-channel image, got %d channels", srcChannels);
+          break;
+        }
+
         JSInputArray inpaintMask = js_input_array(ctx, argv[1]);
         JSOutputArray dst = js_cv_outputarray(ctx, argv[2]);
         double inpaintRadius;
