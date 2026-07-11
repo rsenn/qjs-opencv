@@ -39,13 +39,10 @@ cv::Mat* dptr = 0;
 static JSValue
 js_draw_circle(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSInputOutputArray dst;
-  int i = 0, ret = -1;
   JSPointData<double> point;
-  int radius = 0;
   cv::Scalar color;
   bool antialias = true;
-  int thickness = -1;
-  int line_type = cv::LINE_AA;
+  int i = 0, ret = -1, radius = 0, thickness = -1, line_type = cv::LINE_AA;
 
   if(argc > i) {
     if(!js_is_noarray((dst = js_umat_or_mat(ctx, argv[i]))))
@@ -62,6 +59,7 @@ js_draw_circle(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
     i++;
   } else {
     int32_t x, y;
+
     JS_ToInt32(ctx, &x, argv[i]);
     JS_ToInt32(ctx, &y, argv[i + 1]);
     point.x = x;
@@ -76,7 +74,6 @@ js_draw_circle(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
   if(argc > i)
     js_value_to(ctx, argv[i++], thickness);
 
-  /**/
   if(argc > i) {
     if(JS_IsBool(argv[i])) {
       js_value_to(ctx, argv[i++], antialias);
@@ -127,6 +124,7 @@ js_draw_ellipse(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
       JS_ToFloat64(ctx, &center.y, argv[i + 1]);
       i += 2;
     }
+
     if(js_size_read(ctx, argv[i], &axes)) {
       i++;
     } else {
@@ -138,14 +136,19 @@ js_draw_ellipse(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
 
   if(argc > i)
     js_value_to(ctx, argv[i++], angle);
+
   if(argc > i)
     js_value_to(ctx, argv[i++], start_angle);
+
   if(argc > i)
     js_value_to(ctx, argv[i++], end_angle);
+
   if(argc > i)
     js_color_read(ctx, argv[i++], &color);
+
   if(argc > i)
     js_value_to(ctx, argv[i++], thickness);
+
   if(argc > i) {
     if(JS_IsBool(argv[i])) {
       js_value_to(ctx, argv[i++], antialias);
@@ -171,6 +174,7 @@ js_draw_contour(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
   JSColorData<double> color;
   int thickness = 1;
   bool antialias = true;
+  JSPointData<int> offset{0, 0};
 
   contours.resize(1);
 
@@ -187,21 +191,20 @@ js_draw_contour(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
     return JS_EXCEPTION;*/
 
   if(argc > i)
-    js_contour_read(ctx, argv[i++], &contours[0]);
-
-  /* if(argc > i)
-     JS_ToInt32(ctx, &index, argv[i++]);*/
+    js_value_to(ctx, argv[i++], contours[0]);
   if(argc > i)
     js_color_read(ctx, argv[i++], &color);
   if(argc > i)
     js_value_to(ctx, argv[i++], thickness);
   if(argc > i)
     JS_ToInt32(ctx, &line_type, argv[i++]);
+  if(argc > i)
+    js_value_to(ctx, argv[i++], offset);
 
   std::cerr << "draw_contour() contours.length=" << contours.size() << " index=" << index << " thickness=" << thickness << std::endl;
 
   try {
-    cv::drawContours(dst, contours, index, cv::Scalar(color), thickness, line_type);
+    cv::drawContours(dst, contours, index, cv::Scalar(color), thickness, line_type, cv::noArray(), INT_MAX, offset);
   } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 
   std::cerr << "draw_contour() ret:" << ret << " color: " << cv::Scalar(color) << std::endl;
@@ -421,9 +424,8 @@ js_draw_polylines(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
       JS_ToInt32(ctx, &line_type, argv[i++]);
   }
 
-  // std::cerr << "polylines()" << " is_closed: " << is_closed << " color: " <<  (color) << "
-  // thickness: " << thickness
-  // << " line_type: " << line_type << std::endl;
+  // std::cerr << "polylines()" << " is_closed: " << is_closed << " color: " <<  (color) << " thickness: " << thickness << " line_type: " << line_type <<
+  // std::endl;
   try {
     cv::polylines(dst, points, is_closed, *reinterpret_cast<cv::Scalar const*>(&color), thickness, line_type);
   } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
@@ -488,8 +490,7 @@ js_draw_rectangle(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
   points[1].x = rect.x + rect.width;
   points[1].y = rect.y + rect.height;
 
-  // printf("cv::rectangle %lf,%lf %lfx%lf [%.0lf,%.0lf,%.0lf,%.0lf]\n", rect.x, rect.y,
-  // rect.width, rect.height, scalar[0], scalar[1], scalar[2], scalar[3]);
+  // printf("cv::rectangle %lf,%lf %lfx%lf [%.0lf,%.0lf,%.0lf,%.0lf]\n", rect.x, rect.y, rect.width, rect.height, scalar[0], scalar[1], scalar[2], scalar[3]);
   try {
     cv::rectangle(dst, points[0], points[1], scalar, thickness, line_type);
   } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
@@ -663,6 +664,7 @@ js_get_text_size(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
   } else if(JS_IsObject(argv[i])) {
     JS_SetPropertyStr(ctx, argv[i], "y", baseline_value);
   }
+
   dim[0] = size.width;
   dim[1] = size.height;
 
@@ -754,7 +756,6 @@ js_fill_convex_poly(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   int32_t lineType = cv::LINE_8, shift = 0;
 
   js_value_to(ctx, argv[1], points);
-
   js_color_read(ctx, argv[2], &color);
 
   if(argc > 3)
