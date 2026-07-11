@@ -231,6 +231,8 @@ js_draw_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
     JSValue element = JS_GetPropertyUint32(ctx, argv[1], index);
     js_value_to(ctx, element, contours[0]);
     JS_FreeValue(ctx, element);
+
+    index = 0;
   } else {
     js_array_to(ctx, argv[1], contours);
   }
