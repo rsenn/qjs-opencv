@@ -223,10 +223,26 @@ js_draw_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
   if(js_is_noarray((dst = js_umat_or_mat(ctx, argv[0]))))
     return JS_EXCEPTION;
 
-  js_array_to(ctx, argv[1], contours);
   js_value_to(ctx, argv[2], index);
 
-  /* if(index >= 0 && index < contours.size()) {
+  if(index >= 0) {
+    contours.resize(1);
+
+    JSValue element = JS_GetPropertyUint32(ctx, argv[1], index);
+    JSContourData<double>* contour;
+
+    if((contour = js_contour_data(element))) {
+      std::copy(contour->begin(), contour->end(), std::back_inserter(contours[0]));
+    } else
+      js_array_to(ctx, element, contours[0]);
+
+    JS_FreeValue(ctx, element);
+
+  } else {
+    js_array_to(ctx, argv[1], contours);
+  }
+
+  /*if(index >= 0 && index < contours.size()) {
      std::cerr << "contour #" << (index + 1) << ": " << contours[index].size() << std::endl;
    } else {
      for(size_t m = 0; m < contours.size(); ++m) {
@@ -253,9 +269,7 @@ js_draw_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
     js_point_read<int>(ctx, argv[8], &offset);
 
   cv::Scalar scalar = cv::Scalar(color);
-  // std::cerr << "draw_contours() contours.length=" << contours.size() << " index=" <<
-  // index << " thickness="
-  // << thickness << std::endl;
+  // std::cerr << "draw_contours() contours.length=" << contours.size() << " index=" << index << " thickness=" << thickness << std::endl;
 
   try {
     if(dst.isMat()) {
@@ -269,8 +283,7 @@ js_draw_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
     }
   } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 
-  // std::cerr << "draw_contours() ret:" << ret << " color: " <<
-  // cv::Scalar(color) << std::endl;
+  // std::cerr << "draw_contours() ret:" << ret << " color: " << cv::Scalar(color) << std::endl;
 
   return JS_UNDEFINED;
 }
