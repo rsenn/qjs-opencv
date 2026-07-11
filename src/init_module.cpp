@@ -32,6 +32,7 @@ extern "C" int js_bg_subtractor_init(JSContext*, JSModuleDef*);
 extern "C" int js_white_balancer_init(JSContext*, JSModuleDef*);
 extern "C" int js_barcode_detector_init(JSContext*, JSModuleDef*);
 extern "C" int js_calib3d_init(JSContext*, JSModuleDef*);
+extern "C" int js_photo_init(JSContext*, JSModuleDef*);
 extern "C" int js_algorithms_init(JSContext*, JSModuleDef*);
 extern "C" int js_ximgproc_init(JSContext*, JSModuleDef*);
 extern "C" int js_filestorage_init(JSContext*, JSModuleDef*);
@@ -74,6 +75,7 @@ extern "C" void js_bg_subtractor_export(JSContext*, JSModuleDef*);
 extern "C" void js_white_balancer_export(JSContext*, JSModuleDef*);
 extern "C" void js_barcode_detector_export(JSContext*, JSModuleDef*);
 extern "C" void js_calib3d_export(JSContext*, JSModuleDef*);
+extern "C" void js_photo_export(JSContext*, JSModuleDef*);
 extern "C" void js_algorithms_export(JSContext*, JSModuleDef*);
 extern "C" void js_ximgproc_export(JSContext*, JSModuleDef*);
 extern "C" void js_filestorage_export(JSContext*, JSModuleDef*);
@@ -127,6 +129,7 @@ js_opencv_init(JSContext* ctx, JSModuleDef* m) {
   js_barcode_detector_init(ctx, m);
 #endif
   js_calib3d_init(ctx, m);
+  js_photo_init(ctx, m);
   js_algorithms_init(ctx, m);
 #ifdef HAVE_OPENCV2_XIMGPROC_HPP
   js_ximgproc_init(ctx, m);
@@ -195,6 +198,7 @@ JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   js_barcode_detector_export(ctx, m);
 #endif
   js_calib3d_export(ctx, m);
+  js_photo_export(ctx, m);
   js_algorithms_export(ctx, m);
 #ifdef HAVE_OPENCV2_XIMGPROC_HPP
   js_ximgproc_export(ctx, m);
