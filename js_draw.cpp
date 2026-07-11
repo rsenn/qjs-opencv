@@ -237,15 +237,6 @@ js_draw_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
     js_array_to(ctx, argv[1], contours);
   }
 
-  /*if(index >= 0 && index < contours.size()) {
-     std::cerr << "contour #" << (index + 1) << ": " << contours[index].size() << std::endl;
-   } else {
-     for(size_t m = 0; m < contours.size(); ++m) {
-       std::cerr << "contour #" << (m + 1) << "/" << (contours.size() - 1) << ": " <<
-   contours[m].size() << std::endl;
-     }
-   }*/
-
   js_color_read(ctx, argv[3], &color);
 
   if(argc > 4)
