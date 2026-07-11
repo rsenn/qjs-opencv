@@ -1489,6 +1489,7 @@ js_contour_finalizer(JSRuntime* rt, JSValue this_val) {
     // printf("js_contour_finalizer  cid=%i this_val=%p contour=%p\n", JS_GetClassID(this_val),
     // JS_VALUE_GET_OBJ(this_val), contour);
 
+    contour->~JSContourData<double>();
     js_deallocate(rt, contour);
   }
 }

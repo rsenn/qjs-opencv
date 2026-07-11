@@ -1870,7 +1870,11 @@ void
 js_mat_iterator_finalizer(JSRuntime* rt, JSValue val) {
   JSMatIteratorData* it = js_mat_iterator_data(val);
 
-  js_deallocate(rt, it);
+  if(it) {
+    JS_FreeValueRT(rt, it->obj);
+    JS_FreeValueRT(rt, it->buf);
+    js_deallocate(rt, it);
+  }
 }
 
 static JSValue
