@@ -1,14 +1,16 @@
-// Reports how much of the OpenCV C++ API is actually pulled in by opencv.so.
+// Reports how much of a C++ library's API is actually pulled in by a given
+// QuickJS native module (any qjs-* project's <module>.so).
 //
-// Method: opencv.so's undefined dynamic symbols are the mangled names it
-// *imports* from libopencv_*.so. For each libopencv_*.so we list its
-// *exported* mangled function symbols (via nm), demangle them (via c++filt)
-// and classify each one as either:
+// Method: the target module's undefined dynamic symbols are the mangled
+// names it *imports* from the candidate libraries. For each candidate
+// library (given via --lib / --lib-dir) we list its *exported* mangled
+// function symbols (via nm), demangle them (via c++filt) and classify each
+// one as either:
 //   - a class constructor (mangled name's innermost scope name repeats the
 //     class name, e.g. "cv::Mat::Mat(...)") -> the class counts as
-//     "implemented" if any of its constructor symbols is imported by
-//     opencv.so.
-//   - a free function(does not belong to a class that also exports a
+//     "implemented" if any of its constructor symbols is imported by the
+//     target module.
+//   - a free function (does not belong to a class that also exports a
 //     constructor or destructor symbol in the same library) -> counts as
 //     implemented if that exact mangled symbol is imported.
 // Plain (non-constructor) member functions are not scored individually:
@@ -17,11 +19,14 @@
 // under "functions" instead.
 //
 // Usage:
-//   qjs scripts/binding_coverage.js [options]
+//   qjs scripts/binding_coverage.js --module=PATH (--lib=PATH | --lib-dir=DIR)... [options]
 //
 // Options:
-//   --opencv-so=PATH   path to the built opencv.so (default: <repo>/build/x86_64-linux-gnu/opencv.so)
-//   --lib-dir=DIR      directory containing libopencv_*.so (default: /opt/opencv-4.13.0-x86_64/lib)
+//   --module=PATH      path to the QuickJS native module .so to analyze (required)
+//   --lib=PATH         a single shared library to scan for exported symbols (repeatable)
+//   --lib-dir=DIR      a directory of shared libraries to scan (repeatable)
+//   --lib-pattern=RE   regex matching library filenames inside --lib-dir (default: ^lib[^.]+\.so$)
+//   --namespace=NAME   restrict classification to this C++ namespace, e.g. "cv" (default: no filter)
 //   --json=PATH        JSON report output path (default: ./binding_coverage.json)
 //   --out=PATH         human-readable report output path (default: stdout)
 //   --verbose          list missing classes/functions even for 0%-bound libraries
@@ -37,8 +42,11 @@ function die(msg) {
 
 function parseArgs(argv) {
   const opts = {
-    opencvSo: null,
-    libDir: '/opt/opencv-4.13.0-x86_64/lib',
+    module: null,
+    libs: [],
+    libDirs: [],
+    libPattern: '^lib[^.]+\\.so$',
+    namespace: null,
     json: './binding_coverage.json',
     out: null,
     verbose: false,
@@ -51,17 +59,40 @@ function parseArgs(argv) {
     }
     const m = /^--([a-z-]+)=(.*)$/.exec(a);
     if(!m) die(`unrecognized argument: ${a}`);
-    const key = { 'opencv-so': 'opencvSo', 'lib-dir': 'libDir', json: 'json', out: 'out' }[m[1]];
-    if(!key) die(`unknown option: --${m[1]}`);
-    opts[key] = m[2];
+    const key = m[1],
+      val = m[2];
+    switch(key) {
+      case 'module':
+        opts.module = val;
+        break;
+      case 'lib':
+        opts.libs.push(val);
+        break;
+      case 'lib-dir':
+        opts.libDirs.push(val);
+        break;
+      case 'lib-pattern':
+        opts.libPattern = val;
+        break;
+      case 'namespace':
+        opts.namespace = val;
+        break;
+      case 'json':
+        opts.json = val;
+        break;
+      case 'out':
+        opts.out = val;
+        break;
+      default:
+        die(`unknown option: --${key}`);
+    }
   }
   return opts;
 }
 
-function scriptDir() {
-  const p = scriptArgs[0];
-  const i = p.lastIndexOf('/');
-  return i === -1 ? '.' : p.slice(0, i);
+function basename(path) {
+  const i = path.lastIndexOf('/');
+  return i === -1 ? path : path.slice(i + 1);
 }
 
 function shQuote(s) {
@@ -177,8 +208,9 @@ function baseName(component) {
 }
 
 // Classifies a c++filt-demangled symbol into constructor / destructor /
-// function / other, restricted to names under the "cv" namespace.
-function classify(demangled) {
+// function / other. If `namespace` is given, restricts to names under that
+// top-level namespace (e.g. "cv"); otherwise no namespace filtering is done.
+function classify(demangled, namespace) {
   const s = stripTrailingQualifiers(demangled.trim());
   if(!s.endsWith(')')) return { kind: 'other' };
   const openIdx = findMatchingOpenParen(s);
@@ -198,7 +230,8 @@ function classify(demangled) {
   const namePath = lastSpace >= 0 ? declarator.slice(lastSpace + 1) : declarator;
 
   const components = splitTopLevel(namePath, '::');
-  if(components.length === 0 || components[0] !== 'cv') return { kind: 'other' };
+  if(components.length === 0) return { kind: 'other' };
+  if(namespace && components[0] !== namespace) return { kind: 'other' };
 
   const last = components[components.length - 1];
   if(last.startsWith('~')) {
@@ -221,10 +254,10 @@ function pct(implemented, total) {
   return total === 0 ? null : Math.round((implemented / total) * 10000) / 100;
 }
 
-function buildLibraryReport(libPath, undefinedSet) {
+function buildLibraryReport(libPath, undefinedSet, namespace) {
   const mangledNames = getDefinedFunctionSymbols(libPath);
   const demangledNames = demangleAll(mangledNames);
-  const entries = mangledNames.map((m, i) => ({ mangled: m, demangled: demangledNames[i], info: classify(demangledNames[i]) }));
+  const entries = mangledNames.map((m, i) => ({ mangled: m, demangled: demangledNames[i], info: classify(demangledNames[i], namespace) }));
 
   const knownClasses = new Set();
   for(const e of entries) {
@@ -288,10 +321,11 @@ function colorize(text, implemented, color) {
 
 function renderText(report, verbose, color) {
   const lines = [];
-  lines.push(`OpenCV JS binding coverage report`);
-  lines.push(`generated: ${report.generatedAt}`);
-  lines.push(`opencv.so: ${report.opencvSo}`);
-  lines.push(`lib dir:   ${report.libDir}`);
+  lines.push(`QuickJS native module binding coverage report`);
+  lines.push(`generated:   ${report.generatedAt}`);
+  lines.push(`module:      ${report.module}`);
+  lines.push(`lib sources: ${report.libSources.join(', ')}`);
+  if(report.namespace) lines.push(`namespace:   ${report.namespace}`);
   lines.push('');
 
   const names = Object.keys(report.libraries).sort();
@@ -335,23 +369,29 @@ function renderText(report, verbose, color) {
 
 function main() {
   const opts = parseArgs(scriptArgs);
-  if(!opts.opencvSo) opts.opencvSo = `${scriptDir()}/../build/x86_64-linux-gnu/opencv.so`;
+  if(!opts.module) die('--module=PATH is required (the QuickJS native module .so to analyze)');
+  if(opts.libs.length === 0 && opts.libDirs.length === 0) die('specify at least one --lib=PATH or --lib-dir=DIR');
 
-  if(std.loadFile(opts.opencvSo) === null) die(`cannot read opencv.so: ${opts.opencvSo}`);
-  const [entries, err] = os.readdir(opts.libDir);
-  if(err) die(`cannot read lib dir: ${opts.libDir}`);
+  if(std.loadFile(opts.module) === null) die(`cannot read module: ${opts.module}`);
 
-  const libNames = entries.filter(n => /^libopencv_[^.]+\.so$/.test(n)).sort();
-  if(libNames.length === 0) die(`no libopencv_*.so found in ${opts.libDir}`);
+  const libPattern = new RegExp(opts.libPattern);
+  const libPaths = [...opts.libs];
+  for(const dir of opts.libDirs) {
+    const [entries, err] = os.readdir(dir);
+    if(err) die(`cannot read lib dir: ${dir}`);
+    for(const name of entries.filter(n => libPattern.test(n)).sort()) libPaths.push(`${dir}/${name}`);
+  }
+  if(libPaths.length === 0) die(`no libraries found (pattern ${opts.libPattern})`);
 
-  std.err.puts(`scanning opencv.so imports: ${opts.opencvSo}\n`);
-  const undefinedSet = getUndefinedSymbols(opts.opencvSo);
+  std.err.puts(`scanning module imports: ${opts.module}\n`);
+  const undefinedSet = getUndefinedSymbols(opts.module);
   std.err.puts(`  ${undefinedSet.size} imported mangled symbols\n`);
 
   const report = {
     generatedAt: new Date().toISOString(),
-    opencvSo: opts.opencvSo,
-    libDir: opts.libDir,
+    module: opts.module,
+    namespace: opts.namespace,
+    libSources: [...opts.libs, ...opts.libDirs.map(d => `${d}/${opts.libPattern}`)],
     libraries: {},
   };
 
@@ -359,9 +399,10 @@ function main() {
     tc = 0,
     sf = 0,
     tf = 0;
-  for(const name of libNames) {
+  for(const libPath of libPaths) {
+    const name = basename(libPath);
     std.err.puts(`  ${name} ...\n`);
-    const libReport = buildLibraryReport(`${opts.libDir}/${name}`, undefinedSet);
+    const libReport = buildLibraryReport(libPath, undefinedSet, opts.namespace);
     report.libraries[name] = libReport;
     sc += libReport.classes.implemented;
     tc += libReport.classes.total;
@@ -380,7 +421,7 @@ function main() {
   jsonOut.close();
   std.err.puts(`wrote ${opts.json}\n`);
 
-  const color = opts.out ? false : os.isatty(1);
+  const color = opts.out ? false : true; //os.isatty(1);
   const text = renderText(report, opts.verbose, color);
   if(opts.out) {
     const f = std.open(opts.out, 'w');

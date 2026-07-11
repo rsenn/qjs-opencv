@@ -65,8 +65,14 @@ Partially bound modules worth knowing about: `features2d` (only `drawKeypoints` 
 `scripts/binding_coverage.js` measures this precisely rather than by inspection: it diffs `opencv.so`'s imported (undefined) mangled symbols against each `libopencv_*.so`'s exported symbols, classifying each as an implemented/missing class constructor or free function.
 
 ```bash
-qjsm scripts/binding_coverage.js --lib-dir=/opt/opencv-4.13.0-x86_64/lib --out=report.txt
+qjsm scripts/binding_coverage.js \
+  --module=build/x86_64-linux-gnu/opencv.so \
+  --lib-dir=/opt/opencv-4.13.0-x86_64/lib \
+  --namespace=cv \
+  --out=report.txt
 ```
+
+The script itself is generic — not specific to this project or to OpenCV — and works against any QuickJS native module and C++ library set via `--module`/`--lib`/`--lib-dir`/`--namespace`; run it with no arguments for the full option list.
 
 Last run against `build/x86_64-linux-gnu/opencv.so` (OpenCV 4.13.0):
 
