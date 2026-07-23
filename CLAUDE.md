@@ -8,6 +8,16 @@ OpenCV bindings for QuickJS (https://bellard.org/quickjs/). The build produces a
 
 A parent `CLAUDE.md` at `/mnt/data/Projects/plot-cv/CLAUDE.md` provides behavioral guidelines (think before coding, simplicity first, surgical changes, goal-driven execution). Those apply here too.
 
+The roadmap is tracked in `TODO.md`. Bugs are tracked in a plain text file `BUGS` (all lowercase), formatted like `../../../shish/BUGS`: each entry starts with `- <canonical-name>: <description>`, and if there's a JS repro it follows after a blank line, indented:
+
+```
+- <canonical-name>: <description>
+
+    <JS code that triggers it>
+
+- <next-canonical-name>: <description>
+```
+
 ## Build
 
 The build is CMake-driven, with helper shell functions in `cfg.sh` that wrap `cmake` for various toolchains and build types. Source `cfg.sh` first to get the `cfg` / `cfg-clang` / `cfg-mingw64` / `cfg-wasm` / `cfg-aarch64` / `cfg-musl*` / `cfg-android*` functions.
