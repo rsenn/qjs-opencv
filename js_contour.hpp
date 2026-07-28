@@ -87,6 +87,9 @@ contour_adjacent(const JSContourData<T>& contour, const JSContourData<T>& other)
 template<typename T>
 static inline bool
 contour_intersect(const JSContourData<T>& a, const JSContourData<T>& b, std::array<ssize_t, 2>* indexes, JSPointData<T>* intersection) {
+  if(a.empty() || b.empty())
+    return false;
+
   const auto *ita = a.data(), *itb = b.data();
   const auto *aend = ita + a.size() - 1, *bend = itb + b.size() - 1;
 

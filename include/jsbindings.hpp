@@ -545,7 +545,7 @@ js_is_noarray(const T& array) {
 static inline BOOL
 js_is_typedarray(JSContext* ctx, JSValueConst value) {
   JSValue ctor = js_typedarray_constructor(ctx);
-  BOOL ret = JS_IsInstanceOf(ctx, value, js_typedarray_constructor(ctx));
+  BOOL ret = JS_IsInstanceOf(ctx, value, ctor);
   JS_FreeValue(ctx, ctor);
   return ret;
 }
@@ -889,7 +889,7 @@ js_is_function(JSContext* ctx, JSValueConst val) {
 
 static inline std::string
 js_function_name(JSContext* ctx, JSValueConst value) {
-  const char *str, *name;
+  const char *str, *name = nullptr;
   std::string ret;
   int namelen;
 

@@ -1660,7 +1660,7 @@ js_contour_iterator(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   if(!(s = js_contour_data2(ctx, this_val)))
     return JS_EXCEPTION;
 
-  return js_point_iterator_new(ctx, s->data(), s->data() + s->size(), magic);
+  return js_point_iterator_new(ctx, this_val, 0, s->size(), magic);
 }
 
 const JSCFunctionListEntry js_contour_proto_funcs[] = {

@@ -8,7 +8,7 @@ OpenCV bindings for QuickJS (https://bellard.org/quickjs/). The build produces a
 
 A parent `CLAUDE.md` at `/mnt/data/Projects/plot-cv/CLAUDE.md` provides behavioral guidelines (think before coding, simplicity first, surgical changes, goal-driven execution). Those apply here too.
 
-The roadmap is tracked in `TODO.md`. Bugs are tracked in a plain text file `BUGS` (all lowercase), formatted like `../../../shish/BUGS`: each entry starts with `- <canonical-name>: <description>`, and if there's a JS repro it follows after a blank line, indented:
+The roadmap is tracked in `TODO.md`. Bugs are tracked in a plain text file `BUGS` (all lowercase), formatted like `../../../shish/BUGS` and `../quickjs/qjs-nanovg/BUGS`: each entry starts with `- <canonical-name>: <description>`, and if there's a JS repro it follows after a blank line, indented. This `BUGS` file is to be updated automatically as soon as a bug is found during work in this repo — don't wait to be asked:
 
 ```
 - <canonical-name>: <description>

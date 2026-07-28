@@ -1095,6 +1095,9 @@ js_mat_set(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[])
     }
   }
 
+  if(argc < 1)
+    return JS_ThrowTypeError(ctx, "Mat.set requires a value argument");
+
   bytes = m->elemSize();
 
   if(m->type() == CV_32FC1 || m->type() == CV_64FC1) {
@@ -1944,7 +1947,7 @@ const JSCFunctionListEntry js_mat_proto_funcs[] = {
 
     JS_CFUNC_DEF("toString", 0, js_mat_tostring),
     JS_CFUNC_DEF("at", 1, js_mat_at),
-    JS_CFUNC_DEF("set", 2, js_mat_set),
+    JS_CFUNC_DEF("set", 3, js_mat_set),
     JS_CFUNC_DEF("setTo", 1, js_mat_set_to),
     JS_CFUNC_DEF("convertTo", 2, js_mat_convert_to),
     JS_CFUNC_DEF("copyTo", 1, js_mat_copy_to),

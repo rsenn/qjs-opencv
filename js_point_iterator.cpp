@@ -7,6 +7,7 @@
 #include "include/jsbindings.hpp"
 #include <opencv2/core/types.hpp>
 #include <quickjs.h>
+#include <algorithm>
 #include <cassert>
 #include <stddef.h>
 #include <iosfwd>
@@ -19,7 +20,7 @@ thread_local JSValue point_iterator_proto = JS_UNDEFINED, point_iterator_class =
 thread_local JSClassID js_point_iterator_class_id = 0;
 
 JSValue
-js_point_iterator_new(JSContext* ctx, JSPointData<double>* first, JSPointData<double>* last, int magic) {
+js_point_iterator_new(JSContext* ctx, JSValueConst owner, size_t start, size_t end, int magic) {
   JSPointIteratorData* it;
   JSValue iterator;
 
@@ -39,8 +40,9 @@ js_point_iterator_new(JSContext* ctx, JSPointData<double>* first, JSPointData<do
   new(it) JSPointIteratorData();
 
   it->magic = JSPointIteratorMagic(magic);
-  it->first = first;
-  it->second = last;
+  it->index = start;
+  it->end = end;
+  it->obj = JS_DupValue(ctx, owner);
 
   JS_SetOpaque(iterator, it);
   return iterator;
@@ -57,25 +59,30 @@ static JSValue
 js_point_iterator_next(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], BOOL* pdone, int magic) {
   JSPointIteratorData* it;
   JSValue result;
+  JSContourData<double>* contour;
+  size_t size;
 
   if((it = static_cast<JSPointIteratorData*>(JS_GetOpaque(this_val, js_point_iterator_class_id))) == nullptr)
     return JS_EXCEPTION;
 
+  contour = js_contour_data(it->obj);
+  size = contour ? std::min(it->end, contour->size()) : 0;
+
   switch(it->magic) {
     case NEXT_POINT: {
-      *pdone = it->first == nullptr || it->second == nullptr || (it->first == it->second);
-      result = *pdone ? JS_NULL : js_point_new(ctx, it->first->x, it->first->y);
+      *pdone = it->index >= size;
+      result = *pdone ? JS_NULL : js_point_new(ctx, (*contour)[it->index].x, (*contour)[it->index].y);
       break;
     }
 
     case NEXT_LINE: {
-      *pdone = it->first == nullptr || it->second == nullptr || (it->first + 1 >= it->second);
-      result = *pdone ? JS_NULL : js_line_new(ctx, it->first[0], it->first[1]);
+      *pdone = it->index + 1 >= size;
+      result = *pdone ? JS_NULL : js_line_new(ctx, (*contour)[it->index], (*contour)[it->index + 1]);
       break;
     }
   }
 
-  it->first++;
+  it->index++;
 
   return result;
 }
@@ -101,8 +108,9 @@ js_point_iterator_constructor(JSContext* ctx, JSValueConst new_target, int argc,
 
   v = static_cast<JSContourData<double>*>(JS_GetOpaque(argv[0], 0 /*js_contour_class_id*/));
 
-  s->first = &(*v)[0];
-  s->second = s->first + v->size();
+  s->obj = JS_DupValue(ctx, argv[0]);
+  s->index = 0;
+  s->end = v->size();
 
   proto = JS_GetPropertyStr(ctx, new_target, "prototype");
 
@@ -133,8 +141,10 @@ js_point_iterator_finalizer(JSRuntime* rt, JSValue val) {
   JSPointIteratorData* s = static_cast<JSPointIteratorData*>(JS_GetOpaque(val, js_point_iterator_class_id));
   /* Note: 's' can be NULL in case JS_SetOpaque() was not called */
 
-  if(s != nullptr)
+  if(s != nullptr) {
+    JS_FreeValueRT(rt, s->obj);
     js_deallocate(rt, s);
+  }
 
   // JS_FreeValueRT(rt, val);
 }
