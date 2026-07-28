@@ -53,12 +53,18 @@ js_draw_circle(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
   if(js_is_noarray(dst))
     return JS_EXCEPTION;
 
+  if(argc <= i)
+    return JS_ThrowTypeError(ctx, "argument 2 must be a point");
+
   if(js_point_read(ctx, argv[i], &point)) {
     /*x = point.x;
     y = point.y;*/
     i++;
   } else {
     int32_t x, y;
+
+    if(argc <= i + 1)
+      return JS_ThrowTypeError(ctx, "argument 2 must be a point or x, y coordinates");
 
     JS_ToInt32(ctx, &x, argv[i]);
     JS_ToInt32(ctx, &y, argv[i + 1]);

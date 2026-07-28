@@ -363,10 +363,10 @@ js_size_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
       js_size_fit_t fit_type = js_size_fit_t(magic - 3);
       if(magic >= 6) {}
 
-      if(js_size_read(ctx, argv[0], &other)) {
+      if(argc > 0 && js_size_read(ctx, argv[0], &other)) {
         result = js_size_fit(size, other, fit_type);
 
-      } else if(fit_type == JS_SIZE_FIT_WIDTH || fit_type == JS_SIZE_FIT_HEIGHT) {
+      } else if(argc > 0 && (fit_type == JS_SIZE_FIT_WIDTH || fit_type == JS_SIZE_FIT_HEIGHT)) {
         JS_ToFloat64(ctx, &arg, argv[0]);
         result = js_size_fit(size, arg, fit_type);
       }

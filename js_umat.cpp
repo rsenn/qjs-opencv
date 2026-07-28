@@ -327,7 +327,8 @@ js_umat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
     case METHOD_STEP1: {
       int32_t i = 0;
 
-      JS_ToInt32(ctx, &i, argv[0]);
+      if(argc > 0)
+        JS_ToInt32(ctx, &i, argv[0]);
       ret = JS_NewInt64(ctx, um->step1(i));
       break;
     }
@@ -336,8 +337,10 @@ js_umat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
       cv::Size wholeSize;
       cv::Point ofs;
       um->locateROI(wholeSize, ofs);
-      js_size_write(ctx, argv[0], wholeSize);
-      js_point_write(ctx, argv[0], ofs);
+      if(argc > 0)
+        js_size_write(ctx, argv[0], wholeSize);
+      if(argc > 1)
+        js_point_write(ctx, argv[1], ofs);
       break;
     }
 
@@ -530,6 +533,9 @@ js_umat_set(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       argv++;
     }
   }
+  if(argc < 1)
+    return JS_ThrowTypeError(ctx, "UMat.set requires a value argument");
+
   bytes = (1 << um->depth()) * um->channels();
   if(um->type() == CV_32FC1) {
     double data;
@@ -1024,8 +1030,8 @@ const JSCFunctionListEntry js_umat_proto_funcs[] = {JS_CGETSET_MAGIC_DEF("cols",
                                                     JS_CFUNC_MAGIC_DEF("dup", 0, js_umat_funcs, METHOD_DUP),
                                                     JS_CFUNC_MAGIC_DEF("clear", 0, js_umat_funcs, METHOD_CLEAR),
                                                     JS_CFUNC_MAGIC_DEF("reset", 0, js_umat_funcs, METHOD_RESET),
-                                                    JS_CFUNC_MAGIC_DEF("step1", 0, js_umat_funcs, METHOD_STEP1),
-                                                    JS_CFUNC_MAGIC_DEF("locateROI", 0, js_umat_funcs, METHOD_LOCATE_ROI),
+                                                    JS_CFUNC_MAGIC_DEF("step1", 1, js_umat_funcs, METHOD_STEP1),
+                                                    JS_CFUNC_MAGIC_DEF("locateROI", 2, js_umat_funcs, METHOD_LOCATE_ROI),
 
                                                     JS_CFUNC_MAGIC_DEF("zero", 2, js_umat_fill, 0),
                                                     JS_CFUNC_MAGIC_DEF("one", 2, js_umat_fill, 1),
@@ -1033,7 +1039,7 @@ const JSCFunctionListEntry js_umat_proto_funcs[] = {JS_CGETSET_MAGIC_DEF("cols",
                                                     JS_CFUNC_DEF("toString", 0, js_umat_tostring),
                                                     JS_CFUNC_DEF("inspect", 0, js_umat_inspect),
                                                     JS_CFUNC_DEF("at", 1, js_umat_at),
-                                                    JS_CFUNC_DEF("set", 2, js_umat_set),
+                                                    JS_CFUNC_DEF("set", 3, js_umat_set),
                                                     JS_CFUNC_DEF("setTo", 0, js_umat_set_to),
                                                     JS_CFUNC_DEF("convertTo", 2, js_umat_convert_to),
                                                     JS_CFUNC_DEF("copyTo", 1, js_umat_copy_to),

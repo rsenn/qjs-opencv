@@ -12,8 +12,6 @@
 #include <cstdio>
 #include <new>
 
-typedef cv::LineIterator JSLineIteratorData;
-
 thread_local JSValue line_iterator_proto = JS_UNDEFINED, line_iterator_class = JS_UNDEFINED;
 thread_local JSClassID js_line_iterator_class_id;
 
@@ -64,9 +62,10 @@ js_line_iterator_constructor(JSContext* ctx, JSValueConst new_target, int argc, 
       js_value_to(ctx, argv[optind++], left_to_right);
   }
 
-  if(mat)
+  if(mat) {
     new(li) JSLineIteratorData(*mat, pt1, pt2, connectivity, left_to_right);
-  else if(rect)
+    li->obj = JS_DupValue(ctx, argv[0]);
+  } else if(rect)
     new(li) JSLineIteratorData(*rect, pt1, pt2, connectivity, left_to_right);
   else if(size)
     new(li) JSLineIteratorData(*size, pt1, pt2, connectivity, left_to_right);
@@ -94,7 +93,7 @@ js_line_iterator_data(JSValueConst val) {
 }
 
 JSValue
-js_line_iterator_wrap(JSContext* ctx, const cv::LineIterator& line_iterator) {
+js_line_iterator_wrap(JSContext* ctx, const cv::LineIterator& line_iterator, JSValueConst owner) {
   JSValue ret;
   JSLineIteratorData* li;
 
@@ -103,7 +102,8 @@ js_line_iterator_wrap(JSContext* ctx, const cv::LineIterator& line_iterator) {
   if(!(li = js_allocate<JSLineIteratorData>(ctx)))
     return JS_EXCEPTION;
 
-  *li = line_iterator;
+  new(li) JSLineIteratorData(line_iterator);
+  li->obj = JS_DupValue(ctx, owner);
 
   JS_SetOpaque(ret, li);
 
@@ -115,8 +115,11 @@ js_line_iterator_finalizer(JSRuntime* rt, JSValue val) {
   JSLineIteratorData* li = static_cast<JSLineIteratorData*>(JS_GetOpaque(val, js_line_iterator_class_id));
   /* Note: 'li' can be NULL in case JS_SetOpaque() was not called */
 
-  li->~JSLineIteratorData();
-  js_deallocate(rt, li);
+  if(li) {
+    JS_FreeValueRT(rt, li->obj);
+    li->~JSLineIteratorData();
+    js_deallocate(rt, li);
+  }
 }
 
 enum {
@@ -204,8 +207,8 @@ js_line_iterator_method(JSContext* ctx, JSValueConst this_val, int argc, JSValue
     }
 
     case METHOD_POSTINCR: {
-      JSLineIteratorData li2 = (*li)++;
-      ret = js_line_iterator_wrap(ctx, li2);
+      cv::LineIterator li2 = (*li)++;
+      ret = js_line_iterator_wrap(ctx, li2, li->obj);
       break;
     }
 

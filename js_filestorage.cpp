@@ -320,7 +320,7 @@ js_filestorage_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCo
     }
 
     case METHOD_STARTWRITESTRUCT: {
-      const char *name, *typeName;
+      const char *name, *typeName = nullptr;
       int32_t flags = 0;
 
       if(!(name = JS_ToCString(ctx, argv[0])))
@@ -332,7 +332,7 @@ js_filestorage_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCo
       if(argc > 2)
         typeName = JS_ToCString(ctx, argv[2]);
 
-      fs->startWriteStruct(name, flags, typeName);
+      fs->startWriteStruct(name, flags, typeName ? typeName : "");
 
       JS_FreeCString(ctx, name);
       if(typeName)
@@ -365,13 +365,16 @@ js_filestorage_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCo
       } else if(JS_IsString(argv[1])) {
         const char* str;
 
-        if(!(str = JS_ToCString(ctx, argv[1])))
+        if(!(str = JS_ToCString(ctx, argv[1]))) {
+          JS_FreeCString(ctx, name);
           return JS_ThrowTypeError(ctx, "argument 2 must be a string");
+        }
 
         fs->write(name, str);
         JS_FreeCString(ctx, str);
       }
 
+      JS_FreeCString(ctx, name);
       break;
     }
 

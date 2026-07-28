@@ -4,7 +4,11 @@
 #include "include/jsbindings.hpp"
 #include <opencv2/imgproc.hpp>
 
-typedef cv::LineIterator JSLineIteratorData;
+struct JSLineIteratorData : public cv::LineIterator {
+  using cv::LineIterator::LineIterator;
+  JSLineIteratorData(const cv::LineIterator& li) : cv::LineIterator(li) {}
+  JSValue obj = JS_UNDEFINED;
+};
 
 extern "C" {
 
@@ -15,7 +19,7 @@ JSLineIteratorData* js_line_iterator_data2(JSContext*, JSValueConst val);
 JSLineIteratorData* js_line_iterator_data(JSValueConst val);
 }
 
-JSValue js_line_iterator_wrap(JSContext* ctx, const cv::LineIterator& line_iterator);
+JSValue js_line_iterator_wrap(JSContext* ctx, const cv::LineIterator& line_iterator, JSValueConst owner = JS_UNDEFINED);
 
 extern "C" int js_line_iterator_init(JSContext*, JSModuleDef*);
 

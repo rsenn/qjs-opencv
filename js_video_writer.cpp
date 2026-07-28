@@ -28,9 +28,11 @@ js_video_writer_open(JSContext* ctx, JSVideoWriterData* vw, int argc, JSValueCon
   JSSizeData<int> frameSize;
   int sizeIndex, argIndex;
   uint32_t fourcc;
-  double fps;
+  double fps = 0;
 
-  cv::String filename = JS_ToCString(ctx, argv[0]);
+  const char* filename_str = JS_ToCString(ctx, argv[0]);
+  cv::String filename = filename_str;
+  JS_FreeCString(ctx, filename_str);
 
   for(sizeIndex = 2; sizeIndex < argc; sizeIndex++)
     if(js_size_read(ctx, argv[sizeIndex], &frameSize))

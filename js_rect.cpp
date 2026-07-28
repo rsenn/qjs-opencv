@@ -451,7 +451,7 @@ static JSValue
 js_rect_method(JSContext* ctx, JSValueConst rect, int argc, JSValueConst argv[], int magic) {
   JSRectData<double>* s = static_cast<JSRectData<double>*>(JS_GetOpaque2(ctx, rect, js_rect_class_id));
   JSValue ret = JS_UNDEFINED;
-  JSPointData<double> point = js_point_get(ctx, argv[0]);
+  JSPointData<double> point = argc >= 1 ? js_point_get(ctx, argv[0]) : JSPointData<double>();
 
   switch(magic) {
     case METHOD_CONTAINS: {

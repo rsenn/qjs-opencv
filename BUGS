@@ -1,98 +1,16 @@
-- contour-iterator-dangling-pointer: FIXED. js_contour_iterator()
-  (js_contour.cpp:1657-1664) built a PointIterator from raw pointers
-  s->data() / s->data()+s->size() into the std::vector<JSPointData<double>>
-  backing a Contour, but never JS_DupValue()'d the Contour to keep it (and
-  its backing vector) alive, and had no way to detect vector reallocation.
-  Fixed by adding an `owner` JSValueConst parameter to js_point_iterator_new()
-  (js_point_iterator.hpp/.cpp) that is dup'd into a new `obj` field on
-  JSPointIteratorData and freed in the finalizer; js_contour_iterator() now
-  passes `this_val` as the owner.
-
-    let c = new cv.Contour([[0,0],[1,1],[2,2]]);
-    let it = c.points();
-    c.push([3,3]); // may reallocate the backing vector
-    it.next(); // used to dereference a dangling pointer
-
-- contour-intersect-empty-underflow: FIXED. contour_intersect()
-  (js_contour.hpp:87-121) computed `aend = ita + a.size() - 1` /
-  `bend = itb + b.size() - 1`. size() is size_t, so when either contour is
-  empty this underflowed to SIZE_MAX, producing a wild pointer passed into
-  std::find_first_of. Fixed by returning false immediately when either
-  contour is empty.
-
-    cv.Contour.intersect(new cv.Contour([]), new cv.Contour([[0,0],[1,1]]));
-
-- mat-set-argv-overread: FIXED. js_mat_set() (js_mat.cpp:1069-1132) was
-  registered with declared arity 2 (JS_CFUNC_DEF("set", 2, js_mat_set)),
-  but optionally advances argv/decrements argc once for a leading Point
-  arg, or twice for separate row/col args, then unconditionally read
-  argv[0] again as the value to store. QuickJS only pads argv up to the
-  declared arity when the real call passes fewer args than that; a call
-  matching the declared arity (2) left no real third slot, so the final
-  argv[0] read was out-of-bounds relative to the actual argument buffer.
-  Fixed by bumping the declared arity to 3 (so QuickJS guarantees a padded,
-  safely-readable third slot) and adding an explicit argc check that throws
-  a TypeError when no value argument remains.
-
-    let m = new cv.Mat(2, 2, cv.CV_8UC1);
-    m.set(0, 0); // row/col consumed both declared args; value read was OOB
-
-- js-is-typedarray-refleak: FIXED. js_is_typedarray()
-  (include/jsbindings.hpp:545-551) called js_typedarray_constructor(ctx)
-  twice - once assigned to `ctor` and freed, and once passed directly as
-  the second argument to JS_IsInstanceOf(). The second call's returned
-  reference was never freed, leaking one reference every time this
-  function ran. It sits on the hot path of js_is_array(), so essentially
-  any argument type-checked as a possible TypedArray leaked a reference.
-  Fixed by reusing the already-dup'd `ctor` value for both calls.
-
-    // any binding call whose argument is checked with js_is_array()/
-    // js_is_typedarray() used to leak a JSValue ref each time, e.g.:
-    cv.add(new Float64Array([1,2,3]), new Float64Array([1,2,3]));
-
-- js-function-name-uninitialized-read: FIXED. js_function_name()
-  (include/jsbindings.hpp:890-916) declared `const char *str, *name;`
-  uninitialized, and only assigned `name` inside the branch where
-  JS_ToCString succeeded AND the string started with "function ". The
-  subsequent `if(!name)` check read `name` uninitialized whenever
-  JS_ToCString failed or the stringified value didn't start with that
-  literal (e.g. arrow functions, bound functions, classes) - undefined
-  behavior that could branch either way depending on stack garbage.
-  Reachable via js_object_classname() (jsbindings.hpp:298-308). Fixed by
-  initializing `name = nullptr`.
-
-    // any path that stringifies a non-"function "-prefixed callable via
-    // js_function_name(), e.g. passing an arrow function where a class/
-    // constructor name is introspected.
-
-- contour-intersect-not-a-bug: retracted. Earlier entries here claimed
-  `Contour.prototype.intersect` was unreachable/broken because
-  `typeof contour.intersect` is `undefined` and "fixed" it to read the
-  first contour from `this_val`. That was wrong: `intersect`
-  (js_contour.cpp:1731) is registered in `js_contour_static_funcs`, not
-  `js_contour_proto_funcs` - it is a *static* method by design, called as
-  `cv.Contour.intersect(a, b)`, exactly matching the original
-  argv[0]/argv[1] implementation. Reverted the this_val change and the
-  arity-1 change back to the original argv[0]/argv[1]/arity-2 form.
-  contour-intersect-empty-underflow above (the actual bug, now fixed) is
-  the only real defect that was here.
-
-    cv.Contour.intersect(c1, c2); // correct usage - static, not instance
-
 - qjs-swallows-uncaught-exceptions-with-native-module: NOT a qjs-opencv
   bug - root cause lives in the `qjs` CLI / QuickJS engine itself (a
   separate project, not this repo), recorded here only because it was
-  discovered while chasing the contour-intersect-ignores-this repro above
-  (an unrelated-looking "process exits silently" symptom). Confirmed the
-  opencv module is not implicated: `import * as std from 'std'; gc();`
-  (no opencv involved at all) reproduces the same silent exit(0) with no
-  error printed, whereas the identical script with no import correctly
-  prints the exception and exits 1. So this is a bug in how `qjs` reports
-  uncaught top-level exceptions once *any* native module has been
-  dynamically loaded via the module system - out of scope to fix from
-  qjs-opencv. Worth reporting upstream / fixing in the quickjs project
-  directly if it matters (it currently means any qjs-opencv script's
-  uncaught errors are invisible).
+  discovered while chasing an unrelated-looking "process exits silently"
+  symptom. Confirmed the opencv module is not implicated:
+  `import * as std from 'std'; gc();` (no opencv involved at all)
+  reproduces the same silent exit(0) with no error printed, whereas the
+  identical script with no import correctly prints the exception and
+  exits 1. So this is a bug in how `qjs` reports uncaught top-level
+  exceptions once *any* native module has been dynamically loaded via the
+  module system - out of scope to fix from qjs-opencv. Worth reporting
+  upstream / fixing in the quickjs project directly if it matters (it
+  currently means any qjs-opencv script's uncaught errors are invisible).
 
     import * as std from 'std';
     console.log("before");
@@ -101,3 +19,19 @@
                            // process exits 0. Without the import, the
                            // same script prints the ReferenceError and
                            // exits 1 as expected.
+
+- umat-mat_at-null-host-pointer: mat_at(cv::UMat&, ...) and mat_ptr(cv::UMat&)
+  (include/util.hpp:190-203, 243-248), used by UMat.at()/UMat.set() and
+  anything else built on mat_at for a UMat, read `mat.u->data` directly as
+  the host-memory base pointer. UMatData::data is only guaranteed valid
+  once the UMat has been mapped/downloaded to host memory (normally via
+  Mat::getMat(ACCESS_...)); a freshly constructed UMat can have `u->data`
+  still null (or otherwise not synced), so `mat_ptr` returns nullptr /
+  garbage and `mat_at` dereferences `nullptr + offset`, segfaulting the
+  whole process (SIGSEGV, no JS exception, nothing catchable from script).
+  Confirmed with a plain freshly-constructed UMat - no OpenCL, no
+  unusual setup needed.
+
+    let u = new cv.UMat(2, 2, cv.CV_8UC1);
+    u.at(0, 0); // segfaults
+    u.set(0, 0, 55); // segfaults the same way (same mat_at() call)

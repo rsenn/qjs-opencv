@@ -33,7 +33,11 @@ js_video_capture_open(JSContext* ctx, JSVideoCaptureData* s, int argc, JSValueCo
   cv::String filename;
   std::vector<int> params;
 
-  filename = JS_ToCString(ctx, argv[0]);
+  {
+    const char* filename_str = JS_ToCString(ctx, argv[0]);
+    filename = filename_str;
+    JS_FreeCString(ctx, filename_str);
+  }
 
   if(argc > 1)
     JS_ToInt32(ctx, &apiPreference, argv[1]);
