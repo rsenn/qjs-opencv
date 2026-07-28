@@ -20,11 +20,7 @@
   std::find_first_of. Fixed by returning false immediately when either
   contour is empty.
 
-    new cv.Contour([]).intersect(new cv.Contour([[0,0],[1,1]]));
-
-  Note: while investigating this, found that Contour.prototype.intersect
-  is not actually reachable via normal method-call syntax - see
-  contour-intersect-unreachable-silent-exit below.
+    cv.Contour.intersect(new cv.Contour([]), new cv.Contour([[0,0],[1,1]]));
 
 - mat-set-argv-overread: FIXED. js_mat_set() (js_mat.cpp:1069-1132) was
   registered with declared arity 2 (JS_CFUNC_DEF("set", 2, js_mat_set)),
@@ -69,31 +65,39 @@
     // js_function_name(), e.g. passing an arrow function where a class/
     // constructor name is introspected.
 
-- opencv-module-swallows-uncaught-exceptions: discovered while verifying the
-  contour-intersect-empty-underflow fix above (a call to
-  `contour.intersect(...)` appeared to make the whole process exit(0)
-  silently with no error printed and no subsequent JS running). Root cause
-  is NOT specific to intersect/Contour: any script that does
-  `import * as cv from 'opencv'` and then hits an uncaught exception at
-  top level silently exits with code 0 and prints nothing, whereas the
-  identical script without the opencv import correctly prints the
-  exception (e.g. "ReferenceError: 'gc' is not defined ... at <eval>") and
-  exits 1. Confirmed via strace: the process calls exit_group(0) directly;
-  gdb reports "exited normally" (no signal). Separately, note
-  `Contour.prototype.intersect` (js_contour.cpp:1731) is also not reachable
-  via normal method-call syntax - `typeof contour.intersect` is
-  `undefined` at runtime, unlike every other Contour proto method - so the
-  original repro that surfaced this was doubly confusing. Root cause of the
-  swallowed-exception behavior not yet identified - needs investigation
-  into whatever qjs's top-level error reporting path does differently once
-  a native module has been dynamically loaded (init_module.cpp / the
-  module loader), since this affects error visibility for every script
-  that uses this binding, not just Contour.
+- contour-intersect-not-a-bug: retracted. Earlier entries here claimed
+  `Contour.prototype.intersect` was unreachable/broken because
+  `typeof contour.intersect` is `undefined` and "fixed" it to read the
+  first contour from `this_val`. That was wrong: `intersect`
+  (js_contour.cpp:1731) is registered in `js_contour_static_funcs`, not
+  `js_contour_proto_funcs` - it is a *static* method by design, called as
+  `cv.Contour.intersect(a, b)`, exactly matching the original
+  argv[0]/argv[1] implementation. Reverted the this_val change and the
+  arity-1 change back to the original argv[0]/argv[1]/arity-2 form.
+  contour-intersect-empty-underflow above (the actual bug, now fixed) is
+  the only real defect that was here.
 
-    import * as cv from 'opencv';
+    cv.Contour.intersect(c1, c2); // correct usage - static, not instance
+
+- qjs-swallows-uncaught-exceptions-with-native-module: NOT a qjs-opencv
+  bug - root cause lives in the `qjs` CLI / QuickJS engine itself (a
+  separate project, not this repo), recorded here only because it was
+  discovered while chasing the contour-intersect-ignores-this repro above
+  (an unrelated-looking "process exits silently" symptom). Confirmed the
+  opencv module is not implicated: `import * as std from 'std'; gc();`
+  (no opencv involved at all) reproduces the same silent exit(0) with no
+  error printed, whereas the identical script with no import correctly
+  prints the exception and exits 1. So this is a bug in how `qjs` reports
+  uncaught top-level exceptions once *any* native module has been
+  dynamically loaded via the module system - out of scope to fix from
+  qjs-opencv. Worth reporting upstream / fixing in the quickjs project
+  directly if it matters (it currently means any qjs-opencv script's
+  uncaught errors are invisible).
+
+    import * as std from 'std';
     console.log("before");
     gc(); // or any other uncaught exception
     console.log("after"); // never reached, and no error is printed either;
-                           // process exits 0. Without the opencv import,
-                           // the same script prints the ReferenceError and
+                           // process exits 0. Without the import, the
+                           // same script prints the ReferenceError and
                            // exits 1 as expected.
