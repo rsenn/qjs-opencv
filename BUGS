@@ -19,19 +19,3 @@
                            // process exits 0. Without the import, the
                            // same script prints the ReferenceError and
                            // exits 1 as expected.
-
-- umat-mat_at-null-host-pointer: mat_at(cv::UMat&, ...) and mat_ptr(cv::UMat&)
-  (include/util.hpp:190-203, 243-248), used by UMat.at()/UMat.set() and
-  anything else built on mat_at for a UMat, read `mat.u->data` directly as
-  the host-memory base pointer. UMatData::data is only guaranteed valid
-  once the UMat has been mapped/downloaded to host memory (normally via
-  Mat::getMat(ACCESS_...)); a freshly constructed UMat can have `u->data`
-  still null (or otherwise not synced), so `mat_ptr` returns nullptr /
-  garbage and `mat_at` dereferences `nullptr + offset`, segfaulting the
-  whole process (SIGSEGV, no JS exception, nothing catchable from script).
-  Confirmed with a plain freshly-constructed UMat - no OpenCL, no
-  unusual setup needed.
-
-    let u = new cv.UMat(2, 2, cv.CV_8UC1);
-    u.at(0, 0); // segfaults
-    u.set(0, 0, 55); // segfaults the same way (same mat_at() call)

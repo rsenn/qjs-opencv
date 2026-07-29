@@ -399,9 +399,10 @@ void
 js_umat_get(JSContext* ctx, JSValueConst this_val, uint32_t row, uint32_t col, T& value) {
   cv::UMat* um = js_umat_data2(ctx, this_val);
 
-  if(um)
-    value = mat_at<T>(*um, row, col);
-  else
+  if(um) {
+    cv::Mat m = um->getMat(cv::ACCESS_READ);
+    value = mat_at<T>(m, row, col);
+  } else
     value = T();
 }
 
@@ -541,23 +542,23 @@ js_umat_set(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
     double data;
     if(JS_ToFloat64(ctx, &data, argv[0]))
       return JS_EXCEPTION;
-    mat_at<float>(*um, row, col) = (float)data;
+    cv::Mat m = um->getMat(cv::ACCESS_RW);
+    mat_at<float>(m, row, col) = (float)data;
   } else if(bytes <= sizeof(uint)) {
     uint32_t mask = (1LU << (bytes * 8)) - 1;
     uint32_t data;
     if(JS_ToUint32(ctx, &data, argv[0]))
       return JS_EXCEPTION;
 
+    cv::Mat m = um->getMat(cv::ACCESS_RW);
+
     if(bytes <= 1) {
-      uint8_t* p = &mat_at<uint8_t>(*um, row, col);
-      *p = (uint8_t)data & mask;
+      mat_at<uint8_t>(m, row, col) = (uint8_t)data & mask;
     } else if(bytes <= 2) {
-      uint16_t* p = &mat_at<uint16_t>(*um, row, col);
-      *p = (uint16_t)data & mask;
+      mat_at<uint16_t>(m, row, col) = (uint16_t)data & mask;
 
     } else if(bytes <= 4) {
-      uint* p = &mat_at<uint>(*um, row, col);
-      *p = (uint)data & mask;
+      mat_at<uint>(m, row, col) = (uint)data & mask;
     }
 
   } else
@@ -624,9 +625,11 @@ js_umat_set_vector(JSContext* ctx, JSUMatData* um, int argc, JSValueConst argv[]
   std::vector<T> v;
   js_umat_vector_get(ctx, argc, argv, v, defined);
 
+  cv::Mat m = um->getMat(cv::ACCESS_RW);
+
   for(idx = 0; idx < v.size(); idx++)
     if(defined[idx])
-      mat_at<T>(*um, idx / dim.cols, idx % dim.cols) = v[idx];
+      mat_at<T>(m, idx / dim.cols, idx % dim.cols) = v[idx];
   return v;
 }
 
@@ -719,6 +722,8 @@ js_umat_tostring(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
     }
     os << tstr << 'C' << um->channels() << ")" /*<< std::endl*/;
   } else {
+    cv::Mat m = um->getMat(cv::ACCESS_READ);
+
     os << "UMat[";
     for(y = 0; y < um->rows; y++) {
       os << "\n  ";
@@ -727,9 +732,9 @@ js_umat_tostring(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
         if(x > 0)
           os << ',';
         if(um->type() == CV_32FC1)
-          os << mat_at<float>(*um, y, x);
+          os << mat_at<float>(m, y, x);
         else
-          os << std::setfill('0') << std::setbase(16) << std::setw(um->type() == CV_8UC4 ? 8 : um->type() == CV_8UC1 ? 2 : 6) << mat_at<uint32_t>(*um, y, x);
+          os << std::setfill('0') << std::setbase(16) << std::setw(um->type() == CV_8UC4 ? 8 : um->type() == CV_8UC1 ? 2 : 6) << mat_at<uint32_t>(m, y, x);
       }
     }
 
