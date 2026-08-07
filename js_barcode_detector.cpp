@@ -46,7 +46,17 @@ js_barcode_detector_constructor(JSContext* ctx, JSValueConst new_target, int arg
   if(argc > 1)
     model_path = JS_ToCString(ctx, argv[1]);
 
+#ifdef HAVE_OPENCV_BARCODE_LEGACY_CTOR
   new(bd) cv::barcode::BarcodeDetector(prototxt_path ? prototxt_path : "", model_path ? model_path : "");
+#else
+  /* OpenCV 5 dropped the (prototxt_path, model_path) ctor - custom
+   * super-resolution model prototxt/weights pairs can no longer be loaded
+   * from JS. Only a single super-resolution model path is accepted now. */
+  if(prototxt_path)
+    new(bd) cv::barcode::BarcodeDetector(prototxt_path);
+  else
+    new(bd) cv::barcode::BarcodeDetector();
+#endif
 
   if(prototxt_path)
     JS_FreeCString(ctx, prototxt_path);

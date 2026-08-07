@@ -19,3 +19,45 @@
                            // process exits 0. Without the import, the
                            // same script prints the ReferenceError and
                            // exits 1 as expected.
+
+- cmakelists-option-declared-after-use: `option(USE_FEATURE2D ...)` and
+  `option(USE_BARCODE ...)` in `CMakeLists.txt` are declared at line ~315-316,
+  but both variables are already read by `if(USE_FEATURE2D)` (line ~136) and
+  `if(USE_BARCODE)` (line ~158) earlier in the same file. On a truly fresh
+  build directory (no prior `CMakeCache.txt`), CMake treats the not-yet-declared
+  variable as undefined/false at that point, so both `if()` blocks are
+  silently skipped: `-DUSE_FEATURE2D=1`/`-DUSE_BARCODE=1` never get added,
+  `HAVE_OPENCV2_XFEATURES2D_HPP`/`HAVE_OPENCV2_BARCODE_HPP` never get probed,
+  and `FEATURE2D_SOURCE`/`BARCODE_SOURCE` never get set - `js_feature2d.cpp`
+  and `js_barcode_detector.cpp` end up compiled without the flags their code
+  depends on (found while adding new capability checks inside the
+  `if(USE_FEATURE2D)` block for the OpenCV 5 migration and discovering they
+  silently never ran on a clean configure; existing build directories masked
+  this because their `CMakeCache.txt` already had `USE_FEATURE2D`/`USE_BARCODE`
+  cached ON from before this ordering regression). Fixed as part of the
+  OpenCV 5 migration work by moving both `option()` calls above their first
+  use.
+
+    rm -rf build/some-fresh-dir
+    cmake -B build/some-fresh-dir .   # no -DUSE_FEATURE2D=... on the command line
+    grep USE_FEATURE2D build/some-fresh-dir/compile_commands.json  # absent
+
+- cmakelists-broken-barcode-check-library-exists: `check_library_exists(opencv_objdetect
+  _ZN2cv7barcode15BarcodeDetectorC1Ev "${OPENCV_LIBDIR}" OPENCV_BARCODE)` inside the
+  `if(USE_BARCODE)` block of `CMakeLists.txt` (originally line ~151, right after
+  `set(BARCODE_SOURCE js_barcode_detector.cpp)`) fails configuration outright on a fresh build
+  directory with `CMake Error ... No known features for CXX compiler "" version .` from inside
+  `CheckLibraryExists.cmake`'s internal `try_compile`, aborting the whole cmake run. This was
+  masked for a long time by [[cmakelists-option-declared-after-use]]: with that bug in place,
+  `USE_BARCODE` was always false at this point in the file, so this block - and this broken
+  check - never actually executed on a from-scratch configure; only after fixing the option()
+  ordering (as part of the OpenCV 5 migration work) did this second latent bug surface. The
+  check's result variable, `OPENCV_BARCODE`, is never read anywhere else in the CMake project
+  (confirmed by grep) - it was already dead code even when it worked, if it ever did. Removed the
+  call entirely as part of the OpenCV 5 migration work rather than trying to fix its arguments,
+  since nothing depends on its result.
+
+    rm -rf build/some-fresh-dir
+    cmake -B build/some-fresh-dir -DUSE_BARCODE=ON .
+    # CMake Error ... No known features for CXX compiler "" version .
+    # -- Configuring incomplete, errors occurred!

@@ -51,7 +51,7 @@ dominant_colors_grabber::GetDomColors(cv::Mat img, color_space cs, dist_type dt,
     cv::Scalar full_w = sum(hist);
     hist /= full_w[0];
     double sum = 0;
-    cv::Mat hist_mask(3, hist.size, CV_8UC1, cv::Scalar(255));
+    cv::Mat hist_mask(hist.dims, hist.size.p, CV_8UC1, cv::Scalar(255));
     cv::Mat center_mask = hist_mask.clone();
 
     std::vector<float> koefs = {hist_ranges[cs][1] / hist_sizes[cs][0], hist_ranges[cs][3] / hist_sizes[cs][1], hist_ranges[cs][5] / hist_sizes[cs][2]};

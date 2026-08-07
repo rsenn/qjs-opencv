@@ -36,12 +36,19 @@ js_value_from(JSContext* ctx, const cv::DMatch& dm) {
 
 using namespace cv::xfeatures2d;
 using cv::AffineFeature;
+#ifdef HAVE_OPENCV_XFEATURES2D_AKAZE
+using cv::xfeatures2d::AgastFeatureDetector;
+using cv::xfeatures2d::AKAZE;
+using cv::xfeatures2d::BRISK;
+using cv::xfeatures2d::KAZE;
+#else
 using cv::AgastFeatureDetector;
 using cv::AKAZE;
 using cv::BRISK;
+using cv::KAZE;
+#endif
 using cv::FastFeatureDetector;
 using cv::GFTTDetector;
-using cv::KAZE;
 using cv::MSER;
 using cv::ORB;
 using cv::SIFT;

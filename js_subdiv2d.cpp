@@ -10,6 +10,9 @@
 #include <cstdint>
 #include <new>
 #include <opencv2/imgproc.hpp>
+#ifdef HAVE_OPENCV2_GEOMETRY_HPP
+#include <opencv2/geometry.hpp>
+#endif
 #include <vector>
 
 extern "C" int js_subdiv2d_init(JSContext*, JSModuleDef*);

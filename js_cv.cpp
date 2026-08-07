@@ -13,7 +13,6 @@
 #include "include/util.hpp"
 #include <exception>
 #include <float.h>
-#include <opencv2/core/core_c.h>
 #include <opencv2/core/cvdef.h>
 #include <opencv2/core/hal/interface.h>
 #include <png.h>
@@ -626,10 +625,12 @@ js_cv_core(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[],
   JSOutputArray dst = argc >= 2 ? js_cv_inputoutputarray(ctx, argv[1]) : cv::noArray();
 
   switch(magic) {
+#ifdef HAVE_OPENCV_CONVERT_FP16
     case CORE_CONVERTFP16: {
       cv::convertFp16(src, dst);
       break;
     }
+#endif
 
     case CORE_CONVERTSCALEABS: {
       double alpha = 1, beta = 0;
@@ -1660,7 +1661,9 @@ js_function_list_t js_cv_static_funcs{
     JS_CFUNC_MAGIC_DEF("solve", 3, js_cv_math, MATH_SOLVE),
     JS_CFUNC_MAGIC_DEF("subtract", 3, js_cv_math, MATH_SUBTRACT),
 
+#ifdef HAVE_OPENCV_CONVERT_FP16
     JS_CFUNC_MAGIC_DEF("convertFp16", 2, js_cv_core, CORE_CONVERTFP16),
+#endif
     JS_CFUNC_MAGIC_DEF("convertScaleAbs", 2, js_cv_core, CORE_CONVERTSCALEABS),
     JS_CFUNC_MAGIC_DEF("copyMakeBorder", 7, js_cv_core, CORE_COPYMAKEBORDER),
     JS_CFUNC_MAGIC_DEF("copyTo", 2, js_cv_core, CORE_COPYTO),
@@ -2051,7 +2054,9 @@ js_function_list_t js_cv_constants{
     JS_CV_CONSTANT(THRESH_OTSU),
     JS_CV_CONSTANT(THRESH_TRIANGLE),
     JS_CV_CONSTANT(CAP_ANY),
+#ifdef HAVE_OPENCV_CAP_VFW
     JS_CV_CONSTANT(CAP_VFW),
+#endif
     JS_CV_CONSTANT(CAP_V4L),
     JS_CV_CONSTANT(CAP_V4L2),
     JS_CV_CONSTANT(CAP_FIREWIRE),
@@ -2059,16 +2064,22 @@ js_function_list_t js_cv_constants{
     JS_CV_CONSTANT(CAP_IEEE1394),
     JS_CV_CONSTANT(CAP_DC1394),
     JS_CV_CONSTANT(CAP_CMU1394),
+#ifdef HAVE_OPENCV_CAP_VFW
     JS_CV_CONSTANT(CAP_QT),
     JS_CV_CONSTANT(CAP_UNICAP),
+#endif
     JS_CV_CONSTANT(CAP_DSHOW),
     JS_CV_CONSTANT(CAP_PVAPI),
+#ifdef HAVE_OPENCV_CAP_VFW
     JS_CV_CONSTANT(CAP_OPENNI),
     JS_CV_CONSTANT(CAP_OPENNI_ASUS),
+#endif
     JS_CV_CONSTANT(CAP_ANDROID),
     JS_CV_CONSTANT(CAP_XIAPI),
     JS_CV_CONSTANT(CAP_AVFOUNDATION),
+#ifdef HAVE_OPENCV_CAP_VFW
     JS_CV_CONSTANT(CAP_GIGANETIX),
+#endif
     JS_CV_CONSTANT(CAP_MSMF),
     JS_CV_CONSTANT(CAP_WINRT),
     JS_CV_CONSTANT(CAP_INTELPERC),
@@ -2219,10 +2230,15 @@ js_function_list_t js_cv_constants{
     JS_CV_CONSTANT(CAP_PROP_FRAME_WIDTH),
     JS_CV_CONSTANT(CAP_PROP_GAIN),
     JS_CV_CONSTANT(CAP_PROP_GAMMA),
+#if CV_VERSION_MAJOR <= 4
+    /* Typo aliases in pre-5.x sources, dropped by OpenCV 5.0 itself. */
     JS_CV_CONSTANT(CAP_PROP_GIGA_FRAME_HEIGH_MAX),
+#endif
     JS_CV_CONSTANT(CAP_PROP_GIGA_FRAME_OFFSET_X),
     JS_CV_CONSTANT(CAP_PROP_GIGA_FRAME_OFFSET_Y),
+#if CV_VERSION_MAJOR <= 4
     JS_CV_CONSTANT(CAP_PROP_GIGA_FRAME_SENS_HEIGH),
+#endif
     JS_CV_CONSTANT(CAP_PROP_GIGA_FRAME_SENS_WIDTH),
     JS_CV_CONSTANT(CAP_PROP_GIGA_FRAME_WIDTH_MAX),
     JS_CV_CONSTANT(CAP_PROP_GPHOTO2_COLLECT_MSGS),

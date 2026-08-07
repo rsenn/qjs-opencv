@@ -133,6 +133,9 @@ else(HAVE_OPENCV2_FREETYPE_HPP AND OPENCV_FREETYPE)
   set(OPENCV_FREETYPE_LIBRARY)
 endif(HAVE_OPENCV2_FREETYPE_HPP AND OPENCV_FREETYPE)
 
+option(USE_FEATURE2D "Use feature2d" ON)
+option(USE_BARCODE "Use barcode" ON)
+
 if(USE_FEATURE2D)
   add_definitions(-DUSE_FEATURE2D=1)
   set(OPENCV_XFEATURES2D_LIBRARY opencv_xfeatures2d
@@ -144,12 +147,26 @@ if(USE_FEATURE2D)
   if(HAVE_OPENCV2_XFEATURES2D_HPP)
     add_definitions(-DHAVE_OPENCV2_XFEATURES2D_HPP=1)
   endif(HAVE_OPENCV2_XFEATURES2D_HPP)
+
+  # OpenCV 5.0 moved AKAZE/BRISK/KAZE/AgastFeatureDetector out of core
+  # features2d into cv::xfeatures2d (contrib). AKAZE is a type name, not an
+  # addressable symbol, so check_cxx_symbol_exists doesn't apply here - use
+  # check_cxx_source_compiles instead.
+  include(CheckCXXSourceCompiles)
+  set(CMAKE_REQUIRED_INCLUDES_SAVE "${CMAKE_REQUIRED_INCLUDES}")
+  set(CMAKE_REQUIRED_INCLUDES "${OPENCV_INCLUDE_DIRS}")
+  check_cxx_source_compiles("
+    #include <opencv2/xfeatures2d.hpp>
+    int main() { cv::Ptr<cv::xfeatures2d::AKAZE> p; return 0; }
+  " HAVE_OPENCV_XFEATURES2D_AKAZE)
+  set(CMAKE_REQUIRED_INCLUDES "${CMAKE_REQUIRED_INCLUDES_SAVE}")
+  if(HAVE_OPENCV_XFEATURES2D_AKAZE)
+    add_definitions(-DHAVE_OPENCV_XFEATURES2D_AKAZE=1)
+  endif(HAVE_OPENCV_XFEATURES2D_AKAZE)
 endif()
 if(USE_BARCODE)
   add_definitions(-DUSE_BARCODE=1)
   set(BARCODE_SOURCE js_barcode_detector.cpp)
-  check_library_exists(opencv_objdetect _ZN2cv7barcode15BarcodeDetectorC1Ev
-                       "${OPENCV_LIBDIR}" OPENCV_BARCODE)
 
   check_include_file_cxx(opencv2/barcode.hpp HAVE_OPENCV2_BARCODE_HPP)
   if(HAVE_OPENCV2_BARCODE_HPP)
@@ -188,6 +205,114 @@ endif(HAVE_OPENCV2_CHARUCO_DETECTOR_HPP)
 if(HAVE_OPENCV_AFFINE_FEATURE)
   add_definitions(-DHAVE_OPENCV_AFFINE_FEATURE)
 endif(HAVE_OPENCV_AFFINE_FEATURE)
+
+# OpenCV 5.0 moved shape/contour-analysis functions (boundingRect, moments,
+# contourArea, approxPolyDP, convexHull, fitEllipse, minAreaRect, Subdiv2D,
+# etc.) out of imgproc into a new "geometry" module/header.
+check_include_file_cxx(opencv2/geometry.hpp HAVE_OPENCV2_GEOMETRY_HPP)
+if(HAVE_OPENCV2_GEOMETRY_HPP)
+  add_definitions(-DHAVE_OPENCV2_GEOMETRY_HPP=1)
+endif(HAVE_OPENCV2_GEOMETRY_HPP)
+
+# OpenCV 5.0 also moved goodFeaturesToTrack out of imgproc into a new
+# "features" module/header (opencv2/features.hpp, new in 5.0).
+check_include_file_cxx(opencv2/features.hpp HAVE_OPENCV2_FEATURES_HPP)
+if(HAVE_OPENCV2_FEATURES_HPP)
+  add_definitions(-DHAVE_OPENCV2_FEATURES_HPP=1)
+endif(HAVE_OPENCV2_FEATURES_HPP)
+
+# linearPolar/logPolar were deprecated in 4.x (in favor of warpPolar) and
+# fully removed in OpenCV 5.0, with no drop-in replacement declared. Checked
+# via decltype so only the declaration is needed, not a full link - some
+# local OpenCV 4.x builds pull in libtbb transitively and fail to link a
+# throwaway test executable even though the real (shared-library) build
+# links fine.
+set(CMAKE_REQUIRED_INCLUDES_SAVE "${CMAKE_REQUIRED_INCLUDES}")
+set(CMAKE_REQUIRED_INCLUDES "${OPENCV_INCLUDE_DIRS}")
+check_cxx_source_compiles("
+  #include <opencv2/imgproc.hpp>
+  int main() { decltype(&cv::linearPolar) fp = nullptr; return fp == nullptr; }
+" HAVE_OPENCV_LINEARPOLAR)
+check_cxx_source_compiles("
+  #include <opencv2/imgproc.hpp>
+  int main() { decltype(&cv::logPolar) fp = nullptr; return fp == nullptr; }
+" HAVE_OPENCV_LOGPOLAR)
+set(CMAKE_REQUIRED_INCLUDES "${CMAKE_REQUIRED_INCLUDES_SAVE}")
+if(HAVE_OPENCV_LINEARPOLAR)
+  add_definitions(-DHAVE_OPENCV_LINEARPOLAR=1)
+endif(HAVE_OPENCV_LINEARPOLAR)
+if(HAVE_OPENCV_LOGPOLAR)
+  add_definitions(-DHAVE_OPENCV_LOGPOLAR=1)
+endif(HAVE_OPENCV_LOGPOLAR)
+
+# OpenCV 5.0 rewrote the DNN engine: readNetFromCaffe/Darknet/Torch,
+# readTorchBlob and shrinkCaffeModel were dropped, Net gained/lost several
+# methods, and cv::dnn::DataLayout moved to cv::DataLayout. All landed in the
+# same header revision as cv::dnn::ENGINE_AUTO, so one flag gates all of it.
+# check_cxx_symbol_exists can't be used here: ENGINE_AUTO is a plain enum
+# constant (not addressable), so its "&symbol" probe fails to compile even
+# when the symbol exists - use check_cxx_source_compiles instead.
+include(CheckCXXSourceCompiles)
+set(CMAKE_REQUIRED_INCLUDES_SAVE "${CMAKE_REQUIRED_INCLUDES}")
+set(CMAKE_REQUIRED_INCLUDES "${OPENCV_INCLUDE_DIRS}")
+check_cxx_source_compiles("
+  #include <opencv2/dnn.hpp>
+  int main() { int e = cv::dnn::ENGINE_AUTO; return e - e; }
+" HAVE_OPENCV_DNN_NEW_ENGINE)
+set(CMAKE_REQUIRED_INCLUDES "${CMAKE_REQUIRED_INCLUDES_SAVE}")
+if(HAVE_OPENCV_DNN_NEW_ENGINE)
+  add_definitions(-DHAVE_OPENCV_DNN_NEW_ENGINE)
+endif(HAVE_OPENCV_DNN_NEW_ENGINE)
+
+# OpenCV 5.0 replaced BarcodeDetector's (prototxt_path, model_path) ctor with
+# a default ctor and a single-arg (super_resolution_model_path) ctor. Probe
+# by resolving overload resolution against the old two-arg ctor via decltype
+# (declaration-only - a plain symbol-exists check can't distinguish
+# overloads, and actually constructing would require linking opencv_objdetect,
+# which some local OpenCV 4.x builds can't do in a standalone test
+# executable even though the real shared-library build links fine).
+if(USE_BARCODE)
+  set(CMAKE_REQUIRED_INCLUDES_SAVE "${CMAKE_REQUIRED_INCLUDES}")
+  set(CMAKE_REQUIRED_INCLUDES "${OPENCV_INCLUDE_DIRS}")
+  check_cxx_source_compiles("
+    #include <opencv2/objdetect/barcode.hpp>
+    #include <utility>
+    using T = decltype(cv::barcode::BarcodeDetector(std::declval<std::string>(), std::declval<std::string>()));
+    int main() { return 0; }
+  " HAVE_OPENCV_BARCODE_LEGACY_CTOR)
+  set(CMAKE_REQUIRED_INCLUDES "${CMAKE_REQUIRED_INCLUDES_SAVE}")
+  if(HAVE_OPENCV_BARCODE_LEGACY_CTOR)
+    add_definitions(-DHAVE_OPENCV_BARCODE_LEGACY_CTOR=1)
+  endif(HAVE_OPENCV_BARCODE_LEGACY_CTOR)
+endif(USE_BARCODE)
+
+# Old deprecated VideoCapture backend constants (VFW/QT/UNICAP/OpenNI-v1/
+# Giganetix) and the CAP_PROP_GIGA_FRAME_*_HEIGH typo aliases were dropped in
+# OpenCV 5.0. convertFp16() (deprecated in 4.x in favor of Mat::convertTo
+# with CV_16F) was fully removed too.
+# CAP_VFW is a plain enum constant too - same addressability problem as
+# ENGINE_AUTO above, use check_cxx_source_compiles.
+set(CMAKE_REQUIRED_INCLUDES_SAVE "${CMAKE_REQUIRED_INCLUDES}")
+set(CMAKE_REQUIRED_INCLUDES "${OPENCV_INCLUDE_DIRS}")
+check_cxx_source_compiles("
+  #include <opencv2/videoio.hpp>
+  int main() { int c = cv::CAP_VFW; return c - c; }
+" HAVE_OPENCV_CAP_VFW)
+set(CMAKE_REQUIRED_INCLUDES "${CMAKE_REQUIRED_INCLUDES_SAVE}")
+if(HAVE_OPENCV_CAP_VFW)
+  add_definitions(-DHAVE_OPENCV_CAP_VFW=1)
+endif(HAVE_OPENCV_CAP_VFW)
+# Declaration-only check (see linearPolar/logPolar above for why).
+set(CMAKE_REQUIRED_INCLUDES_SAVE "${CMAKE_REQUIRED_INCLUDES}")
+set(CMAKE_REQUIRED_INCLUDES "${OPENCV_INCLUDE_DIRS}")
+check_cxx_source_compiles("
+  #include <opencv2/core.hpp>
+  int main() { decltype(&cv::convertFp16) fp = nullptr; return fp == nullptr; }
+" HAVE_OPENCV_CONVERT_FP16)
+set(CMAKE_REQUIRED_INCLUDES "${CMAKE_REQUIRED_INCLUDES_SAVE}")
+if(HAVE_OPENCV_CONVERT_FP16)
+  add_definitions(-DHAVE_OPENCV_CONVERT_FP16=1)
+endif(HAVE_OPENCV_CONVERT_FP16)
 
 #[[check_include_file_cxx(opencv2/bgsegm.hpp HAVE_OPENCV2_BGSEGM_HPP)
 check_library_exists(opencv_bgsegm _ZN2cv6bgsegm30createBackgroundSubtractorLSBPEiiiffffffffii /usr
@@ -243,15 +368,13 @@ option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 option(BUILD_QUICKJS "Build QuickJS" ON)
 option(USE_LIBCAMERA "Use libcamera-opencv" OFF)
 option(USE_LCCV "Use LCCV" ON)
-option(USE_FEATURE2D "Use feature2d" ON)
-option(USE_BARCODE "Use barcode" ON)
 
 if(ENABLE_LTO)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -flto")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -flto")
 endif(ENABLE_LTO)
 
-link_directories(BEFORE ${quickjs_BINARY_DIR} ${OPENCV_LIB_DIR})
+link_directories(BEFORE ${quickjs_BINARY_DIR} ${OPENCV_LIBDIR})
 
 link_directories("${CMAKE_CURRENT_BINARY_DIR}/quickjs")
 

@@ -24,6 +24,9 @@
 #include <new>
 
 #include <opencv2/imgproc.hpp>
+#ifdef HAVE_OPENCV2_GEOMETRY_HPP
+#include <opencv2/geometry.hpp>
+#endif
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -105,8 +108,8 @@ js_mat_sizes(const JSMatData& mat) {
   if(mat.dims == 2) {
     sizes.push_back(mat.rows);
     sizes.push_back(mat.cols);
-  } else if(size.dims() > 0)
-    std::copy(&size[0], &size[size.dims()], std::back_inserter(sizes));
+  } else if(mat.dims > 0)
+    std::copy(&size[0], &size[mat.dims], std::back_inserter(sizes));
 
   return sizes;
 }
@@ -1203,13 +1206,13 @@ js_mat_size_value(JSContext* ctx, cv::Mat* m) {
   if(m->cols != -1 && m->rows != -1) {
     ret = js_size_new(ctx, m->cols, m->rows);
 
-    for(int i = 0; i < m->size.dims(); ++i)
+    for(int i = 0; i < m->dims; ++i)
       JS_DefinePropertyValueUint32(ctx, ret, i, JS_NewInt32(ctx, m->size[i]), JS_PROP_CONFIGURABLE);
 
   } else {
     std::vector<int> sizes;
 
-    for(int i = 0; i < m->size.dims(); ++i)
+    for(int i = 0; i < m->dims; ++i)
       sizes.push_back(m->size[i]);
 
     ret = js_array_from(ctx, sizes);
@@ -1242,7 +1245,7 @@ js_mat_size_box(JSContext* ctx, JSValueConst this_val, cv::Mat* m) {
     JS_DefinePropertyValueStr(ctx, fn, "height", JS_NewInt32(ctx, m->rows), JS_PROP_CONFIGURABLE);
   }
 
-  for(int i = 0; i < m->size.dims(); ++i)
+  for(int i = 0; i < m->dims; ++i)
     JS_DefinePropertyValueUint32(ctx, fn, i, JS_NewInt32(ctx, m->size[i]), JS_PROP_CONFIGURABLE);
 
   return fn;
@@ -1308,7 +1311,7 @@ js_mat_get_props(JSContext* ctx, JSValueConst this_val, int magic) {
     case PROP_MATSIZE: {
       std::vector<int> sizes;
 
-      for(int i = 0; i < m->size.dims(); ++i)
+      for(int i = 0; i < m->dims; ++i)
         sizes.push_back(m->size[i]);
 
       ret = js_array_from(ctx, sizes);

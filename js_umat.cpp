@@ -94,7 +94,7 @@ js_umat_sizes(const JSUMatData& umat) {
     sizes.push_back(umat.rows);
     sizes.push_back(umat.cols);
   } else {
-    std::copy(&size[0], &size[size.dims()], std::back_inserter(sizes));
+    std::copy(&size[0], &size[umat.dims], std::back_inserter(sizes));
   }
 
   return sizes;

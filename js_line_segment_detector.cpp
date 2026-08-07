@@ -41,7 +41,7 @@ js_line_segment_detector_new(JSContext* ctx,
   ret = JS_NewObjectProtoClass(ctx, proto, js_line_segment_detector_class_id);
   s = js_allocate<JSLineSegmentDetector>(ctx);
 
-  ptr = cv::createLineSegmentDetector(refine, scale, sigma_scale, quant, ang_th, log_eps, density_th, n_bins);
+  ptr = cv::createLineSegmentDetector(static_cast<cv::LineSegmentDetectorModes>(refine), scale, sigma_scale, quant, ang_th, log_eps, density_th, n_bins);
   *s = ptr;
   JS_SetOpaque(ret, s);
 

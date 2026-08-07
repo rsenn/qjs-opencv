@@ -25,6 +25,9 @@
 #include <opencv2/core/matx.hpp>
 #include <opencv2/core/types.hpp>*/
 #include <opencv2/imgproc.hpp>
+#ifdef HAVE_OPENCV2_GEOMETRY_HPP
+#include <opencv2/geometry.hpp>
+#endif
 #include <ostream>
 #include <iostream>
 #include <string>

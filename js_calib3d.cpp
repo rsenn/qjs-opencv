@@ -3,6 +3,7 @@
 #include "js_mat.hpp"
 #include "js_umat.hpp"
 #include <opencv2/calib3d.hpp>
+#include <opencv2/objdetect.hpp>
 
 extern "C" int js_calib3d_init(JSContext*, JSModuleDef*);
 

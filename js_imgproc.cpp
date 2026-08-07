@@ -22,6 +22,12 @@
 #include <map>
 #include <memory>
 #include <opencv2/imgproc.hpp>
+#ifdef HAVE_OPENCV2_GEOMETRY_HPP
+#include <opencv2/geometry.hpp>
+#endif
+#ifdef HAVE_OPENCV2_FEATURES_HPP
+#include <opencv2/features.hpp>
+#endif
 
 #include <string>
 #include <vector>
@@ -1436,6 +1442,7 @@ js_imgproc_transform(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
         break;
       }
 
+#ifdef HAVE_OPENCV_LINEARPOLAR
       case TRANSFORM_LINEAR_POLAR: {
         JSInputOutputArray dst = js_cv_inputoutputarray(ctx, argv[1]);
         JSPointData<float> center;
@@ -1449,7 +1456,9 @@ js_imgproc_transform(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
         cv::linearPolar(src, dst, center, maxRadius, flags);
         break;
       }
+#endif
 
+#ifdef HAVE_OPENCV_LOGPOLAR
       case TRANSFORM_LOG_POLAR: {
         JSInputOutputArray dst = js_cv_inputoutputarray(ctx, argv[1]);
         JSPointData<float> center;
@@ -1463,6 +1472,7 @@ js_imgproc_transform(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
         cv::logPolar(src, dst, center, M, flags);
         break;
       }
+#endif
 
       case TRANSFORM_REMAP: {
         JSInputOutputArray dst = js_cv_inputoutputarray(ctx, argv[1]);
@@ -2256,8 +2266,12 @@ js_function_list_t js_imgproc_static_funcs{
     JS_CFUNC_MAGIC_DEF("getRotationMatrix2D", 3, js_imgproc_transform, TRANSFORM_GET_ROTATION_MATRIX2_D),
     // JS_CFUNC_MAGIC_DEF("getRotationMatrix2D_", 3, js_imgproc_transform,  TRANSFORM_GET_ROTATION_MATRIX2D_),
     JS_CFUNC_MAGIC_DEF("invertAffineTransform", 2, js_imgproc_transform, TRANSFORM_INVERT_AFFINE_TRANSFORM),
+#ifdef HAVE_OPENCV_LINEARPOLAR
     JS_CFUNC_MAGIC_DEF("linearPolar", 5, js_imgproc_transform, TRANSFORM_LINEAR_POLAR),
+#endif
+#ifdef HAVE_OPENCV_LOGPOLAR
     JS_CFUNC_MAGIC_DEF("logPolar", 5, js_imgproc_transform, TRANSFORM_LOG_POLAR),
+#endif
     JS_CFUNC_MAGIC_DEF("remap", 5, js_imgproc_transform, TRANSFORM_REMAP),
     JS_CFUNC_MAGIC_DEF("resize", 3, js_imgproc_transform, TRANSFORM_RESIZE),
     JS_CFUNC_MAGIC_DEF("warpAffine", 4, js_imgproc_transform, TRANSFORM_WARP_AFFINE),

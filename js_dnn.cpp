@@ -9,6 +9,33 @@ using JSNetData = cv::dnn::Net;
 using JSImage2BlobParamsData = cv::dnn::Image2BlobParams;
 using JSLayerData = cv::Ptr<cv::dnn::Layer>;
 
+/* OpenCV 5 moved DataLayout (and its DNN_LAYOUT_* enumerators) from
+ * cv::dnn::DataLayout to cv::DataLayout - dnn.hpp now just reuses the core
+ * enum. Qualified lookup doesn't fall back to the enclosing namespace, so
+ * cv::dnn::DataLayout stops resolving on 5.x even though it's still valid
+ * on 4.x. This shim gives both a single portable spelling. */
+namespace qjs_dnn_compat {
+#ifdef HAVE_OPENCV_DNN_NEW_ENGINE
+using DataLayout = cv::DataLayout;
+constexpr DataLayout DNN_LAYOUT_UNKNOWN = cv::DNN_LAYOUT_UNKNOWN;
+constexpr DataLayout DNN_LAYOUT_ND = cv::DNN_LAYOUT_ND;
+constexpr DataLayout DNN_LAYOUT_NCHW = cv::DNN_LAYOUT_NCHW;
+constexpr DataLayout DNN_LAYOUT_NCDHW = cv::DNN_LAYOUT_NCDHW;
+constexpr DataLayout DNN_LAYOUT_NHWC = cv::DNN_LAYOUT_NHWC;
+constexpr DataLayout DNN_LAYOUT_NDHWC = cv::DNN_LAYOUT_NDHWC;
+constexpr DataLayout DNN_LAYOUT_PLANAR = cv::DNN_LAYOUT_PLANAR;
+#else
+using DataLayout = cv::dnn::DataLayout;
+constexpr DataLayout DNN_LAYOUT_UNKNOWN = cv::dnn::DNN_LAYOUT_UNKNOWN;
+constexpr DataLayout DNN_LAYOUT_ND = cv::dnn::DNN_LAYOUT_ND;
+constexpr DataLayout DNN_LAYOUT_NCHW = cv::dnn::DNN_LAYOUT_NCHW;
+constexpr DataLayout DNN_LAYOUT_NCDHW = cv::dnn::DNN_LAYOUT_NCDHW;
+constexpr DataLayout DNN_LAYOUT_NHWC = cv::dnn::DNN_LAYOUT_NHWC;
+constexpr DataLayout DNN_LAYOUT_NDHWC = cv::dnn::DNN_LAYOUT_NDHWC;
+constexpr DataLayout DNN_LAYOUT_PLANAR = cv::dnn::DNN_LAYOUT_PLANAR;
+#endif
+} // namespace qjs_dnn_compat
+
 extern "C" {
 thread_local JSValue dnn_object, net_proto, net_class, imageblob2params_proto, imageblob2params_class, layer_proto, layer_class;
 thread_local JSClassID js_net_class_id, js_imageblob2params_class_id, js_layer_class_id;
@@ -329,6 +356,7 @@ js_net_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
         break;
       }
 
+#ifndef HAVE_OPENCV_DNN_NEW_ENGINE
       case DNN_NET_GETINPUTDETAILS: {
         std::vector<float> scales;
         std::vector<int> zeropoints;
@@ -342,6 +370,7 @@ js_net_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
         js_array_copy(ctx, argv[1], zeropoints);
         break;
       }
+#endif
 
       case DNN_NET_GETLAYER: {
         JSLayerData dl;
@@ -393,6 +422,7 @@ js_net_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
         break;
       }
 
+#ifndef HAVE_OPENCV_DNN_NEW_ENGINE
       case DNN_NET_GETOUTPUTDETAILS: {
         std::vector<float> scales;
         std::vector<int> zeropoints;
@@ -406,6 +436,7 @@ js_net_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
         js_array_copy(ctx, argv[1], zeropoints);
         break;
       }
+#endif
 
       case DNN_NET_GETPARAM: {
         int32_t numParam = 0;
@@ -438,6 +469,7 @@ js_net_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
         break;
       }
 
+#ifndef HAVE_OPENCV_DNN_NEW_ENGINE
       case DNN_NET_QUANTIZE: {
         JSInputArray calibData = js_input_array(ctx, argv[0]);
         int32_t inputsDtype, outputsDtype;
@@ -452,6 +484,7 @@ js_net_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
         ret = js_net_new(ctx, dn->quantize(calibData, inputsDtype, outputsDtype, perChannel));
         break;
       }
+#endif
 
       case DNN_NET_REGISTEROUTPUT: {
         cv::String outputName;
@@ -465,6 +498,7 @@ js_net_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
         break;
       }
 
+#ifndef HAVE_OPENCV_DNN_NEW_ENGINE
       case DNN_NET_SETHALIDESCHEDULER: {
         cv::String scheduler;
 
@@ -473,6 +507,7 @@ js_net_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
         dn->setHalideScheduler(scheduler);
         break;
       }
+#endif
     }
   } catch(const cv::Exception& e) { ret = js_cv_throw(ctx, e); }
 
@@ -508,18 +543,26 @@ const JSCFunctionListEntry js_net_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("forwardAll", 1, js_net_method, DNN_NET_FORWARDALL),
     JS_CFUNC_MAGIC_DEF("getUnconnectedOutLayers", 0, js_net_method, DNN_NET_GETUNCONNECTEDOUTLAYERS),
     JS_CFUNC_MAGIC_DEF("getUnconnectedOutLayersNames", 0, js_net_method, DNN_NET_GETUNCONNECTEDOUTLAYERSNAMES),
+#ifndef HAVE_OPENCV_DNN_NEW_ENGINE
     JS_CFUNC_MAGIC_DEF("getInputDetails", 2, js_net_method, DNN_NET_GETINPUTDETAILS),
+#endif
     JS_CFUNC_MAGIC_DEF("getLayer", 1, js_net_method, DNN_NET_GETLAYER),
     JS_CFUNC_MAGIC_DEF("getLayerId", 1, js_net_method, DNN_NET_GETLAYERID),
     JS_CFUNC_MAGIC_DEF("getLayerNames", 0, js_net_method, DNN_NET_GETLAYERNAMES),
     JS_CFUNC_MAGIC_DEF("getLayersCount", 1, js_net_method, DNN_NET_GETLAYERSCOUNT),
     JS_CFUNC_MAGIC_DEF("getLayerTypes", 1, js_net_method, DNN_NET_GETLAYERTYPES),
+#ifndef HAVE_OPENCV_DNN_NEW_ENGINE
     JS_CFUNC_MAGIC_DEF("getOutputDetails", 2, js_net_method, DNN_NET_GETOUTPUTDETAILS),
+#endif
     JS_CFUNC_MAGIC_DEF("getParam", 2, js_net_method, DNN_NET_GETPARAM),
     JS_CFUNC_MAGIC_DEF("getPerfProfile", 1, js_net_method, DNN_NET_GETPERFPROFILE),
+#ifndef HAVE_OPENCV_DNN_NEW_ENGINE
     JS_CFUNC_MAGIC_DEF("quantize", 3, js_net_method, DNN_NET_QUANTIZE),
+#endif
     JS_CFUNC_MAGIC_DEF("registerOuput", 3, js_net_method, DNN_NET_REGISTEROUTPUT),
+#ifndef HAVE_OPENCV_DNN_NEW_ENGINE
     JS_CFUNC_MAGIC_DEF("setHalideScheduler", 1, js_net_method, DNN_NET_SETHALIDESCHEDULER),
+#endif
     JS_CFUNC_MAGIC_DEF("setInput", 0, js_net_method, DNN_NET_SETINPUT),
     JS_CFUNC_MAGIC_DEF("setInputsNames", 1, js_net_method, DNN_NET_SETINPUTSNAMES),
     JS_CFUNC_MAGIC_DEF("setParam", 3, js_net_method, DNN_NET_SETPARAM),
@@ -570,7 +613,7 @@ js_imageblob2params_constructor(JSContext* ctx, JSValueConst new_target, int arg
     cv::Scalar scalefactor, mean;
     cv::Size size;
     bool swapRB = false;
-    int32_t ddepth = CV_32F, datalayout = cv::dnn::DNN_LAYOUT_NCHW, mode = cv::dnn::DNN_PMODE_NULL;
+    int32_t ddepth = CV_32F, datalayout = qjs_dnn_compat::DNN_LAYOUT_NCHW, mode = cv::dnn::DNN_PMODE_NULL;
     cv::Scalar borderValue{0.0};
 
     js_scalar_read(ctx, argv[0], scalefactor);
@@ -589,7 +632,7 @@ js_imageblob2params_constructor(JSContext* ctx, JSValueConst new_target, int arg
     if(argc > 7)
       js_scalar_read(ctx, argv[7], borderValue);
 
-    new(dn) JSImage2BlobParamsData(scalefactor, size, mean, swapRB, ddepth, cv::dnn::DataLayout(datalayout), cv::dnn::ImagePaddingMode(mode), borderValue);
+    new(dn) JSImage2BlobParamsData(scalefactor, size, mean, swapRB, ddepth, qjs_dnn_compat::DataLayout(datalayout), cv::dnn::ImagePaddingMode(mode), borderValue);
   } else {
     new(dn) JSImage2BlobParamsData();
   }
@@ -706,7 +749,7 @@ js_imageblob2params_set(JSContext* ctx, JSValueConst this_val, JSValueConst val,
       int32_t datalayout;
       js_value_to(ctx, val, datalayout);
 
-      ib2p->datalayout = cv::dnn::DataLayout(datalayout);
+      ib2p->datalayout = qjs_dnn_compat::DataLayout(datalayout);
       break;
     }
 
@@ -1253,6 +1296,7 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
         break;
       }
 
+#ifndef HAVE_OPENCV_DNN_NEW_ENGINE
       case DNN_READNETFROMCAFFE: {
         int argi = 0;
 
@@ -1338,6 +1382,7 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
 
         break;
       }
+#endif
 
       case DNN_READNETFROMMODELOPTIMIZER: {
         int argi = 0;
@@ -1397,6 +1442,24 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
           } else
             size = size2;
 
+#ifdef HAVE_OPENCV_DNN_NEW_ENGINE
+          int32_t engine = cv::dnn::ENGINE_AUTO;
+          if(argc > argi)
+            js_value_to(ctx, argv[argi++], engine);
+
+          ret = js_net_new(ctx, cv::dnn::readNetFromONNX(reinterpret_cast<const char*>(ptr), size, engine));
+        } else {
+          std::string onnxFile;
+
+          js_value_to(ctx, argv[0], onnxFile);
+
+          int32_t engine = cv::dnn::ENGINE_AUTO;
+          if(argc > 1)
+            js_value_to(ctx, argv[1], engine);
+
+          ret = js_net_new(ctx, cv::dnn::readNetFromONNX(onnxFile, engine));
+        }
+#else
           ret = js_net_new(ctx, cv::dnn::readNetFromONNX(reinterpret_cast<const char*>(ptr), size));
         } else {
           std::string onnxFile;
@@ -1405,6 +1468,7 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
 
           ret = js_net_new(ctx, cv::dnn::readNetFromONNX(onnxFile));
         }
+#endif
 
         break;
       }
@@ -1479,6 +1543,7 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
         break;
       }
 
+#ifndef HAVE_OPENCV_DNN_NEW_ENGINE
       case DNN_READNETFROMTORCH: {
         std::string model;
         bool isBinary = true, evaluate = true;
@@ -1493,6 +1558,7 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
         ret = js_net_new(ctx, cv::dnn::readNetFromTorch(model, isBinary, evaluate));
         break;
       }
+#endif
 
       case DNN_READTENSORFROMONNX: {
         std::string path;
@@ -1503,6 +1569,7 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
         break;
       }
 
+#ifndef HAVE_OPENCV_DNN_NEW_ENGINE
       case DNN_READTORCHBLOB: {
         std::string filename;
         bool isBinary = true;
@@ -1529,6 +1596,7 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
 
         break;
       }
+#endif
 
       case DNN_SOFTNMSBOXES: {
         std::vector<cv::Rect> bboxes;
@@ -1618,7 +1686,9 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
 
 const JSCFunctionListEntry js_dnn_dnn_funcs[] = {
     JS_PROP_INT32_DEF("DNN_BACKEND_DEFAULT", cv::dnn::DNN_BACKEND_DEFAULT, JS_PROP_ENUMERABLE),
+#ifndef HAVE_OPENCV_DNN_NEW_ENGINE
     JS_PROP_INT32_DEF("DNN_BACKEND_HALIDE", cv::dnn::DNN_BACKEND_HALIDE, JS_PROP_ENUMERABLE),
+#endif
     JS_PROP_INT32_DEF("DNN_BACKEND_INFERENCE_ENGINE", cv::dnn::DNN_BACKEND_INFERENCE_ENGINE, JS_PROP_ENUMERABLE),
     JS_PROP_INT32_DEF("DNN_BACKEND_OPENCV", cv::dnn::DNN_BACKEND_OPENCV, JS_PROP_ENUMERABLE),
     JS_PROP_INT32_DEF("DNN_BACKEND_VKCOM", cv::dnn::DNN_BACKEND_VKCOM, JS_PROP_ENUMERABLE),
@@ -1637,16 +1707,22 @@ const JSCFunctionListEntry js_dnn_dnn_funcs[] = {
     JS_PROP_INT32_DEF("DNN_TARGET_HDDL", cv::dnn::DNN_TARGET_HDDL, JS_PROP_ENUMERABLE),
     JS_PROP_INT32_DEF("DNN_TARGET_NPU", cv::dnn::DNN_TARGET_NPU, JS_PROP_ENUMERABLE),
     JS_PROP_INT32_DEF("DNN_TARGET_CPU_FP16", cv::dnn::DNN_TARGET_CPU_FP16, JS_PROP_ENUMERABLE),
-    JS_PROP_INT32_DEF("DNN_LAYOUT_UNKNOWN", cv::dnn::DNN_LAYOUT_UNKNOWN, JS_PROP_ENUMERABLE),
-    JS_PROP_INT32_DEF("DNN_LAYOUT_ND", cv::dnn::DNN_LAYOUT_ND, JS_PROP_ENUMERABLE),
-    JS_PROP_INT32_DEF("DNN_LAYOUT_NCHW", cv::dnn::DNN_LAYOUT_NCHW, JS_PROP_ENUMERABLE),
-    JS_PROP_INT32_DEF("DNN_LAYOUT_NCDHW", cv::dnn::DNN_LAYOUT_NCDHW, JS_PROP_ENUMERABLE),
-    JS_PROP_INT32_DEF("DNN_LAYOUT_NHWC", cv::dnn::DNN_LAYOUT_NHWC, JS_PROP_ENUMERABLE),
-    JS_PROP_INT32_DEF("DNN_LAYOUT_NDHWC", cv::dnn::DNN_LAYOUT_NDHWC, JS_PROP_ENUMERABLE),
-    JS_PROP_INT32_DEF("DNN_LAYOUT_PLANAR", cv::dnn::DNN_LAYOUT_PLANAR, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("DNN_LAYOUT_UNKNOWN", qjs_dnn_compat::DNN_LAYOUT_UNKNOWN, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("DNN_LAYOUT_ND", qjs_dnn_compat::DNN_LAYOUT_ND, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("DNN_LAYOUT_NCHW", qjs_dnn_compat::DNN_LAYOUT_NCHW, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("DNN_LAYOUT_NCDHW", qjs_dnn_compat::DNN_LAYOUT_NCDHW, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("DNN_LAYOUT_NHWC", qjs_dnn_compat::DNN_LAYOUT_NHWC, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("DNN_LAYOUT_NDHWC", qjs_dnn_compat::DNN_LAYOUT_NDHWC, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("DNN_LAYOUT_PLANAR", qjs_dnn_compat::DNN_LAYOUT_PLANAR, JS_PROP_ENUMERABLE),
     JS_PROP_INT32_DEF("DNN_PMODE_NULL", cv::dnn::DNN_PMODE_NULL, JS_PROP_ENUMERABLE),
     JS_PROP_INT32_DEF("DNN_PMODE_CROP_CENTER", cv::dnn::DNN_PMODE_CROP_CENTER, JS_PROP_ENUMERABLE),
     JS_PROP_INT32_DEF("DNN_PMODE_LETTERBOX", cv::dnn::DNN_PMODE_LETTERBOX, JS_PROP_ENUMERABLE),
+#ifdef HAVE_OPENCV_DNN_NEW_ENGINE
+    JS_PROP_INT32_DEF("ENGINE_CLASSIC", cv::dnn::ENGINE_CLASSIC, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("ENGINE_NEW", cv::dnn::ENGINE_NEW, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("ENGINE_AUTO", cv::dnn::ENGINE_AUTO, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("ENGINE_ORT", cv::dnn::ENGINE_ORT, JS_PROP_ENUMERABLE),
+#endif
 
     JS_CFUNC_MAGIC_DEF("blobFromImage", 1, js_dnn_func, DNN_BLOBFROMIMAGE),
     JS_CFUNC_MAGIC_DEF("blobFromImages", 1, js_dnn_func, DNN_BLOBFROMIMAGES),
@@ -1661,16 +1737,22 @@ const JSCFunctionListEntry js_dnn_dnn_funcs[] = {
     JS_CFUNC_MAGIC_DEF("NMSBoxes", 5, js_dnn_func, DNN_NMSBOXES),
     JS_CFUNC_MAGIC_DEF("NMSBoxesBatched", 6, js_dnn_func, DNN_NMSBOXESBATCHED),
     JS_CFUNC_MAGIC_DEF("readNet", 1, js_dnn_func, DNN_READNET),
+#ifndef HAVE_OPENCV_DNN_NEW_ENGINE
     JS_CFUNC_MAGIC_DEF("readNetFromCaffe", 1, js_dnn_func, DNN_READNETFROMCAFFE),
     JS_CFUNC_MAGIC_DEF("readNetFromDarknet", 1, js_dnn_func, DNN_READNETFROMDARKNET),
+#endif
     JS_CFUNC_MAGIC_DEF("readNetFromModelOptimizer", 1, js_dnn_func, DNN_READNETFROMMODELOPTIMIZER),
     JS_CFUNC_MAGIC_DEF("readNetFromONNX", 1, js_dnn_func, DNN_READNETFROMONNX),
     JS_CFUNC_MAGIC_DEF("readNetFromTensorflow", 1, js_dnn_func, DNN_READNETFROMTENSORFLOW),
     JS_CFUNC_MAGIC_DEF("readNetFromTFLite", 1, js_dnn_func, DNN_READNETFROMTFLITE),
+#ifndef HAVE_OPENCV_DNN_NEW_ENGINE
     JS_CFUNC_MAGIC_DEF("readNetFromTorch", 1, js_dnn_func, DNN_READNETFROMTORCH),
+#endif
     JS_CFUNC_MAGIC_DEF("readTensorFromONNX", 1, js_dnn_func, DNN_READTENSORFROMONNX),
+#ifndef HAVE_OPENCV_DNN_NEW_ENGINE
     JS_CFUNC_MAGIC_DEF("readTorchBlob", 1, js_dnn_func, DNN_READTORCHBLOB),
     JS_CFUNC_MAGIC_DEF("shrinkCaffeModel", 1, js_dnn_func, DNN_SHRINKCAFFEMODEL),
+#endif
     JS_CFUNC_MAGIC_DEF("softNMSBoxes", 1, js_dnn_func, DNN_SOFTNMSBOXES),
     JS_CFUNC_MAGIC_DEF("writeTextGraph", 2, js_dnn_func, DNN_WRITETEXTGRAPH),
 };
