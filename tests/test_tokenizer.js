@@ -8,14 +8,17 @@ import { dnn } from 'opencv';
  *
  * tests/qwen2.5-tokenizer/ ships Qwen2.5's real tokenizer.json (byte-level
  * BPE, downloaded from https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct)
- * plus a config.json declaring {"model_type": "gpt2"} - Tokenizer::load()'s
- * documented format for a tiktoken/GPT2-style BPE vocabulary, which is what
- * Qwen2.5's tokenizer.json actually contains. As of this writing
- * Tokenizer::load() throws on this fixture (cv::FileStorage internals
- * rejecting it - see the BUGS-adjacent note in migration-opencv5.md); this
- * test documents that as an open compatibility gap rather than asserting a
- * successful load, while still proving the binding itself is safe (a
- * catchable exception, not a crash) either way.
+ * plus a config.json declaring {"model_type": "qwen2.5"}. Two gotchas found
+ * by reading OpenCV's actual tokenizer.cpp (dnn.hpp's doc comment on
+ * Tokenizer::load() is misleading on both counts):
+ *   - the argument is the path to config.json itself, not a directory - the
+ *     tokenizer.json directory is derived by stripping the filename back off
+ *     whatever path is given;
+ *   - model_type must be "qwen2"/"qwen2.5" for a real Qwen tokenizer.json,
+ *     not "gpt2"/"gpt4" - those select a different regex-split pattern and
+ *     silently mis-tokenize instead of failing outright.
+ * With both fixed, this does a real encode/decode round-trip against
+ * Qwen2.5's actual vocabulary, not just a "doesn't crash" check.
  */
 
 let failed = 0;
@@ -33,31 +36,32 @@ function ok(name, fn) {
 const haveTokenizer = typeof dnn.Tokenizer !== 'undefined';
 console.log('dnn.Tokenizer =', haveTokenizer ? 'present (OpenCV 5.0+)' : 'absent (pre-5.x, as expected)');
 
-ok('Tokenizer.load() on a bogus directory throws, not crashes', () => {
+ok('Tokenizer.load() on a bogus path throws, not crashes', () => {
   if(!haveTokenizer) return; /* nothing to test pre-5.x */
 
   let threw = false;
   try {
-    dnn.Tokenizer.load('/nonexistent/directory/');
+    dnn.Tokenizer.load('/nonexistent/directory/config.json');
   } catch(e) {
     threw = true;
   }
-  if(!threw) throw new Error('expected a throw for a nonexistent model directory');
+  if(!threw) throw new Error('expected a throw for a nonexistent config.json path');
 });
 
-ok('Tokenizer.load() on the real Qwen2.5 tokenizer.json fixture does not crash', () => {
+ok('Tokenizer.load() real Qwen2.5 fixture: encode()/decode() round-trip', () => {
   if(!haveTokenizer) return; /* nothing to test pre-5.x */
 
-  const dir = 'qwen2.5-tokenizer/';
+  const tok = dnn.Tokenizer.load('qwen2.5-tokenizer/config.json');
 
-  try {
-    const tok = dnn.Tokenizer.load(dir);
-    const ids = tok.encode('Hello, Qwen2.5!');
-    const text = tok.decode(ids);
-    console.log('     (loaded ok - encode/decode round-trip:', JSON.stringify(text), ')');
-  } catch(e) {
-    console.log('     (Tokenizer.load() threw on the real fixture, which is a known open item: ' + ((e && e.message) || e).split('\n')[0] + ')');
-  }
+  const text = 'Hello, world! This is Qwen2.5.';
+  const ids = tok.encode(text); /* an Int32Array, not a plain Array */
+
+  if(ids.length === 0) throw new Error('encode() returned no tokens: ' + JSON.stringify(Array.from(ids)));
+
+  const decoded = tok.decode(ids);
+  if(decoded !== text) throw new Error(`decode(encode(text)) !== text: got ${JSON.stringify(decoded)}`);
+
+  console.log('     (ids =', Array.from(ids).join(','), ')');
 });
 
 ok('Net.prototype has enableKVCache/disableKVCache/resetKVCache iff Tokenizer is present', () => {

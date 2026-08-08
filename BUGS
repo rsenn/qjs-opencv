@@ -20,22 +20,3 @@
                            // same script prints the ReferenceError and
                            // exits 1 as expected.
 
-- opencv-tokenizer-load-config-json-format-undocumented: `cv::dnn::Tokenizer::
-  load(modelDir)` (OpenCV 5.0+) throws `Assertion failed: buf in function
-  'open'` from `opencv2/core/persistence.cpp` when given a real
-  `tokenizer.json` (verified with Qwen2.5's actual byte-level-BPE
-  tokenizer.json from HuggingFace, see tests/qwen2.5-tokenizer/) alongside a
-  `config.json` containing `{"model_type": "gpt2"}` - the exact format the
-  Tokenizer::load() doc comment in dnn.hpp describes. Tried several config.json
-  variants (compact/pretty JSON, a %YAML:1.0 marker) with identical results,
-  so the format cv::FileStorage actually expects here is not what the header
-  documents, or the fixture's tokenizer.json itself isn't in the exact dialect
-  expected. Not a qjs-opencv binding bug - the exception is a normal
-  `cv::Exception`, caught cleanly, no crash - but it means real Qwen2.5
-  tokenization is not yet verified end-to-end through this binding. See
-  migration-opencv5.md, "Wrapping LLM inference (Qwen2.5)".
-
-    import { dnn } from 'opencv';
-    // tests/qwen2.5-tokenizer/{tokenizer.json,config.json} as shipped
-    dnn.Tokenizer.load('tests/qwen2.5-tokenizer/'); // throws the above
-

@@ -411,41 +411,54 @@ something like Qwen2.5 end-to-end means composing these primitives from JS:
    `opencv_dnn`, so `ENGINE_ORT` works with no extra linking on the qjs-opencv side.
 2. `net.enableKVCache()` once, before the generation loop, so attention layers reuse
    past keys/values across steps instead of recomputing the whole sequence every token.
-3. `dnn.Tokenizer.load(modelDir)` to get a tokenizer, `tok.encode(text)` to turn the prompt into
-   token ids, feed those through `net.setInput(...)`/`net.forward()` per step (there is no
+3. `dnn.Tokenizer.load(configJsonPath)` to get a tokenizer, `tok.encode(text)` to turn the prompt
+   into token ids, feed those through `net.setInput(...)`/`net.forward()` per step (there is no
    `generate()` helper — the sampling loop, whatever it is: greedy, temperature, top-k/top-p, is
    plain JS around repeated `forward()` calls), and `tok.decode(ids)` to turn generated ids back
    into text.
 4. `net.resetKVCache()` between independent generations reusing the same `Net`.
 
-All of this is now bound: `dnn.Tokenizer` (`.load(path)` static factory, `.encode(text)`,
-`.decode(tokens)`) and `Net.prototype.{enable,disable,reset}KVCache()`, gated by a dedicated
-`HAVE_OPENCV_DNN_TOKENIZER` CMake probe (declaration-only, same `decltype` technique as the rest
-of this file) rather than reusing `HAVE_OPENCV_DNN_NEW_ENGINE` — the two landed in the same header
-revision in this build but aren't guaranteed to always track each other. `Tokenizer` is undefined
-and the three KV-cache methods are absent from `Net.prototype` on pre-5.x builds. See
+All of this is now bound: `dnn.Tokenizer` (`.load(path)` static factory, `.encode(text)` →
+`Int32Array`, `.decode(tokens)` → `string`) and `Net.prototype.{enable,disable,reset}KVCache()`,
+gated by a dedicated `HAVE_OPENCV_DNN_TOKENIZER` CMake probe (declaration-only, same `decltype`
+technique as the rest of this file) rather than reusing `HAVE_OPENCV_DNN_NEW_ENGINE` — the two
+landed in the same header revision in this build but aren't guaranteed to always track each other.
+`Tokenizer` is undefined and the three KV-cache methods are absent from `Net.prototype` on pre-5.x
+builds. Verified with a real end-to-end `encode()`/`decode()` round-trip against Qwen2.5's actual
+tokenizer (downloaded from HuggingFace, committed at `tests/qwen2.5-tokenizer/`) — see
 `tests/test_tokenizer.js`.
 
-**Two real issues found while wiring this up, not just "not yet tested":**
+**`Tokenizer::load()`'s doc comment in dnn.hpp is misleading — reading OpenCV's actual
+`modules/dnn/src/tokenizer/tokenizer.cpp` (this machine happens to have the OpenCV source tree
+checked out) was necessary to get this working at all:**
 
-- `Net::enableKVCache()`/`resetKVCache()` **segfaulted** (not a catchable `cv::Exception`) when
-  called on a `Net` with no layers loaded — confirmed on a plain `new dnn.Net()`. The crash is
-  inside OpenCV's own implementation, but `Net::empty()` (already bound as `Net.prototype.empty`)
-  reliably reports whether a net actually has layers, so `js_net_method()` now checks it before
-  forwarding either call and throws a plain catchable `TypeError` instead — fixed, not just
-  documented. `disableKVCache()` alone was already safe on an empty net and needed no guard. See
-  `tests/test_tokenizer.js`.
-- `Tokenizer::load()`'s own doc comment says it expects a directory with `config.json` (field
-  `model_type: "gpt2"` or `"gpt4"`) and `tokenizer.json`. Tried this against Qwen2.5's actual
-  `tokenizer.json` (downloaded from HuggingFace, real byte-level BPE vocab+merges, committed at
-  `tests/qwen2.5-tokenizer/`) with a `{"model_type": "gpt2"}` config.json, and it throws
-  `Assertion failed: buf in function 'open'` out of `opencv2/core/persistence.cpp` regardless of
-  config.json formatting (compact JSON, pretty JSON, a `%YAML:1.0` marker all fail identically).
-  So either the documented format isn't actually what `cv::FileStorage` expects here, or Qwen2.5's
-  tokenizer.json isn't in the exact dialect this loader wants — real Qwen2.5 tokenization is not
-  yet verified end-to-end through this binding. Logged as
-  `opencv-tokenizer-load-config-json-format-undocumented` in `BUGS`. The exception itself is a
-  normal, catchable `cv::Exception` — no crash, just no successful load yet.
+- The doc comment describes the argument as a directory ("`Tokenizer::load("/path/to/model/")`").
+  It's actually **the path to `config.json` itself** — `Tokenizer::load()` opens that path
+  directly as a `cv::FileStorage`, then derives the directory `tokenizer.json` lives in by
+  stripping the filename back off whatever path was given. Passing a directory instead (as the
+  doc comment suggests, and as this project's binding originally assumed) makes `cv::FileStorage`
+  try to open the directory itself as a file, which trips `CV_Assert(buf)` deep in
+  `opencv2/core/persistence.cpp` with an unhelpful `Assertion failed: buf in function 'open'` —
+  still a normal catchable `cv::Exception`, not a crash, just a confusing one to debug blind.
+- The doc comment says `model_type` must be `"gpt2"` or `"gpt4"`. The actual implementation also
+  accepts (and, for a real Qwen tokenizer.json, *requires*) `"qwen2"`/`"qwen2.5"` — using `"gpt2"`
+  against Qwen2.5's vocabulary silently selects the wrong regex-split pattern rather than failing,
+  which would have produced mis-tokenized output instead of an error.
+
+Both are now correct in `tests/qwen2.5-tokenizer/config.json` (`{"model_type": "qwen2.5"}`) and in
+`tests/test_tokenizer.js` (`dnn.Tokenizer.load('qwen2.5-tokenizer/config.json')`), and real
+Qwen2.5 tokenization round-trips correctly end-to-end. Not a qjs-opencv bug and not logged to
+`BUGS` — the exception was always a normal, catchable `cv::Exception`, and the underlying cause
+was this project calling the API the way its own (outdated) doc comment describes rather than the
+way it actually works.
+
+Separately, a real bug *was* found and fixed while testing this: `Net::enableKVCache()`/
+`resetKVCache()` **segfaulted** (not a catchable `cv::Exception`) when called on a `Net` with no
+layers loaded — confirmed on a plain `new dnn.Net()`. The crash is inside OpenCV's own
+implementation, but `Net::empty()` (already bound as `Net.prototype.empty`) reliably reports
+whether a net actually has layers, so `js_net_method()` now checks it before forwarding either
+call and throws a plain catchable `TypeError` instead. `disableKVCache()` alone was already safe
+on an empty net and needed no guard. See `tests/test_tokenizer.js`.
 
 ## Wrapping the classic DNN convenience Model classes
 
