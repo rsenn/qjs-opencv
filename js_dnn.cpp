@@ -1,5 +1,7 @@
 #include "js_cv.hpp"
 #include "js_umat.hpp"
+#include "js_rect.hpp"
+#include "js_rotated_rect.hpp"
 #include "include/jsbindings.hpp"
 #include <quickjs.h>
 
@@ -8,6 +10,16 @@
 using JSNetData = cv::dnn::Net;
 using JSImage2BlobParamsData = cv::dnn::Image2BlobParams;
 using JSLayerData = cv::Ptr<cv::dnn::Layer>;
+
+/* No generic js_value_from(cv::RotatedRect) exists elsewhere (js_rotated_rect.hpp
+ * only provides js_rotated_rect_new) - added here so std::vector<cv::RotatedRect>
+ * (TextDetectionModel_EAST/_DB::detectTextRectangles results) can go through the
+ * generic std::vector<T> marshaling in jsbindings.hpp like every other vector type
+ * in this file. */
+static inline JSValue
+js_value_from(JSContext* ctx, const cv::RotatedRect& r) {
+  return js_rotated_rect_new(ctx, r);
+}
 
 /* OpenCV 5 moved DataLayout (and its DNN_LAYOUT_* enumerators) from
  * cv::dnn::DataLayout to cv::DataLayout - dnn.hpp now just reuses the core
@@ -164,6 +176,11 @@ enum {
   DNN_NET_QUANTIZE,
   DNN_NET_REGISTEROUTPUT,
   DNN_NET_SETHALIDESCHEDULER,
+#ifdef HAVE_OPENCV_DNN_TOKENIZER
+  DNN_NET_ENABLEKVCACHE,
+  DNN_NET_DISABLEKVCACHE,
+  DNN_NET_RESETKVCACHE,
+#endif
 };
 
 static JSValue
@@ -508,6 +525,23 @@ js_net_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
         break;
       }
 #endif
+
+#ifdef HAVE_OPENCV_DNN_TOKENIZER
+      case DNN_NET_ENABLEKVCACHE: {
+        dn->enableKVCache();
+        break;
+      }
+
+      case DNN_NET_DISABLEKVCACHE: {
+        dn->disableKVCache();
+        break;
+      }
+
+      case DNN_NET_RESETKVCACHE: {
+        dn->resetKVCache();
+        break;
+      }
+#endif
     }
   } catch(const cv::Exception& e) { ret = js_cv_throw(ctx, e); }
 
@@ -562,6 +596,11 @@ const JSCFunctionListEntry js_net_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("registerOuput", 3, js_net_method, DNN_NET_REGISTEROUTPUT),
 #ifndef HAVE_OPENCV_DNN_NEW_ENGINE
     JS_CFUNC_MAGIC_DEF("setHalideScheduler", 1, js_net_method, DNN_NET_SETHALIDESCHEDULER),
+#endif
+#ifdef HAVE_OPENCV_DNN_TOKENIZER
+    JS_CFUNC_MAGIC_DEF("enableKVCache", 0, js_net_method, DNN_NET_ENABLEKVCACHE),
+    JS_CFUNC_MAGIC_DEF("disableKVCache", 0, js_net_method, DNN_NET_DISABLEKVCACHE),
+    JS_CFUNC_MAGIC_DEF("resetKVCache", 0, js_net_method, DNN_NET_RESETKVCACHE),
 #endif
     JS_CFUNC_MAGIC_DEF("setInput", 0, js_net_method, DNN_NET_SETINPUT),
     JS_CFUNC_MAGIC_DEF("setInputsNames", 1, js_net_method, DNN_NET_SETINPUTSNAMES),
@@ -1053,6 +1092,951 @@ const JSCFunctionListEntry js_layer_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("outputNameToIndex", 1, js_layer_method, LAYER_OUTPUTNAMETOINDEX),
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Layer", JS_PROP_CONFIGURABLE),
 };
+
+#ifdef HAVE_OPENCV_DNN_TOKENIZER
+/* cv::dnn::Tokenizer (OpenCV 5.0+) - BPE tokenizer for LLM inference (e.g. Qwen2.5
+ * exported to ONNX). See migration-opencv5.md, "Wrapping LLM inference (Qwen2.5)".
+ * Real entry point is the static factory Tokenizer.load(modelDir), not `new
+ * Tokenizer()` - mirrors the C++ API, where the default ctor exists but isn't
+ * useful standalone. `modelDir` must end with a path separator: OpenCV
+ * concatenates "config.json"/"tokenizer.json" directly onto it. */
+using JSTokenizerData = cv::dnn::Tokenizer;
+
+extern "C" {
+thread_local JSValue tokenizer_proto, tokenizer_class;
+thread_local JSClassID js_tokenizer_class_id;
+}
+
+static JSValue
+js_tokenizer_wrap(JSContext* ctx, JSValueConst proto, JSTokenizerData* tok) {
+  JSValue ret = JS_NewObjectProtoClass(ctx, proto, js_tokenizer_class_id);
+  JS_SetOpaque(ret, tok);
+  return ret;
+}
+
+static JSValue
+js_tokenizer_new(JSContext* ctx, JSValueConst proto, const JSTokenizerData& other) {
+  JSTokenizerData* tok = js_allocate<JSTokenizerData>(ctx);
+
+  new(tok) JSTokenizerData(other);
+
+  return js_tokenizer_wrap(ctx, proto, tok);
+}
+
+static JSValue
+js_tokenizer_new(JSContext* ctx, const JSTokenizerData& other) {
+  return js_tokenizer_new(ctx, tokenizer_proto, other);
+}
+
+static JSValue
+js_tokenizer_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
+  JSTokenizerData* tok;
+  JSValue obj = JS_UNDEFINED, proto;
+
+  if(!(tok = js_allocate<JSTokenizerData>(ctx)))
+    return JS_EXCEPTION;
+
+  new(tok) JSTokenizerData();
+
+  proto = JS_GetPropertyStr(ctx, new_target, "prototype");
+  if(JS_IsException(proto))
+    goto fail;
+
+  obj = JS_NewObjectProtoClass(ctx, proto, js_tokenizer_class_id);
+  JS_FreeValue(ctx, proto);
+
+  if(JS_IsException(obj))
+    goto fail;
+
+  JS_SetOpaque(obj, tok);
+
+  return obj;
+
+fail:
+  js_deallocate(ctx, tok);
+  JS_FreeValue(ctx, obj);
+  return JS_EXCEPTION;
+}
+
+static JSTokenizerData*
+js_tokenizer_data(JSValueConst val) {
+  return static_cast<JSTokenizerData*>(JS_GetOpaque(val, js_tokenizer_class_id));
+}
+
+static JSTokenizerData*
+js_tokenizer_data2(JSContext* ctx, JSValueConst val) {
+  return static_cast<JSTokenizerData*>(JS_GetOpaque2(ctx, val, js_tokenizer_class_id));
+}
+
+enum {
+  TOKENIZER_ENCODE,
+  TOKENIZER_DECODE,
+};
+
+static JSValue
+js_tokenizer_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  JSTokenizerData* tok;
+  JSValue ret = JS_UNDEFINED;
+
+  if(!(tok = js_tokenizer_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  try {
+    switch(magic) {
+      case TOKENIZER_ENCODE: {
+        std::string text;
+        js_value_to(ctx, argv[0], text);
+
+        ret = js_value_from(ctx, tok->encode(text));
+        break;
+      }
+
+      case TOKENIZER_DECODE: {
+        std::vector<int> tokens;
+        js_value_to(ctx, argv[0], tokens);
+
+        ret = js_value_from(ctx, tok->decode(tokens));
+        break;
+      }
+    }
+  } catch(const cv::Exception& e) { ret = js_cv_throw(ctx, e); }
+
+  return ret;
+}
+
+enum {
+  TOKENIZER_STATIC_LOAD,
+};
+
+static JSValue
+js_tokenizer_static(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  JSValue ret = JS_UNDEFINED;
+
+  try {
+    switch(magic) {
+      case TOKENIZER_STATIC_LOAD: {
+        std::string modelConfig;
+        js_value_to(ctx, argv[0], modelConfig);
+
+        ret = js_tokenizer_new(ctx, cv::dnn::Tokenizer::load(modelConfig));
+        break;
+      }
+    }
+  } catch(const cv::Exception& e) { ret = js_cv_throw(ctx, e); }
+
+  return ret;
+}
+
+static void
+js_tokenizer_finalizer(JSRuntime* rt, JSValue val) {
+  JSTokenizerData* tok;
+
+  if((tok = js_tokenizer_data(val))) {
+    tok->~JSTokenizerData();
+
+    js_deallocate(rt, tok);
+  }
+}
+
+JSClassDef js_tokenizer_class = {
+    .class_name = "Tokenizer",
+    .finalizer = js_tokenizer_finalizer,
+};
+
+const JSCFunctionListEntry js_tokenizer_proto_funcs[] = {
+    JS_CFUNC_MAGIC_DEF("encode", 1, js_tokenizer_method, TOKENIZER_ENCODE),
+    JS_CFUNC_MAGIC_DEF("decode", 1, js_tokenizer_method, TOKENIZER_DECODE),
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Tokenizer", JS_PROP_CONFIGURABLE),
+};
+
+const JSCFunctionListEntry js_tokenizer_static_funcs[] = {
+    JS_CFUNC_MAGIC_DEF("load", 1, js_tokenizer_static, TOKENIZER_STATIC_LOAD),
+};
+#endif /* HAVE_OPENCV_DNN_TOKENIZER */
+
+/* cv::dnn::Model and its convenience subclasses (Classification/Detection/
+ * Segmentation/Keypoints/TextRecognition/TextDetection). Identical API surface
+ * on OpenCV 4.x and 5.x (unlike the rest of this file, nothing here needs a
+ * capability guard). All eight classes share the same construction shape
+ * (fromModelFile(model, config="") or fromNet(existingNet)) and the same base
+ * proxy methods inherited from Model (setInputSize/Mean/Scale/Crop/SwapRB,
+ * setOutputNames, setInputParams, predict, setPreferableBackend/Target,
+ * enableWinograd) - factored out once here instead of seven times. */
+
+enum {
+  MODEL_SET_INPUT_SIZE,
+  MODEL_SET_INPUT_MEAN,
+  MODEL_SET_INPUT_SCALE,
+  MODEL_SET_INPUT_CROP,
+  MODEL_SET_INPUT_SWAP_RB,
+  MODEL_SET_OUTPUT_NAMES,
+  MODEL_SET_INPUT_PARAMS,
+  MODEL_PREDICT,
+  MODEL_SET_PREFERABLE_BACKEND,
+  MODEL_SET_PREFERABLE_TARGET,
+  MODEL_ENABLE_WINOGRAD,
+  MODEL_METHOD_COUNT,
+};
+
+template<class ModelT>
+static bool
+js_model_base_method(JSContext* ctx, ModelT& model, int argc, JSValueConst argv[], int magic, JSValue& ret) {
+  try {
+    switch(magic) {
+      case MODEL_SET_INPUT_SIZE: {
+        if(argc >= 2 && JS_IsNumber(argv[0]) && JS_IsNumber(argv[1])) {
+          int32_t w, h;
+          js_value_to(ctx, argv[0], w);
+          js_value_to(ctx, argv[1], h);
+          model.setInputSize(cv::Size(w, h));
+        } else {
+          cv::Size sz;
+          js_value_to(ctx, argv[0], sz);
+          model.setInputSize(sz);
+        }
+        break;
+      }
+
+      case MODEL_SET_INPUT_MEAN: {
+        cv::Scalar mean;
+        js_scalar_read(ctx, argv[0], mean);
+        model.setInputMean(mean);
+        break;
+      }
+
+      case MODEL_SET_INPUT_SCALE: {
+        cv::Scalar scale;
+        js_scalar_read(ctx, argv[0], scale);
+        model.setInputScale(scale);
+        break;
+      }
+
+      case MODEL_SET_INPUT_CROP: {
+        bool crop = false;
+        js_value_to(ctx, argv[0], crop);
+        model.setInputCrop(crop);
+        break;
+      }
+
+      case MODEL_SET_INPUT_SWAP_RB: {
+        bool swapRB = false;
+        js_value_to(ctx, argv[0], swapRB);
+        model.setInputSwapRB(swapRB);
+        break;
+      }
+
+      case MODEL_SET_OUTPUT_NAMES: {
+        std::vector<cv::String> names;
+        js_value_to(ctx, argv[0], names);
+        model.setOutputNames(names);
+        break;
+      }
+
+      case MODEL_SET_INPUT_PARAMS: {
+        double scale = 1.0;
+        cv::Size size;
+        cv::Scalar mean;
+        bool swapRB = false, crop = false;
+
+        if(argc > 0)
+          js_value_to(ctx, argv[0], scale);
+        if(argc > 1)
+          js_value_to(ctx, argv[1], size);
+        if(argc > 2)
+          js_scalar_read(ctx, argv[2], mean);
+        if(argc > 3)
+          js_value_to(ctx, argv[3], swapRB);
+        if(argc > 4)
+          js_value_to(ctx, argv[4], crop);
+
+        model.setInputParams(scale, size, mean, swapRB, crop);
+        break;
+      }
+
+      case MODEL_PREDICT: {
+        JSInputArray frame = js_input_array(ctx, argv[0]);
+        std::vector<cv::Mat> outs;
+
+        model.predict(frame, outs);
+
+        js_array_clear(ctx, argv[1]);
+        js_array_copy(ctx, argv[1], outs);
+        break;
+      }
+
+      case MODEL_SET_PREFERABLE_BACKEND: {
+        int32_t backendId = 0;
+        js_value_to(ctx, argv[0], backendId);
+        model.setPreferableBackend(cv::dnn::Backend(backendId));
+        break;
+      }
+
+      case MODEL_SET_PREFERABLE_TARGET: {
+        int32_t targetId = 0;
+        js_value_to(ctx, argv[0], targetId);
+        model.setPreferableTarget(cv::dnn::Target(targetId));
+        break;
+      }
+
+      case MODEL_ENABLE_WINOGRAD: {
+        bool useWinograd = true;
+        js_value_to(ctx, argv[0], useWinograd);
+        model.enableWinograd(useWinograd);
+        break;
+      }
+
+      default: return false;
+    }
+  } catch(const cv::Exception& e) {
+    ret = js_cv_throw(ctx, e);
+    return true;
+  }
+
+  return true;
+}
+
+#define DNN_MODEL_BASE_PROTO_FUNCS(method_fn)                                                        \
+  JS_CFUNC_MAGIC_DEF("setInputSize", 1, method_fn, MODEL_SET_INPUT_SIZE),                             \
+      JS_CFUNC_MAGIC_DEF("setInputMean", 1, method_fn, MODEL_SET_INPUT_MEAN),                         \
+      JS_CFUNC_MAGIC_DEF("setInputScale", 1, method_fn, MODEL_SET_INPUT_SCALE),                       \
+      JS_CFUNC_MAGIC_DEF("setInputCrop", 1, method_fn, MODEL_SET_INPUT_CROP),                         \
+      JS_CFUNC_MAGIC_DEF("setInputSwapRB", 1, method_fn, MODEL_SET_INPUT_SWAP_RB),                    \
+      JS_CFUNC_MAGIC_DEF("setOutputNames", 1, method_fn, MODEL_SET_OUTPUT_NAMES),                     \
+      JS_CFUNC_MAGIC_DEF("setInputParams", 0, method_fn, MODEL_SET_INPUT_PARAMS),                     \
+      JS_CFUNC_MAGIC_DEF("predict", 2, method_fn, MODEL_PREDICT),                                     \
+      JS_CFUNC_MAGIC_DEF("setPreferableBackend", 1, method_fn, MODEL_SET_PREFERABLE_BACKEND),         \
+      JS_CFUNC_MAGIC_DEF("setPreferableTarget", 1, method_fn, MODEL_SET_PREFERABLE_TARGET),           \
+      JS_CFUNC_MAGIC_DEF("enableWinograd", 1, method_fn, MODEL_ENABLE_WINOGRAD)
+
+/* Mechanical skeleton (class id/proto/ctor/data accessors/finalizer) shared by
+ * all eight Model-family classes - construction shape is identical:
+ * new X(net) from an existing dnn.Net, or new X(model[, config]) from files. */
+#define DEFINE_DNN_MODEL_SKELETON(tag, CppType, JsName)                                                    \
+  using JS##tag##Data = CppType;                                                                            \
+  extern "C" {                                                                                               \
+  thread_local JSValue tag##_proto, tag##_class;                                                             \
+  thread_local JSClassID js_##tag##_class_id;                                                                \
+  }                                                                                                            \
+  static JSValue js_##tag##_wrap(JSContext* ctx, JSValueConst proto, JS##tag##Data* data) {                  \
+    JSValue ret = JS_NewObjectProtoClass(ctx, proto, js_##tag##_class_id);                                    \
+    JS_SetOpaque(ret, data);                                                                                   \
+    return ret;                                                                                                \
+  }                                                                                                             \
+  static JS##tag##Data* js_##tag##_data(JSValueConst val) {                                                    \
+    return static_cast<JS##tag##Data*>(JS_GetOpaque(val, js_##tag##_class_id));                                \
+  }                                                                                                              \
+  static JS##tag##Data* js_##tag##_data2(JSContext* ctx, JSValueConst val) {                                    \
+    return static_cast<JS##tag##Data*>(JS_GetOpaque2(ctx, val, js_##tag##_class_id));                           \
+  }                                                                                                                \
+  static JSValue js_##tag##_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) { \
+    JS##tag##Data* data;                                                                                           \
+    JSValue obj = JS_UNDEFINED, proto;                                                                             \
+    JSNetData* net;                                                                                                 \
+    if(!(data = js_allocate<JS##tag##Data>(ctx)))                                                                   \
+      return JS_EXCEPTION;                                                                                           \
+    try {                                                                                                             \
+      if(argc > 0 && (net = js_net_data(argv[0]))) {                                                                  \
+        new(data) JS##tag##Data(*net);                                                                                 \
+      } else {                                                                                                          \
+        std::string model, config;                                                                                      \
+        if(argc > 0)                                                                                                      \
+          js_value_to(ctx, argv[0], model);                                                                                \
+        if(argc > 1)                                                                                                        \
+          js_value_to(ctx, argv[1], config);                                                                                 \
+        new(data) JS##tag##Data(model, config);                                                                               \
+      }                                                                                                                        \
+    } catch(const cv::Exception& e) {                                                                                           \
+      js_deallocate(ctx, data);                                                                                                  \
+      return js_cv_throw(ctx, e);                                                                                                 \
+    }                                                                                                                              \
+    proto = JS_GetPropertyStr(ctx, new_target, "prototype");                                                                       \
+    if(JS_IsException(proto))                                                                                                       \
+      goto fail;                                                                                                                     \
+    obj = JS_NewObjectProtoClass(ctx, proto, js_##tag##_class_id);                                                                    \
+    JS_FreeValue(ctx, proto);                                                                                                          \
+    if(JS_IsException(obj))                                                                                                             \
+      goto fail;                                                                                                                          \
+    JS_SetOpaque(obj, data);                                                                                                               \
+    return obj;                                                                                                                             \
+  fail:                                                                                                                                      \
+    data->~JS##tag##Data();                                                                                                                   \
+    js_deallocate(ctx, data);                                                                                                                  \
+    JS_FreeValue(ctx, obj);                                                                                                                     \
+    return JS_EXCEPTION;                                                                                                                         \
+  }                                                                                                                                                \
+  static void js_##tag##_finalizer(JSRuntime* rt, JSValue val) {                                                                                   \
+    JS##tag##Data* data;                                                                                                                             \
+    if((data = js_##tag##_data(val))) {                                                                                                               \
+      data->~JS##tag##Data();                                                                                                                          \
+      js_deallocate(rt, data);                                                                                                                          \
+    }                                                                                                                                                     \
+  }                                                                                                                                                         \
+  JSClassDef js_##tag##_class = {                                                                                                                           \
+      .class_name = JsName,                                                                                                                                  \
+      .finalizer = js_##tag##_finalizer,                                                                                                                       \
+  }
+
+/* Model - the base class itself, no methods beyond the shared base set. */
+DEFINE_DNN_MODEL_SKELETON(model, cv::dnn::Model, "Model");
+
+static JSValue
+js_model_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  JSmodelData* data;
+  JSValue ret = JS_UNDEFINED;
+
+  if(!(data = js_model_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  js_model_base_method(ctx, *data, argc, argv, magic, ret);
+  return ret;
+}
+
+const JSCFunctionListEntry js_model_proto_funcs[] = {
+    DNN_MODEL_BASE_PROTO_FUNCS(js_model_method),
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Model", JS_PROP_CONFIGURABLE),
+};
+
+/* ClassificationModel */
+DEFINE_DNN_MODEL_SKELETON(classification_model, cv::dnn::ClassificationModel, "ClassificationModel");
+
+enum {
+  CLASSIFICATION_MODEL_CLASSIFY = MODEL_METHOD_COUNT,
+  CLASSIFICATION_MODEL_SET_ENABLE_SOFTMAX,
+  CLASSIFICATION_MODEL_GET_ENABLE_SOFTMAX,
+};
+
+static JSValue
+js_classification_model_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  JSclassification_modelData* data;
+  JSValue ret = JS_UNDEFINED;
+
+  if(!(data = js_classification_model_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  if(js_model_base_method(ctx, *data, argc, argv, magic, ret))
+    return ret;
+
+  try {
+    switch(magic) {
+      case CLASSIFICATION_MODEL_CLASSIFY: {
+        JSInputArray frame = js_input_array(ctx, argv[0]);
+        int classId = -1;
+        float conf = 0;
+
+        data->classify(frame, classId, conf);
+
+        JSValue obj = JS_NewObject(ctx);
+        JS_SetPropertyStr(ctx, obj, "classId", js_value_from(ctx, classId));
+        JS_SetPropertyStr(ctx, obj, "confidence", js_value_from(ctx, conf));
+        ret = obj;
+        break;
+      }
+
+      case CLASSIFICATION_MODEL_SET_ENABLE_SOFTMAX: {
+        bool enable = true;
+        js_value_to(ctx, argv[0], enable);
+        data->setEnableSoftmaxPostProcessing(enable);
+        break;
+      }
+
+      case CLASSIFICATION_MODEL_GET_ENABLE_SOFTMAX: {
+        ret = js_value_from(ctx, data->getEnableSoftmaxPostProcessing());
+        break;
+      }
+    }
+  } catch(const cv::Exception& e) { ret = js_cv_throw(ctx, e); }
+
+  return ret;
+}
+
+const JSCFunctionListEntry js_classification_model_proto_funcs[] = {
+    DNN_MODEL_BASE_PROTO_FUNCS(js_classification_model_method),
+    JS_CFUNC_MAGIC_DEF("classify", 1, js_classification_model_method, CLASSIFICATION_MODEL_CLASSIFY),
+    JS_CFUNC_MAGIC_DEF("setEnableSoftmaxPostProcessing", 1, js_classification_model_method, CLASSIFICATION_MODEL_SET_ENABLE_SOFTMAX),
+    JS_CFUNC_MAGIC_DEF("getEnableSoftmaxPostProcessing", 0, js_classification_model_method, CLASSIFICATION_MODEL_GET_ENABLE_SOFTMAX),
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "ClassificationModel", JS_PROP_CONFIGURABLE),
+};
+
+/* DetectionModel */
+DEFINE_DNN_MODEL_SKELETON(detection_model, cv::dnn::DetectionModel, "DetectionModel");
+
+enum {
+  DETECTION_MODEL_DETECT = MODEL_METHOD_COUNT,
+  DETECTION_MODEL_SET_NMS_ACROSS_CLASSES,
+  DETECTION_MODEL_GET_NMS_ACROSS_CLASSES,
+};
+
+static JSValue
+js_detection_model_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  JSdetection_modelData* data;
+  JSValue ret = JS_UNDEFINED;
+
+  if(!(data = js_detection_model_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  if(js_model_base_method(ctx, *data, argc, argv, magic, ret))
+    return ret;
+
+  try {
+    switch(magic) {
+      case DETECTION_MODEL_DETECT: {
+        JSInputArray frame = js_input_array(ctx, argv[0]);
+        std::vector<int> classIds;
+        std::vector<float> confidences;
+        std::vector<cv::Rect> boxes;
+        float confThreshold = 0.5f, nmsThreshold = 0.0f;
+
+        if(argc > 4)
+          js_value_to(ctx, argv[4], confThreshold);
+        if(argc > 5)
+          js_value_to(ctx, argv[5], nmsThreshold);
+
+        data->detect(frame, classIds, confidences, boxes, confThreshold, nmsThreshold);
+
+        js_array_clear(ctx, argv[1]);
+        js_array_copy(ctx, argv[1], classIds);
+        js_array_clear(ctx, argv[2]);
+        js_array_copy(ctx, argv[2], confidences);
+        js_array_clear(ctx, argv[3]);
+        js_array_copy(ctx, argv[3], boxes);
+        break;
+      }
+
+      case DETECTION_MODEL_SET_NMS_ACROSS_CLASSES: {
+        bool value = false;
+        js_value_to(ctx, argv[0], value);
+        data->setNmsAcrossClasses(value);
+        break;
+      }
+
+      case DETECTION_MODEL_GET_NMS_ACROSS_CLASSES: {
+        ret = js_value_from(ctx, data->getNmsAcrossClasses());
+        break;
+      }
+    }
+  } catch(const cv::Exception& e) { ret = js_cv_throw(ctx, e); }
+
+  return ret;
+}
+
+const JSCFunctionListEntry js_detection_model_proto_funcs[] = {
+    DNN_MODEL_BASE_PROTO_FUNCS(js_detection_model_method),
+    JS_CFUNC_MAGIC_DEF("detect", 4, js_detection_model_method, DETECTION_MODEL_DETECT),
+    JS_CFUNC_MAGIC_DEF("setNmsAcrossClasses", 1, js_detection_model_method, DETECTION_MODEL_SET_NMS_ACROSS_CLASSES),
+    JS_CFUNC_MAGIC_DEF("getNmsAcrossClasses", 0, js_detection_model_method, DETECTION_MODEL_GET_NMS_ACROSS_CLASSES),
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "DetectionModel", JS_PROP_CONFIGURABLE),
+};
+
+/* SegmentationModel */
+DEFINE_DNN_MODEL_SKELETON(segmentation_model, cv::dnn::SegmentationModel, "SegmentationModel");
+
+enum {
+  SEGMENTATION_MODEL_SEGMENT = MODEL_METHOD_COUNT,
+};
+
+static JSValue
+js_segmentation_model_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  JSsegmentation_modelData* data;
+  JSValue ret = JS_UNDEFINED;
+
+  if(!(data = js_segmentation_model_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  if(js_model_base_method(ctx, *data, argc, argv, magic, ret))
+    return ret;
+
+  try {
+    switch(magic) {
+      case SEGMENTATION_MODEL_SEGMENT: {
+        JSInputArray frame = js_input_array(ctx, argv[0]);
+        JSOutputArray mask = js_cv_outputarray(ctx, argv[1]);
+
+        data->segment(frame, mask);
+        break;
+      }
+    }
+  } catch(const cv::Exception& e) { ret = js_cv_throw(ctx, e); }
+
+  return ret;
+}
+
+const JSCFunctionListEntry js_segmentation_model_proto_funcs[] = {
+    DNN_MODEL_BASE_PROTO_FUNCS(js_segmentation_model_method),
+    JS_CFUNC_MAGIC_DEF("segment", 2, js_segmentation_model_method, SEGMENTATION_MODEL_SEGMENT),
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "SegmentationModel", JS_PROP_CONFIGURABLE),
+};
+
+/* KeypointsModel */
+DEFINE_DNN_MODEL_SKELETON(keypoints_model, cv::dnn::KeypointsModel, "KeypointsModel");
+
+enum {
+  KEYPOINTS_MODEL_ESTIMATE = MODEL_METHOD_COUNT,
+};
+
+static JSValue
+js_keypoints_model_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  JSkeypoints_modelData* data;
+  JSValue ret = JS_UNDEFINED;
+
+  if(!(data = js_keypoints_model_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  if(js_model_base_method(ctx, *data, argc, argv, magic, ret))
+    return ret;
+
+  try {
+    switch(magic) {
+      case KEYPOINTS_MODEL_ESTIMATE: {
+        JSInputArray frame = js_input_array(ctx, argv[0]);
+        float thresh = 0.5f;
+
+        if(argc > 1)
+          js_value_to(ctx, argv[1], thresh);
+
+        ret = js_value_from(ctx, data->estimate(frame, thresh));
+        break;
+      }
+    }
+  } catch(const cv::Exception& e) { ret = js_cv_throw(ctx, e); }
+
+  return ret;
+}
+
+const JSCFunctionListEntry js_keypoints_model_proto_funcs[] = {
+    DNN_MODEL_BASE_PROTO_FUNCS(js_keypoints_model_method),
+    JS_CFUNC_MAGIC_DEF("estimate", 1, js_keypoints_model_method, KEYPOINTS_MODEL_ESTIMATE),
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "KeypointsModel", JS_PROP_CONFIGURABLE),
+};
+
+/* TextRecognitionModel */
+DEFINE_DNN_MODEL_SKELETON(text_recognition_model, cv::dnn::TextRecognitionModel, "TextRecognitionModel");
+
+enum {
+  TEXT_RECOGNITION_MODEL_RECOGNIZE = MODEL_METHOD_COUNT,
+  TEXT_RECOGNITION_MODEL_SET_DECODE_TYPE,
+  TEXT_RECOGNITION_MODEL_GET_DECODE_TYPE,
+  TEXT_RECOGNITION_MODEL_SET_DECODE_OPTS_CTC,
+  TEXT_RECOGNITION_MODEL_SET_VOCABULARY,
+  TEXT_RECOGNITION_MODEL_GET_VOCABULARY,
+};
+
+static JSValue
+js_text_recognition_model_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  JStext_recognition_modelData* data;
+  JSValue ret = JS_UNDEFINED;
+
+  if(!(data = js_text_recognition_model_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  if(js_model_base_method(ctx, *data, argc, argv, magic, ret))
+    return ret;
+
+  try {
+    switch(magic) {
+      case TEXT_RECOGNITION_MODEL_RECOGNIZE: {
+        JSInputArray frame = js_input_array(ctx, argv[0]);
+
+        if(argc > 1) {
+          std::vector<cv::Rect> roiRects;
+          std::vector<std::string> results;
+
+          js_value_to(ctx, argv[1], roiRects);
+
+          data->recognize(frame, roiRects, results);
+
+          js_array_clear(ctx, argv[2]);
+          js_array_copy(ctx, argv[2], results);
+        } else {
+          ret = js_value_from(ctx, data->recognize(frame));
+        }
+
+        break;
+      }
+
+      case TEXT_RECOGNITION_MODEL_SET_DECODE_TYPE: {
+        std::string decodeType;
+        js_value_to(ctx, argv[0], decodeType);
+        data->setDecodeType(decodeType);
+        break;
+      }
+
+      case TEXT_RECOGNITION_MODEL_GET_DECODE_TYPE: {
+        ret = js_value_from(ctx, data->getDecodeType());
+        break;
+      }
+
+      case TEXT_RECOGNITION_MODEL_SET_DECODE_OPTS_CTC: {
+        int32_t beamSize, vocPruneSize = 0;
+        js_value_to(ctx, argv[0], beamSize);
+        if(argc > 1)
+          js_value_to(ctx, argv[1], vocPruneSize);
+        data->setDecodeOptsCTCPrefixBeamSearch(beamSize, vocPruneSize);
+        break;
+      }
+
+      case TEXT_RECOGNITION_MODEL_SET_VOCABULARY: {
+        std::vector<std::string> vocabulary;
+        js_value_to(ctx, argv[0], vocabulary);
+        data->setVocabulary(vocabulary);
+        break;
+      }
+
+      case TEXT_RECOGNITION_MODEL_GET_VOCABULARY: {
+        ret = js_value_from(ctx, data->getVocabulary());
+        break;
+      }
+    }
+  } catch(const cv::Exception& e) { ret = js_cv_throw(ctx, e); }
+
+  return ret;
+}
+
+const JSCFunctionListEntry js_text_recognition_model_proto_funcs[] = {
+    DNN_MODEL_BASE_PROTO_FUNCS(js_text_recognition_model_method),
+    JS_CFUNC_MAGIC_DEF("recognize", 1, js_text_recognition_model_method, TEXT_RECOGNITION_MODEL_RECOGNIZE),
+    JS_CFUNC_MAGIC_DEF("setDecodeType", 1, js_text_recognition_model_method, TEXT_RECOGNITION_MODEL_SET_DECODE_TYPE),
+    JS_CFUNC_MAGIC_DEF("getDecodeType", 0, js_text_recognition_model_method, TEXT_RECOGNITION_MODEL_GET_DECODE_TYPE),
+    JS_CFUNC_MAGIC_DEF("setDecodeOptsCTCPrefixBeamSearch", 1, js_text_recognition_model_method, TEXT_RECOGNITION_MODEL_SET_DECODE_OPTS_CTC),
+    JS_CFUNC_MAGIC_DEF("setVocabulary", 1, js_text_recognition_model_method, TEXT_RECOGNITION_MODEL_SET_VOCABULARY),
+    JS_CFUNC_MAGIC_DEF("getVocabulary", 0, js_text_recognition_model_method, TEXT_RECOGNITION_MODEL_GET_VOCABULARY),
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "TextRecognitionModel", JS_PROP_CONFIGURABLE),
+};
+
+/* TextDetectionModel_EAST / TextDetectionModel_DB share detect()/
+ * detectTextRectangles() from their common (unbound - protected ctor, not
+ * directly constructible) TextDetectionModel base. */
+enum {
+  TEXT_DETECTION_MODEL_DETECT = MODEL_METHOD_COUNT,
+  TEXT_DETECTION_MODEL_DETECTTEXTRECTANGLES,
+  TEXT_DETECTION_MODEL_METHOD_COUNT,
+};
+
+template<class ModelT>
+static bool
+js_text_detection_model_method(JSContext* ctx, ModelT& model, int argc, JSValueConst argv[], int magic, JSValue& ret) {
+  try {
+    switch(magic) {
+      case TEXT_DETECTION_MODEL_DETECT: {
+        JSInputArray frame = js_input_array(ctx, argv[0]);
+        std::vector<std::vector<cv::Point>> detections;
+
+        if(argc > 2) {
+          std::vector<float> confidences;
+          model.detect(frame, detections, confidences);
+          js_array_clear(ctx, argv[2]);
+          js_array_copy(ctx, argv[2], confidences);
+        } else {
+          model.detect(frame, detections);
+        }
+
+        js_array_clear(ctx, argv[1]);
+        js_array_copy(ctx, argv[1], detections);
+        break;
+      }
+
+      case TEXT_DETECTION_MODEL_DETECTTEXTRECTANGLES: {
+        JSInputArray frame = js_input_array(ctx, argv[0]);
+        std::vector<cv::RotatedRect> detections;
+
+        if(argc > 2) {
+          std::vector<float> confidences;
+          model.detectTextRectangles(frame, detections, confidences);
+          js_array_clear(ctx, argv[2]);
+          js_array_copy(ctx, argv[2], confidences);
+        } else {
+          model.detectTextRectangles(frame, detections);
+        }
+
+        js_array_clear(ctx, argv[1]);
+        js_array_copy(ctx, argv[1], detections);
+        break;
+      }
+
+      default: return false;
+    }
+  } catch(const cv::Exception& e) {
+    ret = js_cv_throw(ctx, e);
+    return true;
+  }
+
+  return true;
+}
+
+#define DNN_TEXT_DETECTION_MODEL_PROTO_FUNCS(method_fn)                                       \
+  JS_CFUNC_MAGIC_DEF("detect", 2, method_fn, TEXT_DETECTION_MODEL_DETECT),                     \
+      JS_CFUNC_MAGIC_DEF("detectTextRectangles", 2, method_fn, TEXT_DETECTION_MODEL_DETECTTEXTRECTANGLES)
+
+/* TextDetectionModel_EAST */
+DEFINE_DNN_MODEL_SKELETON(text_detection_model_east, cv::dnn::TextDetectionModel_EAST, "TextDetectionModel_EAST");
+
+enum {
+  TEXT_DETECTION_MODEL_EAST_SET_CONFIDENCE_THRESHOLD = TEXT_DETECTION_MODEL_METHOD_COUNT,
+  TEXT_DETECTION_MODEL_EAST_GET_CONFIDENCE_THRESHOLD,
+  TEXT_DETECTION_MODEL_EAST_SET_NMS_THRESHOLD,
+  TEXT_DETECTION_MODEL_EAST_GET_NMS_THRESHOLD,
+};
+
+static JSValue
+js_text_detection_model_east_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  JStext_detection_model_eastData* data;
+  JSValue ret = JS_UNDEFINED;
+
+  if(!(data = js_text_detection_model_east_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  if(js_model_base_method(ctx, *data, argc, argv, magic, ret))
+    return ret;
+  if(js_text_detection_model_method(ctx, *data, argc, argv, magic, ret))
+    return ret;
+
+  try {
+    switch(magic) {
+      case TEXT_DETECTION_MODEL_EAST_SET_CONFIDENCE_THRESHOLD: {
+        float confThreshold;
+        js_value_to(ctx, argv[0], confThreshold);
+        data->setConfidenceThreshold(confThreshold);
+        break;
+      }
+
+      case TEXT_DETECTION_MODEL_EAST_GET_CONFIDENCE_THRESHOLD: {
+        ret = js_value_from(ctx, data->getConfidenceThreshold());
+        break;
+      }
+
+      case TEXT_DETECTION_MODEL_EAST_SET_NMS_THRESHOLD: {
+        float nmsThreshold;
+        js_value_to(ctx, argv[0], nmsThreshold);
+        data->setNMSThreshold(nmsThreshold);
+        break;
+      }
+
+      case TEXT_DETECTION_MODEL_EAST_GET_NMS_THRESHOLD: {
+        ret = js_value_from(ctx, data->getNMSThreshold());
+        break;
+      }
+    }
+  } catch(const cv::Exception& e) { ret = js_cv_throw(ctx, e); }
+
+  return ret;
+}
+
+const JSCFunctionListEntry js_text_detection_model_east_proto_funcs[] = {
+    DNN_MODEL_BASE_PROTO_FUNCS(js_text_detection_model_east_method),
+    DNN_TEXT_DETECTION_MODEL_PROTO_FUNCS(js_text_detection_model_east_method),
+    JS_CFUNC_MAGIC_DEF("setConfidenceThreshold", 1, js_text_detection_model_east_method, TEXT_DETECTION_MODEL_EAST_SET_CONFIDENCE_THRESHOLD),
+    JS_CFUNC_MAGIC_DEF("getConfidenceThreshold", 0, js_text_detection_model_east_method, TEXT_DETECTION_MODEL_EAST_GET_CONFIDENCE_THRESHOLD),
+    JS_CFUNC_MAGIC_DEF("setNMSThreshold", 1, js_text_detection_model_east_method, TEXT_DETECTION_MODEL_EAST_SET_NMS_THRESHOLD),
+    JS_CFUNC_MAGIC_DEF("getNMSThreshold", 0, js_text_detection_model_east_method, TEXT_DETECTION_MODEL_EAST_GET_NMS_THRESHOLD),
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "TextDetectionModel_EAST", JS_PROP_CONFIGURABLE),
+};
+
+/* TextDetectionModel_DB */
+DEFINE_DNN_MODEL_SKELETON(text_detection_model_db, cv::dnn::TextDetectionModel_DB, "TextDetectionModel_DB");
+
+enum {
+  TEXT_DETECTION_MODEL_DB_SET_BINARY_THRESHOLD = TEXT_DETECTION_MODEL_METHOD_COUNT,
+  TEXT_DETECTION_MODEL_DB_GET_BINARY_THRESHOLD,
+  TEXT_DETECTION_MODEL_DB_SET_POLYGON_THRESHOLD,
+  TEXT_DETECTION_MODEL_DB_GET_POLYGON_THRESHOLD,
+  TEXT_DETECTION_MODEL_DB_SET_UNCLIP_RATIO,
+  TEXT_DETECTION_MODEL_DB_GET_UNCLIP_RATIO,
+  TEXT_DETECTION_MODEL_DB_SET_MAX_CANDIDATES,
+  TEXT_DETECTION_MODEL_DB_GET_MAX_CANDIDATES,
+};
+
+static JSValue
+js_text_detection_model_db_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  JStext_detection_model_dbData* data;
+  JSValue ret = JS_UNDEFINED;
+
+  if(!(data = js_text_detection_model_db_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  if(js_model_base_method(ctx, *data, argc, argv, magic, ret))
+    return ret;
+  if(js_text_detection_model_method(ctx, *data, argc, argv, magic, ret))
+    return ret;
+
+  try {
+    switch(magic) {
+      case TEXT_DETECTION_MODEL_DB_SET_BINARY_THRESHOLD: {
+        float v;
+        js_value_to(ctx, argv[0], v);
+        data->setBinaryThreshold(v);
+        break;
+      }
+
+      case TEXT_DETECTION_MODEL_DB_GET_BINARY_THRESHOLD: {
+        ret = js_value_from(ctx, data->getBinaryThreshold());
+        break;
+      }
+
+      case TEXT_DETECTION_MODEL_DB_SET_POLYGON_THRESHOLD: {
+        float v;
+        js_value_to(ctx, argv[0], v);
+        data->setPolygonThreshold(v);
+        break;
+      }
+
+      case TEXT_DETECTION_MODEL_DB_GET_POLYGON_THRESHOLD: {
+        ret = js_value_from(ctx, data->getPolygonThreshold());
+        break;
+      }
+
+      case TEXT_DETECTION_MODEL_DB_SET_UNCLIP_RATIO: {
+        double v;
+        js_value_to(ctx, argv[0], v);
+        data->setUnclipRatio(v);
+        break;
+      }
+
+      case TEXT_DETECTION_MODEL_DB_GET_UNCLIP_RATIO: {
+        ret = js_value_from(ctx, data->getUnclipRatio());
+        break;
+      }
+
+      case TEXT_DETECTION_MODEL_DB_SET_MAX_CANDIDATES: {
+        int32_t v;
+        js_value_to(ctx, argv[0], v);
+        data->setMaxCandidates(v);
+        break;
+      }
+
+      case TEXT_DETECTION_MODEL_DB_GET_MAX_CANDIDATES: {
+        ret = js_value_from(ctx, data->getMaxCandidates());
+        break;
+      }
+    }
+  } catch(const cv::Exception& e) { ret = js_cv_throw(ctx, e); }
+
+  return ret;
+}
+
+const JSCFunctionListEntry js_text_detection_model_db_proto_funcs[] = {
+    DNN_MODEL_BASE_PROTO_FUNCS(js_text_detection_model_db_method),
+    DNN_TEXT_DETECTION_MODEL_PROTO_FUNCS(js_text_detection_model_db_method),
+    JS_CFUNC_MAGIC_DEF("setBinaryThreshold", 1, js_text_detection_model_db_method, TEXT_DETECTION_MODEL_DB_SET_BINARY_THRESHOLD),
+    JS_CFUNC_MAGIC_DEF("getBinaryThreshold", 0, js_text_detection_model_db_method, TEXT_DETECTION_MODEL_DB_GET_BINARY_THRESHOLD),
+    JS_CFUNC_MAGIC_DEF("setPolygonThreshold", 1, js_text_detection_model_db_method, TEXT_DETECTION_MODEL_DB_SET_POLYGON_THRESHOLD),
+    JS_CFUNC_MAGIC_DEF("getPolygonThreshold", 0, js_text_detection_model_db_method, TEXT_DETECTION_MODEL_DB_GET_POLYGON_THRESHOLD),
+    JS_CFUNC_MAGIC_DEF("setUnclipRatio", 1, js_text_detection_model_db_method, TEXT_DETECTION_MODEL_DB_SET_UNCLIP_RATIO),
+    JS_CFUNC_MAGIC_DEF("getUnclipRatio", 0, js_text_detection_model_db_method, TEXT_DETECTION_MODEL_DB_GET_UNCLIP_RATIO),
+    JS_CFUNC_MAGIC_DEF("setMaxCandidates", 1, js_text_detection_model_db_method, TEXT_DETECTION_MODEL_DB_SET_MAX_CANDIDATES),
+    JS_CFUNC_MAGIC_DEF("getMaxCandidates", 0, js_text_detection_model_db_method, TEXT_DETECTION_MODEL_DB_GET_MAX_CANDIDATES),
+    JS_PROP_STRING_DEF("[Symbol.toStringTag]", "TextDetectionModel_DB", JS_PROP_CONFIGURABLE),
+};
+
+#define REGISTER_DNN_MODEL_CLASS(tag, JsName)                                                             \
+  do {                                                                                                     \
+    JS_NewClassID(&js_##tag##_class_id);                                                                    \
+    JS_NewClass(JS_GetRuntime(ctx), js_##tag##_class_id, &js_##tag##_class);                                  \
+    tag##_proto = JS_NewObject(ctx);                                                                           \
+    JS_SetPropertyFunctionList(ctx, tag##_proto, js_##tag##_proto_funcs, countof(js_##tag##_proto_funcs));       \
+    JS_SetClassProto(ctx, js_##tag##_class_id, tag##_proto);                                                       \
+    tag##_class = JS_NewCFunction2(ctx, js_##tag##_constructor, JsName, 0, JS_CFUNC_constructor, 0);                 \
+    JS_SetConstructor(ctx, tag##_class, tag##_proto);                                                                  \
+    JS_SetPropertyStr(ctx, dnn_object, JsName, tag##_class);                                                             \
+  } while(0)
 
 enum {
   DNN_BLOBFROMIMAGE,
@@ -1804,6 +2788,32 @@ js_dnn_init(JSContext* ctx, JSModuleDef* m) {
   JS_SetPropertyStr(ctx, dnn_object, "Net", net_class);
   JS_SetPropertyStr(ctx, dnn_object, "Image2BlobParams", imageblob2params_class);
   JS_SetPropertyStr(ctx, dnn_object, "Layer", layer_class);
+
+#ifdef HAVE_OPENCV_DNN_TOKENIZER
+  /* create the Tokenizer class */
+  JS_NewClassID(&js_tokenizer_class_id);
+  JS_NewClass(JS_GetRuntime(ctx), js_tokenizer_class_id, &js_tokenizer_class);
+
+  tokenizer_proto = JS_NewObject(ctx);
+  JS_SetPropertyFunctionList(ctx, tokenizer_proto, js_tokenizer_proto_funcs, countof(js_tokenizer_proto_funcs));
+  JS_SetClassProto(ctx, js_tokenizer_class_id, tokenizer_proto);
+
+  tokenizer_class = JS_NewCFunction2(ctx, js_tokenizer_constructor, "Tokenizer", 0, JS_CFUNC_constructor, 0);
+  JS_SetConstructor(ctx, tokenizer_class, tokenizer_proto);
+  JS_SetPropertyFunctionList(ctx, tokenizer_class, js_tokenizer_static_funcs, countof(js_tokenizer_static_funcs));
+
+  JS_SetPropertyStr(ctx, dnn_object, "Tokenizer", tokenizer_class);
+#endif
+
+  /* create the Model family classes (Model + 7 convenience subclasses) */
+  REGISTER_DNN_MODEL_CLASS(model, "Model");
+  REGISTER_DNN_MODEL_CLASS(classification_model, "ClassificationModel");
+  REGISTER_DNN_MODEL_CLASS(detection_model, "DetectionModel");
+  REGISTER_DNN_MODEL_CLASS(segmentation_model, "SegmentationModel");
+  REGISTER_DNN_MODEL_CLASS(keypoints_model, "KeypointsModel");
+  REGISTER_DNN_MODEL_CLASS(text_recognition_model, "TextRecognitionModel");
+  REGISTER_DNN_MODEL_CLASS(text_detection_model_east, "TextDetectionModel_EAST");
+  REGISTER_DNN_MODEL_CLASS(text_detection_model_db, "TextDetectionModel_DB");
 
   JS_SetPropertyFunctionList(ctx, dnn_object, js_dnn_dnn_funcs, countof(js_dnn_dnn_funcs));
 

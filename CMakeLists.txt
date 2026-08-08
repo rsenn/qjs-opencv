@@ -264,6 +264,24 @@ if(HAVE_OPENCV_DNN_NEW_ENGINE)
   add_definitions(-DHAVE_OPENCV_DNN_NEW_ENGINE)
 endif(HAVE_OPENCV_DNN_NEW_ENGINE)
 
+# OpenCV 5.0 added cv::dnn::Tokenizer (BPE tokenizer for LLM inference) and
+# Net::enable/disable/resetKVCache() for autoregressive attention layers -
+# both new in the same header revision as the new DNN engine, but probed
+# independently since a given 5.x build's Tokenizer support isn't
+# guaranteed to track ENGINE_AUTO exactly. Declaration-only (see
+# linearPolar/logPolar above for why).
+set(CMAKE_REQUIRED_INCLUDES_SAVE "${CMAKE_REQUIRED_INCLUDES}")
+set(CMAKE_REQUIRED_INCLUDES "${OPENCV_INCLUDE_DIRS}")
+check_cxx_source_compiles("
+  #include <opencv2/dnn.hpp>
+  using T = decltype(cv::dnn::Tokenizer::load(std::declval<std::string>()));
+  int main() { decltype(&cv::dnn::Net::enableKVCache) fp = nullptr; return fp == nullptr; }
+" HAVE_OPENCV_DNN_TOKENIZER)
+set(CMAKE_REQUIRED_INCLUDES "${CMAKE_REQUIRED_INCLUDES_SAVE}")
+if(HAVE_OPENCV_DNN_TOKENIZER)
+  add_definitions(-DHAVE_OPENCV_DNN_TOKENIZER=1)
+endif(HAVE_OPENCV_DNN_TOKENIZER)
+
 # OpenCV 5.0 replaced BarcodeDetector's (prototxt_path, model_path) ctor with
 # a default ctor and a single-arg (super_resolution_model_path) ctor. Probe
 # by resolving overload resolution against the old two-arg ctor via decltype

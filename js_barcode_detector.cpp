@@ -1,4 +1,5 @@
 #include "js_alloc.hpp"
+#include "js_cv.hpp"
 #include "js_size.hpp"
 #include "js_point.hpp"
 #include "js_mat.hpp"
@@ -32,6 +33,24 @@ js_barcode_detector_wrap(JSContext* ctx, JSBarcodeDetectorData& wb) {
   return ret;
 }
 
+/* Unified constructor across OpenCV versions - same call shapes work
+ * regardless of which native ctor is actually available:
+ *
+ *   new BarcodeDetector()                        no super-resolution model
+ *   new BarcodeDetector(modelPath)                single-file SR model
+ *                                                  (OpenCV 5.x native; throws
+ *                                                  on pre-5.x, which has no
+ *                                                  single-file form)
+ *   new BarcodeDetector(prototxtPath, modelPath)   legacy two-file SR model
+ *                                                  (pre-5.x native; on 5.x
+ *                                                  only modelPath - the
+ *                                                  actual weights - is used,
+ *                                                  prototxtPath is ignored
+ *                                                  since 5.x has no separate
+ *                                                  architecture file)
+ *
+ * The last argument given is always "the model path".
+ */
 static JSValue
 js_barcode_detector_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
   JSValue proto, obj = JS_UNDEFINED;
@@ -46,17 +65,37 @@ js_barcode_detector_constructor(JSContext* ctx, JSValueConst new_target, int arg
   if(argc > 1)
     model_path = JS_ToCString(ctx, argv[1]);
 
+  try {
 #ifdef HAVE_OPENCV_BARCODE_LEGACY_CTOR
-  new(bd) cv::barcode::BarcodeDetector(prototxt_path ? prototxt_path : "", model_path ? model_path : "");
+    if(argc > 1)
+      new(bd) cv::barcode::BarcodeDetector(prototxt_path, model_path);
+    else if(argc > 0) {
+      if(prototxt_path)
+        JS_FreeCString(ctx, prototxt_path);
+      if(model_path)
+        JS_FreeCString(ctx, model_path);
+      js_deallocate(ctx, bd);
+      return JS_ThrowTypeError(ctx,
+                                "single-argument super-resolution model loading requires OpenCV >= "
+                                "5.0; use new BarcodeDetector(prototxtPath, modelPath) instead");
+    } else
+      new(bd) cv::barcode::BarcodeDetector();
 #else
-  /* OpenCV 5 dropped the (prototxt_path, model_path) ctor - custom
-   * super-resolution model prototxt/weights pairs can no longer be loaded
-   * from JS. Only a single super-resolution model path is accepted now. */
-  if(prototxt_path)
-    new(bd) cv::barcode::BarcodeDetector(prototxt_path);
-  else
-    new(bd) cv::barcode::BarcodeDetector();
+    const char* single_model_path = model_path ? model_path : prototxt_path;
+
+    if(single_model_path)
+      new(bd) cv::barcode::BarcodeDetector(single_model_path);
+    else
+      new(bd) cv::barcode::BarcodeDetector();
 #endif
+  } catch(const cv::Exception& e) {
+    if(prototxt_path)
+      JS_FreeCString(ctx, prototxt_path);
+    if(model_path)
+      JS_FreeCString(ctx, model_path);
+    js_deallocate(ctx, bd);
+    return js_cv_throw(ctx, e);
+  }
 
   if(prototxt_path)
     JS_FreeCString(ctx, prototxt_path);
@@ -80,6 +119,7 @@ js_barcode_detector_constructor(JSContext* ctx, JSValueConst new_target, int arg
   return obj;
 
 fail:
+  bd->~JSBarcodeDetectorClass();
   js_deallocate(ctx, bd);
 fail2:
   JS_FreeValue(ctx, obj);
@@ -112,6 +152,7 @@ js_barcode_detector_method(JSContext* ctx, JSValueConst this_val, int argc, JSVa
   JSBarcodeDetectorData* wb = static_cast<JSBarcodeDetectorData*>(JS_GetOpaque2(ctx, this_val, js_barcode_detector_class_id));
   JSValue ret = JS_UNDEFINED;
 
+  try {
   switch(magic) {
 
     case METHOD_DETECT: {
@@ -169,6 +210,7 @@ js_barcode_detector_method(JSContext* ctx, JSValueConst this_val, int argc, JSVa
       break;
     }
   }
+  } catch(const cv::Exception& e) { ret = js_cv_throw(ctx, e); }
 
   return ret;
 }
@@ -210,6 +252,17 @@ js_barcode_detector_init(JSContext* ctx, JSModuleDef* bd) {
   JS_SetClassProto(ctx, js_barcode_detector_class_id, barcode_detector_proto);
 
   barcode_detector_class = JS_NewCFunction2(ctx, js_barcode_detector_constructor, "BarcodeDetector", 0, JS_CFUNC_constructor, 0);
+
+  /* Whether new BarcodeDetector(prototxtPath, modelPath) loads a real
+   * two-file model (true, pre-5.x) or is emulated by using just modelPath
+   * (false, 5.x - prototxtPath is ignored). See the constructor doc comment. */
+  JS_DefinePropertyValueStr(ctx, barcode_detector_class, "LEGACY_CTOR",
+#ifdef HAVE_OPENCV_BARCODE_LEGACY_CTOR
+                             JS_NewBool(ctx, TRUE),
+#else
+                             JS_NewBool(ctx, FALSE),
+#endif
+                             JS_PROP_ENUMERABLE);
 
   /* set proto.constructor and ctor.prototype */
   JS_SetConstructor(ctx, barcode_detector_class, barcode_detector_proto);

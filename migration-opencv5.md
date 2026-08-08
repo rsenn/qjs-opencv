@@ -1,5 +1,29 @@
 # OpenCV 5.0 migration
 
+## Functionality actually lost going from 4.13.0 to 5.0.0
+
+Everything else in this document is a relocation or a call-site detail change — same capability,
+different spelling. This section is the opposite: the specific, narrow set of things that OpenCV
+5.0 genuinely dropped, with no drop-in replacement, and how each is handled in the qjs-opencv
+bindings as a result.
+
+| Lost | What it did | Replacement in 5.0? | How it's handled here |
+|---|---|---|---|
+| `cv.linearPolar` / `cv.logPolar` | Cartesian↔polar image remapping | No — `warpPolar` exists but has different parameter semantics (dsize-based, not a mechanical substitute) | Bindings compiled out on 5.x (`typeof cv.linearPolar === 'undefined'`); reimplementing atop `warpPolar` is an open follow-up, not done |
+| `BarcodeDetector` custom prototxt+weights loading | `new BarcodeDetector(prototxtPath, modelPath)` — load an arbitrary custom super-resolution model as a separate architecture/weights pair | No — only `new BarcodeDetector(modelPath)` (single bundled model file) or the no-arg default ctor remain | Guarded: on 5.x, only the first constructor argument is used (as the single model path); a second argument is silently ignored rather than erroring |
+| `dnn.readNetFromCaffe` / `readNetFromDarknet` / `readNetFromTorch` / `readTorchBlob` / `shrinkCaffeModel` | Importing Caffe, Darknet, and Torch model formats into `cv.dnn.Net` | No — these formats have no importer at all in OpenCV 5's DNN module | Bindings compiled out on 5.x; only ONNX/TensorFlow/TFLite/model-optimizer import remain |
+| `Net.getInputDetails` / `Net.getOutputDetails` | Reading per-tensor quantization scale/zero-point metadata off a loaded net | No | Compiled out on 5.x |
+| `Net.quantize` | Post-training quantization of a loaded classic-engine net | No — quantization is handled differently in the new DNN engine, not exposed as an equivalent `Net` method | Compiled out on 5.x |
+| `Net.setHalideScheduler` and the Halide backend (`dnn.DNN_BACKEND_HALIDE`) | Selecting Halide as the DNN inference backend | No — the Halide backend was removed from OpenCV 5 entirely | Both compiled out on 5.x |
+| `cv.convertFp16` | Converting a `Mat` to/from 16-bit float | Yes, but not a drop-in — use `mat.convertTo(dst, CV_16F)` (already bound generically) instead of a dedicated function | Binding compiled out on 5.x since the underlying `cv::convertFp16` symbol is gone; callers need to switch to `convertTo` |
+| Legacy `VideoCapture` backend constants: `CAP_VFW`, `CAP_QT`, `CAP_UNICAP`, `CAP_OPENNI` (v1), `CAP_OPENNI_ASUS`, `CAP_GIGANETIX` | Selecting long-deprecated capture backends (Video for Windows, QuickTime, uniCap, first-gen OpenNI, Smartek Giganetix) | No — these backends were dropped from OpenCV 5 itself, not just deprecated | Constants compiled out on 5.x; `cv.VideoCapture` still works normally with any backend OpenCV 5 still supports |
+| `AKAZE` / `BRISK` / `KAZE` / `AgastFeatureDetector` as core `features2d` classes | Feature detectors usable without opencv_contrib | Yes, functionally — moved into `cv::xfeatures2d` (contrib), same behavior | Not a loss in *this* project specifically (already builds with contrib for `USE_FEATURE2D`), but would be a loss for anyone building without contrib |
+
+Two items above are footnotes rather than real losses and are omitted from the table: the
+`CAP_PROP_GIGA_FRAME_HEIGH_MAX`/`CAP_PROP_GIGA_FRAME_SENS_HEIGH` constants are pure typo aliases
+OpenCV itself dropped in 5.0 — the correctly-spelled `CAP_PROP_GIGA_FRAME_HEIGHT_MAX`/
+`CAP_PROP_GIGA_FRAME_SENS_HEIGHT` remain fully available and unchanged.
+
 ## Executive summary
 
 Building `qjs-opencv` against `/opt/opencv-5.0.0-x86_64` originally produced **144 compile
@@ -153,12 +177,35 @@ OpenCV 5.0, replaced by a default constructor and a single-string
 capability loss**: OpenCV 5 no longer supports loading a super-resolution model as a
 prototxt+weights pair from this API — only a single bundled model path.
 
-**Fix**: guarded via `HAVE_OPENCV_BARCODE_LEGACY_CTOR` (probed via `decltype` overload
-resolution against the old two-arg ctor, since a declaration/linkage check can't distinguish
-overloads — see "CMake probe technique" below). On 4.x, the JS constructor keeps accepting
-`(prototxtPath, modelPath)` unchanged. On 5.x, only the first argument (if given) is used, passed
-as the single super-resolution model path; passing a second argument is silently ignored rather
-than erroring, since there's no equivalent parameter to route it to.
+**Fix — unified JS API**: guarded via `HAVE_OPENCV_BARCODE_LEGACY_CTOR` (probed via `decltype`
+overload resolution against the old two-arg ctor, since a declaration/linkage check can't
+distinguish overloads — see "CMake probe technique" below), but the JS-visible constructor now
+accepts the *same three call shapes on both versions*, mapped onto whichever native ctor is
+actually available:
+
+- `new BarcodeDetector()` — no model, identical on both.
+- `new BarcodeDetector(modelPath)` — the single-file form. Native on 5.x. On pre-5.x, where no
+  single-file ctor exists, this now throws a clear, catchable `TypeError` explaining the
+  version requirement, instead of silently doing something surprising.
+- `new BarcodeDetector(prototxtPath, modelPath)` — the two-file form. Native on pre-5.x. On 5.x,
+  only `modelPath` (the actual weights — the substantive artifact of the pair) is used;
+  `prototxtPath` is ignored rather than erroring, since 5.x has no separate-architecture-file
+  concept to route it to.
+
+In every shape, "the last argument given" is always the model path, so code that always passes
+the model path last works unchanged regardless of version. A new `BarcodeDetector.LEGACY_CTOR`
+static boolean (`true` pre-5.x, `false` on 5.x) lets callers introspect which native ctor is
+backing the two-file form, without needing a separate OpenCV-version check. Covered by
+`tests/test_barcode.js`.
+
+**Bug found and fixed while unifying this**: `js_barcode_detector_method()` (the dispatcher
+behind `detect`/`decodeWithType`/`detectAndDecodeWithType`) had no `try/catch` at all, unlike
+every other method dispatcher in the codebase. Any `cv::Exception` OpenCV's barcode detector
+threw — confirmed to happen on both 4.13.0 and 5.0.0 for certain degenerate inputs — crashed the
+whole `qjs` process via `std::terminate()` instead of raising a catchable JS exception. Fixed by
+wrapping the dispatcher in the same `try { ... } catch(const cv::Exception& e) { ret =
+js_cv_throw(ctx, e); }` pattern used elsewhere (e.g. `js_dnn.cpp`'s `js_net_method`). Logged in
+`BUGS` as `js-barcode-detector-method-crashes-process-on-cv-exception`.
 
 ### 7. `LineSegmentDetectorModes` enum strictness
 
@@ -268,6 +315,7 @@ directly in each build's `CMakeCache.txt`:
 | `HAVE_OPENCV2_FEATURES_HPP` | — | — | 1 |
 | `HAVE_OPENCV_DNN_NEW_ENGINE` | — | — | 1 |
 | `HAVE_OPENCV_XFEATURES2D_AKAZE` | — | — | 1 |
+| `HAVE_OPENCV_DNN_TOKENIZER` | — | — | 1 |
 | `HAVE_OPENCV_BARCODE_LEGACY_CTOR` | 1 | 1 | — |
 | `HAVE_OPENCV_CAP_VFW` | 1 | 1 | — |
 | `HAVE_OPENCV_CONVERT_FP16` | 1 | 1 | — |
@@ -302,3 +350,127 @@ here), unrelated to this migration; the build itself is unaffected and compiles/
   present at build time (this project already requires it for `USE_FEATURE2D`, so no new
   dependency in practice, but worth noting if `USE_FEATURE2D` is ever made independently
   toggleable from contrib availability).
+
+## New in OpenCV 5.0 that could be bound (not a migration blocker, ranked by leverage)
+
+Found by diffing exported (`CV_EXPORTS`/`CV_WRAP`) declarations between
+`/opt/opencv-4.13.0-x86_64/include/opencv4` and `/opt/opencv-5.0.0-x86_64/include/opencv5`. None
+of this is required for the migration — it's new capability 5.0 adds on top, listed for anyone
+deciding what to bind next. Highest-leverage first:
+
+1. **Point cloud / mesh I/O — `opencv2/ptcloud.hpp`, new `libopencv_ptcloud.so`.** Wholly new
+   module: `loadPointCloud`/`savePointCloud`, `loadMesh`/`saveMesh` (PLY/OBJ/etc.),
+   `triangleRasterize`/`triangleRasterizeDepth`/`triangleRasterizeColor`, and a `CV_EXPORTS_W
+   Octree` class (`Octree::createWithDepth(...)` from either explicit depth/size or a point
+   cloud, insert/query/radius-search). Highest leverage because it's a capability gap this project
+   has none of today (no point-cloud or mesh I/O at all), it's a single self-contained new
+   `js_ptcloud.cpp` following the existing one-file-per-concept convention, and the module has no
+   unusual runtime dependencies beyond itself.
+2. **Learned local features — `opencv2/features.hpp`.** `DISK` and `ALIKED` (learned
+   keypoint detector/descriptors, `Ptr<DISK> DISK::create(modelPath, ...)`, ONNX-backed via the
+   `dnn` module — `create(bufferModel, ...)` in-memory overload also available),
+   `LightGlueMatcher` (a modern learned matcher, meant to pair with DISK/ALIKED, likely a strict
+   upgrade over `BFMatcher`/`FlannBasedMatcher` for anyone doing feature matching/stitching), and
+   `ANNIndex` (approximate nearest-neighbor index). High leverage for matching/stitching/SLAM-style
+   pipelines, but each detector needs a model file the caller must supply (not bundled) and pulls
+   in `HAVE_OPENCV_DNN` at the OpenCV build level — worth confirming that's on before committing to
+   binding these.
+3. **`opencv2/geometry.hpp` additions**: `minEnclosingConvexPolygon()` (reduce a convex polygon to
+   k vertices) and `getClosestEllipsePoints()` (per-point fit error against an ellipse, companion
+   to `fitEllipse`/`fitEllipseAMS`/`fitEllipseDirect`, already bound). Small, cheap wins — same
+   header already included for the `HAVE_OPENCV2_GEOMETRY_HPP` migration fix (§1), natural fits
+   next to the existing contour/shape functions in `js_contour.cpp`/`js_imgproc.cpp`.
+4. **Multi-camera calibration — `opencv2/calib.hpp`**: `registerCameras()` (rig-level multi-camera
+   calibration) and a new top-level `calibrate()` overload taking `InputOutputArray K, D`
+   directly. Narrower audience (multi-camera rig setups specifically) than the above, but a real
+   gap — `js_calib3d.cpp` currently only exposes single-camera `calibrateCamera`.
+5. ~~**DNN text/LLM primitives**~~ — **done**, see "Wrapping LLM inference (Qwen2.5)" below.
+
+Not investigated further / ruled out:
+- `opencv2/xstereo.hpp` exists but declares no `CV_EXPORTS`/`CV_WRAP` symbols at all — an empty
+  compatibility stub, nothing to bind.
+- A `diff` of `CV_WRAP` methods in `core/mat.hpp` initially flagged `channels()`, `clear()`,
+  `empty()`, `erase()`, `expand()`, `hasSymbols()`, `isScalar()`, `toLayout()` as new — these all
+  belong to the new `MatShape` struct (already covered as the `MatSize::dims()` relocation, §2),
+  not to `cv::Mat`/`cv::UMat` themselves. False lead, excluded here.
+- `Model`/`ClassificationModel`/`DetectionModel`/`SegmentationModel`/`KeypointsModel`/
+  `TextRecognitionModel`/`TextDetectionModel*` in `dnn.hpp` are not new to 5.0 (present in 4.13
+  too) — **now bound**, see "Wrapping the classic DNN convenience Model classes" below.
+
+## Wrapping LLM inference (Qwen2.5)
+
+OpenCV 5.0 added exactly two new DNN primitives aimed at LLM-style autoregressive inference —
+`cv::dnn::Tokenizer` and `Net::enableKVCache()`/`disableKVCache()`/`resetKVCache()` — plus the
+existing `ENGINE_ORT` (§5) as the practical way to actually execute a transformer exported to
+ONNX. There is no built-in generation loop, sampler, or chat template anywhere in OpenCV; running
+something like Qwen2.5 end-to-end means composing these primitives from JS:
+
+1. `dnn.readNetFromONNX(path, dnn.ENGINE_ORT)` (or `ENGINE_AUTO`, which tries ORT and falls back)
+   to load the exported model. This project's OpenCV 5.0.0 build already links
+   `libonnxruntime.so.1` (1.25.1, confirmed via `ldd` on `libopencv_dnn.so`) transitively through
+   `opencv_dnn`, so `ENGINE_ORT` works with no extra linking on the qjs-opencv side.
+2. `net.enableKVCache()` once, before the generation loop, so attention layers reuse
+   past keys/values across steps instead of recomputing the whole sequence every token.
+3. `dnn.Tokenizer.load(modelDir)` to get a tokenizer, `tok.encode(text)` to turn the prompt into
+   token ids, feed those through `net.setInput(...)`/`net.forward()` per step (there is no
+   `generate()` helper — the sampling loop, whatever it is: greedy, temperature, top-k/top-p, is
+   plain JS around repeated `forward()` calls), and `tok.decode(ids)` to turn generated ids back
+   into text.
+4. `net.resetKVCache()` between independent generations reusing the same `Net`.
+
+All of this is now bound: `dnn.Tokenizer` (`.load(path)` static factory, `.encode(text)`,
+`.decode(tokens)`) and `Net.prototype.{enable,disable,reset}KVCache()`, gated by a dedicated
+`HAVE_OPENCV_DNN_TOKENIZER` CMake probe (declaration-only, same `decltype` technique as the rest
+of this file) rather than reusing `HAVE_OPENCV_DNN_NEW_ENGINE` — the two landed in the same header
+revision in this build but aren't guaranteed to always track each other. `Tokenizer` is undefined
+and the three KV-cache methods are absent from `Net.prototype` on pre-5.x builds. See
+`tests/test_tokenizer.js`.
+
+**Two real limitations found while wiring this up, not just "not yet tested":**
+
+- `Net::enableKVCache()`/`resetKVCache()` **segfault** (not a catchable `cv::Exception`) when
+  called on a `Net` with no layers loaded — confirmed on a plain `new dnn.Net()`. This is a crash
+  inside OpenCV's own implementation, not something the JS binding can guard against without a
+  shadow "is this net actually populated" flag the C++ API gives no reliable way to query. Logged
+  as `opencv-net-enablekvcache-segfaults-on-empty-net` in `BUGS`; only call these after a real
+  model is loaded. `disableKVCache()` alone is safe on an empty net.
+- `Tokenizer::load()`'s own doc comment says it expects a directory with `config.json` (field
+  `model_type: "gpt2"` or `"gpt4"`) and `tokenizer.json`. Tried this against Qwen2.5's actual
+  `tokenizer.json` (downloaded from HuggingFace, real byte-level BPE vocab+merges, committed at
+  `tests/qwen2.5-tokenizer/`) with a `{"model_type": "gpt2"}` config.json, and it throws
+  `Assertion failed: buf in function 'open'` out of `opencv2/core/persistence.cpp` regardless of
+  config.json formatting (compact JSON, pretty JSON, a `%YAML:1.0` marker all fail identically).
+  So either the documented format isn't actually what `cv::FileStorage` expects here, or Qwen2.5's
+  tokenizer.json isn't in the exact dialect this loader wants — real Qwen2.5 tokenization is not
+  yet verified end-to-end through this binding. Logged as
+  `opencv-tokenizer-load-config-json-format-undocumented` in `BUGS`. The exception itself is a
+  normal, catchable `cv::Exception` — no crash, just no successful load yet.
+
+## Wrapping the classic DNN convenience Model classes
+
+`Model` and its seven typed subclasses (`ClassificationModel`, `DetectionModel`,
+`SegmentationModel`, `KeypointsModel`, `TextRecognitionModel`, `TextDetectionModel_EAST`,
+`TextDetectionModel_DB`) have existed unchanged since well before 4.13 but were never bound in
+`js_dnn.cpp` — a pre-existing gap unrelated to the 5.0 migration, closed while working on it since
+the header-diffing pass surfaced it. All eight share an identical two-shape construction API
+(`new X(net)` from an existing `dnn.Net`, or `new X(model[, config])` from files) and the same
+`Model`-inherited proxy methods (`setInputSize`/`setInputMean`/`setInputScale`/`setInputCrop`/
+`setInputSwapRB`/`setOutputNames`/`setInputParams`/`predict`/`setPreferableBackend`/
+`setPreferableTarget`/`enableWinograd`) — bound once via a shared C++ template (`js_model_base_method`)
+and a proto-funcs macro (`DNN_MODEL_BASE_PROTO_FUNCS`) reused by all eight classes instead of
+duplicating that logic seven times, plus a `DEFINE_DNN_MODEL_SKELETON` macro for the identical
+class-id/proto/ctor/finalizer boilerplate every one of them needs. `TextDetectionModel_EAST`/`_DB`
+additionally share `detect()`/`detectTextRectangles()` through a second, smaller template
+(`js_text_detection_model_method`) mirroring their common (unbound — protected constructor, not
+directly constructible) `TextDetectionModel` base. Unlike everything else in this file, none of
+this needs a version guard: the API is byte-identical across 4.13 and 5.0.
+
+No real model weights are available in this environment, so `tests/test_model.js` and its seven
+siblings (`test_classification_model.js`, `test_detection_model.js`, `test_segmentation_model.js`,
+`test_keypoints_model.js`, `test_text_recognition_model.js`, `test_text_detection_model_east.js`,
+`test_text_detection_model_db.js`) exercise the JS binding surface itself rather than real
+inference: construction from both an empty `dnn.Net` and a bogus file path (expecting a catchable
+throw, not a crash — the same standard `tests/test_barcode.js` established), setter/getter
+round-trips, and calling `predict()`/`classify()`/`detect()`/etc. on an empty network (expecting a
+catchable `cv::Exception`, verified on both 4.13.0 and 5.0.0). All fifteen new/updated test files
+pass on both builds.
