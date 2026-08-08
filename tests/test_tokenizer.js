@@ -69,16 +69,33 @@ ok('Net.prototype has enableKVCache/disableKVCache/resetKVCache iff Tokenizer is
     throw new Error('KV-cache methods and Tokenizer should be gated by the same HAVE_OPENCV_DNN_TOKENIZER flag');
 });
 
-ok('disableKVCache() is safe to call on an empty Net', () => {
+ok('enableKVCache()/resetKVCache() on an empty Net throw cleanly instead of crashing', () => {
   if(!haveTokenizer) return; /* not bound pre-5.x */
 
-  /* enableKVCache()/resetKVCache() on a Net with no layers loaded segfault
-   * inside OpenCV itself (a native crash, not a catchable cv::Exception) -
-   * see BUGS: opencv-net-enablekvcache-segfaults-on-empty-net. Deliberately
-   * not exercised here since a real model would need to be loaded first;
-   * only disableKVCache(), which is unconditionally safe, is checked. */
+  /* Calling these on a Net with no layers loaded segfaults inside OpenCV
+   * itself (a native crash, not a catchable cv::Exception) - see BUGS:
+   * opencv-net-enablekvcache-segfaults-on-empty-net. js_net_method() now
+   * guards both with a Net::empty() check and throws a JS TypeError instead
+   * of forwarding the call, which is what this verifies. */
   const net = new dnn.Net();
-  net.disableKVCache();
+
+  let threw = false;
+  try {
+    net.enableKVCache();
+  } catch(e) {
+    threw = true;
+  }
+  if(!threw) throw new Error('expected enableKVCache() on an empty Net to throw');
+
+  threw = false;
+  try {
+    net.resetKVCache();
+  } catch(e) {
+    threw = true;
+  }
+  if(!threw) throw new Error('expected resetKVCache() on an empty Net to throw');
+
+  net.disableKVCache(); /* unconditionally safe, no guard needed */
 });
 
 if(failed > 0) {

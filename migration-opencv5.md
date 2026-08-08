@@ -426,14 +426,15 @@ revision in this build but aren't guaranteed to always track each other. `Tokeni
 and the three KV-cache methods are absent from `Net.prototype` on pre-5.x builds. See
 `tests/test_tokenizer.js`.
 
-**Two real limitations found while wiring this up, not just "not yet tested":**
+**Two real issues found while wiring this up, not just "not yet tested":**
 
-- `Net::enableKVCache()`/`resetKVCache()` **segfault** (not a catchable `cv::Exception`) when
-  called on a `Net` with no layers loaded — confirmed on a plain `new dnn.Net()`. This is a crash
-  inside OpenCV's own implementation, not something the JS binding can guard against without a
-  shadow "is this net actually populated" flag the C++ API gives no reliable way to query. Logged
-  as `opencv-net-enablekvcache-segfaults-on-empty-net` in `BUGS`; only call these after a real
-  model is loaded. `disableKVCache()` alone is safe on an empty net.
+- `Net::enableKVCache()`/`resetKVCache()` **segfaulted** (not a catchable `cv::Exception`) when
+  called on a `Net` with no layers loaded — confirmed on a plain `new dnn.Net()`. The crash is
+  inside OpenCV's own implementation, but `Net::empty()` (already bound as `Net.prototype.empty`)
+  reliably reports whether a net actually has layers, so `js_net_method()` now checks it before
+  forwarding either call and throws a plain catchable `TypeError` instead — fixed, not just
+  documented. `disableKVCache()` alone was already safe on an empty net and needed no guard. See
+  `tests/test_tokenizer.js`.
 - `Tokenizer::load()`'s own doc comment says it expects a directory with `config.json` (field
   `model_type: "gpt2"` or `"gpt4"`) and `tokenizer.json`. Tried this against Qwen2.5's actual
   `tokenizer.json` (downloaded from HuggingFace, real byte-level BPE vocab+merges, committed at

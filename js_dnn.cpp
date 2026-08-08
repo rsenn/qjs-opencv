@@ -527,7 +527,16 @@ js_net_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
 #endif
 
 #ifdef HAVE_OPENCV_DNN_TOKENIZER
+      /* enableKVCache()/resetKVCache() segfault inside OpenCV itself (not a
+       * catchable cv::Exception) when called on a Net with no layers loaded -
+       * see BUGS: opencv-net-enablekvcache-segfaults-on-empty-net. Guard with
+       * a JS-level check so this throws cleanly instead of crashing the
+       * process; disableKVCache() alone is safe on an empty Net and needs no
+       * guard. */
       case DNN_NET_ENABLEKVCACHE: {
+        if(dn->empty())
+          return JS_ThrowTypeError(ctx, "enableKVCache() requires a Net with layers loaded (segfaults inside OpenCV on an empty Net)");
+
         dn->enableKVCache();
         break;
       }
@@ -538,6 +547,9 @@ js_net_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
       }
 
       case DNN_NET_RESETKVCACHE: {
+        if(dn->empty())
+          return JS_ThrowTypeError(ctx, "resetKVCache() requires a Net with layers loaded (segfaults inside OpenCV on an empty Net)");
+
         dn->resetKVCache();
         break;
       }

@@ -20,26 +20,6 @@
                            // same script prints the ReferenceError and
                            // exits 1 as expected.
 
-- opencv-net-enablekvcache-segfaults-on-empty-net: calling
-  `cv::dnn::Net::enableKVCache()` or `resetKVCache()` (OpenCV 5.0+, bound in
-  js_dnn.cpp under HAVE_OPENCV_DNN_TOKENIZER) on a `Net` with no layers
-  loaded (e.g. straight from the default constructor, before readNetFromONNX)
-  segfaults the whole process instead of throwing a `cv::Exception` or being
-  a safe no-op. This is a crash inside OpenCV's own implementation - it
-  presumably iterates the net's layers looking for `AttentionOnnxI` instances
-  without checking for an empty/uninitialized layer graph first - not
-  something the qjs-opencv binding can guard against without maintaining its
-  own shadow "is this net actually loaded" flag, which the C++ API gives no
-  way to query reliably. `disableKVCache()` on the same empty `Net` is fine.
-  Found while writing tests/test_tokenizer.js; the test avoids calling
-  enable/resetKVCache on an empty Net as a result. Worth reporting upstream
-  to OpenCV if it still reproduces against a released (non-dev) 5.0 build.
-
-    import { dnn } from 'opencv';
-    const net = new dnn.Net();
-    net.enableKVCache(); // segfaults; net.resetKVCache() does too.
-                         // net.disableKVCache() alone is safe.
-
 - opencv-tokenizer-load-config-json-format-undocumented: `cv::dnn::Tokenizer::
   load(modelDir)` (OpenCV 5.0+) throws `Assertion failed: buf in function
   'open'` from `opencv2/core/persistence.cpp` when given a real
