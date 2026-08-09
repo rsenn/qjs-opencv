@@ -330,6 +330,7 @@ js_mat_initialize(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
   } else {
     int32_t type = 0;
     int index = 0;
+    bool haveType = false;
     uint8_t* buf = 0;
     JSSizeData<double>* size;
     std::vector<int> sizes;
@@ -345,10 +346,19 @@ js_mat_initialize(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
     }
 
     if(argc >= 3 && JS_IsNumber(argv[0]) && js_is_array(ctx, argv[1])) {
-      int32_t ndims, type;
+      /* `new Mat(ndims, sizes, type)`. `ndims` itself isn't used beyond
+       * this - dimensionality is implied by sizes.size(). Must write into
+       * the outer `type` (not a locally-shadowed one, which silently
+       * discarded the parsed value) and advance `index` past all three
+       * consumed arguments - otherwise the generic tail below reinterprets
+       * argv[0] (ndims) as the type and argv[1] (the sizes array) as a
+       * Scalar, producing a Mat with a nonsensical type/fill value. */
+      int32_t ndims;
       js_value_to(ctx, argv[0], ndims);
       js_array_to(ctx, argv[1], sizes);
       js_value_to(ctx, argv[2], type);
+      index = 3;
+      haveType = true;
 
     } else if(js_is_typedarray(ctx, argv[0])) {
       const auto typed = js_typedarray_type(ctx, argv[0]);
@@ -390,7 +400,7 @@ js_mat_initialize(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
       return FALSE;
     }
 
-    if(!buf) {
+    if(!buf && !haveType) {
       if(index == argc || JS_ToInt32(ctx, &type, argv[index])) {
         JS_ThrowTypeError(ctx, "argument %d must be a numeric type", index + 1);
         return FALSE;
@@ -883,6 +893,14 @@ js_mat_get(JSContext* ctx, JSValueConst this_val, uint32_t row, uint32_t col) {
           ret = JS_NewFloat64(ctx, value);
           break;
         }
+#if CV_VERSION_MAJOR >= 5
+        case CV_64SC1: {
+          int64_t value;
+          js_mat_get(ctx, this_val, row, col, value);
+          ret = JS_NewBigInt64(ctx, value);
+          break;
+        }
+#endif
         default: {
           ret = JS_ThrowTypeError(ctx, "Invalid Mat type %u", m->type());
           break;
@@ -949,6 +967,14 @@ js_mat_at(JSContext* ctx, JSValueConst this_val, const cv::Vec<int, N>& vec) {
           ret = JS_NewFloat64(ctx, value);
           break;
         }
+#if CV_VERSION_MAJOR >= 5
+        case CV_64SC1: {
+          int64_t value;
+          js_mat_get<int64_t, N>(ctx, this_val, vec, value);
+          ret = JS_NewBigInt64(ctx, value);
+          break;
+        }
+#endif
         default: {
           ret = JS_ThrowTypeError(ctx, "Invalid Mat type %u", m->type());
           break;
@@ -1114,6 +1140,18 @@ js_mat_set(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[])
     else
       (*m).at<double>(row, col) = data;
 
+#if CV_VERSION_MAJOR >= 5
+  } else if(m->type() == CV_64SC1) {
+    /* bytes==8 here falls outside the bytes<=sizeof(uint) branch below (and
+     * used to silently no-op, since that branch's final `else` just
+     * returns) - CV_64S is new in 5.0, nothing handled it before. */
+    int64_t data;
+
+    if(JS_ToBigInt64(ctx, &data, argv[0]))
+      return JS_EXCEPTION;
+
+    (*m).at<int64_t>(row, col) = data;
+#endif
   } else if(bytes <= sizeof(uint)) {
     uint32_t data, mask = (1LU << (bytes * 8)) - 1;
 
@@ -1376,7 +1414,7 @@ js_mat_tostring(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
 
     os << ", ";
 
-    switch(m->depth() & 7) {
+    switch(m->depth()) {
       case CV_8U: tstr = "CV_8U"; break;
       case CV_8S: tstr = "CV_8S"; break;
       case CV_16U: tstr = "CV_16U"; break;
@@ -1384,6 +1422,14 @@ js_mat_tostring(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
       case CV_32S: tstr = "CV_32S"; break;
       case CV_32F: tstr = "CV_32F"; break;
       case CV_64F: tstr = "CV_64F"; break;
+#if CV_VERSION_MAJOR >= 5
+      case CV_16BF: tstr = "CV_16BF"; break;
+      case CV_Bool: tstr = "CV_Bool"; break;
+      case CV_64U: tstr = "CV_64U"; break;
+      case CV_64S: tstr = "CV_64S"; break;
+      case CV_32U: tstr = "CV_32U"; break;
+#endif
+      default: tstr = "?"; break;
     }
     os << tstr << 'C' << m->channels() << ")" /*<< std::endl*/;
   } else {

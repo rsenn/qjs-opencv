@@ -711,7 +711,7 @@ js_umat_tostring(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
     os << ", ";
     const char* tstr;
 
-    switch(um->depth() & 7) {
+    switch(um->depth()) {
       case CV_8U: tstr = "CV_8U"; break;
       case CV_8S: tstr = "CV_8S"; break;
       case CV_16U: tstr = "CV_16U"; break;
@@ -719,6 +719,14 @@ js_umat_tostring(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
       case CV_32S: tstr = "CV_32S"; break;
       case CV_32F: tstr = "CV_32F"; break;
       case CV_64F: tstr = "CV_64F"; break;
+#if CV_VERSION_MAJOR >= 5
+      case CV_16BF: tstr = "CV_16BF"; break;
+      case CV_Bool: tstr = "CV_Bool"; break;
+      case CV_64U: tstr = "CV_64U"; break;
+      case CV_64S: tstr = "CV_64S"; break;
+      case CV_32U: tstr = "CV_32U"; break;
+#endif
+      default: tstr = "?"; break;
     }
     os << tstr << 'C' << um->channels() << ")" /*<< std::endl*/;
   } else {

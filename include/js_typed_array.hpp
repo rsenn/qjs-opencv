@@ -132,10 +132,10 @@ enum TypedArrayValue {
 
 struct TypedArrayType {
   TypedArrayType(int bsize, bool sig, bool flt) : byte_size(bsize), is_signed(sig), is_floating_point(flt) {}
-  explicit TypedArrayType(const cv::Mat& mat) : byte_size(1 << (mat_depth(mat) >> 1)), is_signed(mat_signed(mat)), is_floating_point(mat_floating(mat)) {}
-  explicit TypedArrayType(const cv::UMat& mat) : byte_size(1 << (mat_depth(mat) >> 1)), is_signed(mat_signed(mat)), is_floating_point(mat_floating(mat)) {}
+  explicit TypedArrayType(const cv::Mat& mat) : byte_size(mattype_bytesize(mat_depth(mat))), is_signed(mat_signed(mat)), is_floating_point(mat_floating(mat)) {}
+  explicit TypedArrayType(const cv::UMat& mat) : byte_size(mattype_bytesize(mat_depth(mat))), is_signed(mat_signed(mat)), is_floating_point(mat_floating(mat)) {}
   explicit TypedArrayType(int32_t cvId)
-      : byte_size(1 << (mattype_depth(cvId) >> 1)), is_signed(mattype_signed(cvId)), is_floating_point(mattype_floating(cvId)) {}
+      : byte_size(mattype_bytesize(mattype_depth(cvId))), is_signed(mattype_signed(cvId)), is_floating_point(mattype_floating(cvId)) {}
   explicit TypedArrayType(enum TypedArrayValue i)
       : byte_size(int(i) & int(TYPEDARRAY_BITS_FIELD)), is_signed(!!(int(i) & int(TYPEDARRAY_SIGNED))),
         is_floating_point(!!(int(i) & int(TYPEDARRAY_FLOATING_POINT))) {}
@@ -168,6 +168,13 @@ struct TypedArrayType {
       case 1: return int32_t(is_signed ? CV_8S : CV_8U);
       case 2: return int32_t(is_signed ? CV_16S : CV_16U);
       case 4: return int32_t(CV_32S);
+#if CV_VERSION_MAJOR >= 5
+      /* BigInt64Array/BigUint64Array (byte_size 8, not floating) fell
+       * through to the -1 "unsupported" case below, silently breaking Mat
+       * construction from either - CV_64S/CV_64U are new in 5.0, so there
+       * was nothing to map them to before. */
+      case 8: return int32_t(is_signed ? CV_64S : CV_64U);
+#endif
     }
 
     return -1;

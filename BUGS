@@ -20,3 +20,46 @@
                            // same script prints the ReferenceError and
                            // exits 1 as expected.
 
+
+- mat-from-flat-typedarray-at-2arg-wrong: `new Mat(typedArrayInstance)` (the
+  single-TypedArray-argument constructor overload in `js_mat_initialize`)
+  builds a genuinely 1-dimensional `cv::Mat` (`sizes = [length]`, one entry)
+  rather than a 2D one - `.rows`/`.cols` report a conventional-looking
+  `1 x length` shape, but `.dims` is actually 1 underneath, so the two-arg
+  `.at(row, col)` accessor doesn't address elements the way the reported
+  shape implies. On OpenCV 4.13.0 this hits `CV_Assert((unsigned)i1 <
+  (unsigned)size.p[1])` inside `cv::Mat::ptr()` and aborts the process
+  (`size.p[1]` is meaningless for a 1D Mat); on 5.0.0 the same call doesn't
+  assert but silently returns the element at column 0 instead of the
+  requested column. Neither version does what the apparent `1 x length`
+  shape promises. Not new in either version and not related to any 5.0
+  migration work - found while testing int64 (BigInt64Array) Mat
+  construction, but reproduces identically with a plain Int32Array, so it's
+  a pre-existing gap in the flat-TypedArray constructor path itself. Workaround:
+  construct with an explicit 2D `Size`/`(rows, cols)` and `.set()` each
+  element instead of passing a flat TypedArray directly.
+
+    import { Mat } from 'opencv';
+    const m = new Mat(new Int32Array([100, 200, 300, 400]));
+    console.log(m.rows, m.cols);   // 1 4 - looks like a normal 1x4 Mat
+    console.log(m.at(0, 2));       // 4.13.0: aborts the process (CV_Assert
+                                    // in cv::Mat::ptr()); 5.0.0: silently
+                                    // returns 100 (column 0's value) instead
+                                    // of 300.
+
+- js-typedarray-type-biguint64array-parsed-as-signed: `js_typedarray_type()`
+  (`include/js_typed_array.hpp`) detects an unsigned typed array by checking
+  for a leading `'U'` character (`Uint8Array`, `Uint16Array`, ...), which
+  misses `BigUint64Array` - its class name starts with `"Big"`, not `"U"`.
+  `new Mat(new BigUint64Array([...]))` therefore silently builds a *signed*
+  `CV_64S` Mat instead of `CV_64U`. Found while adding OpenCV 5.0's new
+  integer depths (CV_64S/CV_64U/CV_32U/CV_Bool/CV_16BF) to this project's
+  TypedArrayType <-> cv::Mat type mapping - `BigInt64Array` (signed) is
+  unaffected and was the only one actually needed for LLM-inference input
+  tensors (token ids), so this wasn't fixed inline. Same class of bug likely
+  doesn't affect `Uint8Array`/`Uint16Array`/`Uint32Array` since those really
+  do start with `'U'`.
+
+    import { Mat, CV_64UC1 } from 'opencv';
+    const m = new Mat(new BigUint64Array([1n, 2n]));
+    console.log(m.type() === CV_64UC1); // false - actually CV_64S

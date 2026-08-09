@@ -30,3 +30,7 @@
 *.exe
 *.out
 *.app
+
+# Downloaded model weights for examples/ scripts (too large to commit -
+# examples/*.js document how to fetch what they need).
+/examples/models/

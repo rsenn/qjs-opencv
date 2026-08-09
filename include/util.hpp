@@ -155,14 +155,22 @@ typedef struct JSMatDimensions {
   operator cv::Size() const { return cv::Size(cols, rows); }
 } JSMatDimensions;
 
+/* OpenCV 5.0 widened the depth field from 3 bits to 5 (CV_CN_SHIFT 3->5, to
+ * fit the new CV_16BF/CV_Bool/CV_64U/CV_64S/CV_32U depths added alongside
+ * CV_8U..CV_16F) - a hardcoded `type & 0x7`/`(type >> 3) + 1` here would
+ * silently misdecode the depth and channel count of any 5.x Mat whose type
+ * isn't one of the original 7 (in particular: every multi-channel Mat, not
+ * just the new depths). CV_MAT_DEPTH/CV_MAT_CN are OpenCV's own portable
+ * macros, correct for both bit widths since they're defined from
+ * CV_CN_SHIFT/CV_MAT_DEPTH_MASK, which are themselves correct per-version. */
 static inline int
 mattype_depth(int type) {
-  return type & 0x7;
+  return CV_MAT_DEPTH(type);
 }
 
 static inline int
 mattype_channels(int type) {
-  return (type >> 3) + 1;
+  return CV_MAT_CN(type);
 }
 
 static inline bool
@@ -180,7 +188,37 @@ mattype_signed(int type) {
     case CV_8S:
     case CV_16S:
     case CV_32S: return true;
+#if CV_VERSION_MAJOR >= 5
+    case CV_64S: return true;
+#endif
     default: return false;
+  }
+}
+
+/* Byte size of one channel element at a given depth. Needed instead of the
+ * `1 << (depth >> 1)` bit-trick this project's TypedArrayType used to rely
+ * on: that trick only happens to work for the original 7 depths (0..6) and
+ * silently returns the wrong size for any of OpenCV 5.0's new ones (e.g. 32
+ * bytes instead of 8 for CV_64S=11). */
+static inline int
+mattype_bytesize(int depth) {
+  switch(depth) {
+    case CV_8U:
+    case CV_8S: return 1;
+    case CV_16U:
+    case CV_16S:
+    case CV_16F: return 2;
+    case CV_32S:
+    case CV_32F: return 4;
+    case CV_64F: return 8;
+#if CV_VERSION_MAJOR >= 5
+    case CV_16BF: return 2;
+    case CV_Bool: return 1;
+    case CV_32U: return 4;
+    case CV_64U:
+    case CV_64S: return 8;
+#endif
+    default: return 1;
   }
 }
 
@@ -292,7 +330,14 @@ mat_array(cv::Matx<T, rows, cols> const& mat) {
 
 static inline size_t
 mat_bytesize(const cv::Mat& mat) {
-  return mat.ptr<uchar>(mat.rows - 1, mat.cols - 1) - mat.ptr<uchar>() + mat.elemSize();
+  if(mat.empty())
+    return 0;
+  if(mat.isContinuous())
+    return mat.total() * mat.elemSize();
+  std::vector<int> idx(mat.dims);
+  for(int d = 0; d < mat.dims; ++d)
+    idx[d] = mat.size[d] - 1;
+  return mat.ptr<uchar>(idx.data()) - mat.ptr<uchar>() + mat.elemSize();
 }
 
 int mat_depth(const cv::Mat& mat);
