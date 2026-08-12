@@ -10,7 +10,7 @@
 // or parameter. It reads paramsSpec(), drives the Trackbars manager, and calls
 // pipeline.process(frameId, params). That is the decoupling the brief asked for.
 
-import { Mat, Size, Scalar, drawRect, Rect, FILLED } from 'opencv.so';
+import { Mat, Size, Scalar, rectangle, Rect, FILLED } from 'opencv.so';
 import { Palette } from '../canvas.js';
 import { drawVectorData } from '../../cv/raster.js';
 
@@ -95,7 +95,7 @@ export class ProcessStage {
     if (!vd) { this.preview = null; return; }
     const w = frame.w || 640, h = frame.h || 480;
     const mat = new Mat(new Size(w, h), 16 /* CV_8UC3 */);
-    drawRect(mat, new Rect(0, 0, w, h), new Scalar(250, 250, 250), FILL);
+    rectangle(mat, new Rect(0, 0, w, h), new Scalar(250, 250, 250), FILL);
     drawVectorData(mat, vd, null, { strokeScale: 1 });
     this.preview = { mat, count: vd.shapes.length };
   }

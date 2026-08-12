@@ -1,5 +1,5 @@
 import { assert } from 'assert';
-import { CV_8UC1, CV_8UC3, Contour, EVENT_FLAG_CTRLKEY, EVENT_FLAG_SHIFTKEY, EVENT_LBUTTONDOWN, EVENT_LBUTTONUP, EVENT_MOUSEMOVE, EVENT_RBUTTONDOWN, EVENT_RBUTTONUP, GC_BGD, GC_FGD, GC_INIT_WITH_MASK, GC_INIT_WITH_RECT, GC_PR_BGD, GC_PR_FGD, IMREAD_COLOR, Mat, Point, Rect, Scalar, WINDOW_AUTOSIZE, addWeighted, copyTo, destroyWindow, drawCircle, drawRect, grabCut, imread, imshow, namedWindow, setMouseCallback, waitKeyEx, } from 'opencv';
+import { CV_8UC1, CV_8UC3, Contour, EVENT_FLAG_CTRLKEY, EVENT_FLAG_SHIFTKEY, EVENT_LBUTTONDOWN, EVENT_LBUTTONUP, EVENT_MOUSEMOVE, EVENT_RBUTTONDOWN, EVENT_RBUTTONUP, GC_BGD, GC_FGD, GC_INIT_WITH_MASK, GC_INIT_WITH_RECT, GC_PR_BGD, GC_PR_FGD, IMREAD_COLOR, Mat, Point, Rect, Scalar, WINDOW_AUTOSIZE, addWeighted, copyTo, destroyWindow, circle, rectangle, grabCut, imread, imshow, namedWindow, setMouseCallback, waitKeyEx, } from 'opencv';
 
 const C = console.config({ compact: true });
 
@@ -95,13 +95,13 @@ class GCApplication {
       addWeighted(black, 0.5, res, 0.5, 0.0, res);
     }
 
-    for(const pt of this.bgdPxls) drawCircle(res, pt, GCApplication.radius, BLUE, GCApplication.thickness);
-    for(const pt of this.fgdPxls) drawCircle(res, pt, GCApplication.radius, RED, GCApplication.thickness);
-    for(const pt of this.prBgdPxls) drawCircle(res, pt, GCApplication.radius, LIGHTBLUE, GCApplication.thickness);
-    for(const pt of this.prFgdPxls) drawCircle(res, pt, GCApplication.radius, PINK, GCApplication.thickness);
+    for(const pt of this.bgdPxls) circle(res, pt, GCApplication.radius, BLUE, GCApplication.thickness);
+    for(const pt of this.fgdPxls) circle(res, pt, GCApplication.radius, RED, GCApplication.thickness);
+    for(const pt of this.prBgdPxls) circle(res, pt, GCApplication.radius, LIGHTBLUE, GCApplication.thickness);
+    for(const pt of this.prFgdPxls) circle(res, pt, GCApplication.radius, PINK, GCApplication.thickness);
 
     if(this.rectState == GCApplication.IN_PROCESS || this.rectState == GCApplication.SET)
-      drawRect(res, new Point(this.rect.x, this.rect.y), new Point(this.rect.x + this.rect.width, this.rect.y + this.rect.height), GREEN, 2);
+      rectangle(res, new Point(this.rect.x, this.rect.y), new Point(this.rect.x + this.rect.width, this.rect.y + this.rect.height), GREEN, 2);
 
     imshow(this.winName, res);
   }
@@ -141,12 +141,12 @@ class GCApplication {
 
     if(flags & BGD_KEY) {
       this[bpxls].push(p);
-      drawCircle(this.mask, p, GCApplication.radius, bvalue, GCApplication.thickness);
+      circle(this.mask, p, GCApplication.radius, bvalue, GCApplication.thickness);
     }
 
     if(flags & FGD_KEY) {
       this[fpxls].push(p);
-      drawCircle(this.mask, p, GCApplication.radius, fvalue, GCApplication.thickness);
+      circle(this.mask, p, GCApplication.radius, fvalue, GCApplication.thickness);
     }
   }
 

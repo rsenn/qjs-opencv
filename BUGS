@@ -37,3 +37,333 @@
     import { Mat, CV_64UC1 } from 'opencv';
     const m = new Mat(new BigUint64Array([1n, 2n]));
     console.log(m.type() === CV_64UC1); // false - actually CV_64S
+
+
+- FIXED: opencv-js-api-mismatch-drawing-function-names: Renamed all
+  drawing functions to match opencv.js API:
+  - drawCircle → circle
+  - drawLine → line
+  - drawRect → rectangle
+  - drawPolylines → polylines
+  - drawPolygon → fillPoly (simplified to only call cv::fillPoly, removed thickness support)
+  - drawEllipse → ellipse
+  Changes made to js_draw.cpp (C++ exports and handler) and all 20+ client JS files.
+  Note: drawContours and drawContour remain as-is (opencv.js has no direct equivalent).
+
+
+- opencv-js-api-mismatch-contour-class: qjs-opencv provides a `Contour`
+  class with convenience methods (approxPolyDP, arcLength, area, etc.)
+  while opencv.js uses `MatVector` (of point-Mats) returned by
+  `findContours`. All Contour methods must be replaced with free
+  functions operating on Mat/MatVector, or Contour must become a
+  compatibility shim over MatVector.
+  Affected files:
+    tests/test_video_homography.js
+    tests/test_freetype.js
+    tests/test_contours.js
+    tests/test_grabcut.js
+    contours.js
+    js/cvVectorization.js
+    ../doc-scanner.js
+    ../scan.js
+    ../test-umat.js
+    ../test-cv.js
+    ../test-quickjs.js
+    ../test.js
+    ../plot-cv.js
+    ../test-diagram.js
+
+
+- opencv-js-api-mismatch-dnn-namespace: qjs-opencv groups dnn symbols
+  under a `dnn` namespace object (`dnn.readNetFromONNX`, `dnn.Net`,
+  `dnn.blobFromImage`, etc.) while opencv.js exposes them as flat
+  functions on the `cv` object (`cv.readNetFromONNX`, `cv.blobFromImage`,
+  `cv.dnn_Net`). Additionally, qjs-opencv has model wrapper classes
+  (DetectionModel, ClassificationModel, SegmentationModel,
+  KeypointsModel, TextDetectionModel_EAST/DB, TextRecognitionModel,
+  Tokenizer, Model) that don't exist in opencv.js — only `dnn_Net`
+  (with setInput/forward/setPreferableBackend/getUnconnectedOutLayersNames)
+  is whitelisted. Also `dnn.NMSBoxes()` and `dnn.DNN_BACKEND_*`/
+  `dnn.DNN_TARGET_*` constants are absent from opencv.js.
+  Affected files:
+    tests/test_segmentation_model.js    (dnn.SegmentationModel, dnn.Net)
+    tests/test_keypoints_model.js       (dnn.KeypointsModel, dnn.Net)
+    tests/test_text_detection_model_east.js (dnn.TextDetectionModel_EAST)
+    tests/test_text_detection_model_db.js   (dnn.TextDetectionModel_DB)
+    tests/test_tokenizer.js             (dnn.Tokenizer, enableKVCache)
+    tests/test_classification_model.js  (dnn.ClassificationModel)
+    tests/test_text_recognition_model.js (dnn.TextRecognitionModel)
+    tests/test_model.js                 (dnn.Model, DNN_BACKEND/TARGET)
+    tests/test_detection_model.js       (dnn.DetectionModel)
+    examples/qwen25_inference.js        (dnn namespace, dnn.Tokenizer,
+                                         ENGINE_ORT, CV_64SC1, mat.buffer,
+                                         N-dim Mat ctor, forward() signature)
+    js/cvVectorization.js               (dnn.readNetFromONNX, dnn.blobFromImage)
+    ../object_detection.js              (dnn namespace, dnn.NMSBoxes)
+    ../yolo.js                          (dnn namespace, readNetFromDarknet,
+                                         NMSBoxes, getLayerNames, getLayer)
+    ../photo_categorizer.js             (dnn namespace, dnn.NMSBoxes)
+
+
+- opencv-js-api-mismatch-line-class: qjs-opencv provides a `Line` class
+  while opencv.js has no `Line` type — `HoughLinesP` returns a
+  `PointVector` (vector<Vec4i> mapped to points). Code using `Line`
+  must be reworked to use Point/Vec4i equivalents.
+  Affected files:
+    tests/test_fastlinedetector.js
+    tests/test_linesegmentdetector.js
+    tests/test_gif.js
+    tests/fld_lines.js
+    tests/test_video_writer.js
+    ../diagram.js
+    ../test-cv.js
+    ../test-quickjs.js
+    ../test-cli.js
+    ../test-video.js
+    ../test-opencv.js
+
+
+- opencv-js-api-mismatch-draw-namespace: qjs-opencv provides a `Draw`
+  namespace with methods like `Draw.line()`, `Draw.circle()`,
+  `Draw.rectangle()`, `Draw.contours()`, `Draw.text()`, `Draw.textSize()`,
+  `Draw.polylines()`, `Draw.loadFont()` while opencv.js has none of
+  this — drawing is done via free functions (`line()`, `circle()`,
+  `rectangle()`, `putText()`, etc.).
+  Affected files:
+    js/cvHighGUI.js
+    ../test-umat.js
+    ../test-diagram.js
+    ../diagram.js
+    ../test-cv.js
+    ../test-quickjs.js
+    ../test-cli.js
+    ../test-video.js
+    ../test-opencv.js
+
+
+- opencv-js-api-mismatch-mat-accessors: qjs-opencv provides `mat.at(i,j)`
+  (generic, type-inferred), `mat.set(i,j,v)`, and `mat.buffer`
+  (raw ArrayBuffer). opencv.js provides type-specific accessors:
+  `mat.ucharAt()`, `mat.intAt()`, `mat.floatAt()`, `mat.doubleAt()`,
+  etc. (no generic `.at()`), and typed views `.data`, `.data32F`,
+  `.data64F` (no `.buffer`). Also `mat.xor()`/`mat.and()` operator
+  methods don't exist — opencv.js uses `cv.bitwise_xor()`/`cv.bitwise_and()`.
+  Affected files:
+    tests/test_worker.js               (mat.buffer — not flagged separately)
+    examples/qwen25_inference.js       (mat.buffer, N-dim constructor)
+    js/cvWorker.js                     (mat.buffer)
+    js/vectorizer/cv/marshal.js        (mat.buffer)
+    ../test-umat.js                    (mat.at, mat.set, mat.xor, mat.and, mat.buffer)
+    ../test-cv.js                      (mat.at, mat.set)
+    ../test-quickjs.js                 (mat.at, mat.set)
+
+
+- opencv-js-api-mismatch-findcontours-signature: qjs-opencv's
+  `findContours` can be called with 4 args (no hierarchy output param)
+  while opencv.js requires 5 args: `findContours(image, contours,
+  hierarchy, mode, method)` — hierarchy MatVector is mandatory.
+  Affected files:
+    ../doc-scanner.js
+    ../scan.js
+
+
+- opencv-js-api-mismatch-houghcircles-class: qjs-opencv exposes
+  `HoughCircles` as a class/wrapper while opencv.js has it as a plain
+  free function `cv.HoughCircles(src, circles, method, dp, minDist, ...)`.
+  Affected files:
+    tests/test_houghcircles.js
+    ../test-video.js
+    ../test-opencv.js
+
+
+- opencv-js-api-mismatch-hu-moments-signature: qjs-opencv's
+  `HuMoments(moments, outputArray)` takes 2 args (output-param style)
+  while opencv.js has `cv.HuMoments(moments)` returning the result
+  directly (1-arg, return-value style).
+  Affected files:
+    tests/test_contours.js
+    ../test-video.js
+    ../test-opencv.js
+
+
+- opencv-js-api-mismatch-keypoint-constructor: qjs-opencv allows
+  `new KeyPoint(point, size, ...)` while opencv.js's `KeyPoint` is a
+  value_object with no JS constructor sugar — it's only returned by
+  detector methods, not constructible.
+  Affected files:
+    tests/test_video_homography.js
+    ../test-video.js
+    ../test-opencv.js
+
+
+- opencv-js-api-mismatch-barcode-detector-name: qjs-opencv exposes
+  `BarcodeDetector` (short name) while opencv.js uses the full
+  namespaced name `barcode_BarcodeDetector`.
+  Affected files:
+    tests/test_barcode.js
+
+
+- opencv-js-api-mismatch-absent-symbols: Symbols used in qjs-opencv
+  test/example code that don't exist in opencv.js at all (not in any
+  whitelisted module). Files using these can't run opencv.js examples
+  without removing or replacing the functionality.
+
+  Subdiv2D:
+    tests/test_delaunay2.js
+
+  FastLineDetector (ximgproc, not in opencv.js):
+    tests/test_fastlinedetector.js
+    tests/fld_lines.js
+    js/vectorizer/vector/methods/fast-line.js
+    ../test-video.js
+    ../test-opencv.js
+
+  LineSegmentDetector (opencv.js has createLineSegmentDetector factory,
+  not a constructible class):
+    tests/test_linesegmentdetector.js
+    js/vectorizer/vector/methods/lsd.js
+    ../detect_lines.js
+    ../test-video.js
+    ../test-opencv.js
+
+  BriefDescriptorExtractor (not whitelisted in opencv.js):
+    tests/test_video_homography.js
+    ../test-video.js
+    ../test-opencv.js
+
+  ximgproc namespace (not compiled into opencv.js):
+    tests/test_thinning.js       (ximgproc.thinning, THINNING_ZHANGSUEN, THINNING_GUOHALL)
+    tests/test_structured_edge_detection.js (ximgproc.createStructuredEdgeDetection)
+
+  createGeneralizedHoughBallard / createGeneralizedHoughGuil:
+    tests/test_generalized_hough_transform.js
+
+  createBackgroundSubtractor{CNT,GMG,GSOC,KNN,LSBP,MOG} (only MOG2
+  is whitelisted in opencv.js):
+    tests/bg_sub.js
+
+  CommandLineParser (not in opencv.js):
+    tests/test_videocapture_audio_combination.js
+    ../object_detection.js
+    ../sky_detect.js
+    ../yolo.js
+
+  depthToString (not in opencv.js core whitelist):
+    tests/test_videocapture_audio_combination.js
+
+  skeletonization / traceSkeleton / pixelNeighborhood /
+  pixelNeighborhoodCross / pixelFindValue (qjs-opencv extensions):
+    tests/test_fastlinedetector.js
+    tests/test_trace_skeleton.js
+    ../count-neighbours.js
+    ../test-opencv.js
+
+  HSVtoRGB (qjs-opencv utility, not in opencv.js):
+    tests/test_fastlinedetector.js
+    tests/test_linesegmentdetector.js
+
+  paletteGenerate / paletteMatch / paletteApply (qjs-opencv extensions):
+    tests/test_gif.js
+    tests/test_png.js
+    ../count-neighbours.js
+
+  invert (qjs-opencv extension, not in opencv.js):
+    ../count-neighbours.js
+
+  getTickCount / getTickFrequency (not in opencv.js):
+    tests/fld_lines.js
+    ../test-umat.js
+    ../object_detection.js
+    ../time-helpers.js
+
+  cvRound (not in opencv.js whitelist):
+    tests/test_delaunay2.js
+
+  getTextSize (not in opencv.js imgproc whitelist):
+    js/vectorizer/gui/canvas.js
+    ../object_detection.js
+
+  createTrackbar / getTrackbarPos (not in opencv.js):
+    js/vectorizer/gui/trackbars.js
+    ../param.js
+
+  Affine3 / AffineFeature / AffineFeature2D:
+    ../test-video.js
+    ../test-opencv.js
+
+  AgastFeatureDetector (not in this build's opencv.js):
+    ../test-features2d.js
+    ../test-opencv.js
+
+  BoostDesc / FREAK / SURF / VGG (not in opencv.js):
+    ../test-features2d.js
+    ../test-video.js
+    ../test-opencv.js
+
+  HarrisLaplaceFeatureDetector / MSDDetector / StarDetector:
+    ../test-features2d.js
+    ../test-video.js
+    ../test-opencv.js
+
+  Mahalanobis (not in opencv.js):
+    ../test-video.js
+    ../test-opencv.js
+
+  TickMeter (not in opencv.js):
+    ../test-video.js
+    ../test-opencv.js
+    ../yolo.js
+
+  UMat (not in opencv.js):
+    ../test-umat.js
+    ../test-video.js
+    ../test-opencv.js
+
+  PointIterator / SliceIterator (qjs-opencv extensions):
+    ../test-umat.js
+    ../test-cv.js
+    ../test-quickjs.js
+    ../test-video.js
+    ../test-opencv.js
+
+  FileNode / FileStorage (not in opencv.js):
+    ../object_detection.js
+
+  pyrMeanShiftFiltering (not in opencv.js imgproc whitelist):
+    js/cvVectorization.js
+
+  sum (not in opencv.js core whitelist):
+    ../cv-helpers.js
+
+  RaspiCam (platform-specific, not in opencv.js):
+    ../takephoto.js
+
+  CAP_GSTREAMER / CAP_ANDROID / CAP_FFMPEG / CAP_ANY /
+  VIDEOWRITER_PROP_FRAMEBYTES (videoio not whitelisted in opencv.js):
+    tests/test_video_writer.js
+    tests/test_videocapture_audio_combination.js
+    ../images2video.js
+
+  readNetFromDarknet (not in this build's opencv.js):
+    ../yolo.js
+
+  net.getLayerNames / net.getLayer / net.getUnconnectedOutLayers
+  (not on dnn_Net in opencv.js; only getUnconnectedOutLayersNames):
+    ../yolo.js
+
+
+- opencv-js-api-mismatch-feature2d-methods-vs-properties: qjs-opencv
+  exposes `descriptorSize`, `descriptorType`, `defaultName` as
+  properties while opencv.js has them as methods: `descriptorSize()`,
+  `descriptorType()`, `getDefaultName()`. Also `Feature2D.write()`/
+  `.read()` (serialize/deserialize) are absent from opencv.js.
+  Affected files:
+    ../test-features2d.js
+
+
+- opencv-js-api-mismatch-cv64sc1-and-ndim-mat: `CV_64SC1` (OpenCV 5
+  integer-depth addition) and N-dimensional Mat constructor
+  `new Mat(dims, sizes[], type)` don't exist in opencv.js. opencv.js
+  only has CV_8U through CV_64F depths and 2D constructors.
+  Affected files:
+    examples/qwen25_inference.js

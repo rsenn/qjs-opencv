@@ -4,7 +4,7 @@
 // HighGUI preview/composite panes. It reuses core flatten()/apply(), so the
 // raster preview matches the exported SVG exactly (including baked perspective).
 
-import { Point, Scalar, drawLine, drawCircle, drawPolygon } from 'opencv.so';
+import { Point, Scalar, line, circle, fillPoly } from 'opencv.so';
 import { flatten } from '../core/vectordata.js';
 import { apply } from '../core/geometry.js';
 
@@ -31,7 +31,7 @@ export function drawVectorData(mat, vd, H = null, opts = {}) {
 
     if(f.isPoint) {
       const [x, y] = xf(f.rings[0][0]);
-      drawCircle(mat, new Point(x | 0, y | 0), Math.max(1, f.r | 0), fillC || strokeC || new Scalar(20, 20, 20), -1);
+      circle(mat, new Point(x | 0, y | 0), Math.max(1, f.r | 0), fillC || strokeC || new Scalar(20, 20, 20), -1);
       continue;
     }
 
@@ -45,7 +45,7 @@ export function drawVectorData(mat, vd, H = null, opts = {}) {
       if(f.closed && fillC) {
         let filled = false;
         try {
-          drawPolygon(mat, pts, fillC, -1);
+          fillPoly(mat, pts, fillC, -1);
           filled = true;
         } catch(_) {}
         if(!filled) strokeRing(mat, pts, fillC, 1, true);
@@ -58,6 +58,6 @@ export function drawVectorData(mat, vd, H = null, opts = {}) {
 }
 
 function strokeRing(mat, pts, color, thick, closed) {
-  for(let i = 0; i < pts.length - 1; i++) drawLine(mat, pts[i], pts[i + 1], color, thick);
-  if(closed && pts.length > 2) drawLine(mat, pts[pts.length - 1], pts[0], color, thick);
+  for(let i = 0; i < pts.length - 1; i++) line(mat, pts[i], pts[i + 1], color, thick);
+  if(closed && pts.length > 2) line(mat, pts[pts.length - 1], pts[0], color, thick);
 }

@@ -1,4 +1,4 @@
-import { HoughCircles, HOUGH_GRADIENT_ALT, HOUGH_GRADIENT, drawCircle, COLOR_BGR2GRAY, Mat, cvtColor, imread, imshow, Point, drawLine, waitKey, medianBlur, LINE_AA } from 'opencv';
+import { HoughCircles, HOUGH_GRADIENT_ALT, HOUGH_GRADIENT, circle, COLOR_BGR2GRAY, Mat, cvtColor, imread, imshow, Point, line, waitKey, medianBlur, LINE_AA } from 'opencv';
 
 function main(filename = 'smarties.png') {
   const src = imread(filename);
@@ -18,8 +18,8 @@ function main(filename = 'smarties.png') {
   for(const [x, y, radius] of circles) {
     const center = new Point(x, y);
 
-    // drawCircle(src, center, 1, [0, 255, 255], 3, LINE_AA);
-    drawCircle(src, center, radius, [255, 0, 255], 3, LINE_AA);
+    // circle(src, center, 1, [0, 255, 255], 3, LINE_AA);
+    circle(src, center, radius, [255, 0, 255], 3, LINE_AA);
   }
 
   imshow('detected circles', src);

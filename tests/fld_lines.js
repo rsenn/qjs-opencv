@@ -1,4 +1,4 @@
-import { Line, Mat, Scalar, IMREAD_GRAYSCALE, LINE_AA, FastLineDetector, getTickFrequency, getTickCount, Point, drawLine, imread, imshow, waitKey, cvtColor, COLOR_GRAY2BGR, moveWindow, getWindowImageRect, imwrite, } from 'opencv';
+import { Line, Mat, Scalar, IMREAD_GRAYSCALE, LINE_AA, FastLineDetector, getTickFrequency, getTickCount, Point, line, imread, imshow, waitKey, cvtColor, COLOR_GRAY2BGR, moveWindow, getWindowImageRect, imwrite, } from 'opencv';
 
 function main(...args) {
   if(args.length == 0) args = ['corridor.jpg'];
@@ -57,8 +57,8 @@ function main(...args) {
 
     lines = [...lines].map(l => new Line(l));
 
-    for(let line of lines) {
-      drawLine(line_image_fld, line, [line.aspect * 255, (line.angle * 255) / Math.PI, 255], 1, LINE_AA);
+    for(let ln of lines) {
+      line(line_image_fld, ln, [ln.aspect * 255, (ln.angle * 255) / Math.PI, 255], 1, LINE_AA);
     }
 
     /*console.log(

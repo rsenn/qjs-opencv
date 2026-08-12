@@ -11,7 +11,7 @@
 // between screen pixels and canvas coordinates and drives drag interaction; it
 // uses OpenCV solely to raster the preview.
 
-import { Mat, Size, Scalar, Rect, drawRect, FILLED } from 'opencv.so';
+import { Mat, Size, Scalar, Rect, rectangle, FILLED } from 'opencv.so';
 import { Palette } from '../canvas.js';
 import { drawVectorData } from '../../cv/raster.js';
 import { rectToQuad } from '../../core/geometry.js';
@@ -82,7 +82,7 @@ export class ProjectStage {
     // Render the whole canvas (in canvas resolution) then paste scaled. This is
     // the same path the SVG composer takes, just rasterized.
     const cM = new Mat(new Size(m.canvas.width, m.canvas.height), 16);
-    drawRect(cM, new Rect(0, 0, m.canvas.width, m.canvas.height), new Scalar(250, 250, 250), FILL);
+    rectangle(cM, new Rect(0, 0, m.canvas.width, m.canvas.height), new Scalar(250, 250, 250), FILL);
     for (const f of vfs) {
       const pl = m.placements.get(f.id);
       const res = m.results.get(f.id);

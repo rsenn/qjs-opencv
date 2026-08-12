@@ -1,4 +1,4 @@
-import { Scalar, Rect, Subdiv2D, CV_8UC3, Size, CV_8UC1, blur, getStructuringElement, MORPH_RECT, IMREAD_COLOR, moveWindow, waitKey, destroyWindow, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY, bitwise_not, erode, dilate, imread, imshow, cvtColor, COLOR_BGR2GRAY, LINE_AA, FILLED, LINE_8, Mat, Point, drawCircle, fillConvexPoly, drawPolylines, drawLine, cvRound, } from 'opencv';
+import { Scalar, Rect, Subdiv2D, CV_8UC3, Size, CV_8UC1, blur, getStructuringElement, MORPH_RECT, IMREAD_COLOR, moveWindow, waitKey, destroyWindow, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY, bitwise_not, erode, dilate, imread, imshow, cvtColor, COLOR_BGR2GRAY, LINE_AA, FILLED, LINE_8, Mat, Point, circle, fillConvexPoly, polylines, line, cvRound, } from 'opencv';
 
 function rand() {
   return Math.round(Math.random() * Math.pow(2, 32));
@@ -16,7 +16,7 @@ function help(char** argv)
 }*/
 
 function draw_subdiv_point(/*Mat&*/ img, /*Point2f */ fp, /*Scalar*/ color) {
-  drawCircle(img, fp, 3, color, FILLED, LINE_8, 0);
+  circle(img, fp, 3, color, FILLED, LINE_8, 0);
 }
 
 function draw_subdiv(/* Mat&*/ img, /*Subdiv2D&*/ subdiv, /* Scalar*/ delaunay_color) {
@@ -33,9 +33,9 @@ function draw_subdiv(/* Mat&*/ img, /*Subdiv2D&*/ subdiv, /* Scalar*/ delaunay_c
     pt[1] = new Point(cvRound(t[2]), cvRound(t[3]));
     pt[2] = new Point(cvRound(t[4]), cvRound(t[5]));
 
-    drawLine(img, pt[0], pt[1], delaunay_color, 1, LINE_AA, 0);
-    drawLine(img, pt[1], pt[2], delaunay_color, 1, LINE_AA, 0);
-    drawLine(img, pt[2], pt[0], delaunay_color, 1, LINE_AA, 0);
+    line(img, pt[0], pt[1], delaunay_color, 1, LINE_AA, 0);
+    line(img, pt[1], pt[2], delaunay_color, 1, LINE_AA, 0);
+    line(img, pt[2], pt[0], delaunay_color, 1, LINE_AA, 0);
   }
 }
 
@@ -59,7 +59,7 @@ function locate_point(/*Mat&*/ img, /*Subdiv2D&*/ subdiv, /*Point2f*/ fp, /*Scal
         dst = new Point();
 
       if(subdiv.edgeOrg(e, org) > 0 && subdiv.edgeDst(e, dst) > 0) {
-        drawLine(img, org, dst, active_color, 3, LINE_AA, 0);
+        line(img, org, dst, active_color, 3, LINE_AA, 0);
       }
 
       e = subdiv.getEdge(e, Subdiv2D.NEXT_AROUND_LEFT);
@@ -91,8 +91,8 @@ function paint_voronoi(img, subdiv) {
 
     ifacets[0] = ifacet;
 
-    drawPolylines(img, ifacets, true, Scalar(0, 0, 255), 1, LINE_AA, 0);
-    drawCircle(img, centers[i], 3, Scalar(0, 0, 255), FILLED, LINE_AA, 0);
+    polylines(img, ifacets, true, Scalar(0, 0, 255), 1, LINE_AA, 0);
+    circle(img, centers[i], 3, Scalar(0, 0, 255), FILLED, LINE_AA, 0);
   }
 }
 

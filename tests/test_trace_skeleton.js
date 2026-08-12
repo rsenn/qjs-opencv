@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import { Mat, Point, Size, Rect, CV_8UC1, CV_8UC3, COLOR_BGR2GRAY, COLOR_GRAY2BGR, LINE_AA, LINE_8, FILLED, cvtColor, imread, imwrite, imshow, waitKey, skeletonization, pixelNeighborhood, pixelFindValue, traceSkeleton, drawLine, drawCircle, } from 'opencv';
+import { Mat, Point, Size, Rect, CV_8UC1, CV_8UC3, COLOR_BGR2GRAY, COLOR_GRAY2BGR, LINE_AA, LINE_8, FILLED, cvtColor, imread, imwrite, imshow, waitKey, skeletonization, pixelNeighborhood, pixelFindValue, traceSkeleton, line, circle, } from 'opencv';
 
 function hsv2bgr(h, s, v) {
   const c = v * s;
@@ -85,18 +85,18 @@ function main(filename = 'tests/test_linesegmentdetector.jpg') {
     const c = contours[i];
     if(c.length < 2) {
       // Single-pixel contour: mark it so it isn't lost.
-      drawCircle(traced, new Point(c[0].x, c[0].y), 1, hsv2bgr((i * 37) % 360, 0.9, 1.0), FILLED, LINE_8);
+      circle(traced, new Point(c[0].x, c[0].y), 1, hsv2bgr((i * 37) % 360, 0.9, 1.0), FILLED, LINE_8);
       continue;
     }
     const color = hsv2bgr((i * 37) % 360, 0.9, 1.0);
     for(let j = 1; j < c.length; j++) {
-      drawLine(traced, new Point(c[j - 1].x, c[j - 1].y), new Point(c[j].x, c[j].y), color, 1, LINE_AA);
+      line(traced, new Point(c[j - 1].x, c[j - 1].y), new Point(c[j].x, c[j].y), color, 1, LINE_AA);
     }
   }
 
   // Overlay endpoints (green) and junctions (red).
-  for(const p of endpoints) drawCircle(traced, new Point(p.x, p.y), 2, [0, 255, 0, 255], 1, LINE_AA);
-  for(const p of junctions) drawCircle(traced, new Point(p.x, p.y), 2, [0, 0, 255, 255], 1, LINE_AA);
+  for(const p of endpoints) circle(traced, new Point(p.x, p.y), 2, [0, 255, 0, 255], 1, LINE_AA);
+  for(const p of junctions) circle(traced, new Point(p.x, p.y), 2, [0, 0, 255, 255], 1, LINE_AA);
 
   traced.copyTo(canvas(new Rect(width * 2, 0, width, height)));
 

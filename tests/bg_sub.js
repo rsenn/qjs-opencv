@@ -1,4 +1,4 @@
-import { Mat, Scalar, FONT_HERSHEY_SIMPLEX, createBackgroundSubtractorCNT, createBackgroundSubtractorGMG, createBackgroundSubtractorGSOC, createBackgroundSubtractorKNN, createBackgroundSubtractorLSBP, createBackgroundSubtractorMOG, createBackgroundSubtractorMOG2, VideoCapture, Point, drawRect, putText, imshow, waitKey, CAP_PROP_POS_FRAMES, } from 'opencv';
+import { Mat, Scalar, FONT_HERSHEY_SIMPLEX, createBackgroundSubtractorCNT, createBackgroundSubtractorGMG, createBackgroundSubtractorGSOC, createBackgroundSubtractorKNN, createBackgroundSubtractorLSBP, createBackgroundSubtractorMOG, createBackgroundSubtractorMOG2, VideoCapture, Point, rectangle, putText, imshow, waitKey, CAP_PROP_POS_FRAMES, } from 'opencv';
 
 function main(input, algo = 'MOG2') {
   const pBackSub = {
@@ -29,7 +29,7 @@ function main(input, algo = 'MOG2') {
     pBackSub.apply(frame, fgMask);
 
     // get the frame number and write it on the current frame
-    drawRect(frame, new Point(10, 2), new Point(100, 20), Scalar(255, 255, 255), -1);
+    rectangle(frame, new Point(10, 2), new Point(100, 20), Scalar(255, 255, 255), -1);
     const frameNumberString = capture.get(CAP_PROP_POS_FRAMES);
 
     putText(frame, frameNumberString, new Point(15, 15), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 0, 0));

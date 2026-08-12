@@ -1,4 +1,4 @@
-import { CV_8UC1, CV_8UC4, Mat, Point, Size, drawLine, imread, imwrite, paletteGenerate, paletteMatch } from 'opencv';
+import { CV_8UC1, CV_8UC4, Mat, Point, Size, line, imread, imwrite, paletteGenerate, paletteMatch } from 'opencv';
 
 const ansiColor = (r, g, b, bg = false) => `\x1b[${bg ? 48 : 38};2;${r};${g};${b}m`;
 const noColor = () => `\x1b[0m`;
@@ -42,7 +42,7 @@ function main(...args) {
       /* console.log('coords', coords.map(({ x, y }) => x + ',' + y).join(' -> '));
       console.log('color', color);
       console.log('j', j);*/
-      drawLine(images[i], ...coords, [...color.slice(0, 3), 255], 3, false);
+      line(images[i], ...coords, [...color.slice(0, 3), 255], 3, false);
     }
 
     images2[i] = Mat.zeros(size, CV_8UC1);

@@ -1,4 +1,4 @@
-import { KeyPoint, Contour, imshow, cvtColor, COLOR_RGB2GRAY, drawKeypoints, countNonZero, findHomography, perspectiveTransform, drawLine, drawCircle, VideoCapture, BriefDescriptorExtractor, BFMatcher, FastFeatureDetector, CV_32FC1, Mat, DRAW_OVER_OUTIMG, Scalar, RANSAC, waitKey, } from 'opencv';
+import { KeyPoint, Contour, imshow, cvtColor, COLOR_RGB2GRAY, drawKeypoints, countNonZero, findHomography, perspectiveTransform, line, circle, VideoCapture, BriefDescriptorExtractor, BFMatcher, FastFeatureDetector, CV_32FC1, Mat, DRAW_OVER_OUTIMG, Scalar, RANSAC, waitKey, } from 'opencv';
 
 /*static void help(char **av)
 {
@@ -17,8 +17,8 @@ function drawMatchesRelative(train, query, matches, img, mask) {
       const pt_new = query[matches[i].queryIdx].pt;
       const pt_old = train[matches[i].trainIdx].pt;
 
-      drawLine(img, pt_new, pt_old, Scalar(125, 255, 125), 1);
-      drawCircle(img, pt_new, 2, Scalar(255, 0, 125), 1);
+      line(img, pt_new, pt_old, Scalar(125, 255, 125), 1);
+      circle(img, pt_new, 2, Scalar(255, 0, 125), 1);
     }
   }
 }

@@ -8,8 +8,8 @@ import {
   COLOR_BGRA2BGR,
   cvtColor,
   detailEnhance,
-  drawCircle,
-  drawLine,
+  circle,
+  line,
   edgePreservingFilter,
   fastNlMeansDenoising,
   fastNlMeansDenoisingColored,
@@ -71,10 +71,10 @@ function main(filename = 'smarties.png') {
   const damaged = src.clone();
   const mask = new Mat(src.rows, src.cols, CV_8UC1, new Scalar(0));
 
-  drawLine(damaged, new Point(40, 40), new Point(src.cols - 40, src.rows - 40), new Scalar(0, 0, 0), 12);
-  drawLine(mask, new Point(40, 40), new Point(src.cols - 40, src.rows - 40), new Scalar(255), 12);
-  drawCircle(damaged, new Point(src.cols >> 1, src.rows >> 1), 30, new Scalar(0, 0, 0), -1);
-  drawCircle(mask, new Point(src.cols >> 1, src.rows >> 1), 30, new Scalar(255), -1);
+  line(damaged, new Point(40, 40), new Point(src.cols - 40, src.rows - 40), new Scalar(0, 0, 0), 12);
+  line(mask, new Point(40, 40), new Point(src.cols - 40, src.rows - 40), new Scalar(255), 12);
+  circle(damaged, new Point(src.cols >> 1, src.rows >> 1), 30, new Scalar(0, 0, 0), -1);
+  circle(mask, new Point(src.cols >> 1, src.rows >> 1), 30, new Scalar(255), -1);
 
   show_wait_destroy('inpaint (damaged)', damaged);
 

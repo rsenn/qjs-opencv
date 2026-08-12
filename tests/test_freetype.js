@@ -3,7 +3,7 @@ import * as util from 'util';
 import { TextStyle } from '../js/cvHighGUI.js';
 import { Window } from '../js/cvHighGUI.js';
 import { Console } from 'console';
-import { COLOR_BGR2GRAY, Contour, CV_8UC3, cvtColor, drawRect, FILLED, imshow, imwrite, LINE_8, LINE_AA, Mat, namedWindow, Point, Rect, resizeWindow, Size, THRESH_BINARY_INV, threshold, waitKey, WINDOW_NORMAL, } from 'opencv';
+import { COLOR_BGR2GRAY, Contour, CV_8UC3, cvtColor, rectangle, FILLED, imshow, imwrite, LINE_8, LINE_AA, Mat, namedWindow, Point, Rect, resizeWindow, Size, THRESH_BINARY_INV, threshold, waitKey, WINDOW_NORMAL, } from 'opencv';
 
 function main(...args) {
   globalThis.console = new Console({
@@ -23,7 +23,7 @@ function main(...args) {
     [255, 255, 255],
   ];
 
-  // drawRect(mat, [0, 0], [639, 479], colors[1], FILLED);
+  // rectangle(mat, [0, 0], [639, 479], colors[1], FILLED);
 
   let [fontFile = 'MiscFixedSC613.ttf', fontSize = 12] = args;
 
@@ -42,7 +42,7 @@ function main(...args) {
   let dim = new Size(powerOf2(rect.width), powerOf2(Math.round(Math.min(rect.width / 1.7777), rect.height)));
   console.log('dim', dim);
   mat = new Mat(dim, CV_8UC3);
-  drawRect(mat, [0, 0], [mat.cols - 1, mat.rows - 1], colors[1], FILLED);
+  rectangle(mat, [0, 0], [mat.cols - 1, mat.rows - 1], colors[1], FILLED);
 
   let step = Math.round(rect.width / str.length);
   console.log('step', step);
@@ -209,7 +209,7 @@ function main(...args) {
     //   console.log(i, console.config({maxArrayLength:10}), rows);
 
     writeROI(i++, box);
-    drawRect(mat, box.tl, box.br.sub(1, 1), [255, 0, 0], 1, LINE_8);
+    rectangle(mat, box.tl, box.br.sub(1, 1), [255, 0, 0], 1, LINE_8);
   }
 
   writeFile(fontName + '@' + fontSize + '.js', toSource(font));

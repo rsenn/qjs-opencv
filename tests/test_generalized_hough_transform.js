@@ -1,4 +1,4 @@
-import { Mat, imread, IMREAD_GRAYSCALE, cvtColor, COLOR_RGB2GRAY, createGeneralizedHoughBallard, createGeneralizedHoughGuil, Point, Size, Scalar, RotatedRect, imshow, drawLine, waitKey, } from 'opencv';
+import { Mat, imread, IMREAD_GRAYSCALE, cvtColor, COLOR_RGB2GRAY, createGeneralizedHoughBallard, createGeneralizedHoughGuil, Point, Size, Scalar, RotatedRect, imshow, line, waitKey, } from 'opencv';
 
 function main() {
   //  load source image and grayscale template
@@ -61,23 +61,23 @@ function main() {
   guil.detect(grayImage, positionGuil);
 
   //  draw ballard
-  for(let line of positionBallard) {
-    const rRect = new RotatedRect(new Point(line[0], line[1]), new Size(w * line[2], h * line[2]), line[3]);
+  for(let seg of positionBallard) {
+    const rRect = new RotatedRect(new Point(seg[0], seg[1]), new Size(w * seg[2], h * seg[2]), seg[3]);
 
     const vertices = [];
     rRect.points(vertices);
 
-    for(let i = 0; i < 4; i++) drawLine(image, vertices[i], vertices[(i + 1) % 4], Scalar(255, 0, 0), 6);
+    for(let i = 0; i < 4; i++) line(image, vertices[i], vertices[(i + 1) % 4], Scalar(255, 0, 0), 6);
   }
 
   //  draw guil
-  for(let line of positionGuil) {
-    const rRect = new RotatedRect(new Point(line[0], line[1]), new Size(w * line[2], h * line[2]), line[3]);
+  for(let seg of positionGuil) {
+    const rRect = new RotatedRect(new Point(seg[0], seg[1]), new Size(w * seg[2], h * seg[2]), seg[3]);
 
     const vertices = [];
     rRect.points(vertices);
 
-    for(let i = 0; i < 4; i++) drawLine(image, vertices[i], vertices[(i + 1) % 4], Scalar(0, 255, 0), 2);
+    for(let i = 0; i < 4; i++) line(image, vertices[i], vertices[(i + 1) % 4], Scalar(0, 255, 0), 2);
   }
 
   imshow('result_img', image);

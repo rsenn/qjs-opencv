@@ -157,8 +157,7 @@ so they're easy to fix if your bindings differ:
   `fast-line.js`)
 * `skeletonization(src, dst)` exists (ximgproc/thinning). (`skeleton.js`)
 * `Subdiv2D` with `.insert(Point)` / `.getTriangleList()`. (`lowpoly-delaunay.js`)
-* `drawPolygon(mat, points, scalar, thickness)` for filled preview polygons
-  (falls back to stroked edges if absent). (`cv/raster.js`)
+* `fillPoly(mat, points, scalar, lineType)` for filled preview polygons. (`cv/raster.js`)
 * Palette helpers `paletteGenerate(src,k)` / `paletteMatch(src,palette)` — these
   are rsenn-specific; if named differently, only `vector/methods/palette-regions.js`
   needs editing.

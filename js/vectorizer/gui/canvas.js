@@ -5,7 +5,7 @@
 // Qt-only createButton/displayOverlay, so the app runs on any HighGUI backend.
 // Hit-testing for "buttons" is done in widgets.js against the rects we draw here.
 
-import { Mat, Size, Point, Rect, Scalar, resize, cvtColor, drawRect, drawLine, putText, getTextSize, COLOR_GRAY2BGR, FONT_HERSHEY_SIMPLEX, FILLED } from 'opencv.so';
+import { Mat, Size, Point, Rect, Scalar, resize, cvtColor, rectangle, line, putText, getTextSize, COLOR_GRAY2BGR, FONT_HERSHEY_SIMPLEX, FILLED } from 'opencv.so';
 
 const FILL = typeof FILLED === 'number' ? FILLED : -1;
 
@@ -34,21 +34,21 @@ export class Canvas {
   }
 
   clear(color = Palette.bg) {
-    drawRect(this.mat, new Rect(0, 0, this.width, this.height), sc(color), FILL);
+    rectangle(this.mat, new Rect(0, 0, this.width, this.height), sc(color), FILL);
   }
 
   rect(x, y, w, h, color, fill = true, thickness = 1) {
-    drawRect(this.mat, new Rect(x | 0, y | 0, w | 0, h | 0), sc(color), fill ? FILL : thickness);
+    rectangle(this.mat, new Rect(x | 0, y | 0, w | 0, h | 0), sc(color), fill ? FILL : thickness);
   }
 
   // Rounded-ish panel (plain rect + lighter top edge for a bit of depth).
   panel(x, y, w, h, color = Palette.panel) {
     this.rect(x, y, w, h, color, true);
-    drawLine(this.mat, new Point(x, y), new Point(x + w, y), sc(Palette.line), 1);
+    line(this.mat, new Point(x, y), new Point(x + w, y), sc(Palette.line), 1);
   }
 
   line(x1, y1, x2, y2, color = Palette.line, thickness = 1) {
-    drawLine(this.mat, new Point(x1 | 0, y1 | 0), new Point(x2 | 0, y2 | 0), sc(color), thickness);
+    line(this.mat, new Point(x1 | 0, y1 | 0), new Point(x2 | 0, y2 | 0), sc(color), thickness);
   }
 
   text(str, x, y, color = Palette.text, scale = 0.5, thickness = 1) {

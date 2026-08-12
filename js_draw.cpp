@@ -350,13 +350,12 @@ js_draw_line(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
 }
 
 static JSValue
-js_draw_polygon(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+js_fill_poly(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSInputOutputArray dst;
-  int i = 0, ret = -1;
+  int i = 0;
   point_vector<int> points;
   cv::Scalar color;
-  bool antialias = true;
-  int thickness = -1;
+  int line_type = cv::LINE_AA;
 
   if(argc > i) {
     if(!js_is_noarray((dst = js_umat_or_mat(ctx, argv[i]))))
@@ -371,22 +370,14 @@ js_draw_polygon(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
     i++;
 
   if(argc > i)
-    js_value_to(ctx, argv[i++], thickness);
-
-  if(argc > i)
-    js_value_to(ctx, argv[i++], antialias);
+    js_value_to(ctx, argv[i++], line_type);
 
   if(dptr != nullptr) {
     const int size = points.size();
-    int line_type = antialias ? cv::LINE_AA : cv::LINE_8;
     const JSPointData<int>* pts = points.data();
 
-    std::cerr << "drawPolygon() points: " << (points) << " color: " << to_string(color) << std::endl;
-
-    // cv::fillPoly(*dptr, points, color, antialias ? cv::LINE_AA : cv::LINE_8);
-
     try {
-      (thickness <= 0 ? cv::fillPoly(dst, &pts, &size, 1, color, line_type) : cv::polylines(dst, &pts, &size, 1, true, color, thickness, line_type));
+      cv::fillPoly(dst, &pts, &size, 1, color, line_type);
     } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 
     return JS_UNDEFINED;
@@ -791,7 +782,7 @@ const JSCFunctionListEntry js_draw_static_funcs[] = {
     JS_CFUNC_DEF("contour", 1, &js_draw_contour),
     JS_CFUNC_DEF("contours", 4, &js_draw_contours),
     JS_CFUNC_DEF("line", 1, &js_draw_line),
-    JS_CFUNC_DEF("polygon", 1, &js_draw_polygon),
+    JS_CFUNC_DEF("fillPoly", 1, &js_fill_poly),
     JS_CFUNC_DEF("polylines", 1, &js_draw_polylines),
     JS_CFUNC_DEF("rectangle", 1, &js_draw_rectangle),
     JS_CFUNC_DEF("text", 2, &js_put_text),
@@ -803,14 +794,14 @@ const JSCFunctionListEntry js_draw_static_funcs[] = {
 };
 
 const JSCFunctionListEntry js_draw_global_funcs[] = {
-    JS_CFUNC_DEF("drawCircle", 1, &js_draw_circle),
-    JS_CFUNC_DEF("drawEllipse", 2, &js_draw_ellipse),
+    JS_CFUNC_DEF("circle", 1, &js_draw_circle),
+    JS_CFUNC_DEF("ellipse", 2, &js_draw_ellipse),
     JS_CFUNC_DEF("drawContour", 1, &js_draw_contour),
     JS_CFUNC_DEF("drawContours", 4, &js_draw_contours),
-    JS_CFUNC_DEF("drawLine", 1, &js_draw_line),
-    JS_CFUNC_DEF("drawPolygon", 1, &js_draw_polygon),
-    JS_CFUNC_DEF("drawPolylines", 1, &js_draw_polylines),
-    JS_CFUNC_DEF("drawRect", 1, &js_draw_rectangle),
+    JS_CFUNC_DEF("line", 1, &js_draw_line),
+    JS_CFUNC_DEF("fillPoly", 1, &js_fill_poly),
+    JS_CFUNC_DEF("polylines", 1, &js_draw_polylines),
+    JS_CFUNC_DEF("rectangle", 1, &js_draw_rectangle),
     JS_CFUNC_DEF("drawKeypoints", 3, &js_draw_keypoints),
     JS_CFUNC_DEF("putText", 2, &js_put_text),
     JS_CFUNC_DEF("getTextSize", 5, &js_get_text_size),

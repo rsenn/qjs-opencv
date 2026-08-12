@@ -1,4 +1,4 @@
-import { HSVtoRGB, HoughCircles, Line, Rect, CV_8UC3, HOUGH_STANDARD, HOUGH_PROBABILISTIC, HOUGH_MULTI_SCALE, HOUGH_GRADIENT_ALT, HOUGH_GRADIENT, drawCircle, threshold, THRESH_BINARY_INV, skeletonization, COLOR_BGR2Lab, COLOR_GRAY2BGR, CV_8UC1, FastLineDetector, LINE_AA, Mat, NORM_MINMAX, cvtColor, equalizeHist, imread, imshow, drawLine, normalize, split, waitKey, } from 'opencv';
+import { HSVtoRGB, HoughCircles, Line, Rect, CV_8UC3, HOUGH_STANDARD, HOUGH_PROBABILISTIC, HOUGH_MULTI_SCALE, HOUGH_GRADIENT_ALT, HOUGH_GRADIENT, circle, threshold, THRESH_BINARY_INV, skeletonization, COLOR_BGR2Lab, COLOR_GRAY2BGR, CV_8UC1, FastLineDetector, LINE_AA, Mat, NORM_MINMAX, cvtColor, equalizeHist, imread, imshow, line, normalize, split, waitKey, } from 'opencv';
 
 function main(arg = 'tests/test_linesegmentdetector.jpg') {
   // Create FLD detector
@@ -58,12 +58,12 @@ function main(arg = 'tests/test_linesegmentdetector.jpg') {
   for(let [x, y, r] of circles) {
     console.log(console.config({ compact: true }), { x, y, r });
 
-    drawCircle(canvas, x + image.cols, y, r, [255, 0, 255, 255], 1);
+    circle(canvas, x + image.cols, y, r, [255, 0, 255, 255], 1);
   }
 
   lines = [...lines].map(l => new Line(...l.map(Math.round)));
 
-  for(let l of lines) drawLine(canvas, l.x1 + image.cols * 2, l.y1, l.x2 + image.cols * 2, l.y2, HSVtoRGB(((l.angle + Math.PI) * 360) / (Math.PI * 2), 1, 1, 255), 1, LINE_AA);
+  for(let l of lines) line(canvas, l.x1 + image.cols * 2, l.y1, l.x2 + image.cols * 2, l.y2, HSVtoRGB(((l.angle + Math.PI) * 360) / (Math.PI * 2), 1, 1, 255), 1, LINE_AA);
 
   console.log('lines', lines);
 
