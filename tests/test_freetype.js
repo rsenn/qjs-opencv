@@ -69,7 +69,7 @@ function main(...args) {
   namedWindow('out', WINDOW_NORMAL);
   let winsize = new Size(rect.width, Math.max(mat.cols / 1.77777, rect.height));
   console.log('winsize', winsize);
-  resizeWindow('out', ...mat.size.mul(1));
+  resizeWindow('out', ...mat.size().mul(1));
   imshow('out', mat);
   waitKey(-1);
 

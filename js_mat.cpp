@@ -38,17 +38,11 @@ enum {
   PROP_COLS = 0,
   PROP_ROWS,
   PROP_DIMS,
-  PROP_CHANNELS,
-  PROP_TYPE,
-  PROP_DEPTH,
   PROP_EMPTY,
-  PROP_SIZE,
   PROP_MATSIZE,
   PROP_CONTINUOUS,
   PROP_SUBMATRIX,
   PROP_STEP,
-  PROP_ELEMSIZE,
-  PROP_ELEMSIZE1
 };
 enum {
   METHOD_CREATE = 0,
@@ -68,6 +62,12 @@ enum {
   METHOD_PTR,
   METHOD_TOTAL,
   METHOD_INV,
+  METHOD_CHANNELS,
+  METHOD_TYPE,
+  METHOD_DEPTH,
+  METHOD_SIZE,
+  METHOD_ELEMSIZE,
+  METHOD_ELEMSIZE1,
 };
 enum {
   MAT_EXPR_AND = 0,
@@ -361,23 +361,18 @@ js_mat_initialize(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
       haveType = true;
 
     } else if(js_is_typedarray(ctx, argv[0])) {
-      const auto typed = js_typedarray_type(ctx, argv[0]);
-      type = typed.cv_type();
-      JSValue tmp = JS_GetPropertyStr(ctx, argv[0], "buffer");
-      uint32_t offset = js_object_property<uint32_t>(ctx, argv[0], "byteOffset");
-      uint32_t length = js_object_property<uint32_t>(ctx, argv[0], "length");
-      size_t dummy;
-
-      sizes.push_back(length);
-
-      abuf = js_arraybuffer_slice(ctx, tmp, offset, offset + length * typed.byte_size);
-      JS_FreeValue(ctx, tmp);
-
-      if(!(buf = JS_GetArrayBuffer(ctx, &dummy, abuf))) {
-        JS_ThrowTypeError(ctx, "argument %d failed tot get .buffer", index + 1);
-        return FALSE;
-      }
-
+      /* `new Mat(typedArray)` with no explicit shape is rejected rather than
+       * inferring sizes = [length]: that silently built a genuinely 1D Mat
+       * while .rows/.cols reported a misleading "1 x length" 2D shape (see
+       * BUGS: mat-from-flat-typedarray-at-2arg-wrong). opencv.js has no
+       * equivalent bare-array overload either - cv.matFromArray(rows, cols,
+       * type, array) always requires the shape up front. Callers must do
+       * the same here via the existing ArrayBuffer-consuming path. */
+      JS_ThrowTypeError(ctx,
+                         "new Mat(typedArray) requires an explicit shape - use "
+                         "new Mat(rows, cols, type, typedArray.buffer) or "
+                         "new Mat(sizes, type, typedArray.buffer) instead");
+      return FALSE;
     } else if(js_is_array(ctx, argv[0])) {
       if(js_array_to(ctx, argv[0], sizes) <= 0) {
         JS_ThrowTypeError(ctx, "argument %d must be an Array that contains 1 or more sizes", index + 1);
@@ -483,6 +478,7 @@ fail2:
 }
 
 static JSValue js_mat_buffer(JSContext* ctx, JSValueConst this_val);
+static JSValue js_mat_size_value(JSContext* ctx, cv::Mat* m);
 
 static JSValue
 js_mat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
@@ -658,6 +654,36 @@ js_mat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
         cv::Mat inverse = m->inv(method);
 
         ret = js_mat_wrap(ctx, inverse);
+        break;
+      }
+
+      case METHOD_CHANNELS: {
+        ret = JS_NewUint32(ctx, m->channels());
+        break;
+      }
+
+      case METHOD_TYPE: {
+        ret = JS_NewUint32(ctx, m->type());
+        break;
+      }
+
+      case METHOD_DEPTH: {
+        ret = JS_NewUint32(ctx, m->depth());
+        break;
+      }
+
+      case METHOD_SIZE: {
+        ret = js_mat_size_value(ctx, m);
+        break;
+      }
+
+      case METHOD_ELEMSIZE: {
+        ret = JS_NewUint32(ctx, m->elemSize());
+        break;
+      }
+
+      case METHOD_ELEMSIZE1: {
+        ret = JS_NewUint32(ctx, m->elemSize1());
         break;
       }
     }
@@ -1203,37 +1229,7 @@ js_mat_set_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
   return JS_UNDEFINED;
 }
 
-// Returns func_data[0] regardless of how it's invoked. Used both as the
-// callable itself and as its own valueOf/toString, so a "number box" (see
-// js_mat_number_box below) behaves as a plain number under coercion (unary
-// +, arithmetic, template literals) while still being callable like
-// OpenCV.js's mat.channels()/type()/depth().
-static JSValue
-js_mat_number_box_call(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic, JSValue* func_data) {
-  return JS_DupValue(ctx, func_data[0]);
-}
-
-// A callable object that also coerces to `value` via valueOf/toString, for
-// properties that used to be plain numbers but are methods in OpenCV.js
-// (mat.channels, mat.type, mat.depth). Old code using them as numbers (e.g.
-// `mat.channels >= 3` or `` `${mat.type}` ``) keeps working, while
-// `mat.channels()` also works as in OpenCV.js. (Diagnostics like
-// console.log() that don't coerce their arguments will still print it as a
-// function, not a number.)
-static JSValue
-js_mat_number_box(JSContext* ctx, uint32_t value) {
-  JSValue num = JS_NewUint32(ctx, value);
-  JSValueConst data[] = {num};
-
-  JSValue fn = JS_NewCFunctionData(ctx, js_mat_number_box_call, 0, 0, 1, data);
-  JS_DefinePropertyValueStr(ctx, fn, "valueOf", JS_NewCFunctionData(ctx, js_mat_number_box_call, 0, 0, 1, data), JS_PROP_CONFIGURABLE | JS_PROP_WRITABLE);
-  JS_DefinePropertyValueStr(ctx, fn, "toString", JS_NewCFunctionData(ctx, js_mat_number_box_call, 0, 0, 1, data), JS_PROP_CONFIGURABLE | JS_PROP_WRITABLE);
-
-  JS_FreeValue(ctx, num);
-  return fn;
-}
-
-// The value produced by mat.size()/mat.size: a cv.Size (when the Mat has
+// The value produced by mat.size(): a cv.Size (when the Mat has
 // conventional 2D cols/rows) with each dimension also available by index
 // (mat.size[i]), or, for a Mat where cols/rows aren't meaningful, a plain
 // array of per-dimension sizes.
@@ -1257,36 +1253,6 @@ js_mat_size_value(JSContext* ctx, cv::Mat* m) {
   }
 
   return ret;
-}
-
-static JSValue
-js_mat_size_call(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic, JSValue* func_data) {
-  cv::Mat* m;
-
-  if(!(m = js_mat_data2(ctx, func_data[0])))
-    return JS_EXCEPTION;
-
-  return js_mat_size_value(ctx, m);
-}
-
-// A callable object usable both as mat.size().width (call it, get a fresh
-// cv.Size reflecting the Mat's current size) and mat.size.width (read
-// width/height straight off the callable, snapshotted at access time like
-// any other property).
-static JSValue
-js_mat_size_box(JSContext* ctx, JSValueConst this_val, cv::Mat* m) {
-  JSValueConst data[] = {this_val};
-  JSValue fn = JS_NewCFunctionData(ctx, js_mat_size_call, 0, 0, 1, data);
-
-  if(m->cols != -1 && m->rows != -1) {
-    JS_DefinePropertyValueStr(ctx, fn, "width", JS_NewInt32(ctx, m->cols), JS_PROP_CONFIGURABLE);
-    JS_DefinePropertyValueStr(ctx, fn, "height", JS_NewInt32(ctx, m->rows), JS_PROP_CONFIGURABLE);
-  }
-
-  for(int i = 0; i < m->dims; ++i)
-    JS_DefinePropertyValueUint32(ctx, fn, i, JS_NewInt32(ctx, m->size[i]), JS_PROP_CONFIGURABLE);
-
-  return fn;
 }
 
 static JSValue
@@ -1316,21 +1282,6 @@ js_mat_get_props(JSContext* ctx, JSValueConst this_val, int magic) {
       break;
     }
 
-    case PROP_CHANNELS: {
-      ret = js_mat_number_box(ctx, m->channels());
-      break;
-    }
-
-    case PROP_TYPE: {
-      ret = js_mat_number_box(ctx, m->type());
-      break;
-    }
-
-    case PROP_DEPTH: {
-      ret = js_mat_number_box(ctx, m->depth());
-      break;
-    }
-
     case PROP_EMPTY: {
       ret = JS_NewBool(ctx, m->empty());
       break;
@@ -1340,11 +1291,6 @@ js_mat_get_props(JSContext* ctx, JSValueConst this_val, int magic) {
         ret = JS_NewFloat64(ctx, m->total());
         break;
       }*/
-
-    case PROP_SIZE: {
-      ret = js_mat_size_box(ctx, this_val, m);
-      break;
-    }
 
     case PROP_MATSIZE: {
       std::vector<int> sizes;
@@ -1376,15 +1322,6 @@ js_mat_get_props(JSContext* ctx, JSValueConst this_val, int magic) {
       break;
     }
 
-    case PROP_ELEMSIZE: {
-      ret = js_mat_number_box(ctx, m->elemSize());
-      break;
-    }
-
-    case PROP_ELEMSIZE1: {
-      ret = js_mat_number_box(ctx, m->elemSize1());
-      break;
-    }
   }
 
   return ret;
@@ -1949,17 +1886,11 @@ const JSCFunctionListEntry js_mat_proto_funcs[] = {
     JS_CGETSET_MAGIC_DEF("cols", js_mat_get_props, NULL, PROP_COLS),
     JS_CGETSET_MAGIC_DEF("rows", js_mat_get_props, NULL, PROP_ROWS),
     JS_CGETSET_MAGIC_DEF("dims", js_mat_get_props, NULL, PROP_DIMS),
-    JS_CGETSET_MAGIC_DEF("channels", js_mat_get_props, NULL, PROP_CHANNELS),
-    JS_CGETSET_MAGIC_DEF("type", js_mat_get_props, NULL, PROP_TYPE),
-    JS_CGETSET_MAGIC_DEF("depth", js_mat_get_props, NULL, PROP_DEPTH),
     JS_CGETSET_MAGIC_DEF("empty", js_mat_get_props, NULL, PROP_EMPTY),
-    JS_CGETSET_MAGIC_DEF("size", js_mat_get_props, NULL, PROP_SIZE),
     JS_CGETSET_MAGIC_DEF("matSize", js_mat_get_props, NULL, PROP_MATSIZE),
     JS_CGETSET_MAGIC_DEF("continuous", js_mat_get_props, NULL, PROP_CONTINUOUS),
     JS_CGETSET_MAGIC_DEF("submatrix", js_mat_get_props, NULL, PROP_SUBMATRIX),
     JS_CGETSET_MAGIC_DEF("step", js_mat_get_props, NULL, PROP_STEP),
-    JS_CGETSET_MAGIC_DEF("elemSize", js_mat_get_props, NULL, PROP_ELEMSIZE),
-    JS_CGETSET_MAGIC_DEF("elemSize1", js_mat_get_props, NULL, PROP_ELEMSIZE1),
     JS_CGETSET_DEF("buffer", js_mat_buffer, NULL),
     JS_CGETSET_DEF("array", js_mat_array, NULL),
 
@@ -1982,6 +1913,13 @@ const JSCFunctionListEntry js_mat_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("ptr", 0, js_mat_funcs, METHOD_PTR),
 
     JS_CFUNC_MAGIC_DEF("inv", 1, js_mat_funcs, METHOD_INV),
+
+    JS_CFUNC_MAGIC_DEF("channels", 0, js_mat_funcs, METHOD_CHANNELS),
+    JS_CFUNC_MAGIC_DEF("type", 0, js_mat_funcs, METHOD_TYPE),
+    JS_CFUNC_MAGIC_DEF("depth", 0, js_mat_funcs, METHOD_DEPTH),
+    JS_CFUNC_MAGIC_DEF("size", 0, js_mat_funcs, METHOD_SIZE),
+    JS_CFUNC_MAGIC_DEF("elemSize", 0, js_mat_funcs, METHOD_ELEMSIZE),
+    JS_CFUNC_MAGIC_DEF("elemSize1", 0, js_mat_funcs, METHOD_ELEMSIZE1),
 
     JS_CFUNC_MAGIC_DEF("and", 2, js_mat_expr, MAT_EXPR_AND),
     JS_CFUNC_MAGIC_DEF("or", 2, js_mat_expr, MAT_EXPR_OR),

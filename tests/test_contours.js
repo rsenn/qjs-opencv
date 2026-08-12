@@ -10,14 +10,14 @@ function main(...args) {
   console.log('input.type', '0x' + input.type().toString(16));
   console.log('input.depth', '0x' + input.depth().toString(16));
   console.log('input.channels', '0x' + input.channels().toString(16));
-  console.log('input.elemSize1', input.elemSize1);
+  console.log('input.elemSize1', input.elemSize1());
   console.log('input.total', input.total);
   console.log('input.at', input.at(0, 0));
 
-  let size = input.size;
+  let size = input.size();
   console.log('size', size);
   let { width, height } = size;
-  let mat = new Mat(input.size, CV_8UC3);
+  let mat = new Mat(input.size(), CV_8UC3);
   let thresh = 100;
   const RandomPoint = () => new Point(randInt(width - 1), randInt(height - 1));
   const RandomColor = () => [randInt(255), randInt(255), randInt(255), 255];

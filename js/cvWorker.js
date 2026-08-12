@@ -47,7 +47,7 @@ export function sharedToMat(d) {
 // a Mat over the SAME memory (true zero-copy).
 export function newSharedMat(rows, cols, type) {
   const probe = new Mat(1, 1, type);
-  const elemBytes = probe.elemSize;
+  const elemBytes = probe.elemSize();
   const step = cols * elemBytes;
   const sab = new SharedArrayBuffer(rows * step);
   const mat = new Mat(rows, cols, type, sab, step);

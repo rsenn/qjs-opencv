@@ -26,12 +26,12 @@ function main(filename = 'tests/test_linesegmentdetector.jpg') {
     console.log('failed to load', filename);
     return 1;
   }
-  console.log('size:', input.size, 'channels:', input.channels());
+  console.log('size:', input.size(), 'channels:', input.channels());
 
   // Stage 1: thinning. skeletonization() handles BGR->gray + Otsu internally.
   const skel = new Mat();
   skeletonization(input, skel);
-  console.log('skeleton: type=0x' + skel.type().toString(16), 'size=', skel.size);
+  console.log('skeleton: type=0x' + skel.type().toString(16), 'size=', skel.size());
 
   // Stage 2: 8-neighbour degree map. Source must be a cv.Mat (not UMat).
   const neighborhood = new Mat();
@@ -59,7 +59,7 @@ function main(filename = 'tests/test_linesegmentdetector.jpg') {
   // --- Visualization ---
 
   // Side-by-side canvas: [original | skeleton | traced polylines].
-  const { width, height } = input.size;
+  const { width, height } = input.size();
   const canvas = new Mat(height, width * 3, CV_8UC3);
 
   // Panel 0: original image (force 3-channel if grayscale).

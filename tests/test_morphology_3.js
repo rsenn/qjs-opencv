@@ -26,7 +26,7 @@ function main(input = './samples/samples/data/notes.png') {
 
   // Apply adaptiveThreshold at the bitwise_not of gray, notice the ~ symbol
   let bw = new Mat(),
-    gray2 = new Mat(gray.size, gray.type());
+    gray2 = new Mat(gray.size(), gray.type());
 
   bitwise_not(gray, gray2);
 

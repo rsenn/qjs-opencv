@@ -34,7 +34,7 @@ const FGD_KEY = EVENT_FLAG_SHIFTKEY;
 function getBinMask(/*const Mat&*/ comMask, /*Mat& */ binMask) {
   if(comMask.empty || comMask.type() != CV_8UC1) throw new Error('comMask is empty or has incorrect type (not CV_8UC1)');
 
-  if(binMask.empty || !binMask.size.equals(comMask.size)) binMask.create(comMask.size, CV_8UC1);
+  if(binMask.empty || !binMask.size().equals(comMask.size())) binMask.create(comMask.size(), CV_8UC1);
 
   //comMask.and(Scalar(1));
 
@@ -74,7 +74,7 @@ class GCApplication {
     this.image = _image;
     this.winName = _winName;
 
-    this.mask.create(this.image.size, CV_8UC1);
+    this.mask.create(this.image.size(), CV_8UC1);
     this.reset();
   }
 
@@ -89,7 +89,7 @@ class GCApplication {
     if(this.isInitialized) {
       getBinMask(this.mask, binMask);
 
-      const black = new Mat(binMask.size, CV_8UC3, Scalar(0, 0, 0));
+      const black = new Mat(binMask.size(), CV_8UC3, Scalar(0, 0, 0));
       black.setTo(Scalar(255, 255, 255), binMask);
 
       addWeighted(black, 0.5, res, 0.5, 0.0, res);
@@ -262,8 +262,8 @@ class GCApplication {
       this.isInitialized = true;
     }
 
-    console.log('bgdModel', C, bgdModel.size);
-    console.log('fgdModel', C, fgdModel.size);
+    console.log('bgdModel', C, bgdModel.size());
+    console.log('fgdModel', C, fgdModel.size());
 
     this.iterCount++;
 

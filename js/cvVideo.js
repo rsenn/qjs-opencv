@@ -16,7 +16,7 @@ function ImageSize(src, dst, dsize, action = (name, arg1, arg2) => console.debug
   let s,
     roi,
     f,
-    ssize = src.size;
+    ssize = src.size();
   if(!ssize.equals(dsize)) {
     let [fx, fy] = dsize.div(ssize);
     if(fx != fy) {
@@ -34,7 +34,7 @@ function ImageSize(src, dst, dsize, action = (name, arg1, arg2) => console.debug
         action('Crop', ssize, roi);
         let cropped = Crop(src, roi);
         src = cropped;
-        ssize = src.size;
+        ssize = src.size();
         [fx, fy] = dsize.div(ssize);
       }
     }
@@ -92,7 +92,7 @@ export class ImageSequence {
 
     if(!dimensions) {
       let mat = imread(images[0], IMREAD_IGNORE_ORIENTATION);
-      dimensions = mat.size;
+      dimensions = mat.size();
       const { cols, rows } = mat;
       dimensions = new Size(mat.cols, mat.rows);
     }
