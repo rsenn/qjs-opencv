@@ -149,14 +149,13 @@
   entry was incorrect.
 
 
-- opencv-js-api-mismatch-hu-moments-signature: qjs-opencv's
-  `HuMoments(moments, outputArray)` takes 2 args (output-param style)
-  while opencv.js has `cv.HuMoments(moments)` returning the result
-  directly (1-arg, return-value style).
-  Affected files:
-    tests/test_contours.js
-    ../test-video.js
-    ../test-opencv.js
+- FIXED: opencv-js-api-mismatch-hu-moments-signature: HuMoments now
+  supports both opencv.js signatures:
+  - HuMoments(moments) -> returns Float64Array(7) with hu values
+  - HuMoments(moments, outputArray) -> writes to outputArray (Mat,
+    Float64Array, or ArrayBuffer) and returns it
+  The 1-arg form matches opencv.js's return-value style. The 2-arg form
+  is retained for backward compatibility with existing qjs-opencv code.
 
 
 - opencv-js-api-mismatch-keypoint-constructor: qjs-opencv allows

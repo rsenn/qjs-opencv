@@ -2092,7 +2092,6 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
 
       case SHAPE_HU_MOMENTS: {
         std::map<std::string, double> moments_map;
-        std::array<double, 7> hu;
         js_object_to(ctx, argv[0], moments_map);
 
         cv::Moments moments(moments_map["m00"],
@@ -2106,11 +2105,19 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
                             moments_map["m12"],
                             moments_map["m03"]);
 
-        cv::HuMoments(moments, &hu[0]);
-
-        if(JS_IsArray(ctx, argv[1])) {
-          js_array_clear(ctx, argv[1]);
-          js_array_copy(ctx, argv[1], hu.begin(), hu.end());
+        if(argc > 1) {
+          // 2-arg form: HuMoments(moments, outputArray)
+          // TODO: could optimize by creating a buffer view into the OutputArray
+          // using JS_NewArrayBuffer with opaque set to the Mat's buffer pointer,
+          // with a finalizer to release the originating Mat.buffer reference
+          JSOutputArray hu_out = js_cv_outputarray(ctx, argv[1]);
+          cv::HuMoments(moments, hu_out);
+          ret = JS_DupValue(ctx, argv[1]);
+        } else {
+          // 1-arg form: HuMoments(moments) -> returns Float64Array(7)
+          std::array<double, 7> hu;
+          cv::HuMoments(moments, &hu[0]);
+          ret = js_array_from(ctx, hu.begin(), hu.end());
         }
 
         break;
