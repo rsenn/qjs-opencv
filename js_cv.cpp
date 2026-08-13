@@ -884,6 +884,7 @@ enum {
   OTHER_RGB,
   OTHER_SWAP,
   OTHER_SCALAR,
+  OTHER_SCALAR_ALL,
   OTHER_HSV2RGB,
   OTHER_RGB2HSV,
   OTHER_COLORCONVERT,
@@ -1436,6 +1437,16 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
         break;
       }
 
+      case OTHER_SCALAR_ALL: {
+        double v = 0;
+        if(argc >= 1)
+          js_number_read(ctx, argv[0], &v);
+
+        cv::Scalar s(v, v, v, v);
+        ret = js_typedarray_from(ctx, *reinterpret_cast<std::array<double, 4>*>(&s));
+        break;
+      }
+
       case OTHER_HSV2RGB: {
         cv::Scalar v = {0, 0, 0, 255};
 
@@ -1726,7 +1737,7 @@ js_function_list_t js_cv_static_funcs{
     JS_CFUNC_MAGIC_DEF("RGBtoHSV", 1, js_cv_other, OTHER_RGB2HSV),
     JS_CFUNC_MAGIC_DEF("colorConvert", 2, js_cv_other, OTHER_COLORCONVERT),
     // JS_CFUNC_MAGIC_DEF("format", 1, js_cv_other, OTHER_FORMAT),
-    JS_CTOR_MAGIC_DEF("Scalar", 0, js_cv_other, OTHER_SCALAR),
+    // Scalar constructor and Scalar.all are created manually in js_cv_init
     JS_CFUNC_MAGIC_DEF("cvRound", 1, js_cv_other, OTHER_CVROUND),
     JS_CFUNC_MAGIC_DEF("cvFloor", 1, js_cv_other, OTHER_CVFLOOR),
     JS_CFUNC_MAGIC_DEF("cvCeil", 1, js_cv_other, OTHER_CVCEIL),
@@ -2589,8 +2600,14 @@ js_cv_init(JSContext* ctx, JSModuleDef* m) {
 
   JS_SetConstructor(ctx, exception_class, exception_proto);
 
+  // Create Scalar constructor manually (to attach static methods)
+  JSValue scalar_ctor = JS_NewCFunctionMagic(ctx, js_cv_other, "Scalar", 0, JS_CFUNC_constructor, OTHER_SCALAR);
+  JSValue scalar_all = JS_NewCFunctionMagic(ctx, js_cv_other, "all", 1, JS_CFUNC_generic_magic, OTHER_SCALAR_ALL);
+  JS_DefinePropertyValue(ctx, scalar_ctor, JS_NewAtom(ctx, "all"), scalar_all, JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE);
+
   if(m) {
     JS_SetModuleExport(ctx, m, "Exception", exception_class);
+    JS_SetModuleExport(ctx, m, "Scalar", scalar_ctor);
     JS_SetModuleExportList(ctx, m, js_cv_static_funcs.data(), js_cv_static_funcs.size());
     JS_SetModuleExportList(ctx, m, js_cv_constants.data(), js_cv_constants.size());
     JS_SetModuleExportList(ctx, m, js_cv_constructors.data(), js_cv_constructors.size());
@@ -2626,6 +2643,7 @@ js_cv_init(JSContext* ctx, JSModuleDef* m) {
 extern "C" void
 js_cv_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "Exception");
+  JS_AddModuleExport(ctx, m, "Scalar");
   JS_AddModuleExportList(ctx, m, js_cv_static_funcs.data(), js_cv_static_funcs.size());
   JS_AddModuleExportList(ctx, m, js_cv_constants.data(), js_cv_constants.size());
   JS_AddModuleExportList(ctx, m, js_cv_constructors.data(), js_cv_constructors.size());

@@ -48,15 +48,75 @@
   - drawPolygon → fillPoly (simplified to only call cv::fillPoly, removed thickness support)
   - drawEllipse → ellipse
   Changes made to js_draw.cpp (C++ exports and handler) and all 20+ client JS files.
-  Note: drawContours and drawContour remain as-is (opencv.js has no direct equivalent).
+- opencv-js-api-mismatch-contour-class: The Contour class is scheduled for
+  phase-out in favor of MatVector (vector<Mat> backed by memory). The
+  plain-array approach used by findContours has performance problems when
+  there are many contours.
 
+  **Migration strategy:**
+  - Implement MatVector with enhanced JS ergonomics (Symbol.iterator,
+    length property, optional .delete()) to balance opencv.js compatibility
+    with JS idioms
+  - Migrate Contour methods to freestanding functions in js_cv.cpp
+    (contourArea, arcLength, approxPolyDP, etc.) matching opencv.js API
+  - Update findContours to output MatVector instead of plain array
+  - Keep Contour class temporarily for backward compatibility during
+    migration
+  - Remove Contour class after migration is complete
 
-- opencv-js-api-mismatch-contour-class: qjs-opencv provides a `Contour`
-  class with convenience methods (approxPolyDP, arcLength, area, etc.)
-  while opencv.js uses `MatVector` (of point-Mats) returned by
-  `findContours`. All Contour methods must be replaced with free
-  functions operating on Mat/MatVector, or Contour must become a
-  compatibility shim over MatVector.
+  **Investigation complete:**
+
+  C++ backing type: `JSContourData<double>` = `std::vector<JSPointData<double>>`
+  (i.e., `vector<Point2d>`). This is NOT compatible with findContours'
+  native output which is `vector<vector<Point>>` (i.e., `vector<Point2i>`).
+  The type mismatch is a real performance issue — data must be copied
+  and converted from int32 to double on every findContours call.
+
+  C++ binding files that depend on Contour (direct #include or usage):
+    js_contour.hpp           — type definitions, template helpers
+    js_contour.cpp           — class registration, all methods, finalizer
+    js_point_iterator.cpp    — iterates contour points
+    js_slice_iterator.cpp    — uses JSContourData<double> (dead code)
+    js_rect.cpp              — Rect.contour() returns a Contour
+    js_umat.hpp              — Contour-to-InputArray/OutputArray bridging
+    js_imgproc.cpp           — findContours, shape functions, pointPolygonTest, getAffineTransform
+    js_draw.cpp              — fillConvexPoly accepts Contour as point array
+    js_subdiv2d.cpp          — Voronoi facets use JSContoursData<float>
+    js_ximgproc.cpp          — getSegments(), contourSampling
+    js_mat.cpp               — Mat constructor accepts Contour (zero-copy wrap)
+    js_calib3d.cpp           — findHomography uses JSContourData<double>
+    algorithms/trace_skeleton.hpp — builds JSContourData<double> directly
+
+  JS client files that import/use Contour (12 named imports + 6 indirect):
+    tests/test_contours.js, test_freetype.js, test_grabcut.js, test_video_homography.js
+    tests/test_trace_skeleton.js (contours from traceSkeleton)
+    contours.js, js/cvVectorization.js
+    ../scan.js, ../doc-scanner.js, ../test-diagram.js, ../test-video.js
+    ../test-opencv.js, ../test-cli.js, ../plot-cv.js
+    ../test.js, ../test-umat.js, ../test-quickjs.js, ../test-imread.js
+    ../test-image.js
+
+  Methods with opencv.js free-function equivalents (already bound):
+    approxPolyDP, arcLength, contourArea, boundingRect, minAreaRect,
+    minEnclosingCircle, minEnclosingTriangle, convexHull, fitEllipse,
+    fitLine, isContourConvex, convexityDefects, moments, HuMoments,
+    matchShapes, pointPolygonTest
+
+  Methods WITHOUT opencv.js equivalents (Contour-only, need migration):
+    simplifyReumannWitkam, simplifyOpheim, simplifyLang,
+    simplifyDouglasPeucker, simplifyNthPoint, simplifyRadialDistance,
+    simplifyPerpendicularDistance, lines, toArray, getMat,
+    Contour.from, Contour.fromString, Contour.fromRect,
+    Contour.match, Contour.intersect, rotatedRectangleIntersection,
+    intersectConvex, rotatePoints, aspectRatio, extent, solidity,
+    equivalentDiameter, orientation, getBoundingClientRect,
+    adjacent, collapse, fill, push, pop, unshift, shift, splice,
+    indexOf, lastIndexOf, find, findIndex, findLast, findLastIndex,
+    concat
+
+  See: contour-methods-migration entry for implementation plan.
+  See: no-opencvjs-matvector entry for MatVector C++ feasibility analysis.
+
   Affected files:
     tests/test_video_homography.js
     tests/test_freetype.js
@@ -66,6 +126,12 @@
     js/cvVectorization.js
     ../doc-scanner.js
     ../scan.js
+    ../test-umat.js
+    ../test-cv.js
+    ../test-quickjs.js
+    ../test.js
+    ../plot-cv.js
+    ../test-diagram.js
     ../test-umat.js
     ../test-cv.js
     ../test-quickjs.js
@@ -356,14 +422,16 @@
   qjs-opencv. Fix: add to js_mat.cpp proto_funcs.
 
 
-- opencv-js-api-mismatch-mat-typed-data-views: opencv.js exposes 7
-  typed-array views of the pixel buffer as Mat properties: `.data`
-  (Uint8Array), `.data8S`, `.data16U`, `.data16S`, `.data32S`,
-  `.data32F`, `.data64F`. qjs-opencv has `.buffer` (raw ArrayBuffer)
-  and `.array` (row-major array of typed sub-arrays) but none of the
-  7 named views. Code like `mat.data32F[i] = 0` silently reads
-  `undefined`. Fix: add property getters to js_mat.cpp that return
-  memory_view-style typed arrays.
+- opencv-js-api-mismatch-mat-typed-data-views: Added 7 typed-array
+  view properties to Mat: `.data` (Uint8Array), `.data8S` (Int8Array),
+  `.data16U` (Uint16Array), `.data16S` (Int16Array), `.data32S` (Int32Array),
+  `.data32F` (Float32Array), `.data64F` (Float64Array). Implemented using
+  a single template function `js_mat_typedarray<T>(ctx, this_val, magic)`
+  registered via `JS_CGETSET_MAGIC_DEF` with element size (1, 2, 4, or 8)
+  as the magic parameter. Each invocation creates a zero-copy view via
+  `js_typedarray<T>::from_buffer()`. The legacy `.array` property (row-major
+  array of typed sub-arrays) is disabled but retained in the code for
+  reference. The `.buffer` property (raw ArrayBuffer) remains unchanged.
 
 
 - opencv-js-api-mismatch-mat-typed-element-accessors: opencv.js has
@@ -390,10 +458,191 @@
   default y/height to 0.
 
 
-- opencv-js-api-mismatch-scalar-all: opencv.js's `Scalar.all(v)`
-  returns `Scalar(v, v, v, v)` — commonly used for uniform fills
-  (e.g., `cv.Scalar.all(-1)` for random per-keypoint colors).
-  qjs-opencv has no static `all` method on Scalar. Additionally,
-  opencv.js's Scalar subclasses `Array` (`instanceof Array === true`);
-  qjs-opencv's returns `Float64Array`. Fix: add static `all` method
-  and consider making Scalar an Array subclass.
+- opencv-js-api-mismatch-scalar-all: Added `Scalar.all(v)` static
+  method that returns `Float64Array(4)` with all components set to v.
+  Implementation: manually create Scalar constructor in js_cv_init using
+  JS_NewCFunctionMagic, then attach "all" as a static method using
+  JS_NewCFunctionMagic and JS_DefinePropertyValue. Scalar continues to
+  return Float64Array for zero-copy bridging into cv::_InputOutputArray.
+
+
+- no-opencvjs-matvector: opencv.js exposes MatVector (and PointVector,
+  KeyPointVector, DMatchVector, RectVector) via Emscripten's
+  register_vector<T>(). These are manually-managed containers that
+  require explicit .delete() calls. qjs-opencv has no equivalent — it
+  uses plain JS arrays throughout.
+
+  ## opencv.js MatVector API (from Emscripten register_vector<cv::Mat>)
+
+  Constructor:
+    new cv.MatVector()              — creates empty vector
+
+  Methods:
+    mv.push_back(mat)               — append a Mat to the vector
+    mv.get(index)                   — returns Mat at index (reference/handle)
+    mv.set(index, mat)              — sets Mat at index (replaces element)
+    mv.size()                       — returns number of elements (int)
+    mv.delete()                     — frees native memory (required!)
+
+  Usage in opencv.js (from tests and tutorials):
+    let contours = new cv.MatVector();
+    cv.findContours(src, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+    for (let i = 0; i < contours.size(); i++) {
+      let cnt = contours.get(i);
+      let area = cv.contourArea(cnt);
+      cnt.delete();  // must delete each retrieved Mat
+    }
+    contours.delete();  // must delete the vector itself
+
+    let bgrPlanes = new cv.MatVector();
+    cv.split(src, bgrPlanes);
+    let rMat = bgrPlanes.get(0);
+    // ... use rMat ...
+    rMat.delete();
+    bgrPlanes.delete();
+
+  ## Implementation Plan for js_matvector.cpp
+
+  C++ backing type: `std::vector<cv::Mat>` (bridges to cv::_InputArray/
+  _OutputArray via the vector<Mat> overload).
+
+  ### File structure: js_matvector.cpp
+
+  1. Type definition:
+     typedef std::vector<cv::Mat> JSMatVectorData;
+     static thread_local JSClassID js_matvector_class_id;
+     static thread_local JSValue matvector_proto, matvector_class;
+
+  2. Constructor — js_matvector_constructor:
+     - Allocates new JSMatVectorData (empty std::vector<cv::Mat>)
+     - Wraps in JS object with js_matvector_class_id
+
+  3. Finalizer — js_matvector_finalizer:
+     - Calls ~JSMatVectorData() to free the vector
+     - Each cv::Mat in the vector has its own refcount (shared with JS
+       Mat wrappers if they were retrieved via .get())
+     - Calls js_deallocate() on the data pointer
+
+  4. Prototype methods:
+     a) push_back(mat):
+        - Extract cv::Mat* from JS Mat via js_mat_data2()
+        - Call vec->push_back(*mat) — copies the Mat header (ref-counted)
+
+     b) get(index):
+        - Bounds check: index < vec->size()
+        - Return js_mat_wrap(ctx, vec->at(index)) — creates new JS Mat
+          wrapper around a COPY of the cv::Mat header (sharing data via
+          refcount). Caller is responsible for .delete() or GC.
+
+     c) set(index, mat):
+        - Bounds check
+        - vec->at(index) = *mat — replaces the Mat header
+
+     d) size():
+        - Return JS_NewInt32(ctx, vec->size())
+
+     e) delete():
+        - Explicit cleanup: clear the vector, free memory
+        - Equivalent to calling the finalizer early
+
+  5. Registration in js_matvector_init/js_matvector_export:
+     - JS_NewClassID, JS_NewClass
+     - JS_SetPropertyFunctionList on proto
+     - JS_SetModuleExport("MatVector", matvector_class)
+
+  6. Wire into src/init_module.cpp:
+     - Add extern "C" int js_matvector_init(JSContext*, JSModuleDef*);
+     - Add extern "C" void js_matvector_export(JSContext*, JSModuleDef*);
+     - Call in js_opencv_init() and export phase
+
+  7. CMakeLists.txt:
+     - Add js_matvector.cpp to quickjs-opencv target sources
+
+  ### Key design decisions:
+  - GC-friendly: unlike opencv.js, qjs-opencv Mat objects are GC'd via
+    finalizers, so .get() returning a new JS Mat wrapper is safe — no
+    manual .delete() needed. But we keep the method for opencv.js API
+    compatibility (it becomes a no-op or calls the finalizer early).
+  - The MatVector itself is also GC-friendly via its finalizer, but
+    .delete() is kept for API compatibility.
+  - cv::_InputArray automatically accepts std::vector<cv::Mat>, so
+    passing a MatVector to functions like findContours, split, merge,
+    calcHist etc. works via the existing js_umat_or_mat dispatch.
+
+  ### C++ feasibility analysis (from test_matvector.cpp):
+  findContours with vector<Mat> produces Mat objects where:
+  - Each Mat is Nx1 (rows=N points, cols=1)
+  - Type is CV_32SC2 (2-channel 32-bit signed int = pairs of x,y)
+  - Point data is identical to vector<vector<Point>> output
+  - Hierarchy is a single Mat [6 x 1] (one Vec4i per contour)
+
+  This means MatVector.get(i) returns a Mat wrapping contiguous point
+  data — can be accessed via .data32S or .ptr<int32_t>() for zero-copy
+  reading. The Mat approach is MORE efficient than the current Contour
+  class because findContours natively writes int32 points; the Contour
+  class forces a copy+conversion to double on every call.
+
+  ### Enhanced JS ergonomics (beyond opencv.js):
+  - Symbol.iterator: enable `for (let mat of mv)` iteration
+  - length property: alias for size() 
+  - .delete() optional: finalizer handles cleanup, .delete() is no-op
+    (kept for opencv.js API compat)
+  - Numeric indexing via Proxy or direct property set is NOT needed —
+    use .get(i) for opencv.js compat, or iterate with for..of
+
+
+- contour-methods-migration: Migrate Contour instance methods to
+  freestanding functions in js_cv.cpp using JS_CFUNC_MAGIC_DEF pattern
+  (one magic-dispatched handler per functional group).
+
+  **Group 1: Shape analysis** (magic enum SHAPE_* in js_cv.cpp)
+  Already implemented in js_imgproc.cpp:
+    approxPolyDP, arcLength, contourArea, boundingRect, minAreaRect,
+    minEnclosingCircle, minEnclosingTriangle, convexHull, fitEllipse,
+    fitLine, isContourConvex, convexityDefects, moments, HuMoments,
+    matchShapes, pointPolygonTest, rotatedRectangleIntersection
+
+  These are already freestanding — no migration needed. Client code
+  already uses them both ways:
+    contour.approxPolyDP(poly, eps, closed)  // instance method
+    approxPolyDP(contour, poly, eps, closed) // free function (opencv.js style)
+
+  **Group 2: Polyline simplification** (magic enum SIMPLIFY_* in js_cv.cpp)
+  Currently Contour-only methods (psimpl library):
+    simplifyReumannWitkam, simplifyOpheim, simplifyLang,
+    simplifyDouglasPeucker, simplifyNthPoint, simplifyRadialDistance,
+    simplifyPerpendicularDistance
+
+  Implementation: create js_cv_simplify() handler with JS_CFUNC_MAGIC_DEF,
+  dispatch on magic to select psimpl algorithm. First arg is contour
+  (Mat or point array), remaining args are algorithm-specific.
+
+  Client usage (from research):
+    c.simplifyRadialDistance(10)           // instance method
+    contour.simplifyReumannWitkam(t)       // instance method
+    contour.simplifyDouglasPeucker(t)      // instance method
+
+  Migration: replace with freestanding calls:
+    simplifyRadialDistance(c, 10)
+    simplifyReumannWitkam(contour, t)
+
+  **Group 3: Utility methods** (no opencv.js equivalent, keep as-is or remove)
+    lines, toArray, getMat, Contour.from, Contour.fromString,
+    Contour.fromRect, Contour.match, Contour.intersect,
+    intersectConvex, rotatePoints, aspectRatio, extent, solidity,
+    equivalentDiameter, orientation, getBoundingClientRect,
+    adjacent, collapse, fill, push, pop, unshift, shift, splice,
+    indexOf, lastIndexOf, find, findIndex, findLast, findLastIndex,
+    concat
+
+  These are array-like mutation/access methods that don't exist in
+  opencv.js. Decision: REMOVE during Contour phase-out. Client code
+  should use standard JS array operations on the Mat data directly.
+
+  **Affected JS files** (from research, 18 files):
+    qjs-opencv/tests: test_contours.js, test_freetype.js, test_grabcut.js,
+                      test_video_homography.js, test_trace_skeleton.js
+    qjs-opencv: contours.js, js/cvVectorization.js
+    plot-cv: scan.js, doc-scanner.js, test-diagram.js, test-video.js,
+             test-opencv.js, test-cli.js, plot-cv.js, test.js,
+             test-umat.js, test-quickjs.js, test-imread.js, test-image.js

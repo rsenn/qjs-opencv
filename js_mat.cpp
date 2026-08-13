@@ -1687,6 +1687,20 @@ js_mat_array(JSContext* ctx, JSValueConst this_val) {
   return ret;
 }
 
+// Typed data view getter (opencv.js compatible)
+// magic = element size in bytes (1, 2, 4, or 8)
+template<typename T>
+static JSValue
+js_mat_typedarray(JSContext* ctx, JSValueConst this_val, int magic) {
+  JSMatData* m;
+  if(!(m = js_mat_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+  JSValue buffer = js_mat_buffer(ctx, this_val);
+  size_t total_bytes = m->total() * m->elemSize();
+  size_t element_count = total_bytes / sizeof(T);
+  return js_typedarray<T>::from_buffer(ctx, buffer, 0, element_count);
+}
+
 JSValue
 js_mat_call(JSContext* ctx, JSValueConst func_obj, JSValueConst this_val, int argc, JSValueConst argv[], int flags) {
   JSRectData<double>* rect;
@@ -1892,7 +1906,14 @@ const JSCFunctionListEntry js_mat_proto_funcs[] = {
     JS_CGETSET_MAGIC_DEF("submatrix", js_mat_get_props, NULL, PROP_SUBMATRIX),
     JS_CGETSET_MAGIC_DEF("step", js_mat_get_props, NULL, PROP_STEP),
     JS_CGETSET_DEF("buffer", js_mat_buffer, NULL),
-    JS_CGETSET_DEF("array", js_mat_array, NULL),
+    // JS_CGETSET_DEF("array", js_mat_array, NULL), // disabled: use typed data views instead
+    JS_CGETSET_MAGIC_DEF("data", js_mat_typedarray<uint8_t>, NULL, 1),
+    JS_CGETSET_MAGIC_DEF("data8S", js_mat_typedarray<int8_t>, NULL, 1),
+    JS_CGETSET_MAGIC_DEF("data16U", js_mat_typedarray<uint16_t>, NULL, 2),
+    JS_CGETSET_MAGIC_DEF("data16S", js_mat_typedarray<int16_t>, NULL, 2),
+    JS_CGETSET_MAGIC_DEF("data32S", js_mat_typedarray<int32_t>, NULL, 4),
+    JS_CGETSET_MAGIC_DEF("data32F", js_mat_typedarray<float>, NULL, 4),
+    JS_CGETSET_MAGIC_DEF("data64F", js_mat_typedarray<double>, NULL, 8),
 
     JS_CFUNC_MAGIC_DEF("create", 1, js_mat_funcs, METHOD_CREATE),
 

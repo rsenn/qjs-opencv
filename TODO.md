@@ -15,6 +15,51 @@ qjsm scripts/binding_coverage.js --module=build/x86_64-linux-debug/opencv.so \
 - **Skeleton tracing.** `algorithms/skeleton_lines.hpp` (Guo-Hall thinning + topology-aware tracing that cuts at junctions) is fully bound: `skeletonizeGuohall`, `traceLines`, `degreeMap`, `skeletonizeAndTrace`. Distinct from `findContours` (region boundaries) and `LineSegmentDetector`/`FastLineDetector` (straight-line detection) — the three don't substitute for each other, pick per input character.
 - **Region proposal for collage-art's "several algorithms to pick a motive."** `grabCut` (bound) plus `ximgproc::segmentation` selective-search/graph-segmentation (already bound) cover this with zero new binding work.
 
+## MatVector migration (replaces Contour class)
+
+**Status:** In progress  
+**Priority:** High (enables opencv.js compatibility, improves performance)
+
+### Rationale
+The current `Contour` class has two fundamental issues:
+1. **Performance:** `findContours` natively outputs `vector<vector<Point>>` (int32), but Contour stores `vector<Point2d>` (double). Every call forces a copy+conversion.
+2. **API mismatch:** opencv.js uses `MatVector` (vector<Mat>) where each contour is a Mat wrapping int32 point data. Contour's custom API is incompatible.
+
+### Solution: MatVector + Mat-based contours
+Implement `MatVector` class that wraps `std::vector<cv::Mat>`, matching opencv.js exactly. Each contour becomes a Mat of type `CV_32SC2` (Nx1, 2-channel int32 points). This is zero-copy from `findContours` output.
+
+### C++ feasibility (verified)
+Test program `test_matvector.cpp` confirms:
+- `findContours(image, contours, hierarchy, mode, method)` with `vector<Mat>` output works
+- Each contour Mat is `CV_32SC2`, Nx1 (rows=point count, cols=1)
+- Point data is identical to `vector<vector<Point>>` output (just different storage)
+- MatVector.get(i) returns a Mat that can be read via `.data32S` or `.ptr<int32_t>()`
+
+### JS ergonomics (beyond opencv.js)
+- `Symbol.iterator` for `for (let mat of mv)` iteration
+- `.length` property as alias for `.size()`
+- `.delete()` is optional (finalizer handles cleanup), kept for API compat
+- No numeric indexing — use `.get(i)` or iterate
+
+### Migration phases
+1. **Implement MatVector class** (js_matvector.cpp) — see BUGS entry for API
+2. **Update findContours** to output MatVector instead of vector<Contour>
+3. **Migrate polyline simplification methods** to freestanding functions (js_cv.cpp, SIMPLIFY_* magic enum)
+4. **Remove Contour class** and all dependencies
+5. **Update all client code** (18 JS files identified)
+
+### Affected code
+- **C++:** js_contour.cpp/hpp, js_imgproc.cpp (findContours), js_cv.cpp (shape analysis), js_mat.cpp, js_draw.cpp, js_umat.hpp, js_point_iterator.cpp
+- **JS:** 18 files in qjs-opencv/tests, qjs-opencv, and plot-cv (see BUGS entry for full list)
+
+### Shape analysis methods (already freestanding)
+approxPolyDP, arcLength, contourArea, boundingRect, minAreaRect, minEnclosingCircle, minEnclosingTriangle, convexHull, fitEllipse, fitLine, isContourConvex, convexityDefects, moments, HuMoments, matchShapes, pointPolygonTest, rotatedRectangleIntersection
+
+### Polyline simplification (to migrate)
+simplifyReumannWitkam, simplifyOpheim, simplifyLang, simplifyDouglasPeucker, simplifyNthPoint, simplifyRadialDistance, simplifyPerpendicularDistance
+
+---
+
 ## Tier 1 — bind next
 
 Small, self-contained additions to files that already exist. Each one either completes a pipeline stage that's currently a dead end, or gives Canny→findContours a materially better input image.
