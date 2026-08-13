@@ -2571,3 +2571,71 @@ events:
         
       exitCode: 0
 ...
+
+---
+events:
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "cmake/CheckFlags.cmake:164 (try_compile)"
+      - "CMakeLists.txt:350 (check_cxx_standard_flag)"
+    description: "cxx_standard_CPLUSPLUS2a"
+    directories:
+      source: "/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/CMakeFiles/CMakeScratch/TryCompile-bBQks5"
+      binary: "/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/CMakeFiles/CMakeScratch/TryCompile-bBQks5"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: ""
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_WARN_DEPRECATED: "FALSE"
+    buildResult:
+      variable: "CXX_STANDARD_CPLUSPLUS2a"
+      cached: true
+      stdout: |
+        Change Dir: '/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/CMakeFiles/CMakeScratch/TryCompile-bBQks5'
+        
+        Run Build Command(s): /opt/cmake-4.0.0-linux-x86_64/bin/cmake -E env VERBOSE=1 /usr/local/bin/gmake -f Makefile cmTC_f8b53/fast
+        /usr/local/bin/gmake  -f CMakeFiles/cmTC_f8b53.dir/build.make CMakeFiles/cmTC_f8b53.dir/build
+        gmake[1]: Entering directory '/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/CMakeFiles/CMakeScratch/TryCompile-bBQks5'
+        Building CXX object CMakeFiles/cmTC_f8b53.dir/cxx_standard_CPLUSPLUS2a.cpp.o
+        /usr/bin/g++   -std=c++2a -o CMakeFiles/cmTC_f8b53.dir/cxx_standard_CPLUSPLUS2a.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/CMakeFiles/CMakeScratch/TryCompile-bBQks5/cxx_standard_CPLUSPLUS2a.cpp
+        Linking CXX executable cmTC_f8b53
+        /opt/cmake-4.0.0-linux-x86_64/bin/cmake -E cmake_link_script CMakeFiles/cmTC_f8b53.dir/link.txt --verbose=1
+        /usr/bin/g++ CMakeFiles/cmTC_f8b53.dir/cxx_standard_CPLUSPLUS2a.cpp.o -o cmTC_f8b53
+        gmake[1]: Leaving directory '/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/CMakeFiles/CMakeScratch/TryCompile-bBQks5'
+        
+      exitCode: 0
+...
+
+---
+events:
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "cmake/CheckFlags.cmake:164 (try_compile)"
+      - "CMakeLists.txt:350 (check_cxx_standard_flag)"
+    description: "cxx_standard_CPLUSPLUS2a"
+    directories:
+      source: "/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/CMakeFiles/CMakeScratch/TryCompile-peqCKA"
+      binary: "/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/CMakeFiles/CMakeScratch/TryCompile-peqCKA"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: ""
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_WARN_DEPRECATED: "FALSE"
+    buildResult:
+      variable: "CXX_STANDARD_CPLUSPLUS2a"
+      cached: true
+      stdout: |
+        Change Dir: '/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/CMakeFiles/CMakeScratch/TryCompile-peqCKA'
+        
+        Run Build Command(s): /opt/cmake-4.0.0-linux-x86_64/bin/cmake -E env VERBOSE=1 /usr/local/bin/gmake -f Makefile cmTC_b6558/fast
+        /usr/local/bin/gmake  -f CMakeFiles/cmTC_b6558.dir/build.make CMakeFiles/cmTC_b6558.dir/build
+        gmake[1]: Entering directory '/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/CMakeFiles/CMakeScratch/TryCompile-peqCKA'
+        Building CXX object CMakeFiles/cmTC_b6558.dir/cxx_standard_CPLUSPLUS2a.cpp.o
+        /usr/bin/g++   -std=c++2a -o CMakeFiles/cmTC_b6558.dir/cxx_standard_CPLUSPLUS2a.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/CMakeFiles/CMakeScratch/TryCompile-peqCKA/cxx_standard_CPLUSPLUS2a.cpp
+        Linking CXX executable cmTC_b6558
+        /opt/cmake-4.0.0-linux-x86_64/bin/cmake -E cmake_link_script CMakeFiles/cmTC_b6558.dir/link.txt --verbose=1
+        /usr/bin/g++ CMakeFiles/cmTC_b6558.dir/cxx_standard_CPLUSPLUS2a.cpp.o -o cmTC_b6558
+        gmake[1]: Leaving directory '/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/CMakeFiles/CMakeScratch/TryCompile-peqCKA'
+        
+      exitCode: 0
+...

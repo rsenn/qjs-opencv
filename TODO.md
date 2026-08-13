@@ -48,11 +48,12 @@ Migrating from `Contour` class to opencv.js-compatible API through a phased appr
 - All tests pass with Mat CV_32SC2 data (findContours output format)
 
 **Implementation:**
-- js_psimpl.cpp: New module with psimpl namespace (like cv.dnn)
+- Added js_psimpl_simplify() freestanding function in js_contour.cpp
 - Uses magic dispatch for 7 simplification algorithms
 - Supports Mat CV_32SC2 (zero-copy from findContours), Contour (backward compat), JS arrays
+- Exported as cv.psimpl namespace (like cv.dnn)
 
-**Impact:** Existing opencv.js code can now use freestanding functions with Mat CV_32SC2 data, enabling opencv.js compatibility without requiring MatVector implementation.
+**Impact:** Existing opencv.js code can now use freestanding functions with Mat CV_32SC2 data, enabling opencv.js compatibility without requiring MatVector implementation (Phase 2 is now lower priority).
 
 **Drawing functions (already complete):**
 - circle, line, rectangle, polylines, fillPoly (renamed from drawCircle, drawLine, etc.)

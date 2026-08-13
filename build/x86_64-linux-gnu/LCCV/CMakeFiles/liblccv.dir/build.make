@@ -53,10 +53,10 @@ RM = /opt/cmake-4.0.0-linux-x86_64/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/roman/Projects/plot-cv/qjs-opencv
+CMAKE_SOURCE_DIR = /mnt/data/Projects/plot-cv/qjs-opencv
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu
+CMAKE_BINARY_DIR = /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu
 
 # Include any dependencies generated for this target.
 include LCCV/CMakeFiles/liblccv.dir/depend.make
@@ -73,46 +73,46 @@ LCCV/CMakeFiles/liblccv.dir/codegen:
 .PHONY : LCCV/CMakeFiles/liblccv.dir/codegen
 
 LCCV/CMakeFiles/liblccv.dir/src/lccv.cpp.o: LCCV/CMakeFiles/liblccv.dir/flags.make
-LCCV/CMakeFiles/liblccv.dir/src/lccv.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/LCCV/src/lccv.cpp
+LCCV/CMakeFiles/liblccv.dir/src/lccv.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/LCCV/src/lccv.cpp
 LCCV/CMakeFiles/liblccv.dir/src/lccv.cpp.o: LCCV/CMakeFiles/liblccv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object LCCV/CMakeFiles/liblccv.dir/src/lccv.cpp.o"
-	cd /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/LCCV && /usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT LCCV/CMakeFiles/liblccv.dir/src/lccv.cpp.o -MF CMakeFiles/liblccv.dir/src/lccv.cpp.o.d -o CMakeFiles/liblccv.dir/src/lccv.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/LCCV/src/lccv.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object LCCV/CMakeFiles/liblccv.dir/src/lccv.cpp.o"
+	cd /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/LCCV && /usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT LCCV/CMakeFiles/liblccv.dir/src/lccv.cpp.o -MF CMakeFiles/liblccv.dir/src/lccv.cpp.o.d -o CMakeFiles/liblccv.dir/src/lccv.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/LCCV/src/lccv.cpp
 
 LCCV/CMakeFiles/liblccv.dir/src/lccv.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/liblccv.dir/src/lccv.cpp.i"
-	cd /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/LCCV && /usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/LCCV/src/lccv.cpp > CMakeFiles/liblccv.dir/src/lccv.cpp.i
+	cd /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/LCCV && /usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/LCCV/src/lccv.cpp > CMakeFiles/liblccv.dir/src/lccv.cpp.i
 
 LCCV/CMakeFiles/liblccv.dir/src/lccv.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/liblccv.dir/src/lccv.cpp.s"
-	cd /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/LCCV && /usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/LCCV/src/lccv.cpp -o CMakeFiles/liblccv.dir/src/lccv.cpp.s
+	cd /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/LCCV && /usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/LCCV/src/lccv.cpp -o CMakeFiles/liblccv.dir/src/lccv.cpp.s
 
 LCCV/CMakeFiles/liblccv.dir/src/libcamera_app.cpp.o: LCCV/CMakeFiles/liblccv.dir/flags.make
-LCCV/CMakeFiles/liblccv.dir/src/libcamera_app.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/LCCV/src/libcamera_app.cpp
+LCCV/CMakeFiles/liblccv.dir/src/libcamera_app.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/LCCV/src/libcamera_app.cpp
 LCCV/CMakeFiles/liblccv.dir/src/libcamera_app.cpp.o: LCCV/CMakeFiles/liblccv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object LCCV/CMakeFiles/liblccv.dir/src/libcamera_app.cpp.o"
-	cd /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/LCCV && /usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT LCCV/CMakeFiles/liblccv.dir/src/libcamera_app.cpp.o -MF CMakeFiles/liblccv.dir/src/libcamera_app.cpp.o.d -o CMakeFiles/liblccv.dir/src/libcamera_app.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/LCCV/src/libcamera_app.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object LCCV/CMakeFiles/liblccv.dir/src/libcamera_app.cpp.o"
+	cd /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/LCCV && /usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT LCCV/CMakeFiles/liblccv.dir/src/libcamera_app.cpp.o -MF CMakeFiles/liblccv.dir/src/libcamera_app.cpp.o.d -o CMakeFiles/liblccv.dir/src/libcamera_app.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/LCCV/src/libcamera_app.cpp
 
 LCCV/CMakeFiles/liblccv.dir/src/libcamera_app.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/liblccv.dir/src/libcamera_app.cpp.i"
-	cd /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/LCCV && /usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/LCCV/src/libcamera_app.cpp > CMakeFiles/liblccv.dir/src/libcamera_app.cpp.i
+	cd /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/LCCV && /usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/LCCV/src/libcamera_app.cpp > CMakeFiles/liblccv.dir/src/libcamera_app.cpp.i
 
 LCCV/CMakeFiles/liblccv.dir/src/libcamera_app.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/liblccv.dir/src/libcamera_app.cpp.s"
-	cd /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/LCCV && /usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/LCCV/src/libcamera_app.cpp -o CMakeFiles/liblccv.dir/src/libcamera_app.cpp.s
+	cd /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/LCCV && /usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/LCCV/src/libcamera_app.cpp -o CMakeFiles/liblccv.dir/src/libcamera_app.cpp.s
 
 LCCV/CMakeFiles/liblccv.dir/src/libcamera_app_options.cpp.o: LCCV/CMakeFiles/liblccv.dir/flags.make
-LCCV/CMakeFiles/liblccv.dir/src/libcamera_app_options.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/LCCV/src/libcamera_app_options.cpp
+LCCV/CMakeFiles/liblccv.dir/src/libcamera_app_options.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/LCCV/src/libcamera_app_options.cpp
 LCCV/CMakeFiles/liblccv.dir/src/libcamera_app_options.cpp.o: LCCV/CMakeFiles/liblccv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object LCCV/CMakeFiles/liblccv.dir/src/libcamera_app_options.cpp.o"
-	cd /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/LCCV && /usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT LCCV/CMakeFiles/liblccv.dir/src/libcamera_app_options.cpp.o -MF CMakeFiles/liblccv.dir/src/libcamera_app_options.cpp.o.d -o CMakeFiles/liblccv.dir/src/libcamera_app_options.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/LCCV/src/libcamera_app_options.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object LCCV/CMakeFiles/liblccv.dir/src/libcamera_app_options.cpp.o"
+	cd /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/LCCV && /usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT LCCV/CMakeFiles/liblccv.dir/src/libcamera_app_options.cpp.o -MF CMakeFiles/liblccv.dir/src/libcamera_app_options.cpp.o.d -o CMakeFiles/liblccv.dir/src/libcamera_app_options.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/LCCV/src/libcamera_app_options.cpp
 
 LCCV/CMakeFiles/liblccv.dir/src/libcamera_app_options.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/liblccv.dir/src/libcamera_app_options.cpp.i"
-	cd /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/LCCV && /usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/LCCV/src/libcamera_app_options.cpp > CMakeFiles/liblccv.dir/src/libcamera_app_options.cpp.i
+	cd /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/LCCV && /usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/LCCV/src/libcamera_app_options.cpp > CMakeFiles/liblccv.dir/src/libcamera_app_options.cpp.i
 
 LCCV/CMakeFiles/liblccv.dir/src/libcamera_app_options.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/liblccv.dir/src/libcamera_app_options.cpp.s"
-	cd /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/LCCV && /usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/LCCV/src/libcamera_app_options.cpp -o CMakeFiles/liblccv.dir/src/libcamera_app_options.cpp.s
+	cd /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/LCCV && /usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/LCCV/src/libcamera_app_options.cpp -o CMakeFiles/liblccv.dir/src/libcamera_app_options.cpp.s
 
 # Object files for target liblccv
 liblccv_OBJECTS = \
@@ -128,19 +128,19 @@ LCCV/liblccv.a: LCCV/CMakeFiles/liblccv.dir/src/libcamera_app.cpp.o
 LCCV/liblccv.a: LCCV/CMakeFiles/liblccv.dir/src/libcamera_app_options.cpp.o
 LCCV/liblccv.a: LCCV/CMakeFiles/liblccv.dir/build.make
 LCCV/liblccv.a: LCCV/CMakeFiles/liblccv.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking CXX static library liblccv.a"
-	cd /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/LCCV && $(CMAKE_COMMAND) -P CMakeFiles/liblccv.dir/cmake_clean_target.cmake
-	cd /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/LCCV && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/liblccv.dir/link.txt --verbose=$(VERBOSE)
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking CXX static library liblccv.a"
+	cd /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/LCCV && $(CMAKE_COMMAND) -P CMakeFiles/liblccv.dir/cmake_clean_target.cmake
+	cd /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/LCCV && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/liblccv.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
 LCCV/CMakeFiles/liblccv.dir/build: LCCV/liblccv.a
 .PHONY : LCCV/CMakeFiles/liblccv.dir/build
 
 LCCV/CMakeFiles/liblccv.dir/clean:
-	cd /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/LCCV && $(CMAKE_COMMAND) -P CMakeFiles/liblccv.dir/cmake_clean.cmake
+	cd /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/LCCV && $(CMAKE_COMMAND) -P CMakeFiles/liblccv.dir/cmake_clean.cmake
 .PHONY : LCCV/CMakeFiles/liblccv.dir/clean
 
 LCCV/CMakeFiles/liblccv.dir/depend:
-	cd /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/roman/Projects/plot-cv/qjs-opencv /home/roman/Projects/plot-cv/qjs-opencv/LCCV /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/LCCV /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/LCCV/CMakeFiles/liblccv.dir/DependInfo.cmake "--color=$(COLOR)"
+	cd /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /mnt/data/Projects/plot-cv/qjs-opencv /mnt/data/Projects/plot-cv/qjs-opencv/LCCV /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/LCCV /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/LCCV/CMakeFiles/liblccv.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : LCCV/CMakeFiles/liblccv.dir/depend
 

@@ -1,8 +1,8 @@
 {
 	"InstallScripts" : 
 	[
-		"/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/cmake_install.cmake",
-		"/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/LCCV/cmake_install.cmake"
+		"/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/cmake_install.cmake",
+		"/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-gnu/LCCV/cmake_install.cmake"
 	],
 	"Parallel" : false
 }

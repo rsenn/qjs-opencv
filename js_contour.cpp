@@ -718,6 +718,111 @@ js_contour_psimpl(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
   return ret;
 }
 
+// Freestanding psimpl function for opencv.js compatibility
+// Accepts: Mat CV_32SC2, Contour, or JS array as first argument
+// Returns: Mat CV_32SC2
+static JSValue
+js_psimpl_simplify(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  if(argc < 1) {
+    return JS_ThrowTypeError(ctx, "Expected at least 1 argument");
+  }
+
+  std::vector<cv::Point> points;
+  JSMatData* mat = nullptr;
+  JSContourData<double>* contour = nullptr;
+
+  // Try Mat first
+  if((mat = js_mat_data2(ctx, argv[0]))) {
+    if(mat->type() != CV_32SC2) {
+      return JS_ThrowTypeError(ctx, "Expected Mat CV_32SC2");
+    }
+    int n = mat->rows * mat->cols;
+    cv::Point* data = mat->ptr<cv::Point>();
+    points.assign(data, data + n);
+  }
+  // Try Contour
+  else if((contour = js_contour_data2(ctx, argv[0]))) {
+    points.reserve(contour->size());
+    for(const auto& p : *contour) {
+      points.emplace_back(static_cast<int>(p.x), static_cast<int>(p.y));
+    }
+  }
+  // Try JS array
+  else if(JS_IsArray(ctx, argv[0])) {
+    js_array_to(ctx, argv[0], points);
+  }
+  else {
+    return JS_ThrowTypeError(ctx, "Expected Mat, Contour, or array");
+  }
+
+  double arg1 = 0, arg2 = 0;
+  if(argc > 1) {
+    JS_ToFloat64(ctx, &arg1, argv[1]);
+    if(argc > 2) {
+      JS_ToFloat64(ctx, &arg2, argv[2]);
+    }
+  }
+
+  // Run simplification
+  std::vector<cv::Point> result;
+  result.resize(points.size());
+
+  double* start = reinterpret_cast<double*>(points.data());
+  double* end = start + points.size() * 2;
+  double* out_ptr = reinterpret_cast<double*>(result.data());
+
+  switch(magic) {
+    case SIMPLIFY_REUMANN_WITKAM:
+      if(arg1 == 0) arg1 = 2;
+      out_ptr = psimpl::simplify_reumann_witkam<2>(start, end, arg1, out_ptr);
+      break;
+
+    case SIMPLIFY_OPHEIM:
+      if(arg1 == 0) arg1 = 2;
+      if(arg2 == 0) arg2 = 10;
+      out_ptr = psimpl::simplify_opheim<2>(start, end, arg1, arg2, out_ptr);
+      break;
+
+    case SIMPLIFY_LANG:
+      if(arg1 == 0) arg1 = 2;
+      if(arg2 == 0) arg2 = 10;
+      out_ptr = psimpl::simplify_lang<2>(start, end, arg1, arg2, out_ptr);
+      break;
+
+    case SIMPLIFY_DOUGLAS_PEUCKER:
+      if(arg1 == 0) arg1 = 2;
+      out_ptr = psimpl::simplify_douglas_peucker<2>(start, end, arg1, out_ptr);
+      break;
+
+    case SIMPLIFY_NTH_POINT:
+      if(arg1 == 0) arg1 = 2;
+      out_ptr = psimpl::simplify_nth_point<2>(start, end, arg1, out_ptr);
+      break;
+
+    case SIMPLIFY_RADIAL_DISTANCE:
+      if(arg1 == 0) arg1 = 2;
+      out_ptr = psimpl::simplify_radial_distance<2>(start, end, arg1, out_ptr);
+      break;
+
+    case SIMPLIFY_PERPENDICULAR_DISTANCE:
+      if(arg1 == 0) arg1 = 2;
+      if(arg2 == 0) arg2 = 1;
+      out_ptr = psimpl::simplify_perpendicular_distance<2>(start, end, arg1, arg2, out_ptr);
+      break;
+  }
+
+  // Calculate actual size
+  size_t result_size = (out_ptr - reinterpret_cast<double*>(result.data())) / 2;
+  result.resize(result_size);
+
+  // Return as Mat CV_32SC2
+  cv::Mat out(result_size, 1, CV_32SC2);
+  cv::Point* out_data = out.ptr<cv::Point>();
+  std::copy(result.begin(), result.end(), out_data);
+
+  return js_mat_wrap(ctx, out);
+}
+
 static JSValue
 js_contour_collapse(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSContourData<double>*v, c;
@@ -1726,6 +1831,17 @@ const JSCFunctionListEntry js_contour_proto_funcs[] = {
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Contour", JS_PROP_CONFIGURABLE),
 };
 
+// psimpl namespace functions for opencv.js compatibility
+const JSCFunctionListEntry js_psimpl_funcs[] = {
+    JS_CFUNC_MAGIC_DEF("reumannWitkam", 1, js_psimpl_simplify, SIMPLIFY_REUMANN_WITKAM),
+    JS_CFUNC_MAGIC_DEF("opheim", 1, js_psimpl_simplify, SIMPLIFY_OPHEIM),
+    JS_CFUNC_MAGIC_DEF("lang", 1, js_psimpl_simplify, SIMPLIFY_LANG),
+    JS_CFUNC_MAGIC_DEF("douglasPeucker", 1, js_psimpl_simplify, SIMPLIFY_DOUGLAS_PEUCKER),
+    JS_CFUNC_MAGIC_DEF("nthPoint", 1, js_psimpl_simplify, SIMPLIFY_NTH_POINT),
+    JS_CFUNC_MAGIC_DEF("radialDistance", 1, js_psimpl_simplify, SIMPLIFY_RADIAL_DISTANCE),
+    JS_CFUNC_MAGIC_DEF("perpendicularDistance", 1, js_psimpl_simplify, SIMPLIFY_PERPENDICULAR_DISTANCE),
+};
+
 const JSCFunctionListEntry js_contour_static_funcs[] = {
     JS_CFUNC_DEF("fromRect", 1, js_contour_rect),
     JS_CFUNC_DEF("fromString", 1, js_contour_fromstr),
@@ -1771,8 +1887,14 @@ js_contour_init(JSContext* ctx, JSModuleDef* m) {
   JSValue global = JS_GetGlobalObject(ctx);
   float64_array = JS_GetPropertyStr(ctx, global, "Float64Array");
 
-  if(m)
+  if(m) {
     JS_SetModuleExport(ctx, m, "Contour", contour_class);
+    
+    // Create and export psimpl namespace
+    JSValue psimpl_object = JS_NewObject(ctx);
+    JS_SetPropertyFunctionList(ctx, psimpl_object, js_psimpl_funcs, countof(js_psimpl_funcs));
+    JS_SetModuleExport(ctx, m, "psimpl", psimpl_object);
+  }
 
   return 0;
 }
@@ -1780,6 +1902,7 @@ js_contour_init(JSContext* ctx, JSModuleDef* m) {
 extern "C" void
 js_contour_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "Contour");
+  JS_AddModuleExport(ctx, m, "psimpl");
 }
 
 #if defined(JS_CONTOUR_MODULE)

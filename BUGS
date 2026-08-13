@@ -771,15 +771,12 @@
   - All tests pass with Mat CV_32SC2 data (findContours output format)
   
   **Implementation:**
-  - js_psimpl.cpp: New module with psimpl namespace
+  - Added js_psimpl_simplify() freestanding function in js_contour.cpp
   - Uses magic dispatch for 7 simplification algorithms
   - Supports Mat CV_32SC2 (zero-copy from findContours), Contour (backward compat), JS arrays
+  - Exported as cv.psimpl namespace (like cv.dnn)
   
   **Remaining (Phase 3):**
   - Remove non-standard Contour methods (toArray, getMat, etc.)
   - Assess which functions need Contour<T>/Contours<T> internally
   - Document MatVector compatibility per function
-    qjs-opencv: contours.js, js/cvVectorization.js
-    plot-cv: scan.js, doc-scanner.js, test-diagram.js, test-video.js,
-             test-opencv.js, test-cli.js, plot-cv.js, test.js,
-             test-umat.js, test-quickjs.js, test-imread.js, test-image.js
