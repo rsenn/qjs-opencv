@@ -99,77 +99,58 @@ Implement MatVector class for running opencv.js code that uses it.
 - ✓ Added js_register_vector<T>() helper for type registration
 - ✓ Added js_export_vector<T>() and js_set_vector_export<T>() for proper module export ordering
 - ✓ Common operations: constructor, push_back, get, set, size, delete
-- ✓ Fixed module initialization order issue (exports declared before init, values set in init)
+- ✓ Symbol.iterator support for all vector types
+- ✓ Automatic memory management via finalizers (GC-friendly, no manual delete required)
 
-**Design Requirements:**
-- Single `js_vector.hpp` with template helpers/classes
-- Factor out common code: push_back, get, set, size, delete
-- Type conversion helpers for JS ↔ C++
-- Memory management utilities
-- Iterator support (Symbol.iterator) - TODO
-- Minimal per-type boilerplate
+**Implemented Vector Types (10/16):**
+
+HIGH Priority (all implemented):
+- ✓ MatVector - vector<Mat> for findContours, split, merge, calcHist, aruco
+- ✓ PointVector - vector<Point> for general point collections
+- ✓ KeyPointVector - vector<KeyPoint> for ORB, FAST, GFTT feature detection
+- ✓ DMatchVector - vector<DMatch> for BFMatcher, drawMatches
+- ✓ RectVector - vector<Rect> for rectangle collections
+
+MEDIUM Priority (implemented):
+- ✓ IntVector - vector<int> for channels, histSize parameters
+- ✓ FloatVector - vector<float> for ranges parameters
+- ✓ DoubleVector - vector<double> for precision-critical values
+- ✓ CharVector - vector<char> for binary data
+- ✓ StringVector - vector<string> for text collections
+
+NOT YET IMPLEMENTED (low priority, rarely used):
+- ⏳ Point2fVector - vector<Point2f> for sub-pixel precision
+- ⏳ Point3fVector - vector<Point3f> for 3D points
+- ⏳ DMatchVectorVector - vector<vector<DMatch>> for knnMatch
+- ⏳ KeyPointVectorVector - vector<vector<KeyPoint>> for multi-image detection
+- ⏳ PointVectorVector - vector<vector<Point>> for nested point collections
+- ⏳ CharVectorVector - vector<vector<char>> for nested binary data
+
+**Testing:**
+- ✓ test_all_vectors.js: 10/10 tests passing
+- ✓ All basic operations verified: constructor, push_back, get, set, size, iterator
+- ✓ Memory management verified: automatic cleanup via finalizers
 
 **Key Design Decisions:**
+- GC-friendly: No manual delete() required (unlike opencv.js)
+- Value semantics for primitive and struct types (Point, Rect, KeyPoint, DMatch)
+- Reference semantics for Mat (shared underlying data via refcount)
+- Symbol.iterator support for `for (const item of vector)` syntax
+- Automatic type conversion via JSConverter specializations
 
-1. **Template class approach:**
-   ```cpp
-   template<typename T>
-   class JSVector {
-     std::vector<T>* vec;
-   public:
-     // Common operations
-     static JSValue push_back(JSContext* ctx, JSValueConst this_val, ...);
-     static JSValue get(JSContext* ctx, JSValueConst this_val, ...);
-     static JSValue set(JSContext* ctx, JSValueConst this_val, ...);
-     static JSValue size(JSContext* ctx, JSValueConst this_val, ...);
-     static JSValue delete_(JSContext* ctx, JSValueConst this_val, ...);
-   };
-   ```
-
-2. **JSConverter trait:**
-   ```cpp
-   template<typename T>
-   struct JSConverter {
-     static T fromJS(JSContext* ctx, JSValueConst val);
-     static JSValue toJS(JSContext* ctx, const T& val);
-   };
-   ```
-
-3. **Specializations implemented:**
-   - ✓ JSConverter<int>
-   - ✓ JSConverter<float>
-   - ✓ JSConverter<double>
-   - ✓ JSConverter<char>
-   - ✓ JSConverter<std::string>
-   - ⏳ JSConverter<cv::Mat> (needs special handling for Mat references)
-   - ⏳ JSConverter<cv::Point> (needs Point class integration)
-   - ⏳ JSConverter<cv::KeyPoint> (needs KeyPoint class integration)
-   - ⏳ JSConverter<cv::DMatch> (needs DMatch class integration)
-   - ⏳ JSConverter<cv::Rect> (needs Rect class integration)
-
-4. **Registration helper:**
-   ```cpp
-   template<typename T>
-   int js_register_vector(JSContext* ctx, JSModuleDef* m, const char* name);
-   ```
-
-**Benefits:**
-- DRY: Common code written once
-- Consistent API across all vector types
-- Easy to add new vector types (just add JSConverter specialization)
-- Iterator support - TODO (will add Symbol.iterator with custom iterator)
-
-**Next Steps:**
-1. Add JSConverter specializations for OpenCV types (Mat, Point, Rect, etc.)
-2. Add Symbol.iterator support for JS for-of loops
-3. Implement js_matvector.cpp using the template
-4. Test with findContours output
-5. Gradually add other vector types
-
-**Challenges:**
-- Nested vectors (PointVectorVector) need special handling
-- Memory management for complex types (Mat, KeyPoint)
-- Type conversion edge cases
+**See BUGS entry `opencvjs-vector-containers` for:**
+- Complete API specification for all 16 vector types
+- Memory management patterns and gotchas
+- Usage examples from opencv.js tests
+- Function parameter mappings (InputArrayOfArrays, OutputArrayOfArrays)
+**Implementation Files:**
+- include/js_vector.hpp - Core template infrastructure
+- js_matvector.cpp - MatVector implementation
+- js_pointvector.cpp - PointVector implementation
+- js_rectvector.cpp - RectVector implementation
+- js_keypointvector.cpp - KeyPointVector implementation
+- js_dmatchvector.cpp - DMatchVector implementation
+- js_primitivevectors.cpp - IntVector, FloatVector, DoubleVector, CharVector, StringVector
 
 **See also:**
 - BUGS: `opencvjs-vector-containers` for full API spec
