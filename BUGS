@@ -106,22 +106,15 @@
     ../test-opencv.js
 
 
-- opencv-js-api-mismatch-draw-namespace: qjs-opencv provides a `Draw`
-  namespace with methods like `Draw.line()`, `Draw.circle()`,
-  `Draw.rectangle()`, `Draw.contours()`, `Draw.text()`, `Draw.textSize()`,
-  `Draw.polylines()`, `Draw.loadFont()` while opencv.js has none of
-  this — drawing is done via free functions (`line()`, `circle()`,
-  `rectangle()`, `putText()`, etc.).
-  Affected files:
-    js/cvHighGUI.js
-    ../test-umat.js
-    ../test-diagram.js
-    ../diagram.js
-    ../test-cv.js
-    ../test-quickjs.js
-    ../test-cli.js
-    ../test-video.js
-    ../test-opencv.js
+- FIXED: opencv-js-api-mismatch-draw-namespace: Removed functions that
+  are now exported at module level from the Draw static namespace.
+  Draw.circle/line/rectangle/polylines/ellipse/fillPoly/drawKeypoints
+  removed from js_draw_static_funcs[] — they remain as module-level
+  exports (circle, line, rectangle, polylines, fillPoly, etc.).
+  Draw namespace retains only: contour, contours, text, textSize,
+  fontScaleFromHeight, loadFont, clipLine.
+  Client files updated: test-umat.js, test-diagram.js, diagram.js,
+  test-video.js, test-opencv.js.
 
 
 - opencv-js-api-mismatch-mat-accessors: qjs-opencv provides `mat.at(i,j)`

@@ -777,20 +777,13 @@ const JSCFunctionListEntry js_draw_proto_funcs[] = {
 };
 
 const JSCFunctionListEntry js_draw_static_funcs[] = {
-    JS_CFUNC_DEF("circle", 1, &js_draw_circle),
-    JS_CFUNC_DEF("ellipse", 2, &js_draw_ellipse),
     JS_CFUNC_DEF("contour", 1, &js_draw_contour),
     JS_CFUNC_DEF("contours", 4, &js_draw_contours),
-    JS_CFUNC_DEF("line", 1, &js_draw_line),
-    JS_CFUNC_DEF("fillPoly", 1, &js_fill_poly),
-    JS_CFUNC_DEF("polylines", 1, &js_draw_polylines),
-    JS_CFUNC_DEF("rectangle", 1, &js_draw_rectangle),
     JS_CFUNC_DEF("text", 2, &js_put_text),
     JS_CFUNC_DEF("textSize", 5, &js_get_text_size),
     JS_CFUNC_DEF("fontScaleFromHeight", 2, &js_get_font_scale_from_height),
     JS_CFUNC_DEF("loadFont", 1, &js_load_font),
     JS_CFUNC_DEF("clipLine", 3, &js_clip_line),
-    JS_CFUNC_DEF("drawKeypoints", 3, &js_draw_keypoints),
 };
 
 const JSCFunctionListEntry js_draw_global_funcs[] = {
