@@ -88,14 +88,18 @@ Implement MatVector class for running opencv.js code that uses it.
 
 **Goal:** Create common template infrastructure for all 16 vector container types
 
-**Status:** Complete - Core template implemented
+**Status:** ✓ COMPLETE (2026-08-13)
 **Priority:** HIGH - enables efficient implementation of all vector types
 
 **Implementation:**
 - ✓ Created `include/js_vector.hpp` with generic JSVector<T> template class
-- ✓ Implemented JSConverter specializations for primitive types (int, float, double, char, std::string)
-- ✓ Added js_register_vector<T>() helper for easy type registration
+- ✓ Implemented JSConverter specializations for all types:
+  - ✓ Primitive types: int, float, double, char, std::string
+  - ✓ OpenCV types: cv::Mat, cv::Point, cv::Point2f, cv::Rect, cv::KeyPoint, cv::DMatch
+- ✓ Added js_register_vector<T>() helper for type registration
+- ✓ Added js_export_vector<T>() and js_set_vector_export<T>() for proper module export ordering
 - ✓ Common operations: constructor, push_back, get, set, size, delete
+- ✓ Fixed module initialization order issue (exports declared before init, values set in init)
 
 **Design Requirements:**
 - Single `js_vector.hpp` with template helpers/classes

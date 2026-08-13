@@ -25,6 +25,7 @@ extern "C" int js_highgui_init(JSContext*, JSModuleDef*);
 extern "C" int js_imgproc_init(JSContext*, JSModuleDef*);
 extern "C" int js_video_writer_init(JSContext*, JSModuleDef*);
 extern "C" int js_keypoint_init(JSContext*, JSModuleDef*);
+extern "C" int js_dmatch_init(JSContext*, JSModuleDef*);
 extern "C" int js_feature2d_init(JSContext*, JSModuleDef*);
 extern "C" int js_libcamera_app_init(JSContext*, JSModuleDef*);
 extern "C" int js_raspi_cam_init(JSContext*, JSModuleDef*);
@@ -74,6 +75,7 @@ extern "C" void js_highgui_export(JSContext*, JSModuleDef*);
 extern "C" void js_imgproc_export(JSContext*, JSModuleDef*);
 extern "C" void js_video_writer_export(JSContext*, JSModuleDef*);
 extern "C" void js_keypoint_export(JSContext*, JSModuleDef*);
+extern "C" void js_dmatch_export(JSContext*, JSModuleDef*);
 extern "C" void js_feature2d_export(JSContext*, JSModuleDef*);
 extern "C" void js_libcamera_app_export(JSContext*, JSModuleDef*);
 extern "C" void js_raspi_cam_export(JSContext*, JSModuleDef*);
@@ -126,6 +128,7 @@ js_opencv_init(JSContext* ctx, JSModuleDef* m) {
   js_line_segment_detector_init(ctx, m);
   js_fast_line_detector_init(ctx, m);
   js_keypoint_init(ctx, m);
+  js_dmatch_init(ctx, m);
 #ifdef USE_FEATURE2D
   js_feature2d_init(ctx, m);
 #endif
@@ -201,6 +204,7 @@ JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   js_line_segment_detector_export(ctx, m);
   js_fast_line_detector_export(ctx, m);
   js_keypoint_export(ctx, m);
+  js_dmatch_export(ctx, m);
 #ifdef USE_FEATURE2D
   js_feature2d_export(ctx, m);
 #endif

@@ -588,15 +588,12 @@ int js_register_vector(JSContext* ctx, JSModuleDef* m, const char* name) {
     // Set prototype
     JS_SetClassProto(ctx, class_id, proto);
 
-    // Create constructor and export it immediately
+    // Create constructor and store it (don't export yet)
     JSValue ctor = JS_NewCFunction2(ctx, JSVector<T>::constructor, name, 0, JS_CFUNC_constructor, 0);
     JS_SetConstructor(ctx, ctor, proto);
-
-    // Export during init phase (this is when exports should happen)
-    if (m) {
-        JS_AddModuleExport(ctx, m, name);
-        JS_SetModuleExport(ctx, m, name, JS_DupValue(ctx, ctor));
-    }
+    
+    // Store the constructor for later use
+    js_vector_get_ctor<T>() = ctor;
 
     return 0;
 }
@@ -604,12 +601,25 @@ int js_register_vector(JSContext* ctx, JSModuleDef* m, const char* name) {
 /**
  * @brief Helper to export a vector type
  *
- * This function is kept for API compatibility but is no longer needed.
- * Export now happens during js_register_vector.
+ * This function should be called from the individual vector init functions.
  */
 template<typename T>
 void js_export_vector(JSContext* ctx, JSModuleDef* m, const char* name) {
-    // Export already happened in js_register_vector
+    if (m) {
+        // Only declare the export here, don't set the value yet
+        JS_AddModuleExport(ctx, m, name);
+    }
+}
+
+// Call this from init functions to actually set the export value
+template<typename T>
+void js_set_vector_export(JSContext* ctx, JSModuleDef* m, const char* name) {
+    if (m) {
+        JSValue& ctor = js_vector_get_ctor<T>();
+        if (!JS_IsUndefined(ctor)) {
+            JS_SetModuleExport(ctx, m, name, JS_DupValue(ctx, ctor));
+        }
+    }
 }
 
 #endif // JS_VECTOR_HPP
