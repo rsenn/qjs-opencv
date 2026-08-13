@@ -341,3 +341,59 @@
   only has CV_8U through CV_64F depths and 2D constructors.
   Affected files:
     examples/qwen25_inference.js
+
+
+- opencv-js-api-mismatch-camshift-meanshift: `CamShift` and `meanShift`
+  are bound in opencv.js (returning `[RotatedRect, updatedRect]` and
+  `[n, updatedRect]` arrays respectively) but not in qjs-opencv at all.
+  Only `pyrMeanShiftFiltering` exists (different algorithm). Ported
+  tracking code will throw `TypeError: cv.CamShift is not a function`.
+  Fix: bind both in js_video.cpp.
+
+
+- opencv-js-api-mismatch-mat-diag: `Mat.diag()` is bound in opencv.js
+  (both `diag(d)` int-offset and `diag()` no-arg forms) but not in
+  qjs-opencv. Fix: add to js_mat.cpp proto_funcs.
+
+
+- opencv-js-api-mismatch-mat-typed-data-views: opencv.js exposes 7
+  typed-array views of the pixel buffer as Mat properties: `.data`
+  (Uint8Array), `.data8S`, `.data16U`, `.data16S`, `.data32S`,
+  `.data32F`, `.data64F`. qjs-opencv has `.buffer` (raw ArrayBuffer)
+  and `.array` (row-major array of typed sub-arrays) but none of the
+  7 named views. Code like `mat.data32F[i] = 0` silently reads
+  `undefined`. Fix: add property getters to js_mat.cpp that return
+  memory_view-style typed arrays.
+
+
+- opencv-js-api-mismatch-mat-typed-element-accessors: opencv.js has
+  per-type element accessors: `charAt`, `ucharAt`, `shortAt`,
+  `ushortAt`, `intAt`, `floatAt`, `doubleAt` (each with 1/2/3-arg
+  overloads). qjs-opencv has only a generic `.at(row, col)` that
+  infers type from `mat.type()`. Code using `mat.floatAt(r, c)`
+  throws `TypeError`. Fix: add 7 typed accessor methods to Mat proto.
+
+
+- opencv-js-api-mismatch-mat-typed-ptr-variants: opencv.js has 7
+  typed pointer accessors: `ucharPtr`, `charPtr`, `shortPtr`,
+  `ushortPtr`, `intPtr`, `floatPtr`, `doublePtr` (each returning
+  `memory_view<T>` of length step1(0) or step1(1)). qjs-opencv has
+  only a single `.ptr()` that returns a typed array matching the Mat
+  depth. Fix: add the 7 typed variants to js_mat.cpp.
+
+
+- opencv-js-api-mismatch-point-size-1arg-constructor: opencv.js's
+  `Point(x)` and `Size(width)` constructors default the second
+  component to 0 (`new Point(5)` → `{x:5, y:0}`). qjs-opencv requires
+  exactly 2 arguments and throws on 1-arg calls. Fix: relax the
+  `argc < 2` guard in js_point.cpp and js_size.cpp constructors to
+  default y/height to 0.
+
+
+- opencv-js-api-mismatch-scalar-all: opencv.js's `Scalar.all(v)`
+  returns `Scalar(v, v, v, v)` — commonly used for uniform fills
+  (e.g., `cv.Scalar.all(-1)` for random per-keypoint colors).
+  qjs-opencv has no static `all` method on Scalar. Additionally,
+  opencv.js's Scalar subclasses `Array` (`instanceof Array === true`);
+  qjs-opencv's returns `Float64Array`. Fix: add static `all` method
+  and consider making Scalar an Array subclass.
