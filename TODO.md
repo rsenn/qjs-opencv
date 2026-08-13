@@ -61,9 +61,14 @@ Migrating from `Contour` class to opencv.js-compatible API through a phased appr
 ### Phase 2: MatVector Implementation (SECONDARY - Planned)
 Implement MatVector class for running opencv.js code that uses it.
 
-**Status:** Planned  
-**Priority:** MEDIUM - nice to have, enables more opencv.js compatibility  
+**Status:** Planned
+**Priority:** MEDIUM - nice to have, enables more opencv.js compatibility
 **Note:** Won't be 100% complete - some functions may still use Contour internally
+
+**Research complete (2026-08-13):**
+- Found 16 vector container types in opencv.js (MatVector, PointVector, KeyPointVector, DMatchVector, RectVector, etc.)
+- All use common API: constructor, push_back, get, set, size, delete
+- See BUGS entry `opencvjs-vector-containers` for full API spec
 
 **Technical foundation (verified):**
 - `findContours` with `vector<Mat>` output works
@@ -72,7 +77,99 @@ Implement MatVector class for running opencv.js code that uses it.
 - PointVector (vector<Vec2i>) NOT viable for Contours (findContours constraint)
 - See BUGS for detailed feasibility analysis
 
+**Implementation Plan:**
+1. Design `js_vector.hpp` template infrastructure (see Phase 2A below)
+2. Implement MatVector as first vector type
+3. Gradually add other vector types as needed
+
 **Implementation:** See BUGS entry `no-opencvjs-matvector` for API design
+
+### Phase 2A: Vector Template Infrastructure Design
+
+**Goal:** Create common template infrastructure for all 16 vector container types
+
+**Status:** Complete - Core template implemented
+**Priority:** HIGH - enables efficient implementation of all vector types
+
+**Implementation:**
+- ✓ Created `include/js_vector.hpp` with generic JSVector<T> template class
+- ✓ Implemented JSConverter specializations for primitive types (int, float, double, char, std::string)
+- ✓ Added js_register_vector<T>() helper for easy type registration
+- ✓ Common operations: constructor, push_back, get, set, size, delete
+
+**Design Requirements:**
+- Single `js_vector.hpp` with template helpers/classes
+- Factor out common code: push_back, get, set, size, delete
+- Type conversion helpers for JS ↔ C++
+- Memory management utilities
+- Iterator support (Symbol.iterator) - TODO
+- Minimal per-type boilerplate
+
+**Key Design Decisions:**
+
+1. **Template class approach:**
+   ```cpp
+   template<typename T>
+   class JSVector {
+     std::vector<T>* vec;
+   public:
+     // Common operations
+     static JSValue push_back(JSContext* ctx, JSValueConst this_val, ...);
+     static JSValue get(JSContext* ctx, JSValueConst this_val, ...);
+     static JSValue set(JSContext* ctx, JSValueConst this_val, ...);
+     static JSValue size(JSContext* ctx, JSValueConst this_val, ...);
+     static JSValue delete_(JSContext* ctx, JSValueConst this_val, ...);
+   };
+   ```
+
+2. **JSConverter trait:**
+   ```cpp
+   template<typename T>
+   struct JSConverter {
+     static T fromJS(JSContext* ctx, JSValueConst val);
+     static JSValue toJS(JSContext* ctx, const T& val);
+   };
+   ```
+
+3. **Specializations implemented:**
+   - ✓ JSConverter<int>
+   - ✓ JSConverter<float>
+   - ✓ JSConverter<double>
+   - ✓ JSConverter<char>
+   - ✓ JSConverter<std::string>
+   - ⏳ JSConverter<cv::Mat> (needs special handling for Mat references)
+   - ⏳ JSConverter<cv::Point> (needs Point class integration)
+   - ⏳ JSConverter<cv::KeyPoint> (needs KeyPoint class integration)
+   - ⏳ JSConverter<cv::DMatch> (needs DMatch class integration)
+   - ⏳ JSConverter<cv::Rect> (needs Rect class integration)
+
+4. **Registration helper:**
+   ```cpp
+   template<typename T>
+   int js_register_vector(JSContext* ctx, JSModuleDef* m, const char* name);
+   ```
+
+**Benefits:**
+- DRY: Common code written once
+- Consistent API across all vector types
+- Easy to add new vector types (just add JSConverter specialization)
+- Iterator support - TODO (will add Symbol.iterator with custom iterator)
+
+**Next Steps:**
+1. Add JSConverter specializations for OpenCV types (Mat, Point, Rect, etc.)
+2. Add Symbol.iterator support for JS for-of loops
+3. Implement js_matvector.cpp using the template
+4. Test with findContours output
+5. Gradually add other vector types
+
+**Challenges:**
+- Nested vectors (PointVectorVector) need special handling
+- Memory management for complex types (Mat, KeyPoint)
+- Type conversion edge cases
+
+**See also:**
+- BUGS: `opencvjs-vector-containers` for full API spec
+- BUGS: `no-opencvjs-matvector` for MatVector-specific design
 
 ### Phase 3: Individual Function Assessment (ONGOING)
 Each function that currently accepts Contour/Contour[] needs individual assessment:

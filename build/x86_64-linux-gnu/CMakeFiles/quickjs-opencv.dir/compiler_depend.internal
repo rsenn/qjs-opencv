@@ -436,20 +436,21 @@ CMakeFiles/quickjs-opencv.dir/gifenc/gifenc.c.o
 
 CMakeFiles/quickjs-opencv.dir/js_affine3.cpp.o
  /mnt/data/Projects/plot-cv/qjs-opencv/js_affine3.cpp
- /mnt/data/Projects/plot-cv/qjs-opencv/include/jsbindings.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/include/line.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/include/psimpl.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_line.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_mat.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_point.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_rect.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_size.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/include/js_alloc.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/include/js_array.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/include/js_typed_array.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/include/jsbindings.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/include/util.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_affine3.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/include/jsbindings.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/include/line.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/include/psimpl.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_line.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_mat.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_point.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_rect.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_size.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/include/js_alloc.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/include/js_array.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/include/js_typed_array.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/include/jsbindings.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/include/util.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_affine3.cpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_affine3.hpp
  /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core.hpp
  /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/affine.hpp
  /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/base.hpp
@@ -852,33 +853,34 @@ CMakeFiles/quickjs-opencv.dir/js_affine3.cpp.o
 
 CMakeFiles/quickjs-opencv.dir/js_algorithms.cpp.o
  /mnt/data/Projects/plot-cv/qjs-opencv/js_algorithms.cpp
- /mnt/data/Projects/plot-cv/qjs-opencv/algorithms/dominant_colors_grabber.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/algorithms/palette.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/algorithms/pixel_neighborhood.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/algorithms/skeleton_lines.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/algorithms/skeletonization.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/algorithms/trace_skeleton.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/include/jsbindings.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/include/line.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/include/psimpl.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_line.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_mat.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_point.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_rect.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_size.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/include/geometry.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/include/js_alloc.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/include/js_array.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/include/js_typed_array.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/include/jsbindings.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/include/psimpl.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/include/util.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_contour.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_cv.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_line.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_mat.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_point.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_umat.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/algorithms/dominant_colors_grabber.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/algorithms/palette.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/algorithms/pixel_neighborhood.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/algorithms/skeleton_lines.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/algorithms/skeletonization.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/algorithms/trace_skeleton.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/include/jsbindings.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/include/line.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/include/psimpl.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_line.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_mat.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_point.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_rect.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_size.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/include/geometry.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/include/js_alloc.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/include/js_array.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/include/js_typed_array.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/include/jsbindings.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/include/psimpl.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/include/util.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_algorithms.cpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_contour.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_cv.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_line.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_mat.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_point.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_umat.hpp
  /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core.hpp
  /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/base.hpp
  /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/bufferpool.hpp
@@ -1280,27 +1282,28 @@ CMakeFiles/quickjs-opencv.dir/js_algorithms.cpp.o
 
 CMakeFiles/quickjs-opencv.dir/js_aruco.cpp.o
  /mnt/data/Projects/plot-cv/qjs-opencv/js_aruco.cpp
- /mnt/data/Projects/plot-cv/qjs-opencv/include/jsbindings.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/include/line.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/include/psimpl.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_line.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_mat.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_point.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_rect.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_size.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/include/geometry.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/include/js_alloc.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/include/js_array.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/include/js_typed_array.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/include/jsbindings.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/include/psimpl.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/include/util.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_contour.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_cv.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_line.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_mat.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_point.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_umat.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/include/jsbindings.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/include/line.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/include/psimpl.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_line.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_mat.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_point.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_rect.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_size.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/include/geometry.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/include/js_alloc.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/include/js_array.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/include/js_typed_array.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/include/jsbindings.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/include/psimpl.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/include/util.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_aruco.cpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_contour.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_cv.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_line.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_mat.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_point.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_umat.hpp
  /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core.hpp
  /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/base.hpp
  /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/bufferpool.hpp
@@ -1706,27 +1709,28 @@ CMakeFiles/quickjs-opencv.dir/js_aruco.cpp.o
 
 CMakeFiles/quickjs-opencv.dir/js_barcode_detector.cpp.o
  /mnt/data/Projects/plot-cv/qjs-opencv/js_barcode_detector.cpp
- /mnt/data/Projects/plot-cv/qjs-opencv/include/line.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/include/psimpl.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_line.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_mat.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_point.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_rect.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_size.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/include/geometry.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/include/js_alloc.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/include/js_array.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/include/js_typed_array.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/include/jsbindings.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/include/psimpl.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/include/util.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_contour.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_cv.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_line.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_mat.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_point.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_size.hpp
- /mnt/data/Projects/plot-cv/qjs-opencv/js_umat.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/include/line.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/include/psimpl.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_line.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_mat.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_point.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_rect.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_size.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/include/geometry.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/include/js_alloc.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/include/js_array.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/include/js_typed_array.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/include/jsbindings.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/include/psimpl.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/include/util.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_barcode_detector.cpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_contour.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_cv.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_line.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_mat.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_point.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_size.hpp
+ /home/roman/Projects/plot-cv/qjs-opencv/js_umat.hpp
  /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core.hpp
  /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/base.hpp
  /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/bufferpool.hpp

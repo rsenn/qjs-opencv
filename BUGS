@@ -248,6 +248,125 @@
   See: no-opencvjs-matvector entry for MatVector C++ feasibility analysis.
 
 
+- opencvjs-vector-containers: Implement all 16 vector container types from
+  opencv.js API using common template infrastructure.
+
+  **Vector Types Found in opencv.js:**
+  
+  1. **MatVector** - vector<cv::Mat>
+     - Most important: used by findContours, split/merge, etc.
+     - API: constructor, push_back(mat), get(i), set(i, mat), size(), delete()
+     - Usage: cv.findContours(src, contours, hierarchy, mode, method)
+     - Access: contours.get(i) returns Mat, iterate via for-of loop
+  
+  2. **PointVector** - vector<cv::Point> (Vec2i)
+     - Used by: fillPoly, polylines, drawContours, convexHull
+     - API: constructor, push_back(point), get(i), set(i, point), size(), delete()
+     - Point = {x: int, y: int} or Vec2i
+  
+  3. **Point2fVector** - vector<cv::Point2f>
+     - Used by: goodFeaturesToTrack, calcOpticalFlowPyrLK
+     - API: same as PointVector but Point2f = {x: float, y: float}
+  
+  4. **Point3fVector** - vector<cv::Point3f>
+     - Used by: solvePnP, calibrateCamera
+     - API: same pattern, Point3f = {x: float, y: float, z: float}
+  
+  5. **PointVectorVector** - vector<vector<cv::Point>>
+     - Used by: findContours (alternative to MatVector)
+     - API: constructor, push_back(pointVector), get(i), size(), delete()
+     - Nested: get(i) returns PointVector, then get(j) returns Point
+  
+  6. **KeyPointVector** - vector<cv::KeyPoint>
+     - Used by: ORB, SIFT, SURF feature detectors
+     - API: constructor, push_back(keypoint), get(i), set(i, keypoint), size(), delete()
+     - KeyPoint = {pt: Point2f, size: float, angle: float, response: float, octave: int, class_id: int}
+  
+  7. **KeyPointVectorVector** - vector<vector<cv::KeyPoint>>
+     - Rarely used
+     - API: nested like PointVectorVector
+  
+  8. **DMatchVector** - vector<cv::DMatch>
+     - Used by: BFMatcher, FlannBasedMatcher
+     - API: constructor, push_back(match), get(i), set(i, match), size(), delete()
+     - DMatch = {queryIdx: int, trainIdx: int, imgIdx: int, distance: float}
+  
+  9. **DMatchVectorVector** - vector<vector<cv::DMatch>>
+     - Used by: knnMatch
+     - API: nested like PointVectorVector
+  
+  10. **RectVector** - vector<cv::Rect>
+      - Used by: detectMultiScale (face detection), groupRectangles
+      - API: constructor, push_back(rect), get(i), set(i, rect), size(), delete()
+      - Rect = {x: int, y: int, width: int, height: int}
+  
+  11. **IntVector** - vector<int>
+      - Used by: various algorithms needing int arrays
+      - API: constructor, push_back(int), get(i), set(i, int), size(), delete()
+  
+  12. **FloatVector** - vector<float>
+      - Used by: various algorithms needing float arrays
+      - API: same pattern with float
+  
+  13. **DoubleVector** - vector<double>
+      - Used by: various algorithms needing double arrays
+      - API: same pattern with double
+  
+  14. **CharVector** - vector<char>
+      - Rarely used
+      - API: same pattern with char
+  
+  15. **StringVector** - vector<std::string>
+      - Used by: getLayerNames, getUnconnectedOutLayersNames
+      - API: constructor, push_back(string), get(i), set(i, string), size(), delete()
+  
+  16. **CharVectorVector** - vector<vector<char>>
+      - Rarely used
+      - API: nested pattern
+
+  **Common API Pattern** (via emscripten::register_vector<T>):
+  
+  All vector types expose the same interface:
+  - `new cv.XxxVector()` - create empty vector
+  - `vec.push_back(element)` - append element
+  - `vec.get(index)` - retrieve element at index
+  - `vec.set(index, element)` - update element at index
+  - `vec.size()` - get number of elements
+  - `vec.delete()` - manual cleanup (opencv.js style)
+  
+  **Implementation Plan:**
+  
+  1. Create `js_vector.hpp` with template helpers:
+     - `JSVector<T>` base template class
+     - Common operations: push_back, get, set, size, delete
+     - Type conversion helpers for JS ↔ C++
+     - Memory management utilities
+     - Iterator support (Symbol.iterator)
+  
+  2. Create separate binding files for each vector type:
+     - js_matvector.cpp
+     - js_pointvector.cpp
+     - js_keypointvector.cpp
+     - js_dmatchvector.cpp
+     - js_rectvector.cpp
+     - js_primitivevectors.cpp (IntVector, FloatVector, DoubleVector, etc.)
+  
+  3. Wire into build system:
+     - Add to CMakeLists.txt
+     - Register in init_module.cpp
+     - Export from opencv module
+
+  **Priority:**
+  - HIGH: MatVector (required for Contour migration)
+  - MEDIUM: PointVector, RectVector, KeyPointVector, DMatchVector
+  - LOW: Primitive vectors (Int/Float/Double/Char/String)
+  - VERY LOW: Nested vectors (PointVectorVector, etc.)
+
+  **See also:**
+  - no-opencvjs-matvector entry for MatVector-specific details
+  - make-dormant-point-line-iterator-plug-into-point-mat-vector for PointVector design
+
+
 - make-dormant-point-line-iterator-plug-into-point-mat-vector: 
   "Husarenstück" (brilliant maneuver) approach to phase out Contour class
   while preserving iteration capability via binary compatibility.

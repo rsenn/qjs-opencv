@@ -2,6 +2,8 @@
 #define JS_KEYPOINT_HPP
 
 #include "include/jsbindings.hpp"
+#include "include/js_array.hpp"
+#include "include/js_vector.hpp"
 #include <quickjs.h>
 #include <stddef.h>
 #include <cstdint>
@@ -69,6 +71,24 @@ public:
     copy_sequence(ctx, arr, start, end);
     return arr;
   }
+};
+
+/**
+ * @brief JSConverter specialization for cv::KeyPoint
+ */
+template<>
+struct JSConverter<cv::KeyPoint> {
+    static cv::KeyPoint fromJS(JSContext* ctx, JSValueConst val) {
+        JSKeyPointData* kp = js_keypoint_data2(ctx, val);
+        if (!kp) {
+            return cv::KeyPoint();
+        }
+        return *kp;
+    }
+
+    static JSValue toJS(JSContext* ctx, const cv::KeyPoint& val) {
+        return js_keypoint_new(ctx, val);
+    }
 };
 
 #endif /* defined(JS_KEYPOINT_HPP) */

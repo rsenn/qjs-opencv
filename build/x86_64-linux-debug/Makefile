@@ -57,10 +57,10 @@ RM = /opt/cmake-4.0.0-linux-x86_64/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/roman/Projects/plot-cv/qjs-opencv
+CMAKE_SOURCE_DIR = /mnt/data/Projects/plot-cv/qjs-opencv
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug
+CMAKE_BINARY_DIR = /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -78,7 +78,7 @@ package/fast: package
 # Special rule for the target package_source
 package_source:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool for source..."
-	/opt/cmake-4.0.0-linux-x86_64/bin/cpack --config ./CPackSourceConfig.cmake /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CPackSourceConfig.cmake
+	/opt/cmake-4.0.0-linux-x86_64/bin/cpack --config ./CPackSourceConfig.cmake /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CPackSourceConfig.cmake
 .PHONY : package_source
 
 # Special rule for the target package_source
@@ -152,9 +152,9 @@ install/strip/fast: preinstall/fast
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug//CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug//CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -178,7 +178,7 @@ preinstall/fast:
 
 # clear depends
 depend:
-	$(CMAKE_COMMAND) -P /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles/VerifyGlobs.cmake
+	$(CMAKE_COMMAND) -P /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles/VerifyGlobs.cmake
 	$(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
@@ -855,6 +855,30 @@ js_mat.s: js_mat.cpp.s
 js_mat.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/quickjs-opencv.dir/build.make CMakeFiles/quickjs-opencv.dir/js_mat.cpp.s
 .PHONY : js_mat.cpp.s
+
+js_matvector.o: js_matvector.cpp.o
+.PHONY : js_matvector.o
+
+# target to build an object file
+js_matvector.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/quickjs-opencv.dir/build.make CMakeFiles/quickjs-opencv.dir/js_matvector.cpp.o
+.PHONY : js_matvector.cpp.o
+
+js_matvector.i: js_matvector.cpp.i
+.PHONY : js_matvector.i
+
+# target to preprocess a source file
+js_matvector.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/quickjs-opencv.dir/build.make CMakeFiles/quickjs-opencv.dir/js_matvector.cpp.i
+.PHONY : js_matvector.cpp.i
+
+js_matvector.s: js_matvector.cpp.s
+.PHONY : js_matvector.s
+
+# target to generate assembly for a file
+js_matvector.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/quickjs-opencv.dir/build.make CMakeFiles/quickjs-opencv.dir/js_matvector.cpp.s
+.PHONY : js_matvector.cpp.s
 
 js_matx.o: js_matx.cpp.o
 .PHONY : js_matx.o
@@ -1553,6 +1577,9 @@ help:
 	@echo "... js_mat.o"
 	@echo "... js_mat.i"
 	@echo "... js_mat.s"
+	@echo "... js_matvector.o"
+	@echo "... js_matvector.i"
+	@echo "... js_matvector.s"
 	@echo "... js_matx.o"
 	@echo "... js_matx.i"
 	@echo "... js_matx.s"
@@ -1639,7 +1666,7 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	$(CMAKE_COMMAND) -P /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles/VerifyGlobs.cmake
+	$(CMAKE_COMMAND) -P /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles/VerifyGlobs.cmake
 	$(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 

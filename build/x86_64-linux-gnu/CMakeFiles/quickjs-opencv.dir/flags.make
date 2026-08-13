@@ -3,15 +3,15 @@
 
 # compile C with /usr/bin/gcc
 # compile CXX with /usr/bin/g++
-C_DEFINES = -DCONFIG_PREFIX=\"/usr/local\" -DHAVE_OPENCV2_BARCODE_HPP=1 -DHAVE_OPENCV2_FEATURES_HPP=1 -DHAVE_OPENCV2_GEOMETRY_HPP=1 -DHAVE_OPENCV2_XFEATURES2D_HPP=1 -DHAVE_OPENCV2_XIMGPROC_FIND_ELLIPSES_HPP=1 -DHAVE_OPENCV2_XIMGPROC_HPP=1 -DHAVE_OPENCV_DNN_NEW_ENGINE -DHAVE_OPENCV_DNN_TOKENIZER=1 -DHAVE_OPENCV_XFEATURES2D_AKAZE=1 -DHAVE_QUICKJS_CONFIG_H=1 -DHAVE_X11_X_H=1 -DJS_OPENCV_MODULE -DUSE_BARCODE=1 -DUSE_FEATURE2D=1 -DUSE_LCCV=1 -D_FILE_OFFSET_BITS=64 -Dquickjs_opencv_EXPORTS
+C_DEFINES = -DCONFIG_PREFIX=\"/usr/local\" -DHAVE_OPENCV2_FEATURES_HPP=1 -DHAVE_OPENCV2_GEOMETRY_HPP=1 -DHAVE_OPENCV2_XFEATURES2D_HPP=1 -DHAVE_OPENCV2_XIMGPROC_FIND_ELLIPSES_HPP=1 -DHAVE_OPENCV2_XIMGPROC_HPP=1 -DHAVE_OPENCV_DNN_NEW_ENGINE -DHAVE_OPENCV_DNN_TOKENIZER=1 -DHAVE_OPENCV_XFEATURES2D_AKAZE=1 -DHAVE_QUICKJS_CONFIG_H=1 -DHAVE_X11_X_H=1 -DJS_OPENCV_MODULE -DUSE_BARCODE=1 -DUSE_FEATURE2D=1 -DUSE_LCCV=1 -D_FILE_OFFSET_BITS=64 -Dquickjs_opencv_EXPORTS
 
-C_INCLUDES = -I/usr/local/include/quickjs -I/mnt/data/Projects/plot-cv/qjs-opencv/include -I/opt/opencv-5.0.0-x86_64/include/opencv5 -I/mnt/data/Projects/plot-cv/qjs-opencv -I/mnt/data/Projects/plot-cv/qjs-opencv/lsd/include -I/usr/local/include/libcamera -I/mnt/data/Projects/plot-cv/qjs-opencv/LCCV/include -isystem /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5
+C_INCLUDES = -I/usr/local/include/quickjs -I/mnt/data/Projects/plot-cv/qjs-opencv/include -I/mnt/data/Projects/plot-cv/qjs-opencv -I/mnt/data/Projects/plot-cv/qjs-opencv/lsd/include -I/usr/local/include/libcamera -I/mnt/data/Projects/plot-cv/qjs-opencv/LCCV/include -isystem /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5
 
 C_FLAGS =  -Wno-unused-value -Wno-unused-variable -O3 -DNDEBUG -fPIC   -D"CXX2A" -fvisibility=hidden -Wno-psabi -fvisibility=hidden
 
-CXX_DEFINES = -DCONFIG_PREFIX=\"/usr/local\" -DHAVE_OPENCV2_BARCODE_HPP=1 -DHAVE_OPENCV2_FEATURES_HPP=1 -DHAVE_OPENCV2_GEOMETRY_HPP=1 -DHAVE_OPENCV2_XFEATURES2D_HPP=1 -DHAVE_OPENCV2_XIMGPROC_FIND_ELLIPSES_HPP=1 -DHAVE_OPENCV2_XIMGPROC_HPP=1 -DHAVE_OPENCV_DNN_NEW_ENGINE -DHAVE_OPENCV_DNN_TOKENIZER=1 -DHAVE_OPENCV_XFEATURES2D_AKAZE=1 -DHAVE_QUICKJS_CONFIG_H=1 -DHAVE_X11_X_H=1 -DJS_OPENCV_MODULE -DUSE_BARCODE=1 -DUSE_FEATURE2D=1 -DUSE_LCCV=1 -D_FILE_OFFSET_BITS=64 -Dquickjs_opencv_EXPORTS
+CXX_DEFINES = -DCONFIG_PREFIX=\"/usr/local\" -DHAVE_OPENCV2_FEATURES_HPP=1 -DHAVE_OPENCV2_GEOMETRY_HPP=1 -DHAVE_OPENCV2_XFEATURES2D_HPP=1 -DHAVE_OPENCV2_XIMGPROC_FIND_ELLIPSES_HPP=1 -DHAVE_OPENCV2_XIMGPROC_HPP=1 -DHAVE_OPENCV_DNN_NEW_ENGINE -DHAVE_OPENCV_DNN_TOKENIZER=1 -DHAVE_OPENCV_XFEATURES2D_AKAZE=1 -DHAVE_QUICKJS_CONFIG_H=1 -DHAVE_X11_X_H=1 -DJS_OPENCV_MODULE -DUSE_BARCODE=1 -DUSE_FEATURE2D=1 -DUSE_LCCV=1 -D_FILE_OFFSET_BITS=64 -Dquickjs_opencv_EXPORTS
 
-CXX_INCLUDES = -I/usr/local/include/quickjs -I/mnt/data/Projects/plot-cv/qjs-opencv/include -I/opt/opencv-5.0.0-x86_64/include/opencv5 -I/mnt/data/Projects/plot-cv/qjs-opencv -I/mnt/data/Projects/plot-cv/qjs-opencv/lsd/include -I/usr/local/include/libcamera -I/mnt/data/Projects/plot-cv/qjs-opencv/LCCV/include -isystem /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5
+CXX_INCLUDES = -I/usr/local/include/quickjs -I/mnt/data/Projects/plot-cv/qjs-opencv/include -I/mnt/data/Projects/plot-cv/qjs-opencv -I/mnt/data/Projects/plot-cv/qjs-opencv/lsd/include -I/usr/local/include/libcamera -I/mnt/data/Projects/plot-cv/qjs-opencv/LCCV/include -isystem /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5
 
 CXX_FLAGS =  -std=c++2a -DCXX_STANDARD=2a -Wno-unused-value -Wno-unused-variable -fPIC -fvisibility=hidden -O3 -DNDEBUG -std=gnu++17 -fPIC   -D"CXX2A" -fvisibility=hidden -Wno-psabi -fvisibility=hidden
 

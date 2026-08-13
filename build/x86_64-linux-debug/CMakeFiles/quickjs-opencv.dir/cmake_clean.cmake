@@ -54,6 +54,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/quickjs-opencv.dir/js_line_segment_detector.cpp.o.d"
   "CMakeFiles/quickjs-opencv.dir/js_mat.cpp.o"
   "CMakeFiles/quickjs-opencv.dir/js_mat.cpp.o.d"
+  "CMakeFiles/quickjs-opencv.dir/js_matvector.cpp.o"
+  "CMakeFiles/quickjs-opencv.dir/js_matvector.cpp.o.d"
   "CMakeFiles/quickjs-opencv.dir/js_matx.cpp.o"
   "CMakeFiles/quickjs-opencv.dir/js_matx.cpp.o.d"
   "CMakeFiles/quickjs-opencv.dir/js_opengl.cpp.o"

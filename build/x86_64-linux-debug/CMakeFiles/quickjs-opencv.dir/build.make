@@ -53,10 +53,10 @@ RM = /opt/cmake-4.0.0-linux-x86_64/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/roman/Projects/plot-cv/qjs-opencv
+CMAKE_SOURCE_DIR = /mnt/data/Projects/plot-cv/qjs-opencv
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug
+CMAKE_BINARY_DIR = /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug
 
 # Include any dependencies generated for this target.
 include CMakeFiles/quickjs-opencv.dir/depend.make
@@ -73,732 +73,746 @@ CMakeFiles/quickjs-opencv.dir/codegen:
 .PHONY : CMakeFiles/quickjs-opencv.dir/codegen
 
 CMakeFiles/quickjs-opencv.dir/algorithms/dominant_colors_grabber.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/algorithms/dominant_colors_grabber.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/algorithms/dominant_colors_grabber.cpp
+CMakeFiles/quickjs-opencv.dir/algorithms/dominant_colors_grabber.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/algorithms/dominant_colors_grabber.cpp
 CMakeFiles/quickjs-opencv.dir/algorithms/dominant_colors_grabber.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/quickjs-opencv.dir/algorithms/dominant_colors_grabber.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/algorithms/dominant_colors_grabber.cpp.o -MF CMakeFiles/quickjs-opencv.dir/algorithms/dominant_colors_grabber.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/algorithms/dominant_colors_grabber.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/algorithms/dominant_colors_grabber.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/quickjs-opencv.dir/algorithms/dominant_colors_grabber.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/algorithms/dominant_colors_grabber.cpp.o -MF CMakeFiles/quickjs-opencv.dir/algorithms/dominant_colors_grabber.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/algorithms/dominant_colors_grabber.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/algorithms/dominant_colors_grabber.cpp
 
 CMakeFiles/quickjs-opencv.dir/algorithms/dominant_colors_grabber.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/algorithms/dominant_colors_grabber.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/algorithms/dominant_colors_grabber.cpp > CMakeFiles/quickjs-opencv.dir/algorithms/dominant_colors_grabber.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/algorithms/dominant_colors_grabber.cpp > CMakeFiles/quickjs-opencv.dir/algorithms/dominant_colors_grabber.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/algorithms/dominant_colors_grabber.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/algorithms/dominant_colors_grabber.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/algorithms/dominant_colors_grabber.cpp -o CMakeFiles/quickjs-opencv.dir/algorithms/dominant_colors_grabber.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/algorithms/dominant_colors_grabber.cpp -o CMakeFiles/quickjs-opencv.dir/algorithms/dominant_colors_grabber.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/gifenc/gifenc.c.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/gifenc/gifenc.c.o: /home/roman/Projects/plot-cv/qjs-opencv/gifenc/gifenc.c
+CMakeFiles/quickjs-opencv.dir/gifenc/gifenc.c.o: /mnt/data/Projects/plot-cv/qjs-opencv/gifenc/gifenc.c
 CMakeFiles/quickjs-opencv.dir/gifenc/gifenc.c.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building C object CMakeFiles/quickjs-opencv.dir/gifenc/gifenc.c.o"
-	/usr/bin/gcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/gifenc/gifenc.c.o -MF CMakeFiles/quickjs-opencv.dir/gifenc/gifenc.c.o.d -o CMakeFiles/quickjs-opencv.dir/gifenc/gifenc.c.o -c /home/roman/Projects/plot-cv/qjs-opencv/gifenc/gifenc.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building C object CMakeFiles/quickjs-opencv.dir/gifenc/gifenc.c.o"
+	/usr/bin/gcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/gifenc/gifenc.c.o -MF CMakeFiles/quickjs-opencv.dir/gifenc/gifenc.c.o.d -o CMakeFiles/quickjs-opencv.dir/gifenc/gifenc.c.o -c /mnt/data/Projects/plot-cv/qjs-opencv/gifenc/gifenc.c
 
 CMakeFiles/quickjs-opencv.dir/gifenc/gifenc.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/quickjs-opencv.dir/gifenc/gifenc.c.i"
-	/usr/bin/gcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/gifenc/gifenc.c > CMakeFiles/quickjs-opencv.dir/gifenc/gifenc.c.i
+	/usr/bin/gcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/gifenc/gifenc.c > CMakeFiles/quickjs-opencv.dir/gifenc/gifenc.c.i
 
 CMakeFiles/quickjs-opencv.dir/gifenc/gifenc.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/quickjs-opencv.dir/gifenc/gifenc.c.s"
-	/usr/bin/gcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/gifenc/gifenc.c -o CMakeFiles/quickjs-opencv.dir/gifenc/gifenc.c.s
+	/usr/bin/gcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/gifenc/gifenc.c -o CMakeFiles/quickjs-opencv.dir/gifenc/gifenc.c.s
 
 CMakeFiles/quickjs-opencv.dir/js_affine3.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_affine3.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_affine3.cpp
+CMakeFiles/quickjs-opencv.dir/js_affine3.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_affine3.cpp
 CMakeFiles/quickjs-opencv.dir/js_affine3.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_affine3.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_affine3.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_affine3.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_affine3.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_affine3.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_affine3.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_affine3.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_affine3.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_affine3.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_affine3.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_affine3.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_affine3.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_affine3.cpp > CMakeFiles/quickjs-opencv.dir/js_affine3.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_affine3.cpp > CMakeFiles/quickjs-opencv.dir/js_affine3.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_affine3.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_affine3.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_affine3.cpp -o CMakeFiles/quickjs-opencv.dir/js_affine3.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_affine3.cpp -o CMakeFiles/quickjs-opencv.dir/js_affine3.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_algorithms.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_algorithms.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_algorithms.cpp
+CMakeFiles/quickjs-opencv.dir/js_algorithms.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_algorithms.cpp
 CMakeFiles/quickjs-opencv.dir/js_algorithms.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_algorithms.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_algorithms.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_algorithms.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_algorithms.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_algorithms.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_algorithms.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_algorithms.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_algorithms.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_algorithms.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_algorithms.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_algorithms.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_algorithms.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_algorithms.cpp > CMakeFiles/quickjs-opencv.dir/js_algorithms.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_algorithms.cpp > CMakeFiles/quickjs-opencv.dir/js_algorithms.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_algorithms.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_algorithms.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_algorithms.cpp -o CMakeFiles/quickjs-opencv.dir/js_algorithms.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_algorithms.cpp -o CMakeFiles/quickjs-opencv.dir/js_algorithms.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_aruco.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_aruco.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_aruco.cpp
+CMakeFiles/quickjs-opencv.dir/js_aruco.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_aruco.cpp
 CMakeFiles/quickjs-opencv.dir/js_aruco.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_aruco.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_aruco.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_aruco.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_aruco.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_aruco.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_aruco.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_aruco.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_aruco.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_aruco.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_aruco.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_aruco.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_aruco.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_aruco.cpp > CMakeFiles/quickjs-opencv.dir/js_aruco.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_aruco.cpp > CMakeFiles/quickjs-opencv.dir/js_aruco.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_aruco.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_aruco.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_aruco.cpp -o CMakeFiles/quickjs-opencv.dir/js_aruco.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_aruco.cpp -o CMakeFiles/quickjs-opencv.dir/js_aruco.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_barcode_detector.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_barcode_detector.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_barcode_detector.cpp
+CMakeFiles/quickjs-opencv.dir/js_barcode_detector.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_barcode_detector.cpp
 CMakeFiles/quickjs-opencv.dir/js_barcode_detector.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_barcode_detector.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_barcode_detector.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_barcode_detector.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_barcode_detector.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_barcode_detector.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_barcode_detector.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_barcode_detector.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_barcode_detector.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_barcode_detector.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_barcode_detector.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_barcode_detector.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_barcode_detector.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_barcode_detector.cpp > CMakeFiles/quickjs-opencv.dir/js_barcode_detector.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_barcode_detector.cpp > CMakeFiles/quickjs-opencv.dir/js_barcode_detector.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_barcode_detector.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_barcode_detector.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_barcode_detector.cpp -o CMakeFiles/quickjs-opencv.dir/js_barcode_detector.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_barcode_detector.cpp -o CMakeFiles/quickjs-opencv.dir/js_barcode_detector.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_bg_subtractor.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_bg_subtractor.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_bg_subtractor.cpp
+CMakeFiles/quickjs-opencv.dir/js_bg_subtractor.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_bg_subtractor.cpp
 CMakeFiles/quickjs-opencv.dir/js_bg_subtractor.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_bg_subtractor.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_bg_subtractor.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_bg_subtractor.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_bg_subtractor.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_bg_subtractor.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_bg_subtractor.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_bg_subtractor.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_bg_subtractor.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_bg_subtractor.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_bg_subtractor.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_bg_subtractor.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_bg_subtractor.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_bg_subtractor.cpp > CMakeFiles/quickjs-opencv.dir/js_bg_subtractor.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_bg_subtractor.cpp > CMakeFiles/quickjs-opencv.dir/js_bg_subtractor.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_bg_subtractor.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_bg_subtractor.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_bg_subtractor.cpp -o CMakeFiles/quickjs-opencv.dir/js_bg_subtractor.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_bg_subtractor.cpp -o CMakeFiles/quickjs-opencv.dir/js_bg_subtractor.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_calib3d.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_calib3d.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_calib3d.cpp
+CMakeFiles/quickjs-opencv.dir/js_calib3d.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_calib3d.cpp
 CMakeFiles/quickjs-opencv.dir/js_calib3d.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_calib3d.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_calib3d.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_calib3d.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_calib3d.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_calib3d.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_calib3d.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_calib3d.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_calib3d.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_calib3d.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_calib3d.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_calib3d.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_calib3d.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_calib3d.cpp > CMakeFiles/quickjs-opencv.dir/js_calib3d.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_calib3d.cpp > CMakeFiles/quickjs-opencv.dir/js_calib3d.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_calib3d.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_calib3d.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_calib3d.cpp -o CMakeFiles/quickjs-opencv.dir/js_calib3d.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_calib3d.cpp -o CMakeFiles/quickjs-opencv.dir/js_calib3d.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_clahe.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_clahe.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_clahe.cpp
+CMakeFiles/quickjs-opencv.dir/js_clahe.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_clahe.cpp
 CMakeFiles/quickjs-opencv.dir/js_clahe.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_clahe.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_clahe.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_clahe.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_clahe.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_clahe.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_clahe.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_clahe.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_clahe.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_clahe.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_clahe.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_clahe.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_clahe.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_clahe.cpp > CMakeFiles/quickjs-opencv.dir/js_clahe.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_clahe.cpp > CMakeFiles/quickjs-opencv.dir/js_clahe.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_clahe.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_clahe.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_clahe.cpp -o CMakeFiles/quickjs-opencv.dir/js_clahe.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_clahe.cpp -o CMakeFiles/quickjs-opencv.dir/js_clahe.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_commandlineparser.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_commandlineparser.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_commandlineparser.cpp
+CMakeFiles/quickjs-opencv.dir/js_commandlineparser.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_commandlineparser.cpp
 CMakeFiles/quickjs-opencv.dir/js_commandlineparser.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_commandlineparser.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_commandlineparser.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_commandlineparser.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_commandlineparser.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_commandlineparser.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_commandlineparser.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_commandlineparser.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_commandlineparser.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_commandlineparser.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_commandlineparser.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_commandlineparser.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_commandlineparser.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_commandlineparser.cpp > CMakeFiles/quickjs-opencv.dir/js_commandlineparser.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_commandlineparser.cpp > CMakeFiles/quickjs-opencv.dir/js_commandlineparser.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_commandlineparser.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_commandlineparser.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_commandlineparser.cpp -o CMakeFiles/quickjs-opencv.dir/js_commandlineparser.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_commandlineparser.cpp -o CMakeFiles/quickjs-opencv.dir/js_commandlineparser.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_contour.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_contour.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp
+CMakeFiles/quickjs-opencv.dir/js_contour.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_contour.cpp
 CMakeFiles/quickjs-opencv.dir/js_contour.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_contour.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_contour.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_contour.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_contour.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_contour.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_contour.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_contour.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_contour.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_contour.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_contour.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_contour.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp > CMakeFiles/quickjs-opencv.dir/js_contour.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_contour.cpp > CMakeFiles/quickjs-opencv.dir/js_contour.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_contour.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_contour.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp -o CMakeFiles/quickjs-opencv.dir/js_contour.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_contour.cpp -o CMakeFiles/quickjs-opencv.dir/js_contour.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_cv.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_cv.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_cv.cpp
+CMakeFiles/quickjs-opencv.dir/js_cv.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_cv.cpp
 CMakeFiles/quickjs-opencv.dir/js_cv.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_cv.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_cv.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_cv.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_cv.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_cv.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_cv.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_cv.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_cv.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_cv.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_cv.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_cv.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_cv.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_cv.cpp > CMakeFiles/quickjs-opencv.dir/js_cv.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_cv.cpp > CMakeFiles/quickjs-opencv.dir/js_cv.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_cv.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_cv.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_cv.cpp -o CMakeFiles/quickjs-opencv.dir/js_cv.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_cv.cpp -o CMakeFiles/quickjs-opencv.dir/js_cv.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_dnn.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_dnn.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_dnn.cpp
+CMakeFiles/quickjs-opencv.dir/js_dnn.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_dnn.cpp
 CMakeFiles/quickjs-opencv.dir/js_dnn.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_dnn.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_dnn.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_dnn.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_dnn.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_dnn.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_dnn.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_dnn.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_dnn.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_dnn.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_dnn.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_dnn.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_dnn.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_dnn.cpp > CMakeFiles/quickjs-opencv.dir/js_dnn.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_dnn.cpp > CMakeFiles/quickjs-opencv.dir/js_dnn.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_dnn.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_dnn.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_dnn.cpp -o CMakeFiles/quickjs-opencv.dir/js_dnn.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_dnn.cpp -o CMakeFiles/quickjs-opencv.dir/js_dnn.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_draw.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_draw.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_draw.cpp
+CMakeFiles/quickjs-opencv.dir/js_draw.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_draw.cpp
 CMakeFiles/quickjs-opencv.dir/js_draw.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_draw.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_draw.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_draw.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_draw.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_draw.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_draw.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_draw.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_draw.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_draw.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_draw.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_draw.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_draw.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_draw.cpp > CMakeFiles/quickjs-opencv.dir/js_draw.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_draw.cpp > CMakeFiles/quickjs-opencv.dir/js_draw.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_draw.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_draw.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_draw.cpp -o CMakeFiles/quickjs-opencv.dir/js_draw.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_draw.cpp -o CMakeFiles/quickjs-opencv.dir/js_draw.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_fast_line_detector.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_fast_line_detector.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_fast_line_detector.cpp
+CMakeFiles/quickjs-opencv.dir/js_fast_line_detector.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_fast_line_detector.cpp
 CMakeFiles/quickjs-opencv.dir/js_fast_line_detector.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_fast_line_detector.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_fast_line_detector.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_fast_line_detector.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_fast_line_detector.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_fast_line_detector.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_fast_line_detector.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_fast_line_detector.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_fast_line_detector.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_fast_line_detector.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_fast_line_detector.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_fast_line_detector.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_fast_line_detector.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_fast_line_detector.cpp > CMakeFiles/quickjs-opencv.dir/js_fast_line_detector.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_fast_line_detector.cpp > CMakeFiles/quickjs-opencv.dir/js_fast_line_detector.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_fast_line_detector.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_fast_line_detector.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_fast_line_detector.cpp -o CMakeFiles/quickjs-opencv.dir/js_fast_line_detector.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_fast_line_detector.cpp -o CMakeFiles/quickjs-opencv.dir/js_fast_line_detector.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_feature2d.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_feature2d.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_feature2d.cpp
+CMakeFiles/quickjs-opencv.dir/js_feature2d.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_feature2d.cpp
 CMakeFiles/quickjs-opencv.dir/js_feature2d.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_feature2d.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_feature2d.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_feature2d.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_feature2d.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_feature2d.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_feature2d.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_feature2d.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_feature2d.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_feature2d.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_feature2d.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_feature2d.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_feature2d.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_feature2d.cpp > CMakeFiles/quickjs-opencv.dir/js_feature2d.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_feature2d.cpp > CMakeFiles/quickjs-opencv.dir/js_feature2d.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_feature2d.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_feature2d.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_feature2d.cpp -o CMakeFiles/quickjs-opencv.dir/js_feature2d.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_feature2d.cpp -o CMakeFiles/quickjs-opencv.dir/js_feature2d.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_filenode.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_filenode.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_filenode.cpp
+CMakeFiles/quickjs-opencv.dir/js_filenode.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_filenode.cpp
 CMakeFiles/quickjs-opencv.dir/js_filenode.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_filenode.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_filenode.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_filenode.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_filenode.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_filenode.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_filenode.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_filenode.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_filenode.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_filenode.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_filenode.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_filenode.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_filenode.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_filenode.cpp > CMakeFiles/quickjs-opencv.dir/js_filenode.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_filenode.cpp > CMakeFiles/quickjs-opencv.dir/js_filenode.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_filenode.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_filenode.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_filenode.cpp -o CMakeFiles/quickjs-opencv.dir/js_filenode.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_filenode.cpp -o CMakeFiles/quickjs-opencv.dir/js_filenode.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_filestorage.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_filestorage.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_filestorage.cpp
+CMakeFiles/quickjs-opencv.dir/js_filestorage.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_filestorage.cpp
 CMakeFiles/quickjs-opencv.dir/js_filestorage.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_filestorage.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_filestorage.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_filestorage.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_filestorage.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_filestorage.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_filestorage.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_filestorage.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_filestorage.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_filestorage.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_filestorage.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_filestorage.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_filestorage.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_filestorage.cpp > CMakeFiles/quickjs-opencv.dir/js_filestorage.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_filestorage.cpp > CMakeFiles/quickjs-opencv.dir/js_filestorage.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_filestorage.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_filestorage.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_filestorage.cpp -o CMakeFiles/quickjs-opencv.dir/js_filestorage.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_filestorage.cpp -o CMakeFiles/quickjs-opencv.dir/js_filestorage.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_fisheye.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_fisheye.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_fisheye.cpp
+CMakeFiles/quickjs-opencv.dir/js_fisheye.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_fisheye.cpp
 CMakeFiles/quickjs-opencv.dir/js_fisheye.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_fisheye.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_fisheye.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_fisheye.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_fisheye.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_fisheye.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_fisheye.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_fisheye.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_fisheye.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_fisheye.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_fisheye.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_fisheye.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_fisheye.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_fisheye.cpp > CMakeFiles/quickjs-opencv.dir/js_fisheye.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_fisheye.cpp > CMakeFiles/quickjs-opencv.dir/js_fisheye.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_fisheye.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_fisheye.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_fisheye.cpp -o CMakeFiles/quickjs-opencv.dir/js_fisheye.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_fisheye.cpp -o CMakeFiles/quickjs-opencv.dir/js_fisheye.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_highgui.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_highgui.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_highgui.cpp
+CMakeFiles/quickjs-opencv.dir/js_highgui.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_highgui.cpp
 CMakeFiles/quickjs-opencv.dir/js_highgui.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_highgui.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_highgui.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_highgui.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_highgui.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_highgui.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_highgui.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_highgui.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_highgui.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_highgui.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_highgui.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_highgui.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_highgui.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_highgui.cpp > CMakeFiles/quickjs-opencv.dir/js_highgui.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_highgui.cpp > CMakeFiles/quickjs-opencv.dir/js_highgui.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_highgui.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_highgui.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_highgui.cpp -o CMakeFiles/quickjs-opencv.dir/js_highgui.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_highgui.cpp -o CMakeFiles/quickjs-opencv.dir/js_highgui.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_imgproc.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_imgproc.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp
+CMakeFiles/quickjs-opencv.dir/js_imgproc.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_imgproc.cpp
 CMakeFiles/quickjs-opencv.dir/js_imgproc.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_imgproc.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_imgproc.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_imgproc.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_imgproc.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_imgproc.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_imgproc.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_imgproc.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_imgproc.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_imgproc.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_imgproc.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_imgproc.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp > CMakeFiles/quickjs-opencv.dir/js_imgproc.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_imgproc.cpp > CMakeFiles/quickjs-opencv.dir/js_imgproc.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_imgproc.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_imgproc.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp -o CMakeFiles/quickjs-opencv.dir/js_imgproc.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_imgproc.cpp -o CMakeFiles/quickjs-opencv.dir/js_imgproc.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_keypoint.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_keypoint.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_keypoint.cpp
+CMakeFiles/quickjs-opencv.dir/js_keypoint.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_keypoint.cpp
 CMakeFiles/quickjs-opencv.dir/js_keypoint.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_keypoint.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_keypoint.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_keypoint.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_keypoint.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_keypoint.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_keypoint.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_keypoint.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_keypoint.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_keypoint.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_keypoint.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_keypoint.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_keypoint.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_keypoint.cpp > CMakeFiles/quickjs-opencv.dir/js_keypoint.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_keypoint.cpp > CMakeFiles/quickjs-opencv.dir/js_keypoint.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_keypoint.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_keypoint.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_keypoint.cpp -o CMakeFiles/quickjs-opencv.dir/js_keypoint.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_keypoint.cpp -o CMakeFiles/quickjs-opencv.dir/js_keypoint.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_libcamera_app.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_libcamera_app.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_libcamera_app.cpp
+CMakeFiles/quickjs-opencv.dir/js_libcamera_app.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_libcamera_app.cpp
 CMakeFiles/quickjs-opencv.dir/js_libcamera_app.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_23) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_libcamera_app.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_libcamera_app.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_libcamera_app.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_libcamera_app.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_libcamera_app.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_23) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_libcamera_app.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_libcamera_app.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_libcamera_app.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_libcamera_app.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_libcamera_app.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_libcamera_app.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_libcamera_app.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_libcamera_app.cpp > CMakeFiles/quickjs-opencv.dir/js_libcamera_app.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_libcamera_app.cpp > CMakeFiles/quickjs-opencv.dir/js_libcamera_app.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_libcamera_app.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_libcamera_app.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_libcamera_app.cpp -o CMakeFiles/quickjs-opencv.dir/js_libcamera_app.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_libcamera_app.cpp -o CMakeFiles/quickjs-opencv.dir/js_libcamera_app.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_line.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_line.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_line.cpp
+CMakeFiles/quickjs-opencv.dir/js_line.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_line.cpp
 CMakeFiles/quickjs-opencv.dir/js_line.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_24) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_line.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_line.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_line.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_line.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_line.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_24) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_line.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_line.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_line.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_line.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_line.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_line.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_line.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_line.cpp > CMakeFiles/quickjs-opencv.dir/js_line.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_line.cpp > CMakeFiles/quickjs-opencv.dir/js_line.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_line.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_line.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_line.cpp -o CMakeFiles/quickjs-opencv.dir/js_line.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_line.cpp -o CMakeFiles/quickjs-opencv.dir/js_line.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_line_iterator.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_line_iterator.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_line_iterator.cpp
+CMakeFiles/quickjs-opencv.dir/js_line_iterator.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_line_iterator.cpp
 CMakeFiles/quickjs-opencv.dir/js_line_iterator.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_25) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_line_iterator.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_line_iterator.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_line_iterator.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_line_iterator.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_line_iterator.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_25) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_line_iterator.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_line_iterator.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_line_iterator.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_line_iterator.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_line_iterator.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_line_iterator.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_line_iterator.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_line_iterator.cpp > CMakeFiles/quickjs-opencv.dir/js_line_iterator.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_line_iterator.cpp > CMakeFiles/quickjs-opencv.dir/js_line_iterator.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_line_iterator.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_line_iterator.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_line_iterator.cpp -o CMakeFiles/quickjs-opencv.dir/js_line_iterator.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_line_iterator.cpp -o CMakeFiles/quickjs-opencv.dir/js_line_iterator.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_line_segment_detector.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_line_segment_detector.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_line_segment_detector.cpp
+CMakeFiles/quickjs-opencv.dir/js_line_segment_detector.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_line_segment_detector.cpp
 CMakeFiles/quickjs-opencv.dir/js_line_segment_detector.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_26) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_line_segment_detector.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_line_segment_detector.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_line_segment_detector.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_line_segment_detector.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_line_segment_detector.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_26) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_line_segment_detector.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_line_segment_detector.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_line_segment_detector.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_line_segment_detector.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_line_segment_detector.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_line_segment_detector.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_line_segment_detector.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_line_segment_detector.cpp > CMakeFiles/quickjs-opencv.dir/js_line_segment_detector.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_line_segment_detector.cpp > CMakeFiles/quickjs-opencv.dir/js_line_segment_detector.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_line_segment_detector.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_line_segment_detector.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_line_segment_detector.cpp -o CMakeFiles/quickjs-opencv.dir/js_line_segment_detector.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_line_segment_detector.cpp -o CMakeFiles/quickjs-opencv.dir/js_line_segment_detector.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_mat.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_mat.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_mat.cpp
+CMakeFiles/quickjs-opencv.dir/js_mat.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_mat.cpp
 CMakeFiles/quickjs-opencv.dir/js_mat.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_27) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_mat.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_mat.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_mat.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_mat.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_mat.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_27) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_mat.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_mat.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_mat.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_mat.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_mat.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_mat.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_mat.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_mat.cpp > CMakeFiles/quickjs-opencv.dir/js_mat.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_mat.cpp > CMakeFiles/quickjs-opencv.dir/js_mat.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_mat.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_mat.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_mat.cpp -o CMakeFiles/quickjs-opencv.dir/js_mat.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_mat.cpp -o CMakeFiles/quickjs-opencv.dir/js_mat.cpp.s
+
+CMakeFiles/quickjs-opencv.dir/js_matvector.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
+CMakeFiles/quickjs-opencv.dir/js_matvector.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_matvector.cpp
+CMakeFiles/quickjs-opencv.dir/js_matvector.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_28) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_matvector.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_matvector.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_matvector.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_matvector.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_matvector.cpp
+
+CMakeFiles/quickjs-opencv.dir/js_matvector.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_matvector.cpp.i"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_matvector.cpp > CMakeFiles/quickjs-opencv.dir/js_matvector.cpp.i
+
+CMakeFiles/quickjs-opencv.dir/js_matvector.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_matvector.cpp.s"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_matvector.cpp -o CMakeFiles/quickjs-opencv.dir/js_matvector.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_matx.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_matx.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_matx.cpp
+CMakeFiles/quickjs-opencv.dir/js_matx.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_matx.cpp
 CMakeFiles/quickjs-opencv.dir/js_matx.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_28) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_matx.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_matx.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_matx.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_matx.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_matx.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_29) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_matx.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_matx.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_matx.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_matx.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_matx.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_matx.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_matx.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_matx.cpp > CMakeFiles/quickjs-opencv.dir/js_matx.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_matx.cpp > CMakeFiles/quickjs-opencv.dir/js_matx.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_matx.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_matx.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_matx.cpp -o CMakeFiles/quickjs-opencv.dir/js_matx.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_matx.cpp -o CMakeFiles/quickjs-opencv.dir/js_matx.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_opengl.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_opengl.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_opengl.cpp
+CMakeFiles/quickjs-opencv.dir/js_opengl.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_opengl.cpp
 CMakeFiles/quickjs-opencv.dir/js_opengl.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_29) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_opengl.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_opengl.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_opengl.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_opengl.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_opengl.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_30) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_opengl.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_opengl.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_opengl.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_opengl.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_opengl.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_opengl.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_opengl.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_opengl.cpp > CMakeFiles/quickjs-opencv.dir/js_opengl.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_opengl.cpp > CMakeFiles/quickjs-opencv.dir/js_opengl.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_opengl.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_opengl.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_opengl.cpp -o CMakeFiles/quickjs-opencv.dir/js_opengl.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_opengl.cpp -o CMakeFiles/quickjs-opencv.dir/js_opengl.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_photo.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_photo.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_photo.cpp
+CMakeFiles/quickjs-opencv.dir/js_photo.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_photo.cpp
 CMakeFiles/quickjs-opencv.dir/js_photo.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_30) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_photo.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_photo.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_photo.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_photo.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_photo.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_31) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_photo.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_photo.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_photo.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_photo.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_photo.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_photo.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_photo.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_photo.cpp > CMakeFiles/quickjs-opencv.dir/js_photo.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_photo.cpp > CMakeFiles/quickjs-opencv.dir/js_photo.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_photo.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_photo.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_photo.cpp -o CMakeFiles/quickjs-opencv.dir/js_photo.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_photo.cpp -o CMakeFiles/quickjs-opencv.dir/js_photo.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_point.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_point.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_point.cpp
+CMakeFiles/quickjs-opencv.dir/js_point.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_point.cpp
 CMakeFiles/quickjs-opencv.dir/js_point.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_31) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_point.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_point.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_point.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_point.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_point.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_32) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_point.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_point.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_point.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_point.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_point.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_point.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_point.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_point.cpp > CMakeFiles/quickjs-opencv.dir/js_point.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_point.cpp > CMakeFiles/quickjs-opencv.dir/js_point.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_point.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_point.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_point.cpp -o CMakeFiles/quickjs-opencv.dir/js_point.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_point.cpp -o CMakeFiles/quickjs-opencv.dir/js_point.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_point_iterator.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_point_iterator.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_point_iterator.cpp
+CMakeFiles/quickjs-opencv.dir/js_point_iterator.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_point_iterator.cpp
 CMakeFiles/quickjs-opencv.dir/js_point_iterator.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_32) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_point_iterator.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_point_iterator.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_point_iterator.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_point_iterator.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_point_iterator.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_33) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_point_iterator.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_point_iterator.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_point_iterator.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_point_iterator.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_point_iterator.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_point_iterator.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_point_iterator.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_point_iterator.cpp > CMakeFiles/quickjs-opencv.dir/js_point_iterator.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_point_iterator.cpp > CMakeFiles/quickjs-opencv.dir/js_point_iterator.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_point_iterator.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_point_iterator.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_point_iterator.cpp -o CMakeFiles/quickjs-opencv.dir/js_point_iterator.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_point_iterator.cpp -o CMakeFiles/quickjs-opencv.dir/js_point_iterator.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_raspi_cam.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_raspi_cam.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_raspi_cam.cpp
+CMakeFiles/quickjs-opencv.dir/js_raspi_cam.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_raspi_cam.cpp
 CMakeFiles/quickjs-opencv.dir/js_raspi_cam.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_33) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_raspi_cam.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_raspi_cam.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_raspi_cam.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_raspi_cam.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_raspi_cam.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_34) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_raspi_cam.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_raspi_cam.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_raspi_cam.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_raspi_cam.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_raspi_cam.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_raspi_cam.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_raspi_cam.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_raspi_cam.cpp > CMakeFiles/quickjs-opencv.dir/js_raspi_cam.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_raspi_cam.cpp > CMakeFiles/quickjs-opencv.dir/js_raspi_cam.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_raspi_cam.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_raspi_cam.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_raspi_cam.cpp -o CMakeFiles/quickjs-opencv.dir/js_raspi_cam.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_raspi_cam.cpp -o CMakeFiles/quickjs-opencv.dir/js_raspi_cam.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_rect.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_rect.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_rect.cpp
+CMakeFiles/quickjs-opencv.dir/js_rect.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_rect.cpp
 CMakeFiles/quickjs-opencv.dir/js_rect.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_34) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_rect.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_rect.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_rect.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_rect.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_rect.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_35) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_rect.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_rect.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_rect.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_rect.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_rect.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_rect.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_rect.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_rect.cpp > CMakeFiles/quickjs-opencv.dir/js_rect.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_rect.cpp > CMakeFiles/quickjs-opencv.dir/js_rect.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_rect.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_rect.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_rect.cpp -o CMakeFiles/quickjs-opencv.dir/js_rect.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_rect.cpp -o CMakeFiles/quickjs-opencv.dir/js_rect.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_rotated_rect.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_rotated_rect.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_rotated_rect.cpp
+CMakeFiles/quickjs-opencv.dir/js_rotated_rect.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_rotated_rect.cpp
 CMakeFiles/quickjs-opencv.dir/js_rotated_rect.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_35) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_rotated_rect.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_rotated_rect.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_rotated_rect.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_rotated_rect.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_rotated_rect.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_36) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_rotated_rect.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_rotated_rect.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_rotated_rect.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_rotated_rect.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_rotated_rect.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_rotated_rect.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_rotated_rect.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_rotated_rect.cpp > CMakeFiles/quickjs-opencv.dir/js_rotated_rect.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_rotated_rect.cpp > CMakeFiles/quickjs-opencv.dir/js_rotated_rect.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_rotated_rect.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_rotated_rect.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_rotated_rect.cpp -o CMakeFiles/quickjs-opencv.dir/js_rotated_rect.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_rotated_rect.cpp -o CMakeFiles/quickjs-opencv.dir/js_rotated_rect.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_size.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_size.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_size.cpp
+CMakeFiles/quickjs-opencv.dir/js_size.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_size.cpp
 CMakeFiles/quickjs-opencv.dir/js_size.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_36) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_size.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_size.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_size.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_size.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_size.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_37) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_size.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_size.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_size.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_size.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_size.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_size.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_size.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_size.cpp > CMakeFiles/quickjs-opencv.dir/js_size.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_size.cpp > CMakeFiles/quickjs-opencv.dir/js_size.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_size.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_size.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_size.cpp -o CMakeFiles/quickjs-opencv.dir/js_size.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_size.cpp -o CMakeFiles/quickjs-opencv.dir/js_size.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_slice_iterator.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_slice_iterator.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_slice_iterator.cpp
+CMakeFiles/quickjs-opencv.dir/js_slice_iterator.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_slice_iterator.cpp
 CMakeFiles/quickjs-opencv.dir/js_slice_iterator.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_37) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_slice_iterator.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_slice_iterator.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_slice_iterator.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_slice_iterator.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_slice_iterator.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_38) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_slice_iterator.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_slice_iterator.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_slice_iterator.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_slice_iterator.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_slice_iterator.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_slice_iterator.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_slice_iterator.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_slice_iterator.cpp > CMakeFiles/quickjs-opencv.dir/js_slice_iterator.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_slice_iterator.cpp > CMakeFiles/quickjs-opencv.dir/js_slice_iterator.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_slice_iterator.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_slice_iterator.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_slice_iterator.cpp -o CMakeFiles/quickjs-opencv.dir/js_slice_iterator.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_slice_iterator.cpp -o CMakeFiles/quickjs-opencv.dir/js_slice_iterator.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_subdiv2d.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_subdiv2d.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp
+CMakeFiles/quickjs-opencv.dir/js_subdiv2d.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp
 CMakeFiles/quickjs-opencv.dir/js_subdiv2d.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_38) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_subdiv2d.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_subdiv2d.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_subdiv2d.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_subdiv2d.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_39) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_subdiv2d.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_subdiv2d.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_subdiv2d.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_subdiv2d.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_subdiv2d.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_subdiv2d.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp > CMakeFiles/quickjs-opencv.dir/js_subdiv2d.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp > CMakeFiles/quickjs-opencv.dir/js_subdiv2d.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_subdiv2d.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_subdiv2d.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp -o CMakeFiles/quickjs-opencv.dir/js_subdiv2d.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp -o CMakeFiles/quickjs-opencv.dir/js_subdiv2d.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_umat.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_umat.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_umat.cpp
+CMakeFiles/quickjs-opencv.dir/js_umat.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_umat.cpp
 CMakeFiles/quickjs-opencv.dir/js_umat.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_39) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_umat.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_umat.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_umat.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_umat.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_umat.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_40) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_umat.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_umat.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_umat.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_umat.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_umat.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_umat.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_umat.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_umat.cpp > CMakeFiles/quickjs-opencv.dir/js_umat.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_umat.cpp > CMakeFiles/quickjs-opencv.dir/js_umat.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_umat.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_umat.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_umat.cpp -o CMakeFiles/quickjs-opencv.dir/js_umat.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_umat.cpp -o CMakeFiles/quickjs-opencv.dir/js_umat.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_utility.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_utility.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_utility.cpp
+CMakeFiles/quickjs-opencv.dir/js_utility.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_utility.cpp
 CMakeFiles/quickjs-opencv.dir/js_utility.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_40) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_utility.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_utility.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_utility.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_utility.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_utility.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_41) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_utility.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_utility.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_utility.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_utility.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_utility.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_utility.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_utility.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_utility.cpp > CMakeFiles/quickjs-opencv.dir/js_utility.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_utility.cpp > CMakeFiles/quickjs-opencv.dir/js_utility.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_utility.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_utility.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_utility.cpp -o CMakeFiles/quickjs-opencv.dir/js_utility.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_utility.cpp -o CMakeFiles/quickjs-opencv.dir/js_utility.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_video_capture.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_video_capture.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_video_capture.cpp
+CMakeFiles/quickjs-opencv.dir/js_video_capture.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_video_capture.cpp
 CMakeFiles/quickjs-opencv.dir/js_video_capture.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_41) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_video_capture.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_video_capture.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_video_capture.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_video_capture.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_video_capture.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_42) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_video_capture.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_video_capture.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_video_capture.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_video_capture.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_video_capture.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_video_capture.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_video_capture.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_video_capture.cpp > CMakeFiles/quickjs-opencv.dir/js_video_capture.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_video_capture.cpp > CMakeFiles/quickjs-opencv.dir/js_video_capture.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_video_capture.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_video_capture.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_video_capture.cpp -o CMakeFiles/quickjs-opencv.dir/js_video_capture.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_video_capture.cpp -o CMakeFiles/quickjs-opencv.dir/js_video_capture.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_video_writer.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_video_writer.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_video_writer.cpp
+CMakeFiles/quickjs-opencv.dir/js_video_writer.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_video_writer.cpp
 CMakeFiles/quickjs-opencv.dir/js_video_writer.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_42) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_video_writer.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_video_writer.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_video_writer.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_video_writer.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_video_writer.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_43) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_video_writer.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_video_writer.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_video_writer.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_video_writer.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_video_writer.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_video_writer.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_video_writer.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_video_writer.cpp > CMakeFiles/quickjs-opencv.dir/js_video_writer.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_video_writer.cpp > CMakeFiles/quickjs-opencv.dir/js_video_writer.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_video_writer.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_video_writer.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_video_writer.cpp -o CMakeFiles/quickjs-opencv.dir/js_video_writer.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_video_writer.cpp -o CMakeFiles/quickjs-opencv.dir/js_video_writer.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_white_balancer.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_white_balancer.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_white_balancer.cpp
+CMakeFiles/quickjs-opencv.dir/js_white_balancer.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_white_balancer.cpp
 CMakeFiles/quickjs-opencv.dir/js_white_balancer.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_43) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_white_balancer.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_white_balancer.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_white_balancer.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_white_balancer.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_white_balancer.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_44) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_white_balancer.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_white_balancer.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_white_balancer.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_white_balancer.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_white_balancer.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_white_balancer.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_white_balancer.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_white_balancer.cpp > CMakeFiles/quickjs-opencv.dir/js_white_balancer.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_white_balancer.cpp > CMakeFiles/quickjs-opencv.dir/js_white_balancer.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_white_balancer.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_white_balancer.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_white_balancer.cpp -o CMakeFiles/quickjs-opencv.dir/js_white_balancer.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_white_balancer.cpp -o CMakeFiles/quickjs-opencv.dir/js_white_balancer.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/js_ximgproc.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/js_ximgproc.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/js_ximgproc.cpp
+CMakeFiles/quickjs-opencv.dir/js_ximgproc.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/js_ximgproc.cpp
 CMakeFiles/quickjs-opencv.dir/js_ximgproc.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_44) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_ximgproc.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_ximgproc.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_ximgproc.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_ximgproc.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/js_ximgproc.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_45) "Building CXX object CMakeFiles/quickjs-opencv.dir/js_ximgproc.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/js_ximgproc.cpp.o -MF CMakeFiles/quickjs-opencv.dir/js_ximgproc.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/js_ximgproc.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/js_ximgproc.cpp
 
 CMakeFiles/quickjs-opencv.dir/js_ximgproc.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/js_ximgproc.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/js_ximgproc.cpp > CMakeFiles/quickjs-opencv.dir/js_ximgproc.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/js_ximgproc.cpp > CMakeFiles/quickjs-opencv.dir/js_ximgproc.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/js_ximgproc.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/js_ximgproc.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/js_ximgproc.cpp -o CMakeFiles/quickjs-opencv.dir/js_ximgproc.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/js_ximgproc.cpp -o CMakeFiles/quickjs-opencv.dir/js_ximgproc.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/lsd/src/lsd.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/lsd/src/lsd.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/lsd/src/lsd.cpp
+CMakeFiles/quickjs-opencv.dir/lsd/src/lsd.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/lsd/src/lsd.cpp
 CMakeFiles/quickjs-opencv.dir/lsd/src/lsd.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_45) "Building CXX object CMakeFiles/quickjs-opencv.dir/lsd/src/lsd.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/lsd/src/lsd.cpp.o -MF CMakeFiles/quickjs-opencv.dir/lsd/src/lsd.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/lsd/src/lsd.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/lsd/src/lsd.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_46) "Building CXX object CMakeFiles/quickjs-opencv.dir/lsd/src/lsd.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/lsd/src/lsd.cpp.o -MF CMakeFiles/quickjs-opencv.dir/lsd/src/lsd.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/lsd/src/lsd.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/lsd/src/lsd.cpp
 
 CMakeFiles/quickjs-opencv.dir/lsd/src/lsd.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/lsd/src/lsd.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/lsd/src/lsd.cpp > CMakeFiles/quickjs-opencv.dir/lsd/src/lsd.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/lsd/src/lsd.cpp > CMakeFiles/quickjs-opencv.dir/lsd/src/lsd.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/lsd/src/lsd.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/lsd/src/lsd.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/lsd/src/lsd.cpp -o CMakeFiles/quickjs-opencv.dir/lsd/src/lsd.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/lsd/src/lsd.cpp -o CMakeFiles/quickjs-opencv.dir/lsd/src/lsd.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_opencv.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_opencv.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/lsd/src/lsd_opencv.cpp
+CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_opencv.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/lsd/src/lsd_opencv.cpp
 CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_opencv.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_46) "Building CXX object CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_opencv.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_opencv.cpp.o -MF CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_opencv.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_opencv.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/lsd/src/lsd_opencv.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_47) "Building CXX object CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_opencv.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_opencv.cpp.o -MF CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_opencv.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_opencv.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/lsd/src/lsd_opencv.cpp
 
 CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_opencv.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_opencv.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/lsd/src/lsd_opencv.cpp > CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_opencv.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/lsd/src/lsd_opencv.cpp > CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_opencv.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_opencv.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_opencv.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/lsd/src/lsd_opencv.cpp -o CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_opencv.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/lsd/src/lsd_opencv.cpp -o CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_opencv.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_wrap.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_wrap.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/lsd/src/lsd_wrap.cpp
+CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_wrap.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/lsd/src/lsd_wrap.cpp
 CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_wrap.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_47) "Building CXX object CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_wrap.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_wrap.cpp.o -MF CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_wrap.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_wrap.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/lsd/src/lsd_wrap.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_48) "Building CXX object CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_wrap.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_wrap.cpp.o -MF CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_wrap.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_wrap.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/lsd/src/lsd_wrap.cpp
 
 CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_wrap.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_wrap.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/lsd/src/lsd_wrap.cpp > CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_wrap.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/lsd/src/lsd_wrap.cpp > CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_wrap.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_wrap.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_wrap.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/lsd/src/lsd_wrap.cpp -o CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_wrap.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/lsd/src/lsd_wrap.cpp -o CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_wrap.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/src/geometry.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/src/geometry.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/src/geometry.cpp
+CMakeFiles/quickjs-opencv.dir/src/geometry.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/src/geometry.cpp
 CMakeFiles/quickjs-opencv.dir/src/geometry.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_48) "Building CXX object CMakeFiles/quickjs-opencv.dir/src/geometry.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/src/geometry.cpp.o -MF CMakeFiles/quickjs-opencv.dir/src/geometry.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/src/geometry.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/src/geometry.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_49) "Building CXX object CMakeFiles/quickjs-opencv.dir/src/geometry.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/src/geometry.cpp.o -MF CMakeFiles/quickjs-opencv.dir/src/geometry.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/src/geometry.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/src/geometry.cpp
 
 CMakeFiles/quickjs-opencv.dir/src/geometry.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/src/geometry.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/src/geometry.cpp > CMakeFiles/quickjs-opencv.dir/src/geometry.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/src/geometry.cpp > CMakeFiles/quickjs-opencv.dir/src/geometry.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/src/geometry.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/src/geometry.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/src/geometry.cpp -o CMakeFiles/quickjs-opencv.dir/src/geometry.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/src/geometry.cpp -o CMakeFiles/quickjs-opencv.dir/src/geometry.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/src/init_module.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/src/init_module.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/src/init_module.cpp
+CMakeFiles/quickjs-opencv.dir/src/init_module.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/src/init_module.cpp
 CMakeFiles/quickjs-opencv.dir/src/init_module.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_49) "Building CXX object CMakeFiles/quickjs-opencv.dir/src/init_module.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/src/init_module.cpp.o -MF CMakeFiles/quickjs-opencv.dir/src/init_module.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/src/init_module.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/src/init_module.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_50) "Building CXX object CMakeFiles/quickjs-opencv.dir/src/init_module.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/src/init_module.cpp.o -MF CMakeFiles/quickjs-opencv.dir/src/init_module.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/src/init_module.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/src/init_module.cpp
 
 CMakeFiles/quickjs-opencv.dir/src/init_module.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/src/init_module.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/src/init_module.cpp > CMakeFiles/quickjs-opencv.dir/src/init_module.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/src/init_module.cpp > CMakeFiles/quickjs-opencv.dir/src/init_module.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/src/init_module.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/src/init_module.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/src/init_module.cpp -o CMakeFiles/quickjs-opencv.dir/src/init_module.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/src/init_module.cpp -o CMakeFiles/quickjs-opencv.dir/src/init_module.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/src/jsbindings.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/src/jsbindings.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/src/jsbindings.cpp
+CMakeFiles/quickjs-opencv.dir/src/jsbindings.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/src/jsbindings.cpp
 CMakeFiles/quickjs-opencv.dir/src/jsbindings.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_50) "Building CXX object CMakeFiles/quickjs-opencv.dir/src/jsbindings.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/src/jsbindings.cpp.o -MF CMakeFiles/quickjs-opencv.dir/src/jsbindings.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/src/jsbindings.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/src/jsbindings.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_51) "Building CXX object CMakeFiles/quickjs-opencv.dir/src/jsbindings.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/src/jsbindings.cpp.o -MF CMakeFiles/quickjs-opencv.dir/src/jsbindings.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/src/jsbindings.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/src/jsbindings.cpp
 
 CMakeFiles/quickjs-opencv.dir/src/jsbindings.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/src/jsbindings.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/src/jsbindings.cpp > CMakeFiles/quickjs-opencv.dir/src/jsbindings.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/src/jsbindings.cpp > CMakeFiles/quickjs-opencv.dir/src/jsbindings.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/src/jsbindings.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/src/jsbindings.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/src/jsbindings.cpp -o CMakeFiles/quickjs-opencv.dir/src/jsbindings.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/src/jsbindings.cpp -o CMakeFiles/quickjs-opencv.dir/src/jsbindings.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/src/line.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/src/line.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/src/line.cpp
+CMakeFiles/quickjs-opencv.dir/src/line.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/src/line.cpp
 CMakeFiles/quickjs-opencv.dir/src/line.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_51) "Building CXX object CMakeFiles/quickjs-opencv.dir/src/line.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/src/line.cpp.o -MF CMakeFiles/quickjs-opencv.dir/src/line.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/src/line.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/src/line.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_52) "Building CXX object CMakeFiles/quickjs-opencv.dir/src/line.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/src/line.cpp.o -MF CMakeFiles/quickjs-opencv.dir/src/line.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/src/line.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/src/line.cpp
 
 CMakeFiles/quickjs-opencv.dir/src/line.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/src/line.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/src/line.cpp > CMakeFiles/quickjs-opencv.dir/src/line.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/src/line.cpp > CMakeFiles/quickjs-opencv.dir/src/line.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/src/line.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/src/line.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/src/line.cpp -o CMakeFiles/quickjs-opencv.dir/src/line.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/src/line.cpp -o CMakeFiles/quickjs-opencv.dir/src/line.cpp.s
 
 CMakeFiles/quickjs-opencv.dir/src/util.cpp.o: CMakeFiles/quickjs-opencv.dir/flags.make
-CMakeFiles/quickjs-opencv.dir/src/util.cpp.o: /home/roman/Projects/plot-cv/qjs-opencv/src/util.cpp
+CMakeFiles/quickjs-opencv.dir/src/util.cpp.o: /mnt/data/Projects/plot-cv/qjs-opencv/src/util.cpp
 CMakeFiles/quickjs-opencv.dir/src/util.cpp.o: CMakeFiles/quickjs-opencv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_52) "Building CXX object CMakeFiles/quickjs-opencv.dir/src/util.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/src/util.cpp.o -MF CMakeFiles/quickjs-opencv.dir/src/util.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/src/util.cpp.o -c /home/roman/Projects/plot-cv/qjs-opencv/src/util.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_53) "Building CXX object CMakeFiles/quickjs-opencv.dir/src/util.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/quickjs-opencv.dir/src/util.cpp.o -MF CMakeFiles/quickjs-opencv.dir/src/util.cpp.o.d -o CMakeFiles/quickjs-opencv.dir/src/util.cpp.o -c /mnt/data/Projects/plot-cv/qjs-opencv/src/util.cpp
 
 CMakeFiles/quickjs-opencv.dir/src/util.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/quickjs-opencv.dir/src/util.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/roman/Projects/plot-cv/qjs-opencv/src/util.cpp > CMakeFiles/quickjs-opencv.dir/src/util.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/data/Projects/plot-cv/qjs-opencv/src/util.cpp > CMakeFiles/quickjs-opencv.dir/src/util.cpp.i
 
 CMakeFiles/quickjs-opencv.dir/src/util.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/quickjs-opencv.dir/src/util.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/roman/Projects/plot-cv/qjs-opencv/src/util.cpp -o CMakeFiles/quickjs-opencv.dir/src/util.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/data/Projects/plot-cv/qjs-opencv/src/util.cpp -o CMakeFiles/quickjs-opencv.dir/src/util.cpp.s
 
 # Object files for target quickjs-opencv
 quickjs__opencv_OBJECTS = \
@@ -829,6 +843,7 @@ quickjs__opencv_OBJECTS = \
 "CMakeFiles/quickjs-opencv.dir/js_line_iterator.cpp.o" \
 "CMakeFiles/quickjs-opencv.dir/js_line_segment_detector.cpp.o" \
 "CMakeFiles/quickjs-opencv.dir/js_mat.cpp.o" \
+"CMakeFiles/quickjs-opencv.dir/js_matvector.cpp.o" \
 "CMakeFiles/quickjs-opencv.dir/js_matx.cpp.o" \
 "CMakeFiles/quickjs-opencv.dir/js_opengl.cpp.o" \
 "CMakeFiles/quickjs-opencv.dir/js_photo.cpp.o" \
@@ -885,6 +900,7 @@ opencv.so: CMakeFiles/quickjs-opencv.dir/js_line.cpp.o
 opencv.so: CMakeFiles/quickjs-opencv.dir/js_line_iterator.cpp.o
 opencv.so: CMakeFiles/quickjs-opencv.dir/js_line_segment_detector.cpp.o
 opencv.so: CMakeFiles/quickjs-opencv.dir/js_mat.cpp.o
+opencv.so: CMakeFiles/quickjs-opencv.dir/js_matvector.cpp.o
 opencv.so: CMakeFiles/quickjs-opencv.dir/js_matx.cpp.o
 opencv.so: CMakeFiles/quickjs-opencv.dir/js_opengl.cpp.o
 opencv.so: CMakeFiles/quickjs-opencv.dir/js_photo.cpp.o
@@ -971,7 +987,7 @@ opencv.so: /opt/opencv-5.0.0-x86_64/lib/libopencv_geometry.so.5.0.0
 opencv.so: /opt/opencv-5.0.0-x86_64/lib/libopencv_flann.so.5.0.0
 opencv.so: /opt/opencv-5.0.0-x86_64/lib/libopencv_core.so.5.0.0
 opencv.so: CMakeFiles/quickjs-opencv.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_53) "Linking CXX shared library opencv.so"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_54) "Linking CXX shared library opencv.so"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/quickjs-opencv.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -983,6 +999,6 @@ CMakeFiles/quickjs-opencv.dir/clean:
 .PHONY : CMakeFiles/quickjs-opencv.dir/clean
 
 CMakeFiles/quickjs-opencv.dir/depend:
-	cd /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/roman/Projects/plot-cv/qjs-opencv /home/roman/Projects/plot-cv/qjs-opencv /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles/quickjs-opencv.dir/DependInfo.cmake "--color=$(COLOR)"
+	cd /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /mnt/data/Projects/plot-cv/qjs-opencv /mnt/data/Projects/plot-cv/qjs-opencv /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles/quickjs-opencv.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : CMakeFiles/quickjs-opencv.dir/depend
 

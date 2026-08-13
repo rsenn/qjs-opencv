@@ -8,9 +8,9 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/roman/Projects/plot-cv/qjs-opencv/LCCV/src/lccv.cpp" "LCCV/CMakeFiles/liblccv.dir/src/lccv.cpp.o" "gcc" "LCCV/CMakeFiles/liblccv.dir/src/lccv.cpp.o.d"
-  "/home/roman/Projects/plot-cv/qjs-opencv/LCCV/src/libcamera_app.cpp" "LCCV/CMakeFiles/liblccv.dir/src/libcamera_app.cpp.o" "gcc" "LCCV/CMakeFiles/liblccv.dir/src/libcamera_app.cpp.o.d"
-  "/home/roman/Projects/plot-cv/qjs-opencv/LCCV/src/libcamera_app_options.cpp" "LCCV/CMakeFiles/liblccv.dir/src/libcamera_app_options.cpp.o" "gcc" "LCCV/CMakeFiles/liblccv.dir/src/libcamera_app_options.cpp.o.d"
+  "/mnt/data/Projects/plot-cv/qjs-opencv/LCCV/src/lccv.cpp" "LCCV/CMakeFiles/liblccv.dir/src/lccv.cpp.o" "gcc" "LCCV/CMakeFiles/liblccv.dir/src/lccv.cpp.o.d"
+  "/mnt/data/Projects/plot-cv/qjs-opencv/LCCV/src/libcamera_app.cpp" "LCCV/CMakeFiles/liblccv.dir/src/libcamera_app.cpp.o" "gcc" "LCCV/CMakeFiles/liblccv.dir/src/libcamera_app.cpp.o.d"
+  "/mnt/data/Projects/plot-cv/qjs-opencv/LCCV/src/libcamera_app_options.cpp" "LCCV/CMakeFiles/liblccv.dir/src/libcamera_app_options.cpp.o" "gcc" "LCCV/CMakeFiles/liblccv.dir/src/libcamera_app_options.cpp.o.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

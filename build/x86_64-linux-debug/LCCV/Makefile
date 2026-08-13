@@ -57,10 +57,10 @@ RM = /opt/cmake-4.0.0-linux-x86_64/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/roman/Projects/plot-cv/qjs-opencv
+CMAKE_SOURCE_DIR = /mnt/data/Projects/plot-cv/qjs-opencv
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug
+CMAKE_BINARY_DIR = /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -68,7 +68,7 @@ CMAKE_BINARY_DIR = /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-de
 # Special rule for the target package
 package: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool..."
-	cd /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && /opt/cmake-4.0.0-linux-x86_64/bin/cpack --config ./CPackConfig.cmake
+	cd /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && /opt/cmake-4.0.0-linux-x86_64/bin/cpack --config ./CPackConfig.cmake
 .PHONY : package
 
 # Special rule for the target package
@@ -78,7 +78,7 @@ package/fast: package
 # Special rule for the target package_source
 package_source:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool for source..."
-	cd /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && /opt/cmake-4.0.0-linux-x86_64/bin/cpack --config ./CPackSourceConfig.cmake /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CPackSourceConfig.cmake
+	cd /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && /opt/cmake-4.0.0-linux-x86_64/bin/cpack --config ./CPackSourceConfig.cmake /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CPackSourceConfig.cmake
 .PHONY : package_source
 
 # Special rule for the target package_source
@@ -152,14 +152,14 @@ install/strip/fast: preinstall/fast
 
 # The main all target
 all: cmake_check_build_system
-	cd /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(CMAKE_COMMAND) -E cmake_progress_start /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/LCCV//CMakeFiles/progress.marks
-	cd /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 LCCV/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles 0
+	cd /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(CMAKE_COMMAND) -E cmake_progress_start /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/LCCV//CMakeFiles/progress.marks
+	cd /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 LCCV/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	cd /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 LCCV/clean
+	cd /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 LCCV/clean
 .PHONY : clean
 
 # The main clean target
@@ -168,23 +168,23 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	cd /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 LCCV/preinstall
+	cd /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 LCCV/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	cd /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 LCCV/preinstall
+	cd /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 LCCV/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	cd /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(CMAKE_COMMAND) -P /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles/VerifyGlobs.cmake
-	cd /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
+	cd /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(CMAKE_COMMAND) -P /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles/VerifyGlobs.cmake
+	cd /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
 # Convenience name for target.
 LCCV/CMakeFiles/liblccv.dir/rule:
-	cd /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 LCCV/CMakeFiles/liblccv.dir/rule
+	cd /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 LCCV/CMakeFiles/liblccv.dir/rule
 .PHONY : LCCV/CMakeFiles/liblccv.dir/rule
 
 # Convenience name for target.
@@ -193,7 +193,7 @@ liblccv: LCCV/CMakeFiles/liblccv.dir/rule
 
 # fast build rule for target.
 liblccv/fast:
-	cd /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(MAKE) $(MAKESILENT) -f LCCV/CMakeFiles/liblccv.dir/build.make LCCV/CMakeFiles/liblccv.dir/build
+	cd /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(MAKE) $(MAKESILENT) -f LCCV/CMakeFiles/liblccv.dir/build.make LCCV/CMakeFiles/liblccv.dir/build
 .PHONY : liblccv/fast
 
 src/lccv.o: src/lccv.cpp.o
@@ -201,7 +201,7 @@ src/lccv.o: src/lccv.cpp.o
 
 # target to build an object file
 src/lccv.cpp.o:
-	cd /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(MAKE) $(MAKESILENT) -f LCCV/CMakeFiles/liblccv.dir/build.make LCCV/CMakeFiles/liblccv.dir/src/lccv.cpp.o
+	cd /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(MAKE) $(MAKESILENT) -f LCCV/CMakeFiles/liblccv.dir/build.make LCCV/CMakeFiles/liblccv.dir/src/lccv.cpp.o
 .PHONY : src/lccv.cpp.o
 
 src/lccv.i: src/lccv.cpp.i
@@ -209,7 +209,7 @@ src/lccv.i: src/lccv.cpp.i
 
 # target to preprocess a source file
 src/lccv.cpp.i:
-	cd /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(MAKE) $(MAKESILENT) -f LCCV/CMakeFiles/liblccv.dir/build.make LCCV/CMakeFiles/liblccv.dir/src/lccv.cpp.i
+	cd /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(MAKE) $(MAKESILENT) -f LCCV/CMakeFiles/liblccv.dir/build.make LCCV/CMakeFiles/liblccv.dir/src/lccv.cpp.i
 .PHONY : src/lccv.cpp.i
 
 src/lccv.s: src/lccv.cpp.s
@@ -217,7 +217,7 @@ src/lccv.s: src/lccv.cpp.s
 
 # target to generate assembly for a file
 src/lccv.cpp.s:
-	cd /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(MAKE) $(MAKESILENT) -f LCCV/CMakeFiles/liblccv.dir/build.make LCCV/CMakeFiles/liblccv.dir/src/lccv.cpp.s
+	cd /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(MAKE) $(MAKESILENT) -f LCCV/CMakeFiles/liblccv.dir/build.make LCCV/CMakeFiles/liblccv.dir/src/lccv.cpp.s
 .PHONY : src/lccv.cpp.s
 
 src/libcamera_app.o: src/libcamera_app.cpp.o
@@ -225,7 +225,7 @@ src/libcamera_app.o: src/libcamera_app.cpp.o
 
 # target to build an object file
 src/libcamera_app.cpp.o:
-	cd /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(MAKE) $(MAKESILENT) -f LCCV/CMakeFiles/liblccv.dir/build.make LCCV/CMakeFiles/liblccv.dir/src/libcamera_app.cpp.o
+	cd /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(MAKE) $(MAKESILENT) -f LCCV/CMakeFiles/liblccv.dir/build.make LCCV/CMakeFiles/liblccv.dir/src/libcamera_app.cpp.o
 .PHONY : src/libcamera_app.cpp.o
 
 src/libcamera_app.i: src/libcamera_app.cpp.i
@@ -233,7 +233,7 @@ src/libcamera_app.i: src/libcamera_app.cpp.i
 
 # target to preprocess a source file
 src/libcamera_app.cpp.i:
-	cd /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(MAKE) $(MAKESILENT) -f LCCV/CMakeFiles/liblccv.dir/build.make LCCV/CMakeFiles/liblccv.dir/src/libcamera_app.cpp.i
+	cd /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(MAKE) $(MAKESILENT) -f LCCV/CMakeFiles/liblccv.dir/build.make LCCV/CMakeFiles/liblccv.dir/src/libcamera_app.cpp.i
 .PHONY : src/libcamera_app.cpp.i
 
 src/libcamera_app.s: src/libcamera_app.cpp.s
@@ -241,7 +241,7 @@ src/libcamera_app.s: src/libcamera_app.cpp.s
 
 # target to generate assembly for a file
 src/libcamera_app.cpp.s:
-	cd /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(MAKE) $(MAKESILENT) -f LCCV/CMakeFiles/liblccv.dir/build.make LCCV/CMakeFiles/liblccv.dir/src/libcamera_app.cpp.s
+	cd /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(MAKE) $(MAKESILENT) -f LCCV/CMakeFiles/liblccv.dir/build.make LCCV/CMakeFiles/liblccv.dir/src/libcamera_app.cpp.s
 .PHONY : src/libcamera_app.cpp.s
 
 src/libcamera_app_options.o: src/libcamera_app_options.cpp.o
@@ -249,7 +249,7 @@ src/libcamera_app_options.o: src/libcamera_app_options.cpp.o
 
 # target to build an object file
 src/libcamera_app_options.cpp.o:
-	cd /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(MAKE) $(MAKESILENT) -f LCCV/CMakeFiles/liblccv.dir/build.make LCCV/CMakeFiles/liblccv.dir/src/libcamera_app_options.cpp.o
+	cd /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(MAKE) $(MAKESILENT) -f LCCV/CMakeFiles/liblccv.dir/build.make LCCV/CMakeFiles/liblccv.dir/src/libcamera_app_options.cpp.o
 .PHONY : src/libcamera_app_options.cpp.o
 
 src/libcamera_app_options.i: src/libcamera_app_options.cpp.i
@@ -257,7 +257,7 @@ src/libcamera_app_options.i: src/libcamera_app_options.cpp.i
 
 # target to preprocess a source file
 src/libcamera_app_options.cpp.i:
-	cd /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(MAKE) $(MAKESILENT) -f LCCV/CMakeFiles/liblccv.dir/build.make LCCV/CMakeFiles/liblccv.dir/src/libcamera_app_options.cpp.i
+	cd /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(MAKE) $(MAKESILENT) -f LCCV/CMakeFiles/liblccv.dir/build.make LCCV/CMakeFiles/liblccv.dir/src/libcamera_app_options.cpp.i
 .PHONY : src/libcamera_app_options.cpp.i
 
 src/libcamera_app_options.s: src/libcamera_app_options.cpp.s
@@ -265,7 +265,7 @@ src/libcamera_app_options.s: src/libcamera_app_options.cpp.s
 
 # target to generate assembly for a file
 src/libcamera_app_options.cpp.s:
-	cd /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(MAKE) $(MAKESILENT) -f LCCV/CMakeFiles/liblccv.dir/build.make LCCV/CMakeFiles/liblccv.dir/src/libcamera_app_options.cpp.s
+	cd /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(MAKE) $(MAKESILENT) -f LCCV/CMakeFiles/liblccv.dir/build.make LCCV/CMakeFiles/liblccv.dir/src/libcamera_app_options.cpp.s
 .PHONY : src/libcamera_app_options.cpp.s
 
 # Help Target
@@ -303,7 +303,7 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	cd /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(CMAKE_COMMAND) -P /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles/VerifyGlobs.cmake
-	cd /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
+	cd /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(CMAKE_COMMAND) -P /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles/VerifyGlobs.cmake
+	cd /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 

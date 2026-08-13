@@ -21,11 +21,13 @@ QuickJS library dir: /usr/local/lib/x86_64-linux-gnu
 Thread library: 
 QuickJS include dir: /usr/local/include/quickjs
 QuickJS library dir: /usr/local/lib/x86_64-linux-gnu
--- Finding opencv library
-OpenCV found: /opt/opencv-5.0.0-x86_64/lib/cmake/opencv4
+-- OpenCV location changed - re-resolving (OpenCV_DIR='/opt/opencv-5.0.0-x86_64/lib/cmake/opencv5' OPENCV_PREFIX='/opt/opencv-5.0.0-x86_64')
+-- Finding OpenCV library
+-- OpenCV 5.0.0 found at /mnt/data/opt/opencv-5.0.0-x86_64
   OPENCV_FOUND = TRUE
-  OPENCV_INCLUDE_DIRS = /mnt/data/opt/opencv-4.11.0-x86_64/include/opencv4
-  OPENCV_LIBDIR = /opt/opencv-5.0.0-x86_64/lib/cmake/opencv4/lib
+  OPENCV_VERSION = 5.0.0
+  OPENCV_INCLUDE_DIRS = /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5
+  OPENCV_LIBDIR = /mnt/data/opt/opencv-5.0.0-x86_64/lib
   OPENCV_LINK_FLAGS = 
 -- Finding opencv library - found
 -- Checking for C++ standard flag: -std=c++2a: OK
@@ -37,6 +39,6 @@ C++ flags: -g3 -ggdb -O0 -std=c++2a -DCXX_STANDARD=2a
 --     libraries: /usr/local/lib/x86_64-linux-gnu/libcamera.so;/usr/local/lib/x86_64-linux-gnu/libcamera-base.so
 --     include path: /usr/local/include/libcamera
 -- OpenCV freetype: opencv_freetype
--- Configuring done (1.9s)
--- Generating done (0.1s)
--- Build files have been written to: /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug
+-- Configuring done (0.2s)
+-- Generating done (0.0s)
+-- Build files have been written to: /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug

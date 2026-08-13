@@ -1,4 +1,4 @@
-# Install script for directory: /home/roman/Projects/plot-cv/qjs-opencv
+# Install script for directory: /mnt/data/Projects/plot-cv/qjs-opencv
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -57,12 +57,12 @@ if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT
   if(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
-  file(INSTALL DESTINATION "/usr/local/lib/x86_64-linux-gnu/quickjs" TYPE SHARED_LIBRARY PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE FILES "/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/opencv.so")
+  file(INSTALL DESTINATION "/usr/local/lib/x86_64-linux-gnu/quickjs" TYPE SHARED_LIBRARY PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE FILES "/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/opencv.so")
   if(EXISTS "$ENV{DESTDIR}/usr/local/lib/x86_64-linux-gnu/quickjs/opencv.so" AND
      NOT IS_SYMLINK "$ENV{DESTDIR}/usr/local/lib/x86_64-linux-gnu/quickjs/opencv.so")
     file(RPATH_CHANGE
          FILE "$ENV{DESTDIR}/usr/local/lib/x86_64-linux-gnu/quickjs/opencv.so"
-         OLD_RPATH "/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug:/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/quickjs:/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/quickjs:/usr/local/lib/x86_64-linux-gnu/quickjs:/mnt/data/opt/opencv-5.0.0-x86_64/lib:/usr/local/include/quickjs:/usr/local/lib/x86_64-linux-gnu:/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/quickjs:/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/LCCV:/opt/opencv-5.0.0-x86_64/lib:"
+         OLD_RPATH "/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug:/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/quickjs:/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/quickjs:/usr/local/lib/x86_64-linux-gnu/quickjs:/mnt/data/opt/opencv-5.0.0-x86_64/lib:/usr/local/include/quickjs:/usr/local/lib/x86_64-linux-gnu:/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/quickjs:/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/LCCV:/opt/opencv-5.0.0-x86_64/lib:"
          NEW_RPATH "/mnt/data/opt/opencv-5.0.0-x86_64/lib")
     if(CMAKE_INSTALL_DO_STRIP)
       execute_process(COMMAND "/usr/bin/strip" "$ENV{DESTDIR}/usr/local/lib/x86_64-linux-gnu/quickjs/opencv.so")
@@ -74,19 +74,19 @@ if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  include("/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles/quickjs-opencv.dir/install-cxx-module-bmi-Debug.cmake" OPTIONAL)
+  include("/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles/quickjs-opencv.dir/install-cxx-module-bmi-Debug.cmake" OPTIONAL)
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/LCCV/cmake_install.cmake")
+  include("/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/LCCV/cmake_install.cmake")
 
 endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
 if(CMAKE_INSTALL_LOCAL_ONLY)
-  file(WRITE "/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/install_local_manifest.txt"
+  file(WRITE "/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/install_local_manifest.txt"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
 endif()
 if(CMAKE_INSTALL_COMPONENT)
@@ -102,6 +102,6 @@ else()
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
-  file(WRITE "/home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/${CMAKE_INSTALL_MANIFEST}"
+  file(WRITE "/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
 endif()
