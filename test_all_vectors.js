@@ -43,9 +43,7 @@ test('MatVector basic operations', () => {
     if (count !== 2) throw new Error('iterator count wrong');
     
     vec.delete();
-    mat1.delete();
-    mat2.delete();
-    mat3.delete();
+    // Note: Mat objects use garbage collection, no explicit delete() needed
 });
 
 // Test PointVector

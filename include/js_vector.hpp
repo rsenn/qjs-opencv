@@ -10,6 +10,11 @@
 #include "js_mat.hpp"
 #include "js_point.hpp"
 #include "js_rect.hpp"
+
+// Forward declarations for DMatch
+typedef cv::DMatch JSDMatchData;
+JSDMatchData* js_dmatch_data(JSValueConst val);
+JSValue js_dmatch_new(JSContext* ctx, const JSDMatchData& dm);
 // Note: js_keypoint.hpp not included here to avoid js_array template conflicts
 // JSConverter<cv::KeyPoint> is defined in js_keypoint.hpp instead
 
@@ -200,13 +205,20 @@ struct JSConverter<cv::Rect> {
 template<>
 struct JSConverter<cv::DMatch> {
     static cv::DMatch fromJS(JSContext* ctx, JSValueConst val) {
-        cv::DMatch match;
+        // Try to extract from DMatch instance first
+        JSDMatchData* dm = js_dmatch_data(val);
+        if (dm) {
+            return *dm;
+        }
         
+        // Fall back to plain object
+        cv::DMatch match;
+
         JSValue queryIdx = JS_GetPropertyStr(ctx, val, "queryIdx");
         JSValue trainIdx = JS_GetPropertyStr(ctx, val, "trainIdx");
         JSValue imgIdx = JS_GetPropertyStr(ctx, val, "imgIdx");
         JSValue distance = JS_GetPropertyStr(ctx, val, "distance");
-        
+
         if (!JS_IsUndefined(queryIdx)) {
             int idx;
             JS_ToInt32(ctx, &idx, queryIdx);
@@ -227,24 +239,18 @@ struct JSConverter<cv::DMatch> {
             JS_ToFloat64(ctx, &dist, distance);
             match.distance = static_cast<float>(dist);
         }
-        
+
         JS_FreeValue(ctx, queryIdx);
         JS_FreeValue(ctx, trainIdx);
         JS_FreeValue(ctx, imgIdx);
         JS_FreeValue(ctx, distance);
-        
+
         return match;
     }
-    
+
     static JSValue toJS(JSContext* ctx, const cv::DMatch& val) {
-        JSValue obj = JS_NewObject(ctx);
-        
-        JS_SetPropertyStr(ctx, obj, "queryIdx", JS_NewInt32(ctx, val.queryIdx));
-        JS_SetPropertyStr(ctx, obj, "trainIdx", JS_NewInt32(ctx, val.trainIdx));
-        JS_SetPropertyStr(ctx, obj, "imgIdx", JS_NewInt32(ctx, val.imgIdx));
-        JS_SetPropertyStr(ctx, obj, "distance", JS_NewFloat64(ctx, val.distance));
-        
-        return obj;
+        // Return a DMatch instance instead of a plain object
+        return js_dmatch_new(ctx, val);
     }
 };
 

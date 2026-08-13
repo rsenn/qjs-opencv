@@ -5,69 +5,33 @@
 
 extern "C" int js_primitivevectors_init(JSContext* ctx, JSModuleDef* m) {
     int result = 0;
-    
-    // IntVector
+
     result = js_register_vector<int>(ctx, m, "IntVector");
-    if (result == 0 && m) {
-        JSValue& ctor = js_vector_get_ctor<int>();
-        if (!JS_IsUndefined(ctor)) {
-            JS_SetModuleExport(ctx, m, "IntVector", JS_DupValue(ctx, ctor));
-        }
-    }
-    
-    // FloatVector
+    js_set_vector_export<int>(ctx, m, "IntVector");
     if (result == 0) {
         result = js_register_vector<float>(ctx, m, "FloatVector");
-        if (result == 0 && m) {
-            JSValue& ctor = js_vector_get_ctor<float>();
-            if (!JS_IsUndefined(ctor)) {
-                JS_SetModuleExport(ctx, m, "FloatVector", JS_DupValue(ctx, ctor));
-            }
-        }
+        js_set_vector_export<float>(ctx, m, "FloatVector");
     }
-    
-    // DoubleVector
     if (result == 0) {
         result = js_register_vector<double>(ctx, m, "DoubleVector");
-        if (result == 0 && m) {
-            JSValue& ctor = js_vector_get_ctor<double>();
-            if (!JS_IsUndefined(ctor)) {
-                JS_SetModuleExport(ctx, m, "DoubleVector", JS_DupValue(ctx, ctor));
-            }
-        }
+        js_set_vector_export<double>(ctx, m, "DoubleVector");
     }
-    
-    // CharVector
     if (result == 0) {
         result = js_register_vector<char>(ctx, m, "CharVector");
-        if (result == 0 && m) {
-            JSValue& ctor = js_vector_get_ctor<char>();
-            if (!JS_IsUndefined(ctor)) {
-                JS_SetModuleExport(ctx, m, "CharVector", JS_DupValue(ctx, ctor));
-            }
-        }
+        js_set_vector_export<char>(ctx, m, "CharVector");
     }
-    
-    // StringVector
     if (result == 0) {
         result = js_register_vector<std::string>(ctx, m, "StringVector");
-        if (result == 0 && m) {
-            JSValue& ctor = js_vector_get_ctor<std::string>();
-            if (!JS_IsUndefined(ctor)) {
-                JS_SetModuleExport(ctx, m, "StringVector", JS_DupValue(ctx, ctor));
-            }
-        }
+        js_set_vector_export<std::string>(ctx, m, "StringVector");
     }
 
     return result;
 }
 
 extern "C" void js_primitivevectors_export(JSContext* ctx, JSModuleDef* m) {
-    if (m) {
-        JS_AddModuleExport(ctx, m, "IntVector");
-        JS_AddModuleExport(ctx, m, "FloatVector");
-        JS_AddModuleExport(ctx, m, "DoubleVector");
-        JS_AddModuleExport(ctx, m, "CharVector");
-        JS_AddModuleExport(ctx, m, "StringVector");
-    }
+    js_export_vector<int>(ctx, m, "IntVector");
+    js_export_vector<float>(ctx, m, "FloatVector");
+    js_export_vector<double>(ctx, m, "DoubleVector");
+    js_export_vector<char>(ctx, m, "CharVector");
+    js_export_vector<std::string>(ctx, m, "StringVector");
 }

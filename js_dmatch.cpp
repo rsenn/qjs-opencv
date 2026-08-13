@@ -33,15 +33,25 @@ js_dmatch_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValue
     JS_ToInt32(ctx, &queryIdx, argv[0]);
   if(argc >= 2)
     JS_ToInt32(ctx, &trainIdx, argv[1]);
-  if(argc >= 3)
+
+  // Handle both 3-arg and 4-arg constructors
+  if(argc == 3) {
+    // DMatch(queryIdx, trainIdx, distance) - 3 arg constructor
+    double d;
+    JS_ToFloat64(ctx, &d, argv[2]);
+    distance = (float)d;
+    new(dm) JSDMatchData(queryIdx, trainIdx, distance);
+  } else if(argc >= 4) {
+    // DMatch(queryIdx, trainIdx, imgIdx, distance) - 4 arg constructor
     JS_ToInt32(ctx, &imgIdx, argv[2]);
-  if(argc >= 4) {
     double d;
     JS_ToFloat64(ctx, &d, argv[3]);
     distance = (float)d;
+    new(dm) JSDMatchData(queryIdx, trainIdx, imgIdx, distance);
+  } else {
+    // Default constructor
+    new(dm) JSDMatchData();
   }
-
-  new(dm) JSDMatchData(queryIdx, trainIdx, distance, imgIdx);
 
   JS_SetOpaque(obj, dm);
   return obj;
