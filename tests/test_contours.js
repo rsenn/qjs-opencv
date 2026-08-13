@@ -78,8 +78,7 @@ function main(...args) {
   let mom = moments(poly, false);
   console.log(`poly`, console.config({ maxArrayLength: 20, compact: 1 }), poly);
   console.log(`moments(poly)`, console.config({ compact: 1 }), mom);
-  let huMoments;
-  HuMoments(mom, (huMoments = []));
+  let huMoments = HuMoments(mom);
   console.log(`huMoments`, console.config({ compact: 1 }), huMoments);
 
   imshow('input', input);

@@ -91,6 +91,12 @@ No clear path back to "video source → SVG for a laser cutter." Listed so the r
 
 ## API discrepancies vs opencv.js (shared surface only)
 
+**IMPORTANT: When fixing opencv.js compatibility issues, always update all client scripts.** After changing a C++ binding to match opencv.js behavior, you MUST update every JavaScript file that uses the affected function:
+```bash
+grep -r -l "^import.*'opencv" examples/ tests/ *.js ../*.js
+```
+Update the call sites to use the opencv.js-compatible form, even if qjs-opencv retains backward compatibility (e.g., supporting both 1-arg and 2-arg signatures). The goal is to make client scripts as opencv.js-portable as possible.
+
 Investigated 2026-08-12 by comparing `doc/opencv-js-api.md` (the official opencv.js binding surface, compiled from OpenCV 5.0.0's `platforms/js/opencv_js.config.py` + `modules/js/src/core_bindings.cpp` + `helpers.js`) against this project's own bindings, function-by-function, for names that exist **on both sides**. This is not a coverage comparison — qjs-opencv deliberately binds far more of `cv::` than opencv.js's hand-curated browser whitelist (see Tiers above). It's a divergence audit: where the same-named call exists in both, does it behave the same way? Anyone porting opencv.js snippets/tutorials into this project's `qjs` REPL will hit these.
 
 Grouped by how badly a naive port breaks.
