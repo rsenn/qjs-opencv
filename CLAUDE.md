@@ -65,17 +65,17 @@ Notes:
 
 ## Running JS code
 
-After build & install, qjs picks up `opencv.so` via `QUICKJS_MODULES` env var or the compile-time module dirs:
+After build, use `qjsm` (not `qjs`) with `QUICKJS_MODULE_PATH` pointing to the build directory:
 
 ```bash
-QUICKJS_MODULES=$PWD/build/x86_64-linux-gnu qjs tests/test_freetype.js
-# or after `make install`
-qjs tests/test_video_writer.js
+QUICKJS_MODULE_PATH=$PWD/build/x86_64-linux-gnu qjsm tests/unittests/test_contour_functions.js
 ```
 
-Tests under `tests/*.js` are standalone scripts (no test runner) — run them individually with `qjs`. Several rely on companion assets in `tests/` (e.g. `box.png`, `box_in_scene.png`, `model.yml.gz`).
+Or after `make install`, `qjsm` picks up `opencv.so` from the system module dirs.
 
-The high-level JS wrappers under `js/` (`cvHighGUI.js`, `cvPipeline.js`, `cvVideo.js`, `cvUtils.js`) provide `Window`, `TextStyle`, `Pipeline`, `VideoSource`, `ImageSequence` abstractions built on top of the C++ bindings — they're imported as `'../js/cvHighGUI.js'` etc. from the tests.
+Tests under `tests/*.js` are standalone scripts. Unit tests using `tinytest` are in `tests/unittests/`. Several tests rely on companion assets in `tests/` (e.g. `box.png`, `box_in_scene.png`, `model.yml.gz`).
+
+The high-level JS wrappers under `js/` (`cvHighGUI.js`, `cvPipeline.js`, `cvVideo.js`, `cvUtils.js`) provide `Window`, `TextStyle`, `Pipeline`, `VideoSource`, `ImageSequence` abstractions built on top of the C++ bindings.
 
 ## Architecture
 
@@ -103,31 +103,64 @@ Common JS↔C++ glue lives in `include/jsbindings.hpp` (single file, ~1000 lines
 
 The README's design intent: **no copies, mutable, finalizers do the work.** A `cv.Mat` is backed by a `cv::Mat`; iteration yields `Float64Array(4)` views into the underlying buffer; `cv.Contour` is a `std::vector<cv::Point3d>` exposed as an iterable ArrayBuffer. Many functions accept `cv.Mat | cv.Contour | TypedArray` interchangeably because they unwrap through `cv::_InputArray` / `cv::_InputOutputArray` (`JSInputArgument`, `JSImageArgument` in `jsbindings.hpp`). When editing a binding, preserve this: do not silently copy through `cv::Mat::clone()` or allocate a new buffer just to simplify the signature.
 
-### Contour → MatVector migration (in progress)
+### Contour Migration Strategy (Phase 1 COMPLETE)
 
-The current `Contour` class uses `std::vector<std::vector<Point2d>>` which requires int32→double conversion on every `findContours` call. The migration replaces it with `MatVector` (vector<Mat>) where each contour is a `CV_32SC2` Mat (zero-copy from OpenCV output).
+**Status:** Phase 1 complete (2026-08-13). Phase 2 (MatVector) is lower priority.
 
-**Key types distinction:**
-- **PointVector** = `vector<cv::Point>` = `vector<Vec2i>` (8 bytes, 2 ints per element)
-- **LineVector** (HoughLinesP output) = `vector<Vec4i>` (16 bytes, 4 ints per element)
-- **MatVector** = `vector<Mat>` (each Mat is a contour with CV_32SC2 type)
+The project is migrating from the custom `Contour` class toward opencv.js-compatible APIs. **Phase 1 (method migration) is done**; Phase 2 (MatVector class) is planned but secondary.
 
-`findContours` requires `OutputArrayOfArrays`, which accepts only:
-- `vector<vector<Point>>` (nested)
-- `vector<Mat>` (nested — our MatVector)
-- `vector<UMat>` (nested)
+**Phase 1 — COMPLETE:**
+All Contour methods are now available as freestanding functions:
+- 16 shape analysis functions (already existed): `cv.contourArea()`, `cv.arcLength()`, `cv.boundingRect()`, `cv.approxPolyDP()`, `cv.convexHull()`, `cv.fitEllipse()`, `cv.fitLine()`, `cv.isContourConvex()`, `cv.minAreaRect()`, `cv.minEnclosingCircle()`, `cv.minEnclosingTriangle()`, `cv.pointPolygonTest()`, `cv.rotatedRectangleIntersection()`, `cv.convexityDefects()`, `cv.matchShapes()`, `cv.HuMoments()`
+- 7 psimpl methods migrated to `cv.psimpl.*` namespace: `cv.psimpl.douglasPeucker()`, `cv.psimpl.nthPoint()`, `cv.psimpl.radialDistance()`, `cv.psimpl.reumannWitkam()`, `cv.psimpl.opheim()`, `cv.psimpl.lang()`, `cv.psimpl.perpendicularDistance()`
+- All accept Mat CV_32SC2 (findContours output format), Contour objects (backward compat), or JS arrays
+- All return Mat CV_32SC2
 
-A flat `vector<Point>` (PointVector) or `vector<Vec4i>` fails with an assertion error. PointVector is useful for other functions like `HoughLinesP` which accept `OutputArray` (flat structure), but NOT for Contours.
+**Phase 2 — MatVector (planned, secondary):**
+Implement `MatVector` class wrapping `std::vector<cv::Mat>`. See BUGS entry `no-opencvjs-matvector` for detailed plan.
 
-See `test_matvector.cpp` and `test_pointvector_contours.cpp` for verification.
+**Phase 3 — Cleanup (ongoing):**
+Remove non-standard Contour methods, assess which functions need `Contour<T>` internally vs. generic `JSInputOutputArray`.
 
-### Algorithms
+**Key insight (binary compatibility):** Point and Vec2i have identical memory layout (8 bytes). Mat CV_32SC2 data can be reinterpreted as Vec2i* for zero-copy iteration. This enables efficient iteration without requiring full MatVector migration. See BUGS: `make-dormant-point-line-iterator-plug-into-point-mat-vector`.
 
-`algorithms/` contains in-tree implementations not in OpenCV but interoperable on `cv::Mat`: `skeletonization.hpp`, `trace_skeleton.hpp`, `pixel_neighborhood.hpp`, `palette.hpp`, `dominant_colors_grabber.cpp`. `lsd/` contains a Line Segment Detector. `gifenc/` and `giflib-turbo/` provide GIF encoding (low-bit-depth palette work referenced in the README).
+### Testing
+
+Tests are in `tests/unittests/` using the `tinytest` framework (copied from `../quickjs/qjs-modules/tests/tinytest.js`). Each functionality group gets its own test file:
+- `test_contour_functions.js` — 16 shape analysis tests
+- `test_psimpl_functions.js` — 9 psimpl simplification tests
+- `test_matvector.js` — planned for MatVector
+
+**Run tests with `qjsm` (not `qjs`!)** and set `QUICKJS_MODULE_PATH` to the build directory:
+```bash
+QUICKJS_MODULE_PATH=build/x86_64-linux-gnu qjsm tests/unittests/test_contour_functions.js
+```
+
+The `qjsm` binary supports ES modules natively. Do NOT use `qjs` or `-m`/`--module` flags.
 
 ## Conventions to keep
 
+- **Use `qjsm` for running scripts, not `qjs`.** The `qjsm` binary has native ES module support. Do NOT use `-m` or `--module` flags (those load library modules, not scripts).
+- **Use `QUICKJS_MODULE_PATH=<build-dir>`** when testing with freshly built `opencv.so` to ensure the local build is loaded instead of an installed version.
+- **Use `JS_CFUNC_MAGIC_DEF` for method groups.** When adding a set of related methods to a binding file, always use magic dispatch: one handler function with a switch on the magic value, registered via `JS_CFUNC_MAGIC_DEF`. Don't create separate C++ functions per method. This matches existing patterns like `js_imgproc_shape()`, `js_mat_expr()`, `js_contour_psimpl()`.
+- **Namespace non-standard extensions.** Custom utilities like psimpl go under a namespace object (e.g., `cv.psimpl.douglasPeucker`), mirroring how `cv.dnn.*` is done in `js_dnn.cpp`. Use `JS_OBJECT_DEF` with the function list to create the namespace in the exports array.
 - Match the existing style — `.clang-format` and `.cmake-format` are checked in; don't reflow files you didn't touch.
 - New bindings go in their own `js_<name>.cpp` + matching `.hpp`. `CMakeLists.txt`'s `file(GLOB OPENCV_SOURCES js_*.[ch]pp ...)` picks them up automatically, but if the module depends on another one (e.g. mat → size), add the `target_link_libraries(...)` line in `cmake/JSBindings.cmake`.
 - The `js_<name>.cpp` skeleton: one `JSClassID`, one `JSClassDef` with a finalizer, `js_<name>_proto_funcs` table, `js_<name>_static_funcs`, and a `js_<name>_init(ctx, m)` function called from `init_module.cpp`.
 - Prefer the `js_value_to` / `js_value_from` templates over hand-rolled `JS_To*` calls — they already cover `cv::Vec`, `cv::Scalar_`, `std::vector<T>`, `cv::Range`.
+- **Mat typed data views are now implemented.** Mat has `.data`, `.data8S`, `.data16U`, `.data16S`, `.data32S`, `.data32F`, `.data64F` properties returning typed array views of the pixel buffer (via `js_typedarray<T>::from_buffer()` template). The legacy `.array` property is disabled but `.buffer` (raw ArrayBuffer) remains.
+- **Scalar.all(v) is implemented.** Creates a Float64Array with all 4 components set to v, matching opencv.js API. Implemented via `JS_NewCFunctionMagic` since it's a static method on the Scalar constructor.
+
+## Key files for reference
+
+- `BUGS` — known issues and opencv.js API discrepancies (plain text, see format above)
+- `TODO.md` — binding backlog and migration roadmap
+- `js_mat.cpp` — Mat class (most complex binding, ~2000 lines, reference for patterns)
+- `js_contour.cpp` — Contour class + psimpl namespace + findContours
+- `js_imgproc.cpp` — shape analysis functions (SHAPE_* magic enum pattern)
+- `js_dnn.cpp` — DNN namespace pattern (reference for namespace objects)
+- `include/js_typed_array.hpp` — `js_typedarray<T>::from_buffer()` template
+- `include/jsbindings.hpp` — common JS↔C++ glue (~1000 lines)
+- `test_matvector.cpp` / `test_pointvector_contours.cpp` — C++ feasibility tests for MatVector
+- `test_binary_compat.cpp` — binary compatibility verification (Point=Vec2i, Vec4i=2×Point)
+- `doc/opencv-js-api.md` — target API specification (what opencv.js exposes)
