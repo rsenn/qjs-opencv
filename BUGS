@@ -77,15 +77,71 @@
   - make-dormant-point-line-iterator-plug-into-point-mat-vector (binary compat)
 
 
-- FIXED: opencv-js-api-mismatch-drawing-function-names: Renamed all
-  drawing functions to match opencv.js API:
-  - drawCircle → circle
-  - drawLine → line
-  - drawRect → rectangle
-  - drawPolylines → polylines
-  - drawPolygon → fillPoly (simplified to only call cv::fillPoly, removed thickness support)
-  - drawEllipse → ellipse
-  Changes made to js_draw.cpp (C++ exports and handler) and all 20+ client JS files.
+- contour-cleanup-plan: Systematic removal of non-standard Contour methods
+  to align with opencv.js API and reduce tech debt.
+
+  **Audit Results (2026-08-13):**
+  - 14 methods: cv:: bindings (already migrated to freestanding)
+  - 7 methods: psimpl bindings (already migrated to cv.psimpl.*)
+  - ~30 methods: non-standard tech debt (to remove)
+
+  **Non-Standard Methods to Remove:**
+
+  Array-like mutations (Contour extends Array proto):
+  - push, pop, unshift, shift, splice
+  - indexOf, lastIndexOf, find, findIndex, findLast, findLastIndex
+  - concat
+
+  Serialization/conversion:
+  - toArray, toString, toSource
+  - buffer (getter), array (getter)
+  - getMat
+
+  Custom geometry (not in OpenCV):
+  - collapse (custom simplify)
+  - fill (Bresenham rasterization)
+  - adjacent (point/contour adjacency check)
+  - rotatePoints (std::rotate wrapper)
+  - center (centroid via moments)
+
+  Static factories/helpers:
+  - fromRect, fromString, from
+  - match (static), intersect (static)
+
+  Derived properties (computed but non-standard API):
+  - aspectRatio, extent, solidity, equivalentDiameter, orientation
+  - boundingRect, getBoundingClientRect (manual min/max, not cv::boundingRect)
+
+  **Cleanup Progress:**
+  - ✅ Removed: toArray, toString, toSource, collapse, fill, adjacent
+  - ✅ Updated client files: test-image.js, test-video.js (use Contour directly)
+  - ⏳ TODO: Remove array-like methods (push/pop/splice/etc.)
+  - ⏳ TODO: Remove derived properties (aspectRatio/extent/etc.)
+  - ⏳ TODO: Remove static factories (fromRect/fromString/etc.)
+  - ⏳ TODO: Test and verify all changes
+
+  **Key Notes:**
+  - boundingRect/getBoundingClientRect use manual min/max loop, not cv::boundingRect
+  - center is gray area (calls cv::moments but computation is custom)
+  - All removed methods have freestanding equivalents or are not in opencv.js
+
+  See: contour-migration-strategy for overall plan
+
+- findcontours-crash-opencv5: findContours crashes when writing to hierarchy
+  vector with OpenCV 5.0.0. The crash occurs inside cv::findContours when it
+  tries to populate the hierarchy vector via JSInputOutputArray wrapper.
+  Error: "Assertion '__n < this->size()' failed" when accessing vec4i[i].
+  
+  This appears to be a compatibility issue between JSInputOutputArray and
+  OpenCV 5.0.0's findContours implementation. The crash happens before we
+  even check if vec4i is empty, suggesting the issue is inside the OpenCV
+  library itself when it tries to write to the output parameter.
+  
+  Workaround: None currently. May need to investigate JSInputOutputArray
+  implementation or use a different approach for hierarchy output.
+  
+  Impact: findContours with hierarchy parameter is broken in OpenCV 5.0.0.
+  findContours without hierarchy parameter works fine.
 - opencv-js-api-mismatch-contour-class: The Contour class is scheduled for
   phase-out in favor of MatVector (vector<Mat> backed by memory). The
   plain-array approach used by findContours has performance problems when

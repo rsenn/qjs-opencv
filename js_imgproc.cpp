@@ -1007,7 +1007,7 @@ js_cv_find_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   // into a single ArrayBuffer, instead of copying it into an ArrayBuffer
   // and then, for the callback case, copying it *again* element-by-element
   // into a plain array (previously via js_array_from on raw int32_t*).
-  if(hier_array || hier_callback) {
+  if((hier_array || hier_callback) && !vec4i.empty()) {
     auto* heap_vec = static_cast<std::vector<cv::Vec4i>*>(js_mallocz(ctx, sizeof(std::vector<cv::Vec4i>)));
     new(heap_vec) std::vector<cv::Vec4i>(std::move(vec4i));
 

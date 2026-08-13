@@ -1,8 +1,0 @@
-{
-	"InstallScripts" : 
-	[
-		"/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-opencv500/cmake_install.cmake",
-		"/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-opencv500/LCCV/cmake_install.cmake"
-	],
-	"Parallel" : false
-}
