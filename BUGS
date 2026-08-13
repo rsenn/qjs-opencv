@@ -569,18 +569,48 @@
     passing a MatVector to functions like findContours, split, merge,
     calcHist etc. works via the existing js_umat_or_mat dispatch.
 
-  ### C++ feasibility analysis (from test_matvector.cpp):
+  ### C++ feasibility analysis (from test_matvector.cpp & test_pointvector.cpp):
+  
+  **MatVector (vector<Mat>) - VIABLE:**
   findContours with vector<Mat> produces Mat objects where:
   - Each Mat is Nx1 (rows=N points, cols=1)
   - Type is CV_32SC2 (2-channel 32-bit signed int = pairs of x,y)
   - Point data is identical to vector<vector<Point>> output
   - Hierarchy is a single Mat [6 x 1] (one Vec4i per contour)
-
+  
   This means MatVector.get(i) returns a Mat wrapping contiguous point
   data — can be accessed via .data32S or .ptr<int32_t>() for zero-copy
   reading. The Mat approach is MORE efficient than the current Contour
   class because findContours natively writes int32 points; the Contour
   class forces a copy+conversion to double on every call.
+  
+  **PointVector (vector<Point>) - NOT VIABLE:**
+  test_pointvector.cpp confirms that findContours REQUIRES an
+  OutputArrayOfArrays, which accepts only:
+  - vector<vector<Point>> (STD_VECTOR_VECTOR)
+  - vector<Mat> (STD_VECTOR_MAT)
+  - vector<UMat> (STD_VECTOR_UMAT)
+  
+  Using vector<Point> (PointVector) or vector<Vec4i> fails with:
+  "error: (-215:Assertion failed) (_contours.kind() == 
+  _InputArray::STD_VECTOR_VECTOR) || (_contours.kind() == 
+  _InputArray::STD_VECTOR_MAT) || (_contours.kind() == 
+  _InputArray::STD_VECTOR_UMAT)"
+  
+  Note: PointVector in opencv.js is registered as vector<cv::Point>
+  (which is vector<Vec2i>, 8 bytes), NOT vector<Vec4i> as sometimes
+  assumed. It's used for flat point collections (e.g., KeyPoint.pt),
+  not for contour storage.
+  
+  **PointVectorVector (vector<vector<Point>>) - VIABLE but verbose:**
+  Also registered in opencv.js (line 482 core_bindings.cpp). This is
+  the C++ native format and works perfectly, but requires the verbose
+  .get(i).get(j) API for point access, which is less ergonomic than
+  MatVector's .get(i) returning a Mat with .data32S access.
+  
+  **Conclusion:** MatVector is the best choice for Contour replacement
+  because it balances opencv.js compatibility, performance (zero-copy),
+  and ergonomics (Mat-based access to point data).
 
   ### Enhanced JS ergonomics (beyond opencv.js):
   - Symbol.iterator: enable `for (let mat of mv)` iteration

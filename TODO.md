@@ -29,11 +29,30 @@ The current `Contour` class has two fundamental issues:
 Implement `MatVector` class that wraps `std::vector<cv::Mat>`, matching opencv.js exactly. Each contour becomes a Mat of type `CV_32SC2` (Nx1, 2-channel int32 points). This is zero-copy from `findContours` output.
 
 ### C++ feasibility (verified)
-Test program `test_matvector.cpp` confirms:
+Test programs `test_matvector.cpp` and `test_pointvector.cpp` confirm:
+
+**MatVector (vector<Mat>) - VIABLE:**
 - `findContours(image, contours, hierarchy, mode, method)` with `vector<Mat>` output works
 - Each contour Mat is `CV_32SC2`, Nx1 (rows=point count, cols=1)
 - Point data is identical to `vector<vector<Point>>` output (just different storage)
 - MatVector.get(i) returns a Mat that can be read via `.data32S` or `.ptr<int32_t>()`
+- Zero-copy from native output, no int32→double conversion
+
+**PointVector (vector<Point>) - NOT VIABLE:**
+- findContours REQUIRES OutputArrayOfArrays, which accepts only:
+  - vector<vector<Point>> (STD_VECTOR_VECTOR)
+  - vector<Mat> (STD_VECTOR_MAT)
+  - vector<UMat> (STD_VECTOR_UMAT)
+- Using vector<Point> fails with assertion error
+- Note: PointVector is vector<cv::Point> (vector<Vec2i>, 8 bytes), NOT vector<Vec4i>
+- It's used for flat point collections (e.g., KeyPoint.pt), not for contour storage
+
+**PointVectorVector (vector<vector<Point>>) - VIABLE but verbose:**
+- The C++ native format, works perfectly
+- But requires verbose .get(i).get(j) API for point access
+- Less ergonomic than MatVector's .get(i) returning a Mat with .data32S access
+
+**Conclusion:** MatVector is the best choice for Contour replacement.
 
 ### JS ergonomics (beyond opencv.js)
 - `Symbol.iterator` for `for (let mat of mv)` iteration
