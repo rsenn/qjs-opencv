@@ -134,13 +134,14 @@
     ../test-quickjs.js                 (mat.at, mat.set)
 
 
-- opencv-js-api-mismatch-findcontours-signature: qjs-opencv's
-  `findContours` can be called with 4 args (no hierarchy output param)
-  while opencv.js requires 5 args: `findContours(image, contours,
-  hierarchy, mode, method)` — hierarchy MatVector is mandatory.
-  Affected files:
-    ../doc-scanner.js
+- FIXED: opencv-js-api-mismatch-findcontours-signature: All client
+  scripts updated to use opencv.js-compatible 5-arg form:
+  `findContours(image, contours, hierarchy, mode, method)` with
+  hierarchy as a mandatory parameter.
+  Updated files:
     ../scan.js
+    ../sky_detect.js
+    ../circuit2circuitjs.js
 
 
 - NOT-A-BUG: opencv-js-api-mismatch-houghcircles-class: HoughCircles is
