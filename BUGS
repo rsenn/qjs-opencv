@@ -72,6 +72,42 @@
   The type mismatch is a real performance issue — data must be copied
   and converted from int32 to double on every findContours call.
 
+  **Alternative approaches investigated (2026-08-13):**
+
+  Test programs `test_matvector.cpp` and `test_pointvector.cpp` evaluated
+  three candidate types for Contour replacement:
+
+  1. **MatVector (vector<Mat>) - CHOSEN:**
+     - findContours accepts vector<Mat> as OutputArrayOfArrays
+     - Each contour stored as CV_32SC2 Mat (Nx1, 2-channel int32)
+     - Zero-copy from native output, no type conversion
+     - Ergonomic: .get(i) returns Mat, access via .data32S or .ptr<int32_t>()
+     - Matches opencv.js API exactly
+
+  2. **PointVector (vector<Point>) - NOT VIABLE for Contours:**
+     - findContours REQUIRES OutputArrayOfArrays, which accepts only:
+       * vector<vector<Point>> (STD_VECTOR_VECTOR)
+       * vector<Mat> (STD_VECTOR_MAT)
+       * vector<UMat> (STD_VECTOR_UMAT)
+     - Using vector<Point> (Vec2i) or vector<Vec4i> fails with assertion:
+       "(-215:Assertion failed) (_contours.kind() == 
+       _InputArray::STD_VECTOR_VECTOR) || (_contours.kind() == 
+       _InputArray::STD_VECTOR_MAT) || (_contours.kind() == 
+       _InputArray::STD_VECTOR_UMAT)"
+     - Note: PointVector is vector<cv::Point> = vector<Vec2i> (8 bytes, 2 ints),
+       distinct from vector<Vec4i> (16 bytes, 4 ints) used by HoughLinesP
+     - PointVector is useful for OTHER functions like HoughLinesP which
+       accept OutputArray (flat structure), but NOT for Contours (plural)
+     - See test_pointvector_contours.cpp for verification
+
+  3. **PointVectorVector (vector<vector<Point>>) - VIABLE but verbose:**
+     - The C++ native format, works perfectly with findContours
+     - Requires verbose .get(i).get(j) API for point access
+     - Less ergonomic than MatVector's .get(i) returning a Mat
+
+  **Conclusion:** MatVector chosen for best balance of performance (zero-copy),
+  opencv.js compatibility, and JS ergonomics.
+
   C++ binding files that depend on Contour (direct #include or usage):
     js_contour.hpp           — type definitions, template helpers
     js_contour.cpp           — class registration, all methods, finalizer

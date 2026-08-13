@@ -103,6 +103,24 @@ Common JS↔C++ glue lives in `include/jsbindings.hpp` (single file, ~1000 lines
 
 The README's design intent: **no copies, mutable, finalizers do the work.** A `cv.Mat` is backed by a `cv::Mat`; iteration yields `Float64Array(4)` views into the underlying buffer; `cv.Contour` is a `std::vector<cv::Point3d>` exposed as an iterable ArrayBuffer. Many functions accept `cv.Mat | cv.Contour | TypedArray` interchangeably because they unwrap through `cv::_InputArray` / `cv::_InputOutputArray` (`JSInputArgument`, `JSImageArgument` in `jsbindings.hpp`). When editing a binding, preserve this: do not silently copy through `cv::Mat::clone()` or allocate a new buffer just to simplify the signature.
 
+### Contour → MatVector migration (in progress)
+
+The current `Contour` class uses `std::vector<std::vector<Point2d>>` which requires int32→double conversion on every `findContours` call. The migration replaces it with `MatVector` (vector<Mat>) where each contour is a `CV_32SC2` Mat (zero-copy from OpenCV output).
+
+**Key types distinction:**
+- **PointVector** = `vector<cv::Point>` = `vector<Vec2i>` (8 bytes, 2 ints per element)
+- **LineVector** (HoughLinesP output) = `vector<Vec4i>` (16 bytes, 4 ints per element)
+- **MatVector** = `vector<Mat>` (each Mat is a contour with CV_32SC2 type)
+
+`findContours` requires `OutputArrayOfArrays`, which accepts only:
+- `vector<vector<Point>>` (nested)
+- `vector<Mat>` (nested — our MatVector)
+- `vector<UMat>` (nested)
+
+A flat `vector<Point>` (PointVector) or `vector<Vec4i>` fails with an assertion error. PointVector is useful for other functions like `HoughLinesP` which accept `OutputArray` (flat structure), but NOT for Contours.
+
+See `test_matvector.cpp` and `test_pointvector_contours.cpp` for verification.
+
 ### Algorithms
 
 `algorithms/` contains in-tree implementations not in OpenCV but interoperable on `cv::Mat`: `skeletonization.hpp`, `trace_skeleton.hpp`, `pixel_neighborhood.hpp`, `palette.hpp`, `dominant_colors_grabber.cpp`. `lsd/` contains a Line Segment Detector. `gifenc/` and `giflib-turbo/` provide GIF encoding (low-bit-depth palette work referenced in the README).

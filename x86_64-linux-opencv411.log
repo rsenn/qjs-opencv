@@ -1,0 +1,79 @@
+Entering directory 'build/x86_64-linux-opencv411'
+-- The C compiler identification is GNU 16.0.1
+-- The CXX compiler identification is GNU 16.0.1
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/gcc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/g++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+Building project [1;31mqjs-opencv[0m
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE
+-- Found PkgConfig: /usr/bin/pkg-config (found version "1.8.1")
+-- Architecture-specific library directory: lib/x86_64-linux-gnu
+-- Finding QuickJS...
+QuickJS header: /usr/local/include/quickjs/quickjs.h
+QuickJS include dir: /usr/local/include/quickjs
+QuickJS library dir: /usr/local/lib/x86_64-linux-gnu
+-- QuickJS configuration
+-- 	interpreter: /usr/local/bin/qjs
+-- 	compiler: /usr/local/bin/qjsc
+-- 	library: /usr/local/lib/x86_64-linux-gnu/libquickjs.so
+-- 	install directory: /usr/local
+-- 	library directory: /usr/local/lib/x86_64-linux-gnu
+-- 	include directory: /usr/local/include/quickjs
+-- 	C module directory: /usr/local/lib/x86_64-linux-gnu/quickjs
+-- 	JS module directory: /usr/local/lib/quickjs
+-- 	module search path: /usr/local/lib/x86_64-linux-gnu/x86_64-linux-gnu/quickjs;/usr/local/lib/x86_64-linux-gnu/quickjs;/usr/local/lib/quickjs
+-- Checking for one of the modules 'libpng16'
+-- size of long 8
+-- size of long long 8
+-- size of size_t 8
+Thread library: 
+QuickJS include dir: /usr/local/include/quickjs
+QuickJS library dir: /usr/local/lib/x86_64-linux-gnu
+-- Finding OpenCV library
+-- OpenCV 4.11.0 found at /mnt/data/opt/opencv-4.11.0-x86_64
+  OPENCV_FOUND = TRUE
+  OPENCV_VERSION = 4.11.0
+  OPENCV_INCLUDE_DIRS = /mnt/data/opt/opencv-4.11.0-x86_64/include/opencv4
+  OPENCV_LIBDIR = /mnt/data/opt/opencv-4.11.0-x86_64/lib
+  OPENCV_LINK_FLAGS = 
+-- Finding opencv library - found
+-- Checking for C++ standard flag: -std=c++2a: OK
+C++ standard: c++2a
+C++ flags:  -std=c++2a -DCXX_STANDARD=2a
+-- Performing Test WARN_NO_UNUSED_VALUE
+-- Performing Test WARN_NO_UNUSED_VALUE - Success
+-- Performing Test WARN_NO_UNUSED_VARIABLE
+-- Performing Test WARN_NO_UNUSED_VARIABLE - Success
+-- Performing Test F_PIC
+-- Performing Test F_PIC - Success
+-- Performing Test OPT_C_OPT_NONE
+-- Performing Test OPT_C_OPT_NONE - Success
+-- Performing Test OPT_CXX_OPT_NONE
+-- Performing Test OPT_CXX_OPT_NONE - Success
+-- Performing Test OPT_C_G_GDB
+-- Performing Test OPT_C_G_GDB - Success
+-- Performing Test OPT_CXX_G_GDB
+-- Performing Test OPT_CXX_G_GDB - Success
+-- Performing Test HAS_F_LTO_FLAG
+-- Performing Test HAS_F_LTO_FLAG - Success
+-- Found OpenCV: /mnt/data/opt/opencv-4.11.0-x86_64 (found version "4.11.0")
+-- Checking for module 'libcamera'
+--   Found libcamera, version 0.5.2
+-- Platform: amd64
+-- libcamera library found:
+--     version: 0.5.2
+--     libraries: /usr/local/lib/x86_64-linux-gnu/libcamera.so;/usr/local/lib/x86_64-linux-gnu/libcamera-base.so
+--     include path: /usr/local/include/libcamera
+-- OpenCV freetype: opencv_freetype
+-- Configuring done (19.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/roman/Projects/plot-cv/qjs-opencv/build/x86_64-linux-opencv411

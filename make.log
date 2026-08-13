@@ -1,0 +1,904 @@
+make: Entering directory '/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug'
+make[1]: Entering directory '/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug'
+make[2]: Entering directory '/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug'
+make[2]: Leaving directory '/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug'
+[  7%] Built target liblccv
+make[2]: Entering directory '/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug'
+make[2]: Leaving directory '/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug'
+make[2]: Entering directory '/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug'
+[  8%] Building CXX object CMakeFiles/quickjs-opencv.dir/algorithms/dominant_colors_grabber.cpp.o
+[ 10%] Building CXX object CMakeFiles/quickjs-opencv.dir/js_barcode_detector.cpp.o
+[ 12%] Building CXX object CMakeFiles/quickjs-opencv.dir/js_calib3d.cpp.o
+[ 14%] Building CXX object CMakeFiles/quickjs-opencv.dir/js_contour.cpp.o
+[ 15%] Building CXX object CMakeFiles/quickjs-opencv.dir/js_cv.cpp.o
+[ 17%] Building CXX object CMakeFiles/quickjs-opencv.dir/js_dnn.cpp.o
+[ 19%] Building CXX object CMakeFiles/quickjs-opencv.dir/js_feature2d.cpp.o
+[ 21%] Building CXX object CMakeFiles/quickjs-opencv.dir/js_imgproc.cpp.o
+[ 22%] Building CXX object CMakeFiles/quickjs-opencv.dir/js_keypoint.cpp.o
+[ 24%] Building CXX object CMakeFiles/quickjs-opencv.dir/js_libcamera_app.cpp.o
+/home/roman/Projects/plot-cv/qjs-opencv/js_cv.cpp:16:10: fatal error: opencv2/core/core_c.h: No such file or directory
+   16 | #include <opencv2/core/core_c.h>
+      |          ^~~~~~~~~~~~~~~~~~~~~~~
+compilation terminated.
+[ 26%] Building CXX object CMakeFiles/quickjs-opencv.dir/js_line.cpp.o
+/home/roman/Projects/plot-cv/qjs-opencv/algorithms/dominant_colors_grabber.cpp: In member function ‘std::vector<cv::Scalar_<double> > dominant_colors_grabber::GetDomColors(cv::Mat, color_space, dist_type, unsigned int, double)’:
+/home/roman/Projects/plot-cv/qjs-opencv/algorithms/dominant_colors_grabber.cpp:54:61: error: no matching function for call to ‘cv::Mat::Mat(int, cv::MatSize&, int, cv::Scalar)’
+   54 |     cv::Mat hist_mask(3, hist.size, CV_8UC1, cv::Scalar(255));
+      |                                                             ^
+  • there are 35 candidates
+In file included from /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core.hpp:58,
+                 from /home/roman/Projects/plot-cv/qjs-opencv/algorithms/dominant_colors_grabber.hpp:6,
+                 from /home/roman/Projects/plot-cv/qjs-opencv/algorithms/dominant_colors_grabber.cpp:1:
+    • candidate 1: ‘template<class _Tp> cv::Mat::Mat(const cv::MatCommaInitializer_<_Tp>&)’
+      /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:1271:60:
+       1271 |     template<typename _Tp> CV_DEPRECATED_EXTERNAL explicit Mat(const MatCommaInitializer_<_Tp>& commaInitializer);
+            |                                                            ^~~
+      • candidate expects 1 argument, 4 provided
+    • candidate 2: ‘template<class _Tp> cv::Mat::Mat(const cv::Point3_<_Tp>&, bool)’
+      /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:1267:37:
+       1267 |     template<typename _Tp> explicit Mat(const Point3_<_Tp>& pt, bool copyData=true);
+            |                                     ^~~
+      • candidate expects 2 arguments, 4 provided
+    • candidate 3: ‘template<class _Tp> cv::Mat::Mat(const cv::Point_<_Tp>&, bool)’
+      /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:1263:37:
+       1263 |     template<typename _Tp> explicit Mat(const Point_<_Tp>& pt, bool copyData=true);
+            |                                     ^~~
+      • candidate expects 2 arguments, 4 provided
+    • candidate 4: ‘template<class _Tp, int m, int n> cv::Mat::Mat(const cv::Matx<_Tp, m, n>&, bool)’
+      /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:1259:51:
+       1259 |     template<typename _Tp, int m, int n> explicit Mat(const Matx<_Tp, m, n>& mtx, bool copyData=true);
+            |                                                   ^~~
+      • candidate expects 2 arguments, 4 provided
+    • candidate 5: ‘template<class _Tp, int n> cv::Mat::Mat(const cv::Vec<_Tp, m>&, bool)’
+      /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:1255:44:
+       1255 |     template<typename _Tp, int n> explicit Mat(const Vec<_Tp, n>& vec, bool copyData=true);
+            |                                            ^~~
+      • candidate expects 2 arguments, 4 provided
+    • candidate 6: ‘template<class _Tp, long unsigned int _Nm> cv::Mat::Mat(const std::array<_Tp, _Nm>&, bool)’
+      /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:1251:49:
+       1251 |     template<typename _Tp, size_t _Nm> explicit Mat(const std::array<_Tp, _Nm>& arr, bool copyData=false);
+            |                                                 ^~~
+      • candidate expects 2 arguments, 4 provided
+    • candidate 7: ‘template<class _Tp> cv::Mat::Mat(std::initializer_list<int>, std::initializer_list<_Tp>)’
+      /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:1247:37:
+       1247 |     template<typename _Tp> explicit Mat(const std::initializer_list<int> sizes, const std::initializer_list<_Tp> list);
+            |                                     ^~~
+      • candidate expects 2 arguments, 4 provided
+    • candidate 8: ‘template<class _Tp, class> cv::Mat::Mat(std::initializer_list<_Tp>)’
+      /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:1243:14:
+       1243 |     explicit Mat(const std::initializer_list<_Tp> list);
+            |              ^~~
+      • candidate expects 1 argument, 4 provided
+    • candidate 9: ‘template<class _Tp> cv::Mat::Mat(const std::vector<_Tp>&, bool)’
+      /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:1238:37:
+       1238 |     template<typename _Tp> explicit Mat(const std::vector<_Tp>& vec, bool copyData=false);
+            |                                     ^~~
+      • candidate expects 2 arguments, 4 provided
+    • candidate 10: ‘cv::Mat::Mat(cv::Mat&&)’
+      /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:2472:5:
+       2472 |     Mat(Mat&& m) CV_NOEXCEPT;
+            |     ^~~
+      • candidate expects 1 argument, 4 provided
+    • candidate 11: ‘cv::Mat::Mat(const cv::cuda::GpuMat&)’
+      /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:1274:14:
+       1274 |     explicit Mat(const cuda::GpuMat& m);
+            |              ^~~
+      • candidate expects 1 argument, 4 provided
+    • candidate 12: ‘cv::Mat::Mat(const cv::Mat&, const std::vector<cv::Range>&)’
+      /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:1220:5:
+       1220 |     Mat(const Mat& m, const std::vector<Range>& ranges);
+            |     ^~~
+      • candidate expects 2 arguments, 4 provided
+    • candidate 13: ‘cv::Mat::Mat(const cv::Mat&, const cv::Range*)’
+      /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:1210:5:
+       1210 |     Mat(const Mat& m, const Range* ranges);
+            |     ^~~
+      • candidate expects 2 arguments, 4 provided
+    • candidate 14: ‘cv::Mat::Mat(const cv::Mat&, const cv::Rect&)’
+      /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:1200:5:
+       1200 |     Mat(const Mat& m, const Rect& roi);
+            |     ^~~
+      • candidate expects 2 arguments, 4 provided
+    • candidate 15: ‘cv::Mat::Mat(const cv::Mat&, const cv::Range&, const cv::Range&)’
+      /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:1190:5:
+       1190 |     Mat(const Mat& m, const Range& rowRange, const Range& colRange=Range::all());
+            |     ^~~
+      • candidate expects 3 arguments, 4 provided
+    • candidate 16: ‘cv::Mat::Mat(std::initializer_list<int>, int, void*, const size_t*)’
+      /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:1178:5:
+       1178 |     Mat(std::initializer_list<int> shape, int type, void* data, const size_t* steps=0);
+            |     ^~~
+      • no known conversion for argument 1 from ‘int’ to ‘std::initializer_list<int>’
+        /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:1178:36:
+         1178 |     Mat(std::initializer_list<int> shape, int type, void* data, const size_t* steps=0);
+              |         ~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~
+    • candidate 17: ‘cv::Mat::Mat(const cv::MatShape&, int, void*, const size_t*)’
+      /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:1164:5:
+       1164 |     Mat(const MatShape& shape, int type, void* data, const size_t* steps=0);
+            |     ^~~
+      • no known conversion for argument 1 from ‘int’ to ‘const cv::MatShape&’
+        /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:1164:25:
+         1164 |     Mat(const MatShape& shape, int type, void* data, const size_t* steps=0);
+              |         ~~~~~~~~~~~~~~~~^~~~~
+    • candidate 18: ‘cv::Mat::Mat(const std::vector<int>&, int, void*, const size_t*)’
+      /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:1150:5:
+       1150 |     Mat(const std::vector<int>& sizes, int type, void* data, const size_t* steps=0);
+            |     ^~~
+      • no known conversion for argument 1 from ‘int’ to ‘const std::vector<int>&’
+        /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:1150:33:
+         1150 |     Mat(const std::vector<int>& sizes, int type, void* data, const size_t* steps=0);
+              |         ~~~~~~~~~~~~~~~~~~~~~~~~^~~~~
+    • candidate 19: ‘cv::Mat::Mat(int, const int*, int, void*, const size_t*)’
+      /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:1136:5:
+       1136 |     Mat(int ndims, const int* sizes, int type, void* data, const size_t* steps=0);
+            |     ^~~
+      • no known conversion for argument 2 from ‘cv::MatSize’ {aka ‘cv::MatShape’} to ‘const int*’
+        /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:1136:31:
+         1136 |     Mat(int ndims, const int* sizes, int type, void* data, const size_t* steps=0);
+              |                    ~~~~~~~~~~~^~~~~
+    • candidate 20: ‘cv::Mat::Mat(cv::Size, int, void*, size_t)’
+      /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:1121:5:
+       1121 |     Mat(Size size, int type, void* data, size_t step=AUTO_STEP);
+            |     ^~~
+      • no known conversion for argument 1 from ‘int’ to ‘cv::Size’ {aka ‘cv::Size_<int>’}
+        /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:1121:14:
+         1121 |     Mat(Size size, int type, void* data, size_t step=AUTO_STEP);
+              |         ~~~~~^~~~
+    • candidate 21: ‘cv::Mat::Mat(int, int, int, void*, size_t)’
+      /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:1105:5:
+       1105 |     Mat(int rows, int cols, int type, void* data, size_t step=AUTO_STEP);
+            |     ^~~
+      • no known conversion for argument 2 from ‘cv::MatSize’ {aka ‘cv::MatShape’} to ‘int’
+        /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:1105:23:
+         1105 |     Mat(int rows, int cols, int type, void* data, size_t step=AUTO_STEP);
+              |                   ~~~~^~~~
+    • candidate 22: ‘cv::Mat::Mat(const cv::Mat&)’
+      /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:1089:5:
+       1089 |     Mat(const Mat& m);
+            |     ^~~
+      • candidate expects 1 argument, 4 provided
+    • candidate 23: ‘cv::Mat::Mat(std::initializer_list<int>, int, const cv::Scalar&)’
+      /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:1080:5:
+       1080 |     Mat(std::initializer_list<int> shape, int type, const Scalar& s);
+            |     ^~~
+      • candidate expects 3 arguments, 4 provided
+    • candidate 24: ‘cv::Mat::Mat(const cv::MatShape&, int, const cv::Scalar&)’
+      /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:1070:5:
+       1070 |     Mat(const MatShape& shape, int type, const Scalar& s);
+            |     ^~~
+      • candidate expects 3 arguments, 4 provided
+    • candidate 25: ‘cv::Mat::Mat(const std::vector<int>&, int, const cv::Scalar&)’
+      /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:1060:5:
+       1060 |     Mat(const std::vector<int>& sizes, int type, const Scalar& s);
+            |     ^~~
+      • candidate expects 3 arguments, 4 provided
+    • candidate 26: ‘cv::Mat::Mat(int, const int*, int, const cv::Scalar&)’
+      /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:1050:5:
+       1050 |     Mat(int ndims, const int* sizes, int type, const Scalar& s);
+            |     ^~~
+      • no known conversion for argument 2 from ‘cv::MatSize’ {aka ‘cv::MatShape’} to ‘const int*’
+        /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:1050:31:
+         1050 |     Mat(int ndims, const int* sizes, int type, const Scalar& s);
+              |                    ~~~~~~~~~~~^~~~~
+    • candidate 27: ‘cv::Mat::Mat(std::initializer_list<int>, int)’
+      /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:1039:5:
+       1039 |     Mat(std::initializer_list<int> shape, int type);
+            |     ^~~
+      • candidate expects 2 arguments, 4 provided
+    • candidate 28: ‘cv::Mat::Mat(const cv::MatShape&, int)’
+      /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:1032:5:
+       1032 |     Mat(const MatShape& shape, int type);
+            |     ^~~
+      • candidate expects 2 arguments, 4 provided
+    • candidate 29: ‘cv::Mat::Mat(const std::vector<int>&, int)’
+      /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:1025:5:
+       1025 |     Mat(const std::vector<int>& sizes, int type);
+            |     ^~~
+      • candidate expects 2 arguments, 4 provided
+    • candidate 30: ‘cv::Mat::Mat(int, const int*, int)’
+      /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:1018:5:
+       1018 |     Mat(int ndims, const int* sizes, int type);
+            |     ^~~
+      • candidate expects 3 arguments, 4 provided
+    • candidate 31: ‘cv::Mat::Mat(cv::Size, int, const cv::Scalar&)’
+      /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:1010:5:
+       1010 |     Mat(Size size, int type, const Scalar& s);
+            |     ^~~
+      • candidate expects 3 arguments, 4 provided
+    • candidate 32: ‘cv::Mat::Mat(int, int, int, const cv::Scalar&)’
+      /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:999:5:
+        999 |     Mat(int rows, int cols, int type, const Scalar& s);
+            |     ^~~
+      • no known conversion for argument 2 from ‘cv::MatSize’ {aka ‘cv::MatShape’} to ‘int’
+        /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:999:23:
+          999 |     Mat(int rows, int cols, int type, const Scalar& s);
+              |                   ~~~~^~~~
+    • candidate 33: ‘cv::Mat::Mat(cv::Size, int)’
+      /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:988:5:
+        988 |     Mat(Size size, int type);
+            |     ^~~
+      • candidate expects 2 arguments, 4 provided
+    • candidate 34: ‘cv::Mat::Mat(int, int, int)’
+      /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:980:5:
+        980 |     Mat(int rows, int cols, int type);
+            |     ^~~
+      • candidate expects 3 arguments, 4 provided
+    • candidate 35: ‘cv::Mat::Mat()’
+      /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:972:5:
+        972 |     Mat() CV_NOEXCEPT;
+            |     ^~~
+      • candidate expects 0 arguments, 4 provided
+/home/roman/Projects/plot-cv/qjs-opencv/js_barcode_detector.cpp: In function ‘JSValue js_barcode_detector_constructor(JSContext*, JSValue, int, JSValue*)’:
+/home/roman/Projects/plot-cv/qjs-opencv/js_barcode_detector.cpp:49:104: error: no matching function for call to ‘cv::barcode::BarcodeDetector::BarcodeDetector(const char*, const char*)’
+   49 |   new(bd) cv::barcode::BarcodeDetector(prototxt_path ? prototxt_path : "", model_path ? model_path : "");
+      |                                                                                                        ^
+  • there are 3 candidates
+In file included from /home/roman/Projects/plot-cv/qjs-opencv/js_barcode_detector.cpp:8:
+    • candidate 1: ‘cv::barcode::BarcodeDetector::BarcodeDetector(const std::string&)’
+      /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/objdetect/barcode.hpp:36:13:
+         36 |     CV_WRAP BarcodeDetector(CV_WRAP_FILE_PATH const std::string &super_resolution_model_path);
+            |             ^~~~~~~~~~~~~~~
+      • candidate expects 1 argument, 2 provided
+    • candidate 2: ‘cv::barcode::BarcodeDetector::BarcodeDetector()’
+      /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/objdetect/barcode.hpp:23:13:
+         23 |     CV_WRAP BarcodeDetector();
+            |             ^~~~~~~~~~~~~~~
+      • candidate expects 0 arguments, 2 provided
+    • candidate 3: ‘cv::barcode::BarcodeDetector::BarcodeDetector(const cv::barcode::BarcodeDetector&)’
+      /mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/objdetect/barcode.hpp:18:27:
+         18 | class CV_EXPORTS_W_SIMPLE BarcodeDetector : public cv::GraphicalCodeDetector
+            |                           ^~~~~~~~~~~~~~~
+      • candidate expects 1 argument, 2 provided
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp: In function ‘JSValue js_cv_bounding_rect(JSContext*, JSValue, int, JSValue*)’:
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp:365:14: error: ‘boundingRect’ is not a member of ‘cv’
+  365 |   rect = cv::boundingRect(input);
+      |              ^~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp: In function ‘JSValue js_cv_good_features_to_track(JSContext*, JSValue, int, JSValue*)’:
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp:637:9: error: ‘goodFeaturesToTrack’ is not a member of ‘cv’
+  637 |     cv::goodFeaturesToTrack(
+      |         ^~~~~~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp:640:9: error: ‘goodFeaturesToTrack’ is not a member of ‘cv’
+  640 |     cv::goodFeaturesToTrack(*image, *corners, maxCorners, qualityLevel, minDistance, mask ? *mask : cv::noArray(), blockSize, useHarrisDetector, k);
+      |         ^~~~~~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp: In function ‘JSValue js_cv_point_polygon_test(JSContext*, JSValue, int, JSValue*)’:
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp:1044:33: error: ‘pointPolygonTest’ is not a member of ‘cv’
+ 1044 |   return JS_NewFloat64(ctx, cv::pointPolygonTest(*contour, point, measureDist));
+      |                                 ^~~~~~~~~~~~~~~~
+[ 28%] Building CXX object CMakeFiles/quickjs-opencv.dir/js_line_iterator.cpp.o
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp: In function ‘JSValue js_imgproc_misc(JSContext*, JSValue, int, JSValue*, int)’:
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp:1281:25: error: ‘moments’ is not a member of ‘cv’; did you mean ‘Moments’?
+ 1281 |           moments = cv::moments(polygon, binaryImage);
+      |                         ^~~~~~~
+      |                         Moments
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp:1283:25: error: ‘moments’ is not a member of ‘cv’; did you mean ‘Moments’?
+ 1283 |           moments = cv::moments(src, true);
+      |                         ^~~~~~~
+      |                         Moments
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp: In function ‘JSValue js_imgproc_transform(JSContext*, JSValue, int, JSValue*, int)’:
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp:1372:29: error: ‘getAffineTransform’ is not a member of ‘cv’
+ 1372 |         JSMatData mat = cv::getAffineTransform(src, dst);
+      |                             ^~~~~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp:1390:21: error: ‘getPerspectiveTransform’ is not a member of ‘cv’; did you mean ‘perspectiveTransform’?
+ 1390 |           mat = cv::getPerspectiveTransform(src, dst, solveMethod);
+      |                     ^~~~~~~~~~~~~~~~~~~~~~~
+      |                     perspectiveTransform
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp:1393:21: error: ‘getPerspectiveTransform’ is not a member of ‘cv’; did you mean ‘perspectiveTransform’?
+ 1393 |           mat = cv::getPerspectiveTransform(src, dst, solveMethod);
+      |                     ^~~~~~~~~~~~~~~~~~~~~~~
+      |                     perspectiveTransform
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp:1423:29: error: ‘getRotationMatrix2D’ is not a member of ‘cv’
+ 1423 |         JSMatData mat = cv::getRotationMatrix2D(center, angle, scale);
+      |                             ^~~~~~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp:1435:13: error: ‘invertAffineTransform’ is not a member of ‘cv’
+ 1435 |         cv::invertAffineTransform(src, dst);
+      |             ^~~~~~~~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp:1449:13: error: ‘linearPolar’ is not a member of ‘cv’
+ 1449 |         cv::linearPolar(src, dst, center, maxRadius, flags);
+      |             ^~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp:1463:13: error: ‘logPolar’ is not a member of ‘cv’
+ 1463 |         cv::logPolar(src, dst, center, M, flags);
+      |             ^~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp: In function ‘JSValue js_imgproc_shape(JSContext*, JSValue, int, JSValue*, int)’:
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp:1938:15: error: ‘approxPolyDP’ is not a member of ‘cv’
+ 1938 |           cv::approxPolyDP(src, dst, epsilon, closed);
+      |               ^~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp:1945:15: error: ‘approxPolyDP’ is not a member of ‘cv’
+ 1945 |           cv::approxPolyDP(src, approxCurve, epsilon, closed);
+      |               ^~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp:1952:29: error: ‘arcLength’ is not a member of ‘cv’
+ 1952 |         double length = cv::arcLength(src, closed);
+      |                             ^~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp:1962:13: error: ‘boxPoints’ is not a member of ‘cv’
+ 1962 |         cv::boxPoints(*rr, *points);
+      |             ^~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp:2007:22: error: ‘contourArea’ is not a member of ‘cv’
+ 2007 |           area = cv::contourArea(mat, oriented);
+      |                      ^~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp:2010:22: error: ‘contourArea’ is not a member of ‘cv’
+ 2010 |           area = cv::contourArea(src, oriented);
+      |                      ^~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp:2014:22: error: ‘contourArea’ is not a member of ‘cv’
+ 2014 |           area = cv::contourArea(in, oriented);
+      |                      ^~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp:2031:13: error: ‘convexHull’ is not a member of ‘cv’
+ 2031 |         cv::convexHull(src, hull, clockwise, returnPoints);
+      |             ^~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp:2039:13: error: ‘convexityDefects’ is not a member of ‘cv’
+ 2039 |         cv::convexityDefects(src, convexhull, convexityDefects);
+      |             ^~~~~~~~~~~~~~~~
+[ 29%] Building CXX object CMakeFiles/quickjs-opencv.dir/js_line_segment_detector.cpp.o
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp:2054:36: error: ‘fitEllipse’ is not a member of ‘cv’; did you mean ‘ellipse’?
+ 2054 |         JSRotatedRectData rr = cv::fitEllipse(src);
+      |                                    ^~~~~~~~~~
+      |                                    ellipse
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp:2060:36: error: ‘fitEllipseAMS’ is not a member of ‘cv’
+ 2060 |         JSRotatedRectData rr = cv::fitEllipseAMS(src);
+      |                                    ^~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp:2066:36: error: ‘fitEllipseDirect’ is not a member of ‘cv’
+ 2066 |         JSRotatedRectData rr = cv::fitEllipseDirect(src);
+      |                                    ^~~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp:2079:13: error: ‘fitLine’ is not a member of ‘cv’
+ 2079 |         cv::fitLine(src, line, dist_type, param, reps, aeps);
+      |             ^~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp:2099:13: error: ‘HuMoments’ is not a member of ‘cv’; did you mean ‘Moments’?
+ 2099 |         cv::HuMoments(moments, &hu[0]);
+      |             ^~~~~~~~~
+      |             Moments
+/home/roman/Projects/plot-cv/qjs-opencv/js_calib3d.cpp: In function ‘JSValue js_calib3d_functions(JSContext*, JSValue, int, JSValue*, int)’:
+/home/roman/Projects/plot-cv/qjs-opencv/js_calib3d.cpp:72:27: error: ‘CALIB_CB_ADAPTIVE_THRESH’ is not a member of ‘cv’
+   72 |       int32_t flags = cv::CALIB_CB_ADAPTIVE_THRESH | cv::CALIB_CB_NORMALIZE_IMAGE;
+      |                           ^~~~~~~~~~~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp:2117:38: error: ‘intersectConvexConvex’ is not a member of ‘cv’
+ 2117 |         ret = JS_NewFloat64(ctx, cv::intersectConvexConvex(src, p2, p12, handleNested));
+      |                                      ^~~~~~~~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp:2122:35: error: ‘isContourConvex’ is not a member of ‘cv’
+ 2122 |         ret = JS_NewBool(ctx, cv::isContourConvex(src));
+      |                                   ^~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp:2134:38: error: ‘matchShapes’ is not a member of ‘cv’
+ 2134 |         ret = JS_NewFloat64(ctx, cv::matchShapes(src, c2, method, parameter));
+      |                                      ^~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp:2139:44: error: ‘minAreaRect’ is not a member of ‘cv’
+ 2139 |         ret = js_rotated_rect_new(ctx, cv::minAreaRect(src));
+      |                                            ^~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_calib3d.cpp:72:58: error: ‘CALIB_CB_NORMALIZE_IMAGE’ is not a member of ‘cv’
+   72 |       int32_t flags = cv::CALIB_CB_ADAPTIVE_THRESH | cv::CALIB_CB_NORMALIZE_IMAGE;
+      |                                                          ^~~~~~~~~~~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp:2146:13: error: ‘minEnclosingCircle’ is not a member of ‘cv’
+ 2146 |         cv::minEnclosingCircle(src, center, radius);
+      |             ^~~~~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp:2166:38: error: ‘minEnclosingTriangle’ is not a member of ‘cv’
+ 2166 |         ret = JS_NewFloat64(ctx, cv::minEnclosingTriangle(src, triangle));
+      |                                      ^~~~~~~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_imgproc.cpp:2180:36: error: ‘rotatedRectangleIntersection’ is not a member of ‘cv’
+ 2180 |         ret = JS_NewInt32(ctx, cv::rotatedRectangleIntersection(*r1, *r2, intersectingRegion));
+      |                                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_calib3d.cpp:77:25: error: ‘findChessboardCorners’ is not a member of ‘cv’
+   77 |       BOOL result = cv::findChessboardCorners(image, pattern_size, corners, flags);
+      |                         ^~~~~~~~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_calib3d.cpp:90:27: error: ‘CALIB_CB_EXHAUSTIVE’ is not a member of ‘cv’
+   90 |       int32_t flags = cv::CALIB_CB_EXHAUSTIVE | cv::CALIB_CB_NORMALIZE_IMAGE;
+      |                           ^~~~~~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_calib3d.cpp:90:53: error: ‘CALIB_CB_NORMALIZE_IMAGE’ is not a member of ‘cv’
+   90 |       int32_t flags = cv::CALIB_CB_EXHAUSTIVE | cv::CALIB_CB_NORMALIZE_IMAGE;
+      |                                                     ^~~~~~~~~~~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_calib3d.cpp:99:26: error: ‘findChessboardCornersSB’ is not a member of ‘cv’
+   99 |           argc > 3 ? cv::findChessboardCornersSB(image, pattern_size, corners, flags, meta) : cv::findChessboardCornersSB(image, pattern_size, corners);
+      |                          ^~~~~~~~~~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_calib3d.cpp:99:99: error: ‘findChessboardCornersSB’ is not a member of ‘cv’
+   99 |           argc > 3 ? cv::findChessboardCornersSB(image, pattern_size, corners, flags, meta) : cv::findChessboardCornersSB(image, pattern_size, corners);
+      |                                                                                                   ^~~~~~~~~~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_calib3d.cpp:235:11: error: ‘drawChessboardCorners’ is not a member of ‘cv’
+  235 |       cv::drawChessboardCorners(image, patternSize, corners, patternWasFound);
+      |           ^~~~~~~~~~~~~~~~~~~~~
+In file included from /home/roman/Projects/plot-cv/qjs-opencv/include/js_alloc.hpp:4,
+                 from /home/roman/Projects/plot-cv/qjs-opencv/js_calib3d.cpp:1:
+/home/roman/Projects/plot-cv/qjs-opencv/js_calib3d.cpp: At global scope:
+/home/roman/Projects/plot-cv/qjs-opencv/js_calib3d.cpp:252:55: error: ‘CALIB_CB_ADAPTIVE_THRESH’ is not a member of ‘cv’
+  252 |     JS_PROP_INT32_DEF("CALIB_CB_ADAPTIVE_THRESH", cv::CALIB_CB_ADAPTIVE_THRESH, 0),
+      |                                                       ^~~~~~~~~~~~~~~~~~~~~~~~
+/usr/local/include/quickjs/quickjs.h:993:93: note: in definition of macro ‘JS_PROP_INT32_DEF’
+  993 |     .name = n, .prop_flags = flags, .def_type = JS_DEF_PROP_INT32, .magic = 0, .u = {.i32 = val } \
+      |                                                                                             ^~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_calib3d.cpp:253:55: error: ‘CALIB_CB_NORMALIZE_IMAGE’ is not a member of ‘cv’
+  253 |     JS_PROP_INT32_DEF("CALIB_CB_NORMALIZE_IMAGE", cv::CALIB_CB_NORMALIZE_IMAGE, 0),
+      |                                                       ^~~~~~~~~~~~~~~~~~~~~~~~
+/usr/local/include/quickjs/quickjs.h:993:93: note: in definition of macro ‘JS_PROP_INT32_DEF’
+  993 |     .name = n, .prop_flags = flags, .def_type = JS_DEF_PROP_INT32, .magic = 0, .u = {.i32 = val } \
+      |                                                                                             ^~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_calib3d.cpp:254:52: error: ‘CALIB_CB_FILTER_QUADS’ is not a member of ‘cv’
+  254 |     JS_PROP_INT32_DEF("CALIB_CB_FILTER_QUADS", cv::CALIB_CB_FILTER_QUADS, 0),
+      |                                                    ^~~~~~~~~~~~~~~~~~~~~
+/usr/local/include/quickjs/quickjs.h:993:93: note: in definition of macro ‘JS_PROP_INT32_DEF’
+  993 |     .name = n, .prop_flags = flags, .def_type = JS_DEF_PROP_INT32, .magic = 0, .u = {.i32 = val } \
+      |                                                                                             ^~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_calib3d.cpp:255:50: error: ‘CALIB_CB_FAST_CHECK’ is not a member of ‘cv’
+  255 |     JS_PROP_INT32_DEF("CALIB_CB_FAST_CHECK", cv::CALIB_CB_FAST_CHECK, 0),
+      |                                                  ^~~~~~~~~~~~~~~~~~~
+/usr/local/include/quickjs/quickjs.h:993:93: note: in definition of macro ‘JS_PROP_INT32_DEF’
+  993 |     .name = n, .prop_flags = flags, .def_type = JS_DEF_PROP_INT32, .magic = 0, .u = {.i32 = val } \
+      |                                                                                             ^~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_calib3d.cpp:256:50: error: ‘CALIB_CB_EXHAUSTIVE’ is not a member of ‘cv’
+  256 |     JS_PROP_INT32_DEF("CALIB_CB_EXHAUSTIVE", cv::CALIB_CB_EXHAUSTIVE, 0),
+      |                                                  ^~~~~~~~~~~~~~~~~~~
+/usr/local/include/quickjs/quickjs.h:993:93: note: in definition of macro ‘JS_PROP_INT32_DEF’
+  993 |     .name = n, .prop_flags = flags, .def_type = JS_DEF_PROP_INT32, .magic = 0, .u = {.i32 = val } \
+      |                                                                                             ^~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_calib3d.cpp:257:48: error: ‘CALIB_CB_ACCURACY’ is not a member of ‘cv’
+  257 |     JS_PROP_INT32_DEF("CALIB_CB_ACCURACY", cv::CALIB_CB_ACCURACY, 0),
+      |                                                ^~~~~~~~~~~~~~~~~
+/usr/local/include/quickjs/quickjs.h:993:93: note: in definition of macro ‘JS_PROP_INT32_DEF’
+  993 |     .name = n, .prop_flags = flags, .def_type = JS_DEF_PROP_INT32, .magic = 0, .u = {.i32 = val } \
+      |                                                                                             ^~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_calib3d.cpp:258:46: error: ‘CALIB_CB_LARGER’ is not a member of ‘cv’
+  258 |     JS_PROP_INT32_DEF("CALIB_CB_LARGER", cv::CALIB_CB_LARGER, 0),
+      |                                              ^~~~~~~~~~~~~~~
+/usr/local/include/quickjs/quickjs.h:993:93: note: in definition of macro ‘JS_PROP_INT32_DEF’
+  993 |     .name = n, .prop_flags = flags, .def_type = JS_DEF_PROP_INT32, .magic = 0, .u = {.i32 = val } \
+      |                                                                                             ^~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_calib3d.cpp:259:46: error: ‘CALIB_CB_MARKER’ is not a member of ‘cv’
+  259 |     JS_PROP_INT32_DEF("CALIB_CB_MARKER", cv::CALIB_CB_MARKER, 0),
+      |                                              ^~~~~~~~~~~~~~~
+/usr/local/include/quickjs/quickjs.h:993:93: note: in definition of macro ‘JS_PROP_INT32_DEF’
+  993 |     .name = n, .prop_flags = flags, .def_type = JS_DEF_PROP_INT32, .magic = 0, .u = {.i32 = val } \
+      |                                                                                             ^~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp: In function ‘JSValue js_contour_approxpolydp(JSContext*, JSValue, int, JSValue*)’:
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp:192:7: error: ‘approxPolyDP’ is not a member of ‘cv’
+  192 |   cv::approxPolyDP(contour, approxCurve, epsilon, closed);
+      |       ^~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp: In function ‘JSValue js_contour_arclength(JSContext*, JSValue, int, JSValue*)’:
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp:222:13: error: ‘arcLength’ is not a member of ‘cv’
+  222 |   len = cv::arcLength(contour, closed);
+      |             ^~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp: In function ‘JSValue js_contour_area(JSContext*, JSValue)’:
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp:238:14: error: ‘contourArea’ is not a member of ‘cv’
+  238 |   area = cv::contourArea(contour);
+      |              ^~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp: In function ‘JSValue js_contour_center(JSContext*, JSValue)’:
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp:286:24: error: ‘moments’ is not a member of ‘cv’; did you mean ‘Moments’?
+  286 |   cv::Moments mu = cv::moments(points);
+      |                        ^~~~~~~
+      |                        Moments
+/home/roman/Projects/plot-cv/qjs-opencv/js_feature2d.cpp:39:11: error: ‘AgastFeatureDetector’ has not been declared in ‘cv’
+   39 | using cv::AgastFeatureDetector;
+      |           ^~~~~~~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_feature2d.cpp:40:11: error: ‘AKAZE’ has not been declared in ‘cv’
+   40 | using cv::AKAZE;
+      |           ^~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_feature2d.cpp:41:11: error: ‘BRISK’ has not been declared in ‘cv’
+   41 | using cv::BRISK;
+      |           ^~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_feature2d.cpp:44:11: error: ‘KAZE’ has not been declared in ‘cv’
+   44 | using cv::KAZE;
+      |           ^~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp: In function ‘JSValue js_contour_convexhull(JSContext*, JSValue, int, JSValue*)’:
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp:313:9: error: ‘convexHull’ is not a member of ‘cv’
+  313 |     cv::convexHull(contour, hull, clockwise, true);
+      |         ^~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp:315:9: error: ‘convexHull’ is not a member of ‘cv’
+  315 |     cv::convexHull(contour, hullIndices, clockwise, false);
+      |         ^~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp: In function ‘JSValue js_contour_convexitydefects(JSContext*, JSValue, int, JSValue*)’:
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp:349:7: error: ‘convexityDefects’ is not a member of ‘cv’
+  349 |   cv::convexityDefects(*s, hullIndices, defects);
+      |       ^~~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp: In function ‘JSValue js_contour_fitellipse(JSContext*, JSValue, int, JSValue*)’:
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp:367:12: error: ‘fitEllipse’ is not a member of ‘cv’; did you mean ‘ellipse’?
+  367 |   rr = cv::fitEllipse(contour);
+      |            ^~~~~~~~~~
+      |            ellipse
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp: In function ‘JSValue js_contour_fitline(JSContext*, JSValue, int, JSValue*)’:
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp:376:26: error: ‘DIST_FAIR’ is not a member of ‘cv’
+  376 |   int64_t distType = cv::DIST_FAIR;
+      |                          ^~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp:401:7: error: ‘fitLine’ is not a member of ‘cv’
+  401 |   cv::fitLine(*v, line, distType, param, reps, aeps);
+      |       ^~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp: In function ‘JSValue js_contour_intersectconvex(JSContext*, JSValue, int, JSValue*)’:
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp:471:7: error: ‘intersectConvexConvex’ is not a member of ‘cv’
+  471 |   cv::intersectConvexConvex(a, b, intersection, handleNested);
+      |       ^~~~~~~~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp: In function ‘JSValue js_contour_isconvex(JSContext*, JSValue, int, JSValue*)’:
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp:489:18: error: ‘isContourConvex’ is not a member of ‘cv’
+  489 |   isConvex = cv::isContourConvex(contour);
+      |                  ^~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp: In function ‘JSValue js_contour_minarearect(JSContext*, JSValue, int, JSValue*)’:
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp:525:12: error: ‘minAreaRect’ is not a member of ‘cv’
+  525 |   rr = cv::minAreaRect(contour);
+      |            ^~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp: In function ‘JSValue js_contour_minenclosingcircle(JSContext*, JSValue, int, JSValue*)’:
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp:547:7: error: ‘minEnclosingCircle’ is not a member of ‘cv’
+  547 |   cv::minEnclosingCircle(contour, rr.center, radius);
+      |       ^~~~~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp: In function ‘JSValue js_contour_minenclosingtriangle(JSContext*, JSValue, int, JSValue*)’:
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp:573:7: error: ‘minEnclosingTriangle’ is not a member of ‘cv’
+  573 |   cv::minEnclosingTriangle(contour, triangle);
+      |       ^~~~~~~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp: In function ‘JSValue js_contour_pointpolygontest(JSContext*, JSValue, int, JSValue*)’:
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp:605:14: error: ‘pointPolygonTest’ is not a member of ‘cv’
+  605 |   dist = cv::pointPolygonTest(contour, pt, measureDist);
+      |              ^~~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp: In function ‘JSValue js_contour_rotatedrectangleintersection(JSContext*, JSValue, int, JSValue*)’:
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp:1132:7: error: ‘rotatedRectangleIntersection’ is not a member of ‘cv’
+ 1132 |   cv::rotatedRectangleIntersection(rra, rrb, intersection);
+      |       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp: In function ‘JSValue js_contour_get(JSContext*, JSValue, int)’:
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp:1416:18: error: ‘boundingRect’ is not a member of ‘cv’
+ 1416 |       rect = cv::boundingRect(points);
+      |                  ^~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp:1424:24: error: ‘contourArea’ is not a member of ‘cv’
+ 1424 |       float area = cv::contourArea(points);
+      |                        ^~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp:1425:36: error: ‘boundingRect’ is not a member of ‘cv’
+ 1425 |       JSRectData<float> rect = cv::boundingRect(points);
+      |                                    ^~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp:1434:24: error: ‘contourArea’ is not a member of ‘cv’
+ 1434 |       float area = cv::contourArea(points);
+      |                        ^~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp:1435:11: error: ‘convexHull’ is not a member of ‘cv’
+ 1435 |       cv::convexHull(points, hull);
+      |           ^~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp:1436:28: error: ‘contourArea’ is not a member of ‘cv’
+ 1436 |       float hullArea = cv::contourArea(hull);
+      |                            ^~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp:1438:43: error: ‘contourArea’ is not a member of ‘cv’
+ 1438 |       ret = JS_NewFloat64(ctx, area / cv::contourArea(hull));
+      |                                           ^~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp:1445:24: error: ‘contourArea’ is not a member of ‘cv’
+ 1445 |       float area = cv::contourArea(points);
+      |                        ^~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_contour.cpp:1456:36: error: ‘fitEllipse’ is not a member of ‘cv’; did you mean ‘ellipse’?
+ 1456 |         cv::RotatedRect rect = cv::fitEllipse(points);
+      |                                    ^~~~~~~~~~
+      |                                    ellipse
+/home/roman/Projects/plot-cv/qjs-opencv/js_dnn.cpp: In function ‘JSValue js_net_method(JSContext*, JSValue, int, JSValue*, int)’:
+/home/roman/Projects/plot-cv/qjs-opencv/js_dnn.cpp:336:13: error: ‘using JSNetData = class cv::dnn::dnn5_v20260605::Net’ {aka ‘class cv::dnn::dnn5_v20260605::Net’} has no member named ‘getInputDetails’
+  336 |         dn->getInputDetails(scales, zeropoints);
+      |             ^~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_dnn.cpp:400:13: error: ‘using JSNetData = class cv::dnn::dnn5_v20260605::Net’ {aka ‘class cv::dnn::dnn5_v20260605::Net’} has no member named ‘getOutputDetails’
+  400 |         dn->getOutputDetails(scales, zeropoints);
+      |             ^~~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_dnn.cpp:452:35: error: ‘using JSNetData = class cv::dnn::dnn5_v20260605::Net’ {aka ‘class cv::dnn::dnn5_v20260605::Net’} has no member named ‘quantize’
+  452 |         ret = js_net_new(ctx, dn->quantize(calibData, inputsDtype, outputsDtype, perChannel));
+      |                                   ^~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_dnn.cpp:473:13: error: ‘using JSNetData = class cv::dnn::dnn5_v20260605::Net’ {aka ‘class cv::dnn::dnn5_v20260605::Net’} has no member named ‘setHalideScheduler’
+  473 |         dn->setHalideScheduler(scheduler);
+      |             ^~~~~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_dnn.cpp: In function ‘JSValue js_imageblob2params_constructor(JSContext*, JSValue, int, JSValue*)’:
+/home/roman/Projects/plot-cv/qjs-opencv/js_dnn.cpp:573:52: error: ‘DNN_LAYOUT_NCHW’ is not a member of ‘cv::dnn’; did you mean ‘cv::DNN_LAYOUT_NCHW’?
+  573 |     int32_t ddepth = CV_32F, datalayout = cv::dnn::DNN_LAYOUT_NCHW, mode = cv::dnn::DNN_PMODE_NULL;
+      |                                                    ^~~~~~~~~~~~~~~
+In file included from /home/roman/Projects/plot-cv/qjs-opencv/include/util.hpp:5,
+                 from /home/roman/Projects/plot-cv/qjs-opencv/include/jsbindings.hpp:4,
+                 from /home/roman/Projects/plot-cv/qjs-opencv/js_cv.hpp:4,
+                 from /home/roman/Projects/plot-cv/qjs-opencv/js_dnn.cpp:1:
+/mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:88:5: note: ‘cv::DNN_LAYOUT_NCHW’ declared here
+   88 |     DNN_LAYOUT_NCHW = 2,      //!< OpenCV data layout for 4D data.
+      |     ^~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_dnn.cpp:588:33: error: ‘mode’ was not declared in this scope; did you mean ‘modf’?
+  588 |       js_value_to(ctx, argv[6], mode);
+      |                                 ^~~~
+      |                                 modf
+/home/roman/Projects/plot-cv/qjs-opencv/js_dnn.cpp:592:86: error: ‘DataLayout’ is not a member of ‘cv::dnn’; did you mean ‘cv::DataLayout’?
+  592 |     new(dn) JSImage2BlobParamsData(scalefactor, size, mean, swapRB, ddepth, cv::dnn::DataLayout(datalayout), cv::dnn::ImagePaddingMode(mode), borderValue);
+      |                                                                                      ^~~~~~~~~~
+/mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:74:6: note: ‘cv::DataLayout’ declared here
+   74 | enum DataLayout
+      |      ^~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_dnn.cpp:592:136: error: ‘mode’ was not declared in this scope; did you mean ‘modf’?
+  592 |     new(dn) JSImage2BlobParamsData(scalefactor, size, mean, swapRB, ddepth, cv::dnn::DataLayout(datalayout), cv::dnn::ImagePaddingMode(mode), borderValue);
+      |                                                                                                                                        ^~~~
+      |                                                                                                                                        modf
+/home/roman/Projects/plot-cv/qjs-opencv/js_dnn.cpp: In function ‘JSValue js_imageblob2params_set(JSContext*, JSValue, JSValue, int)’:
+/home/roman/Projects/plot-cv/qjs-opencv/js_dnn.cpp:709:35: error: ‘DataLayout’ is not a member of ‘cv::dnn’; did you mean ‘cv::DataLayout’?
+  709 |       ib2p->datalayout = cv::dnn::DataLayout(datalayout);
+      |                                   ^~~~~~~~~~
+/mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:74:6: note: ‘cv::DataLayout’ declared here
+   74 | enum DataLayout
+      |      ^~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_dnn.cpp: In function ‘JSValue js_dnn_func(JSContext*, JSValue, int, JSValue*, int)’:
+/home/roman/Projects/plot-cv/qjs-opencv/js_dnn.cpp:1286:42: error: ‘readNetFromCaffe’ is not a member of ‘cv::dnn’
+ 1286 |           ret = js_net_new(ctx, cv::dnn::readNetFromCaffe(reinterpret_cast<const char*>(ptr), size, reinterpret_cast<const char*>(mptr), msize));
+      |                                          ^~~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_dnn.cpp:1293:42: error: ‘readNetFromCaffe’ is not a member of ‘cv::dnn’
+ 1293 |           ret = js_net_new(ctx, cv::dnn::readNetFromCaffe(prototxt, caffeeModel));
+      |                                          ^~~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_dnn.cpp:1329:42: error: ‘readNetFromDarknet’ is not a member of ‘cv::dnn’
+ 1329 |           ret = js_net_new(ctx, cv::dnn::readNetFromDarknet(reinterpret_cast<const char*>(ptr), size, reinterpret_cast<const char*>(mptr), msize));
+      |                                          ^~~~~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_dnn.cpp:1336:42: error: ‘readNetFromDarknet’ is not a member of ‘cv::dnn’
+ 1336 |           ret = js_net_new(ctx, cv::dnn::readNetFromDarknet(prototxt, darknetModel));
+      |                                          ^~~~~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_dnn.cpp:1493:40: error: ‘readNetFromTorch’ is not a member of ‘cv::dnn’
+ 1493 |         ret = js_net_new(ctx, cv::dnn::readNetFromTorch(model, isBinary, evaluate));
+      |                                        ^~~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_dnn.cpp:1515:43: error: ‘readTorchBlob’ is not a member of ‘cv::dnn’
+ 1515 |         ret = js_value_from(ctx, cv::dnn::readTorchBlob(filename, isBinary));
+      |                                           ^~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_dnn.cpp:1528:18: error: ‘shrinkCaffeModel’ is not a member of ‘cv::dnn’
+ 1528 |         cv::dnn::shrinkCaffeModel(src, dst, layersTypes);
+      |                  ^~~~~~~~~~~~~~~~
+In file included from /home/roman/Projects/plot-cv/qjs-opencv/include/util.hpp:9:
+/home/roman/Projects/plot-cv/qjs-opencv/js_dnn.cpp: At global scope:
+/home/roman/Projects/plot-cv/qjs-opencv/js_dnn.cpp:1621:54: error: ‘DNN_BACKEND_HALIDE’ is not a member of ‘cv::dnn’
+ 1621 |     JS_PROP_INT32_DEF("DNN_BACKEND_HALIDE", cv::dnn::DNN_BACKEND_HALIDE, JS_PROP_ENUMERABLE),
+      |                                                      ^~~~~~~~~~~~~~~~~~
+/usr/local/include/quickjs/quickjs.h:993:93: note: in definition of macro ‘JS_PROP_INT32_DEF’
+  993 |     .name = n, .prop_flags = flags, .def_type = JS_DEF_PROP_INT32, .magic = 0, .u = {.i32 = val } \
+      |                                                                                             ^~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_dnn.cpp:1640:54: error: ‘DNN_LAYOUT_UNKNOWN’ is not a member of ‘cv::dnn’; did you mean ‘cv::DNN_LAYOUT_UNKNOWN’?
+ 1640 |     JS_PROP_INT32_DEF("DNN_LAYOUT_UNKNOWN", cv::dnn::DNN_LAYOUT_UNKNOWN, JS_PROP_ENUMERABLE),
+      |                                                      ^~~~~~~~~~~~~~~~~~
+/usr/local/include/quickjs/quickjs.h:993:93: note: in definition of macro ‘JS_PROP_INT32_DEF’
+  993 |     .name = n, .prop_flags = flags, .def_type = JS_DEF_PROP_INT32, .magic = 0, .u = {.i32 = val } \
+      |                                                                                             ^~~
+/mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:86:5: note: ‘cv::DNN_LAYOUT_UNKNOWN’ declared here
+   86 |     DNN_LAYOUT_UNKNOWN = 0,
+      |     ^~~~~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_dnn.cpp:1641:49: error: ‘DNN_LAYOUT_ND’ is not a member of ‘cv::dnn’; did you mean ‘cv::DNN_LAYOUT_ND’?
+ 1641 |     JS_PROP_INT32_DEF("DNN_LAYOUT_ND", cv::dnn::DNN_LAYOUT_ND, JS_PROP_ENUMERABLE),
+      |                                                 ^~~~~~~~~~~~~
+/usr/local/include/quickjs/quickjs.h:993:93: note: in definition of macro ‘JS_PROP_INT32_DEF’
+  993 |     .name = n, .prop_flags = flags, .def_type = JS_DEF_PROP_INT32, .magic = 0, .u = {.i32 = val } \
+      |                                                                                             ^~~
+/mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:87:5: note: ‘cv::DNN_LAYOUT_ND’ declared here
+   87 |     DNN_LAYOUT_ND = 1,        //!< OpenCV data layout for 2D data.
+      |     ^~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_dnn.cpp:1642:51: error: ‘DNN_LAYOUT_NCHW’ is not a member of ‘cv::dnn’; did you mean ‘cv::DNN_LAYOUT_NCHW’?
+ 1642 |     JS_PROP_INT32_DEF("DNN_LAYOUT_NCHW", cv::dnn::DNN_LAYOUT_NCHW, JS_PROP_ENUMERABLE),
+      |                                                   ^~~~~~~~~~~~~~~
+/usr/local/include/quickjs/quickjs.h:993:93: note: in definition of macro ‘JS_PROP_INT32_DEF’
+  993 |     .name = n, .prop_flags = flags, .def_type = JS_DEF_PROP_INT32, .magic = 0, .u = {.i32 = val } \
+      |                                                                                             ^~~
+/mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:88:5: note: ‘cv::DNN_LAYOUT_NCHW’ declared here
+   88 |     DNN_LAYOUT_NCHW = 2,      //!< OpenCV data layout for 4D data.
+      |     ^~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_dnn.cpp:1643:52: error: ‘DNN_LAYOUT_NCDHW’ is not a member of ‘cv::dnn’; did you mean ‘cv::DNN_LAYOUT_NCDHW’?
+ 1643 |     JS_PROP_INT32_DEF("DNN_LAYOUT_NCDHW", cv::dnn::DNN_LAYOUT_NCDHW, JS_PROP_ENUMERABLE),
+      |                                                    ^~~~~~~~~~~~~~~~
+/usr/local/include/quickjs/quickjs.h:993:93: note: in definition of macro ‘JS_PROP_INT32_DEF’
+  993 |     .name = n, .prop_flags = flags, .def_type = JS_DEF_PROP_INT32, .magic = 0, .u = {.i32 = val } \
+      |                                                                                             ^~~
+/mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:89:5: note: ‘cv::DNN_LAYOUT_NCDHW’ declared here
+   89 |     DNN_LAYOUT_NCDHW = 3,     //!< OpenCV data layout for 5D data.
+      |     ^~~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_dnn.cpp:1644:51: error: ‘DNN_LAYOUT_NHWC’ is not a member of ‘cv::dnn’; did you mean ‘cv::DNN_LAYOUT_NHWC’?
+ 1644 |     JS_PROP_INT32_DEF("DNN_LAYOUT_NHWC", cv::dnn::DNN_LAYOUT_NHWC, JS_PROP_ENUMERABLE),
+      |                                                   ^~~~~~~~~~~~~~~
+/usr/local/include/quickjs/quickjs.h:993:93: note: in definition of macro ‘JS_PROP_INT32_DEF’
+  993 |     .name = n, .prop_flags = flags, .def_type = JS_DEF_PROP_INT32, .magic = 0, .u = {.i32 = val } \
+      |                                                                                             ^~~
+/mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:90:5: note: ‘cv::DNN_LAYOUT_NHWC’ declared here
+   90 |     DNN_LAYOUT_NHWC = 4,      //!< Tensorflow-like data layout for 4D data.
+      |     ^~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_dnn.cpp:1645:52: error: ‘DNN_LAYOUT_NDHWC’ is not a member of ‘cv::dnn’; did you mean ‘cv::DNN_LAYOUT_NDHWC’?
+ 1645 |     JS_PROP_INT32_DEF("DNN_LAYOUT_NDHWC", cv::dnn::DNN_LAYOUT_NDHWC, JS_PROP_ENUMERABLE),
+      |                                                    ^~~~~~~~~~~~~~~~
+/usr/local/include/quickjs/quickjs.h:993:93: note: in definition of macro ‘JS_PROP_INT32_DEF’
+  993 |     .name = n, .prop_flags = flags, .def_type = JS_DEF_PROP_INT32, .magic = 0, .u = {.i32 = val } \
+      |                                                                                             ^~~
+/mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:91:5: note: ‘cv::DNN_LAYOUT_NDHWC’ declared here
+   91 |     DNN_LAYOUT_NDHWC = 5,     //!< Tensorflow-like data layout for 5D data.
+      |     ^~~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_dnn.cpp:1646:53: error: ‘DNN_LAYOUT_PLANAR’ is not a member of ‘cv::dnn’; did you mean ‘cv::DNN_LAYOUT_PLANAR’?
+ 1646 |     JS_PROP_INT32_DEF("DNN_LAYOUT_PLANAR", cv::dnn::DNN_LAYOUT_PLANAR, JS_PROP_ENUMERABLE),
+      |                                                     ^~~~~~~~~~~~~~~~~
+/usr/local/include/quickjs/quickjs.h:993:93: note: in definition of macro ‘JS_PROP_INT32_DEF’
+  993 |     .name = n, .prop_flags = flags, .def_type = JS_DEF_PROP_INT32, .magic = 0, .u = {.i32 = val } \
+      |                                                                                             ^~~
+/mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/core/mat.hpp:92:5: note: ‘cv::DNN_LAYOUT_PLANAR’ declared here
+   92 |     DNN_LAYOUT_PLANAR = 6,    //!< Tensorflow-like data layout, it should only be used at tf or tflite model parsing.
+      |     ^~~~~~~~~~~~~~~~~
+[ 31%] Building CXX object CMakeFiles/quickjs-opencv.dir/js_mat.cpp.o
+[ 33%] Building CXX object CMakeFiles/quickjs-opencv.dir/js_matx.cpp.o
+[ 35%] Building CXX object CMakeFiles/quickjs-opencv.dir/js_opengl.cpp.o
+[ 36%] Building CXX object CMakeFiles/quickjs-opencv.dir/js_photo.cpp.o
+[ 38%] Building CXX object CMakeFiles/quickjs-opencv.dir/js_point.cpp.o
+[ 40%] Building CXX object CMakeFiles/quickjs-opencv.dir/js_point_iterator.cpp.o
+[ 42%] Building CXX object CMakeFiles/quickjs-opencv.dir/js_raspi_cam.cpp.o
+/home/roman/Projects/plot-cv/qjs-opencv/js_mat.cpp: In function ‘std::vector<int> js_mat_sizes(const JSMatData&)’:
+/home/roman/Projects/plot-cv/qjs-opencv/js_mat.cpp:108:22: error: expression cannot be used as a function
+  108 |   } else if(size.dims() > 0)
+      |             ~~~~~~~~~^~
+/home/roman/Projects/plot-cv/qjs-opencv/js_mat.cpp:109:40: error: expression cannot be used as a function
+  109 |     std::copy(&size[0], &size[size.dims()], std::back_inserter(sizes));
+      |                               ~~~~~~~~~^~
+[ 43%] Building CXX object CMakeFiles/quickjs-opencv.dir/js_rect.cpp.o
+/home/roman/Projects/plot-cv/qjs-opencv/js_mat.cpp: In function ‘JSValue js_mat_size_value(JSContext*, cv::Mat*)’:
+/home/roman/Projects/plot-cv/qjs-opencv/js_mat.cpp:1206:36: error: expression cannot be used as a function
+ 1206 |     for(int i = 0; i < m->size.dims(); ++i)
+      |                        ~~~~~~~~~~~~^~
+/home/roman/Projects/plot-cv/qjs-opencv/js_mat.cpp:1212:36: error: expression cannot be used as a function
+ 1212 |     for(int i = 0; i < m->size.dims(); ++i)
+      |                        ~~~~~~~~~~~~^~
+/home/roman/Projects/plot-cv/qjs-opencv/js_mat.cpp: In function ‘JSValue js_mat_size_box(JSContext*, JSValue, cv::Mat*)’:
+/home/roman/Projects/plot-cv/qjs-opencv/js_mat.cpp:1245:34: error: expression cannot be used as a function
+ 1245 |   for(int i = 0; i < m->size.dims(); ++i)
+      |                      ~~~~~~~~~~~~^~
+/home/roman/Projects/plot-cv/qjs-opencv/js_mat.cpp: In function ‘JSValue js_mat_get_props(JSContext*, JSValue, int)’:
+/home/roman/Projects/plot-cv/qjs-opencv/js_mat.cpp:1311:38: error: expression cannot be used as a function
+ 1311 |       for(int i = 0; i < m->size.dims(); ++i)
+      |                          ~~~~~~~~~~~~^~
+/home/roman/Projects/plot-cv/qjs-opencv/js_mat.cpp: In function ‘JSValue js_mat_getrotationmatrix2d(JSContext*, JSValue, int, JSValue*)’:
+/home/roman/Projects/plot-cv/qjs-opencv/js_mat.cpp:1459:11: error: ‘getRotationMatrix2D’ is not a member of ‘cv’
+ 1459 |   m = cv::getRotationMatrix2D(s, angle, scale);
+      |           ^~~~~~~~~~~~~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_line_segment_detector.cpp: In function ‘JSValue js_line_segment_detector_new(JSContext*, JSValue, int, double, double, double, double, double, double, int)’:
+/home/roman/Projects/plot-cv/qjs-opencv/js_line_segment_detector.cpp:44:39: error: invalid conversion from ‘int’ to ‘cv::LineSegmentDetectorModes’ [-fpermissive]
+   44 |   ptr = cv::createLineSegmentDetector(refine, scale, sigma_scale, quant, ang_th, log_eps, density_th, n_bins);
+      |                                       ^~~~~~
+      |                                       |
+      |                                       int
+In file included from /home/roman/Projects/plot-cv/qjs-opencv/include/../include/util.hpp:19,
+                 from /home/roman/Projects/plot-cv/qjs-opencv/include/../include/jsbindings.hpp:4,
+                 from /home/roman/Projects/plot-cv/qjs-opencv/include/../js_mat.hpp:4,
+                 from /home/roman/Projects/plot-cv/qjs-opencv/include/js_array.hpp:5,
+                 from /home/roman/Projects/plot-cv/qjs-opencv/js_line_segment_detector.cpp:2:
+/mnt/data/opt/opencv-5.0.0-x86_64/include/opencv5/opencv2/imgproc.hpp:1148:30: note: initializing argument 1 of ‘cv::Ptr<cv::LineSegmentDetector> cv::createLineSegmentDetector(LineSegmentDetectorModes, double, double, double, double, double, double, int)’
+ 1148 |     LineSegmentDetectorModes refine = LSD_REFINE_STD, double scale = 0.8,
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~
+[ 45%] Building CXX object CMakeFiles/quickjs-opencv.dir/js_rotated_rect.cpp.o
+[ 47%] Building CXX object CMakeFiles/quickjs-opencv.dir/js_size.cpp.o
+[ 49%] Building CXX object CMakeFiles/quickjs-opencv.dir/js_slice_iterator.cpp.o
+[ 50%] Building CXX object CMakeFiles/quickjs-opencv.dir/js_subdiv2d.cpp.o
+[ 52%] Building CXX object CMakeFiles/quickjs-opencv.dir/js_umat.cpp.o
+[ 54%] Building CXX object CMakeFiles/quickjs-opencv.dir/js_utility.cpp.o
+[ 56%] Building CXX object CMakeFiles/quickjs-opencv.dir/js_video_capture.cpp.o
+[ 57%] Building CXX object CMakeFiles/quickjs-opencv.dir/js_video_writer.cpp.o
+[ 59%] Building CXX object CMakeFiles/quickjs-opencv.dir/js_white_balancer.cpp.o
+/home/roman/Projects/plot-cv/qjs-opencv/js_umat.cpp: In function ‘std::vector<int> js_umat_sizes(const JSUMatData&)’:
+/home/roman/Projects/plot-cv/qjs-opencv/js_umat.cpp:97:40: error: expression cannot be used as a function
+   97 |     std::copy(&size[0], &size[size.dims()], std::back_inserter(sizes));
+      |                               ~~~~~~~~~^~
+/home/roman/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp: In function ‘JSValue js_subdiv2d_new(JSContext*, JSRectData<int>*)’:
+/home/roman/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp:25:7: error: ‘Subdiv2D’ is not a member of ‘cv’
+   25 |   cv::Subdiv2D* s;
+      |       ^~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp:25:17: error: ‘s’ was not declared in this scope
+   25 |   cv::Subdiv2D* s;
+      |                 ^
+/home/roman/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp:27:23: error: ‘Subdiv2D’ is not a member of ‘cv’
+   27 |   s = js_allocate<cv::Subdiv2D>(ctx);
+      |                       ^~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp:27:32: error: no matching function for call to ‘js_allocate<<expression error> >(JSContext*&)’
+   27 |   s = js_allocate<cv::Subdiv2D>(ctx);
+      |       ~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~
+  • there are 2 candidates
+In file included from /home/roman/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp:1:
+    • candidate 1: ‘template<class T> T* js_allocate(JSContext*)’
+      /home/roman/Projects/plot-cv/qjs-opencv/include/js_alloc.hpp:58:1:
+         58 | js_allocate(JSContext* ctx) {
+            | ^~~~~~~~~~~
+      • template argument deduction/substitution failed:
+        • error: template argument 1 is invalid
+          /home/roman/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp:27:32:
+             27 |   s = js_allocate<cv::Subdiv2D>(ctx);
+                |       ~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~
+    • candidate 2: ‘template<class T> T* js_allocate(JSContext*, size_t)’
+      /home/roman/Projects/plot-cv/qjs-opencv/include/js_alloc.hpp:64:1:
+         64 | js_allocate(JSContext* ctx, size_t n) {
+            | ^~~~~~~~~~~
+      • candidate expects 2 arguments, 1 provided
+/home/roman/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp:30:12: error: expected type-specifier
+   30 |     new(s) cv::Subdiv2D(*rect);
+      |            ^~
+/home/roman/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp:32:12: error: expected type-specifier
+   32 |     new(s) cv::Subdiv2D();
+      |            ^~
+/home/roman/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp: At global scope:
+/home/roman/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp:50:5: error: ‘Subdiv2D’ in namespace ‘cv’ does not name a type
+   50 | cv::Subdiv2D*
+      |     ^~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp: In function ‘void js_subdiv2d_finalizer(JSRuntime*, JSValue)’:
+/home/roman/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp:57:7: error: ‘Subdiv2D’ is not a member of ‘cv’
+   57 |   cv::Subdiv2D* s = static_cast<cv::Subdiv2D*>(JS_GetOpaque(val, js_subdiv2d_class_id));
+      |       ^~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp:57:17: error: ‘s’ was not declared in this scope
+   57 |   cv::Subdiv2D* s = static_cast<cv::Subdiv2D*>(JS_GetOpaque(val, js_subdiv2d_class_id));
+      |                 ^
+/home/roman/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp:57:37: error: ‘Subdiv2D’ in namespace ‘cv’ does not name a type
+   57 |   cv::Subdiv2D* s = static_cast<cv::Subdiv2D*>(JS_GetOpaque(val, js_subdiv2d_class_id));
+      |                                     ^~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp:57:45: error: expected ‘>’ before ‘*’ token
+   57 |   cv::Subdiv2D* s = static_cast<cv::Subdiv2D*>(JS_GetOpaque(val, js_subdiv2d_class_id));
+      |                                             ^
+/home/roman/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp:59:15: error: expected class-name before ‘(’ token
+   59 |   s->~Subdiv2D();
+      |               ^
+/home/roman/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp: In function ‘JSValue js_subdiv2d_method(JSContext*, JSValue, int, JSValue*, int)’:
+/home/roman/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp:83:7: error: ‘Subdiv2D’ is not a member of ‘cv’
+   83 |   cv::Subdiv2D* s;
+      |       ^~~~~~~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp:83:17: error: ‘s’ was not declared in this scope
+   83 |   cv::Subdiv2D* s;
+      |                 ^
+/home/roman/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp:86:11: error: ‘js_subdiv2d_data2’ was not declared in this scope; did you mean ‘js_subdiv2d_new’?
+   86 |   if((s = js_subdiv2d_data2(ctx, this_val)) == nullptr)
+      |           ^~~~~~~~~~~~~~~~~
+      |           js_subdiv2d_new
+In file included from /home/roman/Projects/plot-cv/qjs-opencv/include/js_alloc.hpp:4:
+/home/roman/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp: At global scope:
+/home/roman/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp:294:42: error: ‘cv::Subdiv2D’ has not been declared
+  294 |     JS_PROP_INT32_DEF("PTLOC_ERROR", cv::Subdiv2D::PTLOC_ERROR, 0),
+      |                                          ^~~~~~~~
+/usr/local/include/quickjs/quickjs.h:993:93: note: in definition of macro ‘JS_PROP_INT32_DEF’
+  993 |     .name = n, .prop_flags = flags, .def_type = JS_DEF_PROP_INT32, .magic = 0, .u = {.i32 = val } \
+      |                                                                                             ^~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp:295:49: error: ‘cv::Subdiv2D’ has not been declared
+  295 |     JS_PROP_INT32_DEF("PTLOC_OUTSIDE_RECT", cv::Subdiv2D::PTLOC_OUTSIDE_RECT, 0),
+      |                                                 ^~~~~~~~
+/usr/local/include/quickjs/quickjs.h:993:93: note: in definition of macro ‘JS_PROP_INT32_DEF’
+  993 |     .name = n, .prop_flags = flags, .def_type = JS_DEF_PROP_INT32, .magic = 0, .u = {.i32 = val } \
+      |                                                                                             ^~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp:296:43: error: ‘cv::Subdiv2D’ has not been declared
+  296 |     JS_PROP_INT32_DEF("PTLOC_INSIDE", cv::Subdiv2D::PTLOC_INSIDE, 0),
+      |                                           ^~~~~~~~
+/usr/local/include/quickjs/quickjs.h:993:93: note: in definition of macro ‘JS_PROP_INT32_DEF’
+  993 |     .name = n, .prop_flags = flags, .def_type = JS_DEF_PROP_INT32, .magic = 0, .u = {.i32 = val } \
+      |                                                                                             ^~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp:297:43: error: ‘cv::Subdiv2D’ has not been declared
+  297 |     JS_PROP_INT32_DEF("PTLOC_VERTEX", cv::Subdiv2D::PTLOC_VERTEX, 0),
+      |                                           ^~~~~~~~
+/usr/local/include/quickjs/quickjs.h:993:93: note: in definition of macro ‘JS_PROP_INT32_DEF’
+  993 |     .name = n, .prop_flags = flags, .def_type = JS_DEF_PROP_INT32, .magic = 0, .u = {.i32 = val } \
+      |                                                                                             ^~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp:299:46: error: ‘cv::Subdiv2D’ has not been declared
+  299 |     JS_PROP_INT32_DEF("NEXT_AROUND_ORG", cv::Subdiv2D::NEXT_AROUND_ORG, 0),
+      |                                              ^~~~~~~~
+/usr/local/include/quickjs/quickjs.h:993:93: note: in definition of macro ‘JS_PROP_INT32_DEF’
+  993 |     .name = n, .prop_flags = flags, .def_type = JS_DEF_PROP_INT32, .magic = 0, .u = {.i32 = val } \
+      |                                                                                             ^~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp:300:46: error: ‘cv::Subdiv2D’ has not been declared
+  300 |     JS_PROP_INT32_DEF("NEXT_AROUND_DST", cv::Subdiv2D::NEXT_AROUND_DST, 0),
+      |                                              ^~~~~~~~
+/usr/local/include/quickjs/quickjs.h:993:93: note: in definition of macro ‘JS_PROP_INT32_DEF’
+  993 |     .name = n, .prop_flags = flags, .def_type = JS_DEF_PROP_INT32, .magic = 0, .u = {.i32 = val } \
+      |                                                                                             ^~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp:301:46: error: ‘cv::Subdiv2D’ has not been declared
+  301 |     JS_PROP_INT32_DEF("PREV_AROUND_ORG", cv::Subdiv2D::PREV_AROUND_ORG, 0),
+      |                                              ^~~~~~~~
+/usr/local/include/quickjs/quickjs.h:993:93: note: in definition of macro ‘JS_PROP_INT32_DEF’
+  993 |     .name = n, .prop_flags = flags, .def_type = JS_DEF_PROP_INT32, .magic = 0, .u = {.i32 = val } \
+      |                                                                                             ^~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp:302:46: error: ‘cv::Subdiv2D’ has not been declared
+  302 |     JS_PROP_INT32_DEF("PREV_AROUND_DST", cv::Subdiv2D::PREV_AROUND_DST, 0),
+      |                                              ^~~~~~~~
+/usr/local/include/quickjs/quickjs.h:993:93: note: in definition of macro ‘JS_PROP_INT32_DEF’
+  993 |     .name = n, .prop_flags = flags, .def_type = JS_DEF_PROP_INT32, .magic = 0, .u = {.i32 = val } \
+      |                                                                                             ^~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp:303:47: error: ‘cv::Subdiv2D’ has not been declared
+  303 |     JS_PROP_INT32_DEF("NEXT_AROUND_LEFT", cv::Subdiv2D::NEXT_AROUND_LEFT, 0),
+      |                                               ^~~~~~~~
+/usr/local/include/quickjs/quickjs.h:993:93: note: in definition of macro ‘JS_PROP_INT32_DEF’
+  993 |     .name = n, .prop_flags = flags, .def_type = JS_DEF_PROP_INT32, .magic = 0, .u = {.i32 = val } \
+      |                                                                                             ^~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp:304:48: error: ‘cv::Subdiv2D’ has not been declared
+  304 |     JS_PROP_INT32_DEF("NEXT_AROUND_RIGHT", cv::Subdiv2D::NEXT_AROUND_RIGHT, 0),
+      |                                                ^~~~~~~~
+/usr/local/include/quickjs/quickjs.h:993:93: note: in definition of macro ‘JS_PROP_INT32_DEF’
+  993 |     .name = n, .prop_flags = flags, .def_type = JS_DEF_PROP_INT32, .magic = 0, .u = {.i32 = val } \
+      |                                                                                             ^~~
+/home/roman/Projects/plot-cv/qjs-opencv/js_subdiv2d.cpp:305:47: error: ‘cv::Subdiv2D’ has not been declared
+  305 |     JS_PROP_INT32_DEF("PREV_AROUND_LEFT", cv::Subdiv2D::PREV_AROUND_LEFT, 0),
+      |                                               ^~~~~~~~
+/usr/local/include/quickjs/quickjs.h:993:93: note: in definition of macro ‘JS_PROP_INT32_DEF’
+  993 |     .name = n, .prop_flags = flags, .def_type = JS_DEF_PROP_INT32, .magic = 0, .u = {.i32 = val } \
+      |                                                                                             ^~~
+[ 61%] Building CXX object CMakeFiles/quickjs-opencv.dir/js_ximgproc.cpp.o
+[ 63%] Building CXX object CMakeFiles/quickjs-opencv.dir/lsd/src/lsd.cpp.o
+[ 64%] Building CXX object CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_opencv.cpp.o
+[ 68%] Building CXX object CMakeFiles/quickjs-opencv.dir/src/geometry.cpp.o
+[ 68%] Building CXX object CMakeFiles/quickjs-opencv.dir/lsd/src/lsd_wrap.cpp.o
+[ 70%] Building CXX object CMakeFiles/quickjs-opencv.dir/src/init_module.cpp.o
+[ 71%] Building CXX object CMakeFiles/quickjs-opencv.dir/src/jsbindings.cpp.o
+[ 73%] Building CXX object CMakeFiles/quickjs-opencv.dir/src/line.cpp.o
+[ 75%] Building CXX object CMakeFiles/quickjs-opencv.dir/src/util.cpp.o
+/home/roman/Projects/plot-cv/qjs-opencv/src/geometry.cpp: In function ‘point_vector<float> get_mass_centers(std::vector<std::vector<cv::Point_<int>, std::allocator<cv::Point_<int> > > >)’:
+/home/roman/Projects/plot-cv/qjs-opencv/src/geometry.cpp:9:17: error: ‘moments’ is not a member of ‘cv’; did you mean ‘Moments’?
+    9 |     mu[i] = cv::moments(contours[i], false);
+      |                 ^~~~~~~
+      |                 Moments
+[ 77%] Linking CXX shared library opencv.so
+make[2]: Leaving directory '/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug'
+[100%] Built target quickjs-opencv
+make[1]: Leaving directory '/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug'
+make: Leaving directory '/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug'

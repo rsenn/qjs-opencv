@@ -1,0 +1,619 @@
+<h1>opencv.js API Reference</h1>
+
+<p>Complete API surface of the official Emscripten/embind-based <code>opencv.js</code> bindings, compiled directly from the OpenCV source that generates them — not from tutorial pages, which only cover a subset.</p>
+
+<p><strong>Sources</strong> (local checkout at <code>/mnt/data/Projects/opencv</code>, OpenCV <code>5.0.0</code>, core module set only — no <code>opencv_contrib</code>):</p>
+
+<ul>
+<li><code>platforms/js/opencv_js.config.py</code> — the whitelist of free functions and class methods exposed to JS. <code>modules/js/generator/embindgen.py</code> walks the C++ headers of every module compiled in and emits an <code>embind</code> binding <em>only</em> for symbols listed here (plus operator overloads implied by them). This is the authoritative list of what&rsquo;s callable from JS — anything not in this file does not exist in <code>opencv.js</code>, no matter how complete the underlying C++ module is.</li>
+<li><code>modules/js/src/core_bindings.cpp</code> — hand-written <code>EMSCRIPTEN_BINDINGS</code> block. <code>cv::Mat</code> and the other value types (<code>Point</code>, <code>Size</code>, <code>Rect</code>, <code>Scalar</code>, &hellip;) aren&rsquo;t produced by the generator — they&rsquo;re bound here directly, since their JS-friendly shape (flat arrays for <code>Scalar</code>, plain <code>{x,y}</code> objects for <code>Point</code>, typed-array views for pixel data) doesn&rsquo;t map 1:1 onto the C++ class.</li>
+<li><code>modules/js/src/helpers.js</code> — pure-JS layer injected around the compiled wasm module: <code>imread</code>/<code>imshow</code>/<code>VideoCapture</code> (canvas/DOM glue), <code>matFromArray</code>, <code>matFromImageData</code>, and JS-side constructor sugar for <code>Point</code>/<code>Size</code>/<code>Rect</code>/<code>Scalar</code>/etc. so they behave like normal JS objects instead of embind value-objects.</li>
+</ul>
+
+
+<p>This local checkout carries a couple of small patches against upstream <code>opencv/opencv@4.x</code> (a factory-method <code>Ptr&lt;T&gt;</code> namespace-qualification fix in <code>embindgen.py</code>, and <code>features2d</code> renamed to <code>features</code> / <code>calib3d</code> split into <code>_3d</code> + <code>calib</code>) — noted inline where they affect the whitelist shape below.</p>
+
+<h2>Contents</h2>
+
+<ul>
+<li><a href="#loading-the-module">Loading the module</a></li>
+<li><a href="#value-types">Value types</a></li>
+<li><a href="#the-mat-class">The <code>Mat</code> class</a></li>
+<li><a href="#vector-container-types">Vector container types</a></li>
+<li><a href="#typedepth-constants">Type/depth constants</a></li>
+<li><a href="#core">core</a></li>
+<li><a href="#imgproc">imgproc</a></li>
+<li><a href="#objdetect">objdetect</a></li>
+<li><a href="#video">video</a></li>
+<li><a href="#dnn">dnn</a></li>
+<li><a href="#features-features2d">features (features2d)</a></li>
+<li><a href="#photo">photo</a></li>
+<li><a href="#_3d--calib-calib3d">_3d / calib (calib3d)</a></li>
+<li><a href="#browserdom-helper-layer">Browser/DOM helper layer</a></li>
+<li><a href="#whats-not-in-opencvjs">What&rsquo;s <em>not</em> in opencv.js</a></li>
+<li><a href="#memory-management">Memory management</a></li>
+</ul>
+
+
+<hr />
+
+<h2>Loading the module</h2>
+
+<p>```html</p>
+
+<script async src="opencv.js" onload="onOpenCvReady();"></script>
+
+
+<script>
+function onOpenCvReady() {
+  cv['onRuntimeInitialized'] = () => {
+    // cv.* is ready to use here
+  };
+}
+</script>
+
+
+<p>```</p>
+
+<p><code>Module</code> (the raw Emscripten object) and <code>cv</code> are the same object once initialized — <code>helpers.js</code> does <code>if (typeof cv === 'undefined') { var cv = Module; }</code>.</p>
+
+<hr />
+
+<h2>Value types</h2>
+
+<p>Defined twice, deliberately: an embind <code>value_object</code>/<code>value_array</code> in <code>core_bindings.cpp</code> (the wasm-side shape) and a plain-JS constructor in <code>helpers.js</code> (what you actually construct/pass — embind&rsquo;s <code>value_object</code> marshals to/from these transparently).</p>
+
+<table>
+<thead>
+<tr>
+<th> Type </th>
+<th> Shape </th>
+<th> Notes </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td> <code>Point(x, y)</code> </td>
+<td> <code>{x, y}</code> </td>
+<td> also <code>Point2f</code>, <code>Point3f</code> bound as value_objects for wasm interop </td>
+</tr>
+<tr>
+<td> <code>Size(width, height)</code> </td>
+<td> <code>{width, height}</code> </td>
+<td> also <code>Size2f</code> </td>
+</tr>
+<tr>
+<td> <code>Rect(...)</code> </td>
+<td> <code>{x, y, width, height}</code> </td>
+<td> overloads: <code>()</code>, <code>(rect)</code>, <code>(point, size)</code>, <code>(x, y, width, height)</code>. Also <code>Rect2f</code>, <code>Rect2d</code> </td>
+</tr>
+<tr>
+<td> <code>RotatedRect(center, size, angle)</code> </td>
+<td> <code>{center, size, angle}</code> </td>
+<td> static helpers: <code>RotatedRect.points(rr)</code>, <code>.boundingRect(rr)</code>, <code>.boundingRect2f(rr)</code> — thin wrappers over <code>cv::RotatedRect::points()</code>/<code>boundingRect()</code>/<code>boundingRect2f()</code> </td>
+</tr>
+<tr>
+<td> <code>Scalar(v0, v1, v2, v3)</code> </td>
+<td> subclasses <code>Array</code> (so <code>scalar[0]</code>, <code>.length === 4</code>, etc.) </td>
+<td> <code>Scalar.all(v)</code> → <code>Scalar(v,v,v,v)</code> </td>
+</tr>
+<tr>
+<td> <code>Range(start, end)</code> </td>
+<td> <code>{start, end}</code> </td>
+<td> </td>
+</tr>
+<tr>
+<td> <code>TermCriteria(type, maxCount, epsilon)</code> </td>
+<td> <code>{type, maxCount, epsilon}</code> </td>
+<td> </td>
+</tr>
+<tr>
+<td> <code>MinMaxLoc(minVal, maxVal, minLoc, maxLoc)</code> </td>
+<td> <code>{minVal, maxVal, minLoc, maxLoc}</code> </td>
+<td> return type of <code>cv.minMaxLoc()</code> </td>
+</tr>
+<tr>
+<td> <code>Circle(center, radius)</code> </td>
+<td> <code>{center, radius}</code> </td>
+<td> return type of <code>cv.minEnclosingCircle()</code> </td>
+</tr>
+<tr>
+<td> <code>KeyPoint</code> </td>
+<td> <code>{angle, class_id, octave, pt, response, size}</code> </td>
+<td> value_object only, no JS constructor sugar </td>
+</tr>
+<tr>
+<td> <code>DMatch</code> </td>
+<td> <code>{queryIdx, trainIdx, imgIdx, distance}</code> </td>
+<td> value_object only </td>
+</tr>
+<tr>
+<td> <code>Moments</code> </td>
+<td> <code>{m00, m10, m01, m20, m11, m02, m30, m21, m12, m03, mu20, mu11, mu02, mu30, mu21, mu12, mu03, nu20, nu11, nu02, nu30, nu21, nu12, nu03}</code> </td>
+<td> return type of <code>cv.moments()</code>, value_object only </td>
+</tr>
+<tr>
+<td> <code>Exception</code> </td>
+<td> <code>{code, msg}</code> </td>
+<td> thrown on C++-side <code>cv::Exception</code>; caught JS-side as this shape </td>
+</tr>
+</tbody>
+</table>
+
+
+<hr />
+
+<h2>The <code>Mat</code> class</h2>
+
+<p>Hand-bound in <code>core_bindings.cpp</code>; the single most important type in the API.</p>
+
+<h3>Constructors</h3>
+
+<p><code>js
+new cv.Mat()
+new cv.Mat(other)                      // copy handle (shallow — see clone())
+new cv.Mat(size, type)                 // cv.Size, no data (uninitialized)
+new cv.Mat(rows, cols, type)           // no data (uninitialized)
+new cv.Mat(rows, cols, type, scalar)   // filled with scalar
+new cv.Mat(rows, cols, type, dataPtr, step)  // raw pointer + step — internal use (binding_utils::createMat), not something JS code calls directly
+</code></p>
+
+<p>There is <strong>no constructor that takes a flat JS array or TypedArray directly</strong> — shape must always be explicit. That&rsquo;s what <code>cv.matFromArray(rows, cols, type, array)</code> (a JS-level helper, not a <code>Mat</code> constructor overload) exists for — see <a href="#browserdom-helper-layer">Browser/DOM helper layer</a>. This is architecturally the same shape as this project&rsquo;s <code>new Mat(rows, cols, type, typedArray.buffer)</code>.</p>
+
+<h3>Class (static) functions</h3>
+
+<p><code>js
+cv.Mat.eye(size, type)          cv.Mat.eye(rows, cols, type)
+cv.Mat.ones(size, type)         cv.Mat.ones(rows, cols, type)
+cv.Mat.zeros(size, type)        cv.Mat.zeros(rows, cols, type)
+</code></p>
+
+<h3>Properties</h3>
+
+<table>
+<thead>
+<tr>
+<th> Property </th>
+<th> Type </th>
+<th> Notes </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td> <code>.rows</code> </td>
+<td> <code>int</code> </td>
+<td> </td>
+</tr>
+<tr>
+<td> <code>.cols</code> </td>
+<td> <code>int</code> </td>
+<td> </td>
+</tr>
+<tr>
+<td> <code>.matSize</code> </td>
+<td> <code>int[]</code> </td>
+<td> one entry per dimension (<code>mat.dims</code> long) — via <code>getMatSize</code> </td>
+</tr>
+<tr>
+<td> <code>.step</code> </td>
+<td> <code>int[]</code> </td>
+<td> byte stride per dimension — via <code>getMatStep</code> </td>
+</tr>
+<tr>
+<td> <code>.data</code> </td>
+<td> <code>Uint8Array</code> </td>
+<td> zero-copy view into the underlying buffer </td>
+</tr>
+<tr>
+<td> <code>.data8S</code> </td>
+<td> <code>Int8Array</code> </td>
+<td> </td>
+</tr>
+<tr>
+<td> <code>.data16U</code> </td>
+<td> <code>Uint16Array</code> </td>
+<td> </td>
+</tr>
+<tr>
+<td> <code>.data16S</code> </td>
+<td> <code>Int16Array</code> </td>
+<td> </td>
+</tr>
+<tr>
+<td> <code>.data32S</code> </td>
+<td> <code>Int32Array</code> </td>
+<td> </td>
+</tr>
+<tr>
+<td> <code>.data32F</code> </td>
+<td> <code>Float32Array</code> </td>
+<td> </td>
+</tr>
+<tr>
+<td> <code>.data64F</code> </td>
+<td> <code>Float64Array</code> </td>
+<td> </td>
+</tr>
+</tbody>
+</table>
+
+
+<p>Each <code>.dataXX</code> property is a fresh <code>memory_view</code> computed on access — same underlying memory, reinterpreted per element type, length <code>= (total * elemSize) / sizeof(T)</code>. There is no <code>data8U</code>; plain <code>.data</code> is the <code>uint8</code> view.</p>
+
+<h3>Methods</h3>
+
+<p>```js
+mat.elemSize()                          mat.elemSize1()
+mat.channels()                          mat.depth()
+mat.type()                              mat.empty()
+mat.total()                             mat.isContinuous()
+mat.size()                              // -> Size (via matSize helper, distinct from .matSize property)</p>
+
+<p>mat.convertTo(dst, rtype)
+mat.convertTo(dst, rtype, alpha)
+mat.convertTo(dst, rtype, alpha, beta)</p>
+
+<p>mat.create(rows, cols, type)            mat.create(size, type)</p>
+
+<p>mat.row(i)                              mat.col(i)
+mat.rowRange(start, end)                mat.rowRange(range)
+mat.colRange(start, end)                mat.colRange(range)
+mat.roi(rect)                           // operator()
+mat.step1(i)</p>
+
+<p>mat.copyTo(dst)                         mat.copyTo(dst, mask)
+mat.setTo(scalar)                       mat.setTo(scalar, mask)</p>
+
+<p>mat.clone()                             // deep copy (aliased over embind&rsquo;s shallow default — see note below)
+mat.mat_clone()                         // the actual deep-copy binding of cv::Mat::clone()
+mat.dot(other)
+mat.mul(other, scale)
+mat.inv(decompMethod)
+mat.t()                                 // transpose
+mat.diag(d)                             mat.diag()</p>
+
+<p>// raw pointer access -> typed-array view starting at (i[, j])
+mat.ptr(i)            mat.ptr(i, j)          // Uint8Array
+mat.ucharPtr(i)        mat.ucharPtr(i, j)     // Uint8Array
+mat.charPtr(i)         mat.charPtr(i, j)      // Int8Array
+mat.shortPtr(i)        mat.shortPtr(i, j)     // Int16Array
+mat.ushortPtr(i)       mat.ushortPtr(i, j)    // Uint16Array
+mat.intPtr(i)          mat.intPtr(i, j)       // Int32Array
+mat.floatPtr(i)        mat.floatPtr(i, j)     // Float32Array
+mat.doublePtr(i)       mat.doublePtr(i, j)    // Float64Array</p>
+
+<p>// single-element access, all overloaded for 1D/2D/3D coordinates
+mat.charAt(i)      mat.charAt(i, j)      mat.charAt(i, j, k)
+mat.ucharAt(i)     mat.ucharAt(i, j)     mat.ucharAt(i, j, k)
+mat.shortAt(i)     mat.shortAt(i, j)     mat.shortAt(i, j, k)
+mat.ushortAt(i)    mat.ushortAt(i, j)    mat.ushortAt(i, j, k)
+mat.intAt(i)       mat.intAt(i, j)       mat.intAt(i, j, k)
+mat.floatAt(i)     mat.floatAt(i, j)     mat.floatAt(i, j, k)
+mat.doubleAt(i)    mat.doubleAt(i, j)    mat.doubleAt(i, j, k)
+```</p>
+
+<p>Notable design choices, relevant when comparing against this project&rsquo;s binding style:</p>
+
+<ul>
+<li><strong>No generic <code>.at(row, col)</code>.</strong> opencv.js instead exposes one <code>&lt;type&gt;At()</code> method per element type (<code>intAt</code>, <code>floatAt</code>, <code>doubleAt</code>, &hellip;) — the caller states the element type explicitly rather than it being inferred from <code>mat.type()</code>. This sidesteps any &ldquo;reported shape says X but actual layout is Y&rdquo; class of bug entirely, since there&rsquo;s no shape inference happening at the accessor at all.</li>
+<li><strong><code>clone()</code> deep-copy shadowing is a recent patch, not original design.</strong> Emscripten 3.1.71+ added a default shallow <code>ClassHandle.clone()</code> on <em>every</em> bound class, which collided with <code>cv::Mat::clone()</code>&rsquo;s deep-copy semantics (<a href="https://github.com/opencv/opencv/pull/26643">opencv/opencv#26643</a>, <a href="https://github.com/opencv/opencv/issues/27572">#27572</a>). The fix in <code>helpers.js</code> binds the real deep copy as <code>mat_clone</code> in C++, then reassigns <code>cv.Mat.prototype.clone = cv.Mat.prototype.mat_clone</code> at <code>onRuntimeInitialized</code> time to restore the expected deep-copy behavior. Worth knowing if you ever see version-dependent <code>clone()</code> behavior discussions upstream.</li>
+</ul>
+
+
+<hr />
+
+<h2>Vector container types</h2>
+
+<p><code>register_vector&lt;T&gt;(name)</code> — thin embind wrappers over <code>std::vector&lt;T&gt;</code>, each gets <code>.size()</code>, <code>.get(i)</code>, <code>.push_back(v)</code>, <code>.set(i, v)</code> (and are iterable).</p>
+
+<p><code>
+IntVector            (std::vector&lt;int&gt;)
+CharVector           (std::vector&lt;char&gt;)
+FloatVector          (std::vector&lt;float&gt;)
+DoubleVector         (std::vector&lt;double&gt;)
+StringVector         (std::vector&lt;std::string&gt;)
+PointVector          (std::vector&lt;cv::Point&gt;)
+Point2fVector        (std::vector&lt;cv::Point2f&gt;)
+Point3fVector        (std::vector&lt;cv::Point3_&lt;float&gt;&gt;)
+MatVector            (std::vector&lt;cv::Mat&gt;)
+RectVector           (std::vector&lt;cv::Rect&gt;)
+KeyPointVector       (std::vector&lt;cv::KeyPoint&gt;)
+DMatchVector         (std::vector&lt;cv::DMatch&gt;)
+CharVectorVector     (std::vector&lt;std::vector&lt;char&gt;&gt;)
+DMatchVectorVector   (std::vector&lt;std::vector&lt;cv::DMatch&gt;&gt;)
+KeyPointVectorVector (std::vector&lt;std::vector&lt;cv::KeyPoint&gt;&gt;)
+PointVectorVector    (std::vector&lt;std::vector&lt;cv::Point&gt;&gt;)
+</code></p>
+
+<p>These are the types functions like <code>findContours</code> (→ <code>MatVector</code> of point-Mats) or <code>detectAndCompute</code> (→ <code>KeyPointVector</code>, <code>Mat</code> descriptors) actually return/accept — there&rsquo;s no bare-JS-array marshaling for these; you construct/consume a <code>cv.MatVector</code> etc. explicitly and <code>.delete()</code> it when done.</p>
+
+<hr />
+
+<h2>Type/depth constants</h2>
+
+<p>```
+CV_8UC1  CV_8UC2  CV_8UC3  CV_8UC4
+CV_8SC1  CV_8SC2  CV_8SC3  CV_8SC4
+CV_16UC1 CV_16UC2 CV_16UC3 CV_16UC4
+CV_16SC1 CV_16SC2 CV_16SC3 CV_16SC4
+CV_32SC1 CV_32SC2 CV_32SC3 CV_32SC4
+CV_32FC1 CV_32FC2 CV_32FC3 CV_32FC4
+CV_64FC1 CV_64FC2 CV_64FC3 CV_64FC4</p>
+
+<p>CV_8U  CV_8S  CV_16U  CV_16S  CV_32S  CV_32F  CV_64F</p>
+
+<p>INT_MIN  INT_MAX
+```</p>
+
+<p>Note what&rsquo;s <em>missing</em> relative to native OpenCV: no <code>CV_16F</code>/<code>CV_16BF</code> (bfloat16), no <code>CV_32U</code>/<code>CV_64U</code>/<code>CV_64S</code>/<code>CV_Bool</code> (the OpenCV 5 integer-depth additions this project added recently) — <code>core_bindings.cpp</code>&rsquo;s constant block hasn&rsquo;t been updated for those. Everything else (color-conversion codes like <code>COLOR_BGR2GRAY</code>, morphology shapes, threshold types, border types, etc.) is auto-exposed by <code>embindgen.py</code> as a side effect of being referenced in a whitelisted function&rsquo;s default-argument or parameter type — there&rsquo;s no separate manually-curated constants list for those; they ride along with whichever whitelisted function uses them.</p>
+
+<hr />
+
+<h2>core</h2>
+
+<p>Free functions (no receiver / static in <code>cv.*</code>):</p>
+
+<p><code>
+absdiff, add, addWeighted, bitwise_and, bitwise_not, bitwise_or, bitwise_xor, cartToPolar,
+compare, convertScaleAbs, copyMakeBorder, countNonZero, determinant, dft, divide, divSpectrums,
+eigen, exp, flip, getOptimalDFTSize, gemm, hconcat, inRange, invert, kmeans, log, magnitude,
+max, mean, meanStdDev, merge, min, minMaxLoc, mixChannels, multiply, norm, normalize,
+perspectiveTransform, polarToCart, pow, randn, randu, reduce, repeat, rotate, setIdentity,
+setRNGSeed, solve, solvePoly, split, sqrt, subtract, trace, transform, transpose, vconcat,
+setLogLevel, getLogLevel, LUT
+</code></p>
+
+<p>Classes:</p>
+
+<ul>
+<li><strong><code>Algorithm</code></strong> — base class, no methods whitelisted directly (subclasses like <code>CLAHE</code>, <code>BackgroundSubtractorMOG2</code> add their own).</li>
+</ul>
+
+
+<hr />
+
+<h2>imgproc</h2>
+
+<p>Free functions:</p>
+
+<p><code>
+adaptiveThreshold, applyColorMap, approxPolyDP, approxPolyN, arcLength, arrowedLine,
+bilateralFilter, blendLinear, blur, boundingRect, boxFilter, calcBackProject, calcHist,
+Canny, circle, clipLine, compareHist, connectedComponents, connectedComponentsWithStats,
+contourArea, convertMaps, convexHull, convexityDefects, cornerHarris, cornerMinEigenVal,
+createCLAHE, createHanningWindow, createLineSegmentDetector, cvtColor, demosaicing, dilate,
+distanceTransform, distanceTransformWithLabels, drawContours, drawMarker, ellipse,
+ellipse2Poly, equalizeHist, erode, fillConvexPoly, fillPoly, filter2D, findContours,
+findContoursLinkRuns, fitEllipse, fitEllipseAMS, fitEllipseDirect, fitLine, floodFill,
+GaussianBlur, getAffineTransform, getFontScaleFromHeight, getPerspectiveTransform,
+getRectSubPix, getRotationMatrix2D, getStructuringElement, goodFeaturesToTrack, grabCut,
+HoughLines, HoughLinesP, HoughCircles, HuMoments, integral, integral2, intersectConvexConvex,
+invertAffineTransform, isContourConvex, Laplacian, line, matchShapes, matchTemplate,
+medianBlur, minAreaRect, minEnclosingCircle, minEnclosingTriangle, moments, morphologyEx,
+pointPolygonTest, polylines, preCornerDetect, putText, pyrDown, pyrUp, rectangle, remap,
+resize, rotatedRectangleIntersection, Scharr, sepFilter2D, Sobel, spatialGradient,
+sqrBoxFilter, stackBlur, threshold, warpAffine, warpPerspective, warpPolar, watershed
+</code></p>
+
+<p>Classes:</p>
+
+<ul>
+<li><strong><code>CLAHE</code></strong>: <code>apply</code>, <code>collectGarbage</code>, <code>getClipLimit</code>, <code>getTilesGridSize</code>, <code>setClipLimit</code>, <code>setTilesGridSize</code></li>
+<li><strong><code>segmentation_IntelligentScissorsMB</code></strong>: <code>IntelligentScissorsMB</code> (ctor), <code>setWeights</code>, <code>setGradientMagnitudeMaxLimit</code>, <code>setEdgeFeatureZeroCrossingParameters</code>, <code>setEdgeFeatureCannyParameters</code>, <code>applyImage</code>, <code>applyImageFeatures</code>, <code>buildMap</code>, <code>getContour</code></li>
+</ul>
+
+
+<p>Plus, bound directly in <code>core_bindings.cpp</code> under <code>#ifdef HAVE_OPENCV_IMGPROC</code> rather than generated:</p>
+
+<p><code>
+cv.minEnclosingCircle(points)                                    // -&gt; Circle {center, radius}
+cv.floodFill(img, mask, seedPoint, newVal, rectOut, loDiff, upDiff, connectivity)  // + 4 fewer-arg overloads
+cv.morphologyDefaultBorderValue()
+</code></p>
+
+<hr />
+
+<h2>objdetect</h2>
+
+<p>Free functions:</p>
+
+<p><code>
+getPredefinedDictionary, extendDictionary, drawDetectedMarkers, generateImageMarker,
+drawDetectedCornersCharuco, drawDetectedDiamonds
+</code></p>
+
+<p><em>(Upstream <code>4.x</code> additionally whitelists <code>groupRectangles</code>, and <code>HOGDescriptor</code>/<code>CascadeClassifier</code> classes — absent from this local checkout&rsquo;s config, i.e. not callable from this build&rsquo;s <code>opencv.js</code>.)</em></p>
+
+<p>Classes:</p>
+
+<ul>
+<li><strong><code>GraphicalCodeDetector</code></strong>: <code>decode</code>, <code>detect</code>, <code>detectAndDecode</code>, <code>detectMulti</code>, <code>decodeMulti</code>, <code>detectAndDecodeMulti</code></li>
+<li><strong><code>QRCodeDetector</code></strong>: ctor + all of <code>GraphicalCodeDetector</code>&rsquo;s + <code>decodeCurved</code>, <code>detectAndDecodeCurved</code>, <code>setEpsX</code>, <code>setEpsY</code></li>
+<li><strong><code>aruco_PredefinedDictionaryType</code></strong>: (enum only, no methods)</li>
+<li><strong><code>aruco_Dictionary</code></strong>: <code>Dictionary</code> (ctor), <code>getDistanceToId</code>, <code>generateImageMarker</code>, <code>getByteListFromBits</code>, <code>getBitsFromByteList</code></li>
+<li><strong><code>aruco_Board</code></strong>: <code>Board</code>, <code>matchImagePoints</code>, <code>generateImage</code></li>
+<li><strong><code>aruco_GridBoard</code></strong>: <code>GridBoard</code>, <code>generateImage</code>, <code>getGridSize</code>, <code>getMarkerLength</code>, <code>getMarkerSeparation</code>, <code>matchImagePoints</code></li>
+<li><strong><code>aruco_CharucoParameters</code></strong>: <code>CharucoParameters</code> (ctor)</li>
+<li><strong><code>aruco_CharucoBoard</code></strong>: <code>CharucoBoard</code>, <code>generateImage</code>, <code>getChessboardCorners</code>, <code>getNearestMarkerCorners</code>, <code>checkCharucoCornersCollinear</code>, <code>matchImagePoints</code>, <code>getLegacyPattern</code>, <code>setLegacyPattern</code></li>
+<li><strong><code>aruco_DetectorParameters</code></strong>: <code>DetectorParameters</code> (ctor)</li>
+<li><strong><code>aruco_RefineParameters</code></strong>: <code>RefineParameters</code> (ctor)</li>
+<li><strong><code>aruco_ArucoDetector</code></strong>: <code>ArucoDetector</code>, <code>detectMarkers</code>, <code>refineDetectedMarkers</code>, <code>setDictionary</code>, <code>setDetectorParameters</code>, <code>setRefineParameters</code></li>
+<li><strong><code>aruco_CharucoDetector</code></strong>: <code>CharucoDetector</code>, <code>setBoard</code>, <code>setCharucoParameters</code>, <code>setDetectorParameters</code>, <code>setRefineParameters</code>, <code>detectBoard</code>, <code>detectDiamonds</code></li>
+<li><strong><code>QRCodeDetectorAruco_Params</code></strong>: <code>Params</code> (ctor)</li>
+<li><strong><code>QRCodeDetectorAruco</code></strong>: ctor + <code>decode</code>, <code>detect</code>, <code>detectAndDecode</code>, <code>detectMulti</code>, <code>decodeMulti</code>, <code>detectAndDecodeMulti</code>, <code>setDetectorParameters</code>, <code>setArucoParameters</code></li>
+<li><strong><code>barcode_BarcodeDetector</code></strong>: ctor + <code>decode</code>, <code>detect</code>, <code>detectAndDecode</code>, <code>detectMulti</code>, <code>decodeMulti</code>, <code>detectAndDecodeMulti</code>, <code>decodeWithType</code>, <code>detectAndDecodeWithType</code></li>
+<li><strong><code>mcc_CheckerDetector</code></strong>: <code>process</code>, <code>getBestColorChecker</code>, <code>getListColorChecker</code>, <code>create</code>, <code>draw</code>, <code>getRefColors</code>, <code>setDetectionParams</code>, <code>getDetectionParams</code>, <code>setColorChartType</code>, <code>getColorChartType</code>, <code>setUseDnnModel</code>, <code>getUseDnnModel</code> <em>(local-checkout-only, <code>mcc</code> module)</em></li>
+<li><strong><code>mcc_DetectorParameters</code></strong>: <code>DetectorParametersMCC</code> <em>(local-checkout-only)</em></li>
+<li><strong><code>mcc_Checker</code></strong>: <code>setTarget</code>, <code>setBox</code>, <code>setChartsRGB</code>, <code>setChartsYCbCr</code>, <code>setCost</code>, <code>setCenter</code>, <code>getTarget</code>, <code>getBox</code>, <code>getColorCharts</code>, <code>getChartsRGB</code>, <code>getChartsYCbCr</code>, <code>getCost</code>, <code>getCenter</code> <em>(local-checkout-only)</em></li>
+<li><strong><code>FaceDetectorYN</code></strong>: <code>setInputSize</code>, <code>getInputSize</code>, <code>setScoreThreshold</code>, <code>getScoreThreshold</code>, <code>setNMSThreshold</code>, <code>getNMSThreshold</code>, <code>setTopK</code>, <code>getTopK</code>, <code>detect</code>, <code>create</code></li>
+</ul>
+
+
+<hr />
+
+<h2>video</h2>
+
+<p>Free functions:</p>
+
+<p><code>
+CamShift, calcOpticalFlowFarneback, calcOpticalFlowPyrLK, createBackgroundSubtractorMOG2,
+findTransformECC, meanShift
+</code></p>
+
+<p>Classes:</p>
+
+<ul>
+<li><strong><code>BackgroundSubtractorMOG2</code></strong>: ctor, <code>apply</code></li>
+<li><strong><code>BackgroundSubtractor</code></strong>: <code>apply</code>, <code>getBackgroundImage</code></li>
+<li><strong><code>TrackerMIL</code></strong>: <code>create</code></li>
+<li><strong><code>TrackerMIL_Params</code></strong>: (no methods whitelisted)</li>
+</ul>
+
+
+<p><code>Tracker.init</code>/<code>.update</code> are explicitly <em>not</em> whitelisted (<code># issue #21070</code>) but still bound directly in <code>core_bindings.cpp</code> as pure-virtual wrapper functions:</p>
+
+<p><code>js
+cv.CamShift(mat, rect, termCriteria)   // -&gt; [RotatedRect, updatedRect]  (array, via emscripten::val)
+cv.meanShift(mat, rect, termCriteria)  // -&gt; [n, updatedRect]
+// cv.Tracker base class with init()/update() exists but has no concrete subclass exposed except TrackerMIL
+</code></p>
+
+<hr />
+
+<h2>dnn</h2>
+
+<p><code>
+dnn_Net: setInput, forward, setPreferableBackend, getUnconnectedOutLayersNames
+'': readNetFromTensorflow, readNetFromONNX, readNetFromTFLite, readNet, blobFromImage
+</code></p>
+
+<p><em>(Upstream <code>4.x</code> additionally whitelists <code>readNetFromCaffe</code>, <code>readNetFromTorch</code>, <code>readNetFromDarknet</code> — absent here.)</em></p>
+
+<hr />
+
+<h2>features (features2d)</h2>
+
+<p><em>(Named <code>features2d</code> upstream; this local checkout renamed the module/whitelist key to <code>features</code>, and correspondingly <code>HAVE_OPENCV_FEATURES</code> instead of <code>HAVE_OPENCV_FEATURES2D</code> in <code>core_bindings.cpp</code>.)</em></p>
+
+<ul>
+<li><strong><code>Feature2D</code></strong>: <code>detect</code>, <code>compute</code>, <code>detectAndCompute</code>, <code>descriptorSize</code>, <code>descriptorType</code>, <code>defaultNorm</code>, <code>empty</code>, <code>getDefaultName</code></li>
+<li><strong><code>ORB</code></strong>: <code>create</code>, <code>setMaxFeatures</code>, <code>setScaleFactor</code>, <code>setNLevels</code>, <code>setEdgeThreshold</code>, <code>setFastThreshold</code>, <code>setFirstLevel</code>, <code>setWTA_K</code>, <code>setScoreType</code>, <code>setPatchSize</code>, <code>getFastThreshold</code>, <code>getDefaultName</code></li>
+<li><strong><code>MSER</code></strong>: <code>create</code>, <code>detectRegions</code>, <code>setDelta</code>, <code>getDelta</code>, <code>setMinArea</code>, <code>getMinArea</code>, <code>setMaxArea</code>, <code>getMaxArea</code>, <code>setPass2Only</code>, <code>getPass2Only</code>, <code>getDefaultName</code></li>
+<li><strong><code>FastFeatureDetector</code></strong>: <code>create</code>, <code>setThreshold</code>, <code>getThreshold</code>, <code>setNonmaxSuppression</code>, <code>getNonmaxSuppression</code>, <code>setType</code>, <code>getType</code>, <code>getDefaultName</code></li>
+<li><strong><code>GFTTDetector</code></strong>: <code>create</code>, <code>setMaxFeatures</code>, <code>getMaxFeatures</code>, <code>setQualityLevel</code>, <code>getQualityLevel</code>, <code>setMinDistance</code>, <code>getMinDistance</code>, <code>setBlockSize</code>, <code>getBlockSize</code>, <code>setHarrisDetector</code>, <code>getHarrisDetector</code>, <code>setK</code>, <code>getK</code>, <code>getDefaultName</code></li>
+<li><strong><code>SimpleBlobDetector</code></strong>: <code>create</code>, <code>setParams</code>, <code>getParams</code>, <code>getDefaultName</code></li>
+<li><strong><code>SimpleBlobDetector_Params</code></strong>: (no methods whitelisted)</li>
+<li><strong><code>DescriptorMatcher</code></strong>: <code>add</code>, <code>clear</code>, <code>empty</code>, <code>isMaskSupported</code>, <code>train</code>, <code>match</code>, <code>knnMatch</code>, <code>radiusMatch</code>, <code>clone</code>, <code>create</code></li>
+<li><strong><code>BFMatcher</code></strong>: <code>isMaskSupported</code>, <code>create</code></li>
+<li>Free functions: <code>drawKeypoints</code>, <code>drawMatches</code>, <code>drawMatchesKnn</code></li>
+</ul>
+
+
+<p><em>(Upstream <code>4.x</code> additionally whitelists <code>BRISK</code>, <code>AgastFeatureDetector</code>, <code>KAZE</code>, <code>AKAZE</code> — absent here.)</em></p>
+
+<hr />
+
+<h2>photo</h2>
+
+<p>Free functions:</p>
+
+<p><code>
+createAlignMTB, createCalibrateDebevec, createCalibrateRobertson, createMergeDebevec,
+createMergeMertens, createMergeRobertson, createTonemapDrago, createTonemapMantiuk,
+createTonemapReinhard, inpaint
+</code></p>
+
+<p>Classes:</p>
+
+<ul>
+<li><strong><code>CalibrateCRF</code></strong>: <code>process</code></li>
+<li><strong><code>AlignExposures</code></strong>: <code>process</code></li>
+<li><strong><code>AlignMTB</code></strong>: <code>calculateShift</code>, <code>shiftMat</code>, <code>computeBitmaps</code>, <code>getMaxBits</code>, <code>setMaxBits</code>, <code>getExcludeRange</code>, <code>setExcludeRange</code>, <code>getCut</code>, <code>setCut</code></li>
+<li><strong><code>CalibrateDebevec</code></strong>: <code>getLambda</code>, <code>setLambda</code>, <code>getSamples</code>, <code>setSamples</code>, <code>getRandom</code>, <code>setRandom</code></li>
+<li><strong><code>CalibrateRobertson</code></strong>: <code>getMaxIter</code>, <code>setMaxIter</code>, <code>getThreshold</code>, <code>setThreshold</code>, <code>getRadiance</code></li>
+<li><strong><code>MergeExposures</code></strong>: <code>process</code></li>
+<li><strong><code>MergeDebevec</code></strong>: <code>process</code></li>
+<li><strong><code>MergeMertens</code></strong>: <code>process</code>, <code>getContrastWeight</code>, <code>setContrastWeight</code>, <code>getSaturationWeight</code>, <code>setSaturationWeight</code>, <code>getExposureWeight</code>, <code>setExposureWeight</code></li>
+<li><strong><code>MergeRobertson</code></strong>: <code>process</code></li>
+<li><strong><code>Tonemap</code></strong>: <code>process</code>, <code>getGamma</code>, <code>setGamma</code></li>
+<li><strong><code>TonemapDrago</code></strong>: <code>getSaturation</code>, <code>setSaturation</code>, <code>getBias</code>, <code>setBias</code>, <code>getSigmaColor</code>, <code>setSigmaColor</code>, <code>getSigmaSpace</code>, <code>setSigmaSpace</code></li>
+<li><strong><code>TonemapMantiuk</code></strong>: <code>getScale</code>, <code>setScale</code>, <code>getSaturation</code>, <code>setSaturation</code></li>
+<li><strong><code>TonemapReinhard</code></strong>: <code>getIntensity</code>, <code>setIntensity</code>, <code>getLightAdaptation</code>, <code>setLightAdaptation</code>, <code>getColorAdaptation</code>, <code>setColorAdaptation</code></li>
+</ul>
+
+
+<p>Notably absent: <code>pencilSketch</code>, <code>stylization</code>, <code>detailEnhance</code>, <code>edgePreservingFilter</code>, <code>fastNlMeansDenoising(Colored)</code> — the NPR filters this project bound in <code>js_photo.cpp</code> have no opencv.js equivalent at all.</p>
+
+<hr />
+
+<h2>_3d / calib (calib3d)</h2>
+
+<p><em>(Upstream <code>4.x</code> has a single <code>calib3d</code> whitelist key; this local checkout splits it into <code>_3d</code> (the <code>cv::</code> namespace calib functions) and <code>calib</code> (the <code>cv::fisheye</code> namespace + <code>UsacParams</code>), matching an upstream OpenCV 5.x module reorganization where <code>calib3d</code> was split into <code>3d</code> and <code>calib</code>.)</em></p>
+
+<p><code>_3d</code> free functions:</p>
+
+<p><code>
+findHomography, calibrateCameraExtended, drawFrameAxes, estimateAffine2D,
+getDefaultNewCameraMatrix, initUndistortRectifyMap, Rodrigues, solvePnP, solvePnPRansac,
+solvePnPRefineLM, projectPoints, undistort
+</code></p>
+
+<p><code>calib</code> free functions:</p>
+
+<p><code>
+fisheye_initUndistortRectifyMap, fisheye_projectPoints
+</code></p>
+
+<p>Classes:</p>
+
+<ul>
+<li><strong><code>UsacParams</code></strong>: ctor only</li>
+</ul>
+
+
+<hr />
+
+<h2>Browser/DOM helper layer</h2>
+
+<p>Pure JS, <code>modules/js/src/helpers.js</code>, injected at <code>Module['onRuntimeInitialized']</code> time — these don&rsquo;t exist in the wasm module itself:</p>
+
+<p><code>js
+cv.imread(canvasOrImgElementOrId)        // -&gt; Mat, CV_8UC4, via canvas getImageData()
+cv.imshow(canvasElementOrId, mat)        // draws a Mat to a &lt;canvas&gt;, converting to CV_8UC4 first
+cv.VideoCapture(videoElementOrId)        // .read(frameMat) pulls the current video frame via canvas
+cv.matFromArray(rows, cols, type, array) // builds a Mat and .set()s the right typed .dataXX view
+cv.matFromImageData(imageData)           // -&gt; Mat CV_8UC4 from a DOM ImageData
+</code></p>
+
+<p>These all require a DOM (<code>document</code>, <code>HTMLCanvasElement</code>, <code>HTMLVideoElement</code>, <code>ImageData</code>) — none of them are usable outside a browser/browser-like environment (e.g. not in this project&rsquo;s <code>qjs</code> REPL context, which has none of those globals).</p>
+
+<p>Also added here, not in <code>core_bindings.cpp</code>:</p>
+
+<ul>
+<li><code>cv.Mat.prototype[Symbol.dispose] = cv.Mat.prototype.delete</code> (and same for <code>cv.UMat</code>) — TC39 <code>using</code> declaration support (TypeScript 5.2+ / future JS), guarded by <code>typeof Symbol.dispose !== 'undefined'</code>.</li>
+<li>The <code>clone()</code> deep-copy reassignment discussed under <a href="#the-mat-class">The Mat class</a>.</li>
+</ul>
+
+
+<hr />
+
+<h2>What&rsquo;s <em>not</em> in opencv.js</h2>
+
+<p>Given only <code>core, imgproc, objdetect, video, dnn, features, photo, _3d, calib</code> are whitelisted at all, and only from modules actually compiled into this build (<code>core, dnn, features, imgproc, objdetect, photo, video</code>, plus <code>_3d</code>/<code>calib</code> — no <code>ximgproc</code>, no <code>xphoto</code>, no <code>stitching</code> despite those modules existing in this checkout&rsquo;s <code>modules/</code> directory), everything else is absent from <code>opencv.js</code> no matter how complete the C++ side is:</p>
+
+<ul>
+<li><strong><code>imgcodecs</code></strong> (<code>cv::imread</code>/<code>cv::imwrite</code> proper) — the browser build uses the DOM/canvas route (<code>cv.imread</code>/<code>cv.imshow</code>) instead, never the native codec path.</li>
+<li><strong><code>videoio</code></strong> (<code>cv::VideoCapture</code>/<code>cv::VideoWriter</code>) — same story, DOM <code>&lt;video&gt;</code> element instead.</li>
+<li><strong><code>ximgproc</code>, <code>xphoto</code></strong> — not compiled in; none of <code>guidedFilter</code>, <code>l0Smooth</code>, <code>oilPainting</code>, <code>bm3dDenoising</code>, etc. exist in opencv.js at all, regardless of contrib availability.</li>
+<li><strong><code>calib3d</code>&rsquo;s full surface</strong> — only 12 of the module&rsquo;s functions are whitelisted; <code>calibrateCamera</code> (non-extended), <code>triangulatePoints</code>, stereo-rectification functions, etc. are absent.</li>
+<li><strong><code>stitching</code>, <code>photo</code>&rsquo;s NPR filters, <code>ml</code>, <code>text</code>, <code>saliency</code>, &hellip;</strong> — not whitelisted, not reachable, independent of whether the underlying module is compiled.</li>
+</ul>
+
+
+<p>This is architecturally different from this project&rsquo;s <code>qjs-opencv</code>, which binds close to the full <code>cv::</code> namespace it cares about (see this repo&rsquo;s own <code>TODO.md</code> coverage survey) rather than a hand-curated browser-oriented subset.</p>
+
+<hr />
+
+<h2>Memory management</h2>
+
+<p>Every embind-wrapped C++ object (<code>Mat</code>, <code>MatVector</code>, <code>CLAHE</code>, detector/matcher instances, &hellip;) must be freed explicitly with <code>.delete()</code> — there&rsquo;s no finalizer-driven cleanup the way this project&rsquo;s <code>qjs-opencv</code> bindings work (which rely on QuickJS GC + C++ destructors in the class finalizer). Forgetting <code>.delete()</code> in opencv.js is a real, common leak; this project&rsquo;s &ldquo;no copies, mutable, finalizers do the work&rdquo; memory model (see this repo&rsquo;s own <code>README</code>/<code>CLAUDE.md</code>) is a deliberate design difference, not an oversight.</p>

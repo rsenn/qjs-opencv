@@ -1,0 +1,26 @@
+Tanqram into readable QR-code
+---------------------------------------------------------------------------------------------------
+
+This is a general description and definition of:
+
+Method of detection of Tanqram which is a valid QR-code
+
+---------------------------------------------------------------------------------------------------
+       
+
+     |Graphic Analysys on Bitmap or Video stream
+     |
+     | Requirements
+       [
+        A bitmap or video frame with Black/White Tanqram-QR
+        Each tangram shape has black outline
+
+        7-Shapes: 5 triangles, a square and a parallelogram
+       ]
+              
+
+- Apply a canny edge-detection algorithm on the image
+       - Perform a cv::findContours 
+     ]     
+
+

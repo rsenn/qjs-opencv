@@ -1,0 +1,41 @@
+there is OpenCV.js whose bindings are specified in ../../opencv/modules/js/
+it is OpenCV C++ library compiled for the web using emscripten...
+can you figure out the exact and whole API from the files in the given directory, or do you need some other source?
+
+The built OpenCV.js is at https://docs.opencv.org/4.13.0/opencv.js
+Learn the API (especially for cv.Mat) and tell me if qjs-opencv is compatible...
+
+Then another task: 
+make me a small web-playground to tinker in OpenCV.js, so i can run tests there and compare the API... call it scripts/opencv.html
+
+
+--------------------------------------------
+
+apart from lasercutting i have other ideas:
+
+  - examples/sticker2svg.js: vectorization of photographed stickers (reproduce them as SVG, with colors and all):
+       come up with a proposed processing path: filtering, tracing, post-processing (psimpl?) of contours/lines and parallel to it also color recognition (making a palette),
+       contours need to be smoothed (psimple + fitting it to splines - quadratic+cubic as in SVG - if possible),
+       it needs to be a bit better than the vectorization in inkscape, but it will be specialized on stickers
+
+  - examples/collage-art.js: different segmentation methods for cutting out stuff from photos, to make collage-art in the style of Andy Warhol:
+       several algorithms to pick a motive from a photo (grabcut, but also some other means),
+       subtracting the background (or color-to-alpha) to make transparent-background images that can be layered,
+       composition algorithm,
+       no GUI: give a list of images or a directory as input... at least 1 motive per photo is chosen automatically (heuristic or random) and is warped on to a layer of the destination (collage consists of many images of the same size, with transparency so they can be imposed upon each other - output an image for each motive and also a combined final image))
+
+   - examples/vector-trace.js: battle hardened contour-tracing + line-detection (is a different thing and needs to be distinguished: contour == edges, lines = lines)
+        propose me a pipeline with sophisticated preprocessing (contrast-equalization, edge-aware filtering etc. consult TODO.md for what you recommended me there),
+        then findContours() or LSD or FLD or skeletonization+tracing,
+        then psimpl for polygon simplification,
+        then curve fitting for getting it into SVG paths.
+        Adaptive dynamic algorithm choosing depending on the result (if vectors are not good, start over with adjusted pipeline)..
+        Could machine learning help on this?
+
+Really consider everything OpenCV has to offer and in addition my algorithms in algorithms/ folder and include/psimpl.hpp
+
+First outline me what needs to be added/improved on the C++ binding layer.
+How could cv.Contour be converted in SVG path splines? are there algorithms in OpenCV already, does it need a library or could you write something in C++ in algorithms/ ?
+
+Only in the next step write the examples...
+

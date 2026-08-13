@@ -1,0 +1,6 @@
+Log file created at: 2026/02/08 01:04:35
+Running on machine: gniltag
+Running duration (h:mm:ss): 0:00:00
+Log line format: [IWEF]yyyymmdd hh:mm:ss.uuuuuu threadid file:line] msg
+I20260208 01:04:35.294232 48249 main_test.cpp:30] Usage:
+I20260208 01:04:35.294518 48249 main_test.cpp:31] ./detector <input-image> <output-image>

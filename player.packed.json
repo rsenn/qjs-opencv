@@ -1,0 +1,122 @@
+{
+  "source": "player.tif",
+  "sourceSize": {
+    "width": 256,
+    "height": 256
+  },
+  "tileWidth": 64,
+  "tileHeight": 63,
+  "offsetX": 24,
+  "offsetY": 18,
+  "grid": {
+    "cols": 3,
+    "rows": 3
+  },
+  "packedImage": "player.packed.png",
+  "packedGrid": {
+    "cols": 3,
+    "rows": 2
+  },
+  "uniqueTiles": [
+    {
+      "index": 0,
+      "outX": 0,
+      "outY": 0,
+      "sourceX": 24,
+      "sourceY": 18
+    },
+    {
+      "index": 1,
+      "outX": 64,
+      "outY": 0,
+      "sourceX": 24,
+      "sourceY": 81
+    },
+    {
+      "index": 2,
+      "outX": 128,
+      "outY": 0,
+      "sourceX": 152,
+      "sourceY": 81
+    },
+    {
+      "index": 3,
+      "outX": 0,
+      "outY": 63,
+      "sourceX": 24,
+      "sourceY": 144
+    },
+    {
+      "index": 4,
+      "outX": 64,
+      "outY": 63,
+      "sourceX": 152,
+      "sourceY": 144
+    }
+  ],
+  "tiles": [
+    {
+      "col": 0,
+      "row": 0,
+      "x": 24,
+      "y": 18,
+      "uniqueIndex": 0
+    },
+    {
+      "col": 1,
+      "row": 0,
+      "x": 88,
+      "y": 18,
+      "uniqueIndex": 0
+    },
+    {
+      "col": 2,
+      "row": 0,
+      "x": 152,
+      "y": 18,
+      "uniqueIndex": 0
+    },
+    {
+      "col": 0,
+      "row": 1,
+      "x": 24,
+      "y": 81,
+      "uniqueIndex": 1
+    },
+    {
+      "col": 1,
+      "row": 1,
+      "x": 88,
+      "y": 81,
+      "uniqueIndex": 1
+    },
+    {
+      "col": 2,
+      "row": 1,
+      "x": 152,
+      "y": 81,
+      "uniqueIndex": 2
+    },
+    {
+      "col": 0,
+      "row": 2,
+      "x": 24,
+      "y": 144,
+      "uniqueIndex": 3
+    },
+    {
+      "col": 1,
+      "row": 2,
+      "x": 88,
+      "y": 144,
+      "uniqueIndex": 3
+    },
+    {
+      "col": 2,
+      "row": 2,
+      "x": 152,
+      "y": 144,
+      "uniqueIndex": 4
+    }
+  ]
+}

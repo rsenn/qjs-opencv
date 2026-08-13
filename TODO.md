@@ -38,14 +38,17 @@ Test programs `test_matvector.cpp` and `test_pointvector.cpp` confirm:
 - MatVector.get(i) returns a Mat that can be read via `.data32S` or `.ptr<int32_t>()`
 - Zero-copy from native output, no int32→double conversion
 
-**PointVector (vector<Point>) - NOT VIABLE:**
+**PointVector (vector<Point>) - NOT VIABLE for Contours:**
 - findContours REQUIRES OutputArrayOfArrays, which accepts only:
   - vector<vector<Point>> (STD_VECTOR_VECTOR)
   - vector<Mat> (STD_VECTOR_MAT)
   - vector<UMat> (STD_VECTOR_UMAT)
-- Using vector<Point> fails with assertion error
-- Note: PointVector is vector<cv::Point> (vector<Vec2i>, 8 bytes), NOT vector<Vec4i>
-- It's used for flat point collections (e.g., KeyPoint.pt), not for contour storage
+- Using vector<Point> (Vec2i) or vector<Vec4i> fails with assertion error
+- Note: PointVector is vector<cv::Point> = vector<Vec2i> (8 bytes, 2 ints),
+  distinct from vector<Vec4i> (16 bytes, 4 ints) used by HoughLinesP
+- PointVector is useful for OTHER functions like HoughLinesP which accept
+  OutputArray (flat structure), but NOT for Contours (plural)
+- See test_pointvector_contours.cpp for verification
 
 **PointVectorVector (vector<vector<Point>>) - VIABLE but verbose:**
 - The C++ native format, works perfectly

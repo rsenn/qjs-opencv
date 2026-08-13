@@ -1,0 +1,108 @@
+{
+  "source": "EMERALD-RUN-TILES-2.jpg",
+  "sourceSize": {
+    "width": 256,
+    "height": 256
+  },
+  "tileWidth": 83,
+  "tileHeight": 79,
+  "offsetX": 15,
+  "offsetY": 0,
+  "grid": {
+    "cols": 2,
+    "rows": 3
+  },
+  "packedImage": "EMERALD-RUN-TILES-2.packed.png",
+  "packedGrid": {
+    "cols": 3,
+    "rows": 2
+  },
+  "uniqueTiles": [
+    {
+      "index": 0,
+      "outX": 0,
+      "outY": 0,
+      "sourceX": 15,
+      "sourceY": 0
+    },
+    {
+      "index": 1,
+      "outX": 83,
+      "outY": 0,
+      "sourceX": 98,
+      "sourceY": 0
+    },
+    {
+      "index": 2,
+      "outX": 166,
+      "outY": 0,
+      "sourceX": 15,
+      "sourceY": 79
+    },
+    {
+      "index": 3,
+      "outX": 0,
+      "outY": 79,
+      "sourceX": 98,
+      "sourceY": 79
+    },
+    {
+      "index": 4,
+      "outX": 83,
+      "outY": 79,
+      "sourceX": 15,
+      "sourceY": 158
+    },
+    {
+      "index": 5,
+      "outX": 166,
+      "outY": 79,
+      "sourceX": 98,
+      "sourceY": 158
+    }
+  ],
+  "tiles": [
+    {
+      "col": 0,
+      "row": 0,
+      "x": 15,
+      "y": 0,
+      "uniqueIndex": 0
+    },
+    {
+      "col": 1,
+      "row": 0,
+      "x": 98,
+      "y": 0,
+      "uniqueIndex": 1
+    },
+    {
+      "col": 0,
+      "row": 1,
+      "x": 15,
+      "y": 79,
+      "uniqueIndex": 2
+    },
+    {
+      "col": 1,
+      "row": 1,
+      "x": 98,
+      "y": 79,
+      "uniqueIndex": 3
+    },
+    {
+      "col": 0,
+      "row": 2,
+      "x": 15,
+      "y": 158,
+      "uniqueIndex": 4
+    },
+    {
+      "col": 1,
+      "row": 2,
+      "x": 98,
+      "y": 158,
+      "uniqueIndex": 5
+    }
+  ]
+}
