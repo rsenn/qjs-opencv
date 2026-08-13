@@ -269,6 +269,7 @@ js_barcode_detector_init(JSContext* ctx, JSModuleDef* bd) {
 
   if(bd) {
     JS_SetModuleExport(ctx, bd, "BarcodeDetector", barcode_detector_class);
+    JS_SetModuleExport(ctx, bd, "barcode_BarcodeDetector", barcode_detector_class);
     JS_SetModuleExportList(ctx, bd, js_barcode_detector_static_funcs, countof(js_barcode_detector_static_funcs));
   }
 
@@ -292,6 +293,7 @@ js_barcode_detector_constructor(JSContext* ctx, JSValue parent, const char* name
 extern "C" void
 js_barcode_detector_export(JSContext* ctx, JSModuleDef* bd) {
   JS_AddModuleExport(ctx, bd, "BarcodeDetector");
+  JS_AddModuleExport(ctx, bd, "barcode_BarcodeDetector");
   JS_AddModuleExportList(ctx, bd, js_barcode_detector_static_funcs, countof(js_barcode_detector_static_funcs));
 }
 

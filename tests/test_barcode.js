@@ -1,12 +1,12 @@
 import * as std from 'std';
-import { BarcodeDetector, Mat, Size, CV_8UC1 } from 'opencv';
+import { barcode_BarcodeDetector, Mat, Size, CV_8UC1 } from 'opencv';
 
 /* Exercises the BarcodeDetector API unified across OpenCV 4.x/5.x (see
  * migration-opencv5.md, "BarcodeDetector constructor signature change").
  * The same three constructor call shapes are expected to work on every
  * OpenCV version this project builds against - only the *effect* of the
  * two-argument form differs (real two-file model pre-5.x, modelPath-only
- * best effort on 5.x, reported via BarcodeDetector.LEGACY_CTOR).
+ * best effort on 5.x, reported via barcode_BarcodeDetector.LEGACY_CTOR).
  */
 
 let failed = 0;
@@ -21,21 +21,21 @@ function ok(name, fn) {
   }
 }
 
-console.log('BarcodeDetector.LEGACY_CTOR =', BarcodeDetector.LEGACY_CTOR,
-            BarcodeDetector.LEGACY_CTOR ? '(pre-5.x: two-file ctor is native)' : '(5.x: two-file ctor is emulated)');
+console.log('barcode_BarcodeDetector.LEGACY_CTOR =', barcode_BarcodeDetector.LEGACY_CTOR,
+            barcode_BarcodeDetector.LEGACY_CTOR ? '(pre-5.x: two-file ctor is native)' : '(5.x: two-file ctor is emulated)');
 
-ok('new BarcodeDetector() - no model', () => {
-  const bd = new BarcodeDetector();
-  if(!(bd instanceof BarcodeDetector)) throw new Error('not a BarcodeDetector instance');
+ok('new barcode_BarcodeDetector() - no model', () => {
+  const bd = new barcode_BarcodeDetector();
+  if(!(bd instanceof barcode_BarcodeDetector)) throw new Error('not a barcode_BarcodeDetector instance');
 });
 
-ok('new BarcodeDetector(modelPath) - single-file form', () => {
-  if(BarcodeDetector.LEGACY_CTOR) {
+ok('new barcode_BarcodeDetector(modelPath) - single-file form', () => {
+  if(barcode_BarcodeDetector.LEGACY_CTOR) {
     /* Pre-5.x has no single-file ctor; the unified API throws a clear,
      * catchable TypeError rather than silently ignoring the argument. */
     let threw = false;
     try {
-      new BarcodeDetector('nonexistent-model.onnx');
+      new barcode_BarcodeDetector('nonexistent-model.onnx');
     } catch(e) {
       threw = true;
     }
@@ -46,7 +46,7 @@ ok('new BarcodeDetector(modelPath) - single-file form', () => {
      * crash, which is what we're actually verifying here. */
     let threw = false;
     try {
-      new BarcodeDetector('nonexistent-model.onnx');
+      new barcode_BarcodeDetector('nonexistent-model.onnx');
     } catch(e) {
       threw = true;
     }
@@ -54,13 +54,13 @@ ok('new BarcodeDetector(modelPath) - single-file form', () => {
   }
 });
 
-ok('new BarcodeDetector(prototxtPath, modelPath) - two-file form', () => {
+ok('new barcode_BarcodeDetector(prototxtPath, modelPath) - two-file form', () => {
   /* Bogus paths on both branches - what matters is that construction goes
    * through the version-appropriate native ctor and fails predictably
    * (a catchable exception) instead of crashing, on every version. */
   let threw = false;
   try {
-    new BarcodeDetector('nonexistent.prototxt', 'nonexistent.caffemodel');
+    new barcode_BarcodeDetector('nonexistent.prototxt', 'nonexistent.caffemodel');
   } catch(e) {
     threw = true;
   }
@@ -83,7 +83,7 @@ function callDetector(name, fn) {
 }
 
 ok('detect()/decodeWithType()/detectAndDecodeWithType() on a blank image', () => {
-  const bd = new BarcodeDetector();
+  const bd = new barcode_BarcodeDetector();
   const blank = new Mat(new Size(200, 200), CV_8UC1);
   blank.setTo(255);
 

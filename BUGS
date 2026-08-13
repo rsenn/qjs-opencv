@@ -168,11 +168,12 @@
     ../test-opencv.js
 
 
-- opencv-js-api-mismatch-barcode-detector-name: qjs-opencv exposes
-  `BarcodeDetector` (short name) while opencv.js uses the full
-  namespaced name `barcode_BarcodeDetector`.
-  Affected files:
-    tests/test_barcode.js
+- FIXED: opencv-js-api-mismatch-barcode-detector-name: Added
+  `barcode_BarcodeDetector` as an alias export for the BarcodeDetector
+  class, matching opencv.js's naming convention. Both `BarcodeDetector`
+  (for backward compatibility) and `barcode_BarcodeDetector` (opencv.js
+  compatible) are now available as imports. Updated test_barcode.js to
+  use the opencv.js-compatible name.
 
 
 - opencv-js-api-mismatch-absent-symbols: Symbols used in qjs-opencv
