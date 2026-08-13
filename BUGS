@@ -768,11 +768,19 @@
   return Float64Array for zero-copy bridging into cv::_InputOutputArray.
 
 
-- no-opencvjs-matvector: opencv.js exposes MatVector (and PointVector,
+- FIXED: no-opencvjs-matvector: opencv.js exposes MatVector (and PointVector,
   KeyPointVector, DMatchVector, RectVector) via Emscripten's
   register_vector<T>(). These are manually-managed containers that
-  require explicit .delete() calls. qjs-opencv has no equivalent — it
-  uses plain JS arrays throughout.
+  require explicit .delete() calls in opencv.js. qjs-opencv now implements
+  these using template infrastructure in include/js_vector.hpp.
+
+  **Status:** IMPLEMENTED ✓ (2026-08-13)
+  - File: js_matvector.cpp
+  - All methods working: push_back, get, set, size, delete, Symbol.iterator
+  - Tested with findContours output
+  - Uses JSVector<T> template class from include/js_vector.hpp
+  - GC-friendly: .delete() is optional (no-op), finalizer handles cleanup
+  - Keeps .delete() method for opencv.js API compatibility
 
   ## opencv.js MatVector API (from Emscripten register_vector<cv::Mat>)
 
@@ -916,11 +924,174 @@
 
   ### Enhanced JS ergonomics (beyond opencv.js):
   - Symbol.iterator: enable `for (let mat of mv)` iteration
-  - length property: alias for size() 
+  - length property: alias for size()
   - .delete() optional: finalizer handles cleanup, .delete() is no-op
     (kept for opencv.js API compat)
   - Numeric indexing via Proxy or direct property set is NOT needed —
     use .get(i) for opencv.js compat, or iterate with for..of
+
+
+- IMPLEMENTED: opencvjs-pointvector: PointVector (std::vector<cv::Point>) API.
+  **Status:** IMPLEMENTED ✓ (2026-08-13)
+  - File: js_pointvector.cpp
+  - All methods working: push_back, get, set, size, delete, Symbol.iterator
+  - Uses JSVector<cv::Point> template class
+  - JSConverter<cv::Point> specialization handles conversion
+  
+  **opencv.js API:**
+  - Constructor: `new cv.PointVector()` - create empty vector
+  - Methods: `push_back(point)`, `get(i)`, `set(i, point)`, `size()`, `delete()`
+  - Iterator: `for (const point of pointVector) { ... }`
+  - Used by: `approxPolyDP()`, `contourArea()`, `arcLength()`, `boundingRect()`,
+    `convexHull()`, `minEnclosingCircle()`, `minEnclosingTriangle()`, `fitEllipse()`,
+    `fitLine()`, `pointPolygonTest()`, `drawContours()` (single contour)
+  
+  **Example usage:**
+  ```javascript
+  const points = new cv.PointVector();
+  points.push_back(new cv.Point(10, 20));
+  points.push_back(new cv.Point(30, 40));
+  const area = cv.contourArea(points);
+  ```
+
+
+- IMPLEMENTED: opencvjs-rectvector: RectVector (std::vector<cv::Rect>) API.
+  **Status:** IMPLEMENTED ✓ (2026-08-13)
+  - File: js_rectvector.cpp
+  - All methods working: push_back, get, set, size, delete, Symbol.iterator
+  - Uses JSVector<cv::Rect> template class
+  - JSConverter<cv::Rect> specialization handles conversion
+  
+  **opencv.js API:**
+  - Constructor: `new cv.RectVector()` - create empty vector
+  - Methods: `push_back(rect)`, `get(i)`, `set(i, rect)`, `size()`, `delete()`
+  - Iterator: `for (const rect of rectVector) { ... }`
+  - Used by: `detectMultiScale()`, `groupRectangles()`, `HOGDescriptor.detectMultiScale()`
+  
+  **Example usage:**
+  ```javascript
+  const faces = new cv.RectVector();
+  classifier.detectMultiScale(gray, faces);
+  for (let i = 0; i < faces.size(); i++) {
+      const face = faces.get(i);
+      cv.rectangle(frame, face, [0, 255, 0, 255], 2);
+  }
+  ```
+
+
+- IMPLEMENTED: opencvjs-keypointvector: KeyPointVector (std::vector<cv::KeyPoint>) API.
+  **Status:** IMPLEMENTED ✓ (2026-08-13)
+  - File: js_keypointvector.cpp
+  - All methods working: push_back, get, set, size, delete, Symbol.iterator
+  - Uses JSVector<cv::KeyPoint> template class
+  - JSConverter<cv::KeyPoint> specialization in js_keypoint.hpp
+  - Requires KeyPoint class (js_keypoint.cpp) which is implemented
+  
+  **opencv.js API:**
+  - Constructor: `new cv.KeyPointVector()` - create empty vector
+  - Methods: `push_back(keypoint)`, `get(i)`, `set(i, keypoint)`, `size()`, `delete()`
+  - Iterator: `for (const keypoint of keypointVector) { ... }`
+  - Used by: `FeatureDetector.detect()`, `DescriptorMatcher.match()`, `drawKeypoints()`
+  
+  **Example usage:**
+  ```javascript
+  const keypoints = new cv.KeyPointVector();
+  detector.detect(gray, keypoints);
+  cv.drawKeypoints(frame, keypoints, frame, [0, 255, 0, 255]);
+  ```
+
+
+- PARTIAL: opencvjs-dmatchvector: DMatchVector (std::vector<cv::DMatch>) API.
+  **Status:** PARTIALLY IMPLEMENTED (2026-08-13)
+  - File: js_dmatchvector.cpp
+  - Vector container: IMPLEMENTED ✓ (push_back, get, set, size, delete, iterator)
+  - **DMatch class: NOT IMPLEMENTED** ❌
+    - Need to create js_dmatch.cpp with DMatch class
+    - DMatch has fields: queryIdx (int), trainIdx (int), imgIdx (int), distance (float)
+    - Constructor: `new cv.DMatch(queryIdx, trainIdx, distance)` or
+      `new cv.DMatch(queryIdx, trainIdx, imgIdx, distance)`
+  
+  **Required work:**
+  1. Create js_dmatch.cpp with DMatch class implementation
+  2. Add JSConverter<cv::DMatch> specialization in js_vector.hpp (already done)
+  3. Export DMatch class in init_module.cpp
+  4. Test DMatchVector with DescriptorMatcher
+  
+  **opencv.js API:**
+  - Constructor: `new cv.DMatchVector()` - create empty vector
+  - Methods: `push_back(match)`, `get(i)`, `set(i, match)`, `size()`, `delete()`
+  - Iterator: `for (const match of dmatchVector) { ... }`
+  - Used by: `DescriptorMatcher.match()`, `BFMatcher.match()`, `FlannBasedMatcher.match()`,
+    `drawMatches()`
+  
+  **Example usage (after DMatch implementation):**
+  ```javascript
+  const matches = new cv.DMatchVector();
+  matcher.match(descriptors1, descriptors2, matches);
+  for (let i = 0; i < matches.size(); i++) {
+      const match = matches.get(i);
+      console.log('Match:', match.queryIdx, '->', match.trainIdx, 'distance:', match.distance);
+  }
+  ```
+
+
+- IMPLEMENTED: opencvjs-primitive-vectors: Primitive type vectors API.
+  **Status:** IMPLEMENTED ✓ (2026-08-13)
+  - File: js_primitivevectors.cpp
+  - All 5 types implemented: IntVector, FloatVector, DoubleVector, CharVector, StringVector
+  - All methods working: push_back, get, set, size, delete, Symbol.iterator
+  - Uses JSVector<T> template class with JSConverter specializations for primitives
+  
+  **opencv.js API:**
+  - **IntVector** (std::vector<int>)
+  - **FloatVector** (std::vector<float>)
+  - **DoubleVector** (std::vector<double>)
+  - **CharVector** (std::vector<char>)
+  - **StringVector** (std::vector<std::string>)
+  
+  **API for all:**
+  - Constructor: `new cv.IntVector()` / `new cv.FloatVector()` / etc.
+  - Methods: `push_back(value)`, `get(i)`, `set(i, value)`, `size()`, `delete()`
+  - Iterator: `for (const value of vector) { ... }`
+  - Used by: Various OpenCV functions that take arrays of primitives
+  
+  **Example usage:**
+  ```javascript
+  const indices = new cv.IntVector();
+  indices.push_back(0);
+  indices.push_back(1);
+  indices.push_back(2);
+  
+  const weights = new cv.FloatVector();
+  weights.push_back(0.5);
+  weights.push_back(0.3);
+  weights.push_back(0.2);
+  ```
+
+
+- IMPLEMENTED: opencvjs-vector-template-infrastructure: Common template infrastructure.
+  **Status:** IMPLEMENTED ✓ (2026-08-13)
+  - Header: include/js_vector.hpp
+  - Template class: `JSVector<T>` with common implementation
+  - Template helper: `js_register_vector<T>()` for registration
+  - JSConverter<T> specializations for type conversion
+  
+  **Design:**
+  - JSVector<T> template class with all methods (push_back, get, set, size, delete)
+  - js_register_vector<T>() for registration and export
+  - JSConverter specializations for: int, float, double, char, std::string, cv::Mat,
+    cv::Point, cv::Rect, cv::KeyPoint, cv::DMatch (DMatch pending js_dmatch.cpp)
+  - Symbol.iterator support for all vector types
+  - GC-friendly: finalizer handles cleanup, .delete() is optional
+  
+  **Files:**
+  - include/js_vector.hpp - Template infrastructure
+  - js_matvector.cpp - MatVector implementation
+  - js_pointvector.cpp - PointVector implementation
+  - js_rectvector.cpp - RectVector implementation
+  - js_keypointvector.cpp - KeyPointVector implementation
+  - js_dmatchvector.cpp - DMatchVector implementation
+  - js_primitivevectors.cpp - Int/Float/Double/Char/String vectors
 
 
 - FIXED: contour-methods-migration: Phase 1 complete (2026-08-13)
