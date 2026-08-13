@@ -11,74 +11,115 @@ qjsm scripts/binding_coverage.js --module=build/x86_64-linux-debug/opencv.so \
 ## Already solved, don't rebuild
 
 - **Contour → SVG bezier splines.** No OpenCV algorithm does this (checked the full coverage survey — no such symbol exists, bound or unbound). It doesn't need a library either: `js/cvVectorization.js` (uncommitted) already has a correct Schneider/Graphics-Gems `FitCurves` cubic-bezier fitter (`CurveFitter` — corner detection, chord-length parameterization, Newton-Raphson reparameterization, recursive error-based subdivision) consuming `contour.array` directly, plus `SvgBuilder` for multi-region path output with holes via `fill-rule="evenodd"`. Keep this in JS; it's O(n) per subdivision and QuickJS handles it fine. Only reconsider a C++ port if profiling on a real workload shows it's the bottleneck.
-- **Polyline simplification.** `cv.Contour` already exposes all seven `psimpl` algorithms as methods (`simplifyDouglasPeucker`, `simplifyReumannWitkam`, `simplifyOpheim`, `simplifyLang`, `simplifyNthPoint`, `simplifyRadialDistance`, `simplifyPerpendicularDistance`) — see `js_contour.cpp`.
+- **Polyline simplification.** `cv.Contour` already exposes all seven `psimpl` algorithms as methods. **Migrated to freestanding functions** in `cv.psimpl.*` namespace (cv.psimpl.douglasPeucker, cv.psimpl.reumannWitkam, etc.) for opencv.js compatibility. See `js_psimpl.cpp` and Phase 1 completion notes.
 - **Skeleton tracing.** `algorithms/skeleton_lines.hpp` (Guo-Hall thinning + topology-aware tracing that cuts at junctions) is fully bound: `skeletonizeGuohall`, `traceLines`, `degreeMap`, `skeletonizeAndTrace`. Distinct from `findContours` (region boundaries) and `LineSegmentDetector`/`FastLineDetector` (straight-line detection) — the three don't substitute for each other, pick per input character.
 - **Region proposal for collage-art's "several algorithms to pick a motive."** `grabCut` (bound) plus `ximgproc::segmentation` selective-search/graph-segmentation (already bound) cover this with zero new binding work.
 
-## MatVector migration (replaces Contour class)
+## Contour Migration Strategy
 
-**Status:** In progress  
-**Priority:** High (enables opencv.js compatibility, improves performance)
+### Overview
+Migrating from `Contour` class to opencv.js-compatible API through a phased approach. **Method migration is primary focus**; MatVector implementation is secondary and may not be 100% complete.
 
-### Rationale
-The current `Contour` class has two fundamental issues:
-1. **Performance:** `findContours` natively outputs `vector<vector<Point>>` (int32), but Contour stores `vector<Point2d>` (double). Every call forces a copy+conversion.
-2. **API mismatch:** opencv.js uses `MatVector` (vector<Mat>) where each contour is a Mat wrapping int32 point data. Contour's custom API is incompatible.
+### Phase 1: Method Migration ✓ COMPLETE
 
-### Solution: MatVector + Mat-based contours
-Implement `MatVector` class that wraps `std::vector<cv::Mat>`, matching opencv.js exactly. Each contour becomes a Mat of type `CV_32SC2` (Nx1, 2-channel int32 points). This is zero-copy from `findContours` output.
+**Goal:** Migrate Contour methods to freestanding functions for opencv.js compatibility
 
-### C++ feasibility (verified)
-Test programs `test_matvector.cpp` and `test_pointvector.cpp` confirm:
+**Status:** ✓ COMPLETE (2026-08-13)
+**Priority:** HIGH - enables existing opencv.js code to work
 
-**MatVector (vector<Mat>) - VIABLE:**
-- `findContours(image, contours, hierarchy, mode, method)` with `vector<Mat>` output works
+**Completed:**
+- ✓ All 16 shape analysis functions already available as freestanding functions:
+  contourArea, arcLength, boundingRect, approxPolyDP, convexHull,
+  fitEllipse, fitLine, isContourConvex, minAreaRect, minEnclosingCircle,
+  minEnclosingTriangle, pointPolygonTest, rotatedRectangleIntersection,
+  convexityDefects, matchShapes, HuMoments
+
+- ✓ All 7 psimpl methods migrated to cv.psimpl.* namespace:
+  cv.psimpl.reumannWitkam, cv.psimpl.opheim, cv.psimpl.lang,
+  cv.psimpl.douglasPeucker, cv.psimpl.nthPoint, cv.psimpl.radialDistance,
+  cv.psimpl.perpendicularDistance
+
+- ✓ psimpl functions accept: Mat CV_32SC2, Contour, or JS arrays
+- ✓ psimpl functions return: Mat CV_32SC2 (opencv.js compatible)
+
+**Testing:**
+- tests/unittests/test_contour_functions.js: 16 tests for shape analysis ✓
+- tests/unittests/test_psimpl_functions.js: 9 tests for psimpl functions ✓
+- All tests pass with Mat CV_32SC2 data (findContours output format)
+
+**Implementation:**
+- js_psimpl.cpp: New module with psimpl namespace (like cv.dnn)
+- Uses magic dispatch for 7 simplification algorithms
+- Supports Mat CV_32SC2 (zero-copy from findContours), Contour (backward compat), JS arrays
+
+**Impact:** Existing opencv.js code can now use freestanding functions with Mat CV_32SC2 data, enabling opencv.js compatibility without requiring MatVector implementation.
+
+**Drawing functions (already complete):**
+- circle, line, rectangle, polylines, fillPoly (renamed from drawCircle, drawLine, etc.)
+
+### Phase 2: MatVector Implementation (SECONDARY - Planned)
+Implement MatVector class for running opencv.js code that uses it.
+
+**Status:** Planned  
+**Priority:** MEDIUM - nice to have, enables more opencv.js compatibility  
+**Note:** Won't be 100% complete - some functions may still use Contour internally
+
+**Technical foundation (verified):**
+- `findContours` with `vector<Mat>` output works
 - Each contour Mat is `CV_32SC2`, Nx1 (rows=point count, cols=1)
-- Point data is identical to `vector<vector<Point>>` output (just different storage)
-- MatVector.get(i) returns a Mat that can be read via `.data32S` or `.ptr<int32_t>()`
 - Zero-copy from native output, no int32→double conversion
+- PointVector (vector<Vec2i>) NOT viable for Contours (findContours constraint)
+- See BUGS for detailed feasibility analysis
 
-**PointVector (vector<Point>) - NOT VIABLE for Contours:**
-- findContours REQUIRES OutputArrayOfArrays, which accepts only:
-  - vector<vector<Point>> (STD_VECTOR_VECTOR)
-  - vector<Mat> (STD_VECTOR_MAT)
-  - vector<UMat> (STD_VECTOR_UMAT)
-- Using vector<Point> (Vec2i) or vector<Vec4i> fails with assertion error
-- Note: PointVector is vector<cv::Point> = vector<Vec2i> (8 bytes, 2 ints),
-  distinct from vector<Vec4i> (16 bytes, 4 ints) used by HoughLinesP
-- PointVector is useful for OTHER functions like HoughLinesP which accept
-  OutputArray (flat structure), but NOT for Contours (plural)
-- See test_pointvector_contours.cpp for verification
+**Implementation:** See BUGS entry `no-opencvjs-matvector` for API design
 
-**PointVectorVector (vector<vector<Point>>) - VIABLE but verbose:**
-- The C++ native format, works perfectly
-- But requires verbose .get(i).get(j) API for point access
-- Less ergonomic than MatVector's .get(i) returning a Mat with .data32S access
+### Phase 3: Individual Function Assessment (ONGOING)
+Each function that currently accepts Contour/Contour[] needs individual assessment:
 
-**Conclusion:** MatVector is the best choice for Contour replacement.
+**Key question:** Does it use `Contour<T>`/`Contours<T>` internally or generic `JSInputOutputArray`?
 
-### JS ergonomics (beyond opencv.js)
-- `Symbol.iterator` for `for (let mat of mv)` iteration
-- `.length` property as alias for `.size()`
-- `.delete()` is optional (finalizer handles cleanup), kept for API compat
-- No numeric indexing — use `.get(i)` or iterate
+- **Generic JSInputOutputArray:** May already work with MatVector
+- **Contour<T>/Contours<T> internally:** Needs wrapper work or keep using Contour
 
-### Migration phases
-1. **Implement MatVector class** (js_matvector.cpp) — see BUGS entry for API
-2. **Update findContours** to output MatVector instead of vector<Contour>
-3. **Migrate polyline simplification methods** to freestanding functions (js_cv.cpp, SIMPLIFY_* magic enum)
-4. **Remove Contour class** and all dependencies
-5. **Update all client code** (18 JS files identified)
+**Process:**
+1. Identify all functions using Contour parameters
+2. Check if they use generic array wrappers or Contour-specific types
+3. Test with MatVector where possible
+4. Document which functions need work vs. which already work
 
-### Affected code
+### Binary Compatibility Insight ("Husarenstück")
+**Key insight:** Point and Vec2i have identical memory layout (8 bytes).
+
+**Opportunities:**
+- PointIterator can work with Mat CV_32SC2 data (reinterpret as Vec2i*)
+- LineIterator can work with Vec4i data (HoughLinesP output)
+- Zero-copy iteration on Mat-based contours
+- See BUGS: `make-dormant-point-line-iterator-plug-into-point-mat-vector`
+
+**Not a full solution:** Enables efficient iteration but doesn't solve all API compatibility issues.
+
+### Rationale for Phased Approach
+1. **Method migration is fastest path to opencv.js compatibility** - existing opencv.js code can work immediately
+2. **MatVector is complex** - requires changes to findContours, all contour functions, client code
+3. **100% MatVector migration unlikely** - some functions may need Contour internally for performance or type safety
+4. **Individual assessment required** - can't assume all functions work the same way
+5. **Test coverage critical** - verify each function works with new API
+
+### Affected Code
 - **C++:** js_contour.cpp/hpp, js_imgproc.cpp (findContours), js_cv.cpp (shape analysis), js_mat.cpp, js_draw.cpp, js_umat.hpp, js_point_iterator.cpp
-- **JS:** 18 files in qjs-opencv/tests, qjs-opencv, and plot-cv (see BUGS entry for full list)
+- **JS:** 18+ files in qjs-opencv/tests, qjs-opencv, and plot-cv (see BUGS for full list)
 
-### Shape analysis methods (already freestanding)
-approxPolyDP, arcLength, contourArea, boundingRect, minAreaRect, minEnclosingCircle, minEnclosingTriangle, convexHull, fitEllipse, fitLine, isContourConvex, convexityDefects, moments, HuMoments, matchShapes, pointPolygonTest, rotatedRectangleIntersection
+### Testing Infrastructure
+- **Framework:** tinytest.js (copied from ../quickjs/qjs-modules/tests/)
+- **Location:** tests/unittests/
+- **Pattern:** One test file per functionality group (test_contour_functions.js, test_matvector.js, etc.)
+- **Coverage:** Verify freestanding functions work, then MatVector integration
 
-### Polyline simplification (to migrate)
-simplifyReumannWitkam, simplifyOpheim, simplifyLang, simplifyDouglasPeucker, simplifyNthPoint, simplifyRadialDistance, simplifyPerpendicularDistance
+### Success Criteria
+1. **Phase 1:** All Contour methods available as freestanding functions, tests pass
+2. **Phase 2:** MatVector class implemented, findContours outputs MatVector
+3. **Phase 3:** Each contour function assessed and documented for MatVector compatibility
+4. **Overall:** Existing opencv.js code can run on qjs-opencv with minimal changes
 
 ---
 
