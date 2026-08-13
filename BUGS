@@ -74,35 +74,18 @@
     ../test-diagram.js
 
 
-- opencv-js-api-mismatch-dnn-namespace: qjs-opencv groups dnn symbols
-  under a `dnn` namespace object (`dnn.readNetFromONNX`, `dnn.Net`,
-  `dnn.blobFromImage`, etc.) while opencv.js exposes them as flat
-  functions on the `cv` object (`cv.readNetFromONNX`, `cv.blobFromImage`,
-  `cv.dnn_Net`). Additionally, qjs-opencv has model wrapper classes
-  (DetectionModel, ClassificationModel, SegmentationModel,
-  KeypointsModel, TextDetectionModel_EAST/DB, TextRecognitionModel,
-  Tokenizer, Model) that don't exist in opencv.js — only `dnn_Net`
-  (with setInput/forward/setPreferableBackend/getUnconnectedOutLayersNames)
-  is whitelisted. Also `dnn.NMSBoxes()` and `dnn.DNN_BACKEND_*`/
-  `dnn.DNN_TARGET_*` constants are absent from opencv.js.
+- FIXED: opencv-js-api-mismatch-dnn-namespace: Five functions that exist
+  in opencv.js (blobFromImage, readNet, readNetFromONNX,
+  readNetFromTensorflow, readNetFromTFLite) are now exported at module
+  level in addition to remaining in the dnn namespace for compatibility.
+  Model wrapper classes (DetectionModel, ClassificationModel, etc.) and
+  qjs-opencv-only functions (NMSBoxes, constants) remain under dnn.
   Affected files:
-    tests/test_segmentation_model.js    (dnn.SegmentationModel, dnn.Net)
-    tests/test_keypoints_model.js       (dnn.KeypointsModel, dnn.Net)
-    tests/test_text_detection_model_east.js (dnn.TextDetectionModel_EAST)
-    tests/test_text_detection_model_db.js   (dnn.TextDetectionModel_DB)
-    tests/test_tokenizer.js             (dnn.Tokenizer, enableKVCache)
-    tests/test_classification_model.js  (dnn.ClassificationModel)
-    tests/test_text_recognition_model.js (dnn.TextRecognitionModel)
-    tests/test_model.js                 (dnn.Model, DNN_BACKEND/TARGET)
-    tests/test_detection_model.js       (dnn.DetectionModel)
-    examples/qwen25_inference.js        (dnn namespace, dnn.Tokenizer,
-                                         ENGINE_ORT, CV_64SC1, mat.buffer,
-                                         N-dim Mat ctor, forward() signature)
-    js/cvVectorization.js               (dnn.readNetFromONNX, dnn.blobFromImage)
-    ../object_detection.js              (dnn namespace, dnn.NMSBoxes)
-    ../yolo.js                          (dnn namespace, readNetFromDarknet,
-                                         NMSBoxes, getLayerNames, getLayer)
-    ../photo_categorizer.js             (dnn namespace, dnn.NMSBoxes)
+    examples/qwen25_inference.js        (added readNetFromONNX import)
+    js/cvVectorization.js               (replaced dnn with flat imports)
+    ../object_detection.js              (added readNet, blobFromImage)
+    ../yolo.js                          (added blobFromImage)
+    ../photo_categorizer.js             (added readNetFromONNX, blobFromImage)
 
 
 - opencv-js-api-mismatch-line-class: qjs-opencv provides a `Line` class
@@ -167,13 +150,10 @@
     ../scan.js
 
 
-- opencv-js-api-mismatch-houghcircles-class: qjs-opencv exposes
-  `HoughCircles` as a class/wrapper while opencv.js has it as a plain
-  free function `cv.HoughCircles(src, circles, method, dp, minDist, ...)`.
-  Affected files:
-    tests/test_houghcircles.js
-    ../test-video.js
-    ../test-opencv.js
+- NOT-A-BUG: opencv-js-api-mismatch-houghcircles-class: HoughCircles is
+  already a plain free function in qjs-opencv (js_imgproc.cpp:2220),
+  identical to opencv.js. No class/wrapper exists — the original BUGS
+  entry was incorrect.
 
 
 - opencv-js-api-mismatch-hu-moments-signature: qjs-opencv's

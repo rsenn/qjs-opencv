@@ -2680,6 +2680,16 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
   return ret;
 }
 
+// Functions that also exist in opencv.js - exported at module level
+const JSCFunctionListEntry js_dnn_flat_funcs[] = {
+    JS_CFUNC_MAGIC_DEF("blobFromImage", 1, js_dnn_func, DNN_BLOBFROMIMAGE),
+    JS_CFUNC_MAGIC_DEF("readNet", 1, js_dnn_func, DNN_READNET),
+    JS_CFUNC_MAGIC_DEF("readNetFromONNX", 1, js_dnn_func, DNN_READNETFROMONNX),
+    JS_CFUNC_MAGIC_DEF("readNetFromTensorflow", 1, js_dnn_func, DNN_READNETFROMTENSORFLOW),
+    JS_CFUNC_MAGIC_DEF("readNetFromTFLite", 1, js_dnn_func, DNN_READNETFROMTFLITE),
+};
+
+// Functions that are qjs-opencv extensions - stay in dnn namespace
 const JSCFunctionListEntry js_dnn_dnn_funcs[] = {
     JS_PROP_INT32_DEF("DNN_BACKEND_DEFAULT", cv::dnn::DNN_BACKEND_DEFAULT, JS_PROP_ENUMERABLE),
 #ifndef HAVE_OPENCV_DNN_NEW_ENGINE
@@ -2720,7 +2730,6 @@ const JSCFunctionListEntry js_dnn_dnn_funcs[] = {
     JS_PROP_INT32_DEF("ENGINE_ORT", cv::dnn::ENGINE_ORT, JS_PROP_ENUMERABLE),
 #endif
 
-    JS_CFUNC_MAGIC_DEF("blobFromImage", 1, js_dnn_func, DNN_BLOBFROMIMAGE),
     JS_CFUNC_MAGIC_DEF("blobFromImages", 1, js_dnn_func, DNN_BLOBFROMIMAGES),
     JS_CFUNC_MAGIC_DEF("blobFromImagesWithParams", 1, js_dnn_func, DNN_BLOBFROMIMAGESWITHPARAMS),
     JS_CFUNC_MAGIC_DEF("blobFromImageWithParams", 1, js_dnn_func, DNN_BLOBFROMIMAGEWITHPARAMS),
@@ -2732,15 +2741,11 @@ const JSCFunctionListEntry js_dnn_dnn_funcs[] = {
     JS_CFUNC_MAGIC_DEF("imagesFromBlob", 2, js_dnn_func, DNN_IMAGESFROMBLOB),
     JS_CFUNC_MAGIC_DEF("NMSBoxes", 5, js_dnn_func, DNN_NMSBOXES),
     JS_CFUNC_MAGIC_DEF("NMSBoxesBatched", 6, js_dnn_func, DNN_NMSBOXESBATCHED),
-    JS_CFUNC_MAGIC_DEF("readNet", 1, js_dnn_func, DNN_READNET),
 #ifndef HAVE_OPENCV_DNN_NEW_ENGINE
     JS_CFUNC_MAGIC_DEF("readNetFromCaffe", 1, js_dnn_func, DNN_READNETFROMCAFFE),
     JS_CFUNC_MAGIC_DEF("readNetFromDarknet", 1, js_dnn_func, DNN_READNETFROMDARKNET),
 #endif
     JS_CFUNC_MAGIC_DEF("readNetFromModelOptimizer", 1, js_dnn_func, DNN_READNETFROMMODELOPTIMIZER),
-    JS_CFUNC_MAGIC_DEF("readNetFromONNX", 1, js_dnn_func, DNN_READNETFROMONNX),
-    JS_CFUNC_MAGIC_DEF("readNetFromTensorflow", 1, js_dnn_func, DNN_READNETFROMTENSORFLOW),
-    JS_CFUNC_MAGIC_DEF("readNetFromTFLite", 1, js_dnn_func, DNN_READNETFROMTFLITE),
 #ifndef HAVE_OPENCV_DNN_NEW_ENGINE
     JS_CFUNC_MAGIC_DEF("readNetFromTorch", 1, js_dnn_func, DNN_READNETFROMTORCH),
 #endif
@@ -2831,6 +2836,7 @@ js_dnn_init(JSContext* ctx, JSModuleDef* m) {
 
   if(m) {
     JS_SetModuleExport(ctx, m, "dnn", dnn_object);
+    JS_SetModuleExportList(ctx, m, js_dnn_flat_funcs, countof(js_dnn_flat_funcs));
   }
 
   return 0;
@@ -2839,6 +2845,7 @@ js_dnn_init(JSContext* ctx, JSModuleDef* m) {
 extern "C" void
 js_dnn_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "dnn");
+  JS_AddModuleExportList(ctx, m, js_dnn_flat_funcs, countof(js_dnn_flat_funcs));
 }
 
 #if defined(JS_CV_MODULE)
