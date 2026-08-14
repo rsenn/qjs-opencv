@@ -739,12 +739,13 @@
   reference. The `.buffer` property (raw ArrayBuffer) remains unchanged.
 
 
-- opencv-js-api-mismatch-mat-typed-element-accessors: opencv.js has
-  per-type element accessors: `charAt`, `ucharAt`, `shortAt`,
-  `ushortAt`, `intAt`, `floatAt`, `doubleAt` (each with 1/2/3-arg
-  overloads). qjs-opencv has only a generic `.at(row, col)` that
-  infers type from `mat.type()`. Code using `mat.floatAt(r, c)`
-  throws `TypeError`. Fix: add 7 typed accessor methods to Mat proto.
+- FIXED: opencv-js-api-mismatch-mat-typed-element-accessors: Added 7
+  typed element accessors to Mat: `charAt`, `ucharAt`, `shortAt`,
+  `ushortAt`, `intAt`, `floatAt`, `doubleAt`. Each takes row and col
+  arguments and returns the element value as the appropriate JavaScript
+  type. Implemented using a single `js_mat_typed_at` function with magic
+  values for type dispatch. All accessors tested with test_mat_typed_accessors.js
+  (6/6 tests pass).
 
 
 - opencv-js-api-mismatch-mat-typed-ptr-variants: opencv.js has 7

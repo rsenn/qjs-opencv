@@ -82,6 +82,15 @@ enum {
   MAT_EXPR_SUB,
 };
 enum { MAT_ITERATOR_KEYS, MAT_ITERATOR_VALUES, MAT_ITERATOR_ENTRIES };
+enum {
+  MAT_TYPED_AT_CHAR = 0,
+  MAT_TYPED_AT_UCHAR,
+  MAT_TYPED_AT_SHORT,
+  MAT_TYPED_AT_USHORT,
+  MAT_TYPED_AT_INT,
+  MAT_TYPED_AT_FLOAT,
+  MAT_TYPED_AT_DOUBLE,
+};
 extern "C" {
 thread_local JSValue mat_proto = JS_UNDEFINED, mat_class = JS_UNDEFINED, mat_iterator_proto = JS_UNDEFINED, mat_iterator_class = JS_UNDEFINED;
 thread_local JSClassID js_mat_class_id = 0, js_mat_iterator_class_id = 0;
@@ -1130,6 +1139,57 @@ js_mat_at(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) 
 }
 
 static JSValue
+js_mat_typed_at(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  cv::Mat* m;
+  uint32_t row = 0, col = 0;
+
+  if(!(m = js_mat_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  // Parse row and col arguments
+  if(argc >= 1) {
+    JS_ToUint32(ctx, &row, argv[0]);
+  }
+  if(argc >= 2) {
+    JS_ToUint32(ctx, &col, argv[1]);
+  }
+
+  // Get the value based on the magic type
+  switch(magic) {
+    case MAT_TYPED_AT_CHAR: {
+      int8_t value = m->at<int8_t>(row, col);
+      return JS_NewInt32(ctx, value);
+    }
+    case MAT_TYPED_AT_UCHAR: {
+      uint8_t value = m->at<uint8_t>(row, col);
+      return JS_NewUint32(ctx, value);
+    }
+    case MAT_TYPED_AT_SHORT: {
+      int16_t value = m->at<int16_t>(row, col);
+      return JS_NewInt32(ctx, value);
+    }
+    case MAT_TYPED_AT_USHORT: {
+      uint16_t value = m->at<uint16_t>(row, col);
+      return JS_NewUint32(ctx, value);
+    }
+    case MAT_TYPED_AT_INT: {
+      int32_t value = m->at<int32_t>(row, col);
+      return JS_NewInt32(ctx, value);
+    }
+    case MAT_TYPED_AT_FLOAT: {
+      float value = m->at<float>(row, col);
+      return JS_NewFloat64(ctx, value);
+    }
+    case MAT_TYPED_AT_DOUBLE: {
+      double value = m->at<double>(row, col);
+      return JS_NewFloat64(ctx, value);
+    }
+    default:
+      return JS_ThrowTypeError(ctx, "Unknown typed accessor");
+  }
+}
+
+static JSValue
 js_mat_set(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   cv::Mat* m;
   uint32_t bytes;
@@ -1951,6 +2011,14 @@ const JSCFunctionListEntry js_mat_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("elemSize", 0, js_mat_funcs, METHOD_ELEMSIZE),
     JS_CFUNC_MAGIC_DEF("elemSize1", 0, js_mat_funcs, METHOD_ELEMSIZE1),
     JS_CFUNC_MAGIC_DEF("diag", 0, js_mat_funcs, METHOD_DIAG),
+
+    JS_CFUNC_MAGIC_DEF("charAt", 2, js_mat_typed_at, MAT_TYPED_AT_CHAR),
+    JS_CFUNC_MAGIC_DEF("ucharAt", 2, js_mat_typed_at, MAT_TYPED_AT_UCHAR),
+    JS_CFUNC_MAGIC_DEF("shortAt", 2, js_mat_typed_at, MAT_TYPED_AT_SHORT),
+    JS_CFUNC_MAGIC_DEF("ushortAt", 2, js_mat_typed_at, MAT_TYPED_AT_USHORT),
+    JS_CFUNC_MAGIC_DEF("intAt", 2, js_mat_typed_at, MAT_TYPED_AT_INT),
+    JS_CFUNC_MAGIC_DEF("floatAt", 2, js_mat_typed_at, MAT_TYPED_AT_FLOAT),
+    JS_CFUNC_MAGIC_DEF("doubleAt", 2, js_mat_typed_at, MAT_TYPED_AT_DOUBLE),
 
     JS_CFUNC_MAGIC_DEF("and", 2, js_mat_expr, MAT_EXPR_AND),
     JS_CFUNC_MAGIC_DEF("or", 2, js_mat_expr, MAT_EXPR_OR),
