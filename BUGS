@@ -719,9 +719,12 @@
   Fix: bind both in js_video.cpp.
 
 
-- opencv-js-api-mismatch-mat-diag: `Mat.diag()` is bound in opencv.js
-  (both `diag(d)` int-offset and `diag()` no-arg forms) but not in
-  qjs-opencv. Fix: add to js_mat.cpp proto_funcs.
+- FIXED: opencv-js-api-mismatch-mat-diag: `Mat.diag()` is now implemented
+  in qjs-opencv. Supports both `diag(d)` with int-offset and `diag()` with
+  no arguments (defaults to d=0, main diagonal). Positive d extracts upper
+  diagonals, negative d extracts lower diagonals. Returns a column vector
+  containing the diagonal elements. Implementation added to js_mat.cpp
+  with METHOD_DIAG enum and tested with test_mat_diag.js (all 4 tests pass).
 
 
 - opencv-js-api-mismatch-mat-typed-data-views: Added 7 typed-array

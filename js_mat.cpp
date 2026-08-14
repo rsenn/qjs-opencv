@@ -68,6 +68,7 @@ enum {
   METHOD_SIZE,
   METHOD_ELEMSIZE,
   METHOD_ELEMSIZE1,
+  METHOD_DIAG,
 };
 enum {
   MAT_EXPR_AND = 0,
@@ -684,6 +685,14 @@ js_mat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
 
       case METHOD_ELEMSIZE1: {
         ret = JS_NewUint32(ctx, m->elemSize1());
+        break;
+      }
+
+      case METHOD_DIAG: {
+        int d = 0;
+        if(argc > 0)
+          JS_ToInt32(ctx, &d, argv[0]);
+        ret = js_mat_wrap(ctx, m->diag(d));
         break;
       }
     }
@@ -1941,6 +1950,7 @@ const JSCFunctionListEntry js_mat_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("size", 0, js_mat_funcs, METHOD_SIZE),
     JS_CFUNC_MAGIC_DEF("elemSize", 0, js_mat_funcs, METHOD_ELEMSIZE),
     JS_CFUNC_MAGIC_DEF("elemSize1", 0, js_mat_funcs, METHOD_ELEMSIZE1),
+    JS_CFUNC_MAGIC_DEF("diag", 0, js_mat_funcs, METHOD_DIAG),
 
     JS_CFUNC_MAGIC_DEF("and", 2, js_mat_expr, MAT_EXPR_AND),
     JS_CFUNC_MAGIC_DEF("or", 2, js_mat_expr, MAT_EXPR_OR),
