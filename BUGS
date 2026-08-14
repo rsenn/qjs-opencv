@@ -727,7 +727,7 @@
   with METHOD_DIAG enum and tested with test_mat_diag.js (all 4 tests pass).
 
 
-- opencv-js-api-mismatch-mat-typed-data-views: Added 7 typed-array
+- FIXED: opencv-js-api-mismatch-mat-typed-data-views: Added 7 typed-array
   view properties to Mat: `.data` (Uint8Array), `.data8S` (Int8Array),
   `.data16U` (Uint16Array), `.data16S` (Int16Array), `.data32S` (Int32Array),
   `.data32F` (Float32Array), `.data64F` (Float64Array). Implemented using
@@ -766,7 +766,7 @@
   cases pass in test_point_size_1arg.js (6/6 tests).
 
 
-- opencv-js-api-mismatch-scalar-all: Added `Scalar.all(v)` static
+- FIXED: opencv-js-api-mismatch-scalar-all: Added `Scalar.all(v)` static
   method that returns `Float64Array(4)` with all components set to v.
   Implementation: manually create Scalar constructor in js_cv_init using
   JS_NewCFunctionMagic, then attach "all" as a static method using
