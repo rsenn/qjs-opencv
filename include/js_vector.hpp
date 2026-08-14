@@ -143,13 +143,34 @@ struct JSConverter<cv::Mat> {
 template<>
 struct JSConverter<cv::Point> {
     static cv::Point fromJS(JSContext* ctx, JSValueConst val) {
+        // First try to get as a Point object
         JSPointData<double>* point = js_point_data2(ctx, val);
-        if (!point) {
-            return cv::Point(0, 0);
+        if (point) {
+            return cv::Point(static_cast<int>(point->x), static_cast<int>(point->y));
         }
-        return cv::Point(static_cast<int>(point->x), static_cast<int>(point->y));
+        
+        // If not a Point object, try to read x and y properties from plain object
+        if (JS_IsObject(val)) {
+            JSValue x_val = JS_GetPropertyStr(ctx, val, "x");
+            JSValue y_val = JS_GetPropertyStr(ctx, val, "y");
+            
+            int x = 0, y = 0;
+            if (!JS_IsUndefined(x_val)) {
+                JS_ToInt32(ctx, &x, x_val);
+            }
+            if (!JS_IsUndefined(y_val)) {
+                JS_ToInt32(ctx, &y, y_val);
+            }
+            
+            JS_FreeValue(ctx, x_val);
+            JS_FreeValue(ctx, y_val);
+            
+            return cv::Point(x, y);
+        }
+        
+        return cv::Point(0, 0);
     }
-    
+
     static JSValue toJS(JSContext* ctx, const cv::Point& val) {
         return js_point_new(ctx, point_proto, val.x, val.y);
     }
@@ -627,5 +648,33 @@ void js_set_vector_export(JSContext* ctx, JSModuleDef* m, const char* name) {
         }
     }
 }
+
+/**
+ * @brief JSConverter specialization for std::vector<cv::Point>
+ *
+ * This converts between PointVector JS objects and std::vector<cv::Point>.
+ * Used for nested vectors like PointVectorVector.
+ * 
+ * Note: This specialization is defined AFTER the JSVector class definition
+ * to avoid incomplete type errors.
+ */
+template<>
+struct JSConverter<std::vector<cv::Point>> {
+    static std::vector<cv::Point> fromJS(JSContext* ctx, JSValueConst val) {
+        JSClassID point_vector_class_id = js_vector_get_class_id<cv::Point>();
+        JSVector<cv::Point>* vector = JSVector<cv::Point>::fromJS(ctx, val, point_vector_class_id);
+        if (!vector) {
+            return std::vector<cv::Point>();
+        }
+        return *(vector->vec);
+    }
+
+    static JSValue toJS(JSContext* ctx, const std::vector<cv::Point>& val) {
+        JSClassID point_vector_class_id = js_vector_get_class_id<cv::Point>();
+        JSVector<cv::Point>* new_vector = new JSVector<cv::Point>();
+        *(new_vector->vec) = val;
+        return new_vector->toJS(ctx, point_vector_class_id);
+    }
+};
 
 #endif // JS_VECTOR_HPP
