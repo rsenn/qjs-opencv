@@ -143,32 +143,9 @@ struct JSConverter<cv::Mat> {
 template<>
 struct JSConverter<cv::Point> {
     static cv::Point fromJS(JSContext* ctx, JSValueConst val) {
-        // First try to get as a Point object
-        JSPointData<double>* point = js_point_data2(ctx, val);
-        if (point) {
-            return cv::Point(static_cast<int>(point->x), static_cast<int>(point->y));
-        }
-        
-        // If not a Point object, try to read x and y properties from plain object
-        if (JS_IsObject(val)) {
-            JSValue x_val = JS_GetPropertyStr(ctx, val, "x");
-            JSValue y_val = JS_GetPropertyStr(ctx, val, "y");
-            
-            int x = 0, y = 0;
-            if (!JS_IsUndefined(x_val)) {
-                JS_ToInt32(ctx, &x, x_val);
-            }
-            if (!JS_IsUndefined(y_val)) {
-                JS_ToInt32(ctx, &y, y_val);
-            }
-            
-            JS_FreeValue(ctx, x_val);
-            JS_FreeValue(ctx, y_val);
-            
-            return cv::Point(x, y);
-        }
-        
-        return cv::Point(0, 0);
+        cv::Point result(0, 0);
+        js_point_read(ctx, val, &result);
+        return result;
     }
 
     static JSValue toJS(JSContext* ctx, const cv::Point& val) {
@@ -182,13 +159,11 @@ struct JSConverter<cv::Point> {
 template<>
 struct JSConverter<cv::Point2f> {
     static cv::Point2f fromJS(JSContext* ctx, JSValueConst val) {
-        JSPointData<double>* point = js_point_data2(ctx, val);
-        if (!point) {
-            return cv::Point2f(0, 0);
-        }
-        return cv::Point2f(static_cast<float>(point->x), static_cast<float>(point->y));
+        cv::Point2f result(0.0f, 0.0f);
+        js_point_read(ctx, val, &result);
+        return result;
     }
-    
+
     static JSValue toJS(JSContext* ctx, const cv::Point2f& val) {
         return js_point_new(ctx, point_proto, val.x, val.y);
     }

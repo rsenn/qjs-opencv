@@ -102,11 +102,12 @@ Implement MatVector class for running opencv.js code that uses it.
 - ✓ Symbol.iterator support for all vector types
 - ✓ Automatic memory management via finalizers (GC-friendly, no manual delete required)
 
-**Implemented Vector Types (10/16):**
+**Implemented Vector Types (11/16):**
 
 HIGH Priority (all implemented):
 - ✓ MatVector - vector<Mat> for findContours, split, merge, calcHist, aruco
 - ✓ PointVector - vector<Point> for general point collections
+- ✓ PointVectorVector - vector<vector<Point>> for nested point collections (findContours alternative output)
 - ✓ KeyPointVector - vector<KeyPoint> for ORB, FAST, GFTT feature detection
 - ✓ DMatchVector - vector<DMatch> for BFMatcher, drawMatches
 - ✓ RectVector - vector<Rect> for rectangle collections
@@ -123,7 +124,6 @@ NOT YET IMPLEMENTED (low priority, rarely used):
 - ⏳ Point3fVector - vector<Point3f> for 3D points
 - ⏳ DMatchVectorVector - vector<vector<DMatch>> for knnMatch
 - ⏳ KeyPointVectorVector - vector<vector<KeyPoint>> for multi-image detection
-- ⏳ PointVectorVector - vector<vector<Point>> for nested point collections
 - ⏳ CharVectorVector - vector<vector<char>> for nested binary data
 
 **Testing:**
@@ -156,13 +156,35 @@ NOT YET IMPLEMENTED (low priority, rarely used):
 - BUGS: `opencvjs-vector-containers` for full API spec
 - BUGS: `no-opencvjs-matvector` for MatVector-specific design
 
-### Phase 3: Individual Function Assessment (ONGOING)
-Each function that currently accepts Contour/Contour[] needs individual assessment:
+### Phase 2B: findContours Integration ✓ COMPLETE
 
-**Key question:** Does it use `Contour<T>`/`Contours<T>` internally or generic `JSInputOutputArray`?
+**Goal:** Make findContours work with MatVector and PointVectorVector as output arrays
 
-- **Generic JSInputOutputArray:** May already work with MatVector
-- **Contour<T>/Contours<T> internally:** Needs wrapper work or keep using Contour
+**Status:** ✓ COMPLETE (2026-08-13)
+**Priority:** HIGH - enables zero-copy performance with opencv.js-compatible API
+
+**Implementation:**
+- ✓ Modified js_cv_find_contours to detect output array type:
+  - MatVector (vector<Mat>) - zero-copy, each contour as CV_32SC2 Mat
+  - PointVectorVector (vector<vector<Point>>) - zero-copy, native C++ type
+  - Traditional JS array - backward compatible, converts to Contour objects
+- ✓ Added PointVector support to contourArea function
+- ✓ All three output types produce identical results (tested with 2 rectangles)
+- ✓ Comprehensive test suite: test_findcontours_vectors.js
+
+**Testing Results:**
+- MatVector: 2 contours found, areas 3481 and 2401 ✓
+- PointVectorVector: 2 contours found, areas 3481 and 2401 ✓
+- Traditional array: 2 contours found, areas 3481 and 2401 ✓
+- All areas match across all three output types ✓
+- Hierarchy support working ✓
+
+**Performance Benefits:**
+- MatVector: Zero-copy, direct access to OpenCV's internal Mat objects
+- PointVectorVector: Zero-copy, uses native C++ vector<vector<Point>> type
+- Traditional array: Requires conversion (backward compatibility)
+
+**See test_findcontours_vectors.js for usage examples.**
 
 **Process:**
 1. Identify all functions using Contour parameters
