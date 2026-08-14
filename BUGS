@@ -1009,30 +1009,24 @@
   ```
 
 
-- PARTIAL: opencvjs-dmatchvector: DMatchVector (std::vector<cv::DMatch>) API.
-  **Status:** PARTIALLY IMPLEMENTED (2026-08-13)
+- FIXED: opencvjs-dmatchvector: DMatchVector (std::vector<cv::DMatch>) API.
+  **Status:** IMPLEMENTED ✓ (2026-08-15)
   - File: js_dmatchvector.cpp
   - Vector container: IMPLEMENTED ✓ (push_back, get, set, size, delete, iterator)
-  - **DMatch class: NOT IMPLEMENTED** ❌
-    - Need to create js_dmatch.cpp with DMatch class
-    - DMatch has fields: queryIdx (int), trainIdx (int), imgIdx (int), distance (float)
-    - Constructor: `new cv.DMatch(queryIdx, trainIdx, distance)` or
-      `new cv.DMatch(queryIdx, trainIdx, imgIdx, distance)`
-  
-  **Required work:**
-  1. Create js_dmatch.cpp with DMatch class implementation
-  2. Add JSConverter<cv::DMatch> specialization in js_vector.hpp (already done)
-  3. Export DMatch class in init_module.cpp
-  4. Test DMatchVector with DescriptorMatcher
-  
+  - DMatch class: IMPLEMENTED ✓ (js_dmatch.cpp) — fields queryIdx, trainIdx,
+    imgIdx, distance; constructors `new cv.DMatch(queryIdx, trainIdx, distance)`
+    and `new cv.DMatch(queryIdx, trainIdx, imgIdx, distance)`
+  - Verified: push_back/get round-trips DMatch objects correctly through
+    DMatchVector, including field values and `instanceof cv.DMatch`
+
   **opencv.js API:**
   - Constructor: `new cv.DMatchVector()` - create empty vector
   - Methods: `push_back(match)`, `get(i)`, `set(i, match)`, `size()`, `delete()`
   - Iterator: `for (const match of dmatchVector) { ... }`
   - Used by: `DescriptorMatcher.match()`, `BFMatcher.match()`, `FlannBasedMatcher.match()`,
     `drawMatches()`
-  
-  **Example usage (after DMatch implementation):**
+
+  **Example usage:**
   ```javascript
   const matches = new cv.DMatchVector();
   matcher.match(descriptors1, descriptors2, matches);
