@@ -958,6 +958,9 @@ enum {
   METHOD_DETECTANDCOMPUTE,
   METHOD_WRITE,
   METHOD_READ,
+  METHOD_GET_DEFAULT_NAME,
+  METHOD_DESCRIPTOR_SIZE,
+  METHOD_DESCRIPTOR_TYPE,
 };
 
 static JSValue
@@ -1053,6 +1056,22 @@ js_feature2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
           ptr->read(*fn);
         }
 
+        break;
+      }
+
+      case METHOD_GET_DEFAULT_NAME: {
+        std::string name = (*s)->getDefaultName();
+        ret = JS_NewStringLen(ctx, name.data(), name.size());
+        break;
+      }
+
+      case METHOD_DESCRIPTOR_SIZE: {
+        ret = JS_NewInt32(ctx, (*s)->descriptorSize());
+        break;
+      }
+
+      case METHOD_DESCRIPTOR_TYPE: {
+        ret = JS_NewInt32(ctx, (*s)->descriptorType());
         break;
       }
     }
@@ -1189,11 +1208,11 @@ const JSCFunctionListEntry js_feature2d_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("detectAndCompute", 4, js_feature2d_method, METHOD_DETECTANDCOMPUTE),
     JS_CFUNC_MAGIC_DEF("write", 1, js_feature2d_method, METHOD_WRITE),
     JS_CFUNC_MAGIC_DEF("read", 1, js_feature2d_method, METHOD_READ),
+    JS_CFUNC_MAGIC_DEF("getDefaultName", 0, js_feature2d_method, METHOD_GET_DEFAULT_NAME),
+    JS_CFUNC_MAGIC_DEF("descriptorSize", 0, js_feature2d_method, METHOD_DESCRIPTOR_SIZE),
+    JS_CFUNC_MAGIC_DEF("descriptorType", 0, js_feature2d_method, METHOD_DESCRIPTOR_TYPE),
     JS_CGETSET_MAGIC_DEF("empty", js_feature2d_getter, 0, PROP_EMPTY),
-    JS_CGETSET_MAGIC_DEF("defaultName", js_feature2d_getter, 0, PROP_DEFAULT_NAME),
     JS_CGETSET_MAGIC_DEF("defaultNorm", js_feature2d_getter, 0, PROP_DEFAULT_NORM),
-    JS_CGETSET_MAGIC_DEF("descriptorSize", js_feature2d_getter, 0, PROP_DESCRIPTOR_SIZE),
-    JS_CGETSET_MAGIC_DEF("descriptorType", js_feature2d_getter, 0, PROP_DESCRIPTOR_TYPE),
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "Feature2D", JS_PROP_CONFIGURABLE),
 };
 

@@ -694,13 +694,15 @@
     ../yolo.js
 
 
-- opencv-js-api-mismatch-feature2d-methods-vs-properties: qjs-opencv
-  exposes `descriptorSize`, `descriptorType`, `defaultName` as
-  properties while opencv.js has them as methods: `descriptorSize()`,
-  `descriptorType()`, `getDefaultName()`. Also `Feature2D.write()`/
-  `.read()` (serialize/deserialize) are absent from opencv.js.
-  Affected files:
-    ../test-features2d.js
+- FIXED: opencv-js-api-mismatch-feature2d-methods-vs-properties: Changed
+  Feature2D properties to methods to match opencv.js API:
+  - `defaultName` property → `getDefaultName()` method
+  - `descriptorSize` property → `descriptorSize()` method
+  - `descriptorType` property → `descriptorType()` method
+  Implementation: Added METHOD_GET_DEFAULT_NAME, METHOD_DESCRIPTOR_SIZE,
+  and METHOD_DESCRIPTOR_TYPE to js_feature2d_method enum and changed
+  JS_CGETSET_MAGIC_DEF to JS_CFUNC_MAGIC_DEF in js_feature2d_proto_funcs.
+  All tests pass in test_feature2d_methods.js (4/4 tests).
 
 
 - opencv-js-api-mismatch-cv64sc1-and-ndim-mat: `CV_64SC1` (OpenCV 5
