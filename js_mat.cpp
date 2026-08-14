@@ -90,6 +90,13 @@ enum {
   MAT_TYPED_AT_INT,
   MAT_TYPED_AT_FLOAT,
   MAT_TYPED_AT_DOUBLE,
+  MAT_TYPED_PTR_CHAR,
+  MAT_TYPED_PTR_UCHAR,
+  MAT_TYPED_PTR_SHORT,
+  MAT_TYPED_PTR_USHORT,
+  MAT_TYPED_PTR_INT,
+  MAT_TYPED_PTR_FLOAT,
+  MAT_TYPED_PTR_DOUBLE,
 };
 extern "C" {
 thread_local JSValue mat_proto = JS_UNDEFINED, mat_class = JS_UNDEFINED, mat_iterator_proto = JS_UNDEFINED, mat_iterator_class = JS_UNDEFINED;
@@ -1190,6 +1197,82 @@ js_mat_typed_at(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
 }
 
 static JSValue
+js_mat_typed_ptr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  cv::Mat* m;
+  uint32_t row = 0;
+
+  if(!(m = js_mat_data2(ctx, this_val)))
+    return JS_EXCEPTION;
+
+  // Parse row argument (default to 0)
+  if(argc >= 1) {
+    JS_ToUint32(ctx, &row, argv[0]);
+  }
+
+  // Check bounds
+  if(row >= (uint32_t)m->rows) {
+    return JS_ThrowRangeError(ctx, "Row %u out of bounds (mat has %d rows)", row, m->rows);
+  }
+
+  // Create ArrayBuffer from Mat data
+  JSValue buf = js_mat_buffer(ctx, this_val);
+  if(JS_IsException(buf)) {
+    return JS_EXCEPTION;
+  }
+
+  // Calculate byte offset for the row
+  size_t byte_offset = row * m->step[0];
+  
+  // Get the typed array view based on the magic type
+  // For 2D matrices, return a view of one row
+  // length is the number of elements in the row (cols for 2D, or appropriate for multi-dimensional)
+  JSValue result;
+  switch(magic) {
+    case MAT_TYPED_PTR_CHAR: {
+      size_t length = m->cols * m->channels();
+      result = js_typedarray<int8_t>::from_buffer(ctx, buf, byte_offset, length);
+      break;
+    }
+    case MAT_TYPED_PTR_UCHAR: {
+      size_t length = m->cols * m->channels();
+      result = js_typedarray<uint8_t>::from_buffer(ctx, buf, byte_offset, length);
+      break;
+    }
+    case MAT_TYPED_PTR_SHORT: {
+      size_t length = m->cols * m->channels();
+      result = js_typedarray<int16_t>::from_buffer(ctx, buf, byte_offset, length);
+      break;
+    }
+    case MAT_TYPED_PTR_USHORT: {
+      size_t length = m->cols * m->channels();
+      result = js_typedarray<uint16_t>::from_buffer(ctx, buf, byte_offset, length);
+      break;
+    }
+    case MAT_TYPED_PTR_INT: {
+      size_t length = m->cols * m->channels();
+      result = js_typedarray<int32_t>::from_buffer(ctx, buf, byte_offset, length);
+      break;
+    }
+    case MAT_TYPED_PTR_FLOAT: {
+      size_t length = m->cols * m->channels();
+      result = js_typedarray<float>::from_buffer(ctx, buf, byte_offset, length);
+      break;
+    }
+    case MAT_TYPED_PTR_DOUBLE: {
+      size_t length = m->cols * m->channels();
+      result = js_typedarray<double>::from_buffer(ctx, buf, byte_offset, length);
+      break;
+    }
+    default:
+      JS_FreeValue(ctx, buf);
+      return JS_ThrowTypeError(ctx, "Unknown typed pointer accessor");
+  }
+
+  JS_FreeValue(ctx, buf);
+  return result;
+}
+
+static JSValue
 js_mat_set(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   cv::Mat* m;
   uint32_t bytes;
@@ -2019,6 +2102,14 @@ const JSCFunctionListEntry js_mat_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("intAt", 2, js_mat_typed_at, MAT_TYPED_AT_INT),
     JS_CFUNC_MAGIC_DEF("floatAt", 2, js_mat_typed_at, MAT_TYPED_AT_FLOAT),
     JS_CFUNC_MAGIC_DEF("doubleAt", 2, js_mat_typed_at, MAT_TYPED_AT_DOUBLE),
+
+    JS_CFUNC_MAGIC_DEF("charPtr", 1, js_mat_typed_ptr, MAT_TYPED_PTR_CHAR),
+    JS_CFUNC_MAGIC_DEF("ucharPtr", 1, js_mat_typed_ptr, MAT_TYPED_PTR_UCHAR),
+    JS_CFUNC_MAGIC_DEF("shortPtr", 1, js_mat_typed_ptr, MAT_TYPED_PTR_SHORT),
+    JS_CFUNC_MAGIC_DEF("ushortPtr", 1, js_mat_typed_ptr, MAT_TYPED_PTR_USHORT),
+    JS_CFUNC_MAGIC_DEF("intPtr", 1, js_mat_typed_ptr, MAT_TYPED_PTR_INT),
+    JS_CFUNC_MAGIC_DEF("floatPtr", 1, js_mat_typed_ptr, MAT_TYPED_PTR_FLOAT),
+    JS_CFUNC_MAGIC_DEF("doublePtr", 1, js_mat_typed_ptr, MAT_TYPED_PTR_DOUBLE),
 
     JS_CFUNC_MAGIC_DEF("and", 2, js_mat_expr, MAT_EXPR_AND),
     JS_CFUNC_MAGIC_DEF("or", 2, js_mat_expr, MAT_EXPR_OR),

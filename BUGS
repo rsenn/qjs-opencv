@@ -748,12 +748,14 @@
   (6/6 tests pass).
 
 
-- opencv-js-api-mismatch-mat-typed-ptr-variants: opencv.js has 7
-  typed pointer accessors: `ucharPtr`, `charPtr`, `shortPtr`,
-  `ushortPtr`, `intPtr`, `floatPtr`, `doublePtr` (each returning
-  `memory_view<T>` of length step1(0) or step1(1)). qjs-opencv has
-  only a single `.ptr()` that returns a typed array matching the Mat
-  depth. Fix: add the 7 typed variants to js_mat.cpp.
+- FIXED: opencv-js-api-mismatch-mat-typed-ptr-variants: Added 7 typed
+  pointer accessors to Mat: `charPtr`, `ucharPtr`, `shortPtr`,
+  `ushortPtr`, `intPtr`, `floatPtr`, `doublePtr`. Each takes a row
+  argument and returns a TypedArray view of that row's data. The length
+  is calculated as cols * channels() to handle multi-channel matrices.
+  Implemented using js_mat_buffer to create an ArrayBuffer and
+  js_typedarray<T>::from_buffer to create typed views. All accessors
+  tested with test_mat_typed_ptrs.js (4/4 tests pass).
 
 
 - opencv-js-api-mismatch-point-size-1arg-constructor: opencv.js's
