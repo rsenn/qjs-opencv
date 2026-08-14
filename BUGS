@@ -758,12 +758,12 @@
   tested with test_mat_typed_ptrs.js (4/4 tests pass).
 
 
-- opencv-js-api-mismatch-point-size-1arg-constructor: opencv.js's
-  `Point(x)` and `Size(width)` constructors default the second
-  component to 0 (`new Point(5)` → `{x:5, y:0}`). qjs-opencv requires
-  exactly 2 arguments and throws on 1-arg calls. Fix: relax the
-  `argc < 2` guard in js_point.cpp and js_size.cpp constructors to
-  default y/height to 0.
+- FIXED: opencv-js-api-mismatch-point-size-1arg-constructor: Modified
+  Point and Size constructors to support 1-arg calls with default values.
+  `new Point(x)` now defaults y to 0, `new Size(width)` now defaults
+  height to 0, matching opencv.js behavior. Both constructors also support
+  0-arg calls (defaulting to (0,0)) and 2-arg calls as before. All test
+  cases pass in test_point_size_1arg.js (6/6 tests).
 
 
 - opencv-js-api-mismatch-scalar-all: Added `Scalar.all(v)` static

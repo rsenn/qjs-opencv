@@ -90,8 +90,12 @@ js_size_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueCo
       if(JS_ToFloat64(ctx, &size.width, argv[0]))
         goto fail;
 
-      if(argc < 2 || JS_ToFloat64(ctx, &size.height, argv[1]))
+      // Default height to 0 if only 1 argument provided (opencv.js compatibility)
+      if(argc < 2) {
+        size.height = 0.0;
+      } else if(JS_ToFloat64(ctx, &size.height, argv[1])) {
         goto fail;
+      }
 
       *s = size;
     }

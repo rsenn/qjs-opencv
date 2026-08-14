@@ -170,8 +170,12 @@ js_point_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueC
       if(JS_ToFloat64(ctx, &pt->x, argv[0]))
         return JS_EXCEPTION;
 
-      if(argc < 2 || JS_ToFloat64(ctx, &pt->y, argv[1]))
+      // Default y to 0 if only 1 argument provided (opencv.js compatibility)
+      if(argc < 2) {
+        pt->y = 0.0;
+      } else if(JS_ToFloat64(ctx, &pt->y, argv[1])) {
         return JS_EXCEPTION;
+      }
     }
   }
 
