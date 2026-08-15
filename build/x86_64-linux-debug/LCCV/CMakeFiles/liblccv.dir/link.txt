@@ -1,2 +1,0 @@
-/usr/bin/ar qc liblccv.a CMakeFiles/liblccv.dir/src/lccv.cpp.o CMakeFiles/liblccv.dir/src/libcamera_app.cpp.o CMakeFiles/liblccv.dir/src/libcamera_app_options.cpp.o
-/usr/bin/ranlib liblccv.a
