@@ -496,6 +496,54 @@ js_cv.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/quickjs-opencv.dir/build.make CMakeFiles/quickjs-opencv.dir/js_cv.cpp.s
 .PHONY : js_cv.cpp.s
 
+js_dmatch.o: js_dmatch.cpp.o
+.PHONY : js_dmatch.o
+
+# target to build an object file
+js_dmatch.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/quickjs-opencv.dir/build.make CMakeFiles/quickjs-opencv.dir/js_dmatch.cpp.o
+.PHONY : js_dmatch.cpp.o
+
+js_dmatch.i: js_dmatch.cpp.i
+.PHONY : js_dmatch.i
+
+# target to preprocess a source file
+js_dmatch.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/quickjs-opencv.dir/build.make CMakeFiles/quickjs-opencv.dir/js_dmatch.cpp.i
+.PHONY : js_dmatch.cpp.i
+
+js_dmatch.s: js_dmatch.cpp.s
+.PHONY : js_dmatch.s
+
+# target to generate assembly for a file
+js_dmatch.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/quickjs-opencv.dir/build.make CMakeFiles/quickjs-opencv.dir/js_dmatch.cpp.s
+.PHONY : js_dmatch.cpp.s
+
+js_dmatchvector.o: js_dmatchvector.cpp.o
+.PHONY : js_dmatchvector.o
+
+# target to build an object file
+js_dmatchvector.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/quickjs-opencv.dir/build.make CMakeFiles/quickjs-opencv.dir/js_dmatchvector.cpp.o
+.PHONY : js_dmatchvector.cpp.o
+
+js_dmatchvector.i: js_dmatchvector.cpp.i
+.PHONY : js_dmatchvector.i
+
+# target to preprocess a source file
+js_dmatchvector.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/quickjs-opencv.dir/build.make CMakeFiles/quickjs-opencv.dir/js_dmatchvector.cpp.i
+.PHONY : js_dmatchvector.cpp.i
+
+js_dmatchvector.s: js_dmatchvector.cpp.s
+.PHONY : js_dmatchvector.s
+
+# target to generate assembly for a file
+js_dmatchvector.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/quickjs-opencv.dir/build.make CMakeFiles/quickjs-opencv.dir/js_dmatchvector.cpp.s
+.PHONY : js_dmatchvector.cpp.s
+
 js_dnn.o: js_dnn.cpp.o
 .PHONY : js_dnn.o
 
@@ -735,6 +783,30 @@ js_keypoint.s: js_keypoint.cpp.s
 js_keypoint.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/quickjs-opencv.dir/build.make CMakeFiles/quickjs-opencv.dir/js_keypoint.cpp.s
 .PHONY : js_keypoint.cpp.s
+
+js_keypointvector.o: js_keypointvector.cpp.o
+.PHONY : js_keypointvector.o
+
+# target to build an object file
+js_keypointvector.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/quickjs-opencv.dir/build.make CMakeFiles/quickjs-opencv.dir/js_keypointvector.cpp.o
+.PHONY : js_keypointvector.cpp.o
+
+js_keypointvector.i: js_keypointvector.cpp.i
+.PHONY : js_keypointvector.i
+
+# target to preprocess a source file
+js_keypointvector.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/quickjs-opencv.dir/build.make CMakeFiles/quickjs-opencv.dir/js_keypointvector.cpp.i
+.PHONY : js_keypointvector.cpp.i
+
+js_keypointvector.s: js_keypointvector.cpp.s
+.PHONY : js_keypointvector.s
+
+# target to generate assembly for a file
+js_keypointvector.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/quickjs-opencv.dir/build.make CMakeFiles/quickjs-opencv.dir/js_keypointvector.cpp.s
+.PHONY : js_keypointvector.cpp.s
 
 js_libcamera_app.o: js_libcamera_app.cpp.o
 .PHONY : js_libcamera_app.o
@@ -1000,6 +1072,78 @@ js_point_iterator.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/quickjs-opencv.dir/build.make CMakeFiles/quickjs-opencv.dir/js_point_iterator.cpp.s
 .PHONY : js_point_iterator.cpp.s
 
+js_pointvector.o: js_pointvector.cpp.o
+.PHONY : js_pointvector.o
+
+# target to build an object file
+js_pointvector.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/quickjs-opencv.dir/build.make CMakeFiles/quickjs-opencv.dir/js_pointvector.cpp.o
+.PHONY : js_pointvector.cpp.o
+
+js_pointvector.i: js_pointvector.cpp.i
+.PHONY : js_pointvector.i
+
+# target to preprocess a source file
+js_pointvector.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/quickjs-opencv.dir/build.make CMakeFiles/quickjs-opencv.dir/js_pointvector.cpp.i
+.PHONY : js_pointvector.cpp.i
+
+js_pointvector.s: js_pointvector.cpp.s
+.PHONY : js_pointvector.s
+
+# target to generate assembly for a file
+js_pointvector.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/quickjs-opencv.dir/build.make CMakeFiles/quickjs-opencv.dir/js_pointvector.cpp.s
+.PHONY : js_pointvector.cpp.s
+
+js_pointvectorvector.o: js_pointvectorvector.cpp.o
+.PHONY : js_pointvectorvector.o
+
+# target to build an object file
+js_pointvectorvector.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/quickjs-opencv.dir/build.make CMakeFiles/quickjs-opencv.dir/js_pointvectorvector.cpp.o
+.PHONY : js_pointvectorvector.cpp.o
+
+js_pointvectorvector.i: js_pointvectorvector.cpp.i
+.PHONY : js_pointvectorvector.i
+
+# target to preprocess a source file
+js_pointvectorvector.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/quickjs-opencv.dir/build.make CMakeFiles/quickjs-opencv.dir/js_pointvectorvector.cpp.i
+.PHONY : js_pointvectorvector.cpp.i
+
+js_pointvectorvector.s: js_pointvectorvector.cpp.s
+.PHONY : js_pointvectorvector.s
+
+# target to generate assembly for a file
+js_pointvectorvector.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/quickjs-opencv.dir/build.make CMakeFiles/quickjs-opencv.dir/js_pointvectorvector.cpp.s
+.PHONY : js_pointvectorvector.cpp.s
+
+js_primitivevectors.o: js_primitivevectors.cpp.o
+.PHONY : js_primitivevectors.o
+
+# target to build an object file
+js_primitivevectors.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/quickjs-opencv.dir/build.make CMakeFiles/quickjs-opencv.dir/js_primitivevectors.cpp.o
+.PHONY : js_primitivevectors.cpp.o
+
+js_primitivevectors.i: js_primitivevectors.cpp.i
+.PHONY : js_primitivevectors.i
+
+# target to preprocess a source file
+js_primitivevectors.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/quickjs-opencv.dir/build.make CMakeFiles/quickjs-opencv.dir/js_primitivevectors.cpp.i
+.PHONY : js_primitivevectors.cpp.i
+
+js_primitivevectors.s: js_primitivevectors.cpp.s
+.PHONY : js_primitivevectors.s
+
+# target to generate assembly for a file
+js_primitivevectors.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/quickjs-opencv.dir/build.make CMakeFiles/quickjs-opencv.dir/js_primitivevectors.cpp.s
+.PHONY : js_primitivevectors.cpp.s
+
 js_raspi_cam.o: js_raspi_cam.cpp.o
 .PHONY : js_raspi_cam.o
 
@@ -1047,6 +1191,30 @@ js_rect.s: js_rect.cpp.s
 js_rect.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/quickjs-opencv.dir/build.make CMakeFiles/quickjs-opencv.dir/js_rect.cpp.s
 .PHONY : js_rect.cpp.s
+
+js_rectvector.o: js_rectvector.cpp.o
+.PHONY : js_rectvector.o
+
+# target to build an object file
+js_rectvector.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/quickjs-opencv.dir/build.make CMakeFiles/quickjs-opencv.dir/js_rectvector.cpp.o
+.PHONY : js_rectvector.cpp.o
+
+js_rectvector.i: js_rectvector.cpp.i
+.PHONY : js_rectvector.i
+
+# target to preprocess a source file
+js_rectvector.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/quickjs-opencv.dir/build.make CMakeFiles/quickjs-opencv.dir/js_rectvector.cpp.i
+.PHONY : js_rectvector.cpp.i
+
+js_rectvector.s: js_rectvector.cpp.s
+.PHONY : js_rectvector.s
+
+# target to generate assembly for a file
+js_rectvector.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/quickjs-opencv.dir/build.make CMakeFiles/quickjs-opencv.dir/js_rectvector.cpp.s
+.PHONY : js_rectvector.cpp.s
 
 js_rotated_rect.o: js_rotated_rect.cpp.o
 .PHONY : js_rotated_rect.o
@@ -1532,6 +1700,12 @@ help:
 	@echo "... js_cv.o"
 	@echo "... js_cv.i"
 	@echo "... js_cv.s"
+	@echo "... js_dmatch.o"
+	@echo "... js_dmatch.i"
+	@echo "... js_dmatch.s"
+	@echo "... js_dmatchvector.o"
+	@echo "... js_dmatchvector.i"
+	@echo "... js_dmatchvector.s"
 	@echo "... js_dnn.o"
 	@echo "... js_dnn.i"
 	@echo "... js_dnn.s"
@@ -1562,6 +1736,9 @@ help:
 	@echo "... js_keypoint.o"
 	@echo "... js_keypoint.i"
 	@echo "... js_keypoint.s"
+	@echo "... js_keypointvector.o"
+	@echo "... js_keypointvector.i"
+	@echo "... js_keypointvector.s"
 	@echo "... js_libcamera_app.o"
 	@echo "... js_libcamera_app.i"
 	@echo "... js_libcamera_app.s"
@@ -1595,12 +1772,24 @@ help:
 	@echo "... js_point_iterator.o"
 	@echo "... js_point_iterator.i"
 	@echo "... js_point_iterator.s"
+	@echo "... js_pointvector.o"
+	@echo "... js_pointvector.i"
+	@echo "... js_pointvector.s"
+	@echo "... js_pointvectorvector.o"
+	@echo "... js_pointvectorvector.i"
+	@echo "... js_pointvectorvector.s"
+	@echo "... js_primitivevectors.o"
+	@echo "... js_primitivevectors.i"
+	@echo "... js_primitivevectors.s"
 	@echo "... js_raspi_cam.o"
 	@echo "... js_raspi_cam.i"
 	@echo "... js_raspi_cam.s"
 	@echo "... js_rect.o"
 	@echo "... js_rect.i"
 	@echo "... js_rect.s"
+	@echo "... js_rectvector.o"
+	@echo "... js_rectvector.i"
+	@echo "... js_rectvector.s"
 	@echo "... js_rotated_rect.o"
 	@echo "... js_rotated_rect.i"
 	@echo "... js_rotated_rect.s"

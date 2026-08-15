@@ -107,12 +107,12 @@ LCCV/clean: LCCV/CMakeFiles/liblccv.dir/clean
 CMakeFiles/quickjs-opencv.dir/all: LCCV/CMakeFiles/liblccv.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/quickjs-opencv.dir/build.make CMakeFiles/quickjs-opencv.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/quickjs-opencv.dir/build.make CMakeFiles/quickjs-opencv.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58 "Built target quickjs-opencv"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65 "Built target quickjs-opencv"
 .PHONY : CMakeFiles/quickjs-opencv.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/quickjs-opencv.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles 58
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles 65
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/quickjs-opencv.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles 0
 .PHONY : CMakeFiles/quickjs-opencv.dir/rule
@@ -124,7 +124,7 @@ quickjs-opencv: CMakeFiles/quickjs-opencv.dir/rule
 # codegen rule for target.
 CMakeFiles/quickjs-opencv.dir/codegen: LCCV/CMakeFiles/liblccv.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/quickjs-opencv.dir/build.make CMakeFiles/quickjs-opencv.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58 "Finished codegen for target quickjs-opencv"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/data/Projects/plot-cv/qjs-opencv/build/x86_64-linux-debug/CMakeFiles --progress-num=5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65 "Finished codegen for target quickjs-opencv"
 .PHONY : CMakeFiles/quickjs-opencv.dir/codegen
 
 # clean rule for target.
