@@ -23,6 +23,14 @@ js_vector_init(JSContext* ctx, JSModuleDef* m) {
     JSVector<cv::Point>::set_export(ctx, m, "PointVector");
   }
   if(result == 0) {
+    result = JSVector<cv::Point2f>::init(ctx, m, "Point2fVector");
+    JSVector<cv::Point2f>::set_export(ctx, m, "Point2fVector");
+  }
+  if(result == 0) {
+    result = JSVector<cv::Point3f>::init(ctx, m, "Point3fVector");
+    JSVector<cv::Point3f>::set_export(ctx, m, "Point3fVector");
+  }
+  if(result == 0) {
     result = JSVector<std::vector<cv::Point>>::init(ctx, m, "PointVectorVector");
     JSVector<std::vector<cv::Point>>::set_export(ctx, m, "PointVectorVector");
   }
@@ -60,6 +68,8 @@ js_vector_export(JSContext* ctx, JSModuleDef* m) {
   JSVector<cv::KeyPoint>::add_export(ctx, m, "KeyPointVector");
   JSVector<cv::Mat>::add_export(ctx, m, "MatVector");
   JSVector<cv::Point>::add_export(ctx, m, "PointVector");
+  JSVector<cv::Point2f>::add_export(ctx, m, "Point2fVector");
+  JSVector<cv::Point3f>::add_export(ctx, m, "Point3fVector");
   JSVector<std::vector<cv::Point>>::add_export(ctx, m, "PointVectorVector");
   JSVector<cv::Rect>::add_export(ctx, m, "RectVector");
   JSVector<int>::add_export(ctx, m, "IntVector");

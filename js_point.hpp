@@ -92,6 +92,40 @@ js_point_read(JSContext* ctx, JSValueConst point, JSPointData<T>* out) {
 
 template<class T>
 static inline int
+js_point3_read(JSContext* ctx, JSValueConst point, cv::Point3_<T>* out) {
+  int ret = 1;
+  JSValue x = JS_UNDEFINED, y = JS_UNDEFINED, z = JS_UNDEFINED;
+
+  if(JS_IsArray(ctx, point)) {
+    x = JS_GetPropertyUint32(ctx, point, 0);
+    y = JS_GetPropertyUint32(ctx, point, 1);
+    z = JS_GetPropertyUint32(ctx, point, 2);
+  } else if(JS_IsObject(point)) {
+    x = JS_GetPropertyStr(ctx, point, "x");
+    y = JS_GetPropertyStr(ctx, point, "y");
+    z = JS_GetPropertyStr(ctx, point, "z");
+  }
+
+  if(JS_IsNumber(x) && JS_IsNumber(y) && JS_IsNumber(z)) {
+    ret &= js_number_read(ctx, x, &out->x);
+    ret &= js_number_read(ctx, y, &out->y);
+    ret &= js_number_read(ctx, z, &out->z);
+  } else {
+    ret = 0;
+  }
+
+  if(!JS_IsUndefined(x))
+    JS_FreeValue(ctx, x);
+  if(!JS_IsUndefined(y))
+    JS_FreeValue(ctx, y);
+  if(!JS_IsUndefined(z))
+    JS_FreeValue(ctx, z);
+
+  return ret;
+}
+
+template<class T>
+static inline int
 js_point_argument(JSContext* ctx, int argc, JSValueConst argv[], JSPointData<T>* out) {
   int ret = 0;
 

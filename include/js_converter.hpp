@@ -4,6 +4,8 @@
 #include <quickjs.h>
 #include <opencv2/core.hpp>
 
+#include "js_typed_array.hpp"
+
 // Forward declarations for OpenCV type converters
 #include "js_mat.hpp"
 #include "js_point.hpp"
@@ -146,6 +148,22 @@ template<> struct JSConverter<cv::Point2f> {
   }
 
   static JSValue toJS(JSContext* ctx, const cv::Point2f& val) { return js_point_new(ctx, point_proto, val.x, val.y); }
+};
+
+/**
+ * @brief JSConverter specialization for cv::Point3f
+ */
+template<> struct JSConverter<cv::Point3f> {
+  static cv::Point3f fromJS(JSContext* ctx, JSValueConst val) {
+    cv::Point3f result(0.0f, 0.0f, 0.0f);
+    js_point3_read(ctx, val, &result);
+    return result;
+  }
+
+  static JSValue toJS(JSContext* ctx, const cv::Point3f& val) {
+    cv::Vec<float, 3> vec(val);
+    return js_typedarray_from(ctx, &vec[0], &vec[3]);
+  }
 };
 
 /**
