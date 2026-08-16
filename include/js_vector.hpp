@@ -6,6 +6,21 @@
 #include <vector>
 #include <string>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+int js_dmatchvector_init(JSContext*, JSModuleDef*);
+void js_dmatchvector_export(JSContext*, JSModuleDef*);
+int js_keypointvector_init(JSContext*, JSModuleDef*);
+void js_keypointvector_export(JSContext*, JSModuleDef*);
+int js_pointvector_init(JSContext*, JSModuleDef*);
+void js_pointvector_export(JSContext*, JSModuleDef*);
+int js_rectvector_init(JSContext*, JSModuleDef*);
+void js_rectvector_export(JSContext*, JSModuleDef*);
+#ifdef __cplusplus
+}
+#endif
+
 // Forward declarations for OpenCV type converters
 #include "js_mat.hpp"
 #include "js_point.hpp"
