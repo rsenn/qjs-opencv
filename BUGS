@@ -1304,7 +1304,7 @@
   iterator's own finalizer) to the source JSVector<T> object for the
   iterator's lifetime.
 
-- contourarea-spurious-internal-exception: cv.contourArea(mat) (js_imgproc.cpp,
+- FIXED: contourarea-spurious-internal-exception: cv.contourArea(mat) (js_imgproc.cpp,
   SHAPE_CONTOUR_AREA) speculatively calls
   `JSVector<cv::Point>::fromJS(ctx, argv[0])` - the 2-argument, ctx-taking
   overload - to detect whether argv[0] is a PointVector. When argv[0] is
@@ -1326,3 +1326,52 @@
                                 // object expected" to stderr despite
                                 // returning the correct area
     });
+
+  Fixed as a side effect of removing js_imgproc.cpp's JSContourData<double>
+  usage: SHAPE_CONTOUR_AREA no longer re-detects the contour type itself
+  (including the speculative PointVector probe) - it now just calls
+  cv::contourArea(src, oriented) using the `src` the shared js_imgproc_shape()
+  preamble already built (see FIXED: contour-getmat-dangling-reference).
+
+- boxpoints-only-accepts-mat: cv.boxPoints(rotatedRect, dst) requires `dst` to
+  be a cv.Mat - a cv.Contour or cv.PointVector destination throws (does not
+  crash) an OpenCV assertion. Root cause is inherent to cv::boxPoints() itself,
+  not this binding: it writes a raw 4x2 single-channel CV_32F matrix (matching
+  opencv.js/cv2's ndarray-shaped return value), not 4 points - and a
+  std::vector<Point>-backed OutputArray (what a Contour/PointVector's
+  destination becomes) can only be created as an Nx1 or 1xN point-shaped
+  array, never a genuine 4x2 matrix. This is not new: the previous
+  JSContourData<double>-based implementation required argv[1] to be a
+  cv.Contour and would have hit the same cv::_OutputArray::create() shape
+  assertion when boxPoints tried to create its 4x2 result into that Contour's
+  vector storage.
+
+    import('opencv').then(cv => {
+      const rr = new cv.RotatedRect({x: 50, y: 50}, {width: 40, height: 20}, 0);
+
+      const pts = new cv.Mat();
+      cv.boxPoints(rr, pts); // OK - 4x2 CV_32F Mat
+
+      const ptsContour = new cv.Contour();
+      cv.boxPoints(rr, ptsContour);
+      // Assertion failed: d <= 2 && (size0 == 1 || size1 == 1 || size0*size1 == 0)
+      //   in function 'create'
+    });
+
+- FIXED: pointpolygontest-crashes-process: cv.pointPolygonTest(contour, pt,
+  measureDist) (js_cv_point_polygon_test, js_imgproc.cpp) had no try/catch
+  around cv::pointPolygonTest(), and that call requires CV_32S/CV_32F point
+  data - a real cv.Contour's own storage is CV_64F (double), so calling it
+  with a genuine Contour threw an uncaught cv::Exception that aborted the
+  whole process (SIGABRT), not a catchable JS exception.
+
+    import('opencv').then(cv => {
+      const c = new cv.Contour([{x: 20, y: 20}, {x: 100, y: 20}, {x: 100, y: 100}, {x: 20, y: 100}]);
+      cv.pointPolygonTest(c, {x: 50, y: 50}, false); // process aborts (SIGABRT)
+    });
+
+  Fixed alongside the JSContourData<double> removal: the contour argument is
+  now read through js_shape_inputoutputarray() (converts CV_64F sources to
+  CV_32F, backed by a function-scope cv::Mat so the conversion outlives the
+  call), and the cv::pointPolygonTest() call is now wrapped in the same
+  try/catch -> js_cv_throw() pattern used elsewhere in this file.

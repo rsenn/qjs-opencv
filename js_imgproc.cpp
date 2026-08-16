@@ -1021,22 +1021,46 @@ js_cv_find_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   return ret;
 }
 
+/**
+ * @brief Get argv[i] as a JSInputOutputArray suitable for contour/shape
+ * functions that reject CV_64F point data (arcLength, pointPolygonTest,
+ * isContourConvex, ... all assert depth == CV_32S || depth == CV_32F).
+ *
+ * A cv.Contour's own storage is double-precision, so its InputArray comes
+ * back as CV_64F; convert it to CV_32F on demand, backed by `scratch` so the
+ * result stays valid for the rest of the caller's function body. Any other
+ * source (Mat CV_32SC2, PointVector, ...) already satisfies the depth
+ * requirement and is returned unconverted.
+ */
+static JSInputOutputArray
+js_shape_inputoutputarray(JSContext* ctx, JSValueConst value, cv::Mat& scratch) {
+  JSInputOutputArray arr = js_cv_inputoutputarray(ctx, value);
+
+  if(!js_is_noarray(arr) && arr.depth() == CV_64F) {
+    arr.getMat().convertTo(scratch, CV_32F);
+    arr = scratch;
+  }
+
+  return arr;
+}
+
 static JSValue
 js_cv_point_polygon_test(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  JSContourData<double>* contour;
+  cv::Mat converted;
+  JSInputOutputArray contour = js_shape_inputoutputarray(ctx, argv[0], converted);
   JSPointData<float> point;
   bool measureDist = false;
 
-  contour = js_contour_data2(ctx, argv[0]);
-
-  if(contour == nullptr)
+  if(js_is_noarray(contour))
     return JS_EXCEPTION;
 
   point = js_point_get(ctx, argv[1]);
   if(argc > 2)
     measureDist = JS_ToBool(ctx, argv[2]);
 
-  return JS_NewFloat64(ctx, cv::pointPolygonTest(*contour, point, measureDist));
+  try {
+    return JS_NewFloat64(ctx, cv::pointPolygonTest(contour, point, measureDist));
+  } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 }
 
 enum {
@@ -1922,25 +1946,14 @@ static JSValue
 js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSInputOutputArray src;
   JSValue ret = JS_UNDEFINED;
-  cv::Mat mat;
-  /* Must outlive `mat`/`src` below - contour_getmat() returns a zero-copy Mat
-   * view over fcontour's buffer, so fcontour has to stay alive for as long as
-   * mat/src are still in use (i.e. for the rest of this function call), not
-   * just for the scope of the `if` that fills it in. */
-  JSContourData<float> fcontour;
+  /* Must outlive `src` below - js_shape_inputoutputarray() converts a
+   * CV_64F source (e.g. a cv.Contour's own storage) into this Mat and
+   * returns a view over it, so it has to stay alive for as long as `src` is
+   * still in use, i.e. for the rest of this function call. */
+  cv::Mat converted;
 
-  if(magic < SHAPE_BOX_POINTS && argc > 0) {
-    JSContourData<double>* contour;
-
-    if((contour = js_contour_data(argv[0]))) {
-      fcontour.resize(contour->size());
-      std::copy(contour->begin(), contour->end(), fcontour.begin());
-
-      mat = contour_getmat(fcontour);
-      src = mat;
-    } else
-      src = js_cv_inputoutputarray(ctx, argv[0]);
-  }
+  if(magic < SHAPE_BOX_POINTS && argc > 0)
+    src = js_shape_inputoutputarray(ctx, argv[0], converted);
 
   try {
     switch(magic) {
@@ -1948,23 +1961,9 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
         double epsilon;
         BOOL closed = argc > 2 ? JS_ToBool(ctx, argv[3]) : FALSE;
         JS_ToFloat64(ctx, &epsilon, argv[2]);
-        JSContourData<double>*srcContour, *pContour;
-        // std::cerr << "epsilon = " << epsilon << std::endl;
 
-        if((srcContour = js_contour_data(argv[0])) && (pContour = js_contour_data(argv[1]))) {
-          JSContourData<float> src, dst;
-
-          src.resize(srcContour->size());
-          std::copy(srcContour->begin(), srcContour->end(), src.begin());
-          cv::approxPolyDP(src, dst, epsilon, closed);
-          pContour->resize(dst.size());
-          std::copy(dst.begin(), dst.end(), pContour->begin());
-
-        } else {
-          JSInputOutputArray approxCurve = js_cv_inputoutputarray(ctx, argv[1]);
-
-          cv::approxPolyDP(src, approxCurve, epsilon, closed);
-        }
+        JSInputOutputArray approxCurve = js_cv_inputoutputarray(ctx, argv[1]);
+        cv::approxPolyDP(src, approxCurve, epsilon, closed);
         break;
       }
 
@@ -2005,41 +2004,11 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
       }
 
       case SHAPE_CONTOUR_AREA: {
-        BOOL oriented;
-        oriented = argc > 1 ? JS_ToBool(ctx, argv[1]) : FALSE;
-        cv::Mat mat = src.getMat(0);
-        double area = 0;
-        JSContourData<double>* contour;
+        BOOL oriented = argc > 1 ? JS_ToBool(ctx, argv[1]) : FALSE;
 
-        if((contour = js_contour_data(argv[0]))) {
-          JSContourData<float> fcontour;
-          fcontour.resize(contour->size());
-          std::copy(contour->begin(), contour->end(), fcontour.begin());
-
-          mat = contour_getmat(fcontour);
-          area = cv::contourArea(mat, oriented);
-
-        } else {
-          // Check if it's a PointVector
-          auto* pointvector = JSVector<cv::Point>::fromJS(ctx, argv[0]);
-
-          if(pointvector) {
-            // Convert PointVector to Mat for contourArea
-            auto& points = *(pointvector->vec);
-
-            if(!points.empty()) {
-              cv::Mat pointsMat(1, points.size(), CV_32SC2, points.data());
-              area = cv::contourArea(pointsMat, oriented);
-            }
-          } else if(mat.rows > 0 && mat.cols > 0) {
-            area = cv::contourArea(src, oriented);
-          } else {
-            JSInputArray in = js_cv_inputarray(ctx, argv[0]);
-            area = cv::contourArea(in, oriented);
-          }
-        }
-
-        ret = JS_NewFloat64(ctx, area);
+        // `src` (built by the preamble above) already handles Mat,
+        // PointVector, and cv.Contour (converted to CV_32F) uniformly.
+        ret = JS_NewFloat64(ctx, cv::contourArea(src, oriented));
         break;
       }
 
@@ -2160,9 +2129,9 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
 
       case SHAPE_BOX_POINTS: {
         JSRotatedRectData* rr = js_rotated_rect_data2(ctx, argv[0]);
-        JSContourData<double>* points = js_contour_data2(ctx, argv[1]);
+        JSInputOutputArray points = js_cv_inputoutputarray(ctx, argv[1]);
 
-        cv::boxPoints(*rr, *points);
+        cv::boxPoints(*rr, points);
         break;
       }
 
