@@ -176,14 +176,12 @@ static JSValue
 js_draw_contour(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSInputOutputArray dst;
   int i = 0, ret = -1;
-  JSContoursData<int> contours;
+  JSInputOutputArray contour;
   int32_t index = -1, line_type = cv::LINE_8;
   JSColorData<double> color;
   int thickness = 1;
   bool antialias = true;
   JSPointData<int> offset{0, 0};
-
-  contours.resize(1);
 
   if(argc > i) {
     if(!js_is_noarray((dst = js_cv_inputoutputarray(ctx, argv[i]))))
@@ -194,11 +192,8 @@ js_draw_contour(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
   if(js_is_noarray(dst))
     return JS_EXCEPTION;
 
-  /*if(i == argc || !js_is_array(ctx, argv[i]))
-    return JS_EXCEPTION;*/
-
   if(argc > i)
-    js_value_to(ctx, argv[i++], contours[0]);
+    contour = js_cv_inputoutputarray(ctx, argv[i++]);
   if(argc > i)
     js_color_read(ctx, argv[i++], &color);
   if(argc > i)
@@ -208,9 +203,13 @@ js_draw_contour(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
   if(argc > i)
     js_value_to(ctx, argv[i++], offset);
 
-  std::cerr << "draw_contour() contours.length=" << contours.size() << " index=" << index << " thickness=" << thickness << std::endl;
+  std::cerr << "draw_contour() index=" << index << " thickness=" << thickness << std::endl;
 
   try {
+    // drawContours() takes InputArrayOfArrays - wrap the single contour
+    // (a Mat CV_32SC2 or a PointVector, zero-copy either way via getMat())
+    // in a one-element vector<Mat> of Mat *headers* (no pixel-data copy).
+    std::vector<cv::Mat> contours{contour.getMat()};
     cv::drawContours(dst, contours, index, cv::Scalar(color), thickness, line_type, cv::noArray(), INT_MAX, offset);
   } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 
@@ -221,7 +220,7 @@ js_draw_contour(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
 static JSValue
 js_draw_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSInputOutputArray dst = js_cv_inputoutputarray(ctx, argv[0]);
-  JSContoursData<int> contours;
+  JSInputOutputArray contours = js_cv_inputoutputarray(ctx, argv[1]);
   int32_t index = -1, line_type = cv::LINE_8;
   JSColorData<double> color;
   JSPointData<int> offset;
@@ -233,18 +232,6 @@ js_draw_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
     return JS_EXCEPTION;
 
   js_value_to(ctx, argv[2], index);
-
-  if(index >= 0) {
-    contours.resize(1);
-
-    JSValue element = JS_GetPropertyUint32(ctx, argv[1], index);
-    js_value_to(ctx, element, contours[0]);
-    JS_FreeValue(ctx, element);
-
-    index = 0;
-  } else {
-    js_array_to(ctx, argv[1], contours);
-  }
 
   js_color_read(ctx, argv[3], &color);
 
