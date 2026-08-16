@@ -27,10 +27,8 @@ js_cv_inputarray(JSContext* ctx, JSValueConst value) {
   if(js_contour_class_id) {
     JSContourData<double>* contour;
 
-    if((contour = js_contour_data(value))) {
-      cv::Mat m = contour_getmat(*contour);
-      return JSInputArray(m);
-    }
+    if((contour = js_contour_data(value)))
+      return JSInputArray(*contour);
   }
 
   JSInputArray inputArray = js_vector_inputarray(value);

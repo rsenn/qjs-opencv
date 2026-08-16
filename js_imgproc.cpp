@@ -1,7 +1,5 @@
 #include "cutils.h"
-#include "include/geometry.hpp"
 #include "js_cv.hpp"
-#include "include/js_array.hpp"
 #include "js_contour.hpp"
 #include "js_mat.hpp"
 #include "js_object.hpp"
@@ -9,10 +7,12 @@
 #include "js_rect.hpp"
 #include "js_rotated_rect.hpp"
 #include "js_size.hpp"
-#include "js_typed_array.hpp"
 #include "js_umat.hpp"
 #include "js_vector.hpp"
+#include "include/geometry.hpp"
 #include "include/jsbindings.hpp"
+#include "include/js_array.hpp"
+#include "include/js_typed_array.hpp"
 #include "include/js_inputoutputarray.hpp"
 #include <quickjs.h>
 #include "include/util.hpp"
@@ -1675,7 +1675,7 @@ js_imgproc_filter(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
         break;
       }
 
-        /*      case FILTER_DILATE: {
+        /*case FILTER_DILATE: {
                 JSInputOutputArray dst = js_cv_inputoutputarray(ctx, argv[1]);
                 JSInputArray kernel = js_cv_inputarray(ctx, argv[2]);
                 JSPointData<int> anchor;
@@ -1690,11 +1690,11 @@ js_imgproc_filter(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
                 if(argc > 6)
                   js_color_read(ctx, argv[6], &borderValue);
 
-                cv::dilate(src, dst, kernel, anchor, iterations, borderType,
-           cv::Scalar(borderValue)); break;
+                cv::dilate(src, dst, kernel, anchor, iterations, borderType, cv::Scalar(borderValue));
+                break;
               }*/
 
-        /*  case FILTER_ERODE: {
+        /*case FILTER_ERODE: {
             JSInputOutputArray dst = js_cv_inputoutputarray(ctx, argv[1]);
             JSInputArray kernel = js_cv_inputarray(ctx, argv[2]);
             JSPointData<int> anchor;
@@ -1710,9 +1710,10 @@ js_imgproc_filter(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
               js_color_read(ctx, argv[6], &borderValue);
 
             cv::erode(src, dst, kernel, anchor, iterations, borderType,
-          cv::Scalar(borderValue)); break;
-          }
-    */
+            cv::Scalar(borderValue));
+            break;
+          }*/
+
       case FILTER_FILTER2_D: {
         JSInputOutputArray dst = js_cv_inputoutputarray(ctx, argv[1]);
         int32_t ddepth;
@@ -1721,12 +1722,16 @@ js_imgproc_filter(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
         double delta = 0;
         int32_t borderType = cv::BORDER_CONSTANT;
         JS_ToInt32(ctx, &ddepth, argv[2]);
+
         if(!(argc >= 5 && js_point_read(ctx, argv[4], &anchor)))
           anchor = JSPointData<int>(-1, -1);
+
         if(argc > 5)
           JS_ToFloat64(ctx, &delta, argv[5]);
+
         if(argc > 6)
           JS_ToInt32(ctx, &borderType, argv[6]);
+
         cv::filter2D(src, dst, ddepth, kernel, anchor, delta, borderType);
         break;
       }
@@ -1738,10 +1743,13 @@ js_imgproc_filter(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
         int32_t borderType = cv::BORDER_DEFAULT;
         js_size_read(ctx, argv[2], &ksize);
         JS_ToFloat64(ctx, &sigmaX, argv[3]);
+
         if(argc > 4)
           JS_ToFloat64(ctx, &sigmaY, argv[4]);
+
         if(argc > 5)
           JS_ToInt32(ctx, &borderType, argv[5]);
+
         cv::GaussianBlur(src, dst, ksize, sigmaX, sigmaY, borderType);
         break;
       }
@@ -1760,6 +1768,7 @@ js_imgproc_filter(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
 
         if(argc > 6)
           JS_ToInt32(ctx, &ktype, argv[6]);
+
         cv::getDerivKernels(src, ky, dx, dy, ksize, normalize, ktype);
         break;
       }
@@ -1773,11 +1782,13 @@ js_imgproc_filter(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
         JS_ToFloat64(ctx, &theta, argv[2]);
         JS_ToFloat64(ctx, &lambd, argv[3]);
         JS_ToFloat64(ctx, &gamma, argv[4]);
+
         if(argc > 5)
           JS_ToFloat64(ctx, &psi, argv[5]);
 
         if(argc > 6)
           JS_ToInt32(ctx, &ktype, argv[6]);
+
         ret = js_mat_wrap(ctx, cv::getGaborKernel(ksize, sigma, theta, lambd, gamma, psi, ktype));
         break;
       }
@@ -1787,8 +1798,10 @@ js_imgproc_filter(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
         double sigma;
         JS_ToInt32(ctx, &ksize, argv[0]);
         JS_ToFloat64(ctx, &sigma, argv[1]);
+
         if(argc > 2)
           JS_ToInt32(ctx, &ktype, argv[2]);
+
         ret = js_mat_wrap(ctx, cv::getGaussianKernel(ksize, sigma, ktype));
         break;
       }
@@ -1799,10 +1812,11 @@ js_imgproc_filter(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
         JSPointData<int> anchor;
         JS_ToInt32(ctx, &shape, argv[0]);
         js_size_read(ctx, argv[1], &ksize);
+
         if(!(argc >= 3 && js_point_read(ctx, argv[2], &anchor)))
           anchor = JSPointData<int>(-1, -1);
-        ret = js_mat_wrap(ctx, cv::getStructuringElement(shape, ksize, anchor));
 
+        ret = js_mat_wrap(ctx, cv::getStructuringElement(shape, ksize, anchor));
         break;
       }
 
@@ -1863,8 +1877,10 @@ js_imgproc_filter(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
 
         if(argc > 5)
           JS_ToInt32(ctx, &ksize, argv[5]);
+
         if(argc > 6)
           JS_ToInt32(ctx, &borderType, argv[6]);
+
         cv::Sobel(src, dst, ddepth, dx, dy, ksize, borderType);
         break;
       }
@@ -1921,7 +1937,6 @@ js_imgproc_filter(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
 enum {
   SHAPE_APPROX_POLY_DP = 0,
   SHAPE_ARC_LENGTH,
-  SHAPE_BOX_POINTS,
   SHAPE_CONNECTED_COMPONENTS,
   SHAPE_CONNECTED_COMPONENTS_WITH_STATS,
   SHAPE_CONTOUR_AREA,
@@ -1933,33 +1948,40 @@ enum {
   SHAPE_FIT_ELLIPSE_AMS,
   SHAPE_FIT_ELLIPSE_DIRECT,
   SHAPE_FIT_LINE,
-  SHAPE_HU_MOMENTS,
   SHAPE_INTERSECT_CONVEX_CONVEX,
   SHAPE_IS_CONTOUR_CONVEX,
   SHAPE_MATCH_SHAPES,
   SHAPE_MIN_AREA_RECT,
   SHAPE_MIN_ENCLOSING_CIRCLE,
   SHAPE_MIN_ENCLOSING_TRIANGLE,
+  SHAPE_BOX_POINTS,
   SHAPE_ROTATED_RECTANGLE_INTERSECTION,
+  SHAPE_HU_MOMENTS,
 };
 
 static JSValue
 js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSInputOutputArray src;
   JSValue ret = JS_UNDEFINED;
-  JSContourData<double>* contour;
   cv::Mat mat;
+  /* Must outlive `mat`/`src` below - contour_getmat() returns a zero-copy Mat
+   * view over fcontour's buffer, so fcontour has to stay alive for as long as
+   * mat/src are still in use (i.e. for the rest of this function call), not
+   * just for the scope of the `if` that fills it in. */
+  JSContourData<float> fcontour;
 
-  if((contour = js_contour_data(argv[0]))) {
-    JSContourData<float> fcontour;
-    fcontour.resize(contour->size());
-    std::copy(contour->begin(), contour->end(), fcontour.begin());
+  if(magic < SHAPE_BOX_POINTS && argc > 0) {
+    JSContourData<double>* contour;
 
-    mat = contour_getmat(fcontour);
-    src = mat;
+    if((contour = js_contour_data(argv[0]))) {
+      fcontour.resize(contour->size());
+      std::copy(contour->begin(), contour->end(), fcontour.begin());
 
-  } else if(magic != SHAPE_BOX_POINTS && magic != SHAPE_HU_MOMENTS)
-    src = argc >= 1 ? js_cv_inputoutputarray(ctx, argv[0]) : cv::noArray();
+      mat = contour_getmat(fcontour);
+      src = mat;
+    } else
+      src = js_cv_inputoutputarray(ctx, argv[0]);
+  }
 
   try {
     switch(magic) {
@@ -1992,14 +2014,6 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
         double length = cv::arcLength(src, closed);
 
         ret = JS_NewFloat64(ctx, length);
-        break;
-      }
-
-      case SHAPE_BOX_POINTS: {
-        JSRotatedRectData* rr = js_rotated_rect_data2(ctx, argv[0]);
-        JSContourData<double>* points = js_contour_data2(ctx, argv[1]);
-
-        cv::boxPoints(*rr, *points);
         break;
       }
 
@@ -2092,16 +2106,6 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
         break;
       }
 
-      case SHAPE_CREATE_GENERALIZED_HOUGH_BALLARD: {
-        ret = js_generalized_hough_new(ctx, cv::createGeneralizedHoughBallard());
-        break;
-      }
-
-      case SHAPE_CREATE_GENERALIZED_HOUGH_GUIL: {
-        ret = js_generalized_hough_new(ctx, cv::createGeneralizedHoughGuil());
-        break;
-      }
-
       case SHAPE_FIT_ELLIPSE: {
         JSRotatedRectData rr = cv::fitEllipse(src);
         ret = js_rotated_rect_new(ctx, rr);
@@ -2128,40 +2132,8 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
         JS_ToFloat64(ctx, &param, argv[3]);
         JS_ToFloat64(ctx, &reps, argv[4]);
         JS_ToFloat64(ctx, &aeps, argv[5]);
+
         cv::fitLine(src, line, dist_type, param, reps, aeps);
-        break;
-      }
-
-      case SHAPE_HU_MOMENTS: {
-        std::map<std::string, double> moments_map;
-        js_object_to(ctx, argv[0], moments_map);
-
-        cv::Moments moments(moments_map["m00"],
-                            moments_map["m10"],
-                            moments_map["m01"],
-                            moments_map["m20"],
-                            moments_map["m11"],
-                            moments_map["m02"],
-                            moments_map["m30"],
-                            moments_map["m21"],
-                            moments_map["m12"],
-                            moments_map["m03"]);
-
-        if(argc > 1) {
-          // 2-arg form: HuMoments(moments, outputArray)
-          // TODO: could optimize by creating a buffer view into the OutputArray
-          // using JS_NewArrayBuffer with opaque set to the Mat's buffer pointer,
-          // with a finalizer to release the originating Mat.buffer reference
-          JSOutputArray hu_out = js_cv_outputarray(ctx, argv[1]);
-          cv::HuMoments(moments, hu_out);
-          ret = JS_DupValue(ctx, argv[1]);
-        } else {
-          // 1-arg form: HuMoments(moments) -> returns Float64Array(7)
-          std::array<double, 7> hu;
-          cv::HuMoments(moments, &hu[0]);
-          ret = js_array_from(ctx, hu.begin(), hu.end());
-        }
-
         break;
       }
 
@@ -2202,6 +2174,7 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
       case SHAPE_MIN_ENCLOSING_CIRCLE: {
         JSPointData<float> center;
         float radius;
+
         cv::minEnclosingCircle(src, center, radius);
 
         if(js_is_function(ctx, argv[1])) {
@@ -2226,6 +2199,47 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
         break;
       }
 
+      case SHAPE_BOX_POINTS: {
+        JSRotatedRectData* rr = js_rotated_rect_data2(ctx, argv[0]);
+        JSContourData<double>* points = js_contour_data2(ctx, argv[1]);
+
+        cv::boxPoints(*rr, *points);
+        break;
+      }
+
+      case SHAPE_HU_MOMENTS: {
+        std::map<std::string, double> moments_map;
+        js_object_to(ctx, argv[0], moments_map);
+
+        cv::Moments moments(moments_map["m00"],
+                            moments_map["m10"],
+                            moments_map["m01"],
+                            moments_map["m20"],
+                            moments_map["m11"],
+                            moments_map["m02"],
+                            moments_map["m30"],
+                            moments_map["m21"],
+                            moments_map["m12"],
+                            moments_map["m03"]);
+
+        if(argc > 1) {
+          // 2-arg form: HuMoments(moments, outputArray)
+          // TODO: could optimize by creating a buffer view into the OutputArray
+          // using JS_NewArrayBuffer with opaque set to the Mat's buffer pointer,
+          // with a finalizer to release the originating Mat.buffer reference
+          JSOutputArray hu_out = js_cv_outputarray(ctx, argv[1]);
+          cv::HuMoments(moments, hu_out);
+          ret = JS_DupValue(ctx, argv[1]);
+        } else {
+          // 1-arg form: HuMoments(moments) -> returns Float64Array(7)
+          std::array<double, 7> hu;
+          cv::HuMoments(moments, &hu[0]);
+          ret = js_typedarray_from(ctx, hu.begin(), hu.end());
+        }
+
+        break;
+      }
+
       case SHAPE_ROTATED_RECTANGLE_INTERSECTION: {
         cv::RotatedRect *r1, *r2;
         JSInputOutputArray intersectingRegion = js_cv_inputoutputarray(ctx, argv[2]);
@@ -2237,6 +2251,16 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
           return JS_ThrowTypeError(ctx, "argument 2 must be RotateRect");
 
         ret = JS_NewInt32(ctx, cv::rotatedRectangleIntersection(*r1, *r2, intersectingRegion));
+        break;
+      }
+
+      case SHAPE_CREATE_GENERALIZED_HOUGH_BALLARD: {
+        ret = js_generalized_hough_new(ctx, cv::createGeneralizedHoughBallard());
+        break;
+      }
+
+      case SHAPE_CREATE_GENERALIZED_HOUGH_GUIL: {
+        ret = js_generalized_hough_new(ctx, cv::createGeneralizedHoughGuil());
         break;
       }
     }
