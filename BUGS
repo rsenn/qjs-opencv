@@ -1333,10 +1333,11 @@
   cv::contourArea(src, oriented) using the `src` the shared js_imgproc_shape()
   preamble already built (see FIXED: contour-getmat-dangling-reference).
 
-- boxpoints-only-accepts-mat: cv.boxPoints(rotatedRect, dst) requires `dst` to
-  be a cv.Mat - a cv.Contour or cv.PointVector destination throws (does not
-  crash) an OpenCV assertion. Root cause is inherent to cv::boxPoints() itself,
-  not this binding: it writes a raw 4x2 single-channel CV_32F matrix (matching
+- PARTIALLY FIXED: boxpoints-only-accepts-mat: cv.boxPoints(rotatedRect, dst)
+  requires `dst` to be a cv.Mat or (as of the PointVector special-case below)
+  a cv.PointVector - a cv.Contour destination still throws (does not crash)
+  an OpenCV assertion. Root cause is inherent to cv::boxPoints() itself, not
+  this binding: it writes a raw 4x2 single-channel CV_32F matrix (matching
   opencv.js/cv2's ndarray-shaped return value), not 4 points - and a
   std::vector<Point>-backed OutputArray (what a Contour/PointVector's
   destination becomes) can only be created as an Nx1 or 1xN point-shaped
@@ -1352,11 +1353,24 @@
       const pts = new cv.Mat();
       cv.boxPoints(rr, pts); // OK - 4x2 CV_32F Mat
 
+      const pv = new cv.PointVector();
+      cv.boxPoints(rr, pv); // OK - 4-element PointVector (see fix below)
+
       const ptsContour = new cv.Contour();
       cv.boxPoints(rr, ptsContour);
       // Assertion failed: d <= 2 && (size0 == 1 || size1 == 1 || size0*size1 == 0)
       //   in function 'create'
     });
+
+  SHAPE_BOX_POINTS (js_imgproc.cpp) now special-cases a PointVector
+  destination: it detects one via JSVector<cv::Point>::fromJS(argv[1]) (the
+  ctx-less overload, so a non-PointVector argv[1] doesn't leave a stray
+  pending exception the way the ctx-taking overload does - see FIXED:
+  contourarea-spurious-internal-exception), computes boxPoints() into a local
+  cv::Mat as before, and copies the resulting 4 float points across into the
+  PointVector (rounded to int, matching PointVector's cv::Point element
+  type). A cv.Contour destination isn't special-cased the same way (its
+  points are double-precision, not int) and still hits the assertion above.
 
 - FIXED: pointpolygontest-crashes-process: cv.pointPolygonTest(contour, pt,
   measureDist) (js_cv_point_polygon_test, js_imgproc.cpp) had no try/catch

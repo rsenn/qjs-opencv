@@ -2129,9 +2129,26 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
 
       case SHAPE_BOX_POINTS: {
         JSRotatedRectData* rr = js_rotated_rect_data2(ctx, argv[0]);
-        JSInputOutputArray points = js_cv_inputoutputarray(ctx, argv[1]);
 
-        cv::boxPoints(*rr, points);
+        if(auto* pv = JSVector<cv::Point>::fromJS(argv[1])) {
+          // cv::boxPoints() always creates its output as a literal 4x2
+          // matrix, which a std::vector<Point>-backed OutputArray (a
+          // PointVector's storage) can't satisfy - see BUGS:
+          // boxpoints-only-accepts-mat. Compute into a local Mat instead
+          // and copy the 4 points across (same underlying float data, just
+          // reshaped/rounded to int to match PointVector's element type).
+          cv::Mat local;
+          cv::boxPoints(*rr, local);
+
+          pv->vec->resize(4);
+
+          for(int i = 0; i < 4; i++)
+            (*pv->vec)[i] = cv::Point(cvRound(local.at<float>(i, 0)), cvRound(local.at<float>(i, 1)));
+        } else {
+          JSInputOutputArray points = js_cv_inputoutputarray(ctx, argv[1]);
+
+          cv::boxPoints(*rr, points);
+        }
         break;
       }
 
