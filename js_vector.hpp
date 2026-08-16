@@ -412,8 +412,9 @@ template<class T> struct JSConverter<std::vector<T>> {
   static std::vector<T> fromJS(JSContext* ctx, JSValueConst val) {
     JSVector<T>* vector;
 
-    if((vector = JSVector<T>::fromJS(ctx, val)))
-      return *(vector->vec);
+      if(JSVector<T>::get_class_id() != 0)
+        if((vector = JSVector<T>::fromJS(val)))
+        return *(vector->vec);
 
     std::vector<T> vec;
     BOOL done;
@@ -439,9 +440,7 @@ template<class T> struct JSConverter<std::vector<T>> {
     // return a genuine JSVector<T> instance instead of a plain JS array -
     // mirrors the short-circuit fromJS() does above, for the JS-bound
     // direction. get_class_id() is always a well-formed call for any T (the
-    // template compiles regardless), so this is necessarily a runtime check:
-    // registration only happens once js_vector_init() runs, which isn't
-    // something a compile-time (SFINAE) check on T could observe.
+    // template compiles regardless), so this is a runtime check.
     if(JSVector<T>::get_class_id() != 0) {
       JSVector<T>* vector = new JSVector<T>();
       *vector->vec = val;

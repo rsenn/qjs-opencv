@@ -1258,13 +1258,14 @@
       console.log(pvv.get(0).constructor.name); // "Array", not "PointVector"
     });
 
-  Fixed by adding an explicit JSConverter<std::vector<cv::Point>> full
-  specialization in js_vector.hpp (more specialized than the generic
-  JSConverter<std::vector<T>>) whose toJS() builds a `new JSVector<cv::Point>`
-  wrapping a copy of the nested vector and returns it via that vector's own
-  toJS(), so get() now hands back a genuine PointVector instance. DMatch/
-  KeyPoint/Char VectorVector still return plain arrays (out of scope - only
-  the PointVectorVector case was requested).
+  Fixed generically: JSConverter<std::vector<T>>::toJS() in js_vector.hpp now
+  checks JSVector<T>::get_class_id() != 0 (i.e. a JSVector<T> class was
+  registered by js_vector_init(), the same signal fromJS() already used) and,
+  if so, wraps `val` in a `new JSVector<T>` and returns it via that vector's
+  own toJS() instead of building a plain JS array - so PointVectorVector,
+  DMatchVectorVector, KeyPointVectorVector, and CharVectorVector's get() all
+  now hand back genuine PointVector/DMatchVector/KeyPointVector/CharVector
+  instances.
 
   Fixing this exposed a second, pre-existing bug (see FIXED:
   jsvectoriterator-dangling-owner below): the temporary PointVector this
