@@ -386,9 +386,9 @@ js_mat_initialize(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
        * type, array) always requires the shape up front. Callers must do
        * the same here via the existing ArrayBuffer-consuming path. */
       JS_ThrowTypeError(ctx,
-                         "new Mat(typedArray) requires an explicit shape - use "
-                         "new Mat(rows, cols, type, typedArray.buffer) or "
-                         "new Mat(sizes, type, typedArray.buffer) instead");
+                        "new Mat(typedArray) requires an explicit shape - use "
+                        "new Mat(rows, cols, type, typedArray.buffer) or "
+                        "new Mat(sizes, type, typedArray.buffer) instead");
       return FALSE;
     } else if(js_is_array(ctx, argv[0])) {
       if(js_array_to(ctx, argv[0], sizes) <= 0) {
@@ -1191,8 +1191,7 @@ js_mat_typed_at(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
       double value = m->at<double>(row, col);
       return JS_NewFloat64(ctx, value);
     }
-    default:
-      return JS_ThrowTypeError(ctx, "Unknown typed accessor");
+    default: return JS_ThrowTypeError(ctx, "Unknown typed accessor");
   }
 }
 
@@ -1222,7 +1221,7 @@ js_mat_typed_ptr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
 
   // Calculate byte offset for the row
   size_t byte_offset = row * m->step[0];
-  
+
   // Get the typed array view based on the magic type
   // For 2D matrices, return a view of one row
   // length is the number of elements in the row (cols for 2D, or appropriate for multi-dimensional)
@@ -1263,9 +1262,7 @@ js_mat_typed_ptr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
       result = js_typedarray<double>::from_buffer(ctx, buf, byte_offset, length);
       break;
     }
-    default:
-      JS_FreeValue(ctx, buf);
-      return JS_ThrowTypeError(ctx, "Unknown typed pointer accessor");
+    default: JS_FreeValue(ctx, buf); return JS_ThrowTypeError(ctx, "Unknown typed pointer accessor");
   }
 
   JS_FreeValue(ctx, buf);
@@ -1473,7 +1470,6 @@ js_mat_get_props(JSContext* ctx, JSValueConst this_val, int magic) {
       ret = js_array_from(ctx, steps);
       break;
     }
-
   }
 
   return ret;

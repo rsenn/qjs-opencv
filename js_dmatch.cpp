@@ -128,18 +128,10 @@ js_dmatch_getter(JSContext* ctx, JSValueConst this_val, int magic) {
   JSValue ret = JS_UNDEFINED;
 
   switch(magic) {
-    case PROP_QUERY_IDX:
-      ret = JS_NewInt32(ctx, dm->queryIdx);
-      break;
-    case PROP_TRAIN_IDX:
-      ret = JS_NewInt32(ctx, dm->trainIdx);
-      break;
-    case PROP_IMG_IDX:
-      ret = JS_NewInt32(ctx, dm->imgIdx);
-      break;
-    case PROP_DISTANCE:
-      ret = JS_NewFloat64(ctx, dm->distance);
-      break;
+    case PROP_QUERY_IDX: ret = JS_NewInt32(ctx, dm->queryIdx); break;
+    case PROP_TRAIN_IDX: ret = JS_NewInt32(ctx, dm->trainIdx); break;
+    case PROP_IMG_IDX: ret = JS_NewInt32(ctx, dm->imgIdx); break;
+    case PROP_DISTANCE: ret = JS_NewFloat64(ctx, dm->distance); break;
   }
 
   return ret;
