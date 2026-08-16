@@ -1142,3 +1142,96 @@
     import('opencv').then(cv => {
       new cv.DoubleVector(); // TypeError: not a function
     });
+
+- contour-getmat-dangling-reference: every SHAPE_* method in js_imgproc_shape()
+  (js_imgproc.cpp) crashes or silently returns garbage when argv[0] is a real
+  cv.Contour object (e.g. one produced by findContours(image, [], hierarchy)).
+  Root cause: in the function's preamble,
+
+    if((contour = js_contour_data(argv[0]))) {
+      JSContourData<float> fcontour;
+      fcontour.resize(contour->size());
+      std::copy(contour->begin(), contour->end(), fcontour.begin());
+
+      cv::Mat mat = contour_getmat(fcontour);
+      src = mat;
+    }
+
+  `fcontour` is a local of the `if` block, and contour_getmat() returns a Mat
+  that is a zero-copy view over fcontour.data() (by design, per this repo's
+  "no copies" memory model). `mat` is also local to that `if` block. `src =
+  mat` stores a pointer to `mat` inside the cv::_InputOutputArray, but both
+  `mat` and the `fcontour` buffer it points into go out of scope and are
+  destroyed the moment the `if` block ends - before any of the SHAPE_* switch
+  cases run. Every subsequent read through `src` (arcLength, isContourConvex,
+  minAreaRect, fitEllipse, convexHull, fitLine, approxPolyDP,
+  minEnclosingCircle, minEnclosingTriangle, ...) is a use-after-free on a
+  destroyed stack-allocated cv::Mat header, producing assertion failures
+  ("depth == CV_32F || CV_32S", "count >= 0", etc.), silently-wrong results
+  (boundingRect returns an empty rect), or occasionally a plausible-looking
+  but unverified value. contourArea() has its own separate contour-handling
+  branch with the same bug (calls contour_getmat() again into another
+  block-local Mat). tests/unittests/test_imgproc.js works around this by
+  converting each cv.Contour to a cv.Mat CV_32SC2 before calling any SHAPE_*
+  method - the existing tests/unittests/test_contour_functions.js also never
+  actually exercises a real cv.Contour object for this reason, only synthetic
+  Mat CV_32SC2 contours.
+
+    import('opencv').then(cv => {
+      const img = cv.Mat.zeros(240, 240, cv.CV_8UC1);
+      cv.rectangle(img, {x: 20, y: 20, width: 80, height: 80}, 255, -1);
+
+      const contours = [];
+      cv.findContours(img, contours, [], cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+
+      cv.arcLength(contours[0], true);
+      // Assertion failed: count >= 0 && (depth == CV_32F || depth == CV_32S)
+      //   in function 'arcLength'
+    });
+
+- pointvectorvector-get-not-zero-copy: PointVectorVector.get(i) (and the same
+  for DMatchVectorVector/KeyPointVectorVector/CharVectorVector) returns a
+  plain JS array of converted elements instead of a zero-copy PointVector,
+  because JSConverter<std::vector<cv::Point>>'s toJS() was replaced by the
+  fully generic JSConverter<std::vector<T>> in js_vector.hpp, whose toJS()
+  always builds a JS_NewArray() and converts each element individually. This
+  contradicts this repo's documented "no copies, zero-copy iteration" design
+  for PointVectorVector (see CLAUDE.md's Contour Migration Strategy /
+  binary-compatibility notes) and means e.g. cv.findContours(img, pvv, ...)
+  followed by pvv.get(i) no longer hands back something that can be passed
+  straight into contourArea()/arcLength()/etc. as a PointVector - callers
+  need to manually rebuild a `new cv.PointVector()` and push_back() every
+  point first, as tests/unittests/test_imgproc.js does.
+
+    import('opencv').then(cv => {
+      const img = cv.Mat.zeros(240, 240, cv.CV_8UC1);
+      cv.rectangle(img, {x: 20, y: 20, width: 80, height: 80}, 255, -1);
+
+      const pvv = new cv.PointVectorVector();
+      cv.findContours(img, pvv, new cv.Mat(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+
+      console.log(pvv.get(0).constructor.name); // "Array", not "PointVector"
+    });
+
+- contourarea-spurious-internal-exception: cv.contourArea(mat) (js_imgproc.cpp,
+  SHAPE_CONTOUR_AREA) speculatively calls
+  `JSVector<cv::Point>::fromJS(ctx, argv[0])` - the 2-argument, ctx-taking
+  overload - to detect whether argv[0] is a PointVector. When argv[0] is
+  anything else (e.g. a plain Mat), that overload's JS_GetOpaque2() call
+  throws a TypeError internally ("PointVector object expected") via ctx, but
+  the calling code only checks the returned pointer and never observes or
+  clears the exception, so it's left pending and gets printed by the runtime
+  later even though contourArea() goes on to compute and return the correct
+  result. Cosmetic (doesn't affect the return value or throw to the caller)
+  but noisy - every cv.contourArea(mat) call for a non-PointVector argument
+  prints a stray "TypeError: PointVector object expected" to stderr. Using
+  the ctx-less single-argument JSVector<cv::Point>::fromJS(value) overload
+  instead (as e.g. js_vector_outputarray() in js_vector.cpp does) would avoid
+  raising the exception in the first place.
+
+    import('opencv').then(cv => {
+      const contour = new cv.Mat(4, 1, cv.CV_32SC2);
+      cv.contourArea(contour); // logs a spurious "TypeError: PointVector
+                                // object expected" to stderr despite
+                                // returning the correct area
+    });
