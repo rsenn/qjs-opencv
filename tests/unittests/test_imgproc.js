@@ -26,7 +26,7 @@ function drawShapesImage() {
   return img;
 }
 
-// findContours(image, [], hierarchy) fills the array with cv.Contour
+// findContours(image, [], hierarchy) fills the array with cv.Mat CV_32SC2
 // instances ("Contours" mode).
 function findContoursAsContours(img) {
   const contours = [];
@@ -37,41 +37,15 @@ function findContoursAsContours(img) {
 
 // findContours(image, PointVectorVector, hierarchy) fills nested
 // std::vector<cv::Point> per contour, zero-copy on the C++ side.
-// PointVectorVector.get(i) currently hands back a plain JS array rather than
-// a zero-copy PointVector (see BUGS: pointvectorvector-get-not-zero-copy) -
-// rebuild a real PointVector from it so the methods below run against a
-// genuine PointVector instance, same as e.g. `new cv.PointVector()` would be
-// used directly in application code.
+// PointVectorVector.get(i) hands back a genuine PointVector instance.
 function findContoursAsPointVectors(img) {
   const pvv = new cv.PointVectorVector();
   const hierarchy = new cv.Mat();
   cv.findContours(img, pvv, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
 
   const result = [];
-  for (let i = 0; i < pvv.size(); i++) {
-    const pv = new cv.PointVector();
-    for (const p of pvv.get(i)) pv.push_back(p);
-    result.push(pv);
-  }
+  for (let i = 0; i < pvv.size(); i++) result.push(pvv.get(i));
   return result;
-}
-
-// cv.Contour objects currently crash every js_imgproc_shape() method: the
-// SHAPE_* preamble builds its working Mat from a JSContourData<float> that is
-// local to an `if` block, and that block (plus the Mat wrapping it) goes out
-// of scope before the Mat is actually used - see BUGS:
-// contour-getmat-dangling-reference. Convert to Mat CV_32SC2, the
-// representation the rest of the test suite already relies on, so the tests
-// below exercise the intended shape-analysis code instead of that bug.
-function contourToMat(contour) {
-  const mat = new cv.Mat(contour.length, 1, cv.CV_32SC2);
-  let i = 0;
-  for (const p of contour) {
-    mat.data32S[i * 2] = Math.round(p.x);
-    mat.data32S[i * 2 + 1] = Math.round(p.y);
-    i++;
-  }
-  return mat;
 }
 
 // The circle's boundary keeps far more points after CHAIN_APPROX_SIMPLE than
@@ -97,9 +71,9 @@ function classify(items, lengthOf) {
 const img = drawShapesImage();
 
 const contoursFromArray = findContoursAsContours(img);
-const arrayShapes = classify(contoursFromArray, contour => contour.length);
-const rectMat = contourToMat(arrayShapes.rect);
-const circleMat = contourToMat(arrayShapes.circle);
+const arrayShapes = classify(contoursFromArray, mat => mat.rows);
+const rectMat = arrayShapes.rect;
+const circleMat = arrayShapes.circle;
 
 const contoursFromPVV = findContoursAsPointVectors(img);
 const pvvShapes = classify(contoursFromPVV, pv => pv.size());
@@ -108,11 +82,11 @@ const circlePV = pvvShapes.circle;
 
 // Every per-contour test below runs once per contour representation.
 const rectByRepresentation = [
-  ['Mat (from Contour)', rectMat],
+  ['Mat (from findContours)', rectMat],
   ['PointVector', rectPV],
 ];
 const circleByRepresentation = [
-  ['Mat (from Contour)', circleMat],
+  ['Mat (from findContours)', circleMat],
   ['PointVector', circlePV],
 ];
 
@@ -158,6 +132,7 @@ function addTest(name, fn) {
 
 for (const [label, rect] of rectByRepresentation) {
   addTest(`contourArea - rectangle (${label})`, () => {
+    console.log('rect',rect);
     const area = cv.contourArea(rect);
     assert(Math.abs(area - RECT_AREA) < RECT_AREA * 0.1, `expected area ~${RECT_AREA}, got ${area}`);
   });

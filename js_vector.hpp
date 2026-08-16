@@ -244,7 +244,7 @@ public:
     if(JS_IsException(iter_obj))
       return JS_EXCEPTION;
 
-    JSVectorIterator<T>* iter = new JSVectorIterator<T>(vector);
+    JSVectorIterator<T>* iter = new JSVectorIterator<T>(vector, JS_DupValue(ctx, this_val));
     JS_SetOpaque(iter_obj, iter);
 
     return iter_obj;
@@ -272,12 +272,18 @@ public:
     // Create prototype
     JSValue proto = JS_NewObject(ctx);
 
+    static const JSCFunctionListEntry js_proto_funcs[] = {
+        JS_PROP_STRING_DEF("[Symbol.toStringTag]", name, JS_PROP_CONFIGURABLE),
+    };
+
     // Add methods
     JS_SetPropertyStr(ctx, proto, "push_back", JS_NewCFunction(ctx, JSVector<T>::push_back, "push_back", 1));
     JS_SetPropertyStr(ctx, proto, "get", JS_NewCFunction(ctx, JSVector<T>::get, "get", 1));
     JS_SetPropertyStr(ctx, proto, "set", JS_NewCFunction(ctx, JSVector<T>::set, "set", 2));
     JS_SetPropertyStr(ctx, proto, "size", JS_NewCFunction(ctx, JSVector<T>::size, "size", 0));
     JS_SetPropertyStr(ctx, proto, "delete", JS_NewCFunction(ctx, JSVector<T>::delete_, "delete", 0));
+
+    JS_SetPropertyFunctionList(ctx, proto, js_proto_funcs, countof(js_proto_funcs));
 
     // Add Symbol.iterator for for-of loop support
     JSValue symbol_iterator = JS_GetPropertyStr(ctx, JS_GetGlobalObject(ctx), "Symbol");
@@ -346,8 +352,13 @@ template<typename T> class JSVectorIterator {
 public:
   JSVector<T>* vector;
   size_t index;
+  JSValue owner;
 
-  JSVectorIterator(JSVector<T>* vec) : vector(vec), index(0) {}
+  /* Holds a strong reference to the JSVector<T> JS object owning `vec`, so a
+   * temporary iterable (e.g. `for(const p of pvv.get(i))`) stays alive for
+   * the duration of iteration instead of being finalized (and `vector` freed
+   * with it) as soon as the for-of loop drops its only other reference. */
+  JSVectorIterator(JSVector<T>* vec, JSValue owner) : vector(vec), index(0), owner(owner) {}
 
   /**
    * @brief Get the class ID for this vector iterator type
@@ -382,8 +393,10 @@ public:
   static void finalizer(JSRuntime* rt, JSValue val) {
     JSVectorIterator<T>* iter;
 
-    if((iter = static_cast<JSVectorIterator<T>*>(JS_GetOpaque(val, get_class_id()))))
+    if((iter = static_cast<JSVectorIterator<T>*>(JS_GetOpaque(val, get_class_id())))) {
+      JS_FreeValueRT(rt, iter->owner);
       delete iter;
+    }
   }
 };
 
@@ -428,6 +441,46 @@ template<class T> struct JSConverter<std::vector<T>> {
       JS_SetPropertyUint32(ctx, ret, i++, JSConverter<T>::toJS(ctx, item));
 
     return ret;
+  }
+};
+
+/**
+ * @brief JSConverter specialization for std::vector<cv::Point>
+ *
+ * More specialized than the generic JSConverter<std::vector<T>> above, so
+ * get() on a JSVector<std::vector<cv::Point>> (PointVectorVector) hands back
+ * a genuine JSVector<cv::Point> (PointVector) instance instead of a plain JS
+ * array of converted points.
+ */
+template<> struct JSConverter<std::vector<cv::Point>> {
+  static std::vector<cv::Point> fromJS(JSContext* ctx, JSValueConst val) {
+    JSVector<cv::Point>* vector;
+
+    if((vector = JSVector<cv::Point>::fromJS(ctx, val)))
+      return *(vector->vec);
+
+    std::vector<cv::Point> vec;
+    BOOL done;
+    JSValue iter = js_iterator_new(ctx, val);
+
+    for(uint32_t i = 0;; ++i) {
+      JSValue item = js_iterator_next(ctx, iter, done);
+
+      if(done)
+        break;
+
+      vec.push_back(JSConverter<cv::Point>::fromJS(ctx, item));
+      JS_FreeValue(ctx, item);
+    }
+
+    JS_FreeValue(ctx, iter);
+    return vec;
+  }
+
+  static JSValue toJS(JSContext* ctx, const std::vector<cv::Point>& val) {
+    JSVector<cv::Point>* vector = new JSVector<cv::Point>();
+    *vector->vec = val;
+    return vector->toJS(ctx);
   }
 };
 

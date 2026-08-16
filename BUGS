@@ -1234,7 +1234,7 @@
       //   in function 'intersectConvexConvex'
     });
 
-- pointvectorvector-get-not-zero-copy: PointVectorVector.get(i) (and the same
+- FIXED: pointvectorvector-get-not-zero-copy: PointVectorVector.get(i) (and the same
   for DMatchVectorVector/KeyPointVectorVector/CharVectorVector) returns a
   plain JS array of converted elements instead of a zero-copy PointVector,
   because JSConverter<std::vector<cv::Point>>'s toJS() was replaced by the
@@ -1257,6 +1257,51 @@
 
       console.log(pvv.get(0).constructor.name); // "Array", not "PointVector"
     });
+
+  Fixed by adding an explicit JSConverter<std::vector<cv::Point>> full
+  specialization in js_vector.hpp (more specialized than the generic
+  JSConverter<std::vector<T>>) whose toJS() builds a `new JSVector<cv::Point>`
+  wrapping a copy of the nested vector and returns it via that vector's own
+  toJS(), so get() now hands back a genuine PointVector instance. DMatch/
+  KeyPoint/Char VectorVector still return plain arrays (out of scope - only
+  the PointVectorVector case was requested).
+
+  Fixing this exposed a second, pre-existing bug (see FIXED:
+  jsvectoriterator-dangling-owner below): the temporary PointVector this
+  produces would immediately segfault when iterated inline, e.g.
+  `for (const p of pvv.get(i)) ...` - see that entry.
+
+- FIXED: jsvectoriterator-dangling-owner: JSVectorIterator<T> (js_vector.hpp,
+  used for `for...of` over any JSVector<T> - PointVector, MatVector, etc.)
+  stored only a raw `JSVector<T>* vector` pointer, not a reference to the
+  JSValue that owns it. Per the for-of spec, only the iterator object itself
+  is kept alive between calls to next() - the original iterable expression
+  isn't. So for any *temporary* JSVector<T> (nothing else holding a JS
+  reference to it - e.g. `pvv.get(i)` called directly inside a for-of, or any
+  function returning `new cv.PointVector()`), the temporary's refcount drops
+  to 0 as soon as Symbol.iterator() returns the iterator object, and it gets
+  finalized (`delete vector`, freeing `vec`) before the loop calls next() -
+  every next() call after the first then dereferences a freed JSVector<T>/
+  std::vector<T>, segfaulting. Predates the PointVectorVector.get() fix above
+  but was masked until then, since get() previously returned a plain JS array
+  (a built-in type with normal GC semantics, not a JSVectorIterator).
+
+    import('opencv').then(cv => {
+      function makePV() {
+        const pv = new cv.PointVector();
+        pv.push_back({x: 1, y: 2});
+        pv.push_back({x: 3, y: 4});
+        return pv;
+      }
+
+      const out = new cv.PointVector();
+      for (const p of makePV()) out.push_back(p); // segfault after first element
+    });
+
+  Fixed by having JSVectorIterator<T> hold a strong reference
+  (JS_DupValue(ctx, this_val) in symbol_iterator(), JS_FreeValueRT() in the
+  iterator's own finalizer) to the source JSVector<T> object for the
+  iterator's lifetime.
 
 - contourarea-spurious-internal-exception: cv.contourArea(mat) (js_imgproc.cpp,
   SHAPE_CONTOUR_AREA) speculatively calls
