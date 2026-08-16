@@ -1,4 +1,4 @@
-import {arcLength,  approxPolyDP, PointVectorVector, drawContours, LINE_AA, Contour, Mat, Point, Size, CHAIN_APPROX_SIMPLE, COLOR_BGR2GRAY, CV_8UC3, Canny, HuMoments, RETR_TREE, blur, cvtColor, findContours, imread, imshow, moments, waitKey, } from 'opencv';
+import {arcLength,  approxPolyDP, PointVector, PointVectorVector, drawContours, LINE_AA, Contour, Mat, Point, Size, CHAIN_APPROX_SIMPLE, COLOR_BGR2GRAY, CV_8UC3, Canny, HuMoments, RETR_TREE, blur, cvtColor, findContours, imread, imshow, moments, waitKey, } from 'opencv';
 
 const randInt = max => Math.floor(Math.random() * max);
 
@@ -42,7 +42,7 @@ function main(...args) {
       console.log('contours', contours);
   for(let contour of contours) {
     console.log('contour', contour);
-    let poly = new PointVectorVector();
+    let poly = new PointVector();
 
     approxPolyDP(contour, poly, 0.05 * arcLength(contour));
     console.log('contour', poly);
@@ -70,15 +70,13 @@ function main(...args) {
 
     /*  if(!angles.some(a => Math.abs(a) <= 1)) continue;
 
-    if(lpoly.length > 4) continue;
-    Draw.contours(mat, contours, i, RandomColor() ?? [(i * 255) / contours.length, 0, 0, 0], 2);*/
+    if(lpoly.length > 4) continue;*/
+    drawContours(mat, contours, i, RandomColor() ?? [(i * 255) / contours.length, 0, 0, 0], 2);
     i++;
   }
   // console.log(`lines`, [...lines]);
 
-  contours.reverse();
-
-  let poly = [...contours[0]];
+  let poly = [...contours.get(0)];
   let mom = moments(poly, false);
   console.log(`poly`, console.config({ maxArrayLength: 20, compact: 1 }), poly);
   console.log(`moments(poly)`, console.config({ compact: 1 }), mom);

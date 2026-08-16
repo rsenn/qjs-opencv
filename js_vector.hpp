@@ -412,8 +412,8 @@ template<class T> struct JSConverter<std::vector<T>> {
   static std::vector<T> fromJS(JSContext* ctx, JSValueConst val) {
     JSVector<T>* vector;
 
-      if(JSVector<T>::get_class_id() != 0)
-        if((vector = JSVector<T>::fromJS(val)))
+    if(JSVector<T>::get_class_id() != 0)
+      if((vector = JSVector<T>::fromJS(val)))
         return *(vector->vec);
 
     std::vector<T> vec;

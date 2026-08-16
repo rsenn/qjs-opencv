@@ -2218,21 +2218,7 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
   return ret;
 }
 
-thread_local JSClassID js_imgproc_class_id = 0;
-
-void
-js_imgproc_finalizer(JSRuntime* rt, JSValue val) {
-
-  // JS_FreeValueRT(rt, val);
-  // JS_FreeValueRT(rt, cv_class);
-}
-
-JSClassDef js_imgproc_class = {
-    .class_name = "cv",
-    .finalizer = js_imgproc_finalizer,
-};
-
-js_function_list_t js_imgproc_static_funcs{
+const JSCFunctionListEntry js_imgproc_static_funcs[] = {
     JS_CFUNC_DEF("HoughLines", 5, js_cv_hough_lines),
     JS_CFUNC_DEF("HoughLinesP", 5, js_cv_hough_lines_p),
     JS_CFUNC_DEF("HoughCircles", 5, js_cv_hough_circles),
@@ -2390,7 +2376,6 @@ js_function_list_t js_imgproc_static_funcs{
     JS_CV_CONSTANT(CCL_SAUF),
     JS_CV_CONSTANT(CCL_BBDT),
     JS_CV_CONSTANT(CCL_SPAGHETTI),
-
 };
 
 extern "C" int
