@@ -378,7 +378,7 @@ static JSValue
 js_draw_polylines(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSInputOutputArray dst;
   int i = 0, ret = -1;
-  JSContoursData<int> points;
+  JSInputOutputArray points;
   JSColorData<double> color = {0, 0, 0};
   bool is_closed = false;
   int32_t thickness = -1, line_type = cv::LINE_AA;
@@ -390,7 +390,7 @@ js_draw_polylines(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
     dst = *dptr;
 
   if(argc > i)
-    js_array_to(ctx, argv[i++], points);
+    points = js_cv_inputoutputarray(ctx, argv[i++]);
 
   if(argc > i)
     is_closed = JS_ToBool(ctx, argv[i++]);
