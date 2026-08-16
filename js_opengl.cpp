@@ -3,6 +3,7 @@
 #include "js_umat.hpp"
 #include "js_size.hpp"
 #include "include/jsbindings.hpp"
+#include "include/js_inputoutputarray.hpp"
 #include "util.hpp"
 #include <quickjs.h>
 

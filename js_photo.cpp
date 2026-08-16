@@ -1,5 +1,6 @@
 #include "js_cv.hpp"
 #include "js_umat.hpp"
+#include "include/js_inputoutputarray.hpp"
 #include <opencv2/photo.hpp>
 
 extern "C" int js_photo_init(JSContext*, JSModuleDef*);

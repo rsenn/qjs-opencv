@@ -1,4 +1,5 @@
-#include "jsbindings.hpp"
+#include "include/jsbindings.hpp"
+#include "include/js_inputoutputarray.hpp"
 #include "js_array.hpp"
 #include "js_umat.hpp"
 #include <quickjs.h>

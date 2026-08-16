@@ -7,6 +7,7 @@
 #include "js_filenode.hpp"
 #include "js_filestorage.hpp"
 #include "include/jsbindings.hpp"
+#include "include/js_inputoutputarray.hpp"
 #include <quickjs.h>
 #include <cstring>
 #include <cstdint>

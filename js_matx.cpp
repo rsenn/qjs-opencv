@@ -1,3 +1,4 @@
+#include "include/js_inputoutputarray.hpp"
 #include "js_matx.hpp"
 #include "js_umat.hpp"
 

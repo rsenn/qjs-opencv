@@ -13,6 +13,7 @@
 #include "js_umat.hpp"
 #include "js_vector.hpp"
 #include "include/jsbindings.hpp"
+#include "include/js_inputoutputarray.hpp"
 #include <quickjs.h>
 #include "include/util.hpp"
 #include <cassert>
@@ -981,18 +982,17 @@ js_cv_find_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   // Detect if contours argument is MatVector or PointVectorVector
   contours_matvector = false;
   contours_pointvectorvector = false;
-  if(!contours_array) {
-    JSClassID matvector_class_id = JSVector<cv::Mat>::get_class_id();
-    JSClassID pointvectorvector_class_id = JSVector<std::vector<cv::Point>>::get_class_id();
 
-    JSVector<cv::Mat>* matvector = JSVector<cv::Mat>::fromJS(ctx, argv[1], matvector_class_id);
+  if(!contours_array) {
+    auto* matvector = JSVector<cv::Mat>::fromJS(argv[1]);
+
     if(matvector) {
       contours_matvector = true;
     } else {
-      JSVector<std::vector<cv::Point>>* pointvectorvector = JSVector<std::vector<cv::Point>>::fromJS(ctx, argv[1], pointvectorvector_class_id);
-      if(pointvectorvector) {
+      auto* pointvectorvector = JSVector<std::vector<cv::Point>>::fromJS(argv[1]);
+
+      if(pointvectorvector)
         contours_pointvectorvector = true;
-      }
     }
   }
 
@@ -1007,14 +1007,10 @@ js_cv_find_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   // Call findContours with appropriate type
   if(contours_matvector) {
     // Use MatVector directly (zero-copy)
-    JSClassID matvector_class_id = JSVector<cv::Mat>::get_class_id();
-    JSVector<cv::Mat>* matvector = JSVector<cv::Mat>::fromJS(ctx, argv[1], matvector_class_id);
-    cv::findContours(*m, *(matvector->vec), hier, mode, approx, offset);
+    cv::findContours(*m, *(JSVector<cv::Mat>::fromJS(ctx, argv[1])->vec), hier, mode, approx, offset);
   } else if(contours_pointvectorvector) {
     // Use PointVectorVector directly (zero-copy)
-    JSClassID pointvectorvector_class_id = JSVector<std::vector<cv::Point>>::get_class_id();
-    JSVector<std::vector<cv::Point>>* pointvectorvector = JSVector<std::vector<cv::Point>>::fromJS(ctx, argv[1], pointvectorvector_class_id);
-    cv::findContours(*m, *(pointvectorvector->vec), hier, mode, approx, offset);
+    cv::findContours(*m, *(JSVector<std::vector<cv::Point>>::fromJS(ctx, argv[1])->vec), hier, mode, approx, offset);
   } else {
     // Use traditional JSContoursData<int> and convert to JS array
     JSContoursData<int> contours;
@@ -2052,12 +2048,12 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
 
         } else {
           // Check if it's a PointVector
-          JSClassID pointvector_class_id = JSVector<cv::Point>::get_class_id();
-          JSVector<cv::Point>* pointvector = JSVector<cv::Point>::fromJS(ctx, argv[0], pointvector_class_id);
+          auto* pointvector = JSVector<cv::Point>::fromJS(ctx, argv[0]);
 
           if(pointvector) {
             // Convert PointVector to Mat for contourArea
-            std::vector<cv::Point>& points = *(pointvector->vec);
+            auto& points = *(pointvector->vec);
+
             if(!points.empty()) {
               cv::Mat pointsMat(1, points.size(), CV_32SC2, points.data());
               area = cv::contourArea(pointsMat, oriented);

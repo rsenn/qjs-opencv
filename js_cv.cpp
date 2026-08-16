@@ -11,6 +11,7 @@
 #include "include/gif_write.hpp"
 #include <quickjs.h>
 #include "include/util.hpp"
+#include "include/js_inputoutputarray.hpp"
 #include <exception>
 #include <float.h>
 #include <opencv2/core/cvdef.h>

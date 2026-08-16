@@ -10,6 +10,7 @@
 #include "algorithms/trace_skeleton.hpp"
 #include <quickjs.h>
 #include "include/util.hpp"
+#include "include/js_inputoutputarray.hpp"
 
 using std::array;
 using std::cout;

@@ -6,7 +6,7 @@
 #include <vector>
 #include <string>
 
-#include "js_converter.hpp"
+#include "include/js_converter.hpp"
 
 extern "C" {
 
@@ -27,8 +27,7 @@ template<typename T> class JSVectorIterator;
  * - set: update element at index
  * - size: get number of elements
  * - delete: manual cleanup
- */
-template<typename T> class JSVector {
+ */ template<typename T> class JSVector {
 public:
   using VectorType = std::vector<T>;
   using Converter = JSConverter<T>;
@@ -61,15 +60,18 @@ public:
   /**
    * @brief Get the vector data from a JS object
    */
-  static JSVector<T>* fromJS(JSContext* ctx, JSValueConst this_val, JSClassID class_id = get_class_id()) {
-    return static_cast<JSVector<T>*>(JS_GetOpaque2(ctx, this_val, class_id));
+  static JSVector<T>* fromJS(JSValueConst this_val) { return static_cast<JSVector<T>*>(JS_GetOpaque(this_val, get_class_id())); }
+  static JSVector<T>* fromJS(JSContext* ctx, JSValueConst this_val) { return static_cast<JSVector<T>*>(JS_GetOpaque2(ctx, this_val, get_class_id())); }
+
+  operator cv::_OutputArray() const {
+    return cv::_OutputArray(*vec);
   }
 
   /**
    * @brief Create a new JS object wrapping this vector
    */
-  JSValue toJS(JSContext* ctx, JSClassID class_id = get_class_id()) {
-    JSValue obj = JS_NewObjectClass(ctx, class_id);
+  JSValue toJS(JSContext* ctx) {
+    JSValue obj = JS_NewObjectClass(ctx, get_class_id());
 
     if(JS_IsException(obj)) {
       delete this;

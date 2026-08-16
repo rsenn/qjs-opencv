@@ -4,6 +4,7 @@
 #include "js_size.hpp"
 #include "js_umat.hpp"
 #include "include/jsbindings.hpp"
+#include "include/js_inputoutputarray.hpp"
 #include <opencv2/core/cvstd_wrapper.hpp>
 #include <opencv2/core/mat.hpp>
 #include <opencv2/core/mat.inl.hpp>

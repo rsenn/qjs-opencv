@@ -2,6 +2,7 @@
 #include "js_umat.hpp"
 #include "js_contour.hpp"
 #include "include/jsbindings.hpp"
+#include "include/js_inputoutputarray.hpp"
 #include <quickjs.h>
 
 #ifdef HAVE_OPENCV2_XIMGPROC_HPP

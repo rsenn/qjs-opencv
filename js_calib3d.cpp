@@ -2,6 +2,7 @@
 #include "js_size.hpp"
 #include "js_mat.hpp"
 #include "js_umat.hpp"
+#include "include/js_inputoutputarray.hpp"
 #include <opencv2/calib3d.hpp>
 #include <opencv2/objdetect.hpp>
 

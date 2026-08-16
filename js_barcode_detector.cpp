@@ -4,6 +4,7 @@
 #include "js_point.hpp"
 #include "js_mat.hpp"
 #include "js_umat.hpp"
+#include "include/js_inputoutputarray.hpp"
 
 #ifdef USE_BARCODE
 #include <opencv2/objdetect/barcode.hpp>

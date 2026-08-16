@@ -11,6 +11,7 @@
 #include "js_umat.hpp"
 #include "js_keypoint.hpp"
 #include "include/jsbindings.hpp"
+#include "include/js_inputoutputarray.hpp"
 #include <opencv2/features2d.hpp>
 #include <opencv2/imgproc.hpp>
 #include <quickjs.h>

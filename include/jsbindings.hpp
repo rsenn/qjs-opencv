@@ -16,14 +16,13 @@ namespace cv {
 class CLAHE;
 }
 
+typedef cv::_InputArray JSInputArray;
+typedef cv::_InputOutputArray JSInputOutputArray;
+typedef cv::_OutputArray JSOutputArray;
 typedef cv::VideoCapture JSVideoCaptureData;
 typedef cv::VideoWriter JSVideoWraiterData;
 typedef cv::TickMeter JSTickMeterData;
 typedef cv::Ptr<cv::CLAHE> JSCLAHEData;
-
-typedef cv::_InputArray JSInputArray;
-typedef cv::_InputOutputArray JSInputOutputArray;
-typedef cv::_OutputArray JSOutputArray;
 
 struct JSConstructor {
   JSConstructor(JSCFunction* _ctor, const char* _name) : name(_name), ctor(_ctor), proto(nullptr), nfuncs(0), class_obj(JS_UNDEFINED) {}

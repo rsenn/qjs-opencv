@@ -3,6 +3,7 @@
 #include "js_rect.hpp"
 #include "js_rotated_rect.hpp"
 #include "include/jsbindings.hpp"
+#include "include/js_inputoutputarray.hpp"
 #include <quickjs.h>
 
 #include <opencv2/dnn.hpp>

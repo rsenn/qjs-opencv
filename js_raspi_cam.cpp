@@ -2,6 +2,7 @@
 #include "js_alloc.hpp"
 #include "js_umat.hpp"
 #include "include/jsbindings.hpp"
+#include "include/js_inputoutputarray.hpp"
 #include <opencv2/core.hpp>
 #include <quickjs.h>
 
