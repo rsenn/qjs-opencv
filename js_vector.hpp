@@ -61,14 +61,14 @@ public:
   /**
    * @brief Get the vector data from a JS object
    */
-  static JSVector<T>* fromJS(JSContext* ctx, JSValueConst this_val, JSClassID class_id) {
+  static JSVector<T>* fromJS(JSContext* ctx, JSValueConst this_val, JSClassID class_id = get_class_id()) {
     return static_cast<JSVector<T>*>(JS_GetOpaque2(ctx, this_val, class_id));
   }
 
   /**
    * @brief Create a new JS object wrapping this vector
    */
-  JSValue toJS(JSContext* ctx, JSClassID class_id) {
+  JSValue toJS(JSContext* ctx, JSClassID class_id = get_class_id()) {
     JSValue obj = JS_NewObjectClass(ctx, class_id);
 
     if(JS_IsException(obj)) {
@@ -101,7 +101,7 @@ public:
   static JSValue push_back(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
     JSVector<T>* vector;
 
-    if(!(vector = fromJS(ctx, this_val, get_class_id())))
+    if(!(vector = fromJS(ctx, this_val)))
       return JS_EXCEPTION;
 
     if(argc < 1)
@@ -119,7 +119,7 @@ public:
   static JSValue get(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
     JSVector<T>* vector;
 
-    if(!(vector = fromJS(ctx, this_val, get_class_id())))
+    if(!(vector = fromJS(ctx, this_val)))
       return JS_EXCEPTION;
 
     if(argc < 1)
@@ -140,7 +140,7 @@ public:
   static JSValue set(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
     JSVector<T>* vector;
 
-    if(!(vector = fromJS(ctx, this_val, get_class_id())))
+    if(!(vector = fromJS(ctx, this_val)))
       return JS_EXCEPTION;
 
     if(argc < 2)
@@ -163,7 +163,7 @@ public:
   static JSValue size(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
     JSVector<T>* vector;
 
-    if(!(vector = fromJS(ctx, this_val, get_class_id())))
+    if(!(vector = fromJS(ctx, this_val)))
       return JS_EXCEPTION;
 
     return JS_NewInt32(ctx, vector->vec->size());
@@ -175,7 +175,7 @@ public:
   static JSValue delete_(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
     JSVector<T>* vector;
 
-    if(!(vector = fromJS(ctx, this_val, get_class_id())))
+    if(!(vector = fromJS(ctx, this_val)))
       return JS_EXCEPTION;
 
     delete vector;
@@ -202,7 +202,7 @@ public:
   static JSValue symbol_iterator(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
     JSVector<T>* vector;
 
-    if(!(vector = fromJS(ctx, this_val, get_class_id())))
+    if(!(vector = fromJS(ctx, this_val)))
       return JS_EXCEPTION;
 
     // Create iterator object
@@ -384,20 +384,18 @@ public:
  */
 template<> struct JSConverter<std::vector<cv::Point>> {
   static std::vector<cv::Point> fromJS(JSContext* ctx, JSValueConst val) {
-    JSClassID point_vector_class_id = JSVector<cv::Point>::get_class_id();
     JSVector<cv::Point>* vector;
 
-    if(!(vector = JSVector<cv::Point>::fromJS(ctx, val, point_vector_class_id)))
+    if(!(vector = JSVector<cv::Point>::fromJS(ctx, val)))
       return std::vector<cv::Point>();
 
     return *(vector->vec);
   }
 
   static JSValue toJS(JSContext* ctx, const std::vector<cv::Point>& val) {
-    JSClassID point_vector_class_id = JSVector<cv::Point>::get_class_id();
     JSVector<cv::Point>* new_vector = new JSVector<cv::Point>();
     *(new_vector->vec) = val;
-    return new_vector->toJS(ctx, point_vector_class_id);
+    return new_vector->toJS(ctx);
   }
 };
 

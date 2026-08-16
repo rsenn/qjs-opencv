@@ -242,4 +242,38 @@ template<> struct JSConverter<cv::DMatch> {
   }
 };
 
+/**
+ * @brief JSConverter specialization for std::vector<>
+ */
+template<class T> struct JSConverter<std::vector<T>> {
+  static std::vector<T> fromJS(JSContext* ctx, JSValueConst val) {
+    std::vector<T> vec;
+    BOOL done;
+    JSValue iter = js_iterator_new(ctx, val);
+
+    for(uint32_t i = 0;; ++i) {
+      JSValue item = js_iterator_next(ctx, iter, done);
+
+      if(done)
+        break;
+
+      vec.push_back(JSConverter<T>::fromJS(ctx, item));
+      JS_FreeValue(ctx, item);
+    }
+
+    JS_FreeValue(ctx, iter);
+    return vec;
+  }
+
+  static JSValue toJS(JSContext* ctx, const std::vector<T>& vec) {
+    JSValue ret = JS_NewArray(ctx);
+    uint32_t i = 0;
+
+    for(const auto& item : vec)
+      JS_SetPropertyUint32(ctx, ret, i++, JSConverter<T>::toJS(ctx, item));
+
+    return ret;
+  }
+};
+
 #endif // JS_CONVERTER_HPP

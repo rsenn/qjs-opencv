@@ -7,9 +7,10 @@ int
 js_vector_init(JSContext* ctx, JSModuleDef* m) {
   int result = 0;
 
-  result = JSVector<cv::DMatch>::init(ctx, m, "DMatchVector");
-  JSVector<cv::DMatch>::set_export(ctx, m, "DMatchVector");
-
+  if(result == 0) {
+    result = JSVector<cv::DMatch>::init(ctx, m, "DMatchVector");
+    JSVector<cv::DMatch>::set_export(ctx, m, "DMatchVector");
+  }
   if(result == 0) {
     result = JSVector<cv::KeyPoint>::init(ctx, m, "KeyPointVector");
     JSVector<cv::KeyPoint>::set_export(ctx, m, "KeyPointVector");
@@ -29,10 +30,6 @@ js_vector_init(JSContext* ctx, JSModuleDef* m) {
   if(result == 0) {
     result = JSVector<cv::Point3f>::init(ctx, m, "Point3fVector");
     JSVector<cv::Point3f>::set_export(ctx, m, "Point3fVector");
-  }
-  if(result == 0) {
-    result = JSVector<std::vector<cv::Point>>::init(ctx, m, "PointVectorVector");
-    JSVector<std::vector<cv::Point>>::set_export(ctx, m, "PointVectorVector");
   }
   if(result == 0) {
     result = JSVector<cv::Rect>::init(ctx, m, "RectVector");
@@ -59,6 +56,23 @@ js_vector_init(JSContext* ctx, JSModuleDef* m) {
     JSVector<std::string>::set_export(ctx, m, "StringVector");
   }
 
+  if(result == 0) {
+    result = JSVector<std::vector<cv::DMatch>>::init(ctx, m, "DMatchVectorVector");
+    JSVector<std::vector<cv::DMatch>>::set_export(ctx, m, "DMatchVectorVector");
+  }
+  if(result == 0) {
+    result = JSVector<std::vector<cv::KeyPoint>>::init(ctx, m, "KeyPointVectorVector");
+    JSVector<std::vector<cv::KeyPoint>>::set_export(ctx, m, "KeyPointVectorVector");
+  }
+  if(result == 0) {
+    result = JSVector<std::vector<cv::Point>>::init(ctx, m, "PointVectorVector");
+    JSVector<std::vector<cv::Point>>::set_export(ctx, m, "PointVectorVector");
+  }
+  if(result == 0) {
+    result = JSVector<std::vector<char>>::init(ctx, m, "CharVectorVector");
+    JSVector<std::vector<char>>::set_export(ctx, m, "CharVectorVector");
+  }
+
   return result;
 }
 
@@ -70,12 +84,16 @@ js_vector_export(JSContext* ctx, JSModuleDef* m) {
   JSVector<cv::Point>::add_export(ctx, m, "PointVector");
   JSVector<cv::Point2f>::add_export(ctx, m, "Point2fVector");
   JSVector<cv::Point3f>::add_export(ctx, m, "Point3fVector");
-  JSVector<std::vector<cv::Point>>::add_export(ctx, m, "PointVectorVector");
   JSVector<cv::Rect>::add_export(ctx, m, "RectVector");
   JSVector<int>::add_export(ctx, m, "IntVector");
   JSVector<float>::add_export(ctx, m, "FloatVector");
   JSVector<double>::add_export(ctx, m, "DoubleVector");
   JSVector<char>::add_export(ctx, m, "CharVector");
   JSVector<std::string>::add_export(ctx, m, "StringVector");
+
+  JSVector<std::vector<cv::DMatch>>::add_export(ctx, m, "DMatchVectorVector");
+  JSVector<std::vector<cv::KeyPoint>>::add_export(ctx, m, "KeyPointVectorVector");
+  JSVector<std::vector<cv::Point>>::add_export(ctx, m, "PointVectorVector");
+  JSVector<std::vector<char>>::add_export(ctx, m, "CharVectorVector");
 }
 }
