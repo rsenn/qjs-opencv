@@ -10,6 +10,8 @@
 #include "js_mat.hpp"
 #include "js_point.hpp"
 #include "js_rect.hpp"
+#include "js_keypoint.hpp"
+#include "js_dmatch.hpp"
 #include "js_converter.hpp"
 
 // Forward declarations for DMatch
@@ -186,6 +188,22 @@ template<> struct JSConverter<cv::Rect> {
 };
 
 /**
+ * @brief JSConverter specialization for cv::KeyPoint
+ */
+template<> struct JSConverter<cv::KeyPoint> {
+  static cv::KeyPoint fromJS(JSContext* ctx, JSValueConst val) {
+    cv::KeyPoint* kp;
+
+    if((kp = js_keypoint_data(val)))
+      return *kp;
+
+    return cv::KeyPoint();
+  }
+
+  static JSValue toJS(JSContext* ctx, const cv::KeyPoint& val) { return js_keypoint_new(ctx, val); }
+};
+
+/**
  * @brief JSConverter specialization for cv::DMatch
  *
  * DMatch doesn't have JS bindings yet, so we use a simple object representation.
@@ -239,40 +257,6 @@ template<> struct JSConverter<cv::DMatch> {
   static JSValue toJS(JSContext* ctx, const cv::DMatch& val) {
     // Return a DMatch instance instead of a plain object
     return js_dmatch_new(ctx, val);
-  }
-};
-
-/**
- * @brief JSConverter specialization for std::vector<>
- */
-template<class T> struct JSConverter<std::vector<T>> {
-  static std::vector<T> fromJS(JSContext* ctx, JSValueConst val) {
-    std::vector<T> vec;
-    BOOL done;
-    JSValue iter = js_iterator_new(ctx, val);
-
-    for(uint32_t i = 0;; ++i) {
-      JSValue item = js_iterator_next(ctx, iter, done);
-
-      if(done)
-        break;
-
-      vec.push_back(JSConverter<T>::fromJS(ctx, item));
-      JS_FreeValue(ctx, item);
-    }
-
-    JS_FreeValue(ctx, iter);
-    return vec;
-  }
-
-  static JSValue toJS(JSContext* ctx, const std::vector<T>& vec) {
-    JSValue ret = JS_NewArray(ctx);
-    uint32_t i = 0;
-
-    for(const auto& item : vec)
-      JS_SetPropertyUint32(ctx, ret, i++, JSConverter<T>::toJS(ctx, item));
-
-    return ret;
   }
 };
 

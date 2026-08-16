@@ -374,28 +374,46 @@ public:
 };
 
 /**
- * @brief JSConverter specialization for std::vector<cv::Point>
+ * @brief JSConverter specialization for std::vector<T>
  *
- * This converts between PointVector JS objects and std::vector<cv::Point>.
- * Used for nested vectors like PointVectorVector.
+ * This converts between JSVector<T> JS objects and std::vector<T>.
  *
  * Note: This specialization is defined AFTER the JSVector class definition
  * to avoid incomplete type errors.
  */
-template<> struct JSConverter<std::vector<cv::Point>> {
-  static std::vector<cv::Point> fromJS(JSContext* ctx, JSValueConst val) {
-    JSVector<cv::Point>* vector;
+template<class T> struct JSConverter<std::vector<T>> {
+  static std::vector<T> fromJS(JSContext* ctx, JSValueConst val) {
+    JSVector<T>* vector;
 
-    if(!(vector = JSVector<cv::Point>::fromJS(ctx, val)))
-      return std::vector<cv::Point>();
+    if((vector = JSVector<T>::fromJS(ctx, val)))
+      return *(vector->vec);
 
-    return *(vector->vec);
+    std::vector<T> vec;
+    BOOL done;
+    JSValue iter = js_iterator_new(ctx, val);
+
+    for(uint32_t i = 0;; ++i) {
+      JSValue item = js_iterator_next(ctx, iter, done);
+
+      if(done)
+        break;
+
+      vec.push_back(JSConverter<T>::fromJS(ctx, item));
+      JS_FreeValue(ctx, item);
+    }
+
+    JS_FreeValue(ctx, iter);
+    return vec;
   }
 
-  static JSValue toJS(JSContext* ctx, const std::vector<cv::Point>& val) {
-    JSVector<cv::Point>* new_vector = new JSVector<cv::Point>();
-    *(new_vector->vec) = val;
-    return new_vector->toJS(ctx);
+  static JSValue toJS(JSContext* ctx, const std::vector<T>& val) {
+    JSValue ret = JS_NewArray(ctx);
+    uint32_t i = 0;
+
+    for(const auto& item : val)
+      JS_SetPropertyUint32(ctx, ret, i++, JSConverter<T>::toJS(ctx, item));
+
+    return ret;
   }
 };
 

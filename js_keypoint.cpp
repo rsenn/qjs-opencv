@@ -52,9 +52,8 @@ js_keypoint_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSVal
           if(optind < argc) {
             JS_ToInt32(ctx, &octave, argv[optind++]);
 
-            if(optind < argc) {
+            if(optind < argc)
               JS_ToInt32(ctx, &class_id, argv[optind++]);
-            }
           }
         }
       }

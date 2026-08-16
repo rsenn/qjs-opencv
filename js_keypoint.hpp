@@ -3,7 +3,6 @@
 
 #include "include/jsbindings.hpp"
 #include "include/js_array.hpp"
-#include "js_vector.hpp"
 #include <quickjs.h>
 #include <stddef.h>
 #include <cstdint>
@@ -66,26 +65,12 @@ public:
 
     return i;
   }
+
   template<class Iterator> static JSValue from_sequence(JSContext* ctx, const Iterator& start, const Iterator& end) {
     JSValue arr = JS_NewArray(ctx);
     copy_sequence(ctx, arr, start, end);
     return arr;
   }
-};
-
-/**
- * @brief JSConverter specialization for cv::KeyPoint
- */
-template<> struct JSConverter<cv::KeyPoint> {
-  static cv::KeyPoint fromJS(JSContext* ctx, JSValueConst val) {
-    JSKeyPointData* kp = js_keypoint_data2(ctx, val);
-    if(!kp) {
-      return cv::KeyPoint();
-    }
-    return *kp;
-  }
-
-  static JSValue toJS(JSContext* ctx, const cv::KeyPoint& val) { return js_keypoint_new(ctx, val); }
 };
 
 #endif /* defined(JS_KEYPOINT_HPP) */

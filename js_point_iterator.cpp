@@ -177,8 +177,7 @@ js_point_iterator_init(JSContext* ctx, JSModuleDef* m) {
     /* set proto.constructor and ctor.prototype */
 
     JS_SetConstructor(ctx, point_iterator_class, point_iterator_proto);
-    // JS_SetPropertyFunctionList(ctx, point_iterator_class, js_point_iterator_static_funcs,
-    // countof(js_point_iterator_static_funcs));
+    // JS_SetPropertyFunctionList(ctx, point_iterator_class, js_point_iterator_static_funcs, countof(js_point_iterator_static_funcs));
   }
 
   if(m)

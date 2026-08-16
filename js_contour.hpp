@@ -43,15 +43,6 @@ contour_copy(const JSContourData<T>& src, JSContourData<U>& dst) {
   return src.size();
 }
 
-/*template<typename T, typename U = double>
-static inline JSContourData<T>
-contour_convert(const JSContourData<U>& src) {
-  JSContourData<T> dst;
-  dst.resize(src.size());
-  std::copy(src.begin(), src.end(), dst.begin());
-  return dst;
-}*/
-
 template<typename T>
 static inline cv::Mat
 contour_getmat(JSContourData<T>& contour) {
@@ -95,7 +86,6 @@ contour_intersect(const JSContourData<T>& a, const JSContourData<T>& b, std::arr
 
   /*while(ita != aend) {
     while(itb != bend) {
-
       if(reinterpret_cast<const Line<T>*>(ita)->intersect(*reinterpret_cast<const
   Line<T>*>(itb), intersection)) { if(indexes)
           (*indexes) = std::array<ssize_t, 2>{ita - a.data(), itb - b.data()};
