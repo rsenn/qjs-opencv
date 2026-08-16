@@ -355,15 +355,15 @@ js_mat_initialize(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
     std::vector<size_t> steps;
     cv::Scalar scalar = {0, 0, 0, 0};
     JSValue abuf = JS_NULL;
-    JSContourData<double>* cont;
+    JSInputArray array = js_vector_inputarray(argv[0]);
 
-    if((cont = js_contour_data(argv[0]))) {
-      new(m) cv::Mat(cont->size(), 1, CV_64FC2, static_cast<void*>(cont->data()));
-      // new(m) cv::Mat(*cont, true);
+    if(!js_is_noarray(array) && array.isVector()) {
+      new(m) cv::Mat(array.size(), array.type());
+
+      array.getMat().copyTo(*m);
       return TRUE;
-    }
 
-    if(argc >= 3 && JS_IsNumber(argv[0]) && js_is_array(ctx, argv[1])) {
+    } else if(argc >= 3 && JS_IsNumber(argv[0]) && js_is_array(ctx, argv[1])) {
       /* `new Mat(ndims, sizes, type)`. `ndims` itself isn't used beyond
        * this - dimensionality is implied by sizes.size(). Must write into
        * the outer `type` (not a locally-shadowed one, which silently
@@ -420,7 +420,6 @@ js_mat_initialize(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
       }
 
       if(++index < argc) {
-
         if(js_is_arraybuffer(ctx, argv[index]) || js_object_is(ctx, argv[index], "[object SharedArrayBuffer]")) {
           size_t len;
 
@@ -659,7 +658,6 @@ js_mat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
         JSValue buffer = js_mat_buffer(ctx, this_val);
 
         ret = js_typedarray_new(ctx, buffer, uint32_t(ptr - m->data), uint32_t(span), type);
-
         break;
       }
 
@@ -721,7 +719,6 @@ js_mat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
 static JSValue
 js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSValue ret = JS_UNDEFINED;
-  // JSColorData<double> color;
   double value = 0;
   JSMatData *input, *output = nullptr, *other = nullptr;
   double scale = 1.0;

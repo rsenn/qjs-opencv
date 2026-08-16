@@ -1,6 +1,5 @@
 #include "cutils.h"
 #include "js_cv.hpp"
-#include "js_contour.hpp"
 #include "js_mat.hpp"
 #include "js_object.hpp"
 #include "js_point.hpp"

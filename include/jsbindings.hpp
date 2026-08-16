@@ -2,6 +2,7 @@
 #define JSBINDINGS_HPP
 
 #include "util.hpp"
+#include "types.hpp"
 #include <cutils.h>
 #include <quickjs.h>
 #include <cassert>
@@ -19,6 +20,7 @@ class CLAHE;
 typedef cv::_InputArray JSInputArray;
 typedef cv::_InputOutputArray JSInputOutputArray;
 typedef cv::_OutputArray JSOutputArray;
+
 typedef cv::VideoCapture JSVideoCaptureData;
 typedef cv::VideoWriter JSVideoWraiterData;
 typedef cv::TickMeter JSTickMeterData;

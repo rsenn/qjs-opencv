@@ -1,6 +1,5 @@
 #include "js_cv.hpp"
 #include "js_umat.hpp"
-#include "js_contour.hpp"
 #include "include/jsbindings.hpp"
 #include "include/js_inputoutputarray.hpp"
 #include <quickjs.h>
@@ -340,9 +339,9 @@ js_edge_drawing_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
     }
 
     case EDGEDRAWING_GETSEGMENTS: {
-      auto segments = ed->get()->getSegments();
-
-      ret = js_contours_new(ctx, segments);
+      JSVector<std::vector<cv::Point>> pvv;
+      *pvv.vec = ed->get()->getSegments();
+      ret = pvv.toJS(ctx);
       break;
     }
 

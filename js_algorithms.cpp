@@ -10,8 +10,12 @@
 #include "algorithms/trace_skeleton.hpp"
 #include <quickjs.h>
 #include "include/util.hpp"
+#include "include/types.hpp"
 #include "include/js_inputoutputarray.hpp"
+#include "include/js_converter.hpp"
 
+using cv::Point;
+using cv::PointVector;
 using std::array;
 using std::cout;
 using std::endl;
@@ -64,9 +68,11 @@ js_cv_pixel_find_value(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
 
 static JSValue
 js_cv_trace_skeleton(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  JSContoursData<double> contours;
-  uint32_t count;
+  JSVector<vector<Point>>* contours;
   cv::Mat *mat, *neighborhood = 0, *mapping = 0;
+
+  if(!(contours = JSVector<PointVector>::fromJS(ctx, argv[1])))
+    return JS_ThrowTypeError(ctx, "argument 2 must be PointVectorVector");
 
   if(!(mat = js_mat_data2(ctx, argv[0])))
     return JS_EXCEPTION;
@@ -77,18 +83,9 @@ js_cv_trace_skeleton(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
   if(argc > 3)
     mapping = js_mat_data(argv[3]);
 
-  count = trace_skeleton(*mat, contours, neighborhood, mapping, true);
+  uint32_t count = trace_skeleton(*mat, *contours->vec, neighborhood, mapping, true);
 
-  if(argc >= 2) {
-    if(!js_is_array(ctx, argv[1]))
-      return JS_ThrowTypeError(ctx, "argument 2 must be array");
-
-    js_contours_copy(ctx, argv[1], contours);
-
-    return JS_NewUint32(ctx, count);
-  }
-
-  return js_contours_new(ctx, contours);
+  return JS_NewUint32(ctx, count);
 }
 
 static JSValue
@@ -259,26 +256,22 @@ js_cv_degree_map(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
 static JSValue
 js_cv_trace_lines(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSMatData* mat;
+  JSVector<vector<cv::Point>>* lines;
 
   if(!(mat = js_mat_data2(ctx, argv[0])))
     return JS_EXCEPTION;
 
-  std::vector<std::vector<cv::Point>> lines = skeleton_lines::trace_lines(*mat);
+  if(!(lines = JSVector<vector<cv::Point>>::fromJS(ctx, argv[1])))
+    return JS_ThrowTypeError(ctx, "argument 2 must be PointVectorVector");
 
-  if(argc >= 2) {
-    if(!js_is_array(ctx, argv[1]))
-      return JS_ThrowTypeError(ctx, "argument 2 must be array");
+  skeleton_lines::trace_lines(*mat, *lines->vec);
 
-    js_contours_copy(ctx, argv[1], lines);
-
-    return JS_NewUint32(ctx, lines.size());
-  }
-
-  return js_contours_new(ctx, lines);
+  return JS_NewUint32(ctx, lines->vec->size());
 }
 
 static JSValue
 js_cv_skeletonize_and_trace(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+  JSVector<vector<Point>>* lines;
   cv::Mat* skeleton_out = nullptr;
   cv::Mat skel;
   JSInputArray src = js_cv_inputarray(ctx, argv[0]);
@@ -286,24 +279,18 @@ js_cv_skeletonize_and_trace(JSContext* ctx, JSValueConst this_val, int argc, JSV
   if(js_is_noarray(src))
     return JS_ThrowInternalError(ctx, "src not an array!");
 
+  if(!(lines = JSVector<vector<Point>>::fromJS(ctx, argv[1])))
+    return JS_ThrowTypeError(ctx, "argument 2 must be PointVectorVector");
+
   if(argc > 2)
     skeleton_out = js_mat_data(argv[2]);
 
-  std::vector<std::vector<cv::Point>> lines = skeleton_lines::skeletonize_and_trace(src, &skel);
+  skel = skeleton_lines::skeletonize_and_trace(src, *lines->vec);
 
   if(skeleton_out)
     skel.copyTo(*skeleton_out);
 
-  if(argc >= 2 && !JS_IsUndefined(argv[1])) {
-    if(!js_is_array(ctx, argv[1]))
-      return JS_ThrowTypeError(ctx, "argument 2 must be array");
-
-    js_contours_copy(ctx, argv[1], lines);
-
-    return JS_NewUint32(ctx, lines.size());
-  }
-
-  return js_contours_new(ctx, lines);
+  return JS_NewUint32(ctx, lines->vec->size());
 }
 
 js_function_list_t js_algorithms_static_funcs{

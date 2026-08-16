@@ -2,6 +2,10 @@
 #include "js_keypoint.hpp" // Must include before js_vector.hpp to get JSConverter<cv::KeyPoint>
 #include "js_vector.hpp"
 
+using cv::Point;
+using cv::Point2f;
+using std::vector;
+
 extern "C" {
 
 int
@@ -21,12 +25,12 @@ js_vector_init(JSContext* ctx, JSModuleDef* m) {
     JSVector<cv::Mat>::set_export(ctx, m, "MatVector");
   }
   if(result == 0) {
-    result = JSVector<cv::Point>::init(ctx, m, "PointVector");
-    JSVector<cv::Point>::set_export(ctx, m, "PointVector");
+    result = JSVector<Point>::init(ctx, m, "PointVector");
+    JSVector<Point>::set_export(ctx, m, "PointVector");
   }
   if(result == 0) {
-    result = JSVector<cv::Point2f>::init(ctx, m, "Point2fVector");
-    JSVector<cv::Point2f>::set_export(ctx, m, "Point2fVector");
+    result = JSVector<Point2f>::init(ctx, m, "Point2fVector");
+    JSVector<Point2f>::set_export(ctx, m, "Point2fVector");
   }
   if(result == 0) {
     result = JSVector<cv::Point3f>::init(ctx, m, "Point3fVector");
@@ -58,20 +62,24 @@ js_vector_init(JSContext* ctx, JSModuleDef* m) {
   }
 
   if(result == 0) {
-    result = JSVector<std::vector<cv::DMatch>>::init(ctx, m, "DMatchVectorVector");
-    JSVector<std::vector<cv::DMatch>>::set_export(ctx, m, "DMatchVectorVector");
+    result = JSVector<vector<cv::DMatch>>::init(ctx, m, "DMatchVectorVector");
+    JSVector<vector<cv::DMatch>>::set_export(ctx, m, "DMatchVectorVector");
   }
   if(result == 0) {
-    result = JSVector<std::vector<cv::KeyPoint>>::init(ctx, m, "KeyPointVectorVector");
-    JSVector<std::vector<cv::KeyPoint>>::set_export(ctx, m, "KeyPointVectorVector");
+    result = JSVector<vector<cv::KeyPoint>>::init(ctx, m, "KeyPointVectorVector");
+    JSVector<vector<cv::KeyPoint>>::set_export(ctx, m, "KeyPointVectorVector");
   }
   if(result == 0) {
-    result = JSVector<std::vector<cv::Point>>::init(ctx, m, "PointVectorVector");
-    JSVector<std::vector<cv::Point>>::set_export(ctx, m, "PointVectorVector");
+    result = JSVector<vector<Point>>::init(ctx, m, "PointVectorVector");
+    JSVector<vector<Point>>::set_export(ctx, m, "PointVectorVector");
   }
   if(result == 0) {
-    result = JSVector<std::vector<char>>::init(ctx, m, "CharVectorVector");
-    JSVector<std::vector<char>>::set_export(ctx, m, "CharVectorVector");
+    result = JSVector<vector<Point2f>>::init(ctx, m, "Point2fVectorVector");
+    JSVector<vector<Point2f>>::set_export(ctx, m, "Point2fVectorVector");
+  }
+  if(result == 0) {
+    result = JSVector<vector<char>>::init(ctx, m, "CharVectorVector");
+    JSVector<vector<char>>::set_export(ctx, m, "CharVectorVector");
   }
 
   return result;
@@ -82,8 +90,8 @@ js_vector_export(JSContext* ctx, JSModuleDef* m) {
   JSVector<cv::DMatch>::add_export(ctx, m, "DMatchVector");
   JSVector<cv::KeyPoint>::add_export(ctx, m, "KeyPointVector");
   JSVector<cv::Mat>::add_export(ctx, m, "MatVector");
-  JSVector<cv::Point>::add_export(ctx, m, "PointVector");
-  JSVector<cv::Point2f>::add_export(ctx, m, "Point2fVector");
+  JSVector<Point>::add_export(ctx, m, "PointVector");
+  JSVector<Point2f>::add_export(ctx, m, "Point2fVector");
   JSVector<cv::Point3f>::add_export(ctx, m, "Point3fVector");
   JSVector<cv::Rect>::add_export(ctx, m, "RectVector");
   JSVector<int>::add_export(ctx, m, "IntVector");
@@ -92,10 +100,11 @@ js_vector_export(JSContext* ctx, JSModuleDef* m) {
   JSVector<char>::add_export(ctx, m, "CharVector");
   JSVector<std::string>::add_export(ctx, m, "StringVector");
 
-  JSVector<std::vector<cv::DMatch>>::add_export(ctx, m, "DMatchVectorVector");
-  JSVector<std::vector<cv::KeyPoint>>::add_export(ctx, m, "KeyPointVectorVector");
-  JSVector<std::vector<cv::Point>>::add_export(ctx, m, "PointVectorVector");
-  JSVector<std::vector<char>>::add_export(ctx, m, "CharVectorVector");
+  JSVector<vector<cv::DMatch>>::add_export(ctx, m, "DMatchVectorVector");
+  JSVector<vector<cv::KeyPoint>>::add_export(ctx, m, "KeyPointVectorVector");
+  JSVector<vector<Point>>::add_export(ctx, m, "PointVectorVector");
+  JSVector<vector<Point2f>>::add_export(ctx, m, "Point2fVectorVector");
+  JSVector<vector<char>>::add_export(ctx, m, "CharVectorVector");
 }
 }
 
@@ -103,9 +112,9 @@ JSInputArray
 js_vector_inputarray(JSValueConst value) {
   if(auto* ptr = JSVector<cv::Mat>::fromJS(value))
     return *ptr;
-  if(auto* ptr = JSVector<cv::Point>::fromJS(value))
+  if(auto* ptr = JSVector<Point>::fromJS(value))
     return *ptr;
-  if(auto* ptr = JSVector<cv::Point2f>::fromJS(value))
+  if(auto* ptr = JSVector<Point2f>::fromJS(value))
     return *ptr;
   if(auto* ptr = JSVector<cv::Point3f>::fromJS(value))
     return *ptr;
@@ -121,13 +130,15 @@ js_vector_inputarray(JSValueConst value) {
     return *ptr;
   /*if(auto* ptr = JSVector<std::string>::fromJS(value))
     return *ptr;
-  if(auto* ptr = JSVector<std::vector<cv::DMatch>>::fromJS(value))
+  if(auto* ptr = JSVector<vector<cv::DMatch>>::fromJS(value))
     return *ptr;
-  if(auto* ptr = JSVector<std::vector<cv::KeyPoint>>::fromJS(value))
+  if(auto* ptr = JSVector<vector<cv::KeyPoint>>::fromJS(value))
     return *ptr;*/
-  if(auto* ptr = JSVector<std::vector<cv::Point>>::fromJS(value))
+  if(auto* ptr = JSVector<vector<Point>>::fromJS(value))
     return *ptr;
-  if(auto* ptr = JSVector<std::vector<char>>::fromJS(value))
+  if(auto* ptr = JSVector<vector<Point2f>>::fromJS(value))
+    return *ptr;
+  if(auto* ptr = JSVector<vector<char>>::fromJS(value))
     return *ptr;
 
   return cv::noArray();
@@ -137,9 +148,9 @@ JSInputOutputArray
 js_vector_inputoutputarray(JSValueConst value) {
   if(auto* ptr = JSVector<cv::Mat>::fromJS(value))
     return *ptr;
-  if(auto* ptr = JSVector<cv::Point>::fromJS(value))
+  if(auto* ptr = JSVector<Point>::fromJS(value))
     return *ptr;
-  if(auto* ptr = JSVector<cv::Point2f>::fromJS(value))
+  if(auto* ptr = JSVector<Point2f>::fromJS(value))
     return *ptr;
   if(auto* ptr = JSVector<cv::Point3f>::fromJS(value))
     return *ptr;
@@ -155,13 +166,15 @@ js_vector_inputoutputarray(JSValueConst value) {
     return *ptr;
   /*if(auto* ptr = JSVector<std::string>::fromJS(value))
     return *ptr;
-  if(auto* ptr = JSVector<std::vector<cv::DMatch>>::fromJS(value))
+  if(auto* ptr = JSVector<vector<cv::DMatch>>::fromJS(value))
     return *ptr;
-  if(auto* ptr = JSVector<std::vector<cv::KeyPoint>>::fromJS(value))
+  if(auto* ptr = JSVector<vector<cv::KeyPoint>>::fromJS(value))
     return *ptr;*/
-  if(auto* ptr = JSVector<std::vector<cv::Point>>::fromJS(value))
+  if(auto* ptr = JSVector<vector<Point>>::fromJS(value))
     return *ptr;
-  if(auto* ptr = JSVector<std::vector<char>>::fromJS(value))
+  if(auto* ptr = JSVector<vector<Point2f>>::fromJS(value))
+    return *ptr;
+  if(auto* ptr = JSVector<vector<char>>::fromJS(value))
     return *ptr;
 
   return cv::noArray();

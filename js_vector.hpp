@@ -79,6 +79,11 @@ public:
   operator JSInputOutputArray() { return JSInputOutputArray(*vec); }
   operator JSOutputArray() { return JSOutputArray(*vec); }
 
+  void* getBuffer(size_t& size) const {
+    size = vec->size();
+    return static_cast<void*>(vec->data());
+  }
+
   /**
    * @brief Create a new JS object wrapping this vector
    */

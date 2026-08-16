@@ -2,7 +2,6 @@
 #include "include/geometry.hpp"
 #include "js_cv.hpp"
 #include "include/js_array.hpp"
-#include "js_contour.hpp"
 #include "js_line.hpp"
 #include "js_mat.hpp"
 #include "js_point.hpp"
@@ -735,11 +734,10 @@ js_clip_line(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
 static JSValue
 js_fill_convex_poly(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSInputOutputArray img = js_cv_inputoutputarray(ctx, argv[0]);
-  JSContourData<int> points;
+  JSInputArray points = js_cv_inputarray(ctx, argv[1]);
   cv::Scalar color;
   int32_t lineType = cv::LINE_8, shift = 0;
 
-  js_value_to(ctx, argv[1], points);
   js_color_read(ctx, argv[2], &color);
 
   if(argc > 3)

@@ -1,8 +1,8 @@
 #include "js_alloc.hpp"
 #include "js_point.hpp"
 #include "include/js_array.hpp"
-#include "js_contour.hpp"
 #include "js_rect.hpp"
+#include "js_vector.hpp"
 #include "include/jsbindings.hpp"
 #include <opencv2/core/matx.hpp>
 #include <quickjs.h>
@@ -182,18 +182,20 @@ js_subdiv2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
     }
 
     case SUBDIV2D_GET_VORONOI_FACET_LIST: {
-      std::vector<int> idx;
-      JSContoursData<float> facetList;
-      JSContourData<float> facetCenters;
+      JSVector<int>* idx;
+      JSVector<std::vector<cv::Point2f>>* facetList;
+      JSVector<cv::Point2f>* facetCenters = JSVector<cv::Point2f>::fromJS(argv[2]);
 
-      js_array_to(ctx, argv[0], idx);
+      if(!(idx = JSVector<int>::fromJS(argv[0])))
+        return JS_ThrowTypeError(ctx, "argument 1 must be an IntVector");
 
-      s->getVoronoiFacetList(idx, facetList, facetCenters);
+      if(!(facetList = JSVector<std::vector<cv::Point2f>>::fromJS(argv[1])))
+        return JS_ThrowTypeError(ctx, "argument 2 must be a Point2fVectorVector");
 
-      js_array_clear(ctx, argv[1]);
-      js_array_copy(ctx, argv[1], facetList);
-      js_array_clear(ctx, argv[2]);
-      js_array_copy(ctx, argv[2], facetCenters);
+      if(!(facetCenters = JSVector<cv::Point2f>::fromJS(argv[2])))
+        return JS_ThrowTypeError(ctx, "argument 3 must be a Point2fVector");
+
+      s->getVoronoiFacetList(*idx->vec, *facetList->vec, *facetCenters->vec);
       break;
     }
 

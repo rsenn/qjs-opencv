@@ -5,7 +5,6 @@
 #include "include/js_typed_array.hpp"
 #include "include/jsbindings.hpp"
 #include "js_umat.hpp"
-#include "js_contour.hpp"
 #include "js_vector.hpp"
 
 #include <opencv2/core.hpp>
@@ -23,13 +22,6 @@ js_cv_inputarray(JSContext* ctx, JSValueConst value) {
 
   if((mat = js_mat_data_nothrow(value)))
     return JSInputArray(*mat);
-
-  if(js_contour_class_id) {
-    JSContourData<double>* contour;
-
-    if((contour = js_contour_data(value)))
-      return JSInputArray(*contour);
-  }
 
   JSInputArray inputArray = js_vector_inputarray(value);
 
@@ -92,13 +84,6 @@ js_cv_inputoutputarray(JSContext* ctx, JSValueConst value) {
   if((umat = js_umat_data(value)))
     return JSInputOutputArray(*umat);
 
-  if(js_contour_class_id) {
-    JSContourData<double>* contour;
-
-    if((contour = js_contour_data(value)))
-      return JSInputOutputArray(*contour);
-  }
-
   JSInputOutputArray inputOutputArray = js_vector_inputoutputarray(value);
 
   if(inputOutputArray.kind() != JSInputOutputArray::NONE)
@@ -133,13 +118,6 @@ js_cv_outputarray(JSContext* ctx, JSValueConst value) {
 
   if((umat = js_umat_data(value)))
     return JSOutputArray(*umat);
-
-  if(js_contour_class_id) {
-    JSContourData<double>* contour;
-
-    if((contour = js_contour_data(value)))
-      return JSOutputArray(*contour);
-  }
 
   JSOutputArray outputArray = js_vector_inputoutputarray(value);
 

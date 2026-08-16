@@ -405,6 +405,10 @@ endif(USE_LIBCAMERA OR USE_LCCV)
 
 file(GLOB OPENCV_SOURCES js_*.[ch]pp ${FEATURE2D_SOURCE} include/*.hpp
      src/*.cpp gifenc/gifenc.c algorithms/*.cpp lsd/src/*.cpp)
+
+list(FILTER OPENCV_SOURCES EXCLUDE REGEX ".*_iterator.cpp")
+list(FILTER OPENCV_SOURCES EXCLUDE REGEX ".*js_contour.*")
+
 #dump(OPENCV_SOURCES)
 
 if(USE_LCCV)

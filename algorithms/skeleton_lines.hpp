@@ -34,6 +34,10 @@
 #include <utility>
 #include <vector>
 
+using std::vector;
+using cv::Point;
+using cv::Mat;
+
 namespace skeleton_lines {
 
 /* -------------------------------------------------------------------------
@@ -49,8 +53,8 @@ namespace skeleton_lines {
  *     p7 p6 p5
  */
 static inline void
-guohall_iteration(cv::Mat& im, int iter) {
-  cv::Mat marker = cv::Mat::zeros(im.size(), CV_8UC1);
+guohall_iteration(Mat& im, int iter) {
+  Mat marker = Mat::zeros(im.size(), CV_8UC1);
 
   for(int y = 1; y < im.rows - 1; ++y) {
     const uchar* prev = im.ptr<uchar>(y - 1);
@@ -90,18 +94,18 @@ guohall_iteration(cv::Mat& im, int iter) {
  * Output is 0/255 with foreground pixels reduced to a 1-pixel skeleton.
  */
 static inline void
-guohall_thinning(cv::Mat& im) {
+guohall_thinning(Mat& im) {
   im /= 255;
 
-  cv::Mat prev = cv::Mat::zeros(im.size(), CV_8UC1);
-  cv::Mat diff;
+  Mat prev = Mat::zeros(im.size(), CV_8UC1);
+  Mat diff;
 
   do {
     guohall_iteration(im, 0);
     guohall_iteration(im, 1);
-    cv::absdiff(im, prev, diff);
+    absdiff(im, prev, diff);
     im.copyTo(prev);
-  } while(cv::countNonZero(diff) > 0);
+  } while(countNonZero(diff) > 0);
 
   im *= 255;
 }
@@ -111,9 +115,9 @@ guohall_thinning(cv::Mat& im) {
  * Returns a fresh 0/255 CV_8UC1 skeleton; the input is not modified.
  */
 template<class InputArray>
-static cv::Mat
+static Mat
 skeletonize_guohall(InputArray src) {
-  cv::Mat out;
+  Mat out;
 
   if(src.channels() == 1)
     src.copyTo(out);
@@ -134,9 +138,9 @@ skeletonize_guohall(InputArray src) {
  * Compute the 8-connected degree of every foreground pixel.
  * Border pixels (first/last row/column) are reported as degree 0.
  */
-static inline cv::Mat
-degree_map(const cv::Mat& skel) {
-  cv::Mat deg = cv::Mat::zeros(skel.size(), CV_8UC1);
+static inline Mat
+degree_map(const Mat& skel) {
+  Mat deg = Mat::zeros(skel.size(), CV_8UC1);
 
   for(int y = 1; y < skel.rows - 1; ++y) {
     const uchar* prev = skel.ptr<uchar>(y - 1);
@@ -168,33 +172,31 @@ degree_map(const cv::Mat& skel) {
  * Special pixels are shared: a junction with degree k will appear as
  * the start or end point of exactly k polylines (one per incident edge).
  */
-static inline std::vector<std::vector<cv::Point>>
-trace_lines(const cv::Mat& skel) {
+static inline void
+trace_lines(const Mat& skel, vector<vector<Point>>&lines) {
   /* 8-neighbour offsets. The layout is required to satisfy
    *   N8[i] + N8[(i + 4) & 7] == (0, 0)
    * so opposite directions differ by 4. */
-  static const std::array<cv::Point, 8> N8{
-      cv::Point(-1, -1),
-      cv::Point(0, -1),
-      cv::Point(1, -1),
-      cv::Point(1, 0),
-      cv::Point(1, 1),
-      cv::Point(0, 1),
-      cv::Point(-1, 1),
-      cv::Point(-1, 0),
+  static const std::array<Point, 8> N8{
+      Point(-1, -1),
+      Point(0, -1),
+      Point(1, -1),
+      Point(1, 0),
+      Point(1, 1),
+      Point(0, 1),
+      Point(-1, 1),
+      Point(-1, 0),
   };
-
-  std::vector<std::vector<cv::Point>> lines;
-
-  const cv::Mat deg = degree_map(skel);
+  
+  const Mat deg = degree_map(skel);
 
   /* Bit i of used(y,x) = the edge leaving (x,y) along N8[i] has been
    * walked. Per-direction marking lets junctions correctly seed several
    * polylines without re-emitting the same edge from both ends. */
-  cv::Mat used = cv::Mat::zeros(skel.size(), CV_8UC1);
+  Mat used = Mat::zeros(skel.size(), CV_8UC1);
 
-  auto in_bounds = [&](const cv::Point& p) { return p.x >= 0 && p.y >= 0 && p.x < skel.cols && p.y < skel.rows; };
-  auto is_fg = [&](const cv::Point& p) { return skel.at<uchar>(p.y, p.x) != 0; };
+  auto in_bounds = [&](const Point& p) { return p.x >= 0 && p.y >= 0 && p.x < skel.cols && p.y < skel.rows; };
+  auto is_fg = [&](const Point& p) { return skel.at<uchar>(p.y, p.x) != 0; };
 
   /* -- Pass 1: every edge incident to at least one special pixel ------- */
 
@@ -204,22 +206,22 @@ trace_lines(const cv::Mat& skel) {
       if(d == 0 || d == 2)
         continue; /* background or chain interior */
 
-      const cv::Point sp(x, y);
+      const Point sp(x, y);
 
       for(int i = 0; i < 8; ++i) {
         if(used.at<uchar>(sp.y, sp.x) & (1 << i))
           continue;
 
-        const cv::Point first = sp + N8[i];
+        const Point first = sp + N8[i];
         if(!in_bounds(first) || !is_fg(first))
           continue;
 
-        std::vector<cv::Point> chain;
+        vector<Point> chain;
         chain.push_back(sp);
         used.at<uchar>(sp.y, sp.x) |= (1 << i);
 
-        cv::Point prev = sp;
-        cv::Point cur = first;
+        Point prev = sp;
+        Point cur = first;
         int dir = i;
 
         while(true) {
@@ -235,10 +237,10 @@ trace_lines(const cv::Mat& skel) {
 
           /* Step forward along the chain — exactly one non-prev fg
            * neighbour is expected (deg == 2). */
-          cv::Point next;
+          Point next;
           int next_dir = -1;
           for(int j = 0; j < 8; ++j) {
-            const cv::Point q = cur + N8[j];
+            const Point q = cur + N8[j];
             if(!in_bounds(q) || !is_fg(q))
               continue;
             if(q == prev)
@@ -273,19 +275,19 @@ trace_lines(const cv::Mat& skel) {
       if(used.at<uchar>(y, x))
         continue;
 
-      const cv::Point start(x, y);
-      std::vector<cv::Point> loop;
-      cv::Point prev(-1, -1);
-      cv::Point cur = start;
+      const Point start(x, y);
+      vector<Point> loop;
+      Point prev(-1, -1);
+      Point cur = start;
 
       do {
         loop.push_back(cur);
         used.at<uchar>(cur.y, cur.x) = 0xFF;
 
-        cv::Point next;
+        Point next;
         int next_dir = -1;
         for(int j = 0; j < 8; ++j) {
-          const cv::Point q = cur + N8[j];
+          const Point q = cur + N8[j];
           if(!in_bounds(q) || !is_fg(q))
             continue;
           if(q == prev)
@@ -311,8 +313,6 @@ trace_lines(const cv::Mat& skel) {
         lines.push_back(std::move(loop));
     }
   }
-
-  return lines;
 }
 
 /* -------------------------------------------------------------------------
@@ -325,15 +325,11 @@ trace_lines(const cv::Mat& skel) {
  * there. The input is not modified.
  */
 template<class InputArray>
-static inline std::vector<std::vector<cv::Point>>
-skeletonize_and_trace(InputArray src, cv::Mat* skeleton_out = nullptr) {
-  cv::Mat skel = skeletonize_guohall(src);
-  auto lines = trace_lines(skel);
-
-  if(skeleton_out)
-    *skeleton_out = skel;
-
-  return lines;
+static inline Mat
+skeletonize_and_trace(InputArray src, vector<vector<Point>>&lines) {
+  Mat skel = skeletonize_guohall(src);
+ trace_lines(skel, lines);
+return skel;
 }
 
 } /* namespace skeleton_lines */

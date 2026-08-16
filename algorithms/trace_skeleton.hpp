@@ -2,12 +2,14 @@
 #define TRACE_SKELETON_HPP
 
 #include "pixel_neighborhood.hpp"
+#include "include/types.hpp"
 
 namespace skeleton_tracing {
 
+using std::vector;
 using cv::Mat;
 using cv::Point;
-using std::vector;
+using cv::PointVector;
 
 static const std::array<Point, 8> direction_points = {
     Point(0, 1),
@@ -138,7 +140,7 @@ public:
     return false;
   }
 
-  template<typename Predicate = bool(unsigned)> bool trace(JSContoursData<double>& contours, bool simplify, Predicate pred) {
+  template<typename Predicate = bool(unsigned)> bool trace(vector<vector<Point>>& contours, bool simplify, Predicate pred) {
     Point pt, ppdiff, pdiff, diff, next;
     size_t n;
     int dir = -1;
@@ -147,8 +149,8 @@ public:
     if(!pixel_find_pred(pt, index, pred))
       return false;
 
-    contours.push_back(JSContourData<double>());
-    JSContourData<double>& contour = contours.back();
+    contours.push_back(vector<Point>());
+    vector<Point>& contour = contours.back();
 
     points.resize(direction_points.size());
     std::copy(direction_points.begin(), direction_points.end(), points.begin());
@@ -188,7 +190,7 @@ public:
     return true;
   }
 
-  uint32_t run(JSContoursData<double>& contours, bool simplify = false) {
+  uint32_t run(vector<vector<Point>>& contours, bool simplify = false) {
 
     while(trace(contours, simplify, [](unsigned p) -> bool { return p > 0; })) {
 #ifdef DEBUG_OUTPUT
@@ -209,7 +211,7 @@ public:
 }; // namespace skeleton_tracing
 
 static inline uint32_t
-trace_skeleton(cv::Mat& mat, JSContoursData<double>& out, cv::Mat* neighborhood, cv::Mat* mapping, bool simplify = false) {
+trace_skeleton(Mat& mat, vector<vector<Point>>& out, Mat* neighborhood, Mat* mapping, bool simplify = false) {
   uint32_t ret;
   skeleton_tracing::skeleton_tracer tracer(mat);
 
@@ -226,17 +228,17 @@ trace_skeleton(cv::Mat& mat, JSContoursData<double>& out, cv::Mat* neighborhood,
 }
 
 static inline uint32_t
-trace_skeleton(cv::Mat& mat, JSContoursData<double>& out, bool simplify = false) {
+trace_skeleton(Mat& mat, vector<vector<Point>>& out, bool simplify = false) {
   skeleton_tracing::skeleton_tracer tracer(mat);
   return tracer.run(out, simplify);
   // return skeleton_tracing::run(mat, out, simplify);
 }
 
-static inline JSContoursData<double>
-trace_skeleton(cv::Mat& mat, bool simplify = false) {
-  JSContoursData<double> contours;
-  trace_skeleton(mat, contours, simplify);
-  return contours;
-}
+  /*static inline vector<vector<Point>>
+  trace_skeleton(Mat& mat, bool simplify = false) {
+    vector<vector<Point>> contours;
+    trace_skeleton(mat, contours, simplify);
+    return contours;
+  }*/
 
 #endif /* TRACE_SKELETON_HPP */

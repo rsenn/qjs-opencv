@@ -178,13 +178,14 @@ js_calib3d_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
     }
 
     case FIND_HOMOGRAPHY: {
-      JSContourData<double> src; /* = js_cv_inputarray(ctx, argv[0])*/
-      ;
-      JSContourData<double> dst; /*= js_cv_inputarray(ctx, argv[1])*/
-      ;
+      JSInputArray src = js_cv_inputarray(ctx, argv[0]);
+      JSInputArray dst = js_cv_inputarray(ctx, argv[1]);
 
-      js_array_to(ctx, argv[0], src);
-      js_array_to(ctx, argv[1], dst);
+      if(src.type() == JSInputArray::NONE)
+        return JS_ThrowTypeError(ctx, "argument 1 must be a PointVector or Mat of type CV_32FC2");
+
+      if(dst.type() == JSInputArray::NONE)
+        return JS_ThrowTypeError(ctx, "argument 1 must be a PointVector or Mat of type CV_32FC2");
 
       cv::Mat mat;
       JSOutputArray mask = cv::noArray();

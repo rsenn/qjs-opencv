@@ -5,7 +5,7 @@
 #include "js_point.hpp"
 #include "js_size.hpp"
 #include "js_typed_array.hpp"
-#include "js_contour.hpp"
+#include "include/js_converter.hpp"
 #include "include/jsbindings.hpp"
 #include <quickjs.h>
 #include "include/util.hpp"
@@ -407,14 +407,14 @@ js_rect_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
     }
 
     case FUNC_CONTOUR: {
-      JSContourData<double> c{
-          JSPointData<double>(rect.x, rect.y),
-          JSPointData<double>(rect.x + rect.width, rect.y),
-          JSPointData<double>(rect.x + rect.width, rect.y + rect.height),
-          JSPointData<double>(rect.x, rect.y + rect.height),
+      std::vector<cv::Point2d> c{
+          cv::Point2d(rect.x, rect.y),
+          cv::Point2d(rect.x + rect.width, rect.y),
+          cv::Point2d(rect.x + rect.width, rect.y + rect.height),
+          cv::Point2d(rect.x, rect.y + rect.height),
       };
 
-      ret = js_contour_new(ctx, c);
+      ret = js_array_from(ctx, c);
       break;
     }
   }
