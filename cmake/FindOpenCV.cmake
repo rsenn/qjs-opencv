@@ -242,19 +242,21 @@ macro(find_opencv)
       set(OPENCV_LIBDIR "${OPENCV_PREFIX}/lib"
           CACHE PATH "OpenCV library directory" FORCE)
     endif(NOT OPENCV_LIBDIR)
-
-    if("${OPENCV_INCLUDE_DIRS}" MATCHES "/include$")
-      set(OPENCV_INCLUDE_DIRS "${OPENCV_INCLUDE_DIRS}/opencv4"
-          CACHE PATH "OpenCV include directory" FORCE)
-    endif("${OPENCV_INCLUDE_DIRS}" MATCHES "/include$")
+    
     if(NOT OPENCV_INCLUDE_DIRS)
       if(OPENCV_LIBDIR)
-        string(REGEX REPLACE "/lib.*" "/include/opencv4" OPENCV_INCLUDE_DIRS
-                             "${OPENCV_LIBDIR}")
-        set(OPENCV_INCLUDE_DIRS "${OPENCV_INCLUDE_DIRS}"
-            CACHE PATH "OpenCV include directory" FORCE)
+        string(REGEX REPLACE "/lib.*" "/include" OPENCV_INCLUDE_DIRS "${OPENCV_LIBDIR}")
+        set(OPENCV_INCLUDE_DIRS "${OPENCV_INCLUDE_DIRS}" CACHE PATH "OpenCV include directory" FORCE)
       endif(OPENCV_LIBDIR)
     endif(NOT OPENCV_INCLUDE_DIRS)
+
+    if("${OPENCV_INCLUDE_DIRS}" MATCHES "/include$")
+      if(EXISTS "${OPENCV_INCLUDE_DIRS}/opencv5")
+        set(OPENCV_INCLUDE_DIRS "${OPENCV_INCLUDE_DIRS}/opencv5"  CACHE PATH "OpenCV include directory" FORCE)
+      else(EXISTS "${OPENCV_INCLUDE_DIRS}/opencv5")
+        set(OPENCV_INCLUDE_DIRS "${OPENCV_INCLUDE_DIRS}/opencv4"  CACHE PATH "OpenCV include directory" FORCE)
+      endif(EXISTS "${OPENCV_INCLUDE_DIRS}/opencv5")
+    endif("${OPENCV_INCLUDE_DIRS}" MATCHES "/include$")
 
     if(OPENCV_FOUND OR OPENCV_LIBRARIES)
       message(STATUS "OpenCV ${OPENCV_VERSION} found at ${OPENCV_PREFIX}")
