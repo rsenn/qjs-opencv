@@ -339,9 +339,9 @@ js_edge_drawing_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
     }
 
     case EDGEDRAWING_GETSEGMENTS: {
-      JSVector<std::vector<cv::Point>> pvv;
-      *pvv.vec = ed->get()->getSegments();
-      ret = pvv.toJS(ctx);
+      auto* pvv = new JSVector<std::vector<cv::Point>>();
+      *pvv->vec = ed->get()->getSegments();
+      ret = pvv->toJS(ctx);
       break;
     }
 
