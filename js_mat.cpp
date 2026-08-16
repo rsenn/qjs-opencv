@@ -1361,7 +1361,7 @@ js_mat_set_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
   JSInputArray mask = cv::noArray();
 
   if(argc > 1)
-    mask = js_input_array(ctx, argv[1]);
+    mask = js_cv_inputarray(ctx, argv[1]);
 
   if(m->channels() == 1) {
     double value;

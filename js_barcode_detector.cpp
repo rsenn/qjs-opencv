@@ -157,7 +157,7 @@ js_barcode_detector_method(JSContext* ctx, JSValueConst this_val, int argc, JSVa
   switch(magic) {
 
     case METHOD_DETECT: {
-      JSInputArray img = js_input_array(ctx, argv[0]);
+      JSInputArray img = js_cv_inputarray(ctx, argv[0]);
       std::vector<cv::Point2f> points;
       // JSOutputArray points = js_cv_outputarray(ctx, argv[1]);
 
@@ -169,8 +169,8 @@ js_barcode_detector_method(JSContext* ctx, JSValueConst this_val, int argc, JSVa
     }
 
     case METHOD_DECODE: {
-      JSInputArray img = js_input_array(ctx, argv[0]);
-      JSInputArray points = js_input_array(ctx, argv[1]);
+      JSInputArray img = js_cv_inputarray(ctx, argv[0]);
+      JSInputArray points = js_cv_inputarray(ctx, argv[1]);
       std::vector<std::string> decoded_info;
       std::vector<std::string> decoded_type;
 
@@ -190,7 +190,7 @@ js_barcode_detector_method(JSContext* ctx, JSValueConst this_val, int argc, JSVa
     }
 
     case METHOD_DETECT_AND_DECODE: {
-      JSInputArray img = js_input_array(ctx, argv[0]);
+      JSInputArray img = js_cv_inputarray(ctx, argv[0]);
       std::vector<std::string> decoded_info;
       std::vector<std::string> decoded_type;
       std::vector<cv::Point2f> points;

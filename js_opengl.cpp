@@ -73,7 +73,7 @@ js_buffer_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValue
       }
 
     } else {
-      JSInputArray arr = js_input_array(ctx, argv[0]);
+      JSInputArray arr = js_cv_inputarray(ctx, argv[0]);
 
       if(argc > 1)
         target = cv::ogl::Buffer::Target(js_value_to<int32_t>(ctx, argv[1]));
@@ -282,7 +282,7 @@ js_buffer_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
       }
 
       case BUFFER_COPY_FROM: {
-        JSInputArray arr = js_input_array(ctx, argv[0]);
+        JSInputArray arr = js_cv_inputarray(ctx, argv[0]);
         cv::ogl::Buffer::Target target = cv::ogl::Buffer::ARRAY_BUFFER;
         bool autoRelease = false;
 
@@ -461,7 +461,7 @@ js_texture2d_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSVa
 
     } else {
 
-      JSInputArray arr = js_input_array(ctx, argv[i++]);
+      JSInputArray arr = js_cv_inputarray(ctx, argv[i++]);
 
       if(i < argc)
         autoRelease = js_value_to<BOOL>(ctx, argv[i++]);
@@ -573,7 +573,7 @@ js_texture2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
       }
 
       case TEXTURE2D_COPY_FROM: {
-        JSInputArray arr = js_input_array(ctx, argv[0]);
+        JSInputArray arr = js_cv_inputarray(ctx, argv[0]);
         bool autoRelease = false;
 
         if(argc > 1)
@@ -824,25 +824,25 @@ js_arrays_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
       }
 
       case ARRAYS_SET_COLOR_ARRAY: {
-        JSInputArray arr = js_input_array(ctx, argv[0]);
+        JSInputArray arr = js_cv_inputarray(ctx, argv[0]);
         a->setColorArray(arr);
         break;
       }
 
       case ARRAYS_SET_NORMAL_ARRAY: {
-        JSInputArray arr = js_input_array(ctx, argv[0]);
+        JSInputArray arr = js_cv_inputarray(ctx, argv[0]);
         a->setNormalArray(arr);
         break;
       }
 
       case ARRAYS_SET_TEXCOORD_ARRAY: {
-        JSInputArray arr = js_input_array(ctx, argv[0]);
+        JSInputArray arr = js_cv_inputarray(ctx, argv[0]);
         a->setTexCoordArray(arr);
         break;
       }
 
       case ARRAYS_SET_VERTEX_ARRAY: {
-        JSInputArray arr = js_input_array(ctx, argv[0]);
+        JSInputArray arr = js_cv_inputarray(ctx, argv[0]);
         a->setVertexArray(arr);
         break;
       }
@@ -913,7 +913,7 @@ js_opengl_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
       }
 
       case OPENGL_CONVERT_TO_GL_TEXTURE_2D: {
-        JSInputArray src = js_input_array(ctx, argv[0]);
+        JSInputArray src = js_cv_inputarray(ctx, argv[0]);
         JSTexture2DData* tx;
 
         if(!(tx = js_texture2d_data2(ctx, argv[1])))
@@ -965,7 +965,7 @@ js_opengl_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
 
             cv::ogl::render(*ar, mode, color);
           } else {
-            JSInputArray indices = js_input_array(ctx, argv[1]);
+            JSInputArray indices = js_cv_inputarray(ctx, argv[1]);
 
             if(argc > 2)
               mode = js_value_to<int32_t>(ctx, argv[2]);

@@ -6,6 +6,7 @@
 #include <vector>
 #include <string>
 
+#include "include/jsbindings.hpp"
 #include "include/js_converter.hpp"
 
 extern "C" {
@@ -13,6 +14,16 @@ extern "C" {
 int js_vector_init(JSContext*, JSModuleDef*);
 void js_vector_export(JSContext*, JSModuleDef*);
 }
+
+/**
+ * @brief Get a JSOutputArray view of a JSVector<T>, for whichever T it holds
+ *
+ * Tries every registered vector element type in turn and returns an
+ * _OutputArray wrapping the matching JSVector<T>'s underlying
+ * std::vector<T>. Returns cv::noArray() if value isn't any registered
+ * JSVector<T>.
+ */
+JSOutputArray js_vector_outputarray(JSValueConst value);
 
 template<typename T> struct JSVectorRegistry;
 template<typename T> class JSVectorIterator;
@@ -27,7 +38,8 @@ template<typename T> class JSVectorIterator;
  * - set: update element at index
  * - size: get number of elements
  * - delete: manual cleanup
- */ template<typename T> class JSVector {
+ */
+template<typename T> class JSVector {
 public:
   using VectorType = std::vector<T>;
   using Converter = JSConverter<T>;
@@ -63,9 +75,9 @@ public:
   static JSVector<T>* fromJS(JSValueConst this_val) { return static_cast<JSVector<T>*>(JS_GetOpaque(this_val, get_class_id())); }
   static JSVector<T>* fromJS(JSContext* ctx, JSValueConst this_val) { return static_cast<JSVector<T>*>(JS_GetOpaque2(ctx, this_val, get_class_id())); }
 
-  operator cv::_OutputArray() const {
-    return cv::_OutputArray(*vec);
-  }
+  operator JSInputArray() const { return JSInputArray(*vec); }
+  operator JSOutputArray() { return JSOutputArray(*vec); }
+  operator JSInputOutputArray() { return JSInputOutputArray(*vec); }
 
   /**
    * @brief Create a new JS object wrapping this vector
@@ -418,5 +430,8 @@ template<class T> struct JSConverter<std::vector<T>> {
     return ret;
   }
 };
+
+JSInputArray js_vector_inputarray(JSValueConst value);
+JSInputOutputArray js_vector_inputoutputarray(JSValueConst value);
 
 #endif // JS_VECTOR_HPP

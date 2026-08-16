@@ -169,7 +169,7 @@ js_descriptor_matcher_method(JSContext* ctx, JSValueConst this_val, int argc, JS
 
   switch(magic) {
     case DESCRIPTOR_MATCHER_ADD: {
-      JSInputArray descriptors = js_input_array(ctx, argv[0]);
+      JSInputArray descriptors = js_cv_inputarray(ctx, argv[0]);
 
       dm->get()->add(descriptors);
       break;
@@ -181,13 +181,13 @@ js_descriptor_matcher_method(JSContext* ctx, JSValueConst this_val, int argc, JS
     }
 
     case DESCRIPTOR_MATCHER_MATCH: {
-      JSInputArray queryDescriptors = js_input_array(ctx, argv[0]), trainDescriptors;
+      JSInputArray queryDescriptors = js_cv_inputarray(ctx, argv[0]), trainDescriptors;
       std::vector<cv::DMatch> matches;
       JSInputArray masks = cv::noArray();
 
       if(argc > 3) {
-        trainDescriptors = js_input_array(ctx, argv[1]);
-        masks = js_input_array(ctx, argv[3]);
+        trainDescriptors = js_cv_inputarray(ctx, argv[1]);
+        masks = js_cv_inputarray(ctx, argv[3]);
 
         dm->get()->match(queryDescriptors, trainDescriptors, matches, masks);
 
@@ -195,7 +195,7 @@ js_descriptor_matcher_method(JSContext* ctx, JSValueConst this_val, int argc, JS
         js_array_copy(ctx, argv[2], matches);
       } else {
         if(argc > 2)
-          masks = js_input_array(ctx, argv[2]);
+          masks = js_cv_inputarray(ctx, argv[2]);
 
         dm->get()->match(queryDescriptors, matches, masks);
 
@@ -703,7 +703,7 @@ js_feature2d_daisy(JSContext* ctx, JSValueConst new_target, int argc, JSValueCon
   if(argc >= 5)
     JS_ToInt32(ctx, &norm, argv[4]);
   if(argc >= 6)
-    H = js_input_array(ctx, argv[5]);
+    H = js_cv_inputarray(ctx, argv[5]);
   if(argc >= 7)
     interpolation = JS_ToBool(ctx, argv[6]);
   if(argc >= 8)
@@ -996,7 +996,7 @@ js_feature2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
         std::vector<JSKeyPointData> keypoints;
 
         if(argc >= 3)
-          mask = js_input_array(ctx, argv[2]);
+          mask = js_cv_inputarray(ctx, argv[2]);
 
         ptr->detect(image, keypoints, mask);
 
@@ -1012,7 +1012,7 @@ js_feature2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
         BOOL useProvidedKeypoints = FALSE;
 
         if(argc > 1)
-          mask = js_input_array(ctx, argv[1]);
+          mask = js_cv_inputarray(ctx, argv[1]);
 
         if(argc > 3)
           descriptors = js_cv_outputarray(ctx, argv[3]);

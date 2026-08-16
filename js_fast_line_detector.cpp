@@ -136,7 +136,7 @@ js_fast_line_detector_draw_segments(JSContext* ctx, JSValueConst this_val, int a
     return JS_EXCEPTION;
 
   image = js_umat_or_mat(ctx, argv[0]);
-  lines = js_input_array(ctx, argv[1]);
+  lines = js_cv_inputarray(ctx, argv[1]);
 
   // js_array_to(ctx, argv[1], lines);
 

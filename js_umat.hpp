@@ -77,5 +77,4 @@ js_umat_wrap(JSContext* ctx, const cv::UMat& umat) {
   return ret;
 }
 
-
 #endif /* defined(JS_UMAT_HPP) */

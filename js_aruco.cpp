@@ -20,11 +20,11 @@ js_aruco_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
     switch(magic) {
       case ARUCO_DRAW_DETECTED_CORNERS_CHARUCO: {
         JSInputOutputArray image = js_cv_inputoutputarray(ctx, argv[0]);
-        JSInputArray charucoCorners = js_input_array(ctx, argv[1]);
+        JSInputArray charucoCorners = js_cv_inputarray(ctx, argv[1]);
         JSInputArray charucoIds = cv::noArray();
 
         if(argc > 2)
-          charucoIds = js_input_array(ctx, argv[2]);
+          charucoIds = js_cv_inputarray(ctx, argv[2]);
 
         JSColorData<double> cornerColor{255, 0, 0};
 
@@ -37,11 +37,11 @@ js_aruco_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
 
       case ARUCO_DRAW_DETECTED_DIAMONDS: {
         JSInputOutputArray image = js_cv_inputoutputarray(ctx, argv[0]);
-        JSInputArray diamondCorners = js_input_array(ctx, argv[1]);
+        JSInputArray diamondCorners = js_cv_inputarray(ctx, argv[1]);
         JSInputArray diamondIds = cv::noArray();
 
         if(argc > 2)
-          diamondIds = js_input_array(ctx, argv[2]);
+          diamondIds = js_cv_inputarray(ctx, argv[2]);
 
         JSColorData<double> borderColor{0, 0, 255};
 
@@ -54,11 +54,11 @@ js_aruco_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
 
       case ARUCO_DRAW_DETECTED_MARKERS: {
         JSInputOutputArray image = js_cv_inputoutputarray(ctx, argv[0]);
-        JSInputArray corners = js_input_array(ctx, argv[1]);
+        JSInputArray corners = js_cv_inputarray(ctx, argv[1]);
         JSInputArray ids = cv::noArray();
 
         if(argc > 2)
-          ids = js_input_array(ctx, argv[2]);
+          ids = js_cv_inputarray(ctx, argv[2]);
 
         JSColorData<double> borderColor{0, 0, 255};
 

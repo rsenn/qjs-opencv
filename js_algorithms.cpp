@@ -113,7 +113,7 @@ js_cv_trace_skeleton(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
 
 static JSValue
 js_cv_palette_generate(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  JSInputArray src = js_input_array(ctx, argv[0]);
+  JSInputArray src = js_cv_inputarray(ctx, argv[0]);
   dominant_colors_grabber dcg;
   int32_t mode = 0, count = 0;
   enum color_space cs;

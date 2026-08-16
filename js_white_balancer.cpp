@@ -68,7 +68,7 @@ js_white_balancer_function(JSContext* ctx, JSValueConst this_val, int argc, JSVa
     }
 
     case APPLY_CHANNEL_GAINS: {
-      JSInputArray src = js_input_array(ctx, argv[0]);
+      JSInputArray src = js_cv_inputarray(ctx, argv[0]);
       JSOutputArray dst = js_cv_outputarray(ctx, argv[1]);
       double gain_r = 1, gain_g = 1, gain_b = 1;
 
@@ -109,7 +109,7 @@ js_white_balancer_method(JSContext* ctx, JSValueConst this_val, int argc, JSValu
 
   switch(magic) {
     case BALANCE_WHITE: {
-      JSInputArray src = js_input_array(ctx, argv[0]);
+      JSInputArray src = js_cv_inputarray(ctx, argv[0]);
       JSOutputArray dst = js_cv_outputarray(ctx, argv[1]);
 
       (*wb)->balanceWhite(src, dst);

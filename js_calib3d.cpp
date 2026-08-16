@@ -25,7 +25,7 @@ js_calib3d_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
 
   switch(magic) {
     case CALIBRATE_CAMERA: {
-      JSInputArray objectPoints = js_input_array(ctx, argv[0]), imagePoints = js_input_array(ctx, argv[1]);
+      JSInputArray objectPoints = js_cv_inputarray(ctx, argv[0]), imagePoints = js_cv_inputarray(ctx, argv[1]);
 
       JSSizeData<int> image_size;
       js_value_to(ctx, argv[2], image_size);
@@ -108,7 +108,7 @@ js_calib3d_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
     }
 
     case ESTIMATE_AFFINE_2D: {
-      JSInputArray from = js_input_array(ctx, argv[0]), to = js_input_array(ctx, argv[1]);
+      JSInputArray from = js_cv_inputarray(ctx, argv[0]), to = js_cv_inputarray(ctx, argv[1]);
       JSOutputArray inliers = cv::noArray();
       int32_t method = cv::RANSAC;
       double ransacReprojThreshold = 3;
@@ -134,7 +134,7 @@ js_calib3d_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
     }
 
     case ESTIMATE_AFFINE_3D: {
-      JSInputArray src = js_input_array(ctx, argv[0]), dst = js_input_array(ctx, argv[1]);
+      JSInputArray src = js_cv_inputarray(ctx, argv[0]), dst = js_cv_inputarray(ctx, argv[1]);
       JSOutputArray out = js_cv_outputarray(ctx, argv[2]), inliers = js_cv_outputarray(ctx, argv[3]);
       double ransacThreshold = 3;
       double confidence = 0.99;
@@ -152,7 +152,7 @@ js_calib3d_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
     }
 
     case ESTIMATE_AFFINE_PARTIAL_2D: {
-      JSInputArray from = js_input_array(ctx, argv[0]), to = js_input_array(ctx, argv[1]);
+      JSInputArray from = js_cv_inputarray(ctx, argv[0]), to = js_cv_inputarray(ctx, argv[1]);
       JSOutputArray inliers = cv::noArray();
       int32_t method = cv::RANSAC;
       double ransacReprojThreshold = 3;
@@ -178,9 +178,9 @@ js_calib3d_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
     }
 
     case FIND_HOMOGRAPHY: {
-      JSContourData<double> src; /* = js_input_array(ctx, argv[0])*/
+      JSContourData<double> src; /* = js_cv_inputarray(ctx, argv[0])*/
       ;
-      JSContourData<double> dst; /*= js_input_array(ctx, argv[1])*/
+      JSContourData<double> dst; /*= js_cv_inputarray(ctx, argv[1])*/
       ;
 
       js_array_to(ctx, argv[0], src);
@@ -231,7 +231,7 @@ js_calib3d_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
       JSInputOutputArray image = js_cv_inputoutputarray(ctx, argv[0]);
       JSSizeData<int> patternSize;
       js_value_to(ctx, argv[1], patternSize);
-      JSInputArray corners = js_input_array(ctx, argv[2]);
+      JSInputArray corners = js_cv_inputarray(ctx, argv[2]);
       BOOL patternWasFound = js_value_to<BOOL>(ctx, argv[3]);
 
       cv::drawChessboardCorners(image, patternSize, corners, patternWasFound);

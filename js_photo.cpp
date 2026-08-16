@@ -39,7 +39,7 @@ js_photo_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
   try {
     switch(magic) {
       case PENCIL_SKETCH: {
-        JSInputArray src = js_input_array(ctx, argv[0]);
+        JSInputArray src = js_cv_inputarray(ctx, argv[0]);
 
         if(!js_photo_require_channels(ctx, src, 3, "pencilSketch")) {
           ret = JS_EXCEPTION;
@@ -61,7 +61,7 @@ js_photo_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
       }
 
       case STYLIZATION: {
-        JSInputArray src = js_input_array(ctx, argv[0]);
+        JSInputArray src = js_cv_inputarray(ctx, argv[0]);
 
         if(!js_photo_require_channels(ctx, src, 3, "stylization")) {
           ret = JS_EXCEPTION;
@@ -81,7 +81,7 @@ js_photo_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
       }
 
       case DETAIL_ENHANCE: {
-        JSInputArray src = js_input_array(ctx, argv[0]);
+        JSInputArray src = js_cv_inputarray(ctx, argv[0]);
 
         if(!js_photo_require_channels(ctx, src, 3, "detailEnhance")) {
           ret = JS_EXCEPTION;
@@ -101,7 +101,7 @@ js_photo_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
       }
 
       case EDGE_PRESERVING_FILTER: {
-        JSInputArray src = js_input_array(ctx, argv[0]);
+        JSInputArray src = js_cv_inputarray(ctx, argv[0]);
 
         if(!js_photo_require_channels(ctx, src, 3, "edgePreservingFilter")) {
           ret = JS_EXCEPTION;
@@ -124,7 +124,7 @@ js_photo_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
       }
 
       case FAST_NL_MEANS_DENOISING: {
-        JSInputArray src = js_input_array(ctx, argv[0]);
+        JSInputArray src = js_cv_inputarray(ctx, argv[0]);
         JSOutputArray dst = js_cv_outputarray(ctx, argv[1]);
         double h = 3;
         int32_t templateWindowSize = 7, searchWindowSize = 21;
@@ -141,7 +141,7 @@ js_photo_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
       }
 
       case FAST_NL_MEANS_DENOISING_COLORED: {
-        JSInputArray src = js_input_array(ctx, argv[0]);
+        JSInputArray src = js_cv_inputarray(ctx, argv[0]);
 
         if(!js_photo_require_channels(ctx, src, 3, "fastNlMeansDenoisingColored")) {
           ret = JS_EXCEPTION;
@@ -166,7 +166,7 @@ js_photo_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
       }
 
       case INPAINT: {
-        JSInputArray src = js_input_array(ctx, argv[0]);
+        JSInputArray src = js_cv_inputarray(ctx, argv[0]);
         int32_t srcChannels = src.channels();
 
         if(srcChannels != 1 && srcChannels != 3) {
@@ -174,7 +174,7 @@ js_photo_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
           break;
         }
 
-        JSInputArray inpaintMask = js_input_array(ctx, argv[1]);
+        JSInputArray inpaintMask = js_cv_inputarray(ctx, argv[1]);
         JSOutputArray dst = js_cv_outputarray(ctx, argv[2]);
         double inpaintRadius;
         int32_t flags = cv::INPAINT_TELEA;

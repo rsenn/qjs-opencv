@@ -232,7 +232,7 @@ js_bg_subtractor_method(JSContext* ctx, JSValueConst this_val, int argc, JSValue
 
   switch(magic) {
     case METHOD_APPLY: {
-      JSInputArray input = js_input_array(ctx, argv[0]);
+      JSInputArray input = js_cv_inputarray(ctx, argv[0]);
       JSInputOutputArray fgmask = cv::noArray();
       double learningRate = -1;
 

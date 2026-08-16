@@ -316,7 +316,7 @@ js_net_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
         double scalefactor = 1.0;
         cv::Scalar mean;
 
-        blob = js_input_array(ctx, argv[0]);
+        blob = js_cv_inputarray(ctx, argv[0]);
 
         if(argc > 1)
           js_value_to(ctx, argv[1], name);
@@ -489,7 +489,7 @@ js_net_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
 
 #ifndef HAVE_OPENCV_DNN_NEW_ENGINE
       case DNN_NET_QUANTIZE: {
-        JSInputArray calibData = js_input_array(ctx, argv[0]);
+        JSInputArray calibData = js_cv_inputarray(ctx, argv[0]);
         int32_t inputsDtype, outputsDtype;
         BOOL perChannel = TRUE;
 
@@ -1367,7 +1367,7 @@ js_model_base_method(JSContext* ctx, ModelT& model, int argc, JSValueConst argv[
       }
 
       case MODEL_PREDICT: {
-        JSInputArray frame = js_input_array(ctx, argv[0]);
+        JSInputArray frame = js_cv_inputarray(ctx, argv[0]);
         std::vector<cv::Mat> outs;
 
         model.predict(frame, outs);
@@ -1532,7 +1532,7 @@ js_classification_model_method(JSContext* ctx, JSValueConst this_val, int argc, 
   try {
     switch(magic) {
       case CLASSIFICATION_MODEL_CLASSIFY: {
-        JSInputArray frame = js_input_array(ctx, argv[0]);
+        JSInputArray frame = js_cv_inputarray(ctx, argv[0]);
         int classId = -1;
         float conf = 0;
 
@@ -1593,7 +1593,7 @@ js_detection_model_method(JSContext* ctx, JSValueConst this_val, int argc, JSVal
   try {
     switch(magic) {
       case DETECTION_MODEL_DETECT: {
-        JSInputArray frame = js_input_array(ctx, argv[0]);
+        JSInputArray frame = js_cv_inputarray(ctx, argv[0]);
         std::vector<int> classIds;
         std::vector<float> confidences;
         std::vector<cv::Rect> boxes;
@@ -1661,7 +1661,7 @@ js_segmentation_model_method(JSContext* ctx, JSValueConst this_val, int argc, JS
   try {
     switch(magic) {
       case SEGMENTATION_MODEL_SEGMENT: {
-        JSInputArray frame = js_input_array(ctx, argv[0]);
+        JSInputArray frame = js_cv_inputarray(ctx, argv[0]);
         JSOutputArray mask = js_cv_outputarray(ctx, argv[1]);
 
         data->segment(frame, mask);
@@ -1700,7 +1700,7 @@ js_keypoints_model_method(JSContext* ctx, JSValueConst this_val, int argc, JSVal
   try {
     switch(magic) {
       case KEYPOINTS_MODEL_ESTIMATE: {
-        JSInputArray frame = js_input_array(ctx, argv[0]);
+        JSInputArray frame = js_cv_inputarray(ctx, argv[0]);
         float thresh = 0.5f;
 
         if(argc > 1)
@@ -1747,7 +1747,7 @@ js_text_recognition_model_method(JSContext* ctx, JSValueConst this_val, int argc
   try {
     switch(magic) {
       case TEXT_RECOGNITION_MODEL_RECOGNIZE: {
-        JSInputArray frame = js_input_array(ctx, argv[0]);
+        JSInputArray frame = js_cv_inputarray(ctx, argv[0]);
 
         if(argc > 1) {
           std::vector<cv::Rect> roiRects;
@@ -1830,7 +1830,7 @@ js_text_detection_model_method(JSContext* ctx, ModelT& model, int argc, JSValueC
   try {
     switch(magic) {
       case TEXT_DETECTION_MODEL_DETECT: {
-        JSInputArray frame = js_input_array(ctx, argv[0]);
+        JSInputArray frame = js_cv_inputarray(ctx, argv[0]);
         std::vector<std::vector<cv::Point>> detections;
 
         if(argc > 2) {
@@ -1848,7 +1848,7 @@ js_text_detection_model_method(JSContext* ctx, ModelT& model, int argc, JSValueC
       }
 
       case TEXT_DETECTION_MODEL_DETECTTEXTRECTANGLES: {
-        JSInputArray frame = js_input_array(ctx, argv[0]);
+        JSInputArray frame = js_cv_inputarray(ctx, argv[0]);
         std::vector<cv::RotatedRect> detections;
 
         if(argc > 2) {
@@ -2086,7 +2086,7 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
   try {
     switch(magic) {
       case DNN_BLOBFROMIMAGE: {
-        JSInputArray image = js_input_array(ctx, argv[0]);
+        JSInputArray image = js_cv_inputarray(ctx, argv[0]);
         JSOutputArray blob;
         double scalefactor = 1.0;
         cv::Size size;
@@ -2123,7 +2123,7 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       }
 
       case DNN_BLOBFROMIMAGES: {
-        JSInputArray images = js_input_array(ctx, argv[0]);
+        JSInputArray images = js_cv_inputarray(ctx, argv[0]);
         JSOutputArray blob;
         double scalefactor = 1.0;
         cv::Size size;
@@ -2160,7 +2160,7 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       }
 
       case DNN_BLOBFROMIMAGESWITHPARAMS: {
-        JSInputArray images = js_input_array(ctx, argv[0]);
+        JSInputArray images = js_cv_inputarray(ctx, argv[0]);
         JSOutputArray blob;
         cv::dnn::Image2BlobParams* i2bp;
         bool blobArg = false;
@@ -2186,7 +2186,7 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       }
 
       case DNN_BLOBFROMIMAGEWITHPARAMS: {
-        JSInputArray image = js_input_array(ctx, argv[0]);
+        JSInputArray image = js_cv_inputarray(ctx, argv[0]);
         JSOutputArray blob;
         cv::dnn::Image2BlobParams* i2bp;
         bool blobArg = false;
@@ -2260,7 +2260,7 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
           }*/
 
       case DNN_IMAGESFROMBLOB: {
-        JSInputArray blob = js_input_array(ctx, argv[0]);
+        JSInputArray blob = js_cv_inputarray(ctx, argv[0]);
         JSOutputArray images = js_cv_outputarray(ctx, argv[1]);
 
         cv::dnn::imagesFromBlob(blob.getMat(), images);

@@ -298,7 +298,7 @@ js_edge_drawing_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
 
   switch(magic) {
     case EDGEDRAWING_DETECTEDGES: {
-      JSInputArray input = js_input_array(ctx, argv[0]);
+      JSInputArray input = js_cv_inputarray(ctx, argv[0]);
 
       ed->get()->detectEdges(input);
       break;
@@ -487,7 +487,7 @@ js_structured_edge_detection_method(JSContext* ctx, JSValueConst this_val, int a
 
   switch(magic) {
     case STRUCTUREDEDGEDETECTION_COMPUTEORIENTATION: {
-      JSInputArray input = js_input_array(ctx, argv[0]);
+      JSInputArray input = js_cv_inputarray(ctx, argv[0]);
       JSOutputArray output = js_cv_outputarray(ctx, argv[1]);
 
       sed->get()->computeOrientation(input, output);
@@ -495,7 +495,7 @@ js_structured_edge_detection_method(JSContext* ctx, JSValueConst this_val, int a
     }
 
     case STRUCTUREDEDGEDETECTION_DETECTEDGES: {
-      JSInputArray input = js_input_array(ctx, argv[0]);
+      JSInputArray input = js_cv_inputarray(ctx, argv[0]);
       JSOutputArray output = js_cv_outputarray(ctx, argv[1]);
 
       sed->get()->detectEdges(input, output);
@@ -503,8 +503,8 @@ js_structured_edge_detection_method(JSContext* ctx, JSValueConst this_val, int a
     }
 
     case STRUCTUREDEDGEDETECTION_EDGESNMS: {
-      JSInputArray edge_image = js_input_array(ctx, argv[0]);
-      JSInputArray orientation_image = js_input_array(ctx, argv[1]);
+      JSInputArray edge_image = js_cv_inputarray(ctx, argv[0]);
+      JSInputArray orientation_image = js_cv_inputarray(ctx, argv[1]);
       JSOutputArray dst = js_cv_outputarray(ctx, argv[2]);
       int32_t r = 2, s = 0;
       double m = 1;
@@ -669,7 +669,7 @@ js_superpixel_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
 
         lsc->iterate(num_iterations);
       } else if((seeds = dynamic_cast<cv::ximgproc::SuperpixelSEEDS*>(sp->get()))) {
-        JSInputArray input = js_input_array(ctx, argv[0]);
+        JSInputArray input = js_cv_inputarray(ctx, argv[0]);
         int32_t num_iterations = 4;
 
         if(argc > 1)
@@ -844,8 +844,8 @@ js_edgeboxes_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
     }
 
     case EDGEBOXES_GETBOUNDINGBOXES: {
-      JSInputArray edge_map = js_input_array(ctx, argv[0]);
-      JSInputArray orientation_map = js_input_array(ctx, argv[1]);
+      JSInputArray edge_map = js_cv_inputarray(ctx, argv[0]);
+      JSInputArray orientation_map = js_cv_inputarray(ctx, argv[1]);
       JSOutputArray scores = cv::noArray();
 
       std::vector<JSRectData<int>> boxes;
@@ -1258,7 +1258,7 @@ js_search_segmentation_method(JSContext* ctx, JSValueConst this_val, int argc, J
     }
 
     case SEARCH_SEGMENTATION_ADD_IMAGE: {
-      JSInputArray image = js_input_array(ctx, argv[0]);
+      JSInputArray image = js_cv_inputarray(ctx, argv[0]);
 
       sss->get()->addImage(image);
       break;
@@ -1300,7 +1300,7 @@ js_search_segmentation_method(JSContext* ctx, JSValueConst this_val, int argc, J
     }
 
     case SEARCH_SEGMENTATION_SET_BASE_IMAGE: {
-      JSInputArray image = js_input_array(ctx, argv[0]);
+      JSInputArray image = js_cv_inputarray(ctx, argv[0]);
 
       sss->get()->setBaseImage(image);
       break;
@@ -1478,9 +1478,9 @@ js_segmentation_strategy_method(JSContext* ctx, JSValueConst this_val, int argc,
     }
 
     case SELECTIVE_SEARCH_SEGMENTATION_SET_IMAGE: {
-      JSInputArray img = js_input_array(ctx, argv[0]);
-      JSInputArray regions = js_input_array(ctx, argv[1]);
-      JSInputArray sizes = js_input_array(ctx, argv[2]);
+      JSInputArray img = js_cv_inputarray(ctx, argv[0]);
+      JSInputArray regions = js_cv_inputarray(ctx, argv[1]);
+      JSInputArray sizes = js_cv_inputarray(ctx, argv[2]);
       int32_t image_id = -1;
 
       if(argc > 3)
@@ -1706,7 +1706,7 @@ js_ximgproc_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
       }
 
       case XIMGPROC_CONTOURSAMPLING: {
-        JSInputArray src = js_input_array(ctx, argv[0]);
+        JSInputArray src = js_cv_inputarray(ctx, argv[0]);
         JSOutputArray dst = js_cv_outputarray(ctx, argv[1]);
         int32_t nbElt;
 
@@ -1717,7 +1717,7 @@ js_ximgproc_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
       }
 
       case XIMGPROC_COVARIANCEESTIMATION: {
-        JSInputArray src = js_input_array(ctx, argv[0]);
+        JSInputArray src = js_cv_inputarray(ctx, argv[0]);
         JSOutputArray dst = js_cv_outputarray(ctx, argv[1]);
         int32_t rows, cols;
 
@@ -1729,8 +1729,8 @@ js_ximgproc_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
       }
 
       case XIMGPROC_COLORMATCHTEMPLATE: {
-        JSInputArray img = js_input_array(ctx, argv[0]);
-        JSInputArray templ = js_input_array(ctx, argv[1]);
+        JSInputArray img = js_cv_inputarray(ctx, argv[0]);
+        JSInputArray templ = js_cv_inputarray(ctx, argv[1]);
         JSOutputArray result = js_cv_outputarray(ctx, argv[2]);
 
         cv::ximgproc::colorMatchTemplate(img, templ, result);
@@ -1738,8 +1738,8 @@ js_ximgproc_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
       }
 
       case XIMGPROC_TRANSFORMFD: {
-        JSInputArray src = js_input_array(ctx, argv[0]);
-        JSInputArray t = js_input_array(ctx, argv[1]);
+        JSInputArray src = js_cv_inputarray(ctx, argv[0]);
+        JSInputArray t = js_cv_inputarray(ctx, argv[1]);
         JSOutputArray dst = js_cv_outputarray(ctx, argv[2]);
         BOOL fd_contour = TRUE;
 
@@ -1751,7 +1751,7 @@ js_ximgproc_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
       }
 
       case XIMGPROC_FOURIERDESCRIPTOR: {
-        JSInputArray src = js_input_array(ctx, argv[0]);
+        JSInputArray src = js_cv_inputarray(ctx, argv[0]);
         JSOutputArray dst = js_cv_outputarray(ctx, argv[1]);
         int32_t nbElt = -1, nbFD = -1;
 
@@ -1765,8 +1765,8 @@ js_ximgproc_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
       }
 
       case XIMGPROC_WEIGHTEDMEDIANFILTER: {
-        JSInputArray joint = js_input_array(ctx, argv[0]);
-        JSInputArray src = js_input_array(ctx, argv[1]);
+        JSInputArray joint = js_cv_inputarray(ctx, argv[0]);
+        JSInputArray src = js_cv_inputarray(ctx, argv[1]);
         JSOutputArray dst = js_cv_outputarray(ctx, argv[2]);
         int32_t r, weightType = cv::ximgproc::WMF_EXP;
         double sigma = 25.5;
@@ -1778,14 +1778,14 @@ js_ximgproc_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
         if(argc > 5)
           js_value_to(ctx, argv[5], weightType);
         if(argc > 6)
-          mask = js_input_array(ctx, argv[5]);
+          mask = js_cv_inputarray(ctx, argv[5]);
 
         cv::ximgproc::weightedMedianFilter(joint, src, dst, r, sigma, weightType, mask);
         break;
       }
 
       case XIMGPROC_ROLLINGGUIDANCEFILTER: {
-        JSInputArray src = js_input_array(ctx, argv[0]);
+        JSInputArray src = js_cv_inputarray(ctx, argv[0]);
         JSOutputArray dst = js_cv_outputarray(ctx, argv[1]);
         int32_t d, numOfIter = 4, borderType = cv::BORDER_DEFAULT;
         double sigmaColor = 25, sigmaSpace = 3;
@@ -1810,7 +1810,7 @@ js_ximgproc_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
       }
 
       case XIMGPROC_FASTHOUGHTRANSFORM: {
-        JSInputArray input = js_input_array(ctx, argv[0]);
+        JSInputArray input = js_cv_inputarray(ctx, argv[0]);
         JSOutputArray output = js_cv_outputarray(ctx, argv[1]);
         int32_t dstMatDepth, angleRange = cv::ximgproc::ARO_315_135, op = cv::ximgproc::FHT_ADD, makeSkew = cv::ximgproc::HDO_DESKEW;
 
@@ -1828,7 +1828,7 @@ js_ximgproc_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
 
       case XIMGPROC_HOUGHPOINT2LINE: {
         JSPointData<double> point;
-        JSInputArray srcImgInfo = js_input_array(ctx, argv[1]);
+        JSInputArray srcImgInfo = js_cv_inputarray(ctx, argv[1]);
 
         js_point_read(ctx, argv[0], &point);
 
@@ -1848,7 +1848,7 @@ js_ximgproc_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
       }
 
       case XIMGPROC_CREATESUPERPIXELSLIC: {
-        JSInputArray image = js_input_array(ctx, argv[0]);
+        JSInputArray image = js_cv_inputarray(ctx, argv[0]);
         int32_t algorithm = cv::ximgproc::SLICO, region_size = 10;
         double ruler = 10.0;
 
@@ -1867,7 +1867,7 @@ js_ximgproc_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
       }
 
       case XIMGPROC_CREATESUPERPIXELLSC: {
-        JSInputArray image = js_input_array(ctx, argv[0]);
+        JSInputArray image = js_cv_inputarray(ctx, argv[0]);
         int32_t region_size = 10;
         double ratio = 0.075;
 

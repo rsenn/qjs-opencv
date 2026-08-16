@@ -1128,3 +1128,17 @@
   - Remove non-standard Contour methods (toArray, getMat, etc.)
   - Assess which functions need Contour<T>/Contours<T> internally
   - Document MatVector compatibility per function
+
+- doublevector-not-exported: js_vector_export() (js_vector.cpp) never calls
+  JSVector<double>::add_export(ctx, m, "DoubleVector"), even though
+  js_vector_init() does register and set_export() the DoubleVector
+  constructor. Since QuickJS only exposes module exports that were declared
+  via JS_AddModuleExport, `cv.DoubleVector` is missing from the module
+  namespace entirely and `new cv.DoubleVector()` throws "not a function".
+  Found while testing js_vector_outputarray() (js_vector.cpp) against
+  cv.meanStdDev(). IntVector/FloatVector/CharVector/StringVector are all
+  exported correctly; only DoubleVector is missing from js_vector_export().
+
+    import('opencv').then(cv => {
+      new cv.DoubleVector(); // TypeError: not a function
+    });

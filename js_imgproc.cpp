@@ -150,8 +150,8 @@ js_generalized_hough_method(JSContext* ctx, JSValueConst this_val, int argc, JSV
     switch(magic) {
       case GENERALIZED_HOUGH_DETECT: {
         if(argc >= 4) {
-          JSInputArray edges = js_input_array(ctx, argv[0]);
-          JSInputArray dx = js_input_array(ctx, argv[1]), dy = js_input_array(ctx, argv[2]);
+          JSInputArray edges = js_cv_inputarray(ctx, argv[0]);
+          JSInputArray dx = js_cv_inputarray(ctx, argv[1]), dy = js_cv_inputarray(ctx, argv[2]);
           JSOutputArray positions = js_cv_outputarray(ctx, argv[3]), votes = cv::noArray();
 
           if(argc > 4)
@@ -159,7 +159,7 @@ js_generalized_hough_method(JSContext* ctx, JSValueConst this_val, int argc, JSV
 
           gh->get()->detect(edges, dx, dy, positions, votes);
         } else {
-          JSInputArray image = js_input_array(ctx, argv[0]);
+          JSInputArray image = js_cv_inputarray(ctx, argv[0]);
           JSOutputArray positions = js_cv_outputarray(ctx, argv[1]), votes = cv::noArray();
 
           if(argc > 2)
@@ -254,7 +254,7 @@ js_generalized_hough_method(JSContext* ctx, JSValueConst this_val, int argc, JSV
 
       case GENERALIZED_HOUGH_SET_TEMPLATE: {
         if(argc >= 3) {
-          JSInputArray edges = js_input_array(ctx, argv[0]), dx = js_input_array(ctx, argv[1]), dy = js_input_array(ctx, argv[2]);
+          JSInputArray edges = js_cv_inputarray(ctx, argv[0]), dx = js_cv_inputarray(ctx, argv[1]), dy = js_cv_inputarray(ctx, argv[2]);
           JSPointData<int> templCenter{-1, -1};
 
           if(argc > 3)
@@ -262,7 +262,7 @@ js_generalized_hough_method(JSContext* ctx, JSValueConst this_val, int argc, JSV
 
           gh->get()->setTemplate(edges, dx, dy, templCenter);
         } else {
-          JSInputArray templ = js_input_array(ctx, argv[0]);
+          JSInputArray templ = js_cv_inputarray(ctx, argv[0]);
           JSPointData<int> templCenter{-1, -1};
 
           if(argc > 1)
@@ -913,7 +913,7 @@ static JSValue
 js_cv_lsd(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   std::vector<cv::Vec4i> lines;
   std::vector<double> width, prec, nfa;
-  JSInputArray src = js_input_array(ctx, argv[0]);
+  JSInputArray src = js_cv_inputarray(ctx, argv[0]);
 
   if(src.empty())
     return JS_ThrowInternalError(ctx, "argument 1 must be Mat or UMat");
@@ -1103,17 +1103,17 @@ js_imgproc_motion(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
         JSInputOutputArray dst = js_cv_inputoutputarray(ctx, argv[1]);
         JSInputArray mask = cv::noArray();
         if(argc > 2)
-          mask = js_input_array(ctx, argv[2]);
+          mask = js_cv_inputarray(ctx, argv[2]);
         cv::accumulate(src, dst, mask);
         break;
       }
 
       case MOTION_ACCUMULATE_PRODUCT: {
-        JSInputArray src2 = js_input_array(ctx, argv[1]);
+        JSInputArray src2 = js_cv_inputarray(ctx, argv[1]);
         JSInputOutputArray dst = js_cv_inputoutputarray(ctx, argv[2]);
         JSInputArray mask = cv::noArray();
         if(argc > 3)
-          mask = js_input_array(ctx, argv[3]);
+          mask = js_cv_inputarray(ctx, argv[3]);
         cv::accumulateProduct(src, src2, dst, mask);
         break;
       }
@@ -1122,7 +1122,7 @@ js_imgproc_motion(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
         JSInputOutputArray dst = js_cv_inputoutputarray(ctx, argv[1]);
         JSInputArray mask = cv::noArray();
         if(argc > 2)
-          mask = js_input_array(ctx, argv[2]);
+          mask = js_cv_inputarray(ctx, argv[2]);
         cv::accumulateSquare(src, dst, mask);
         break;
       }
@@ -1133,7 +1133,7 @@ js_imgproc_motion(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
         JSInputArray mask = cv::noArray();
         JS_ToFloat64(ctx, &alpha, argv[2]);
         if(argc > 3)
-          mask = js_input_array(ctx, argv[3]);
+          mask = js_cv_inputarray(ctx, argv[3]);
         cv::accumulateWeighted(src, dst, alpha, mask);
         break;
       }
@@ -1162,11 +1162,11 @@ js_imgproc_motion(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
       }
 
       case MOTION_PHASE_CORRELATE: {
-        JSInputArray src2 = js_input_array(ctx, argv[1]), window = cv::noArray();
+        JSInputArray src2 = js_cv_inputarray(ctx, argv[1]), window = cv::noArray();
         double response = 0;
         JSPointData<double> result;
         if(argc > 2)
-          window = js_input_array(ctx, argv[2]);
+          window = js_cv_inputarray(ctx, argv[2]);
 
         result = cv::phaseCorrelate(src, src2, window, &response);
         ret = js_point_new(ctx, result);
@@ -1214,9 +1214,9 @@ js_imgproc_misc(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
       }
 
       case MISC_BLEND_LINEAR: {
-        JSInputArray src2 = js_input_array(ctx, argv[1]);
-        JSInputArray weights1 = js_input_array(ctx, argv[2]);
-        JSInputArray weights2 = js_input_array(ctx, argv[3]);
+        JSInputArray src2 = js_cv_inputarray(ctx, argv[1]);
+        JSInputArray weights1 = js_cv_inputarray(ctx, argv[2]);
+        JSInputArray weights2 = js_cv_inputarray(ctx, argv[3]);
         JSInputOutputArray dst = js_cv_inputoutputarray(ctx, argv[4]);
         cv::blendLinear(src, src2, weights1, weights2, dst);
 
@@ -1297,7 +1297,7 @@ js_imgproc_misc(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
           JS_ToInt32(ctx, &colormap, argv[2]);
           cv::applyColorMap(src, dst, colormap);
         } else {
-          JSInputArray colormap = js_input_array(ctx, argv[2]);
+          JSInputArray colormap = js_cv_inputarray(ctx, argv[2]);
           cv::applyColorMap(src, dst, colormap);
         }
         break;
@@ -1375,12 +1375,12 @@ js_imgproc_transform(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
   JSValue ret = JS_UNDEFINED;
 
   if(magic != TRANSFORM_GET_ROTATION_MATRIX2_D && magic != TRANSFORM_GET_ROTATION_MATRIX2D_)
-    src = argc >= 1 ? js_input_array(ctx, argv[0]) : JSInputArray();
+    src = argc >= 1 ? js_cv_inputarray(ctx, argv[0]) : JSInputArray();
 
   try {
     switch(magic) {
       case TRANSFORM_CONVERT_MAPS: {
-        JSInputArray map2 = js_input_array(ctx, argv[1]);
+        JSInputArray map2 = js_cv_inputarray(ctx, argv[1]);
         JSInputOutputArray dstmap1 = js_cv_inputoutputarray(ctx, argv[2]);
         JSInputOutputArray dstmap2 = js_cv_inputoutputarray(ctx, argv[3]);
         int32_t dstmap1type;
@@ -1396,7 +1396,7 @@ js_imgproc_transform(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
       }
 
       case TRANSFORM_GET_AFFINE_TRANSFORM: {
-        JSInputArray dst = js_input_array(ctx, argv[1]);
+        JSInputArray dst = js_cv_inputarray(ctx, argv[1]);
         JSContourData<float> sc, dc;
 
         if(js_contour_read(ctx, argv[0], &sc))
@@ -1425,7 +1425,7 @@ js_imgproc_transform(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
 
           mat = cv::getPerspectiveTransform(src, dst, solveMethod);
         } else {
-          JSInputArray dst = js_input_array(ctx, argv[1]);
+          JSInputArray dst = js_cv_inputarray(ctx, argv[1]);
           mat = cv::getPerspectiveTransform(src, dst, solveMethod);
         }
 
@@ -1506,8 +1506,8 @@ js_imgproc_transform(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
 
       case TRANSFORM_REMAP: {
         JSInputOutputArray dst = js_cv_inputoutputarray(ctx, argv[1]);
-        JSInputArray map1 = js_input_array(ctx, argv[2]);
-        JSInputArray map2 = js_input_array(ctx, argv[3]);
+        JSInputArray map1 = js_cv_inputarray(ctx, argv[2]);
+        JSInputArray map2 = js_cv_inputarray(ctx, argv[3]);
         int32_t interpolation, borderMode = cv::BORDER_CONSTANT;
         JSColorData<double> borderValue;
 
@@ -1551,7 +1551,7 @@ js_imgproc_transform(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
 
       case TRANSFORM_WARP_AFFINE: {
         JSInputOutputArray dst = js_cv_inputoutputarray(ctx, argv[1]);
-        JSInputArray M = js_input_array(ctx, argv[2]);
+        JSInputArray M = js_cv_inputarray(ctx, argv[2]);
         JSSizeData<int> dsize;
         int32_t flags = cv::INTER_LINEAR, borderMode = cv::BORDER_CONSTANT;
         JSColorData<double> borderValue;
@@ -1570,7 +1570,7 @@ js_imgproc_transform(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
 
       case TRANSFORM_WARP_PERSPECTIVE: {
         JSInputOutputArray dst = js_cv_inputoutputarray(ctx, argv[1]);
-        JSInputArray M = js_input_array(ctx, argv[2]);
+        JSInputArray M = js_cv_inputarray(ctx, argv[2]);
         JSSizeData<int> dsize;
         int32_t flags = cv::INTER_LINEAR, borderMode = cv::BORDER_CONSTANT;
         JSColorData<double> borderValue;
@@ -1677,7 +1677,7 @@ js_imgproc_filter(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
 
         /*      case FILTER_DILATE: {
                 JSInputOutputArray dst = js_cv_inputoutputarray(ctx, argv[1]);
-                JSInputArray kernel = js_input_array(ctx, argv[2]);
+                JSInputArray kernel = js_cv_inputarray(ctx, argv[2]);
                 JSPointData<int> anchor;
                 int32_t iterations = 1, borderType = cv::BORDER_CONSTANT;
                 JSColorData<double> borderValue;
@@ -1696,7 +1696,7 @@ js_imgproc_filter(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
 
         /*  case FILTER_ERODE: {
             JSInputOutputArray dst = js_cv_inputoutputarray(ctx, argv[1]);
-            JSInputArray kernel = js_input_array(ctx, argv[2]);
+            JSInputArray kernel = js_cv_inputarray(ctx, argv[2]);
             JSPointData<int> anchor;
             int32_t iterations = 1, borderType = cv::BORDER_CONSTANT;
             JSColorData<double> borderValue;
@@ -1716,7 +1716,7 @@ js_imgproc_filter(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
       case FILTER_FILTER2_D: {
         JSInputOutputArray dst = js_cv_inputoutputarray(ctx, argv[1]);
         int32_t ddepth;
-        JSInputArray kernel = js_input_array(ctx, argv[3]);
+        JSInputArray kernel = js_cv_inputarray(ctx, argv[3]);
         JSPointData<int> anchor;
         double delta = 0;
         int32_t borderType = cv::BORDER_CONSTANT;
@@ -2061,7 +2061,7 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
           } else if(mat.rows > 0 && mat.cols > 0) {
             area = cv::contourArea(src, oriented);
           } else {
-            JSInputArray in = js_input_array(ctx, argv[0]);
+            JSInputArray in = js_cv_inputarray(ctx, argv[0]);
             area = cv::contourArea(in, oriented);
           }
         }
@@ -2085,7 +2085,7 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
       }
 
       case SHAPE_CONVEXITY_DEFECTS: {
-        JSInputArray convexhull = js_input_array(ctx, argv[1]);
+        JSInputArray convexhull = js_cv_inputarray(ctx, argv[1]);
         JSInputOutputArray convexityDefects = js_cv_inputoutputarray(ctx, argv[2]);
 
         cv::convexityDefects(src, convexhull, convexityDefects);
@@ -2166,7 +2166,7 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
       }
 
       case SHAPE_INTERSECT_CONVEX_CONVEX: {
-        JSInputArray p2 = js_input_array(ctx, argv[1]);
+        JSInputArray p2 = js_cv_inputarray(ctx, argv[1]);
         JSInputOutputArray p12 = js_cv_inputoutputarray(ctx, argv[2]);
         BOOL handleNested = TRUE;
 
@@ -2183,7 +2183,7 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
       }
 
       case SHAPE_MATCH_SHAPES: {
-        JSInputArray c2 = js_input_array(ctx, argv[1]);
+        JSInputArray c2 = js_cv_inputarray(ctx, argv[1]);
         int32_t method = -1;
         double parameter;
 
