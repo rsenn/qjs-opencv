@@ -1379,14 +1379,22 @@ js_imgproc_transform(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
       }
 
       case TRANSFORM_GET_AFFINE_TRANSFORM: {
+        // getAffineTransform() requires exactly 3 CV_32F points - `src` (set
+        // by the preamble above) and `dst` may come back CV_32S or CV_64F
+        // (e.g. a plain Mat, or a PointVector's native int storage), so
+        // convert in place when needed.
         JSInputArray dst = js_cv_inputarray(ctx, argv[1]);
-        JSContourData<float> sc, dc;
+        cv::Mat srcConverted, dstConverted;
 
-        if(js_contour_read(ctx, argv[0], &sc))
-          src = JSInputArray(sc);
+        if(!js_is_noarray(src) && src.depth() != CV_32F) {
+          src.getMat().convertTo(srcConverted, CV_32F);
+          src = srcConverted;
+        }
 
-        if(js_contour_read(ctx, argv[1], &dc))
-          dst = JSInputArray(dc);
+        if(!js_is_noarray(dst) && dst.depth() != CV_32F) {
+          dst.getMat().convertTo(dstConverted, CV_32F);
+          dst = dstConverted;
+        }
 
         JSMatData mat = cv::getAffineTransform(src, dst);
         ret = js_mat_wrap(ctx, mat);

@@ -1389,3 +1389,28 @@
   CV_32F, backed by a function-scope cv::Mat so the conversion outlives the
   call), and the cv::pointPolygonTest() call is now wrapped in the same
   try/catch -> js_cv_throw() pattern used elsewhere in this file.
+
+- getaffinetransform-plain-array-regression: cv.getAffineTransform(src, dst)
+  no longer accepts a plain JS array of point-like objects
+  (`[{x,y},{x,y},{x,y}]`) - it now throws the underlying OpenCV
+  checkVector(2, CV_32F) assertion instead of computing a result.
+  TRANSFORM_GET_AFFINE_TRANSFORM (js_imgproc.cpp) used to read both arguments
+  via js_contour_read(), which accepts any JS-iterable of point-likes
+  (cv.Contour, PointVector, or a plain array) and always converts to
+  CV_32F. That was replaced with plain js_cv_inputarray() + a depth check/
+  convertTo(CV_32F) for non-float Mat/PointVector/Contour sources - but
+  js_cv_inputarray()'s own plain-array fallback treats a JS array as a flat
+  list of scalars (cv::Scalar for 2-4 elements, else std::vector<double>),
+  not as an array of 2D points, so a 3-element array of {x,y} objects doesn't
+  parse into 3 points at all. Mat (any of CV_32FC2/CV_32SC2/CV_64FC2),
+  PointVector, and cv.Contour sources all still work correctly (and Mat
+  CV_32SC2/CV_64FC2 work now, which they didn't before this change).
+
+    import('opencv').then(cv => {
+      const src = [{x: 0, y: 0}, {x: 1, y: 0}, {x: 0, y: 1}];
+      const dst = [{x: 0, y: 0}, {x: 2, y: 0}, {x: 0, y: 3}];
+      cv.getAffineTransform(src, dst);
+      // Assertion failed: src.checkVector(2, CV_32F) == 3 &&
+      //   dst.checkVector(2, CV_32F) == 3 in function 'getAffineTransform'
+      // (works if src/dst are wrapped in `new cv.PointVector()` first)
+    });
