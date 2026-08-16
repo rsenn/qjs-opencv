@@ -1,4 +1,4 @@
-import { drawContours, LINE_AA, Contour, Mat, Point, Size, CHAIN_APPROX_SIMPLE, COLOR_BGR2GRAY, CV_8UC3, Canny, HuMoments, RETR_TREE, blur, cvtColor, findContours, imread, imshow, moments, waitKey, } from 'opencv';
+import {arcLength,  approxPolyDP, PointVectorVector, drawContours, LINE_AA, Contour, Mat, Point, Size, CHAIN_APPROX_SIMPLE, COLOR_BGR2GRAY, CV_8UC3, Canny, HuMoments, RETR_TREE, blur, cvtColor, findContours, imread, imshow, moments, waitKey, } from 'opencv';
 
 const randInt = max => Math.floor(Math.random() * max);
 
@@ -32,22 +32,26 @@ function main(...args) {
   let canny2 = new Mat();
   canny.copyTo(canny2);
 
-  let contours = [];
-  let hierarchy = [];
+  let contours = new PointVectorVector();
+  let hierarchy = new Mat();
   findContours(canny, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE, new Point(0, 0));
   let i = 0;
 
   drawContours(input, contours, -1, [255, 0, 255, 255], 1, LINE_AA);
 
+      console.log('contours', contours);
   for(let contour of contours) {
-    console.log('contour.length', contour.length);
-    let poly = new Contour();
-    contour.approxPolyDP(poly, 0.05 * contour.arcLength());
-    let lpoly = [...poly.lines()];
-    let angles;
+    console.log('contour', contour);
+    let poly = new PointVectorVector();
 
-    console.log('poly.arcLength()', poly.arcLength());
-    console.log(
+    approxPolyDP(contour, poly, 0.05 * arcLength(contour));
+    console.log('contour', poly);
+    /*let lpoly = [...poly.lines()];
+
+    let angles;
+*/
+    console.log('poly.arcLength()', arcLength(poly));
+   /* console.log(
       'lpoly.length',
       lpoly.length,
       lpoly.map(({ x1, y1, x2, y2 }) => `${x1},${y1}|${x2},${y2}`),
@@ -62,7 +66,7 @@ function main(...args) {
       'lpoly lengths',
       lpoly.length,
       lpoly.map(l => Math.round(l.length)),
-    );
+    );*/
 
     /*  if(!angles.some(a => Math.abs(a) <= 1)) continue;
 

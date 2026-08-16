@@ -967,17 +967,11 @@ js_cv_find_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   JSValue ret = JS_UNDEFINED;
   int32_t mode = cv::RETR_TREE;
   int32_t approx = cv::CHAIN_APPROX_SIMPLE;
-  bool hier_callback, contours_array, contours_matvector, contours_pointvectorvector;
-  bool hier_array, hier_mat;
+  bool contours_array, contours_matvector, contours_pointvectorvector;
   cv::Point offset(0, 0);
 
-  std::vector<cv::Vec4i> vec4i;
-  JSInputOutputArray hier(vec4i);
-
-  hier_mat = /*hier.isUMat() || hier.isMat() || */ js_mat_data_nothrow(argv[2]);
-  hier_callback = !hier_mat && js_is_function(ctx, argv[2]);
   contours_array = JS_IsArray(ctx, argv[1]);
-  hier_array = js_is_array(ctx, argv[2]);
+  JSOutputArray hier = js_cv_outputarray(ctx, argv[2]);
 
   // Detect if contours argument is MatVector or PointVectorVector
   contours_matvector = false;
@@ -996,9 +990,6 @@ js_cv_find_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
     }
   }
 
-  if(hier_mat)
-    hier = js_cv_inputoutputarray(ctx, argv[2]);
-
   if(argc > 3)
     JS_ToInt32(ctx, &mode, argv[3]);
   if(argc > 4)
@@ -1012,51 +1003,19 @@ js_cv_find_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
     // Use PointVectorVector directly (zero-copy)
     cv::findContours(input, *JSVector<std::vector<cv::Point>>::fromJS(ctx, argv[1]), hier, mode, approx, offset);
   } else {
-    // Use traditional JSContoursData<int> and convert to JS array
-    JSContoursData<int> contours;
+    // Use std::vector<cv::Mat> (zero-copy, same as the MatVector branch
+    // above) and hand out each contour as a Mat CV_32SC2 - the
+    // opencv.js-compatible representation - instead of copying through
+    // JSContourData<double>/cv.Contour.
+    std::vector<cv::Mat> contours;
     cv::findContours(input, contours, hier, mode, approx, offset);
 
-    // Contours: convert int -> double points one contour at a time (no
-    // separate full-size "poly" copy held alongside `contours`), and skip the
-    // conversion entirely when the caller didn't pass an array to receive it.
     if(contours_array) {
       js_array_truncate(ctx, argv[1], 0);
 
-      for(size_t i = 0; i < contours.size(); i++) {
-        JSContourData<double> poly(contours[i].size());
-        transform_points(contours[i].cbegin(), contours[i].cend(), poly.begin());
-
-        JSValue contour = js_contour_move(ctx, std::move(poly));
-        JS_SetPropertyUint32(ctx, argv[1], i, contour);
-      }
+      for(size_t i = 0; i < contours.size(); i++)
+        JS_SetPropertyUint32(ctx, argv[1], i, js_mat_wrap(ctx, contours[i]));
     }
-  }
-
-  // Hierarchy: skip entirely unless someone asked for it. When they did,
-  // move vec4i to the heap once and hand out zero-copy Int32Array(4) views
-  // into a single ArrayBuffer, instead of copying it into an ArrayBuffer
-  // and then, for the callback case, copying it *again* element-by-element
-  // into a plain array (previously via js_array_from on raw int32_t*).
-  if((hier_array || hier_callback) && !vec4i.empty()) {
-    auto* heap_vec = static_cast<std::vector<cv::Vec4i>*>(js_mallocz(ctx, sizeof(std::vector<cv::Vec4i>)));
-    new(heap_vec) std::vector<cv::Vec4i>(std::move(vec4i));
-
-    JSValue array_buffer = js_arraybuffer_from(ctx, begin(*heap_vec), end(*heap_vec), *(JSFreeArrayBufferDataFunc*)&js_vec4i_free_func, (void*)heap_vec);
-    JSValue ctor = js_global_get(ctx, "Int32Array");
-    JSValue callback_arg = hier_callback ? JS_NewArray(ctx) : JS_UNDEFINED;
-
-    for(size_t i = 0; i < heap_vec->size(); i++) {
-      JSValue view = js_typedarray_new(ctx, array_buffer, i * sizeof(cv::Vec4i), 4, ctor);
-      JS_SetPropertyUint32(ctx, hier_array ? argv[2] : callback_arg, i, view);
-    }
-
-    if(hier_callback) {
-      JS_Call(ctx, argv[2], JS_NULL, 1, &callback_arg);
-      JS_FreeValue(ctx, callback_arg);
-    }
-
-    JS_FreeValue(ctx, ctor);
-    JS_FreeValue(ctx, array_buffer);
   }
 
   return ret;

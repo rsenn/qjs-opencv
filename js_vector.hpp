@@ -434,6 +434,20 @@ template<class T> struct JSConverter<std::vector<T>> {
   }
 
   static JSValue toJS(JSContext* ctx, const std::vector<T>& val) {
+    // If a JSVector<T> class is registered (e.g. T is cv::Point and
+    // PointVector was registered by js_vector_init()), wrap `val` in one and
+    // return a genuine JSVector<T> instance instead of a plain JS array -
+    // mirrors the short-circuit fromJS() does above, for the JS-bound
+    // direction. get_class_id() is always a well-formed call for any T (the
+    // template compiles regardless), so this is necessarily a runtime check:
+    // registration only happens once js_vector_init() runs, which isn't
+    // something a compile-time (SFINAE) check on T could observe.
+    if(JSVector<T>::get_class_id() != 0) {
+      JSVector<T>* vector = new JSVector<T>();
+      *vector->vec = val;
+      return vector->toJS(ctx);
+    }
+
     JSValue ret = JS_NewArray(ctx);
     uint32_t i = 0;
 
@@ -441,46 +455,6 @@ template<class T> struct JSConverter<std::vector<T>> {
       JS_SetPropertyUint32(ctx, ret, i++, JSConverter<T>::toJS(ctx, item));
 
     return ret;
-  }
-};
-
-/**
- * @brief JSConverter specialization for std::vector<cv::Point>
- *
- * More specialized than the generic JSConverter<std::vector<T>> above, so
- * get() on a JSVector<std::vector<cv::Point>> (PointVectorVector) hands back
- * a genuine JSVector<cv::Point> (PointVector) instance instead of a plain JS
- * array of converted points.
- */
-template<> struct JSConverter<std::vector<cv::Point>> {
-  static std::vector<cv::Point> fromJS(JSContext* ctx, JSValueConst val) {
-    JSVector<cv::Point>* vector;
-
-    if((vector = JSVector<cv::Point>::fromJS(ctx, val)))
-      return *(vector->vec);
-
-    std::vector<cv::Point> vec;
-    BOOL done;
-    JSValue iter = js_iterator_new(ctx, val);
-
-    for(uint32_t i = 0;; ++i) {
-      JSValue item = js_iterator_next(ctx, iter, done);
-
-      if(done)
-        break;
-
-      vec.push_back(JSConverter<cv::Point>::fromJS(ctx, item));
-      JS_FreeValue(ctx, item);
-    }
-
-    JS_FreeValue(ctx, iter);
-    return vec;
-  }
-
-  static JSValue toJS(JSContext* ctx, const std::vector<cv::Point>& val) {
-    JSVector<cv::Point>* vector = new JSVector<cv::Point>();
-    *vector->vec = val;
-    return vector->toJS(ctx);
   }
 };
 
