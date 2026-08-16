@@ -1412,6 +1412,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       case OTHER_SCALAR: {
         cv::Scalar v;
 
+        /* Scalar(arrayBuffer, offset) */
         if(argc >= 1 && js_is_arraybuffer(ctx, argv[0])) {
           ArrayBufferProps ab = js_arraybuffer_props(ctx, argv[0]);
           uint32_t offset = 0;
@@ -1427,12 +1428,10 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
           break;
         }
 
-        if(argc == 1 && !JS_IsNumber(argv[0]))
-          if(js_scalar_read(ctx, argv[0], v))
-            break;
-
-        for(int i = 0; i < 4 && i < argc; ++i)
-          js_number_read(ctx, argv[i], &v[i]);
+        if(argc == 1 && !JS_IsNumber(argv[0]) && js_scalar_read(ctx, argv[0], v)) {
+        } else
+          for(int i = 0; i < 4 && i < argc; ++i)
+            js_number_read(ctx, argv[i], &v[i]);
 
         ret = js_typedarray_from(ctx, *reinterpret_cast<std::array<double, 4>*>(&v));
         break;

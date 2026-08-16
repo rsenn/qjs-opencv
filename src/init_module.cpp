@@ -46,6 +46,7 @@ extern "C" int js_aruco_init(JSContext*, JSModuleDef*);
 extern "C" int js_dnn_init(JSContext*, JSModuleDef*);
 extern "C" int js_opengl_init(JSContext*, JSModuleDef*);
 extern "C" int js_commandlineparser_init(JSContext*, JSModuleDef*);
+extern "C" int js_range_init(JSContext*, JSModuleDef*);
 
 extern "C" void js_clahe_export(JSContext*, JSModuleDef*);
 extern "C" void js_contour_export(JSContext*, JSModuleDef*);
@@ -91,6 +92,7 @@ extern "C" void js_aruco_export(JSContext*, JSModuleDef*);
 extern "C" void js_dnn_export(JSContext*, JSModuleDef*);
 extern "C" void js_opengl_export(JSContext*, JSModuleDef*);
 extern "C" void js_commandlineparser_export(JSContext*, JSModuleDef*);
+extern "C" void js_range_export(JSContext*, JSModuleDef*);
 
 int
 js_opencv_init(JSContext* ctx, JSModuleDef* m) {
@@ -148,6 +150,7 @@ js_opencv_init(JSContext* ctx, JSModuleDef* m) {
   js_dnn_init(ctx, m);
   js_opengl_init(ctx, m);
   js_commandlineparser_init(ctx, m);
+  js_range_init(ctx, m);
 
   return 0;
 }
@@ -219,6 +222,7 @@ JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   js_dnn_export(ctx, m);
   js_opengl_export(ctx, m);
   js_commandlineparser_export(ctx, m);
+  js_range_export(ctx, m);
 
   return m;
 }

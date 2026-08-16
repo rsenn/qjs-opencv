@@ -684,7 +684,8 @@ js_imageblob2params_constructor(JSContext* ctx, JSValueConst new_target, int arg
     if(argc > 7)
       js_scalar_read(ctx, argv[7], borderValue);
 
-    new(dn) JSImage2BlobParamsData(scalefactor, size, mean, swapRB, ddepth, qjs_dnn_compat::DataLayout(datalayout), cv::dnn::ImagePaddingMode(mode), borderValue);
+    new(dn)
+        JSImage2BlobParamsData(scalefactor, size, mean, swapRB, ddepth, qjs_dnn_compat::DataLayout(datalayout), cv::dnn::ImagePaddingMode(mode), borderValue);
   } else {
     new(dn) JSImage2BlobParamsData();
   }
@@ -1408,85 +1409,81 @@ js_model_base_method(JSContext* ctx, ModelT& model, int argc, JSValueConst argv[
   return true;
 }
 
-#define DNN_MODEL_BASE_PROTO_FUNCS(method_fn)                                                        \
-  JS_CFUNC_MAGIC_DEF("setInputSize", 1, method_fn, MODEL_SET_INPUT_SIZE),                             \
-      JS_CFUNC_MAGIC_DEF("setInputMean", 1, method_fn, MODEL_SET_INPUT_MEAN),                         \
-      JS_CFUNC_MAGIC_DEF("setInputScale", 1, method_fn, MODEL_SET_INPUT_SCALE),                       \
-      JS_CFUNC_MAGIC_DEF("setInputCrop", 1, method_fn, MODEL_SET_INPUT_CROP),                         \
-      JS_CFUNC_MAGIC_DEF("setInputSwapRB", 1, method_fn, MODEL_SET_INPUT_SWAP_RB),                    \
-      JS_CFUNC_MAGIC_DEF("setOutputNames", 1, method_fn, MODEL_SET_OUTPUT_NAMES),                     \
-      JS_CFUNC_MAGIC_DEF("setInputParams", 0, method_fn, MODEL_SET_INPUT_PARAMS),                     \
-      JS_CFUNC_MAGIC_DEF("predict", 2, method_fn, MODEL_PREDICT),                                     \
-      JS_CFUNC_MAGIC_DEF("setPreferableBackend", 1, method_fn, MODEL_SET_PREFERABLE_BACKEND),         \
-      JS_CFUNC_MAGIC_DEF("setPreferableTarget", 1, method_fn, MODEL_SET_PREFERABLE_TARGET),           \
+#define DNN_MODEL_BASE_PROTO_FUNCS(method_fn) \
+  JS_CFUNC_MAGIC_DEF("setInputSize", 1, method_fn, MODEL_SET_INPUT_SIZE), JS_CFUNC_MAGIC_DEF("setInputMean", 1, method_fn, MODEL_SET_INPUT_MEAN), \
+      JS_CFUNC_MAGIC_DEF("setInputScale", 1, method_fn, MODEL_SET_INPUT_SCALE), JS_CFUNC_MAGIC_DEF("setInputCrop", 1, method_fn, MODEL_SET_INPUT_CROP), \
+      JS_CFUNC_MAGIC_DEF("setInputSwapRB", 1, method_fn, MODEL_SET_INPUT_SWAP_RB), JS_CFUNC_MAGIC_DEF("setOutputNames", 1, method_fn, MODEL_SET_OUTPUT_NAMES), \
+      JS_CFUNC_MAGIC_DEF("setInputParams", 0, method_fn, MODEL_SET_INPUT_PARAMS), JS_CFUNC_MAGIC_DEF("predict", 2, method_fn, MODEL_PREDICT), \
+      JS_CFUNC_MAGIC_DEF("setPreferableBackend", 1, method_fn, MODEL_SET_PREFERABLE_BACKEND), \
+      JS_CFUNC_MAGIC_DEF("setPreferableTarget", 1, method_fn, MODEL_SET_PREFERABLE_TARGET), \
       JS_CFUNC_MAGIC_DEF("enableWinograd", 1, method_fn, MODEL_ENABLE_WINOGRAD)
 
 /* Mechanical skeleton (class id/proto/ctor/data accessors/finalizer) shared by
  * all eight Model-family classes - construction shape is identical:
  * new X(net) from an existing dnn.Net, or new X(model[, config]) from files. */
-#define DEFINE_DNN_MODEL_SKELETON(tag, CppType, JsName)                                                    \
-  using JS##tag##Data = CppType;                                                                            \
-  extern "C" {                                                                                               \
-  thread_local JSValue tag##_proto, tag##_class;                                                             \
-  thread_local JSClassID js_##tag##_class_id;                                                                \
-  }                                                                                                            \
-  static JSValue js_##tag##_wrap(JSContext* ctx, JSValueConst proto, JS##tag##Data* data) {                  \
-    JSValue ret = JS_NewObjectProtoClass(ctx, proto, js_##tag##_class_id);                                    \
-    JS_SetOpaque(ret, data);                                                                                   \
-    return ret;                                                                                                \
-  }                                                                                                             \
-  static JS##tag##Data* js_##tag##_data(JSValueConst val) {                                                    \
-    return static_cast<JS##tag##Data*>(JS_GetOpaque(val, js_##tag##_class_id));                                \
-  }                                                                                                              \
-  static JS##tag##Data* js_##tag##_data2(JSContext* ctx, JSValueConst val) {                                    \
-    return static_cast<JS##tag##Data*>(JS_GetOpaque2(ctx, val, js_##tag##_class_id));                           \
-  }                                                                                                                \
+#define DEFINE_DNN_MODEL_SKELETON(tag, CppType, JsName) \
+  using JS##tag##Data = CppType; \
+  extern "C" { \
+  thread_local JSValue tag##_proto, tag##_class; \
+  thread_local JSClassID js_##tag##_class_id; \
+  } \
+  static JSValue js_##tag##_wrap(JSContext* ctx, JSValueConst proto, JS##tag##Data* data) { \
+    JSValue ret = JS_NewObjectProtoClass(ctx, proto, js_##tag##_class_id); \
+    JS_SetOpaque(ret, data); \
+    return ret; \
+  } \
+  static JS##tag##Data* js_##tag##_data(JSValueConst val) { \
+    return static_cast<JS##tag##Data*>(JS_GetOpaque(val, js_##tag##_class_id)); \
+  } \
+  static JS##tag##Data* js_##tag##_data2(JSContext* ctx, JSValueConst val) { \
+    return static_cast<JS##tag##Data*>(JS_GetOpaque2(ctx, val, js_##tag##_class_id)); \
+  } \
   static JSValue js_##tag##_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) { \
-    JS##tag##Data* data;                                                                                           \
-    JSValue obj = JS_UNDEFINED, proto;                                                                             \
-    JSNetData* net;                                                                                                 \
-    if(!(data = js_allocate<JS##tag##Data>(ctx)))                                                                   \
-      return JS_EXCEPTION;                                                                                           \
-    try {                                                                                                             \
-      if(argc > 0 && (net = js_net_data(argv[0]))) {                                                                  \
-        new(data) JS##tag##Data(*net);                                                                                 \
-      } else {                                                                                                          \
-        std::string model, config;                                                                                      \
-        if(argc > 0)                                                                                                      \
-          js_value_to(ctx, argv[0], model);                                                                                \
-        if(argc > 1)                                                                                                        \
-          js_value_to(ctx, argv[1], config);                                                                                 \
-        new(data) JS##tag##Data(model, config);                                                                               \
-      }                                                                                                                        \
-    } catch(const cv::Exception& e) {                                                                                           \
-      js_deallocate(ctx, data);                                                                                                  \
-      return js_cv_throw(ctx, e);                                                                                                 \
-    }                                                                                                                              \
-    proto = JS_GetPropertyStr(ctx, new_target, "prototype");                                                                       \
-    if(JS_IsException(proto))                                                                                                       \
-      goto fail;                                                                                                                     \
-    obj = JS_NewObjectProtoClass(ctx, proto, js_##tag##_class_id);                                                                    \
-    JS_FreeValue(ctx, proto);                                                                                                          \
-    if(JS_IsException(obj))                                                                                                             \
-      goto fail;                                                                                                                          \
-    JS_SetOpaque(obj, data);                                                                                                               \
-    return obj;                                                                                                                             \
-  fail:                                                                                                                                      \
-    data->~JS##tag##Data();                                                                                                                   \
-    js_deallocate(ctx, data);                                                                                                                  \
-    JS_FreeValue(ctx, obj);                                                                                                                     \
-    return JS_EXCEPTION;                                                                                                                         \
-  }                                                                                                                                                \
-  static void js_##tag##_finalizer(JSRuntime* rt, JSValue val) {                                                                                   \
-    JS##tag##Data* data;                                                                                                                             \
-    if((data = js_##tag##_data(val))) {                                                                                                               \
-      data->~JS##tag##Data();                                                                                                                          \
-      js_deallocate(rt, data);                                                                                                                          \
-    }                                                                                                                                                     \
-  }                                                                                                                                                         \
-  JSClassDef js_##tag##_class = {                                                                                                                           \
-      .class_name = JsName,                                                                                                                                  \
-      .finalizer = js_##tag##_finalizer,                                                                                                                       \
+    JS##tag##Data* data; \
+    JSValue obj = JS_UNDEFINED, proto; \
+    JSNetData* net; \
+    if(!(data = js_allocate<JS##tag##Data>(ctx))) \
+      return JS_EXCEPTION; \
+    try { \
+      if(argc > 0 && (net = js_net_data(argv[0]))) { \
+        new(data) JS##tag##Data(*net); \
+      } else { \
+        std::string model, config; \
+        if(argc > 0) \
+          js_value_to(ctx, argv[0], model); \
+        if(argc > 1) \
+          js_value_to(ctx, argv[1], config); \
+        new(data) JS##tag##Data(model, config); \
+      } \
+    } catch(const cv::Exception& e) { \
+      js_deallocate(ctx, data); \
+      return js_cv_throw(ctx, e); \
+    } \
+    proto = JS_GetPropertyStr(ctx, new_target, "prototype"); \
+    if(JS_IsException(proto)) \
+      goto fail; \
+    obj = JS_NewObjectProtoClass(ctx, proto, js_##tag##_class_id); \
+    JS_FreeValue(ctx, proto); \
+    if(JS_IsException(obj)) \
+      goto fail; \
+    JS_SetOpaque(obj, data); \
+    return obj; \
+  fail: \
+    data->~JS##tag##Data(); \
+    js_deallocate(ctx, data); \
+    JS_FreeValue(ctx, obj); \
+    return JS_EXCEPTION; \
+  } \
+  static void js_##tag##_finalizer(JSRuntime* rt, JSValue val) { \
+    JS##tag##Data* data; \
+    if((data = js_##tag##_data(val))) { \
+      data->~JS##tag##Data(); \
+      js_deallocate(rt, data); \
+    } \
+  } \
+  JSClassDef js_##tag##_class = { \
+      .class_name = JsName, \
+      .finalizer = js_##tag##_finalizer, \
   }
 
 /* Model - the base class itself, no methods beyond the shared base set. */
@@ -1875,8 +1872,8 @@ js_text_detection_model_method(JSContext* ctx, ModelT& model, int argc, JSValueC
   return true;
 }
 
-#define DNN_TEXT_DETECTION_MODEL_PROTO_FUNCS(method_fn)                                       \
-  JS_CFUNC_MAGIC_DEF("detect", 2, method_fn, TEXT_DETECTION_MODEL_DETECT),                     \
+#define DNN_TEXT_DETECTION_MODEL_PROTO_FUNCS(method_fn) \
+  JS_CFUNC_MAGIC_DEF("detect", 2, method_fn, TEXT_DETECTION_MODEL_DETECT), \
       JS_CFUNC_MAGIC_DEF("detectTextRectangles", 2, method_fn, TEXT_DETECTION_MODEL_DETECTTEXTRECTANGLES)
 
 /* TextDetectionModel_EAST */
@@ -2039,16 +2036,16 @@ const JSCFunctionListEntry js_text_detection_model_db_proto_funcs[] = {
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "TextDetectionModel_DB", JS_PROP_CONFIGURABLE),
 };
 
-#define REGISTER_DNN_MODEL_CLASS(tag, JsName)                                                             \
-  do {                                                                                                     \
-    JS_NewClassID(&js_##tag##_class_id);                                                                    \
-    JS_NewClass(JS_GetRuntime(ctx), js_##tag##_class_id, &js_##tag##_class);                                  \
-    tag##_proto = JS_NewObject(ctx);                                                                           \
-    JS_SetPropertyFunctionList(ctx, tag##_proto, js_##tag##_proto_funcs, countof(js_##tag##_proto_funcs));       \
-    JS_SetClassProto(ctx, js_##tag##_class_id, tag##_proto);                                                       \
-    tag##_class = JS_NewCFunction2(ctx, js_##tag##_constructor, JsName, 0, JS_CFUNC_constructor, 0);                 \
-    JS_SetConstructor(ctx, tag##_class, tag##_proto);                                                                  \
-    JS_SetPropertyStr(ctx, dnn_object, JsName, tag##_class);                                                             \
+#define REGISTER_DNN_MODEL_CLASS(tag, JsName) \
+  do { \
+    JS_NewClassID(&js_##tag##_class_id); \
+    JS_NewClass(JS_GetRuntime(ctx), js_##tag##_class_id, &js_##tag##_class); \
+    tag##_proto = JS_NewObject(ctx); \
+    JS_SetPropertyFunctionList(ctx, tag##_proto, js_##tag##_proto_funcs, countof(js_##tag##_proto_funcs)); \
+    JS_SetClassProto(ctx, js_##tag##_class_id, tag##_proto); \
+    tag##_class = JS_NewCFunction2(ctx, js_##tag##_constructor, JsName, 0, JS_CFUNC_constructor, 0); \
+    JS_SetConstructor(ctx, tag##_class, tag##_proto); \
+    JS_SetPropertyStr(ctx, dnn_object, JsName, tag##_class); \
   } while(0)
 
 enum {

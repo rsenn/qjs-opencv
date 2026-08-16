@@ -88,7 +88,7 @@ js_vector_export(JSContext* ctx, JSModuleDef* m) {
   JSVector<cv::Rect>::add_export(ctx, m, "RectVector");
   JSVector<int>::add_export(ctx, m, "IntVector");
   JSVector<float>::add_export(ctx, m, "FloatVector");
-
+  JSVector<double>::add_export(ctx, m, "DoubleVector");
   JSVector<char>::add_export(ctx, m, "CharVector");
   JSVector<std::string>::add_export(ctx, m, "StringVector");
 

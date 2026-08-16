@@ -963,7 +963,7 @@ js_vec4i_free_func(JSRuntime* rt, void* opaque, void* ptr) {
 
 static JSValue
 js_cv_find_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  cv::Mat* m = js_mat_data2(ctx, argv[0]);
+  JSInputArray input = js_cv_inputarray(ctx, argv[0]);
   JSValue ret = JS_UNDEFINED;
   int32_t mode = cv::RETR_TREE;
   int32_t approx = cv::CHAIN_APPROX_SIMPLE;
@@ -1007,14 +1007,14 @@ js_cv_find_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   // Call findContours with appropriate type
   if(contours_matvector) {
     // Use MatVector directly (zero-copy)
-    cv::findContours(*m, *(JSVector<cv::Mat>::fromJS(ctx, argv[1])->vec), hier, mode, approx, offset);
+    cv::findContours(input, *JSVector<cv::Mat>::fromJS(ctx, argv[1]), hier, mode, approx, offset);
   } else if(contours_pointvectorvector) {
     // Use PointVectorVector directly (zero-copy)
-    cv::findContours(*m, *(JSVector<std::vector<cv::Point>>::fromJS(ctx, argv[1])->vec), hier, mode, approx, offset);
+    cv::findContours(input, *JSVector<std::vector<cv::Point>>::fromJS(ctx, argv[1]), hier, mode, approx, offset);
   } else {
     // Use traditional JSContoursData<int> and convert to JS array
     JSContoursData<int> contours;
-    cv::findContours(*m, contours, hier, mode, approx, offset);
+    cv::findContours(input, contours, hier, mode, approx, offset);
 
     // Contours: convert int -> double points one contour at a time (no
     // separate full-size "poly" copy held alongside `contours`), and skip the
