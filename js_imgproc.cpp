@@ -1352,6 +1352,40 @@ enum {
   TRANSFORM_WARP_POLAR,
 };
 
+/**
+ * @brief Read a plain JS array of point-likes (cv.Point instances, or
+ * {x,y} objects - anything js_point_read() accepts) into `out`.
+ *
+ * Returns false, leaving `out` untouched, if `value` isn't an array or any
+ * element fails to parse as a point - js_cv_inputarray()'s own array
+ * fallback treats a JS array as a flat list of scalars, not as a list of
+ * points, so callers that want point-array support (e.g. getAffineTransform)
+ * need this instead.
+ */
+static bool
+js_read_point_array(JSContext* ctx, JSValueConst value, std::vector<cv::Point2f>& out) {
+  if(!js_is_array(ctx, value))
+    return false;
+
+  int64_t len = js_array_length(ctx, value);
+
+  if(len < 0)
+    return false;
+
+  out.resize(len);
+
+  for(int64_t i = 0; i < len; i++) {
+    JSValue item = JS_GetPropertyUint32(ctx, value, i);
+    bool ok = js_point_read(ctx, item, &out[i]);
+    JS_FreeValue(ctx, item);
+
+    if(!ok)
+      return false;
+  }
+
+  return true;
+}
+
 static JSValue
 js_imgproc_transform(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSInputArray src;
@@ -1382,9 +1416,18 @@ js_imgproc_transform(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
         // getAffineTransform() requires exactly 3 CV_32F points - `src` (set
         // by the preamble above) and `dst` may come back CV_32S or CV_64F
         // (e.g. a plain Mat, or a PointVector's native int storage), so
-        // convert in place when needed.
+        // convert in place when needed. A plain JS array of point-likes
+        // isn't handled by js_cv_inputarray() at all (its array fallback
+        // reads flat scalars, not points), so read those separately.
         JSInputArray dst = js_cv_inputarray(ctx, argv[1]);
         cv::Mat srcConverted, dstConverted;
+        std::vector<cv::Point2f> srcPts, dstPts;
+
+        if(js_read_point_array(ctx, argv[0], srcPts))
+          src = srcPts;
+
+        if(js_read_point_array(ctx, argv[1], dstPts))
+          dst = dstPts;
 
         if(!js_is_noarray(src) && src.depth() != CV_32F) {
           src.getMat().convertTo(srcConverted, CV_32F);
@@ -2402,14 +2445,14 @@ js_imgproc_init(JSContext* ctx, JSModuleDef* m) {
   JS_SetPropertyFunctionList(ctx, generalized_hough_class, js_generalized_hough_static_funcs, countof(js_generalized_hough_static_funcs));
 
   if(m)
-    JS_SetModuleExportList(ctx, m, js_imgproc_static_funcs.data(), js_imgproc_static_funcs.size());
+    JS_SetModuleExportList(ctx, m, js_imgproc_static_funcs, countof(js_imgproc_static_funcs));
 
   return 0;
 }
 
 extern "C" void
 js_imgproc_export(JSContext* ctx, JSModuleDef* m) {
-  JS_AddModuleExportList(ctx, m, js_imgproc_static_funcs.data(), js_imgproc_static_funcs.size());
+  JS_AddModuleExportList(ctx, m, js_imgproc_static_funcs, countof(js_imgproc_static_funcs));
 }
 
 #if defined(JS_CV_MODULE)
