@@ -46,7 +46,7 @@ js_draw_circle(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
   int i = 0, ret = -1, radius = 0, thickness = -1, line_type = cv::LINE_AA;
 
   if(argc > i) {
-    if(!js_is_noarray((dst = js_umat_or_mat(ctx, argv[i]))))
+    if(!js_is_noarray((dst = js_cv_inputoutputarray(ctx, argv[i]))))
       i++;
   } else
     dst = *dptr;
@@ -111,7 +111,7 @@ js_draw_ellipse(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
   int line_type = cv::LINE_AA;
 
   if(argc > i) {
-    if(!js_is_noarray((dst = js_umat_or_mat(ctx, argv[i]))))
+    if(!js_is_noarray((dst = js_cv_inputoutputarray(ctx, argv[i]))))
       i++;
   } else
     dst = *dptr;
@@ -186,7 +186,7 @@ js_draw_contour(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
   contours.resize(1);
 
   if(argc > i) {
-    if(!js_is_noarray((dst = js_umat_or_mat(ctx, argv[i]))))
+    if(!js_is_noarray((dst = js_cv_inputoutputarray(ctx, argv[i]))))
       i++;
   } else
     dst = *dptr;
@@ -294,7 +294,7 @@ js_draw_line(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
   bool antialias = true;
 
   if(argc > i) {
-    if(!js_is_noarray((dst = js_umat_or_mat(ctx, argv[i]))))
+    if(!js_is_noarray((dst = js_cv_inputoutputarray(ctx, argv[i]))))
       i++;
   } else
     dst = *dptr;
@@ -359,7 +359,7 @@ js_fill_poly(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
   int line_type = cv::LINE_AA;
 
   if(argc > i) {
-    if(!js_is_noarray((dst = js_umat_or_mat(ctx, argv[i]))))
+    if(!js_is_noarray((dst = js_cv_inputoutputarray(ctx, argv[i]))))
       i++;
   } else
     dst = *dptr;
@@ -397,7 +397,7 @@ js_draw_polylines(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
   int32_t thickness = -1, line_type = cv::LINE_AA;
 
   if(argc > i) {
-    if(!js_is_noarray((dst = js_umat_or_mat(ctx, argv[i]))))
+    if(!js_is_noarray((dst = js_cv_inputoutputarray(ctx, argv[i]))))
       i++;
   } else
     dst = *dptr;
@@ -441,7 +441,7 @@ js_draw_rectangle(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
   int32_t thickness = 1, line_type = cv::LINE_AA;
 
   if(argc > i) {
-    if(!js_is_noarray((dst = js_umat_or_mat(ctx, argv[i]))))
+    if(!js_is_noarray((dst = js_cv_inputoutputarray(ctx, argv[i]))))
       i++;
   } else
     dst = *dptr;

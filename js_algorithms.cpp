@@ -20,15 +20,13 @@ using std::vector;
 
 static JSValue
 js_cv_skeletonization(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  JSInputOutputArray src, dst;
-  cv::Mat output;
-  src = js_umat_or_mat(ctx, argv[0]);
-  dst = js_umat_or_mat(ctx, argv[1]);
+  JSInputOutputArray src = js_cv_inputoutputarray(ctx, argv[0]);
+  JSInputOutputArray dst = js_cv_inputoutputarray(ctx, argv[1]);
 
   if(js_is_noarray(src) || js_is_noarray(dst))
     return JS_ThrowInternalError(ctx, "src or dst not an array!");
 
-  output = skeletonization(src);
+  cv::Mat output = skeletonization(src);
   output.copyTo(dst);
 
   return JS_UNDEFINED;
@@ -36,44 +34,30 @@ js_cv_skeletonization(JSContext* ctx, JSValueConst this_val, int argc, JSValueCo
 
 static JSValue
 js_cv_pixel_neighborhood(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
-  JSMatData* src;
-  JSOutputArray dst;
-  cv::Mat output;
   int count;
-
-  src = js_mat_data2(ctx, argv[0]);
-  dst = js_umat_or_mat(ctx, argv[1]);
+  JSMatData* src = js_mat_data2(ctx, argv[0]);
+  JSOutputArray dst = js_cv_outputarray(ctx, argv[1]);
 
   if(src == nullptr || js_is_noarray(dst))
     return JS_ThrowInternalError(ctx, "src or dst not an array!");
 
-  /* if(argc > 2) {
-     int32_t count;
-
-     JS_ToInt32(ctx, &count, argv[2]);
-     output = magic ? pixel_neighborhood_cross_if(*src, count) : pixel_neighborhood_if(*src,
-   count); } else*/
-  { output = magic ? pixel_neighborhood_cross(*src) : pixel_neighborhood(*src); }
+  cv::Mat output = magic ? pixel_neighborhood_cross(*src) : pixel_neighborhood(*src);
 
   dst.getMatRef() = output;
-  //  output.copyTo();
 
   return JS_UNDEFINED;
 }
 
 static JSValue
 js_cv_pixel_find_value(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  JSMatData* src;
-  vector<JSPointData<int>> output;
   uint32_t value;
-
-  src = js_mat_data2(ctx, argv[0]);
+  JSMatData* src = js_mat_data2(ctx, argv[0]);
 
   if(src == nullptr)
     return JS_ThrowInternalError(ctx, "src not an array!");
 
   JS_ToUint32(ctx, &value, argv[1]);
-  output = pixel_find_value(*src, value);
+  vector<JSPointData<int>> output = pixel_find_value(*src, value);
 
   return js_array_from(ctx, output);
 }
@@ -82,14 +66,10 @@ static JSValue
 js_cv_trace_skeleton(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSContoursData<double> contours;
   uint32_t count;
-  JSInputOutputArray src = js_cv_inputoutputarray(ctx, argv[0]);
   cv::Mat *mat, *neighborhood = 0, *mapping = 0;
 
   if(!(mat = js_mat_data2(ctx, argv[0])))
     return JS_EXCEPTION;
-
-  /*if(src.empty())
-      return JS_ThrowInternalError(ctx, "argument 1 must be Mat or UMat");*/
 
   if(argc > 2)
     neighborhood = js_mat_data(argv[2]);
@@ -146,13 +126,10 @@ js_cv_palette_generate(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
 
 static JSValue
 js_cv_palette_apply(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  JSMatData* src;
-  JSOutputArray dst;
   array<uint32_t, 256> palette32;
   vector<cv::Vec3b> palette;
-
-  src = js_mat_data2(ctx, argv[0]);
-  dst = js_umat_or_mat(ctx, argv[1]);
+  JSMatData* src = js_mat_data2(ctx, argv[0]);
+  JSOutputArray dst = js_cv_outputarray(ctx, argv[1]);
 
   if(src == nullptr || js_is_noarray(dst))
     return JS_ThrowInternalError(ctx, "src or dst not an array!");
@@ -204,12 +181,9 @@ js_cv_palette_apply(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 
 static JSValue
 js_cv_palette_match(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  JSMatData* src;
-  JSOutputArray dst;
   vector<JSColorData<uint8_t>> palette;
-
-  src = js_mat_data2(ctx, argv[0]);
-  dst = js_umat_or_mat(ctx, argv[1]);
+  JSMatData* src = js_mat_data2(ctx, argv[0]);
+  JSOutputArray dst = js_cv_outputarray(ctx, argv[1]);
 
   if(src == nullptr)
     return JS_ThrowInternalError(ctx, "src is not an array!");
@@ -256,16 +230,13 @@ js_cv_guohall_thinning(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
 
 static JSValue
 js_cv_skeletonize_guohall(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  JSInputOutputArray src, dst;
-  cv::Mat output;
-
-  src = js_umat_or_mat(ctx, argv[0]);
-  dst = js_umat_or_mat(ctx, argv[1]);
+  JSInputArray src = js_cv_inputarray(ctx, argv[0]);
+  JSOutputArray dst = js_cv_outputarray(ctx, argv[1]);
 
   if(js_is_noarray(src) || js_is_noarray(dst))
     return JS_ThrowInternalError(ctx, "src or dst not an array!");
 
-  output = skeleton_lines::skeletonize_guohall(src);
+  cv::Mat output = skeleton_lines::skeletonize_guohall(src);
   output.copyTo(dst);
 
   return JS_UNDEFINED;
@@ -273,11 +244,8 @@ js_cv_skeletonize_guohall(JSContext* ctx, JSValueConst this_val, int argc, JSVal
 
 static JSValue
 js_cv_degree_map(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  JSMatData* src;
-  JSOutputArray dst;
-
-  src = js_mat_data2(ctx, argv[0]);
-  dst = js_umat_or_mat(ctx, argv[1]);
+  JSMatData* src = js_mat_data2(ctx, argv[0]);
+  JSOutputArray dst = js_cv_outputarray(ctx, argv[1]);
 
   if(src == nullptr || js_is_noarray(dst))
     return JS_ThrowInternalError(ctx, "src or dst not an array!");
@@ -311,11 +279,9 @@ js_cv_trace_lines(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
 
 static JSValue
 js_cv_skeletonize_and_trace(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  JSInputOutputArray src;
   cv::Mat* skeleton_out = nullptr;
   cv::Mat skel;
-
-  src = js_umat_or_mat(ctx, argv[0]);
+  JSInputArray src = js_cv_inputarray(ctx, argv[0]);
 
   if(js_is_noarray(src))
     return JS_ThrowInternalError(ctx, "src not an array!");

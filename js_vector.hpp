@@ -76,8 +76,8 @@ public:
   static JSVector<T>* fromJS(JSContext* ctx, JSValueConst this_val) { return static_cast<JSVector<T>*>(JS_GetOpaque2(ctx, this_val, get_class_id())); }
 
   operator JSInputArray() const { return JSInputArray(*vec); }
-  operator JSOutputArray() { return JSOutputArray(*vec); }
   operator JSInputOutputArray() { return JSInputOutputArray(*vec); }
+  operator JSOutputArray() { return JSOutputArray(*vec); }
 
   /**
    * @brief Create a new JS object wrapping this vector

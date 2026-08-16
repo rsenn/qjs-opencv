@@ -97,14 +97,12 @@ js_fast_line_detector_finalizer(JSRuntime* rt, JSValue val) {
 static JSValue
 js_fast_line_detector_detect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSFastLineDetector* s;
-  JSInputArray image;
-  JSOutputArray lines;
 
   if((s = js_fast_line_detector_data2(ctx, this_val)) == nullptr)
     return JS_EXCEPTION;
 
-  image = js_umat_or_mat(ctx, argv[0]);
-  lines = js_cv_outputarray(ctx, argv[1]);
+  JSInputArray image = js_cv_inputarray(ctx, argv[0]);
+  JSOutputArray lines = js_cv_outputarray(ctx, argv[1]);
 
   (*s)->detect(image, lines);
 
@@ -124,10 +122,8 @@ js_fast_line_detector_detect(JSContext* ctx, JSValueConst this_val, int argc, JS
 static JSValue
 js_fast_line_detector_draw_segments(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSFastLineDetector* s;
-  JSInputOutputArray image;
   // std::vector<cv::Vec4f> lines;
   cv::Mat mat;
-  JSInputArray lines;
   BOOL draw_arrow = FALSE;
   cv::Scalar linecolor{255, 255, 255, 255};
   int32_t linethickness = 1;
@@ -135,8 +131,8 @@ js_fast_line_detector_draw_segments(JSContext* ctx, JSValueConst this_val, int a
   if((s = js_fast_line_detector_data2(ctx, this_val)) == nullptr)
     return JS_EXCEPTION;
 
-  image = js_umat_or_mat(ctx, argv[0]);
-  lines = js_cv_inputarray(ctx, argv[1]);
+  JSInputOutputArray image = js_cv_inputoutputarray(ctx, argv[0]);
+  JSInputArray lines = js_cv_inputarray(ctx, argv[1]);
 
   // js_array_to(ctx, argv[1], lines);
 
