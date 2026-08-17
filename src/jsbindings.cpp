@@ -8,16 +8,6 @@
 #include <iostream>
 #include <limits>
 
-JSOutputArgument::JSOutputArgument(JSContext* ctx, JSValueConst val) : JSInputOutputArray(js_cv_inputoutputarray(ctx, val)), m_ctx(ctx), m_val(val) {
-  if(empty()) {
-    if(JS_IsArray(m_ctx, m_val))
-      JSInputOutputArray::assign(cv::Mat());
-  }
-}
-
-JSInputArgument::JSInputArgument(JSContext* ctx, JSValueConst val) : JSInputArray(js_cv_inputarray(ctx, val)) {
-}
-
 JSImageArgument::JSImageArgument(JSContext* ctx, JSValueConst val) : JSInputOutputArray(js_umat_or_mat(ctx, val)) {
 }
 

@@ -396,6 +396,9 @@ js_typedarray_type(const std::string& class_name) {
   char* end = start + class_name.size();
   bool is_signed = true, is_floating_point = false;
 
+  if(end - start >= 3 && !strncmp(start, "Big", 3))
+    start += 3;
+
   if(start < end && *start == 'U') {
     start++;
     is_signed = false;

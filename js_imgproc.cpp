@@ -538,7 +538,7 @@ js_cv_hough_circles(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
     return JS_EXCEPTION;
 
   JSImageArgument image(ctx, argv[0]);
-  JSOutputArgument circles(ctx, argv[1]);
+  JSOutputArgument<cv::Vec3f> circles(ctx, argv[1]);
 
   /*  if(js_is_noarray(image) || !js_is_array(ctx, argv[1]))
       return JS_ThrowInternalError(ctx, "argument 1 or argument 2 not an array!");*/
@@ -2077,7 +2077,8 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
       }
 
       case SHAPE_CONVEXITY_DEFECTS: {
-        JSInputArray convexhull = js_cv_inputarray(ctx, argv[1]);
+        cv::Mat convexhull_converted;
+        JSInputOutputArray convexhull = js_shape_inputoutputarray(ctx, argv[1], convexhull_converted);
         JSInputOutputArray convexityDefects = js_cv_inputoutputarray(ctx, argv[2]);
 
         cv::convexityDefects(src, convexhull, convexityDefects);
@@ -2116,7 +2117,8 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
       }
 
       case SHAPE_INTERSECT_CONVEX_CONVEX: {
-        JSInputArray p2 = js_cv_inputarray(ctx, argv[1]);
+        cv::Mat p2_converted;
+        JSInputOutputArray p2 = js_shape_inputoutputarray(ctx, argv[1], p2_converted);
         JSInputOutputArray p12 = js_cv_inputoutputarray(ctx, argv[2]);
         BOOL handleNested = TRUE;
 
@@ -2133,7 +2135,8 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
       }
 
       case SHAPE_MATCH_SHAPES: {
-        JSInputArray c2 = js_cv_inputarray(ctx, argv[1]);
+        cv::Mat c2_converted;
+        JSInputOutputArray c2 = js_shape_inputoutputarray(ctx, argv[1], c2_converted);
         int32_t method = -1;
         double parameter;
 

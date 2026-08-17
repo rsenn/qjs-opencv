@@ -39,7 +39,7 @@ function main(...args) {
 
   let powerOf2 = n => Math.pow(2, Math.ceil(Math.log2(n)));
 
-  let dim = new Size(powerOf2(rect.width), powerOf2(Math.round(Math.min(rect.width / 1.7777), rect.height)));
+  let dim = new Size(powerOf2(rect.width), powerOf2(Math.round(Math.min(rect.width / 1.7777, rect.height))));
   console.log('dim', dim);
   mat = new Mat(dim, CV_8UC3);
   rectangle(mat, [0, 0], [mat.cols - 1, mat.rows - 1], colors[1], FILLED);

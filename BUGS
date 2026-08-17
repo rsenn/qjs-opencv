@@ -21,22 +21,18 @@
                            // exits 1 as expected.
 
 
-- js-typedarray-type-biguint64array-parsed-as-signed: `js_typedarray_type()`
-  (`include/js_typed_array.hpp`) detects an unsigned typed array by checking
+- FIXED: js-typedarray-type-biguint64array-parsed-as-signed: `js_typedarray_type()`
+  (`include/js_typed_array.hpp`) detected an unsigned typed array by checking
   for a leading `'U'` character (`Uint8Array`, `Uint16Array`, ...), which
-  misses `BigUint64Array` - its class name starts with `"Big"`, not `"U"`.
-  `new Mat(new BigUint64Array([...]))` therefore silently builds a *signed*
-  `CV_64S` Mat instead of `CV_64U`. Found while adding OpenCV 5.0's new
-  integer depths (CV_64S/CV_64U/CV_32U/CV_Bool/CV_16BF) to this project's
-  TypedArrayType <-> cv::Mat type mapping - `BigInt64Array` (signed) is
-  unaffected and was the only one actually needed for LLM-inference input
-  tensors (token ids), so this wasn't fixed inline. Same class of bug likely
-  doesn't affect `Uint8Array`/`Uint16Array`/`Uint32Array` since those really
-  do start with `'U'`.
+  missed `BigUint64Array` - its class name starts with `"Big"`, not `"U"`.
+  `new Mat(new BigUint64Array([...]))` therefore silently built a *signed*
+  `CV_64S` Mat instead of `CV_64U`. Fixed by skipping a leading `"Big"`
+  prefix before the `'U'` check.
 
     import { Mat, CV_64UC1 } from 'opencv';
-    const m = new Mat(new BigUint64Array([1n, 2n]));
-    console.log(m.type() === CV_64UC1); // false - actually CV_64S
+    const ta = new BigUint64Array([1n, 2n]);
+    const m = new Mat(1, 2, CV_64UC1, ta.buffer);
+    console.log(m.type() === CV_64UC1); // true
 
 
 - contour-migration-strategy: Phased approach to replace Contour class
@@ -1129,20 +1125,6 @@
   - Assess which functions need Contour<T>/Contours<T> internally
   - Document MatVector compatibility per function
 
-- doublevector-not-exported: js_vector_export() (js_vector.cpp) never calls
-  JSVector<double>::add_export(ctx, m, "DoubleVector"), even though
-  js_vector_init() does register and set_export() the DoubleVector
-  constructor. Since QuickJS only exposes module exports that were declared
-  via JS_AddModuleExport, `cv.DoubleVector` is missing from the module
-  namespace entirely and `new cv.DoubleVector()` throws "not a function".
-  Found while testing js_vector_outputarray() (js_vector.cpp) against
-  cv.meanStdDev(). IntVector/FloatVector/CharVector/StringVector are all
-  exported correctly; only DoubleVector is missing from js_vector_export().
-
-    import('opencv').then(cv => {
-      new cv.DoubleVector(); // TypeError: not a function
-    });
-
 - FIXED: contour-getmat-dangling-reference: every SHAPE_* method in js_imgproc_shape()
   (js_imgproc.cpp) crashes or silently returns garbage when argv[0] is a real
   cv.Contour object (e.g. one produced by findContours(image, [], hierarchy)).
@@ -1201,15 +1183,18 @@
   persistent double-precision vector owned by the JS Contour object), matching
   the already-correct pattern in js_cv_inputoutputarray()/js_cv_outputarray().
 
-- contour-secondary-arg-type-mismatch: js_imgproc_shape()'s preamble only
-  converts argv[0] to a float (CV_32FC2) Mat when it's a real cv.Contour -
+- FIXED: contour-secondary-arg-type-mismatch: js_imgproc_shape()'s preamble only
+  converted argv[0] to a float (CV_32FC2) Mat when it's a real cv.Contour -
   secondary contour arguments (argv[1] in convexityDefects/intersectConvexConvex/
-  matchShapes) are instead read via js_cv_inputarray(ctx, argv[1]), which for a
+  matchShapes) were instead read via js_cv_inputarray(ctx, argv[1]), which for a
   cv.Contour returns a double-precision (CV_64FC2) InputArray straight from the
   Contour's own storage. The resulting type mismatch between `src` (float) and
-  `p2`/`c2` (double) trips OpenCV assertions when both arguments are real
+  `p2`/`c2` (double) tripped OpenCV assertions when both arguments are real
   cv.Contour objects (as opposed to Mat/PointVector, which this file's test
-  suite uses to work around the issue):
+  suite uses to work around the issue). Fixed by routing argv[1] through the
+  same js_shape_inputoutputarray() CV_32F conversion used for argv[0], for all
+  three cases (SHAPE_CONVEXITY_DEFECTS, SHAPE_INTERSECT_CONVEX_CONVEX,
+  SHAPE_MATCH_SHAPES):
 
     import('opencv').then(cv => {
       const img = cv.Mat.zeros(240, 240, cv.CV_8UC1);
@@ -1422,20 +1407,6 @@
       pv.push_back(new cv.Point(1, 2));
       pv.push_back(new cv.Point(3, 4));
       const m = new cv.Mat(pv); // aliases std::vector internals as pixel bytes, not [1,2,3,4]
-    });
-
-- scalar-callable-without-new-throws: `cv.Scalar(a, b, c[, d])` called as a plain
-  function (no `new`) throws `TypeError: must be called with new`. Found while
-  getting `tests/test_video_homography.js` running again after the Contour
-  removal (it previously failed at module-load time on the `Contour` import,
-  before ever reaching this line) - `drawMatchesRelative()` and the main loop's
-  `drawKeypoints(...)` call both do `Scalar(255, 0, 0)` etc. with no `new`, and
-  now that the script gets that far it throws instead of drawing. Not
-  Contour-related; left unfixed since it's outside that migration's scope.
-
-    import('opencv').then(cv => {
-      cv.Scalar(1, 2, 3); // throws "must be called with new" instead of
-                          // returning a Scalar-like value
     });
 
 

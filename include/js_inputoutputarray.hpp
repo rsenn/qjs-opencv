@@ -144,4 +144,113 @@ js_cv_outputarray(JSContext* ctx, JSValueConst value) {
   return cv::noArray();
 }
 
+/**
+ * @brief Storage for JSInputArgument<T>/JSOutputArgument<T>'s owned fallback
+ * vector. Must be a base class listed before JSInputArray/JSInputOutputArray
+ * in those templates (base classes construct in declaration order, ahead of
+ * any data members) so `vec`/`owns` already exist by the time the
+ * InputArray/InputOutputArray base's constructor runs and takes a reference
+ * to `vec`.
+ */
+template<class T>
+struct JSArgumentStorage {
+  std::vector<T> vec;
+  bool owns = false;
+};
+
+/**
+ * @brief InputArray built from a JS argument of element type T: a Mat/UMat,
+ * a matching JSVector<T> (aliased, zero-copy), an ArrayBuffer/TypedArray
+ * (aliased by pointer), or otherwise a plain JS array/array-like, whose
+ * elements are converted once into an owned std::vector<T>.
+ */
+template<class T>
+class JSInputArgument : private JSArgumentStorage<T>, public JSInputArray {
+public:
+  JSInputArgument(JSContext* ctx, JSValueConst val) : JSInputArray(resolve(ctx, val, this->vec)) {}
+
+private:
+  static JSInputArray resolve(JSContext* ctx, JSValueConst val, std::vector<T>& vec) {
+    cv::Mat* mat;
+    cv::UMat* umat;
+    JSVector<T>* vector;
+
+    if((umat = js_umat_data(val)))
+      return JSInputArray(*umat);
+    if((mat = js_mat_data_nothrow(val)))
+      return JSInputArray(*mat);
+    if((vector = JSVector<T>::fromJS(val)))
+      return JSInputArray(*vector->vec);
+
+    if(js_is_arraybuffer(ctx, val)) {
+      size_t size;
+      uint8_t* ptr = JS_GetArrayBuffer(ctx, &size, val);
+      return JSInputArray(reinterpret_cast<const T*>(ptr), int(size / sizeof(T)));
+    }
+    if(js_is_typedarray(ctx, val)) {
+      TypedArrayProps props = js_typedarray_props(ctx, val);
+      return JSInputArray(props.ptr<T>(), props.size<T>());
+    }
+
+    js_array_to(ctx, val, vec);
+    return JSInputArray(vec);
+  }
+};
+
+/**
+ * @brief OutputArray/InputOutputArray built from a JS argument of element
+ * type T: a Mat/UMat, a matching JSVector<T>, or an ArrayBuffer/TypedArray
+ * is aliased directly (zero-copy, mutated in place by the OpenCV call). A
+ * plain JS array falls back to an owned std::vector<T> - OpenCV's
+ * OutputArray machinery can't write into a plain JS Array directly - which
+ * the destructor copies back into the JS array via js_array_clear()/
+ * js_array_copy(), symmetric with JSInputArgument's read-side conversion.
+ */
+template<class T>
+class JSOutputArgument : private JSArgumentStorage<T>, public JSInputOutputArray {
+public:
+  JSOutputArgument(JSContext* ctx, JSValueConst val)
+      : JSInputOutputArray(resolve(ctx, val, this->vec, this->owns)), m_ctx(ctx), m_val(val) {}
+
+  JSOutputArgument(const JSOutputArgument&) = delete;
+  JSOutputArgument& operator=(const JSOutputArgument&) = delete;
+
+  ~JSOutputArgument() {
+    if(this->owns) {
+      js_array_clear(m_ctx, m_val);
+      js_array_copy(m_ctx, m_val, this->vec);
+    }
+  }
+
+private:
+  JSContext* m_ctx;
+  JSValue m_val;
+
+  static JSInputOutputArray resolve(JSContext* ctx, JSValueConst val, std::vector<T>& vec, bool& owns) {
+    cv::Mat* mat;
+    cv::UMat* umat;
+    JSVector<T>* vector;
+
+    if((mat = js_mat_data_nothrow(val)))
+      return JSInputOutputArray(*mat);
+    if((umat = js_umat_data(val)))
+      return JSInputOutputArray(*umat);
+    if((vector = JSVector<T>::fromJS(val)))
+      return JSInputOutputArray(*vector->vec);
+
+    if(js_is_arraybuffer(ctx, val)) {
+      size_t size;
+      uint8_t* ptr = JS_GetArrayBuffer(ctx, &size, val);
+      return JSInputOutputArray(reinterpret_cast<T*>(ptr), int(size / sizeof(T)));
+    }
+    if(js_is_typedarray(ctx, val)) {
+      TypedArrayProps props = js_typedarray_props(ctx, val);
+      return JSInputOutputArray(props.ptr<T>(), props.size<T>());
+    }
+
+    owns = true;
+    return JSInputOutputArray(vec);
+  }
+};
+
 #endif // JS_INPUTOUTPUTARRAY_HPP

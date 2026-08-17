@@ -1009,19 +1009,9 @@ js_arguments_to(JSContext* ctx, int argc, JSValueConst argv[], std::vector<T>& o
   return r;
 }
 
-class JSOutputArgument : public JSInputOutputArray {
-public:
-  JSOutputArgument(JSContext* ctx, JSValueConst val);
-
-protected:
-  JSContext* m_ctx;
-  JSValue m_val;
-};
-
-class JSInputArgument : public JSInputArray {
-public:
-  JSInputArgument(JSContext* ctx, JSValueConst val);
-};
+/* JSInputArgument<T> and JSOutputArgument<T> live in include/js_inputoutputarray.hpp -
+ * they need JSVector<T> (js_vector.hpp), which itself includes this header, so they
+ * can't be declared here without a circular include. */
 
 class JSImageArgument : public JSInputOutputArray {
 public:
