@@ -8,6 +8,84 @@ qjsm scripts/binding_coverage.js --module=build/x86_64-linux-debug/opencv.so \
   --lib-dir=/opt/opencv-4.13.0-x86_64/lib --namespace=cv --verbose --out=cov.txt
 ```
 
+## opencv.js Example Compatibility Gaps (2026-08-17)
+
+Cross-checked every `cv.*` binding referenced by the 80 opencv.js example
+pages cataloged in `doc/opencv-js-examples.md` (source: local checkout
+`/mnt/data/Projects/opencv/doc/js_tutorials/js_assets/*.html`) against this
+project's actual live exports (`Object.keys(cv)` from a built
+`build/x86_64-linux-gnu/opencv.so`, OpenCV 5.0.0). 158 unique `cv.*`
+symbols are referenced across all 80 pages; 142 already resolve. The 16
+gaps below block one or more example pages from running unmodified; full
+detail (repro, exact source locations) for each is filed as its own entry
+in `BUGS` under the `opencvjs-*` canonical-name prefix.
+
+**Highest impact - fix first:**
+
+- **`.delete()` missing on `Mat`/vector-wrapper classes** - not a binding
+  gap, an architectural difference (QuickJS GC + finalizers vs opencv.js's
+  manual wasm-heap `.delete()`) - but it's called **349 times** across the
+  80 pages, more than any other single symbol, so every unmodified example
+  hits it immediately. A harmless no-op `.delete()` stub on `Mat` (and the
+  `*Vector` classes) would fix all 80 pages' single biggest compatibility
+  blocker in one change, without touching the GC design.
+  See `BUGS: opencvjs-mat-delete-missing`.
+
+**New binding work, by tutorial category:**
+
+- `js_video` (5 example pages, all blocked): no `opencv2/video.hpp`
+  tracking module bound at all - `cv.CamShift`, `cv.meanShift`,
+  `cv.calcOpticalFlowPyrLK`, `cv.calcOpticalFlowFarneback` are all
+  unimplemented, plus the `cv.TermCriteria` constructor two of them need.
+  All four C++ functions are `CV_EXPORTS_W` in the local OpenCV headers -
+  pure binding work, no missing dependency. Proposed: a new `js_video.cpp`
+  mirroring the existing `js_calib3d.cpp`/`js_dnn.cpp` module pattern.
+  See `BUGS: opencvjs-video-tracking-module-unbound`,
+  `opencvjs-termcriteria-constructor-missing`.
+- `js_imgproc` (5 example pages blocked): `cv.matchTemplate` +
+  `cv.TM_*` constants (`js_template_matching_matchTemplate.html`),
+  `cv.getOptimalDFTSize` (`js_fourier_transform_dft.html`),
+  `cv.calcBackProject` (`js_histogram_backprojection_calcBackProject.html`,
+  plus 2 of the `js_video` pages above), `cv.DIST_*` constants (3
+  `js_watershed_*` pages - `cv.distanceTransform()` itself is already
+  bound and takes this parameter, it just can't be named from JS),
+  `cv.segmentation_IntelligentScissorsMB` (`js_intelligent_scissors.html`
+  - class exists in the local checkout's `opencv2/photo/segmentation.hpp`,
+  and `js_photo.cpp` already exists as the place to add it).
+  See `BUGS: opencvjs-matchtemplate-missing`, `opencvjs-tm-constants-missing`,
+  `opencvjs-getoptimaldftsize-missing`, `opencvjs-calcbackproject-missing`,
+  `opencvjs-dist-constants-missing`, `opencvjs-intelligentscissors-missing`.
+- `js_core`/browser-helper layer: `cv.matFromArray(rows, cols, type,
+  array)` has no equivalent top-level function (closest match: `new
+  Mat(rows, cols, type, typedArray.buffer)`, already flagged inline at
+  `js_mat.cpp:386`). See `BUGS: opencvjs-matfromarray-missing`.
+
+**Shape/naming mismatches (functionality exists, calling convention doesn't match):**
+
+- `cv.ellipse1(img, rotatedRect, color, thickness, lineType)` - the
+  RotatedRect-taking overload of `ellipse()` - isn't implemented;
+  `js_draw_ellipse` only parses the (center, axes, angle) shape. Blocks
+  `js_contour_features_fitEllipse.html`.
+- `cv.rotatedRectPoints(rect)` doesn't exist as a free function; the same
+  functionality is `rotatedRect.points()` (instance method). Blocks
+  `js_camshift.html` as written (one-line fix to adapt).
+- `cv.BackgroundSubtractorMOG2` isn't directly constructible
+  (`new cv.BackgroundSubtractorMOG2(...)`); only available via the
+  `cv.createBackgroundSubtractorMOG2(...)` factory function under a
+  generic `BackgroundSubtractor` class. Blocks `js_bg_subtraction.html` as
+  written (one-line fix to adapt).
+
+See `BUGS: opencvjs-ellipse-rotatedrect-overload-missing`,
+`opencvjs-rotatedrectpoints-free-function-missing`,
+`opencvjs-bgsubtractormog2-class-shape-mismatch`.
+
+**Not applicable - don't implement:** `cv.FS_createDataFile` is
+Emscripten's in-browser virtual filesystem, used by the 9 DNN examples
+purely to stage a downloaded model where wasm can see it. qjs-opencv reads
+model files directly off a real filesystem - the 9 DNN pages need this
+call deleted when adapted, not replicated. See `BUGS:
+opencvjs-fs-createdatafile-not-applicable`.
+
 ## Recent fixes (2026-08-17)
 
 - **`Rect.contour()` crash fix.** `js_rect.cpp` `FUNC_CONTOUR` called `JSConverter<std::vector<cv::Point2d>>::toJS(ctx, c)` — no such specialization exists in `include/js_converter.hpp` (only individual `cv::Point`/`Point2f`/`Point3f` and a handful of other types are specialized, no generic `std::vector<T>` case), so this didn't compile. Fixed to use `js_array_from(ctx, c)`, matching the pattern already used two cases above in the same function and for `rects` elsewhere in the file; `js_value_from(const cv::Point_<T>&)` (`js_point.hpp:306`) covers the per-point conversion generically.

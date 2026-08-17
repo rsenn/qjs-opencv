@@ -1433,4 +1433,197 @@
     // error: no matching function for call to
     // 'js_typedarray_remain(const __gnu_cxx::__normal_iterator<...>&, ...)'
 
+- opencvjs-mat-delete-missing: opencv.js requires every `cv.Mat` (and other
+  embind value objects: `MatVector`, `RotatedRect`, ...) to be freed
+  explicitly with `.delete()`, since Emscripten's wasm heap has no GC.
+  qjs-opencv's design is the opposite - "no copies, mutable, finalizers do
+  the work" (see qjs-opencv/CLAUDE.md's Memory model section) - QuickJS's
+  GC + per-class finalizers handle cleanup, and `.delete()` doesn't exist
+  on any qjs-opencv class. Found while cross-checking all 80 example pages
+  in doc/opencv-js-examples.md against qjs-opencv's actual exports (see
+  the new "opencv.js Example Compatibility Gaps" section in TODO.md):
+  `.delete()` is called 349 times total across those 80 pages - the single
+  highest-frequency opencv.js API surface qjs-opencv doesn't have, since
+  literally every example calls it on every temporary Mat. Not fixable by
+  binding more OpenCV functionality - this is the intended architectural
+  difference. A harmless no-op `.delete()` stub on Mat (and the vector
+  wrapper classes) would let opencv.js example code run unmodified without
+  compromising the GC-based design; worth adding purely for source
+  compatibility with pasted-in opencv.js snippets.
+
+    import('opencv').then(cv => {
+      const m = new cv.Mat();
+      m.delete(); // TypeError: not a function
+    });
+
+- opencvjs-matfromarray-missing: opencv.js's `cv.matFromArray(rows, cols,
+  type, array)` helper (`modules/js/src/helpers.js`) builds a Mat from a
+  flat JS array or TypedArray in one call - qjs-opencv has no equivalent
+  top-level function. Already flagged inline as a known gap in
+  `js_mat.cpp:386`'s comment ("equivalent bare-array overload either -
+  cv.matFromArray(rows, cols, ..."). qjs-opencv's closest equivalent is
+  `new Mat(rows, cols, type, typedArray.buffer)` (see doc/opencv-js-api.md,
+  "architecturally the same shape") - same idea, different spelling. Used
+  by 3 of the 80 example pages (js_geometric_transformations_*).
+
+    import('opencv').then(cv => {
+      cv.matFromArray(2, 3, cv.CV_32FC1, [1,2,3,4,5,6]); // TypeError: not a function
+    });
+
+- opencvjs-termcriteria-constructor-missing: opencv.js exposes
+  `new cv.TermCriteria(type, maxCount, epsilon)` as a real constructor.
+  qjs-opencv has no `cv.TermCriteria` export at all - `cv::TermCriteria`
+  is only ever built internally from an ad-hoc 3-element array
+  (`js_cv.cpp:1083`, `crit[0]/crit[1]/crit[2]`) inside individual bound
+  functions, never exposed as a constructible JS class. The `TERM_CRITERIA_
+  COUNT`/`MAX_ITER`/`EPS` constants ARE exported (`js_cv.cpp:2077-2079`),
+  so only the constructor itself is missing. Needed by 3 of the 80 example
+  pages (`js_meanshift`, `js_camshift`, `js_optical_flow_lucas_kanade`),
+  all of which are also blocked on CamShift/meanShift/calcOpticalFlowPyrLK
+  themselves being unbound (see the other opencvjs-* entries below).
+
+    import('opencv').then(cv => {
+      new cv.TermCriteria(cv.TERM_CRITERIA_EPS | cv.TERM_CRITERIA_COUNT, 10, 1);
+      // TypeError: not a function
+    });
+
+- opencvjs-matchtemplate-missing: `cv::matchTemplate` (`opencv2/imgproc.hpp`)
+  is not bound anywhere in qjs-opencv - `grep -rn matchTemplate js_*.cpp`
+  finds nothing. Blocks `js_template_matching_matchTemplate.html`.
+
+    import('opencv').then(cv => {
+      cv.matchTemplate(img, templ, result, cv.TM_CCOEFF); // TypeError: not a function
+    });
+
+- opencvjs-tm-constants-missing: No `cv.TM_*` (`cv::TemplateMatchModes`:
+  TM_SQDIFF, TM_SQDIFF_NORMED, TM_CCORR, TM_CCORR_NORMED, TM_CCOEFF,
+  TM_CCOEFF_NORMED) constants are exported at all. Blocks
+  `js_template_matching_matchTemplate.html` even after matchTemplate()
+  itself (opencvjs-matchtemplate-missing) is bound, since there'd still be
+  no way to name the matching mode from JS.
+
+- opencvjs-getoptimaldftsize-missing: `cv::getOptimalDFTSize` (`opencv2/
+  core.hpp`) is not bound - `cv.dft()` itself is bound (js_imgproc.cpp),
+  but the padding-size helper that real DFT code always calls first isn't.
+  Blocks `js_fourier_transform_dft.html`.
+
+    import('opencv').then(cv => {
+      cv.getOptimalDFTSize(100); // TypeError: not a function
+    });
+
+- opencvjs-dist-constants-missing: No `cv.DIST_*` (`cv::DistanceTypes`:
+  DIST_L1, DIST_L2, DIST_C, DIST_L12, DIST_FAIR, DIST_WELSCH, DIST_HUBER)
+  constants are exported, even though `cv.distanceTransform()` itself is
+  already bound and takes a `distanceType` parameter
+  (`js_imgproc.cpp:1211`) - callers currently have no way to name it from
+  JS, only pass a raw integer. Blocks 3 of the 80 example pages
+  (`js_watershed_distanceTransform.html`, `js_watershed_foreground.html`,
+  `js_watershed_watershed.html`) and `cv.fitLine()`'s `distType` parameter
+  the same way.
+
+    import('opencv').then(cv => {
+      console.log(cv.DIST_L2); // undefined, not 4
+    });
+
+- opencvjs-calcbackproject-missing: `cv::calcBackProject` (`opencv2/
+  imgproc.hpp`) is not bound - `cv.calcHist()` itself is bound and used
+  as the first step of every back-projection example, but the
+  back-projection call itself isn't. Blocks 3 of the 80 example pages
+  (`js_histogram_backprojection_calcBackProject.html`, `js_meanshift.html`,
+  `js_camshift.html`).
+
+    import('opencv').then(cv => {
+      cv.calcBackProject([hsv], [0], hist, backproj, [0, 180]); // TypeError: not a function
+    });
+
+- opencvjs-video-tracking-module-unbound: qjs-opencv includes no
+  `opencv2/video.hpp` / `opencv2/video/tracking.hpp` binding file at all
+  (`grep -rln "opencv2/video" js_*.cpp` finds nothing) - the entire
+  `js_video` tutorial category (object tracking / optical flow) is
+  unimplemented, not just individually missing functions. Specifically
+  blocks all 5 of the `js_video` example pages:
+  - `cv.CamShift(probImage, window, criteria)` - `js_camshift.html`
+  - `cv.meanShift(probImage, window, criteria)` - `js_meanshift.html`
+  - `cv.calcOpticalFlowPyrLK(prev, next, prevPts, nextPts, status, err)` -
+    `js_optical_flow_lucas_kanade.html`
+  - `cv.calcOpticalFlowFarneback(prev, next, flow, ...)` -
+    `js_optical_flow_dense.html`
+  All four C++ functions exist and are exported (`CV_EXPORTS_W`) in the
+  local OpenCV 5.0.0 checkout's `opencv2/video/tracking.hpp` - this is
+  pure binding work, not a missing dependency. A new `js_video.cpp`
+  (mirroring the existing `js_calib3d.cpp`/`js_dnn.cpp` module-file
+  pattern) would cover all four in one place.
+
+    import('opencv').then(cv => {
+      cv.CamShift, cv.meanShift, cv.calcOpticalFlowPyrLK, cv.calcOpticalFlowFarneback
+      // all undefined
+    });
+
+- opencvjs-bgsubtractormog2-class-shape-mismatch: opencv.js exposes
+  `BackgroundSubtractorMOG2` as its own directly-constructible class
+  (`new cv.BackgroundSubtractorMOG2(history, varThreshold, detectShadows)`,
+  with `.apply()`/`.getBackgroundImage()` methods). qjs-opencv
+  (`js_bg_subtractor.cpp`) only exposes a factory function,
+  `cv.createBackgroundSubtractorMOG2(history, varThreshold,
+  detectShadows)`, returning a generic `BackgroundSubtractor` instance -
+  functionally equivalent, but the constructor-call shape opencv.js
+  example code uses doesn't exist. Blocks `js_bg_subtractor.html` as
+  written (though trivially adaptable to the factory-function form).
+
+    import('opencv').then(cv => {
+      new cv.BackgroundSubtractorMOG2(500, 16, true); // TypeError: not a constructor
+      // works today as: cv.createBackgroundSubtractorMOG2(500, 16, true)
+    });
+
+- opencvjs-ellipse-rotatedrect-overload-missing: opencv.js binds two
+  overloads of `ellipse()` under separate JS names (embind can't overload
+  on argument shape) - `cv.ellipse(img, center, axes, angle, startAngle,
+  endAngle, color, thickness, lineType)` and `cv.ellipse1(img,
+  rotatedRect, color, thickness, lineType)`. qjs-opencv's `js_draw_ellipse`
+  (`js_draw.cpp:100`) only implements the first shape - it parses argv[1]
+  as a Rect-tuple, then a Point, then two raw numbers, but never as a
+  RotatedRect (`{center, size, angle}`), so there's no `cv.ellipse1` and
+  no way to pass a RotatedRect to `cv.ellipse` either. Blocks
+  `js_contour_features_fitEllipse.html`, which draws the `cv.fitEllipse()`
+  result directly via `cv.ellipse1(dst, rotatedRect, color, 1, cv.LINE_8)`.
+
+    import('opencv').then(cv => {
+      cv.ellipse1; // undefined
+    });
+
+- opencvjs-rotatedrectpoints-free-function-missing: opencv.js exposes
+  `cv.rotatedRectPoints(rotatedRect)` as a free function returning the 4
+  corner points. qjs-opencv has the same functionality only as an instance
+  method, `rotatedRect.points()` (`js_rotated_rect.cpp:195,255`) - same
+  underlying `cv::RotatedRect::points()` call, different calling
+  convention. Blocks `js_camshift.html` as written (trivially adaptable:
+  `cv.rotatedRectPoints(trackBox)` -> `trackBox.points()`).
+
+    import('opencv').then(cv => {
+      cv.rotatedRectPoints; // undefined - use rotatedRect.points() instead
+    });
+
+- opencvjs-intelligentscissors-missing: `cv::segmentation::
+  IntelligentScissorsMB` (live-wire interactive segmentation) is not
+  bound. The class exists in the local OpenCV 5.0.0 checkout under
+  `opencv2/photo/segmentation.hpp` (photo module - NOT imgproc, despite
+  opencv.js exposing it as `cv.segmentation_IntelligentScissorsMB`), and
+  qjs-opencv already has a `js_photo.cpp` module for the rest of the photo
+  API, but doesn't include this header or bind this class. Blocks
+  `js_intelligent_scissors.html`.
+
+    import('opencv').then(cv => {
+      cv.segmentation_IntelligentScissorsMB; // undefined
+    });
+
+- NOT-A-BUG: opencvjs-fs-createdatafile-not-applicable:
+  `cv.FS_createDataFile(...)` is Emscripten's virtual in-memory filesystem
+  API (`FS.createDataFile`), used by the 9 DNN example pages purely to
+  stage a downloaded model blob where the wasm module's `cv.readNet()` can
+  see it, since a browser has no real filesystem. qjs-opencv runs on a
+  real filesystem (`qjsm`, native `std`/file I/O) - `cv.readNet()` (or
+  whatever qjs-opencv's dnn model loader is called; see the dnn survey
+  entries elsewhere in this file for the state of DNN bindings) can read
+  model files directly, no staging step needed. Not a binding gap - the 9
+  DNN example pages need this call deleted, not replicated, when adapted.
 
