@@ -124,22 +124,21 @@ tests({
     eq(cv.CV_32SC2, simplified.type());
   },
 
-  'psimpl - backward compatibility with Contour'() {
-    // Create a Contour object (old API)
-    const contour = new cv.Contour();
+  'psimpl - works with PointVector'() {
+    const contour = new cv.PointVector();
     for (let i = 0; i < 20; i++) {
       const angle = (i / 20) * Math.PI * 2;
-      contour.push(new cv.Point(
+      contour.push_back(new cv.Point(
         Math.round(100 + 50 * Math.cos(angle)),
         Math.round(100 + 50 * Math.sin(angle))
       ));
     }
-    
-    // Should still work with Contour objects
+
+    // Should work with PointVector, not just Mat CV_32SC2
     const simplified = cv.psimpl.douglasPeucker(contour, 5.0);
-    
-    if (simplified.rows >= contour.length) {
-      throw new Error(`Expected fewer points, got ${simplified.rows} >= ${contour.length}`);
+
+    if (simplified.rows >= contour.size()) {
+      throw new Error(`Expected fewer points, got ${simplified.rows} >= ${contour.size()}`);
     }
     eq(cv.CV_32SC2, simplified.type());
   },

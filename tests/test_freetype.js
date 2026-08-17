@@ -3,7 +3,7 @@ import * as util from 'util';
 import { TextStyle } from '../js/cvHighGUI.js';
 import { Window } from '../js/cvHighGUI.js';
 import { Console } from 'console';
-import { COLOR_BGR2GRAY, Contour, CV_8UC3, cvtColor, rectangle, FILLED, imshow, imwrite, LINE_8, LINE_AA, Mat, namedWindow, Point, Rect, resizeWindow, Size, THRESH_BINARY_INV, threshold, waitKey, WINDOW_NORMAL, } from 'opencv';
+import { COLOR_BGR2GRAY, CV_8UC3, cvtColor, rectangle, FILLED, imshow, imwrite, LINE_8, LINE_AA, Mat, namedWindow, Point, Rect, resizeWindow, Size, THRESH_BINARY_INV, threshold, waitKey, WINDOW_NORMAL, } from 'opencv';
 
 function main(...args) {
   globalThis.console = new Console({
@@ -129,7 +129,7 @@ function main(...args) {
 
     let a = [...binary(box)].map(n => !!n);
 
-    let contour = new Contour([...binary(box).entries()].filter(([coord, entry]) => entry != 0).map(p => new Point(...p)));
+    let contour = [...binary(box).entries()].filter(([coord, entry]) => entry != 0).map(p => new Point(...p));
 
     console.log('contour.boundingRect', contour.boundingRect);
     //console.log('contour',[...contour]);

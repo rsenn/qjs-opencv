@@ -1,4 +1,4 @@
-import { KeyPoint, Contour, imshow, cvtColor, COLOR_RGB2GRAY, drawKeypoints, countNonZero, findHomography, perspectiveTransform, line, circle, VideoCapture, BriefDescriptorExtractor, BFMatcher, FastFeatureDetector, CV_32FC1, Mat, DRAW_OVER_OUTIMG, Scalar, RANSAC, waitKey, } from 'opencv';
+import { KeyPoint, Point2fVector, imshow, cvtColor, COLOR_RGB2GRAY, drawKeypoints, countNonZero, findHomography, perspectiveTransform, line, circle, VideoCapture, BriefDescriptorExtractor, BFMatcher, FastFeatureDetector, CV_32FC1, Mat, DRAW_OVER_OUTIMG, Scalar, RANSAC, waitKey, } from 'opencv';
 
 /*static void help(char **av)
 {
@@ -25,10 +25,16 @@ function drawMatchesRelative(train, query, matches, img, mask) {
 
 //Takes a descriptor and turns it into an xy point
 function keypoints2points(inp, out) {
-  out.splice(0, out.length);
+  // `out` is either a plain Array or a Point2fVector (which has push_back
+  // instead of push/splice and no in-place clear).
+  if(out.push_back) {
+    for(let i = 0; i < inp.length; ++i) out.push_back(inp[i].pt);
+  } else {
+    out.splice(0, out.length);
 
-  for(let i = 0; i < inp.length; ++i) {
-    out.push(inp[i].pt);
+    for(let i = 0; i < inp.length; ++i) {
+      out.push(inp[i].pt);
+    }
   }
 }
 
@@ -36,36 +42,47 @@ function keypoints2points(inp, out) {
 function points2keypoints(inp, out) {
   out.splice(0, out.length);
 
-  for(let i = 0; i < inp.length; ++i) {
-    out.push(new KeyPoint(inp[i], 1));
+  // `inp` is either a plain Array or a Point2fVector (get/size instead of
+  // indexing/.length).
+  const size = inp.size ? inp.size() : inp.length;
+  const get = inp.get ? i => inp.get(i) : i => inp[i];
+
+  for(let i = 0; i < size; ++i) {
+    out.push(new KeyPoint(get(i), 1));
   }
 }
 
 //Uses computed homography H to warp original input points to new planar position
 function warpKeypoints(H, inp, out) {
-  const pts = new Contour();
+  const pts = new Point2fVector();
 
   keypoints2points(inp, pts);
 
-  const pts_w = new Contour(pts.length);
-  const m_pts_w = new Mat(pts_w);
+  // Point2fVector has no pre-sizing constructor; perspectiveTransform's
+  // output array grows it as needed, same as it would a fresh Mat.
+  const pts_w = new Point2fVector();
 
-  perspectiveTransform(new Mat(pts), m_pts_w, H);
+  perspectiveTransform(pts, pts_w, H);
 
   points2keypoints(pts_w, out);
 }
 
 //Converts matching indices to xy points
-function matches2points(train, query, matches, pts_train, pts_query) {
-  pts_train.splice(0, pts_train.length);
-  pts_query.splice(0, pts_query.length);
+// Point2fVector has no in-place clear, so this builds and returns fresh
+// vectors rather than mutating the pts_train/pts_query passed in by the
+// old Contour-based API.
+function matches2points(train, query, matches) {
+  const pts_train = new Point2fVector();
+  const pts_query = new Point2fVector();
 
   for(let i = 0; i < matches.length; i++) {
     const dmatch = matches[i];
 
-    pts_query.push(query[dmatch.queryIdx].pt);
-    pts_train.push(train[dmatch.trainIdx].pt);
+    pts_query.push_back(query[dmatch.queryIdx].pt);
+    pts_train.push_back(train[dmatch.trainIdx].pt);
   }
+
+  return [pts_train, pts_query];
 }
 
 function main(cam = 0) {
@@ -92,8 +109,8 @@ function main(cam = 0) {
 
   const desc_matcher = new BFMatcher(brief.defaultNorm);
 
-  let train_pts = new Contour(),
-    query_pts = new Contour();
+  let train_pts = new Point2fVector(),
+    query_pts = new Point2fVector();
 
   let train_kpts = [],
     query_kpts = [];
@@ -144,7 +161,7 @@ function main(cam = 0) {
 
       drawKeypoints(frame, test_kpts, frame, Scalar(255, 0, 0), DRAW_OVER_OUTIMG);
 
-      matches2points(train_kpts, query_kpts, matches, train_pts, query_pts);
+      [train_pts, query_pts] = matches2points(train_kpts, query_kpts, matches);
 
       if(matches.length > 5) {
         /*console.log('train_pts', train_pts.length);

@@ -1,4 +1,4 @@
-import {arcLength,  approxPolyDP, PointVector, PointVectorVector, drawContours, LINE_AA, Contour, Mat, Point, Size, CHAIN_APPROX_SIMPLE, COLOR_BGR2GRAY, CV_8UC3, Canny, HuMoments, RETR_TREE, blur, cvtColor, findContours, imread, imshow, moments, waitKey, } from 'opencv';
+import {arcLength,  approxPolyDP, PointVector, PointVectorVector, drawContours, LINE_AA, Mat, Point, Size, CHAIN_APPROX_SIMPLE, COLOR_BGR2GRAY, CV_8UC3, Canny, HuMoments, RETR_TREE, blur, cvtColor, findContours, imread, imshow, moments, waitKey, } from 'opencv';
 
 const randInt = max => Math.floor(Math.random() * max);
 

@@ -2601,7 +2601,7 @@ js_cv_init(JSContext* ctx, JSModuleDef* m) {
   JS_SetConstructor(ctx, exception_class, exception_proto);
 
   // Create Scalar constructor manually (to attach static methods)
-  JSValue scalar_ctor = JS_NewCFunctionMagic(ctx, js_cv_other, "Scalar", 0, JS_CFUNC_constructor, OTHER_SCALAR);
+  JSValue scalar_ctor = JS_NewCFunctionMagic(ctx, js_cv_other, "Scalar", 0, JS_CFUNC_generic_magic, OTHER_SCALAR);
   JSValue scalar_all = JS_NewCFunctionMagic(ctx, js_cv_other, "all", 1, JS_CFUNC_generic_magic, OTHER_SCALAR_ALL);
   JS_DefinePropertyValue(ctx, scalar_ctor, JS_NewAtom(ctx, "all"), scalar_all, JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE);
 

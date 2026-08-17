@@ -1,5 +1,5 @@
 import { assert } from 'assert';
-import { CV_8UC1, CV_8UC3, Contour, EVENT_FLAG_CTRLKEY, EVENT_FLAG_SHIFTKEY, EVENT_LBUTTONDOWN, EVENT_LBUTTONUP, EVENT_MOUSEMOVE, EVENT_RBUTTONDOWN, EVENT_RBUTTONUP, GC_BGD, GC_FGD, GC_INIT_WITH_MASK, GC_INIT_WITH_RECT, GC_PR_BGD, GC_PR_FGD, IMREAD_COLOR, Mat, Point, Rect, Scalar, WINDOW_AUTOSIZE, addWeighted, copyTo, destroyWindow, circle, rectangle, grabCut, imread, imshow, namedWindow, setMouseCallback, waitKeyEx, } from 'opencv';
+import { CV_8UC1, CV_8UC3, EVENT_FLAG_CTRLKEY, EVENT_FLAG_SHIFTKEY, EVENT_LBUTTONDOWN, EVENT_LBUTTONUP, EVENT_MOUSEMOVE, EVENT_RBUTTONDOWN, EVENT_RBUTTONUP, GC_BGD, GC_FGD, GC_INIT_WITH_MASK, GC_INIT_WITH_RECT, GC_PR_BGD, GC_PR_FGD, IMREAD_COLOR, Mat, Point, Rect, Scalar, WINDOW_AUTOSIZE, addWeighted, copyTo, destroyWindow, circle, rectangle, grabCut, imread, imshow, namedWindow, setMouseCallback, waitKeyEx, } from 'opencv';
 
 const C = console.config({ compact: true });
 
@@ -291,10 +291,10 @@ class GCApplication {
   isInitialized = false;
 
   rect;
-  fgdPxls = new Contour();
-  bgdPxls = new Contour();
-  prFgdPxls = new Contour();
-  prBgdPxls = new Contour();
+  fgdPxls = [];
+  bgdPxls = [];
+  prFgdPxls = [];
+  prBgdPxls = [];
   iterCount = 0;
 }
 

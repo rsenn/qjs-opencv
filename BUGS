@@ -1412,3 +1412,30 @@
   all of: Mat CV_{32,64}{F,S}C2 (3x1) and CV_{32,64}{F,S}C1 (3x2),
   PointVector, Point2fVector, plain array of cv.Point, and plain array of
   {x,y} - all 12 combinations now produce identical, correct results.
+
+- FIXED: mat-ctor-vector-getobj-as-data-pointer: `new Mat(vectorInstance)` (js_mat.cpp, js_mat_initialize, ~line 358-376, the `array.isVector()` branch) passed `array.getObj()` as the raw pixel-data pointer to `cv::Mat(size, type, data)`. `cv::_InputArray::getObj()` returns the address of the underlying `std::vector<T>` container object itself (its identity, e.g. for aliasing checks) - not `vec.data()`. The constructed Mat therefore aliased the vector's own internal bookkeeping bytes (pointer/size/capacity) as if they were pixel data instead of the actual element buffer. The debug block above it also did `JSVector<cv::Point>::fromJS(argv[0])` unconditionally, which was null (and would crash on the following `pv->getBuffer()`/`pv->vec` dereferences) for any vector whose element type wasn't exactly `cv::Point`, even though `js_vector_inputarray()` (js_vector.cpp) already resolved the real element type generically a few lines above via `array`. Also unconditionally `return FALSE`'d, so the branch was unreachable/untested from JS.
+
+  Fixed: the branch now reads `new(m) cv::Mat(array.size(), array.type()); array.getMat().copyTo(*m); return TRUE;` - `array.getMat()` builds the correctly-typed Mat header via OpenCV's own erased-type dispatch (no hardcoded element type needed), and `copyTo` copies the real element buffer. Still worth a regression test (`new cv.PointVector()` -> push points -> `new cv.Mat(pv)`) since nothing currently exercises this path.
+
+    import('opencv').then(cv => {
+      const pv = new cv.PointVector();
+      pv.push_back(new cv.Point(1, 2));
+      pv.push_back(new cv.Point(3, 4));
+      const m = new cv.Mat(pv); // aliases std::vector internals as pixel bytes, not [1,2,3,4]
+    });
+
+- scalar-callable-without-new-throws: `cv.Scalar(a, b, c[, d])` called as a plain
+  function (no `new`) throws `TypeError: must be called with new`. Found while
+  getting `tests/test_video_homography.js` running again after the Contour
+  removal (it previously failed at module-load time on the `Contour` import,
+  before ever reaching this line) - `drawMatchesRelative()` and the main loop's
+  `drawKeypoints(...)` call both do `Scalar(255, 0, 0)` etc. with no `new`, and
+  now that the script gets that far it throws instead of drawing. Not
+  Contour-related; left unfixed since it's outside that migration's scope.
+
+    import('opencv').then(cv => {
+      cv.Scalar(1, 2, 3); // throws "must be called with new" instead of
+                          // returning a Scalar-like value
+    });
+
+
