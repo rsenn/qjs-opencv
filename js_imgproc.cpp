@@ -538,7 +538,7 @@ js_cv_hough_circles(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
     return JS_EXCEPTION;
 
   JSImageArgument image(ctx, argv[0]);
-  JSOutputArgument<cv::Vec3f> circles(ctx, argv[1]);
+  JSOutputArrayOf<cv::Vec3f> circles(ctx, argv[1]);
 
   /*  if(js_is_noarray(image) || !js_is_array(ctx, argv[1]))
       return JS_ThrowInternalError(ctx, "argument 1 or argument 2 not an array!");*/

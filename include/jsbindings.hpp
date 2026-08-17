@@ -1009,7 +1009,7 @@ js_arguments_to(JSContext* ctx, int argc, JSValueConst argv[], std::vector<T>& o
   return r;
 }
 
-/* JSInputArgument<T> and JSOutputArgument<T> live in include/js_inputoutputarray.hpp -
+/* JSInputArrayOf<T> and JSOutputArrayOf<T> live in include/js_inputoutputarray.hpp -
  * they need JSVector<T> (js_vector.hpp), which itself includes this header, so they
  * can't be declared here without a circular include. */
 

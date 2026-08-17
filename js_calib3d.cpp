@@ -70,7 +70,7 @@ js_calib3d_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
     case FIND_CHESSBOARD_CORNERS: {
       JSInputOutputArray image = js_cv_inputoutputarray(ctx, argv[0]);
       cv::Size pattern_size = js_size_get(ctx, argv[1]);
-      JSOutputArgument<cv::Point2f> corners(ctx, argv[2]);
+      JSOutputArrayOf<cv::Point2f> corners(ctx, argv[2]);
       int32_t flags = cv::CALIB_CB_ADAPTIVE_THRESH | cv::CALIB_CB_NORMALIZE_IMAGE;
 
       if(argc > 3)

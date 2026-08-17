@@ -142,7 +142,7 @@ js_cv_outputarray(JSContext* ctx, JSValueConst value) {
 }
 
 /**
- * @brief Storage for JSInputArgument<T>/JSOutputArgument<T>'s owned fallback
+ * @brief Storage for JSInputArrayOf<T>/JSOutputArrayOf<T>'s owned fallback
  * vector. Must be a base class listed before JSInputArray/JSInputOutputArray
  * in those templates (base classes construct in declaration order, ahead of
  * any data members) so `vec`/`owns` already exist by the time the
@@ -156,12 +156,12 @@ struct JSArgumentStorage {
 };
 
 /**
- * @brief Shared resolver behind JSInputArgument<T>/JSOutputArgument<T>:
+ * @brief Shared resolver behind JSInputArrayOf<T>/JSOutputArrayOf<T>:
  * a Mat/UMat, a matching JSVector<T> or an ArrayBuffer/TypedArray all
  * resolve to a zero-copy alias (ArrayT constructed straight over their
  * backing memory). Anything else (a plain JS array/array-like) falls back
  * to `vec`, an owned std::vector<T> built by iterating the JS value -
- * unless `owns` is null, meaning the caller (JSInputArgument, which is
+ * unless `owns` is null, meaning the caller (JSInputArrayOf, which is
  * read-only and has nothing to write back) doesn't need to know a fallback
  * happened, just the converted data.
  */
@@ -203,10 +203,22 @@ js_argument_array(JSContext* ctx, JSValueConst val, std::vector<T>& vec, bool* o
  * elements are converted once into an owned std::vector<T>.
  */
 template<class T>
-class JSInputArgument : private JSArgumentStorage<T>, public JSInputArray {
+class JSInputArrayOf : private JSArgumentStorage<T>, public JSInputArray {
 public:
-  JSInputArgument(JSContext* ctx, JSValueConst val) : JSInputArray(js_argument_array<T, JSInputArray>(ctx, val, this->vec)) {}
+  JSInputArrayOf(JSContext* ctx, JSValueConst val) : JSInputArray(js_argument_array<T, JSInputArray>(ctx, val, this->vec)) {}
 };
+
+/**
+ * @brief Call `fn(arg)`, then free both the argument and the result -
+ * shared by JSOutputArrayOf<T>'s receiver-function branches below.
+ */
+static inline void
+js_call_receiver(JSContext* ctx, JSValueConst fn, JSValue arg) {
+  JSValue ret = JS_Call(ctx, fn, JS_UNDEFINED, 1, &arg);
+
+  JS_FreeValue(ctx, arg);
+  JS_FreeValue(ctx, ret);
+}
 
 /**
  * @brief OutputArray/InputOutputArray built from a JS argument of element
@@ -215,52 +227,63 @@ public:
  * Anything else - a plain JS array, a callback function, ... - falls back
  * to an owned std::vector<T>, since OpenCV's OutputArray machinery can't
  * write into either of those directly. The destructor then hands that
- * vector's contents back to `val`: if `val` is a function, by wrapping them
- * in a freshly constructed JSVector<T> and calling `val(vector)`; otherwise
- * by copying them into `val` as a plain JS array via js_array_clear()/
- * js_array_copy(), symmetric with JSInputArgument's read-side conversion.
+ * vector's contents back to `val`:
+ * - if `val` is a function and T is a plain scalar with a TypedArray
+ *   counterpart (number_type<T>::typed_array, include/js_typed_array.hpp -
+ *   true only for int8/16/32/64, uint8/16/32/64, float and double, i.e.
+ *   exactly the "1-dimensional, single channel" element types), by calling
+ *   it with a freshly built TypedArray view of the results;
+ * - otherwise, if `val` is a function, by wrapping the results in a
+ *   freshly constructed JSVector<T> and calling `val(vector)`;
+ * - otherwise, by copying the results into `val` as a plain JS array via
+ *   js_array_clear()/js_array_copy(), symmetric with JSInputArrayOf's
+ *   read-side conversion.
  */
 template<class T>
-class JSOutputArgument : private JSArgumentStorage<T>, public JSInputOutputArray {
+class JSOutputArrayOf : private JSArgumentStorage<T>, public JSInputOutputArray {
 public:
-  JSOutputArgument(JSContext* ctx, JSValueConst val)
+  JSOutputArrayOf(JSContext* ctx, JSValueConst val)
       : JSInputOutputArray(js_argument_array<T, JSInputOutputArray>(ctx, val, this->vec, &this->owns)), m_ctx(ctx), m_val(val) {}
 
-  JSOutputArgument(const JSOutputArgument&) = delete;
-  JSOutputArgument& operator=(const JSOutputArgument&) = delete;
+  JSOutputArrayOf(const JSOutputArrayOf&) = delete;
+  JSOutputArrayOf& operator=(const JSOutputArrayOf&) = delete;
 
-  ~JSOutputArgument() {
+  ~JSOutputArrayOf() {
     if(!this->owns)
       return;
 
     if(js_is_function(m_ctx, m_val)) {
-      /* A JSVector<T> class only exists for element types js_vector_init()
-       * registered (Mat, Point, Point2f, Point3f, Rect, int, float, double,
-       * char, string, ...). get_class_id() stays 0 for any other T, and 0
-       * isn't "no class" to QuickJS - it's whatever class happened to be
-       * registered first, so creating an object against it would silently
-       * hand the callback an unrelated, wrong-class value instead of failing.
-       *
-       * A JS_Throw* here can't be turned into a catchable exception at the
-       * call site either: this destructor runs while the bound native
-       * function's own return value has already been fixed (during stack
-       * unwind at its closing brace), so the pending exception it sets
-       * doesn't get reported until some later, unrelated call happens to
-       * check for one. So this is a binding-author bug (T was given the
-       * function-receiver capability without a registered JSVector<T>) -
-       * fail silently rather than leave a dangling, confusingly-timed
-       * exception. */
-      if(JSVector<T>::get_class_id() == 0) {
-        /* no-op: nothing safe to call the receiver with */
+      if constexpr(number_type<T>::typed_array) {
+        /* Not js_typedarray<T>::from_vector(m_ctx, this->vec) - it calls
+         * from_sequence(vec.begin(), vec.end()), and js_typedarray_remain()
+         * (used inside from_sequence) is only SFINAE-enabled for raw-pointer
+         * iterators; std::vector<T>::begin()/end() return
+         * __gnu_cxx::__normal_iterator, not T*, so from_vector() fails to
+         * compile for any real std::vector<T> - see BUGS. Pointers sidestep
+         * that entirely. */
+        js_call_receiver(m_ctx, m_val, js_typedarray<T>::from_sequence(m_ctx, this->vec.data(), this->vec.data() + this->vec.size()));
+      } else if(JSVector<T>::get_class_id() == 0) {
+        /* A JSVector<T> class only exists for element types js_vector_init()
+         * registered (Mat, Point, Point2f, Point3f, Rect, int, float, double,
+         * char, string, ...). get_class_id() stays 0 for any other T, and 0
+         * isn't "no class" to QuickJS - it's whatever class happened to be
+         * registered first, so creating an object against it would silently
+         * hand the callback an unrelated, wrong-class value instead of failing.
+         *
+         * A JS_Throw* here can't be turned into a catchable exception at the
+         * call site either: this destructor runs while the bound native
+         * function's own return value has already been fixed (during stack
+         * unwind at its closing brace), so the pending exception it sets
+         * doesn't get reported until some later, unrelated call happens to
+         * check for one. So this is a binding-author bug (T was given the
+         * function-receiver capability without a registered JSVector<T>) -
+         * fail silently rather than leave a dangling, confusingly-timed
+         * exception. */
       } else {
         JSVector<T>* vector = new JSVector<T>();
         *vector->vec = this->vec;
 
-        JSValue arg = vector->toJS(m_ctx);
-        JSValue ret = JS_Call(m_ctx, m_val, JS_UNDEFINED, 1, &arg);
-
-        JS_FreeValue(m_ctx, arg);
-        JS_FreeValue(m_ctx, ret);
+        js_call_receiver(m_ctx, m_val, vector->toJS(m_ctx));
       }
     } else {
       js_array_clear(m_ctx, m_val);

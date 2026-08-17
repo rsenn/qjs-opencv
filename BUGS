@@ -1409,4 +1409,28 @@
       const m = new cv.Mat(pv); // aliases std::vector internals as pixel bytes, not [1,2,3,4]
     });
 
+- js-typedarray-from-vector-iterator-mismatch: `js_typedarray<T>::from_vector()`
+  (`include/js_typed_array.hpp`) forwards to `from_sequence(ctx, in.begin(),
+  in.end())`, which calls `js_typedarray_remain()` on those iterators -
+  but `js_typedarray_remain()` is only SFINAE-enabled for raw-pointer
+  iterators (`std::enable_if<std::is_pointer<Iterator>::value>`).
+  `std::vector<T>::begin()`/`end()` return `__gnu_cxx::__normal_iterator`
+  (libstdc++'s wrapper type), not a raw `T*`, so `from_vector()` fails to
+  compile for any real `std::vector<T>` - `no matching function for call
+  to 'js_typedarray_remain(...)'`. Found while adding a TypedArray-receiver
+  branch to `JSOutputArgument<T>` (`include/js_inputoutputarray.hpp`) and
+  reaching for `from_vector()` as the obvious entry point - worked around
+  there by calling `from_sequence(ctx, vec.data(), vec.data() +
+  vec.size())` directly (raw pointers, so `is_pointer` SFINAE succeeds)
+  instead of fixing `js_typedarray_remain()`'s SFINAE to also accept
+  non-pointer random-access iterators, since that's shared machinery used
+  elsewhere in this header and touching it was out of scope for that task.
+
+    #include "include/js_typed_array.hpp"
+    // T = float, JSContext* ctx already available
+    std::vector<float> vec = {1.5f, 2.5f, 3.5f};
+    JSValue ta = js_typedarray<float>::from_vector(ctx, vec);
+    // error: no matching function for call to
+    // 'js_typedarray_remain(const __gnu_cxx::__normal_iterator<...>&, ...)'
+
 
