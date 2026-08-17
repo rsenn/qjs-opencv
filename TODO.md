@@ -22,14 +22,15 @@ in `BUGS` under the `opencvjs-*` canonical-name prefix.
 
 **Highest impact - fix first:**
 
-- **`.delete()` missing on `Mat`/vector-wrapper classes** - not a binding
-  gap, an architectural difference (QuickJS GC + finalizers vs opencv.js's
-  manual wasm-heap `.delete()`) - but it's called **349 times** across the
-  80 pages, more than any other single symbol, so every unmodified example
-  hits it immediately. A harmless no-op `.delete()` stub on `Mat` (and the
-  `*Vector` classes) would fix all 80 pages' single biggest compatibility
-  blocker in one change, without touching the GC design.
-  See `BUGS: opencvjs-mat-delete-missing`.
+- **`.delete()` missing on `Mat`** - not a binding gap, an architectural
+  difference (QuickJS GC + finalizers vs opencv.js's manual wasm-heap
+  `.delete()`). The `*Vector` classes already have a harmless no-op
+  `.delete()` (`js_vector.hpp:289`); `Mat` is the one class that doesn't,
+  and it's called **349 times** across the 80 pages, more than any other
+  single symbol, so every unmodified example hits it immediately. A
+  harmless no-op `.delete()` stub on `Mat` would fix all 80 pages' single
+  biggest compatibility blocker in one change, without touching the GC
+  design. See `BUGS: opencvjs-mat-delete-missing`.
 
 **New binding work, by tutorial category:**
 
@@ -86,231 +87,13 @@ model files directly off a real filesystem - the 9 DNN pages need this
 call deleted when adapted, not replicated. See `BUGS:
 opencvjs-fs-createdatafile-not-applicable`.
 
-## Recent fixes (2026-08-17)
-
-- **`Rect.contour()` crash fix.** `js_rect.cpp` `FUNC_CONTOUR` called `JSConverter<std::vector<cv::Point2d>>::toJS(ctx, c)` — no such specialization exists in `include/js_converter.hpp` (only individual `cv::Point`/`Point2f`/`Point3f` and a handful of other types are specialized, no generic `std::vector<T>` case), so this didn't compile. Fixed to use `js_array_from(ctx, c)`, matching the pattern already used two cases above in the same function and for `rects` elsewhere in the file; `js_value_from(const cv::Point_<T>&)` (`js_point.hpp:306`) covers the per-point conversion generically.
-- **`EdgeDrawing.getSegments()` use-after-return.** `js_ximgproc.cpp` `EDGEDRAWING_GETSEGMENTS` stack-allocated `JSVector<std::vector<cv::Point>> pvv;` then called `pvv.toJS(ctx)`, which stashes `&pvv` as the returned JS object's opaque pointer. `JSVector<T>::finalizer` (`js_vector.hpp`) later `delete`s that opaque pointer from the GC — since it pointed at a since-popped stack frame, this was undefined behavior on every call. Fixed by heap-allocating `pvv` with `new`.
-- **`new Mat(vectorInstance)` fixed.** `js_mat.cpp`'s `array.isVector()` branch (`js_mat_initialize`) used to pass `array.getObj()` — the address of the `std::vector<T>` container object itself — as the raw pixel-data pointer to `cv::Mat(size, type, data)`, instead of going through `array.getMat()`. Now reads `new(m) cv::Mat(array.size(), array.type()); array.getMat().copyTo(*m); return TRUE;` — `getMat()` builds the correctly-typed Mat header via OpenCV's own erased-type dispatch, so no hardcoded element type is needed at the call site. See `BUGS: mat-ctor-vector-getobj-as-data-pointer` (marked FIXED). Still untested from JS — worth a regression test (`new cv.PointVector()` → push points → `new cv.Mat(pv)`).
-
 ## Already solved, don't rebuild
 
 - **Contour → SVG bezier splines.** No OpenCV algorithm does this (checked the full coverage survey — no such symbol exists, bound or unbound). It doesn't need a library either: `js/cvVectorization.js` (uncommitted) already has a correct Schneider/Graphics-Gems `FitCurves` cubic-bezier fitter (`CurveFitter` — corner detection, chord-length parameterization, Newton-Raphson reparameterization, recursive error-based subdivision) consuming `contour.array` directly, plus `SvgBuilder` for multi-region path output with holes via `fill-rule="evenodd"`. Keep this in JS; it's O(n) per subdivision and QuickJS handles it fine. Only reconsider a C++ port if profiling on a real workload shows it's the bottleneck.
-- **Polyline simplification.** `cv.Contour` already exposes all seven `psimpl` algorithms as methods. **Migrated to freestanding functions** in `cv.psimpl.*` namespace (cv.psimpl.douglasPeucker, cv.psimpl.reumannWitkam, etc.) for opencv.js compatibility. See `js_psimpl.cpp` and Phase 1 completion notes.
+- **Polyline simplification.** All seven `psimpl` algorithms are freestanding functions under the `cv.psimpl.*` namespace (`cv.psimpl.douglasPeucker`, `cv.psimpl.reumannWitkam`, etc.), accepting Mat CV_32SC2/JS arrays and returning Mat CV_32SC2. See `js_psimpl.cpp`.
+- **Contour → freestanding-function migration and the generic vector infrastructure.** The custom `Contour` class is gone entirely; all 16 shape-analysis functions (`contourArea`, `boundingRect`, `convexHull`, ...) are freestanding, and all 16 opencv.js vector-container types (`MatVector`, `PointVector`, `Point2fVector`, ..., `CharVectorVector`) are implemented via the generic `JSVector<T>` template (`include/js_vector.hpp`) with `push_back`/`get`/`set`/`size`/`Symbol.iterator`/`delete()`. `findContours` accepts `MatVector` or `PointVectorVector` as zero-copy output, alongside a plain-`Array` fallback. See `js_vector.hpp`, `js_vector.cpp`, and `tests/unittests/test_contour_functions.js`/`test_psimpl_functions.js`.
 - **Skeleton tracing.** `algorithms/skeleton_lines.hpp` (Guo-Hall thinning + topology-aware tracing that cuts at junctions) is fully bound: `skeletonizeGuohall`, `traceLines`, `degreeMap`, `skeletonizeAndTrace`. Distinct from `findContours` (region boundaries) and `LineSegmentDetector`/`FastLineDetector` (straight-line detection) — the three don't substitute for each other, pick per input character.
 - **Region proposal for collage-art's "several algorithms to pick a motive."** `grabCut` (bound) plus `ximgproc::segmentation` selective-search/graph-segmentation (already bound) cover this with zero new binding work.
-
-## Contour Migration Strategy
-
-### Overview
-Migrating from `Contour` class to opencv.js-compatible API through a phased approach. **Method migration is primary focus**; MatVector implementation is secondary and may not be 100% complete.
-
-### Phase 1: Method Migration ✓ COMPLETE
-
-**Goal:** Migrate Contour methods to freestanding functions for opencv.js compatibility
-
-**Status:** ✓ COMPLETE (2026-08-13)
-**Priority:** HIGH - enables existing opencv.js code to work
-
-**Completed:**
-- ✓ All 16 shape analysis functions already available as freestanding functions:
-  contourArea, arcLength, boundingRect, approxPolyDP, convexHull,
-  fitEllipse, fitLine, isContourConvex, minAreaRect, minEnclosingCircle,
-  minEnclosingTriangle, pointPolygonTest, rotatedRectangleIntersection,
-  convexityDefects, matchShapes, HuMoments
-
-- ✓ All 7 psimpl methods migrated to cv.psimpl.* namespace:
-  cv.psimpl.reumannWitkam, cv.psimpl.opheim, cv.psimpl.lang,
-  cv.psimpl.douglasPeucker, cv.psimpl.nthPoint, cv.psimpl.radialDistance,
-  cv.psimpl.perpendicularDistance
-
-- ✓ psimpl functions accept: Mat CV_32SC2, Contour, or JS arrays
-- ✓ psimpl functions return: Mat CV_32SC2 (opencv.js compatible)
-
-**Testing:**
-- tests/unittests/test_contour_functions.js: 16 tests for shape analysis ✓
-- tests/unittests/test_psimpl_functions.js: 9 tests for psimpl functions ✓
-- All tests pass with Mat CV_32SC2 data (findContours output format)
-
-**Implementation:**
-- Added js_psimpl_simplify() freestanding function in js_contour.cpp
-- Uses magic dispatch for 7 simplification algorithms
-- Supports Mat CV_32SC2 (zero-copy from findContours), Contour (backward compat), JS arrays
-- Exported as cv.psimpl namespace (like cv.dnn)
-
-**Impact:** Existing opencv.js code can now use freestanding functions with Mat CV_32SC2 data, enabling opencv.js compatibility without requiring MatVector implementation (Phase 2 is now lower priority).
-
-**Drawing functions (already complete):**
-- circle, line, rectangle, polylines, fillPoly (renamed from drawCircle, drawLine, etc.)
-
-### Phase 2: MatVector Implementation (SECONDARY - Planned)
-Implement MatVector class for running opencv.js code that uses it.
-
-**Status:** Planned
-**Priority:** MEDIUM - nice to have, enables more opencv.js compatibility
-**Note:** Won't be 100% complete - some functions may still use Contour internally
-
-**Research complete (2026-08-13):**
-- Found 16 vector container types in opencv.js (MatVector, PointVector, KeyPointVector, DMatchVector, RectVector, etc.)
-- All use common API: constructor, push_back, get, set, size, delete
-- See BUGS entry `opencvjs-vector-containers` for full API spec
-
-**Technical foundation (verified):**
-- `findContours` with `vector<Mat>` output works
-- Each contour Mat is `CV_32SC2`, Nx1 (rows=point count, cols=1)
-- Zero-copy from native output, no int32→double conversion
-- PointVector (vector<Vec2i>) NOT viable for Contours (findContours constraint)
-- See BUGS for detailed feasibility analysis
-
-**Implementation Plan:**
-1. Design `js_vector.hpp` template infrastructure (see Phase 2A below)
-2. Implement MatVector as first vector type
-3. Gradually add other vector types as needed
-
-**Implementation:** See BUGS entry `no-opencvjs-matvector` for API design
-
-### Phase 2A: Vector Template Infrastructure Design
-
-**Goal:** Create common template infrastructure for all 16 vector container types
-
-**Status:** ✓ COMPLETE (2026-08-13)
-**Priority:** HIGH - enables efficient implementation of all vector types
-
-**Implementation:**
-- ✓ Created `include/js_vector.hpp` with generic JSVector<T> template class
-- ✓ Implemented JSConverter specializations for all types:
-  - ✓ Primitive types: int, float, double, char, std::string
-  - ✓ OpenCV types: cv::Mat, cv::Point, cv::Point2f, cv::Rect, cv::KeyPoint, cv::DMatch
-- ✓ Added js_register_vector<T>() helper for type registration
-- ✓ Added js_export_vector<T>() and js_set_vector_export<T>() for proper module export ordering
-- ✓ Common operations: constructor, push_back, get, set, size, delete
-- ✓ Symbol.iterator support for all vector types
-- ✓ Automatic memory management via finalizers (GC-friendly, no manual delete required)
-
-**Implemented Vector Types (11/16):**
-
-HIGH Priority (all implemented):
-- ✓ MatVector - vector<Mat> for findContours, split, merge, calcHist, aruco
-- ✓ PointVector - vector<Point> for general point collections
-- ✓ PointVectorVector - vector<vector<Point>> for nested point collections (findContours alternative output)
-- ✓ KeyPointVector - vector<KeyPoint> for ORB, FAST, GFTT feature detection
-- ✓ DMatchVector - vector<DMatch> for BFMatcher, drawMatches
-- ✓ RectVector - vector<Rect> for rectangle collections
-
-MEDIUM Priority (implemented):
-- ✓ IntVector - vector<int> for channels, histSize parameters
-- ✓ FloatVector - vector<float> for ranges parameters
-- ✓ DoubleVector - vector<double> for precision-critical values
-- ✓ CharVector - vector<char> for binary data
-- ✓ StringVector - vector<string> for text collections
-
-NOT YET IMPLEMENTED (low priority, rarely used):
-- ⏳ Point2fVector - vector<Point2f> for sub-pixel precision
-- ⏳ Point3fVector - vector<Point3f> for 3D points
-- ⏳ DMatchVectorVector - vector<vector<DMatch>> for knnMatch
-- ⏳ KeyPointVectorVector - vector<vector<KeyPoint>> for multi-image detection
-- ⏳ CharVectorVector - vector<vector<char>> for nested binary data
-
-**Testing:**
-- ✓ test_all_vectors.js: 10/10 tests passing
-- ✓ All basic operations verified: constructor, push_back, get, set, size, iterator
-- ✓ Memory management verified: automatic cleanup via finalizers
-
-**Key Design Decisions:**
-- GC-friendly: No manual delete() required (unlike opencv.js)
-- Value semantics for primitive and struct types (Point, Rect, KeyPoint, DMatch)
-- Reference semantics for Mat (shared underlying data via refcount)
-- Symbol.iterator support for `for (const item of vector)` syntax
-- Automatic type conversion via JSConverter specializations
-
-**See BUGS entry `opencvjs-vector-containers` for:**
-- Complete API specification for all 16 vector types
-- Memory management patterns and gotchas
-- Usage examples from opencv.js tests
-- Function parameter mappings (InputArrayOfArrays, OutputArrayOfArrays)
-**Implementation Files:**
-- include/js_vector.hpp - Core template infrastructure
-- js_matvector.cpp - MatVector implementation
-- js_pointvector.cpp - PointVector implementation
-- js_rectvector.cpp - RectVector implementation
-- js_keypointvector.cpp - KeyPointVector implementation
-- js_dmatchvector.cpp - DMatchVector implementation
-- js_primitivevectors.cpp - IntVector, FloatVector, DoubleVector, CharVector, StringVector
-
-**See also:**
-- BUGS: `opencvjs-vector-containers` for full API spec
-- BUGS: `no-opencvjs-matvector` for MatVector-specific design
-
-### Phase 2B: findContours Integration ✓ COMPLETE
-
-**Goal:** Make findContours work with MatVector and PointVectorVector as output arrays
-
-**Status:** ✓ COMPLETE (2026-08-13)
-**Priority:** HIGH - enables zero-copy performance with opencv.js-compatible API
-
-**Implementation:**
-- ✓ Modified js_cv_find_contours to detect output array type:
-  - MatVector (vector<Mat>) - zero-copy, each contour as CV_32SC2 Mat
-  - PointVectorVector (vector<vector<Point>>) - zero-copy, native C++ type
-  - Traditional JS array - backward compatible, converts to Contour objects
-- ✓ Added PointVector support to contourArea function
-- ✓ All three output types produce identical results (tested with 2 rectangles)
-- ✓ Comprehensive test suite: test_findcontours_vectors.js
-
-**Testing Results:**
-- MatVector: 2 contours found, areas 3481 and 2401 ✓
-- PointVectorVector: 2 contours found, areas 3481 and 2401 ✓
-- Traditional array: 2 contours found, areas 3481 and 2401 ✓
-- All areas match across all three output types ✓
-- Hierarchy support working ✓
-
-**Performance Benefits:**
-- MatVector: Zero-copy, direct access to OpenCV's internal Mat objects
-- PointVectorVector: Zero-copy, uses native C++ vector<vector<Point>> type
-- Traditional array: Requires conversion (backward compatibility)
-
-**See test_findcontours_vectors.js for usage examples.**
-
-**Process:**
-1. Identify all functions using Contour parameters
-2. Check if they use generic array wrappers or Contour-specific types
-3. Test with MatVector where possible
-4. Document which functions need work vs. which already work
-
-### Binary Compatibility Insight ("Husarenstück")
-**Key insight:** Point and Vec2i have identical memory layout (8 bytes).
-
-**Opportunities:**
-- PointIterator can work with Mat CV_32SC2 data (reinterpret as Vec2i*)
-- LineIterator can work with Vec4i data (HoughLinesP output)
-- Zero-copy iteration on Mat-based contours
-- See BUGS: `make-dormant-point-line-iterator-plug-into-point-mat-vector`
-
-**Not a full solution:** Enables efficient iteration but doesn't solve all API compatibility issues.
-
-### Rationale for Phased Approach
-1. **Method migration is fastest path to opencv.js compatibility** - existing opencv.js code can work immediately
-2. **MatVector is complex** - requires changes to findContours, all contour functions, client code
-3. **100% MatVector migration unlikely** - some functions may need Contour internally for performance or type safety
-4. **Individual assessment required** - can't assume all functions work the same way
-5. **Test coverage critical** - verify each function works with new API
-
-### Affected Code
-- **C++:** js_contour.cpp/hpp, js_imgproc.cpp (findContours), js_cv.cpp (shape analysis), js_mat.cpp, js_draw.cpp, js_umat.hpp, js_point_iterator.cpp
-- **JS:** 18+ files in qjs-opencv/tests, qjs-opencv, and plot-cv (see BUGS for full list)
-
-### Testing Infrastructure
-- **Framework:** tinytest.js (copied from ../quickjs/qjs-modules/tests/)
-- **Location:** tests/unittests/
-- **Pattern:** One test file per functionality group (test_contour_functions.js, test_matvector.js, etc.)
-- **Coverage:** Verify freestanding functions work, then MatVector integration
-
-### Success Criteria
-1. **Phase 1:** All Contour methods available as freestanding functions, tests pass
-2. **Phase 2:** MatVector class implemented, findContours outputs MatVector
-3. **Phase 3:** Each contour function assessed and documented for MatVector compatibility
-4. **Overall:** Existing opencv.js code can run on qjs-opencv with minimal changes
-
----
 
 ## Tier 1 — bind next
 
@@ -403,9 +186,7 @@ Grouped by how badly a naive port breaks.
 ### Silently wrong results (no exception, no obviously-missing output — the dangerous category)
 
 - **`Mat.mul(otherMat, scale)` does matrix multiplication, not elementwise product.** *(unchanged — still live)* opencv.js's `mat.mul(other, scale)` wraps `cv::Mat::mul()` (elementwise/Hadamard product). This project's `.mul()` (`js_mat.cpp:831`, `MAT_EXPR_MUL` in `js_mat_expr`) executes `cv::Mat::operator*` (real matrix multiplication) whenever the argument is another Mat, and silently drops the `scale` argument in that branch (`scale` only applies in the scalar-operand branch at line 793). Two same-size square Mats will "work" and produce silently wrong numeric output; non-square/mismatched-inner-dimension Mats throw a `cv::Exception` where opencv.js would have succeeded.
-- **`estimateAffine2D`/`estimateAffinePartial2D` silently discard the `inliers` output argument.** *(unchanged — still live)* Both hardcode `JSOutputArray inliers = cv::noArray()` (`js_calib3d.cpp:112`, `:174`) and never read `argv[2]`, jumping straight from arg 1 to arg 3 (`method`). Passing an output Mat at position 2 (opencv.js's convention) is silently ignored — no error, the inlier mask is just never populated.
-- **`floodFill`'s `rect` output argument is never written back.** *(unchanged — still live)* `js_imgproc.cpp:1221-1240` (`MISC_FLOOD_FILL`): `rectPtr` receives the flood-filled bounding box from the native call but is never copied back onto the caller's `rect` object afterward — opencv.js mutates the passed-in object's `x`/`y`/`width`/`height` in place. Also: this project's `floodFill` still has no `mask` parameter at all (built on the mask-less overload), where opencv.js's directly-bound version is `floodFill(img, mask, seedPoint, newVal, rectOut, loDiff, upDiff, connectivity)`.
-- **`Feature2D.compute()` doesn't copy the (possibly filtered) keypoints back to the caller.** *(unchanged — still live)* `js_feature2d.cpp:987-989`: the copy-back line is present but still commented out. Descriptor extractors that drop keypoints they can't compute a descriptor for leave the caller's JS array stale. `detect()` (line 1003) does copy back correctly; `compute()` still doesn't.
+- **Three output arguments are silently never written back** — `estimateAffine2D`/`estimateAffinePartial2D`'s `inliers` (argv[2] isn't even read), `floodFill`'s `rect`, and `Feature2D.compute()`'s (possibly descriptor-filtered) `keypoints`. Full detail/repro filed as their own `BUGS` entries: `estimateaffine2d-inliers-output-discarded`, `floodfill-rect-output-not-written-back`, `feature2d-compute-keypoints-not-copied-back`.
 - **`moments(points, binaryImage)` uses `binaryImage` to choose the input's *interpretation*, not just pixel binarization.** *(unchanged — still live)* `js_imgproc.cpp:1288-1302`: `binaryImage === false` unconditionally parses `argv[0]` as a polygon point array. Real `cv::moments`/opencv.js decide points-vs-raster from the actual `InputArray` content; passing a grayscale `Mat` with `binaryImage=false` (valid opencv.js usage, for intensity-weighted image moments) does not work here.
 - **`Mat.step` returns `dims - 1` entries, not `dims`.** *(unchanged — still live)* `js_mat.cpp:1465` loops `i < m->dims - 1`, silently dropping the last dimension's stride. opencv.js's `.step` (`getMatStep`) always returns one entry per dimension.
 
@@ -416,9 +197,8 @@ Grouped by how badly a naive port breaks.
 - **`CamShift`/`meanShift`** — *(unchanged — still live)* both are registered in opencv.js's `core_bindings.cpp` (returning `[RotatedRect, updatedRect]` and `[n, updatedRect]` arrays respectively). Still no bindings for either anywhere in the tree; only the unrelated `pyrMeanShiftFiltering` exists. Ported tracking code calling `cv.CamShift(...)` or `cv.meanShift(...)` will throw `TypeError`.
 - **`cv.createCLAHE(clipLimit, tileGridSize)` free function doesn't exist.** *(unchanged — still live)* `js_clahe.cpp:28` calls `cv::createCLAHE()` internally inside the `new CLAHE(...)` constructor, but never exports a module-level `createCLAHE` function — opencv.js exposes *only* the free-function form, no `new cv.CLAHE(...)` at all. Ported code calling `cv.createCLAHE(...)` throws `TypeError: cv.createCLAHE is not a function`.
 - **`ORB`/`MSER`/`AKAZE`/`BRISK`/`FastFeatureDetector`/`GFTTDetector` have no `.create()` static.** *(unchanged — still live)* `js_feature2d.cpp:1224-1233` registers all of these as `new`-constructible classes only (their static-func tables hold only enum constants, e.g. `ORB.HARRIS_SCORE`/`ORB.FAST_SCORE` — no `create`). opencv.js's whitelist only exposes `XXX.create(...)`, no public constructor, for all of these.
-- **`StringVector`, `DMatchVectorVector`, `KeyPointVectorVector`** (all present in opencv.js's vector-type whitelist per `doc/opencv-js-api.md`) — not found anywhere in `js_vector.cpp`'s dispatch or as separate `.hpp` files; still unbound.
 
-*(`Mat.diag()`, `Mat.data`/`.data8S`/`.data16U`/`.data16S`/`.data32S`/`.data32F`/`.data64F`, all seven `<type>At()` accessors, and all seven `<type>Ptr()` accessors from the 2026-08-12 audit's "not bound" list are now **implemented** — `js_mat.cpp:2051-2101` — and removed from this list.)*
+*(`Mat.diag()`, `Mat.data`/`.data8S`/`.data16U`/`.data16S`/`.data32S`/`.data32F`/`.data64F`, all seven `<type>At()` accessors, all seven `<type>Ptr()` accessors, and `StringVector`/`DMatchVectorVector`/`KeyPointVectorVector` from the 2026-08-12 audit's "not bound" list are now **implemented** — `js_mat.cpp:2051-2101`, `js_vector.cpp` — and removed from this list.)*
 
 ### Different return shape / calling convention (throws or misbehaves on an opencv.js-style call, but obviously so)
 
@@ -437,11 +217,11 @@ Grouped by how badly a naive port breaks.
 
 *(Removed from this list, now fixed: `BarcodeDetector` naming — `js_barcode_detector.cpp:272-273,296-297` now exports both bare `BarcodeDetector` **and** `barcode_BarcodeDetector`, matching opencv.js's namespace-flattened name. `drawContours` with `index >= 0` breaking hierarchy-aware drawing — `js_draw_contours` (plural, `js_draw.cpp:220-264`) now threads the real `index`/`hier`/`maxLevel` straight into `cv::drawContours` against the full `contours` array/vector, no single-contour re-wrap. "No `cv.Range` class, array-shape-only" — `js_range.cpp`/`js_range.hpp` now provide a real constructible `cv.Range` class whose reader (`js_range_read`, `js_range.hpp:42-69`) accepts both the `[start,end]` array form and opencv.js's `{start,end}` object form.)*
 
-### Vector container types — now bound, with remaining gaps
+### Vector container types — remaining gaps
 
-- **`MatVector`/`PointVector`/`Point2fVector`/`Point3fVector`/`KeyPointVector`/`DMatchVector`/`RectVector`/`IntVector`/`FloatVector`/`DoubleVector`/`CharVector`/`PointVectorVector`/`CharVectorVector` all now exist**, via the generic `JSVector<T>` template (`include/js_vector.hpp`) + one `.cpp`/`.hpp` per type. Each has `.size()`, `.get(i)`, `.push_back(v)`, `.set(i,v)`, `Symbol.iterator`, **and** a `.delete()` method (`js_vector.hpp:194-204`) that's safe to call even though this project's own memory model doesn't need it — good, since ported opencv.js code calling `.delete()` explicitly won't throw.
-- **`findContours` now accepts `MatVector` or `PointVectorVector` as the `contours` output**, zero-copy, matching opencv.js's convention (`js_imgproc.cpp:964-1010`, `js_cv_find_contours`). A plain JS `Array` is still also accepted as a backward-compat fallback (populated with `Mat` CV_32SC2 objects — the old custom `Contour` type no longer exists at all).
-- **Still not migrated to `MatVector`/vector-of-vectors conventions:** `split`/`merge` — presumed still plain JS `Array` of `Mat`s (no commits touched these call sites since 2026-08-12; not re-verified this pass). `HoughLines` (but inconsistently *not* `HoughLinesP`/`HoughCircles`) — presumed still requires a plain JS Array for `lines` (not re-verified this pass).
+All 16 opencv.js vector-container types exist (see "Already solved, don't rebuild" above); `.delete()` is a no-op on all of them.
+
+- **Still not migrated to `MatVector`/vector-of-vectors conventions:** `split`/`merge` (`js_cv.cpp:194,333`, re-verified 2026-08-17 — still plain JS `Array` of `Mat`s). `HoughLines` (`js_imgproc.cpp:464`, re-verified 2026-08-17 — still requires a plain JS `Array` for `lines`, inconsistently with `HoughLinesP`/`HoughCircles`).
 
 ### Different defaults / optionality (same call shape, different silent behavior)
 

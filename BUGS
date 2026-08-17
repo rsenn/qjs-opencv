@@ -244,123 +244,18 @@
   See: no-opencvjs-matvector entry for MatVector C++ feasibility analysis.
 
 
-- opencvjs-vector-containers: Implement all 16 vector container types from
-  opencv.js API using common template infrastructure.
-
-  **Vector Types Found in opencv.js:**
-  
-  1. **MatVector** - vector<cv::Mat>
-     - Most important: used by findContours, split/merge, etc.
-     - API: constructor, push_back(mat), get(i), set(i, mat), size(), delete()
-     - Usage: cv.findContours(src, contours, hierarchy, mode, method)
-     - Access: contours.get(i) returns Mat, iterate via for-of loop
-  
-  2. **PointVector** - vector<cv::Point> (Vec2i)
-     - Used by: fillPoly, polylines, drawContours, convexHull
-     - API: constructor, push_back(point), get(i), set(i, point), size(), delete()
-     - Point = {x: int, y: int} or Vec2i
-  
-  3. **Point2fVector** - vector<cv::Point2f>
-     - Used by: goodFeaturesToTrack, calcOpticalFlowPyrLK
-     - API: same as PointVector but Point2f = {x: float, y: float}
-  
-  4. **Point3fVector** - vector<cv::Point3f>
-     - Used by: solvePnP, calibrateCamera
-     - API: same pattern, Point3f = {x: float, y: float, z: float}
-  
-  5. **PointVectorVector** - vector<vector<cv::Point>>
-     - Used by: findContours (alternative to MatVector)
-     - API: constructor, push_back(pointVector), get(i), size(), delete()
-     - Nested: get(i) returns PointVector, then get(j) returns Point
-  
-  6. **KeyPointVector** - vector<cv::KeyPoint>
-     - Used by: ORB, SIFT, SURF feature detectors
-     - API: constructor, push_back(keypoint), get(i), set(i, keypoint), size(), delete()
-     - KeyPoint = {pt: Point2f, size: float, angle: float, response: float, octave: int, class_id: int}
-  
-  7. **KeyPointVectorVector** - vector<vector<cv::KeyPoint>>
-     - Rarely used
-     - API: nested like PointVectorVector
-  
-  8. **DMatchVector** - vector<cv::DMatch>
-     - Used by: BFMatcher, FlannBasedMatcher
-     - API: constructor, push_back(match), get(i), set(i, match), size(), delete()
-     - DMatch = {queryIdx: int, trainIdx: int, imgIdx: int, distance: float}
-  
-  9. **DMatchVectorVector** - vector<vector<cv::DMatch>>
-     - Used by: knnMatch
-     - API: nested like PointVectorVector
-  
-  10. **RectVector** - vector<cv::Rect>
-      - Used by: detectMultiScale (face detection), groupRectangles
-      - API: constructor, push_back(rect), get(i), set(i, rect), size(), delete()
-      - Rect = {x: int, y: int, width: int, height: int}
-  
-  11. **IntVector** - vector<int>
-      - Used by: various algorithms needing int arrays
-      - API: constructor, push_back(int), get(i), set(i, int), size(), delete()
-  
-  12. **FloatVector** - vector<float>
-      - Used by: various algorithms needing float arrays
-      - API: same pattern with float
-  
-  13. **DoubleVector** - vector<double>
-      - Used by: various algorithms needing double arrays
-      - API: same pattern with double
-  
-  14. **CharVector** - vector<char>
-      - Rarely used
-      - API: same pattern with char
-  
-  15. **StringVector** - vector<std::string>
-      - Used by: getLayerNames, getUnconnectedOutLayersNames
-      - API: constructor, push_back(string), get(i), set(i, string), size(), delete()
-  
-  16. **CharVectorVector** - vector<vector<char>>
-      - Rarely used
-      - API: nested pattern
-
-  **Common API Pattern** (via emscripten::register_vector<T>):
-  
-  All vector types expose the same interface:
-  - `new cv.XxxVector()` - create empty vector
-  - `vec.push_back(element)` - append element
-  - `vec.get(index)` - retrieve element at index
-  - `vec.set(index, element)` - update element at index
-  - `vec.size()` - get number of elements
-  - `vec.delete()` - manual cleanup (opencv.js style)
-  
-  **Implementation Plan:**
-  
-  1. Create `js_vector.hpp` with template helpers:
-     - `JSVector<T>` base template class
-     - Common operations: push_back, get, set, size, delete
-     - Type conversion helpers for JS ↔ C++
-     - Memory management utilities
-     - Iterator support (Symbol.iterator)
-  
-  2. Create separate binding files for each vector type:
-     - js_matvector.cpp
-     - js_pointvector.cpp
-     - js_keypointvector.cpp
-     - js_dmatchvector.cpp
-     - js_rectvector.cpp
-     - js_primitivevectors.cpp (IntVector, FloatVector, DoubleVector, etc.)
-  
-  3. Wire into build system:
-     - Add to CMakeLists.txt
-     - Register in init_module.cpp
-     - Export from opencv module
-
-  **Priority:**
-  - HIGH: MatVector (required for Contour migration)
-  - MEDIUM: PointVector, RectVector, KeyPointVector, DMatchVector
-  - LOW: Primitive vectors (Int/Float/Double/Char/String)
-  - VERY LOW: Nested vectors (PointVectorVector, etc.)
-
-  **See also:**
-  - no-opencvjs-matvector entry for MatVector-specific details
-  - make-dormant-point-line-iterator-plug-into-point-mat-vector for PointVector design
+- FIXED: opencvjs-vector-containers: Implement all 16 vector container types
+  from opencv.js API using common template infrastructure. Done - all 16
+  (MatVector, PointVector, Point2fVector, Point3fVector, PointVectorVector,
+  KeyPointVector, KeyPointVectorVector, DMatchVector, DMatchVectorVector,
+  RectVector, IntVector, FloatVector, DoubleVector, CharVector,
+  StringVector, CharVectorVector) are registered via the generic
+  `JSVector<T>` template (`include/js_vector.hpp`) and exported from
+  `js_vector.cpp` (verified 2026-08-17 against `js_vector.cpp`'s
+  `add_export` calls). Each has `push_back`/`get`/`set`/`size`/
+  `Symbol.iterator`/`delete()`. See `no-opencvjs-matvector` (also FIXED)
+  and `make-dormant-point-line-iterator-plug-into-point-mat-vector` for
+  related design notes.
 
 
 - make-dormant-point-line-iterator-plug-into-point-mat-vector: 
@@ -1438,18 +1333,22 @@
   explicitly with `.delete()`, since Emscripten's wasm heap has no GC.
   qjs-opencv's design is the opposite - "no copies, mutable, finalizers do
   the work" (see qjs-opencv/CLAUDE.md's Memory model section) - QuickJS's
-  GC + per-class finalizers handle cleanup, and `.delete()` doesn't exist
-  on any qjs-opencv class. Found while cross-checking all 80 example pages
-  in doc/opencv-js-examples.md against qjs-opencv's actual exports (see
-  the new "opencv.js Example Compatibility Gaps" section in TODO.md):
-  `.delete()` is called 349 times total across those 80 pages - the single
-  highest-frequency opencv.js API surface qjs-opencv doesn't have, since
-  literally every example calls it on every temporary Mat. Not fixable by
-  binding more OpenCV functionality - this is the intended architectural
-  difference. A harmless no-op `.delete()` stub on Mat (and the vector
-  wrapper classes) would let opencv.js example code run unmodified without
-  compromising the GC-based design; worth adding purely for source
-  compatibility with pasted-in opencv.js snippets.
+  GC + per-class finalizers handle cleanup. **Update (2026-08-17): only
+  `cv.Mat` itself is actually missing this** - every `JSVector<T>`-based
+  class (`MatVector`, `PointVector`, etc., `js_vector.hpp:289`) already has
+  a harmless no-op `.delete()` method, added as part of the generic vector
+  template. `Mat` (`js_mat.cpp`) is the one class with no `.delete()` at
+  all, and it's by far the most heavily used: found while cross-checking
+  all 80 example pages in doc/opencv-js-examples.md against qjs-opencv's
+  actual exports (see the "opencv.js Example Compatibility Gaps" section in
+  TODO.md), `.delete()` is called 349 times total across those 80 pages -
+  the single highest-frequency opencv.js API surface qjs-opencv doesn't
+  have, since literally every example calls it on every temporary Mat. Not
+  fixable by binding more OpenCV functionality - this is the intended
+  architectural difference. A harmless no-op `.delete()` stub on `Mat`
+  would let opencv.js example code run unmodified without compromising the
+  GC-based design; worth adding purely for source compatibility with
+  pasted-in opencv.js snippets.
 
     import('opencv').then(cv => {
       const m = new cv.Mat();
@@ -1626,4 +1525,89 @@
   entries elsewhere in this file for the state of DNN bindings) can read
   model files directly, no staging step needed. Not a binding gap - the 9
   DNN example pages need this call deleted, not replicated, when adapted.
+
+- uncaught-cv-exception-aborts-process-in-unguarded-modules: Most js_*.cpp
+  files wrap their OpenCV calls in `try { ... } catch(const cv::Exception&
+  e) { JS_ThrowInternalError(ctx, ...); }` so a bad argument turns into a
+  catchable JS exception. 24 files have zero such try/catch anywhere,
+  including several that call OpenCV functions with real precondition
+  asserts: `js_calib3d.cpp`, `js_bg_subtractor.cpp`, `js_white_balancer.cpp`,
+  `js_fast_line_detector.cpp`, `js_clahe.cpp`, `js_subdiv2d.cpp`. When one
+  of those asserts fires, `cv::Exception` propagates as an uncaught C++
+  exception straight through the QuickJS C call frame - `std::terminate()`
+  aborts the whole process (SIGABRT), not a catchable `try/catch` in JS.
+  Reproduced concretely with `js_white_balancer.cpp`'s `balanceWhite`
+  (`GrayworldWB` requires `CV_8UC3`/`CV_16UC3`, has no channel check of its
+  own in this binding) - a 4-channel Mat crashes the whole `qjsm` process
+  instead of throwing:
+
+    import * as cv from 'opencv';
+    let src = new cv.Mat(50, 50, cv.CV_8UC4, new Uint8Array(50*50*4).fill(128));
+    let dst = new cv.Mat();
+    let wb = cv.createGrayworldWB();
+    try {
+      wb.balanceWhite(src, dst);
+    } catch(e) {
+      console.log("threw:", e.message); // never reached - process aborts first
+    }
+
+  Fix is mechanical per file: wrap the call dispatch in the same
+  try/catch-and-JS_ThrowInternalError pattern already used by the other 68
+  occurrences across `js_cv.cpp`, `js_imgproc.cpp`, `js_photo.cpp`, etc.
+
+- floodfill-rect-output-not-written-back: `cv::floodFill`'s `rect` output
+  parameter (the flood-filled region's bounding box) is read into a local
+  `JSRectData<int> rect` by `js_rect_read()` and passed to the native call
+  as `rectPtr`, but the populated result is never copied back onto the
+  caller's `argv[3]` object afterward (`js_imgproc.cpp:1221-1240`,
+  `MISC_FLOOD_FILL` - no `js_rect_write`/equivalent call after the
+  `cv::floodFill(...)` line). opencv.js's `floodFill(image, mask, seedPoint,
+  newVal, rect, loDiff, upDiff, connectivity)` mutates the passed-in `rect`
+  object in place; here it silently stays at whatever the caller
+  initialized it to.
+
+    import * as cv from 'opencv';
+    let img = new cv.Mat(100, 100, cv.CV_8UC1, new Uint8Array(100*100));
+    let rect = new cv.Rect(0, 0, 0, 0);
+    cv.floodFill(img, new cv.Point(50, 50), new cv.Scalar(255), rect, new cv.Scalar(5), new cv.Scalar(5));
+    // rect is still {x:0, y:0, width:0, height:0} - never updated
+
+- estimateaffine2d-inliers-output-discarded: `estimateAffine2D` and
+  `estimateAffinePartial2D` (`js_calib3d.cpp:107-131`, `:169-...`) both
+  hardcode `JSOutputArray inliers = cv::noArray();` and never read
+  `argv[2]` at all - the dispatch jumps straight from `to` (argv[1]) to
+  `method` (argv[3]). Passing an output Mat/array at position 2, as
+  opencv.js's `estimateAffine2D(from, to, inliers, method, ...)` expects,
+  is silently ignored: no error, the inlier mask is simply never populated
+  and the argument is never even inspected.
+
+    import * as cv from 'opencv';
+    let from = [[0,0],[1,0],[0,1]], to = [[0,0],[1,0],[0,1]];
+    let inliers = new cv.Mat();
+    let m = cv.estimateAffine2D(from, to, inliers);
+    // inliers is still an empty, uninitialized Mat - never touched
+
+  Also found while reading this code: `ESTIMATE_AFFINE_2D`'s optional-arg
+  parsing (`js_calib3d.cpp:116-125`) checks `argc > 6` twice - once
+  (correctly) to read `confidence` from `argv[6]`, then again instead of
+  `argc > 7` to read `refineIters` from `argv[7]`. Calling with exactly 7
+  args (`argc == 7`) reads `argv[7]`, one past the last real argument.
+
+- feature2d-compute-keypoints-not-copied-back: `Feature2D.compute()`'s
+  copy-back of the (possibly descriptor-filtered) keypoints is present in
+  the source but commented out (`js_feature2d.cpp:989`:
+  `// js_array_copy(ctx, argv[1], keypoints.data(), ...);`). Descriptor
+  extractors that can't compute a descriptor for some keypoints drop them
+  internally; the caller's JS keypoints array is left stale (unfiltered)
+  after the call, unlike `detect()` (line 1003 in the same file), which
+  does copy back correctly, and unlike opencv.js's `compute()`.
+
+    import * as cv from 'opencv';
+    let orb = cv.ORB.create();
+    let img = new cv.Mat(64, 64, cv.CV_8UC1, new Uint8Array(64*64));
+    let kps = [];
+    orb.detect(img, kps);
+    let descriptors = new cv.Mat();
+    orb.compute(img, kps, descriptors);
+    // kps may still list keypoints ORB dropped while computing descriptors
 
