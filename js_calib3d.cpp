@@ -70,16 +70,13 @@ js_calib3d_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
     case FIND_CHESSBOARD_CORNERS: {
       JSInputOutputArray image = js_cv_inputoutputarray(ctx, argv[0]);
       cv::Size pattern_size = js_size_get(ctx, argv[1]);
-      std::vector<cv::Point2f> corners;
+      JSOutputArgument<cv::Point2f> corners(ctx, argv[2]);
       int32_t flags = cv::CALIB_CB_ADAPTIVE_THRESH | cv::CALIB_CB_NORMALIZE_IMAGE;
 
       if(argc > 3)
         JS_ToInt32(ctx, &flags, argv[3]);
 
       BOOL result = cv::findChessboardCorners(image, pattern_size, corners, flags);
-
-      js_array_clear(ctx, argv[2]);
-      js_array_copy(ctx, argv[2], corners);
 
       ret = JS_NewBool(ctx, result);
       break;

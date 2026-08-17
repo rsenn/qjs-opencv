@@ -211,10 +211,13 @@ public:
 /**
  * @brief OutputArray/InputOutputArray built from a JS argument of element
  * type T: a Mat/UMat, a matching JSVector<T>, or an ArrayBuffer/TypedArray
- * is aliased directly (zero-copy, mutated in place by the OpenCV call). A
- * plain JS array falls back to an owned std::vector<T> - OpenCV's
- * OutputArray machinery can't write into a plain JS Array directly - which
- * the destructor copies back into the JS array via js_array_clear()/
+ * is aliased directly (zero-copy, mutated in place by the OpenCV call).
+ * Anything else - a plain JS array, a callback function, ... - falls back
+ * to an owned std::vector<T>, since OpenCV's OutputArray machinery can't
+ * write into either of those directly. The destructor then hands that
+ * vector's contents back to `val`: if `val` is a function, by wrapping them
+ * in a freshly constructed JSVector<T> and calling `val(vector)`; otherwise
+ * by copying them into `val` as a plain JS array via js_array_clear()/
  * js_array_copy(), symmetric with JSInputArgument's read-side conversion.
  */
 template<class T>
@@ -227,7 +230,39 @@ public:
   JSOutputArgument& operator=(const JSOutputArgument&) = delete;
 
   ~JSOutputArgument() {
-    if(this->owns) {
+    if(!this->owns)
+      return;
+
+    if(js_is_function(m_ctx, m_val)) {
+      /* A JSVector<T> class only exists for element types js_vector_init()
+       * registered (Mat, Point, Point2f, Point3f, Rect, int, float, double,
+       * char, string, ...). get_class_id() stays 0 for any other T, and 0
+       * isn't "no class" to QuickJS - it's whatever class happened to be
+       * registered first, so creating an object against it would silently
+       * hand the callback an unrelated, wrong-class value instead of failing.
+       *
+       * A JS_Throw* here can't be turned into a catchable exception at the
+       * call site either: this destructor runs while the bound native
+       * function's own return value has already been fixed (during stack
+       * unwind at its closing brace), so the pending exception it sets
+       * doesn't get reported until some later, unrelated call happens to
+       * check for one. So this is a binding-author bug (T was given the
+       * function-receiver capability without a registered JSVector<T>) -
+       * fail silently rather than leave a dangling, confusingly-timed
+       * exception. */
+      if(JSVector<T>::get_class_id() == 0) {
+        /* no-op: nothing safe to call the receiver with */
+      } else {
+        JSVector<T>* vector = new JSVector<T>();
+        *vector->vec = this->vec;
+
+        JSValue arg = vector->toJS(m_ctx);
+        JSValue ret = JS_Call(m_ctx, m_val, JS_UNDEFINED, 1, &arg);
+
+        JS_FreeValue(m_ctx, arg);
+        JS_FreeValue(m_ctx, ret);
+      }
+    } else {
       js_array_clear(m_ctx, m_val);
       js_array_copy(m_ctx, m_val, this->vec);
     }
