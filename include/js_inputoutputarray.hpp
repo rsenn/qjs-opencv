@@ -12,16 +12,36 @@
 JSInputArray js_vector_inputarray(JSValueConst value);
 JSInputOutputArray js_vector_inputoutputarray(JSValueConst value);
 
-static inline JSInputArray
-js_cv_inputarray(JSContext* ctx, JSValueConst value) {
+/**
+ * @brief Look up a JS Mat/UMat and wrap it as ArrayT (JSInputArray,
+ * JSInputOutputArray or JSOutputArray - all zero-copy aliases). Shared by
+ * every JS-argument-to-cv::_InputArray-family resolver in this file.
+ */
+template<class ArrayT>
+static inline bool
+js_mat_umat_array(JSValueConst value, ArrayT& out) {
   cv::Mat* mat;
   cv::UMat* umat;
 
-  if((umat = js_umat_data(value)))
-    return JSInputArray(*umat);
+  if((mat = js_mat_data_nothrow(value))) {
+    out = ArrayT(*mat);
+    return true;
+  }
 
-  if((mat = js_mat_data_nothrow(value)))
-    return JSInputArray(*mat);
+  if((umat = js_umat_data(value))) {
+    out = ArrayT(*umat);
+    return true;
+  }
+
+  return false;
+}
+
+static inline JSInputArray
+js_cv_inputarray(JSContext* ctx, JSValueConst value) {
+  JSInputArray arr;
+
+  if(js_mat_umat_array(value, arr))
+    return arr;
 
   JSInputArray inputArray = js_vector_inputarray(value);
 
@@ -73,33 +93,36 @@ js_cv_inputarray(JSContext* ctx, JSValueConst value) {
   return cv::noArray();
 }
 
-static inline JSInputOutputArray
-js_cv_inputoutputarray(JSContext* ctx, JSValueConst value) {
-  cv::Mat* mat;
-  cv::UMat* umat;
+/**
+ * @brief Shared resolver behind js_cv_inputoutputarray()/js_cv_outputarray() -
+ * those two differ only in the wrapper type they hand back (JSInputOutputArray
+ * vs JSOutputArray), everything else about resolving a JS value to a mutable
+ * cv array is identical.
+ */
+template<class ArrayT>
+static inline ArrayT
+js_cv_output_argument(JSContext* ctx, JSValueConst value) {
+  ArrayT arr;
 
-  if((mat = js_mat_data_nothrow(value)))
-    return JSInputOutputArray(*mat);
+  if(js_mat_umat_array(value, arr))
+    return arr;
 
-  if((umat = js_umat_data(value)))
-    return JSInputOutputArray(*umat);
+  ArrayT vectorArray = js_vector_inputoutputarray(value);
 
-  JSInputOutputArray inputOutputArray = js_vector_inputoutputarray(value);
-
-  if(inputOutputArray.kind() != JSInputOutputArray::NONE)
-    return inputOutputArray;
+  if(vectorArray.kind() != ArrayT::NONE)
+    return vectorArray;
 
   if(js_line_class_id) {
     JSLineData<double>* line;
     if((line = js_line_data(value)))
-      return JSInputOutputArray(line->array);
+      return ArrayT(line->array);
   }
 
   if(js_is_arraybuffer(ctx, value)) {
     size_t size;
     uint8_t* ptr = JS_GetArrayBuffer(ctx, &size, value);
 
-    return JSInputOutputArray(ptr, size);
+    return ArrayT(ptr, size);
   }
 
   if(js_is_typedarray(ctx, value))
@@ -108,40 +131,14 @@ js_cv_inputoutputarray(JSContext* ctx, JSValueConst value) {
   return cv::noArray();
 }
 
+static inline JSInputOutputArray
+js_cv_inputoutputarray(JSContext* ctx, JSValueConst value) {
+  return js_cv_output_argument<JSInputOutputArray>(ctx, value);
+}
+
 static inline JSOutputArray
 js_cv_outputarray(JSContext* ctx, JSValueConst value) {
-  cv::Mat* mat;
-  cv::UMat* umat;
-
-  if((mat = js_mat_data_nothrow(value)))
-    return JSOutputArray(*mat);
-
-  if((umat = js_umat_data(value)))
-    return JSOutputArray(*umat);
-
-  JSOutputArray outputArray = js_vector_inputoutputarray(value);
-
-  if(outputArray.kind() != JSOutputArray::NONE)
-    return outputArray;
-
-  if(js_line_class_id) {
-    JSLineData<double>* line;
-
-    if((line = js_line_data(value)))
-      return JSOutputArray(line->array);
-  }
-
-  if(js_is_arraybuffer(ctx, value)) {
-    size_t size;
-    uint8_t* ptr = JS_GetArrayBuffer(ctx, &size, value);
-
-    return JSOutputArray(ptr, size);
-  }
-
-  if(js_is_typedarray(ctx, value))
-    return js_typedarray_inputoutputarray(ctx, value);
-
-  return cv::noArray();
+  return js_cv_output_argument<JSOutputArray>(ctx, value);
 }
 
 /**
@@ -159,6 +156,47 @@ struct JSArgumentStorage {
 };
 
 /**
+ * @brief Shared resolver behind JSInputArgument<T>/JSOutputArgument<T>:
+ * a Mat/UMat, a matching JSVector<T> or an ArrayBuffer/TypedArray all
+ * resolve to a zero-copy alias (ArrayT constructed straight over their
+ * backing memory). Anything else (a plain JS array/array-like) falls back
+ * to `vec`, an owned std::vector<T> built by iterating the JS value -
+ * unless `owns` is null, meaning the caller (JSInputArgument, which is
+ * read-only and has nothing to write back) doesn't need to know a fallback
+ * happened, just the converted data.
+ */
+template<class T, class ArrayT>
+static inline ArrayT
+js_argument_array(JSContext* ctx, JSValueConst val, std::vector<T>& vec, bool* owns = nullptr) {
+  ArrayT arr;
+  JSVector<T>* vector;
+
+  if(js_mat_umat_array(val, arr))
+    return arr;
+
+  if((vector = JSVector<T>::fromJS(val)))
+    return ArrayT(*vector->vec);
+
+  if(js_is_arraybuffer(ctx, val)) {
+    size_t size;
+    uint8_t* ptr = JS_GetArrayBuffer(ctx, &size, val);
+    return ArrayT(reinterpret_cast<T*>(ptr), int(size / sizeof(T)));
+  }
+
+  if(js_is_typedarray(ctx, val)) {
+    TypedArrayProps props = js_typedarray_props(ctx, val);
+    return ArrayT(props.ptr<T>(), props.size<T>());
+  }
+
+  if(owns)
+    *owns = true;
+  else
+    js_array_to(ctx, val, vec);
+
+  return ArrayT(vec);
+}
+
+/**
  * @brief InputArray built from a JS argument of element type T: a Mat/UMat,
  * a matching JSVector<T> (aliased, zero-copy), an ArrayBuffer/TypedArray
  * (aliased by pointer), or otherwise a plain JS array/array-like, whose
@@ -167,34 +205,7 @@ struct JSArgumentStorage {
 template<class T>
 class JSInputArgument : private JSArgumentStorage<T>, public JSInputArray {
 public:
-  JSInputArgument(JSContext* ctx, JSValueConst val) : JSInputArray(resolve(ctx, val, this->vec)) {}
-
-private:
-  static JSInputArray resolve(JSContext* ctx, JSValueConst val, std::vector<T>& vec) {
-    cv::Mat* mat;
-    cv::UMat* umat;
-    JSVector<T>* vector;
-
-    if((umat = js_umat_data(val)))
-      return JSInputArray(*umat);
-    if((mat = js_mat_data_nothrow(val)))
-      return JSInputArray(*mat);
-    if((vector = JSVector<T>::fromJS(val)))
-      return JSInputArray(*vector->vec);
-
-    if(js_is_arraybuffer(ctx, val)) {
-      size_t size;
-      uint8_t* ptr = JS_GetArrayBuffer(ctx, &size, val);
-      return JSInputArray(reinterpret_cast<const T*>(ptr), int(size / sizeof(T)));
-    }
-    if(js_is_typedarray(ctx, val)) {
-      TypedArrayProps props = js_typedarray_props(ctx, val);
-      return JSInputArray(props.ptr<T>(), props.size<T>());
-    }
-
-    js_array_to(ctx, val, vec);
-    return JSInputArray(vec);
-  }
+  JSInputArgument(JSContext* ctx, JSValueConst val) : JSInputArray(js_argument_array<T, JSInputArray>(ctx, val, this->vec)) {}
 };
 
 /**
@@ -210,7 +221,7 @@ template<class T>
 class JSOutputArgument : private JSArgumentStorage<T>, public JSInputOutputArray {
 public:
   JSOutputArgument(JSContext* ctx, JSValueConst val)
-      : JSInputOutputArray(resolve(ctx, val, this->vec, this->owns)), m_ctx(ctx), m_val(val) {}
+      : JSInputOutputArray(js_argument_array<T, JSInputOutputArray>(ctx, val, this->vec, &this->owns)), m_ctx(ctx), m_val(val) {}
 
   JSOutputArgument(const JSOutputArgument&) = delete;
   JSOutputArgument& operator=(const JSOutputArgument&) = delete;
@@ -225,32 +236,6 @@ public:
 private:
   JSContext* m_ctx;
   JSValue m_val;
-
-  static JSInputOutputArray resolve(JSContext* ctx, JSValueConst val, std::vector<T>& vec, bool& owns) {
-    cv::Mat* mat;
-    cv::UMat* umat;
-    JSVector<T>* vector;
-
-    if((mat = js_mat_data_nothrow(val)))
-      return JSInputOutputArray(*mat);
-    if((umat = js_umat_data(val)))
-      return JSInputOutputArray(*umat);
-    if((vector = JSVector<T>::fromJS(val)))
-      return JSInputOutputArray(*vector->vec);
-
-    if(js_is_arraybuffer(ctx, val)) {
-      size_t size;
-      uint8_t* ptr = JS_GetArrayBuffer(ctx, &size, val);
-      return JSInputOutputArray(reinterpret_cast<T*>(ptr), int(size / sizeof(T)));
-    }
-    if(js_is_typedarray(ctx, val)) {
-      TypedArrayProps props = js_typedarray_props(ctx, val);
-      return JSInputOutputArray(props.ptr<T>(), props.size<T>());
-    }
-
-    owns = true;
-    return JSInputOutputArray(vec);
-  }
 };
 
 #endif // JS_INPUTOUTPUTARRAY_HPP
