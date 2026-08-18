@@ -106,7 +106,15 @@ js_calib3d_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
 
     case ESTIMATE_AFFINE_2D: {
       JSInputArray from = js_cv_inputarray(ctx, argv[0]), to = js_cv_inputarray(ctx, argv[1]);
+      /* argv[2] is opencv.js's `inliers` OutputArray position - was
+       * hardcoded to cv::noArray() and never read, silently discarding
+       * whatever the caller passed. See BUGS:
+       * estimateaffine2d-inliers-output-discarded. */
       JSOutputArray inliers = cv::noArray();
+
+      if(argc > 2)
+        inliers = js_cv_outputarray(ctx, argv[2]);
+
       int32_t method = cv::RANSAC;
       double ransacReprojThreshold = 3;
       uint32_t maxIters = 2000;
@@ -121,7 +129,7 @@ js_calib3d_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
         JS_ToUint32(ctx, &maxIters, argv[5]);
       if(argc > 6)
         JS_ToFloat64(ctx, &confidence, argv[6]);
-      if(argc > 6)
+      if(argc > 7)
         JS_ToUint32(ctx, &refineIters, argv[7]);
 
       cv::Mat mat = cv::estimateAffine2D(from, to, inliers, method, ransacReprojThreshold, maxIters, confidence, refineIters);
@@ -150,7 +158,13 @@ js_calib3d_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
 
     case ESTIMATE_AFFINE_PARTIAL_2D: {
       JSInputArray from = js_cv_inputarray(ctx, argv[0]), to = js_cv_inputarray(ctx, argv[1]);
+      /* See the identical fix/comment in ESTIMATE_AFFINE_2D above - same
+       * bug, same fix. BUGS: estimateaffine2d-inliers-output-discarded. */
       JSOutputArray inliers = cv::noArray();
+
+      if(argc > 2)
+        inliers = js_cv_outputarray(ctx, argv[2]);
+
       int32_t method = cv::RANSAC;
       double ransacReprojThreshold = 3;
       uint32_t maxIters = 2000;
@@ -165,7 +179,7 @@ js_calib3d_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
         JS_ToUint32(ctx, &maxIters, argv[5]);
       if(argc > 6)
         JS_ToFloat64(ctx, &confidence, argv[6]);
-      if(argc > 6)
+      if(argc > 7)
         JS_ToUint32(ctx, &refineIters, argv[7]);
 
       cv::Mat mat = cv::estimateAffinePartial2D(from, to, inliers, method, ransacReprojThreshold, maxIters, confidence, refineIters);

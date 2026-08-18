@@ -1555,61 +1555,67 @@
   try/catch-and-JS_ThrowInternalError pattern already used by the other 68
   occurrences across `js_cv.cpp`, `js_imgproc.cpp`, `js_photo.cpp`, etc.
 
-- floodfill-rect-output-not-written-back: `cv::floodFill`'s `rect` output
-  parameter (the flood-filled region's bounding box) is read into a local
-  `JSRectData<int> rect` by `js_rect_read()` and passed to the native call
-  as `rectPtr`, but the populated result is never copied back onto the
-  caller's `argv[3]` object afterward (`js_imgproc.cpp:1221-1240`,
-  `MISC_FLOOD_FILL` - no `js_rect_write`/equivalent call after the
-  `cv::floodFill(...)` line). opencv.js's `floodFill(image, mask, seedPoint,
-  newVal, rect, loDiff, upDiff, connectivity)` mutates the passed-in `rect`
-  object in place; here it silently stays at whatever the caller
-  initialized it to.
+- FIXED: floodfill-rect-output-not-written-back: `cv::floodFill`'s `rect`
+  output parameter (the flood-filled region's bounding box) was read into
+  a local `JSRectData<int> rect` and passed to the native call as
+  `rectPtr`, but the populated result was never copied back onto the
+  caller's `argv[3]` object afterward (`js_imgproc.cpp`, `MISC_FLOOD_FILL`).
+  opencv.js's `floodFill(image, mask, seedPoint, newVal, rect, loDiff,
+  upDiff, connectivity)` mutates the passed-in `rect` object in place.
+  Fixed by calling `js_rect_write(ctx, argv[3], ...)` with the native call's
+  populated `rectPtr` right after `cv::floodFill()` returns, whenever
+  `rectPtr` is non-null. Verified with the repro below.
 
     import * as cv from 'opencv';
     let img = new cv.Mat(100, 100, cv.CV_8UC1, new Uint8Array(100*100));
     let rect = new cv.Rect(0, 0, 0, 0);
-    cv.floodFill(img, new cv.Point(50, 50), new cv.Scalar(255), rect, new cv.Scalar(5), new cv.Scalar(5));
-    // rect is still {x:0, y:0, width:0, height:0} - never updated
+    cv.floodFill(img, new cv.Point(50, 50), [255], rect, [5], [5]);
+    // rect is now {x:0, y:0, width:100, height:100} - the filled region
 
-- estimateaffine2d-inliers-output-discarded: `estimateAffine2D` and
-  `estimateAffinePartial2D` (`js_calib3d.cpp:107-131`, `:169-...`) both
-  hardcode `JSOutputArray inliers = cv::noArray();` and never read
-  `argv[2]` at all - the dispatch jumps straight from `to` (argv[1]) to
-  `method` (argv[3]). Passing an output Mat/array at position 2, as
-  opencv.js's `estimateAffine2D(from, to, inliers, method, ...)` expects,
-  is silently ignored: no error, the inlier mask is simply never populated
-  and the argument is never even inspected.
+- FIXED: estimateaffine2d-inliers-output-discarded: `estimateAffine2D` and
+  `estimateAffinePartial2D` (`js_calib3d.cpp`) both hardcoded `JSOutputArray
+  inliers = cv::noArray();` and never read `argv[2]` at all - the dispatch
+  jumped straight from `to` (argv[1]) to `method` (argv[3]). Passing an
+  output Mat/array at position 2, as opencv.js's `estimateAffine2D(from,
+  to, inliers, method, ...)` expects, was silently ignored: no error, the
+  inlier mask was simply never populated. Fixed by resolving `argv[2]`
+  through `js_cv_outputarray()` when present, in both functions. Also
+  fixed a nearby bug found while reading this code: `ESTIMATE_AFFINE_2D`/
+  `ESTIMATE_AFFINE_PARTIAL_2D`'s optional-arg parsing checked `argc > 6`
+  twice - once (correctly) to read `confidence` from `argv[6]`, then again
+  instead of `argc > 7` to read `refineIters` from `argv[7]`, an
+  off-by-one that read one past the last real argument when called with
+  exactly 7 args. Verified with the repro below (last point is a
+  deliberate outlier - `inliers` now correctly marks it `0`).
 
     import * as cv from 'opencv';
-    let from = [[0,0],[1,0],[0,1]], to = [[0,0],[1,0],[0,1]];
+    let from = cv.matFromArray(4, 1, cv.CV_32FC2, [0,0, 1,0, 0,1, 1,1]);
+    let to = cv.matFromArray(4, 1, cv.CV_32FC2, [0,0, 1,0, 0,1, 100,100]);
     let inliers = new cv.Mat();
-    let m = cv.estimateAffine2D(from, to, inliers);
-    // inliers is still an empty, uninitialized Mat - never touched
+    cv.estimateAffine2D(from, to, inliers);
+    // [...inliers.data] is now [1,1,0,1] - was an empty, untouched Mat before
 
-  Also found while reading this code: `ESTIMATE_AFFINE_2D`'s optional-arg
-  parsing (`js_calib3d.cpp:116-125`) checks `argc > 6` twice - once
-  (correctly) to read `confidence` from `argv[6]`, then again instead of
-  `argc > 7` to read `refineIters` from `argv[7]`. Calling with exactly 7
-  args (`argc == 7`) reads `argv[7]`, one past the last real argument.
-
-- feature2d-compute-keypoints-not-copied-back: `Feature2D.compute()`'s
-  copy-back of the (possibly descriptor-filtered) keypoints is present in
-  the source but commented out (`js_feature2d.cpp:989`:
-  `// js_array_copy(ctx, argv[1], keypoints.data(), ...);`). Descriptor
-  extractors that can't compute a descriptor for some keypoints drop them
-  internally; the caller's JS keypoints array is left stale (unfiltered)
-  after the call, unlike `detect()` (line 1003 in the same file), which
-  does copy back correctly, and unlike opencv.js's `compute()`.
+- FIXED: feature2d-compute-keypoints-not-copied-back: `Feature2D.compute()`'s
+  copy-back of the (possibly descriptor-filtered) keypoints was present in
+  the source but commented out (`js_feature2d.cpp`). Descriptor extractors
+  that can't compute a descriptor for some keypoints drop them internally;
+  the caller's JS keypoints array was left stale (unfiltered) after the
+  call, unlike `detect()` in the same file, which already copied back
+  correctly, and unlike opencv.js's `compute()`. Fixed by uncommenting the
+  `js_array_copy()` call (it already clears the target array internally,
+  matching `detect()`'s pattern exactly). Verified against
+  `tests/box_in_scene.png` (500 keypoints in, 500 descriptor rows out, no
+  crash/regression - didn't happen to exercise ORB actually dropping any
+  in this image, but confirms the write-back path runs correctly).
 
     import * as cv from 'opencv';
-    let orb = cv.ORB.create();
+    let orb = new cv.ORB();
     let img = new cv.Mat(64, 64, cv.CV_8UC1, new Uint8Array(64*64));
     let kps = [];
     orb.detect(img, kps);
     let descriptors = new cv.Mat();
     orb.compute(img, kps, descriptors);
-    // kps may still list keypoints ORB dropped while computing descriptors
+    // kps is now re-synced to whatever ORB actually kept descriptors for
 
 - tinytest-run-stops-silently-after-two-tests: `tests/unittests/tinytest.js`'s
   `run()` (line 53) is supposed to `try`/`catch` around each test and keep

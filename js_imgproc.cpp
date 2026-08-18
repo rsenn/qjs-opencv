@@ -1237,6 +1237,12 @@ js_imgproc_misc(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
           JS_ToInt32(ctx, &flags, argv[6]);
         // XXX: overload
         ret = JS_NewInt32(ctx, cv::floodFill(src, seedPoint, cv::Scalar(newVal), rectPtr, loDiff, upDiff, flags));
+
+        /* opencv.js mutates the passed-in `rect` object in place with the
+         * flood-filled bounding box - match that instead of leaving argv[3]
+         * unchanged. See BUGS: floodfill-rect-output-not-written-back. */
+        if(rectPtr)
+          js_rect_write(ctx, argv[3], JSRectData<double>(rectPtr->x, rectPtr->y, rectPtr->width, rectPtr->height));
         break;
       }
 

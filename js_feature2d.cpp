@@ -986,7 +986,11 @@ js_feature2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 
         ptr->compute(image, keypoints, descriptors);
 
-        // js_array_copy(ctx, argv[1], keypoints.data(), keypoints.data() + keypoints.size());
+        /* Descriptor extractors can drop keypoints they can't compute a
+         * descriptor for - write the (possibly shorter) filtered list back
+         * to the caller, matching opencv.js and this file's own detect()
+         * a few cases below. See BUGS: feature2d-compute-keypoints-not-copied-back. */
+        js_array_copy(ctx, argv[1], keypoints.data(), keypoints.data() + keypoints.size());
         break;
       }
 
