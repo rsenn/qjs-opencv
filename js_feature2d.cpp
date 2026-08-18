@@ -1159,6 +1159,7 @@ const JSCFunctionListEntry js_feature2d_agast_static_funcs[] = {
 };
 
 const JSCFunctionListEntry js_feature2d_akaze_static_funcs[] = {
+    JS_CFUNC_DEF("create", 0, js_feature2d_akaze),
     JS_PROP_INT32_DEF("DESCRIPTOR_KAZE_UPRIGHT", AKAZE::DESCRIPTOR_KAZE_UPRIGHT, JS_PROP_ENUMERABLE),
     JS_PROP_INT32_DEF("DESCRIPTOR_KAZE", AKAZE::DESCRIPTOR_KAZE, JS_PROP_ENUMERABLE),
     JS_PROP_INT32_DEF("DESCRIPTOR_MLDB_UPRIGHT", AKAZE::DESCRIPTOR_MLDB_UPRIGHT, JS_PROP_ENUMERABLE),
@@ -1166,8 +1167,21 @@ const JSCFunctionListEntry js_feature2d_akaze_static_funcs[] = {
 };
 
 const JSCFunctionListEntry js_feature2d_orb_static_funcs[] = {
+    JS_CFUNC_DEF("create", 0, js_feature2d_orb),
     JS_PROP_INT32_DEF("HARRIS_SCORE", ORB::HARRIS_SCORE, JS_PROP_ENUMERABLE),
     JS_PROP_INT32_DEF("FAST_SCORE", ORB::FAST_SCORE, JS_PROP_ENUMERABLE),
+};
+
+const JSCFunctionListEntry js_feature2d_brisk_static_funcs[] = {
+    JS_CFUNC_DEF("create", 0, js_feature2d_brisk),
+};
+
+const JSCFunctionListEntry js_feature2d_mser_static_funcs[] = {
+    JS_CFUNC_DEF("create", 0, js_feature2d_mser),
+};
+
+const JSCFunctionListEntry js_feature2d_gftt_static_funcs[] = {
+    JS_CFUNC_DEF("create", 0, js_feature2d_gftt),
 };
 
 const JSCFunctionListEntry js_feature2d_boost_static_funcs[] = {
@@ -1188,6 +1202,7 @@ const JSCFunctionListEntry js_feature2d_daisy_static_funcs[] = {
 };
 
 const JSCFunctionListEntry js_feature2d_fast_static_funcs[] = {
+    JS_CFUNC_DEF("create", 0, js_feature2d_fast),
     JS_PROP_INT32_DEF("TYPE_5_8", cv::FastFeatureDetector::TYPE_5_8, JS_PROP_ENUMERABLE),
     JS_PROP_INT32_DEF("TYPE_7_12", cv::FastFeatureDetector::TYPE_7_12, JS_PROP_ENUMERABLE),
     JS_PROP_INT32_DEF("TYPE_9_16", cv::FastFeatureDetector::TYPE_9_16, JS_PROP_ENUMERABLE),
@@ -1229,11 +1244,11 @@ static JSConstructor js_feature2d_classes[] = {
     JSConstructor(js_feature2d_affine, "AffineFeature"),
     JSConstructor(js_feature2d_agast, "AgastFeatureDetector", js_feature2d_agast_static_funcs),
     JSConstructor(js_feature2d_akaze, "AKAZE", js_feature2d_akaze_static_funcs),
-    JSConstructor(js_feature2d_brisk, "BRISK"),
+    JSConstructor(js_feature2d_brisk, "BRISK", js_feature2d_brisk_static_funcs),
     JSConstructor(js_feature2d_fast, "FastFeatureDetector", js_feature2d_fast_static_funcs),
-    JSConstructor(js_feature2d_gftt, "GFTTDetector"),
+    JSConstructor(js_feature2d_gftt, "GFTTDetector", js_feature2d_gftt_static_funcs),
     JSConstructor(js_feature2d_kaze, "KAZE", js_feature2d_kaze_static_funcs),
-    JSConstructor(js_feature2d_mser, "MSER"),
+    JSConstructor(js_feature2d_mser, "MSER", js_feature2d_mser_static_funcs),
     JSConstructor(js_feature2d_orb, "ORB", js_feature2d_orb_static_funcs),
     JSConstructor(js_feature2d_sift, "SIFT"),
     JSConstructor(js_feature2d_simple_blob, "SimpleBlobDetector"),

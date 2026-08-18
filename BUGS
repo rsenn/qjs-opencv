@@ -1754,3 +1754,34 @@
     let [rr, updated] = cv.CamShift(img, window, [cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_COUNT, 10, 1]);
     // rr is a RotatedRect centered near (50,50); updated/window both moved toward the blob - was TypeError before
 
+- FIXED: feature2d-detectors-no-create-static: `ORB`/`MSER`/`AKAZE`/
+  `BRISK`/`FastFeatureDetector`/`GFTTDetector` (`js_feature2d.cpp`) were
+  registered as `new`-constructible classes only - their static-func
+  tables held only enum constants (e.g. `ORB.HARRIS_SCORE`), or for
+  `BRISK`/`MSER`/`GFTTDetector`, no static-func table at all. opencv.js's
+  whitelist exposes *only* `XXX.create(...)` for all of these, no public
+  constructor. Ported code calling e.g. `cv.ORB.create(...)` threw
+  `TypeError: cv.ORB.create is not a function`. Fixed by adding a
+  `create` entry to each class's static-func table that points directly
+  at the same function already used as the `new`-constructor body
+  (`js_feature2d_orb`, `js_feature2d_mser`, etc.) - none of them read
+  their `new_target` argument, so the identical function correctly
+  serves both call forms. `new cv.ORB(...)` etc. still work unchanged.
+  Also discovered in passing (not fixed, out of scope): `new cv.BRISK()`
+  /`cv.BRISK.create()` with zero arguments throws `InternalError:
+  BRISK::create([thresh, octaves,] radiusList, numberList, dMax, dMin,
+  indexChange)` - none of `js_feature2d_brisk`'s three argument-count
+  branches accept `argc === 0`, even though native `BRISK::create()` has
+  all-defaulted parameters and opencv.js's `BRISK.create()` works with no
+  arguments. Pre-existing, not introduced by this fix.
+
+    import * as cv from 'opencv';
+    let orb = cv.ORB.create(300);
+    let kps = [];
+    orb.detect(new cv.Mat(64, 64, cv.CV_8UC1, new Uint8Array(64 * 64)), kps);
+    // works - was TypeError: cv.ORB.create is not a function before
+
+    // separately-discovered, still open:
+    new cv.BRISK();
+    // InternalError: BRISK::create([thresh, octaves,] radiusList, numberList, dMax, dMin, indexChange)
+
