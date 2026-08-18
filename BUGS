@@ -1664,3 +1664,32 @@
     a.mul(b, 1.0, out);
     // [...out.data32F] is now [5,12,21,32] (elementwise), not [19,22,43,50] (matrix product)
 
+- FIXED: moments-binaryimage-controls-input-interpretation:
+  `js_imgproc.cpp`'s `MISC_MOMENTS` used `!binaryImage` to decide whether
+  `argv[0]` should be parsed as a plain-array polygon (point set) or
+  passed through as a raster image, unconditionally treating it as a
+  polygon whenever `binaryImage` was false or omitted. Real
+  `cv::moments()`/opencv.js decide points-vs-raster from the actual
+  `InputArray` content instead (`checkVector(2)`, see
+  `modules/geometry/src/moments.cpp`) - `binaryImage` only controls how a
+  *raster* image gets thresholded. Passing a genuine grayscale `Mat` with
+  `binaryImage=false` (valid opencv.js usage, for intensity-weighted image
+  moments) got silently parsed as an empty JS array instead, producing
+  all-zero moments with no error. Fixed by only taking the
+  plain-array-of-points path when `argv[0]` is actually a plain JS array
+  (which the generic `InputArray` resolver can't parse as Nx2 points
+  itself); anything else - Mat, TypedArray, a `Contour`-shaped
+  `CV_32SC2` Mat from `findContours`, ... - now goes straight through
+  `cv::moments(src, binaryImage)`, letting OpenCV's own auto-detection
+  decide. Verified all four call shapes (raster+binaryImage=false,
+  raster+binaryImage=true, plain point array, `findContours`-output
+  contour Mat) produce correct nonzero moments.
+
+    import * as cv from 'opencv';
+    let img = new cv.Mat(20, 20, cv.CV_8UC1, new Uint8Array(20*20));
+    for(let y = 5; y < 15; y++)
+      for(let x = 5; x < 15; x++)
+        img.data[y*20+x] = 255;
+    let m = cv.moments(img, false);
+    // m.m00 is now 25500 (10*10*255, intensity-weighted) - was 0 before
+

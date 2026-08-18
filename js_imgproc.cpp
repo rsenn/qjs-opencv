@@ -1299,12 +1299,26 @@ js_imgproc_misc(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
         if(argc >= 2)
           binaryImage = JS_ToBool(ctx, argv[1]);
 
-        if(!binaryImage) {
+        /* Real cv::moments()/opencv.js decide points-vs-raster from the
+         * actual InputArray content (checkVector(2), see
+         * modules/geometry/src/moments.cpp), not from `binaryImage` - that
+         * flag only controls how a raster image is thresholded. Gating on
+         * `!binaryImage` here meant a genuine raster Mat passed with
+         * binaryImage=false (valid opencv.js usage, for intensity-weighted
+         * image moments) got silently parsed as an empty polygon instead,
+         * producing all-zero moments with no error. Only take the
+         * plain-JS-array-of-points path when argv[0] actually is a plain
+         * JS array (which the generic `src` InputArray resolver above
+         * can't parse as Nx2 points); anything else (Mat, TypedArray, ...)
+         * goes straight through cv::moments(src, binaryImage) so OpenCV's
+         * own auto-detection decides. See BUGS:
+         * moments-binaryimage-controls-input-interpretation. */
+        if(js_is_array(ctx, argv[0])) {
           std::vector<JSPointData<float>> polygon;
           js_array_to(ctx, argv[0], polygon);
           moments = cv::moments(polygon, binaryImage);
         } else {
-          moments = cv::moments(src, true);
+          moments = cv::moments(src, binaryImage);
         }
 
         moments_map["m00"] = moments.m00;
