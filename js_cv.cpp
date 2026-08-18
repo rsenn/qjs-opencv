@@ -191,6 +191,50 @@ js_cv_imwrite(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
 }
 
 static JSValue
+js_cv_matfromarray(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+  int32_t rows, cols, type;
+
+  if(JS_ToInt32(ctx, &rows, argv[0]) || JS_ToInt32(ctx, &cols, argv[1]) || JS_ToInt32(ctx, &type, argv[2]))
+    return JS_ThrowTypeError(ctx, "matFromArray(rows, cols, type, array): rows/cols/type must be numbers");
+
+  cv::Mat mat(rows, cols, type);
+  std::vector<double> values;
+  js_array_to(ctx, argv[3], values);
+
+  size_t total = mat.total() * size_t(mat.channels());
+
+  if(values.size() < total)
+    return JS_ThrowTypeError(ctx, "matFromArray: array has %zu elements, expected %zu", values.size(), total);
+
+  switch(mat.depth()) {
+    case CV_8U:
+      for(size_t i = 0; i < total; i++) mat.ptr<uint8_t>()[i] = static_cast<uint8_t>(values[i]);
+      break;
+    case CV_8S:
+      for(size_t i = 0; i < total; i++) mat.ptr<int8_t>()[i] = static_cast<int8_t>(values[i]);
+      break;
+    case CV_16U:
+      for(size_t i = 0; i < total; i++) mat.ptr<uint16_t>()[i] = static_cast<uint16_t>(values[i]);
+      break;
+    case CV_16S:
+      for(size_t i = 0; i < total; i++) mat.ptr<int16_t>()[i] = static_cast<int16_t>(values[i]);
+      break;
+    case CV_32S:
+      for(size_t i = 0; i < total; i++) mat.ptr<int32_t>()[i] = static_cast<int32_t>(values[i]);
+      break;
+    case CV_32F:
+      for(size_t i = 0; i < total; i++) mat.ptr<float>()[i] = static_cast<float>(values[i]);
+      break;
+    case CV_64F:
+      for(size_t i = 0; i < total; i++) mat.ptr<double>()[i] = values[i];
+      break;
+    default: return JS_ThrowTypeError(ctx, "matFromArray: unsupported Mat depth");
+  }
+
+  return js_mat_wrap(ctx, mat);
+}
+
+static JSValue
 js_cv_split(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   cv::Mat* src;
   std::vector<cv::Mat> dst;
@@ -1638,6 +1682,7 @@ js_function_list_t js_cv_static_funcs{
     JS_CFUNC_DEF("imencode", 1, js_cv_imencode),
     JS_CFUNC_DEF("imread", 1, js_cv_imread),
     JS_CFUNC_DEF("imwrite", 2, js_cv_imwrite),
+    JS_CFUNC_DEF("matFromArray", 4, js_cv_matfromarray),
     JS_CFUNC_DEF("split", 2, js_cv_split),
     JS_CFUNC_DEF("normalize", 2, js_cv_normalize),
     JS_CFUNC_DEF("merge", 2, js_cv_merge),

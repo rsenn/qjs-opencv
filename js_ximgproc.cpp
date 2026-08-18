@@ -1617,6 +1617,12 @@ enum {
   XIMGPROC_CREATEEDGEBOXES,
   XIMGPROC_FASTHOUGHTRANSFORM,
   XIMGPROC_HOUGHPOINT2LINE,
+  XIMGPROC_GUIDED_FILTER,
+  XIMGPROC_DT_FILTER,
+  XIMGPROC_L0_SMOOTH,
+  XIMGPROC_JOINT_BILATERAL_FILTER,
+  XIMGPROC_BILATERAL_TEXTURE_FILTER,
+  XIMGPROC_FAST_BILATERAL_SOLVER_FILTER,
 };
 
 static JSValue
@@ -1682,6 +1688,117 @@ js_ximgproc_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
           JS_ToFloat64(ctx, &r, argv[7]);
 
         cv::ximgproc::niBlackThreshold(src, dst, maxValue, type, blockSize, k, binarizationMethod, r);
+        break;
+      }
+
+      case XIMGPROC_GUIDED_FILTER: {
+        JSImageArgument guide(ctx, argv[0]);
+        JSImageArgument gsrc(ctx, argv[1]);
+        JSImageArgument gdst(ctx, argv[2]);
+        int32_t radius, dDepth = -1;
+        double eps, scale = 1.0;
+
+        JS_ToInt32(ctx, &radius, argv[3]);
+        JS_ToFloat64(ctx, &eps, argv[4]);
+
+        if(argc > 5)
+          JS_ToInt32(ctx, &dDepth, argv[5]);
+        if(argc > 6)
+          JS_ToFloat64(ctx, &scale, argv[6]);
+
+        cv::ximgproc::guidedFilter(guide, gsrc, gdst, radius, eps, dDepth, scale);
+        break;
+      }
+
+      case XIMGPROC_DT_FILTER: {
+        JSImageArgument guide(ctx, argv[0]);
+        JSImageArgument dsrc(ctx, argv[1]);
+        JSImageArgument ddst(ctx, argv[2]);
+        double sigmaSpatial, sigmaColor;
+        int32_t mode = cv::ximgproc::DTF_NC, numIters = 3;
+
+        JS_ToFloat64(ctx, &sigmaSpatial, argv[3]);
+        JS_ToFloat64(ctx, &sigmaColor, argv[4]);
+
+        if(argc > 5)
+          JS_ToInt32(ctx, &mode, argv[5]);
+        if(argc > 6)
+          JS_ToInt32(ctx, &numIters, argv[6]);
+
+        cv::ximgproc::dtFilter(guide, dsrc, ddst, sigmaSpatial, sigmaColor, mode, numIters);
+        break;
+      }
+
+      case XIMGPROC_L0_SMOOTH: {
+        double lambda = 0.02, kappa = 2.0;
+
+        if(argc > 2)
+          JS_ToFloat64(ctx, &lambda, argv[2]);
+        if(argc > 3)
+          JS_ToFloat64(ctx, &kappa, argv[3]);
+
+        cv::ximgproc::l0Smooth(src, dst, lambda, kappa);
+        break;
+      }
+
+      case XIMGPROC_JOINT_BILATERAL_FILTER: {
+        JSImageArgument joint(ctx, argv[0]);
+        JSImageArgument jsrc(ctx, argv[1]);
+        JSImageArgument jdst(ctx, argv[2]);
+        int32_t d;
+        double sigmaColor, sigmaSpace;
+        int32_t borderType = cv::BORDER_DEFAULT;
+
+        JS_ToInt32(ctx, &d, argv[3]);
+        JS_ToFloat64(ctx, &sigmaColor, argv[4]);
+        JS_ToFloat64(ctx, &sigmaSpace, argv[5]);
+
+        if(argc > 6)
+          JS_ToInt32(ctx, &borderType, argv[6]);
+
+        cv::ximgproc::jointBilateralFilter(joint, jsrc, jdst, d, sigmaColor, sigmaSpace, borderType);
+        break;
+      }
+
+      case XIMGPROC_BILATERAL_TEXTURE_FILTER: {
+        int32_t fr = 3, numIter = 1;
+        double sigmaAlpha = -1., sigmaAvg = -1.;
+
+        if(argc > 2)
+          JS_ToInt32(ctx, &fr, argv[2]);
+        if(argc > 3)
+          JS_ToInt32(ctx, &numIter, argv[3]);
+        if(argc > 4)
+          JS_ToFloat64(ctx, &sigmaAlpha, argv[4]);
+        if(argc > 5)
+          JS_ToFloat64(ctx, &sigmaAvg, argv[5]);
+
+        cv::ximgproc::bilateralTextureFilter(src, dst, fr, numIter, sigmaAlpha, sigmaAvg);
+        break;
+      }
+
+      case XIMGPROC_FAST_BILATERAL_SOLVER_FILTER: {
+        JSImageArgument guide(ctx, argv[0]);
+        JSImageArgument fsrc(ctx, argv[1]);
+        JSImageArgument confidence(ctx, argv[2]);
+        JSImageArgument fdst(ctx, argv[3]);
+        double sigma_spatial = 8, sigma_luma = 8, sigma_chroma = 8, lambda = 128.0, max_tol = 1e-5;
+        int32_t num_iter = 25;
+
+        if(argc > 4)
+          JS_ToFloat64(ctx, &sigma_spatial, argv[4]);
+        if(argc > 5)
+          JS_ToFloat64(ctx, &sigma_luma, argv[5]);
+        if(argc > 6)
+          JS_ToFloat64(ctx, &sigma_chroma, argv[6]);
+        if(argc > 7)
+          JS_ToFloat64(ctx, &lambda, argv[7]);
+        if(argc > 8)
+          JS_ToInt32(ctx, &num_iter, argv[8]);
+        if(argc > 9)
+          JS_ToFloat64(ctx, &max_tol, argv[9]);
+
+        cv::ximgproc::fastBilateralSolverFilter(guide, fsrc, confidence, fdst, sigma_spatial, sigma_luma, sigma_chroma, lambda, num_iter, max_tol);
         break;
       }
 
@@ -1968,6 +2085,12 @@ js_function_list_t js_ximgproc_ximgproc_funcs{
     JS_CFUNC_MAGIC_DEF("niBlackThreshold", 6, js_ximgproc_func, XIMGPROC_NI_BLACK_THRESHOLD),
     JS_CFUNC_MAGIC_DEF("PeiLinNormalization", 2, js_ximgproc_func, XIMGPROC_PEI_LIN_NORMALIZATION),
     JS_CFUNC_MAGIC_DEF("thinning", 2, js_ximgproc_func, XIMGPROC_THINNING),
+    JS_CFUNC_MAGIC_DEF("guidedFilter", 5, js_ximgproc_func, XIMGPROC_GUIDED_FILTER),
+    JS_CFUNC_MAGIC_DEF("dtFilter", 5, js_ximgproc_func, XIMGPROC_DT_FILTER),
+    JS_CFUNC_MAGIC_DEF("l0Smooth", 2, js_ximgproc_func, XIMGPROC_L0_SMOOTH),
+    JS_CFUNC_MAGIC_DEF("jointBilateralFilter", 6, js_ximgproc_func, XIMGPROC_JOINT_BILATERAL_FILTER),
+    JS_CFUNC_MAGIC_DEF("bilateralTextureFilter", 2, js_ximgproc_func, XIMGPROC_BILATERAL_TEXTURE_FILTER),
+    JS_CFUNC_MAGIC_DEF("fastBilateralSolverFilter", 4, js_ximgproc_func, XIMGPROC_FAST_BILATERAL_SOLVER_FILTER),
     JS_CFUNC_MAGIC_DEF("createEdgeDrawing", 0, js_ximgproc_func, XIMGPROC_CREATEEDGEDRAWING),
     JS_CFUNC_MAGIC_DEF("contourSampling", 3, js_ximgproc_func, XIMGPROC_CONTOURSAMPLING),
     JS_CFUNC_MAGIC_DEF("covarianceEstimation", 4, js_ximgproc_func, XIMGPROC_COVARIANCEESTIMATION),
