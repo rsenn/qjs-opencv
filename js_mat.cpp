@@ -818,7 +818,15 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
           case MAT_EXPR_XOR: mat ^= (*other); break;
           case MAT_EXPR_ADD: mat += (*other); break;
           case MAT_EXPR_SUB: mat -= (*other); break;
-          case MAT_EXPR_MUL: mat *= (*other); break;
+          /* mat.mul() (elementwise, matching opencv.js's Mat.mul()) needs a
+           * real assignment (Mat::operator=), which needs a non-const `this`
+           * - `mat` is deliberately `const Mat&` above so the other cases
+           * here can use the free-function compound-assign operators
+           * in-place without it, so this one case writes through `input`
+           * instead. `mat *= (*other)` would silently do a real matrix
+           * multiplication instead (cv::Mat::operator*=) - see BUGS:
+           * mat-mul-does-matrix-multiplication-not-elementwise. */
+          case MAT_EXPR_MUL: *input = mat.mul(*other, scale); break;
           case MAT_EXPR_DIV: mat /= (*other); break;
         }
       } else {
@@ -828,7 +836,7 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
           case MAT_EXPR_XOR: (*output) = mat ^ (*other); break;
           case MAT_EXPR_ADD: (*output) = mat + (*other); break;
           case MAT_EXPR_SUB: (*output) = mat - (*other); break;
-          case MAT_EXPR_MUL: (*output) = mat * (*other); break;
+          case MAT_EXPR_MUL: (*output) = mat.mul(*other, scale); break;
           case MAT_EXPR_DIV: (*output) = mat / (*other); break;
         }
       }

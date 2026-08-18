@@ -15,8 +15,10 @@ pages cataloged in `doc/opencv-js-examples.md` (source: local checkout
 `/mnt/data/Projects/opencv/doc/js_tutorials/js_assets/*.html`) against this
 project's actual live exports (`Object.keys(cv)` from a built
 `build/x86_64-linux-gnu/opencv.so`, OpenCV 5.0.0). 158 unique `cv.*`
-symbols are referenced across all 80 pages; 142 already resolve. The 16
-gaps below block one or more example pages from running unmodified; full
+symbols are referenced across all 80 pages; 143 already resolve as of
+2026-08-17 (`matFromArray` shipped - see `BUGS: opencvjs-matfromarray-missing`,
+now FIXED). The 15 gaps below block one or more example pages from
+running unmodified; full
 detail (repro, exact source locations) for each is filed as its own entry
 in `BUGS` under the `opencvjs-*` canonical-name prefix.
 
@@ -56,10 +58,6 @@ in `BUGS` under the `opencvjs-*` canonical-name prefix.
   See `BUGS: opencvjs-matchtemplate-missing`, `opencvjs-tm-constants-missing`,
   `opencvjs-getoptimaldftsize-missing`, `opencvjs-calcbackproject-missing`,
   `opencvjs-dist-constants-missing`, `opencvjs-intelligentscissors-missing`.
-- `js_core`/browser-helper layer: `cv.matFromArray(rows, cols, type,
-  array)` has no equivalent top-level function (closest match: `new
-  Mat(rows, cols, type, typedArray.buffer)`, already flagged inline at
-  `js_mat.cpp:386`). See `BUGS: opencvjs-matfromarray-missing`.
 
 **Shape/naming mismatches (functionality exists, calling convention doesn't match):**
 
@@ -110,9 +108,9 @@ Small, self-contained additions to files that already exist. Each one either com
   - `undistort`, `initUndistortRectifyMap`, `getOptimalNewCameraMatrix` — `calibrateCamera` is bound but nothing currently *applies* the resulting camera matrix/distortion coefficients; lens-distorted webcam/wide-angle rigs feed skewed contours straight into the SVG today.
   - `Rodrigues`, `solvePnP` — pose-from-known-points, useful for a fixed calibration jig on the cutting bed.
 
-- [ ] **ximgproc — edge-aware smoothing filters** → extend `js_ximgproc.cpp` (55/89 bound)
+- [x] **ximgproc — edge-aware smoothing filters** → `js_ximgproc.cpp` (`cv.ximgproc.*` namespace)
   - `guidedFilter`, `dtFilter`, `l0Smooth`, `jointBilateralFilter`, `bilateralTextureFilter` — smooth flat regions while keeping strong edges crisp; run before Canny/findContours to cut noise contours in gradients/textures (skin, wood grain, fabric).
-  - `fastBilateralSolverFilter` — upsamples a coarse/noisy edge or mask to full resolution snapped to real edges; useful if a reduced-resolution DNN edge pass (see Tier 2) is added later.
+  - `fastBilateralSolverFilter` — upsamples a coarse/noisy edge or mask to full resolution snapped to real edges; useful now that DNN edge detection (below) can supply that coarse/noisy input.
 
 - [ ] **imgproc / draw — parity gaps** → extend `js_imgproc.cpp`, `js_draw.cpp` (97/202 bound)
   - `Laplacian`, `Scharr` — standard second-derivative edge operators missing next to the already-bound `Sobel`.
@@ -147,10 +145,9 @@ Real capability gains, but bigger binding surfaces or contingent on a workflow (
   - `CascadeClassifier` — lower priority, only if there's a concrete "find this specific object in frame" need.
   - **Check first:** the repo already ships `js_barcode_detector.cpp`, but `cv::barcode::BarcodeDetector` shows up as *unbound* in this scan — verify whether `USE_BARCODE` was off for this debug build, or whether the symbol moved when OpenCV merged barcode into `objdetect`. May be a build-config fix rather than new binding work.
 
-- [ ] **dnn — high-level Model wrappers for learned edge detection** → extend `js_dnn.cpp` (139/172 bound)
-  - `DetectionModel`/`SegmentationModel`/`ClassificationModel` — ergonomic pre/post-processing wrappers around the already-bound raw `Net`.
-  - Payoff: a pretrained edge-detection network (HED, DexiNed) via `readNet` + a thin wrapper produces cleaner, more semantically-aware line art than Canny on complex photographs.
-  - Needs shipping/downloading a model file — why this is Tier 2 not Tier 1.
+- [x] **dnn — learned edge detection (DexiNed)** → `examples/edge_detection_dexined.js`
+  - `DetectionModel`/`SegmentationModel`/`ClassificationModel` were already bound in `js_dnn.cpp` (this TODO item was stale on that point) — the actual blocker was a model file. Fetched `examples/models/edge_detection_dexined/edge_detection_dexined_2024sep.onnx` (OpenCV's own `samples/dnn/models.yml` "dexined" entry, sha1 `f86f2d32c3cf892771f76b5e6b629b16a66510e9`, verified on download).
+  - `examples/edge_detection_dexined.js`: `readNetFromONNX` + `blobFromImage` + `Net.forward()` (a 4D 1x1x512x512 blob, so post-processed via a flat sigmoid + min-max stretch over `.data32F` rather than `cv.normalize`/`cv.divide` — those Mat-arithmetic ops don't handle N-D blobs) → `matFromArray` back to a proper 2D Mat → `resize` to the source image size. Verified visually against `tests/smarties.png` — clean, semantically-aware ring outlines, no Canny-style texture noise.
 
 ## Tier 3 — skip for this project
 
@@ -185,7 +182,7 @@ Grouped by how badly a naive port breaks.
 
 ### Silently wrong results (no exception, no obviously-missing output — the dangerous category)
 
-- **`Mat.mul(otherMat, scale)` does matrix multiplication, not elementwise product.** *(unchanged — still live)* opencv.js's `mat.mul(other, scale)` wraps `cv::Mat::mul()` (elementwise/Hadamard product). This project's `.mul()` (`js_mat.cpp:831`, `MAT_EXPR_MUL` in `js_mat_expr`) executes `cv::Mat::operator*` (real matrix multiplication) whenever the argument is another Mat, and silently drops the `scale` argument in that branch (`scale` only applies in the scalar-operand branch at line 793). Two same-size square Mats will "work" and produce silently wrong numeric output; non-square/mismatched-inner-dimension Mats throw a `cv::Exception` where opencv.js would have succeeded.
+- FIXED: `Mat.mul(otherMat, scale)` did matrix multiplication, not elementwise product. See `BUGS: mat-mul-does-matrix-multiplication-not-elementwise`.
 - **Three output arguments are silently never written back** — `estimateAffine2D`/`estimateAffinePartial2D`'s `inliers` (argv[2] isn't even read), `floodFill`'s `rect`, and `Feature2D.compute()`'s (possibly descriptor-filtered) `keypoints`. Full detail/repro filed as their own `BUGS` entries: `estimateaffine2d-inliers-output-discarded`, `floodfill-rect-output-not-written-back`, `feature2d-compute-keypoints-not-copied-back`.
 - **`moments(points, binaryImage)` uses `binaryImage` to choose the input's *interpretation*, not just pixel binarization.** *(unchanged — still live)* `js_imgproc.cpp:1288-1302`: `binaryImage === false` unconditionally parses `argv[0]` as a polygon point array. Real `cv::moments`/opencv.js decide points-vs-raster from the actual `InputArray` content; passing a grayscale `Mat` with `binaryImage=false` (valid opencv.js usage, for intensity-weighted image moments) does not work here.
 - **`Mat.step` returns `dims - 1` entries, not `dims`.** *(unchanged — still live)* `js_mat.cpp:1465` loops `i < m->dims - 1`, silently dropping the last dimension's stride. opencv.js's `.step` (`getMatStep`) always returns one entry per dimension.

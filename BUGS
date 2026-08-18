@@ -1355,19 +1355,19 @@
       m.delete(); // TypeError: not a function
     });
 
-- opencvjs-matfromarray-missing: opencv.js's `cv.matFromArray(rows, cols,
-  type, array)` helper (`modules/js/src/helpers.js`) builds a Mat from a
-  flat JS array or TypedArray in one call - qjs-opencv has no equivalent
-  top-level function. Already flagged inline as a known gap in
-  `js_mat.cpp:386`'s comment ("equivalent bare-array overload either -
-  cv.matFromArray(rows, cols, ..."). qjs-opencv's closest equivalent is
-  `new Mat(rows, cols, type, typedArray.buffer)` (see doc/opencv-js-api.md,
-  "architecturally the same shape") - same idea, different spelling. Used
-  by 3 of the 80 example pages (js_geometric_transformations_*).
+- FIXED: opencvjs-matfromarray-missing: opencv.js's `cv.matFromArray(rows,
+  cols, type, array)` helper (`modules/js/src/helpers.js`) builds a Mat
+  from a flat JS array or TypedArray in one call - qjs-opencv had no
+  equivalent top-level function (closest was `new Mat(rows, cols, type,
+  typedArray.buffer)`). Now implemented as `cv.matFromArray` in
+  `js_cv.cpp` (`js_cv_matfromarray`, registered in `js_cv_static_funcs`):
+  allocates a `cv::Mat(rows, cols, type)` and copies `array`'s elements
+  into it per-element, cast to the Mat's depth (`CV_8U`...`CV_64F`),
+  throwing a `TypeError` if `array` has fewer elements than the Mat needs.
 
-    import('opencv').then(cv => {
-      cv.matFromArray(2, 3, cv.CV_32FC1, [1,2,3,4,5,6]); // TypeError: not a function
-    });
+    import * as cv from 'opencv';
+    let m = cv.matFromArray(2, 3, cv.CV_32FC1, [1,2,3,4,5,6]);
+    // m.rows === 2, m.cols === 3, [...m.data32F] === [1,2,3,4,5,6]
 
 - opencvjs-termcriteria-constructor-missing: opencv.js exposes
   `new cv.TermCriteria(type, maxCount, epsilon)` as a real constructor.
@@ -1610,4 +1610,51 @@
     let descriptors = new cv.Mat();
     orb.compute(img, kps, descriptors);
     // kps may still list keypoints ORB dropped while computing descriptors
+
+- tinytest-run-stops-silently-after-two-tests: `tests/unittests/tinytest.js`'s
+  `run()` (line 53) is supposed to `try`/`catch` around each test and keep
+  going, but `test_contour_functions.js` (and presumably every other
+  `tinytest`-based suite) stops after exactly 2 of its 16 tests print
+  `OK`, with a `Possibly unhandled promise rejection: TypeError: not a
+  function at run (tests/unittests/tinytest.js:53)` printed *before* any
+  test output (stdout/stderr ordering suggests it's a `.then()`/rejection
+  queued at import time, not from a specific test body). Reproduced on an
+  unmodified checkout (verified via `git stash`), so this is pre-existing,
+  not caused by any change in this session - found incidentally while
+  regression-checking after adding `js_ximgproc.cpp`'s edge-aware filters.
+  Not investigated further (out of scope for that task).
+
+    QUICKJS_MODULE_PATH=build/x86_64-linux-gnu qjsm tests/unittests/test_contour_functions.js
+    # prints "Possibly unhandled promise rejection: TypeError: not a function"
+    # then only 2 of 16 "Test: ... OK" lines, then exits - no FAILED, no summary
+
+- FIXED: mat-mul-does-matrix-multiplication-not-elementwise: opencv.js's
+  `mat.mul(other, scale)` wraps `cv::Mat::mul()` (elementwise/Hadamard
+  product). This project's `.mul()` (`js_mat.cpp`, `MAT_EXPR_MUL` in
+  `js_mat_expr`) executed `cv::Mat::operator*`/`operator*=` (real matrix
+  multiplication) whenever the argument was another Mat, and silently
+  dropped the `scale` argument in that branch. Two same-size square Mats
+  "worked" and produced silently wrong numeric output; non-square/
+  mismatched-inner-dimension Mats threw a `cv::Exception` where opencv.js
+  would have succeeded. Fixed by routing both the in-place and
+  output-argument branches through `mat.mul(*other, scale)` instead of
+  `operator*`/`operator*=`; the in-place case had to write through
+  `*input` rather than the (deliberately const) local `mat` reference,
+  since `Mat::operator=` needs a non-const `this` while the other
+  compound-assign ops (`&=`, `+=`, ...) don't. Verified elementwise on
+  both square and non-square Mats, with and without `scale`, both the
+  output-argument and in-place forms - see js_mat.cpp for the fix.
+
+  Note on this binding's calling convention: `.mul()` takes `scale` as its
+  *second* positional argument, before the optional output Mat -
+  `mat.mul(other, scale, output)` - unlike every other MAT_EXPR op in this
+  file (`add`/`sub`/`and`/`or`/`xor`/`div`), which are `mat.op(other,
+  output)` with no scale slot. This predates this fix and wasn't changed.
+
+    import * as cv from 'opencv';
+    let a = cv.matFromArray(2, 2, cv.CV_32FC1, [1,2,3,4]);
+    let b = cv.matFromArray(2, 2, cv.CV_32FC1, [5,6,7,8]);
+    let out = new cv.Mat();
+    a.mul(b, 1.0, out);
+    // [...out.data32F] is now [5,12,21,32] (elementwise), not [19,22,43,50] (matrix product)
 
