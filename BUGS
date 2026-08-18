@@ -1706,3 +1706,24 @@
     let m = new cv.Mat([4, 5, 6], cv.CV_32FC1);
     // [...m.step] is now [120, 24, 4] (one entry per dimension) - was [120, 24]
 
+- FIXED: no-free-function-createclahe: `js_clahe.cpp` exported `CLAHE`
+  only as a `new`-constructible class. opencv.js's whitelist exposes
+  *only* the free-function form `cv.createCLAHE(clipLimit,
+  tileGridSize)` (`cv::createCLAHE()` wrapped as a module-level
+  function) - there is no `new cv.CLAHE(...)` in opencv.js at all.
+  Ported code calling `cv.createCLAHE(...)` threw `TypeError:
+  cv.createCLAHE is not a function`. Fixed by adding a `createCLAHE`
+  free function (`js_create_clahe`, same default-argument handling as
+  the constructor) exported alongside the existing `CLAHE` class, so
+  both `cv.createCLAHE(...)` and the pre-existing `new cv.CLAHE(...)`
+  now work. Updated call sites in the sibling `plot-cv` scripts that
+  imported `CLAHE` by name (`scan.js`, `test-opencv.js`,
+  `test-video.js`) to use `createCLAHE` instead - `test-image.js`,
+  `imagePipeline.js`, and `test-cv.js` reference a bare `CLAHE`/`Mat`
+  global with no matching import at all (pre-existing, unrelated
+  breakage - not touched here).
+
+    import * as cv from 'opencv';
+    let clahe = cv.createCLAHE(2.0, new cv.Size(4, 4));
+    // clahe.clipLimit === 2, [...clahe.tilesGridSize] == [4, 4] - was TypeError before
+

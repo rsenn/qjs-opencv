@@ -42,6 +42,18 @@ js_clahe_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueC
   return js_clahe_new(ctx, clipLimit, tileGridSize);
 }
 
+static JSValue
+js_create_clahe(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+  double clipLimit = 40.0;
+  JSSizeData<double> tileGridSize = cv::Size2d(8, 8);
+  if(argc >= 1)
+    JS_ToFloat64(ctx, &clipLimit, argv[0]);
+  if(argc >= 2)
+    if(!js_size_read(ctx, argv[1], &tileGridSize))
+      return JS_EXCEPTION;
+  return js_clahe_new(ctx, clipLimit, tileGridSize);
+}
+
 JSCLAHEData*
 js_clahe_data2(JSContext* ctx, JSValueConst val) {
   return static_cast<JSCLAHEData*>(JS_GetOpaque2(ctx, val, js_clahe_class_id));
@@ -165,6 +177,10 @@ const JSCFunctionListEntry js_clahe_proto_funcs[] = {
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "CLAHE", JS_PROP_CONFIGURABLE),
 };
 
+const JSCFunctionListEntry js_clahe_create_funcs[] = {
+    JS_CFUNC_DEF("createCLAHE", 0, js_create_clahe),
+};
+
 extern "C" int
 js_clahe_init(JSContext* ctx, JSModuleDef* m) {
 
@@ -182,8 +198,10 @@ js_clahe_init(JSContext* ctx, JSModuleDef* m) {
 
   // js_object_inspect(ctx, clahe_proto, js_clahe_inspect);
 
-  if(m)
+  if(m) {
     JS_SetModuleExport(ctx, m, "CLAHE", clahe_class);
+    JS_SetModuleExportList(ctx, m, js_clahe_create_funcs, countof(js_clahe_create_funcs));
+  }
 
   return 0;
 }
@@ -205,6 +223,7 @@ js_clahe_constructor(JSContext* ctx, JSValue parent, const char* name) {
 extern "C" void
 js_clahe_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "CLAHE");
+  JS_AddModuleExportList(ctx, m, js_clahe_create_funcs, countof(js_clahe_create_funcs));
 }
 
 extern "C" JSModuleDef*
