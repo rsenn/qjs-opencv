@@ -13,6 +13,7 @@
 #include "include/js_array.hpp"
 #include "include/js_typed_array.hpp"
 #include "include/js_inputoutputarray.hpp"
+#include <opencv2/video/tracking.hpp>
 #include <quickjs.h>
 #include "include/util.hpp"
 #include <cassert>
@@ -2291,7 +2292,65 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
   return ret;
 }
 
+enum {
+  TRACK_CAMSHIFT = 0,
+  TRACK_MEANSHIFT,
+};
+
+static JSValue
+js_imgproc_track(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  JSValue ret = JS_UNDEFINED;
+  JSInputArray probImage = js_cv_inputarray(ctx, argv[0]);
+  JSRectData<double>* window;
+  std::vector<double> crit;
+  cv::TermCriteria criteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 10, 1.0);
+
+  if(!(window = js_rect_data2(ctx, argv[1])))
+    return JS_ThrowTypeError(ctx, "argument 2 must be Rect");
+
+  if(argc >= 3) {
+    js_array_to(ctx, argv[2], crit);
+
+    if(crit.size() >= 3)
+      criteria = cv::TermCriteria(int(crit[0]), int(crit[1]), crit[2]);
+  }
+
+  cv::Rect r(window->x, window->y, window->width, window->height);
+
+  try {
+    switch(magic) {
+      case TRACK_CAMSHIFT: {
+        JSRotatedRectData rr = cv::CamShift(probImage, r, criteria);
+
+        *window = JSRectData<double>(r.x, r.y, r.width, r.height);
+
+        JSValue results[2] = {js_rotated_rect_new(ctx, rr), js_rect_wrap(ctx, *window)};
+        ret = js_array<JSValue>::from_sequence(ctx, &results[0], &results[2]);
+        break;
+      }
+
+      case TRACK_MEANSHIFT: {
+        int32_t n = cv::meanShift(probImage, r, criteria);
+
+        *window = JSRectData<double>(r.x, r.y, r.width, r.height);
+
+        JSValue results[2] = {JS_NewInt32(ctx, n), js_rect_wrap(ctx, *window)};
+        ret = js_array<JSValue>::from_sequence(ctx, &results[0], &results[2]);
+        break;
+      }
+    }
+  }
+
+  catch(const cv::Exception& e) {
+    ret = js_cv_throw(ctx, e);
+  }
+
+  return ret;
+}
+
 const JSCFunctionListEntry js_imgproc_static_funcs[] = {
+    JS_CFUNC_MAGIC_DEF("CamShift", 3, js_imgproc_track, TRACK_CAMSHIFT),
+    JS_CFUNC_MAGIC_DEF("meanShift", 3, js_imgproc_track, TRACK_MEANSHIFT),
     JS_CFUNC_DEF("HoughLines", 5, js_cv_hough_lines),
     JS_CFUNC_DEF("HoughLinesP", 5, js_cv_hough_lines_p),
     JS_CFUNC_DEF("HoughCircles", 5, js_cv_hough_circles),

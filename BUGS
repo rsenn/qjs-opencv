@@ -1727,3 +1727,30 @@
     let clahe = cv.createCLAHE(2.0, new cv.Size(4, 4));
     // clahe.clipLimit === 2, [...clahe.tilesGridSize] == [4, 4] - was TypeError before
 
+- FIXED: no-camshift-meanshift-bindings: `cv.CamShift`/`cv.meanShift` -
+  registered in opencv.js's `core_bindings.cpp`, returning `[RotatedRect,
+  updatedRect]` and `[n, updatedRect]` respectively - had no binding
+  anywhere in the tree; only the unrelated `pyrMeanShiftFiltering`
+  existed. Ported tracking code calling either threw `TypeError: cv.
+  CamShift is not a function`. Fixed by adding `js_imgproc_track`
+  (`js_imgproc.cpp`, magic dispatch `TRACK_CAMSHIFT`/`TRACK_MEANSHIFT`)
+  wrapping `cv::CamShift`/`cv::meanShift`: takes `(probImage, window,
+  criteria)`, mutates the passed-in `Rect` in place (matches native
+  OpenCV's in/out `window` semantics) and also returns the updated `Rect`
+  as the second array element (matches opencv.js's return shape).
+  `criteria` reuses this project's existing `kmeans` convention - a plain
+  `[type, maxCount, epsilon]` array - rather than a `TermCriteria` object,
+  since no `TermCriteria` JS class exists anywhere in the codebase yet
+  (tracked separately, see TODO.md's `kmeans` entry). Verified both
+  functions converge a window toward a synthetic bright blob and mutate
+  the input `Rect`.
+
+    import * as cv from 'opencv';
+    let img = new cv.Mat(100, 100, cv.CV_8UC1, new Uint8Array(100 * 100));
+    for(let y = 30; y < 70; y++)
+      for(let x = 30; x < 70; x++)
+        img.data[y * 100 + x] = 200;
+    let window = new cv.Rect(20, 20, 50, 50);
+    let [rr, updated] = cv.CamShift(img, window, [cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_COUNT, 10, 1]);
+    // rr is a RotatedRect centered near (50,50); updated/window both moved toward the blob - was TypeError before
+
