@@ -1693,3 +1693,16 @@
     let m = cv.moments(img, false);
     // m.m00 is now 25500 (10*10*255, intensity-weighted) - was 0 before
 
+- FIXED: mat-step-drops-last-dimension: `Mat.step` (`js_mat.cpp`,
+  `PROP_STEP`) looped `i < m->dims - 1`, silently dropping the last
+  dimension's stride. opencv.js's `.step` (`getMatStep`,
+  `modules/js/src/core_bindings.cpp`) always returns one entry per
+  dimension (`i < mat.dims`). Fixed to match. Verified on both a 2D Mat
+  (`CV_8UC3`, `dims=2` -> now 2-entry step `[60, 3]`, was `[60]`) and a
+  genuine 3D Mat (`dims=3` -> now 3-entry step `[120, 24, 4]`, was
+  `[120, 24]`).
+
+    import * as cv from 'opencv';
+    let m = new cv.Mat([4, 5, 6], cv.CV_32FC1);
+    // [...m.step] is now [120, 24, 4] (one entry per dimension) - was [120, 24]
+

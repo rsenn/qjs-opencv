@@ -182,12 +182,21 @@ Grouped by how badly a naive port breaks.
 
 ### Silently wrong results (no exception, no obviously-missing output — the dangerous category)
 
-- FIXED: `Mat.mul(otherMat, scale)` did matrix multiplication, not elementwise product. See `BUGS: mat-mul-does-matrix-multiplication-not-elementwise`.
-- FIXED: three output arguments were silently never written back — `estimateAffine2D`/`estimateAffinePartial2D`'s `inliers`, `floodFill`'s `rect`, and `Feature2D.compute()`'s (possibly descriptor-filtered) `keypoints`. See `BUGS: estimateaffine2d-inliers-output-discarded`, `floodfill-rect-output-not-written-back`, `feature2d-compute-keypoints-not-copied-back` (all FIXED).
-- FIXED: `moments(points, binaryImage)` used `binaryImage` to choose the input's *interpretation*, not just pixel binarization. See `BUGS: moments-binaryimage-controls-input-interpretation`.
-- **`Mat.step` returns `dims - 1` entries, not `dims`.** *(unchanged — still live)* `js_mat.cpp:1465` loops `i < m->dims - 1`, silently dropping the last dimension's stride. opencv.js's `.step` (`getMatStep`) always returns one entry per dimension.
-
-*(Removed from this list, now fixed: `HuMoments` silently dropping results for non-Array outputs — `js_imgproc.cpp:2220-2233` (`SHAPE_HU_MOMENTS`) now routes the 2-arg form through `js_cv_outputarray()`, a generic `OutputArray` accepting `Mat` and matching opencv.js's convention, rather than gating on `JS_IsArray`.)*
+Every entry identified in this category as of the 2026-08-17/18 passes is
+now fixed: `HuMoments` dropping results for non-Array outputs, `Mat.mul`
+doing matrix multiplication instead of elementwise, three discarded
+output arguments (`estimateAffine2D`/`estimateAffinePartial2D`'s
+`inliers`, `floodFill`'s `rect`, `Feature2D.compute()`'s `keypoints`),
+`moments(points, binaryImage)` picking input interpretation off the wrong
+flag, and `Mat.step` dropping the last dimension's stride. See `BUGS`
+(all marked FIXED): `mat-mul-does-matrix-multiplication-not-elementwise`,
+`estimateaffine2d-inliers-output-discarded`,
+`floodfill-rect-output-not-written-back`,
+`feature2d-compute-keypoints-not-copied-back`,
+`moments-binaryimage-controls-input-interpretation`,
+`mat-step-drops-last-dimension`. No new pass has been done since to look
+for further instances of this category - worth another audit pass rather
+than assuming it's now exhaustively clean.
 
 ### Not bound at all (opencv.js has them, qjs-opencv doesn't)
 

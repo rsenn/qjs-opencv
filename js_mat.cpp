@@ -1470,7 +1470,11 @@ js_mat_get_props(JSContext* ctx, JSValueConst this_val, int magic) {
     case PROP_STEP: {
       std::vector<int> steps;
 
-      for(int i = 0; i < m->dims - 1; ++i)
+      /* opencv.js's getMatStep() (modules/js/src/core_bindings.cpp) loops
+       * i < mat.dims, one entry per dimension - `dims - 1` here silently
+       * dropped the last dimension's stride. See BUGS:
+       * mat-step-drops-last-dimension. */
+      for(int i = 0; i < m->dims; ++i)
         steps.push_back(m->step[i]);
 
       ret = js_array_from(ctx, steps);
