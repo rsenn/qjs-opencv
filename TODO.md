@@ -194,21 +194,13 @@ flag, and `Mat.step` dropping the last dimension's stride. See `BUGS`
 `floodfill-rect-output-not-written-back`,
 `feature2d-compute-keypoints-not-copied-back`,
 `moments-binaryimage-controls-input-interpretation`,
-`mat-step-drops-last-dimension`. No new pass has been done since to look
-for further instances of this category - worth another audit pass rather
-than assuming it's now exhaustively clean.
-
-**New, unfixed (2026-08-19), highest priority - worse than "wrong", a total no-op:**
-`cv.Laplacian()`, `cv.pyrDown()`, `cv.pyrUp()`, `cv.Scharr()`
-(`js_imgproc.cpp`'s `js_imgproc_filter`, cases `FILTER_LAPLACIAN`/
-`FILTER_PYR_DOWN`/`FILTER_PYR_UP`/`FILTER_SCHARR`) are registered and
-callable but their case bodies are literally empty (`{ break; }`) - the
-destination `Mat` is left untouched, no exception. All four are used by
-name in `doc/opencv-js-examples.md` (`js_gradients_Laplacian.html`,
-`js_pyramids_pyrDown.html`, `js_pyramids_pyrUp.html`,
-`js_gradients_Sobel.html`). `FILTER_SOBEL` (same function, fully
-implemented) is the template for `Scharr`. See `BUGS:
-laplacian-pyrdown-pyrup-scharr-are-noop-stubs`.
+`mat-step-drops-last-dimension`. Also fixed since: `Laplacian`/`pyrDown`/
+`pyrUp`/`Scharr` being literal no-op stubs (see `BUGS:
+laplacian-pyrdown-pyrup-scharr-are-noop-stubs`) - arguably the worst
+instance of this category found so far, since it wasn't even "wrong
+output", just no computation at all. No systematic new pass has been
+done since to look for further instances of this category - worth
+another audit pass rather than assuming it's now exhaustively clean.
 
 **New, unfixed (2026-08-19):** `js_cv_inputarray()`'s plain-`Array`-of-
 2..4-numbers path (`include/js_inputoutputarray.hpp:78-91`) returns a

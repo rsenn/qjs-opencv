@@ -1994,34 +1994,38 @@
     } catch(e) {
       console.log(e); // null - not an Error, and would work fine if `uniform` (true) were passed as an 8th arg
 
-- laplacian-pyrdown-pyrup-scharr-are-noop-stubs: `cv.Laplacian()`,
+- FIXED: laplacian-pyrdown-pyrup-scharr-are-noop-stubs: `cv.Laplacian()`,
   `cv.pyrDown()`, `cv.pyrUp()`, and `cv.Scharr()` (`js_imgproc.cpp`'s
   `js_imgproc_filter`, cases `FILTER_LAPLACIAN`/`FILTER_PYR_DOWN`/
-  `FILTER_PYR_UP`/`FILTER_SCHARR`) are all registered, exported, and
-  callable with no argument-count/type errors, but their case bodies are
+  `FILTER_PYR_UP`/`FILTER_SCHARR`) were all registered, exported, and
+  callable with no argument-count/type errors, but their case bodies were
   **empty** (`case FILTER_LAPLACIAN: { break; }` etc - no `cv::Laplacian`/
   `cv::pyrDown`/`cv::pyrUp`/`cv::Scharr` call anywhere in any of the four
-  bodies). Calling any of them leaves the destination `Mat` completely
-  untouched (still empty if freshly constructed) and throws nothing -
+  bodies). Calling any of them left the destination `Mat` completely
+  untouched (still empty if freshly constructed) and threw nothing -
   the single most dangerous failure mode (silent total no-op, not even
   "wrong output", just no computation at all). All four are referenced by
   name in `doc/opencv-js-examples.md`'s catalog
   (`js_gradients_Laplacian.html`, `js_pyramids_pyrDown.html`,
   `js_pyramids_pyrUp.html`, `js_gradients_Sobel.html` also uses
-  `cv.Scharr`), so every one of those example pages silently produces a
-  blank/unchanged image instead of the documented effect. Found while
-  writing `tests/unittests/test_filtering_morphology.js` (opencv.js
-  example-coverage tests) - the sibling case `FILTER_SOBEL` two cases
-  below `FILTER_SCHARR` in the same function *is* fully implemented and
-  is the obvious template for `Scharr` (near-identical signature, just
-  `cv::Scharr(src, dst, ddepth, dx, dy, scale, delta, borderType)` instead
-  of `cv::Sobel`'s extra `ksize` parameter); `FILTER_BOX_FILTER`/
-  `FILTER_GET_STRUCTURING_ELEMENT` are reasonable templates for the
-  `pyrDown`/`pyrUp`/`Laplacian` argument-parsing shape. Not fixed here -
-  four real (if mechanical) implementations to write and verify, out of
-  scope for a test-writing pass - but this is a correctness-critical gap,
-  not a naming/shape mismatch; recommend prioritizing this fix over most
-  of the remaining TODO.md backlog.
+  `cv.Scharr`), so every one of those example pages silently produced a
+  blank/unchanged image instead of the documented effect. Fixed by
+  filling in all four bodies: `Laplacian(src, dst, ddepth, ksize=1,
+  scale=1, delta=0, borderType)`, `Scharr(src, dst, ddepth, dx, dy,
+  scale=1, delta=0, borderType)` (mirroring the sibling `FILTER_SOBEL`
+  case two below it - same signature shape minus `Sobel`'s `ksize`),
+  `pyrDown`/`pyrUp(src, dst, dstsize=Size(), borderType)`. Verified:
+  `Laplacian`/`Scharr` produce a nonzero response at a synthetic
+  rectangle's edge; `pyrDown` halves a 40x40 input to 20x20; `pyrUp`
+  doubles it to 80x80. `tests/unittests/test_filtering_morphology.js` now
+  covers all four (20/20 tests pass).
+
+    import * as cv from 'opencv';
+    let src = cv.Mat.zeros(20, 20, cv.CV_8UC1);
+    cv.rectangle(src, {x:5,y:5,width:10,height:10}, 200, -1);
+    let dst = new cv.Mat();
+    cv.pyrDown(src, dst);
+    // dst.rows === 10, dst.cols === 10 - was empty (0x0) before
 
     import * as cv from 'opencv';
     let src = cv.Mat.zeros(20, 20, cv.CV_8UC1);

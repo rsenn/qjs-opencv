@@ -1875,6 +1875,22 @@ js_imgproc_filter(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
       }
 
       case FILTER_LAPLACIAN: {
+        JSInputOutputArray dst = js_cv_inputoutputarray(ctx, argv[1]);
+        int32_t ddepth, ksize = 1, borderType = cv::BORDER_DEFAULT;
+        double scale = 1, delta = 0;
+
+        JS_ToInt32(ctx, &ddepth, argv[2]);
+
+        if(argc > 3)
+          JS_ToInt32(ctx, &ksize, argv[3]);
+        if(argc > 4)
+          JS_ToFloat64(ctx, &scale, argv[4]);
+        if(argc > 5)
+          JS_ToFloat64(ctx, &delta, argv[5]);
+        if(argc > 6)
+          JS_ToInt32(ctx, &borderType, argv[6]);
+
+        cv::Laplacian(src, dst, ddepth, ksize, scale, delta, borderType);
         break;
       }
 
@@ -1891,6 +1907,16 @@ js_imgproc_filter(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
       }
 
       case FILTER_PYR_DOWN: {
+        JSInputOutputArray dst = js_cv_inputoutputarray(ctx, argv[1]);
+        JSSizeData<int> dstsize;
+        int32_t borderType = cv::BORDER_DEFAULT;
+
+        if(argc > 2)
+          js_size_read(ctx, argv[2], &dstsize);
+        if(argc > 3)
+          JS_ToInt32(ctx, &borderType, argv[3]);
+
+        cv::pyrDown(src, dst, dstsize, borderType);
         break;
       }
 
@@ -1910,10 +1936,36 @@ js_imgproc_filter(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
       }
 
       case FILTER_PYR_UP: {
+        JSInputOutputArray dst = js_cv_inputoutputarray(ctx, argv[1]);
+        JSSizeData<int> dstsize;
+        int32_t borderType = cv::BORDER_DEFAULT;
+
+        if(argc > 2)
+          js_size_read(ctx, argv[2], &dstsize);
+        if(argc > 3)
+          JS_ToInt32(ctx, &borderType, argv[3]);
+
+        cv::pyrUp(src, dst, dstsize, borderType);
         break;
       }
 
       case FILTER_SCHARR: {
+        JSInputOutputArray dst = js_cv_inputoutputarray(ctx, argv[1]);
+        int32_t ddepth, dx, dy, borderType = cv::BORDER_DEFAULT;
+        double scale = 1, delta = 0;
+
+        JS_ToInt32(ctx, &ddepth, argv[2]);
+        JS_ToInt32(ctx, &dx, argv[3]);
+        JS_ToInt32(ctx, &dy, argv[4]);
+
+        if(argc > 5)
+          JS_ToFloat64(ctx, &scale, argv[5]);
+        if(argc > 6)
+          JS_ToFloat64(ctx, &delta, argv[6]);
+        if(argc > 7)
+          JS_ToInt32(ctx, &borderType, argv[7]);
+
+        cv::Scharr(src, dst, ddepth, dx, dy, scale, delta, borderType);
         break;
       }
 

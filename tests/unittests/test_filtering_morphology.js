@@ -6,14 +6,6 @@ import * as cv from 'opencv';
  * the opencv.js example pages cataloged in doc/opencv-js-examples.md
  * (js_imgproc: filtering & morphology, plus pyramids). Synthetic Mats
  * only - no file I/O.
- *
- * Not testable here:
- * - cv.Laplacian(), cv.pyrDown(), cv.pyrUp(), cv.Scharr() are registered
- *   and callable but are literal no-op stubs (empty `case: { break; }`
- *   bodies in js_imgproc_filter) - the destination Mat is left
- *   completely untouched, no exception. See BUGS:
- *   laplacian-pyrdown-pyrup-scharr-are-noop-stubs. Not worked around
- *   here; skipped rather than asserting broken behavior.
  */
 
 const testCases = {};
@@ -137,6 +129,36 @@ addTest('Canny - edge detection', () => {
   cv.Canny(src, dst, 50, 150);
   assert(dst.rows === 40 && dst.cols === 40, 'expected same spatial size');
   assert(cv.countNonZero(dst) > 0, 'expected edges to be detected around the rectangle');
+});
+
+addTest('Laplacian - second-derivative edge detection', () => {
+  const src = shapeImage(40);
+  const dst = new cv.Mat();
+  cv.Laplacian(src, dst, cv.CV_64F);
+  assert(dst.rows === 40 && dst.cols === 40, 'expected same spatial size');
+  assert(cv.countNonZero(dst) > 0, 'expected a nonzero response at the rectangle edge');
+});
+
+addTest('Scharr - gradient edge detection', () => {
+  const src = shapeImage(40);
+  const dst = new cv.Mat();
+  cv.Scharr(src, dst, cv.CV_64F, 1, 0);
+  assert(dst.rows === 40 && dst.cols === 40, 'expected same spatial size');
+  assert(cv.countNonZero(dst) > 0, 'expected a nonzero horizontal-gradient response');
+});
+
+addTest('pyrDown - downsample (blur + halve)', () => {
+  const src = shapeImage(40);
+  const dst = new cv.Mat();
+  cv.pyrDown(src, dst);
+  assert(dst.rows === 20 && dst.cols === 20, `expected 20x20, got ${dst.rows}x${dst.cols}`);
+});
+
+addTest('pyrUp - upsample (double + blur)', () => {
+  const src = shapeImage(40);
+  const dst = new cv.Mat();
+  cv.pyrUp(src, dst);
+  assert(dst.rows === 80 && dst.cols === 80, `expected 80x80, got ${dst.rows}x${dst.cols}`);
 });
 
 tests(testCases);
