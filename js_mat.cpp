@@ -355,6 +355,17 @@ js_mat_initialize(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
     std::vector<size_t> steps;
     cv::Scalar scalar = {0, 0, 0, 0};
     JSValue abuf = JS_NULL;
+    JSMatData* other;
+
+    if((other = js_mat_data(argv[0]))) {
+      /* opencv.js's `new cv.Mat(other)` creates a shallow-copy handle -
+       * cv::Mat's copy constructor shares the reference-counted buffer,
+       * matching that semantics (see the `.dup()` method, which does the
+       * same thing but into a freshly-wrapped object instead of `this`). */
+      new(m) cv::Mat(*other);
+      return TRUE;
+    }
+
     JSInputArray array = js_vector_inputarray(argv[0]);
 
     if(!js_is_noarray(array) && array.isVector()) {

@@ -1785,3 +1785,56 @@
     new cv.BRISK();
     // InternalError: BRISK::create([thresh, octaves,] radiusList, numberList, dMax, dMin, indexChange)
 
+- FIXED: minmaxloc-positional-array-not-named-object: `cv.minMaxLoc()`
+  (`js_cv.cpp`'s `OTHER_MIN_MAX_LOC`) returned only `[minVal, maxVal,
+  minLoc, maxLoc]`; opencv.js returns `{minVal, maxVal, minLoc, maxLoc}`.
+  `result.minVal` etc. were silently `undefined` with no exception -
+  ported code (and, it turned out, this project's own sibling `plot-cv`
+  scripts `test-image.js`/`test-video.js`, both already written against
+  `ret.minVal`/`ret.maxVal`) got `undefined` arithmetic instead of a
+  crash. Fixed by attaching the same four fields by name onto the
+  existing positional array before returning it, so both `result[0]` and
+  `result.minVal` work - no internal caller relied on the return value
+  being a plain `Array` with nothing else attached.
+
+    import * as cv from 'opencv';
+    let m = cv.matFromArray(2, 2, cv.CV_8UC1, [10, 200, 50, 5]);
+    let {minVal, maxVal} = cv.minMaxLoc(m);
+    // minVal === 5, maxVal === 200 - both were undefined before
+
+- FIXED: minenclosingcircle-no-return-value: `cv.minEnclosingCircle()`
+  (`js_imgproc.cpp`'s `SHAPE_MIN_ENCLOSING_CIRCLE`) reported its result
+  only through two optional callback arguments and otherwise returned
+  `undefined`; opencv.js returns `Circle {center, radius}` directly.
+  Fixed by also returning a plain `{center, radius}` object (opencv.js's
+  `Circle` is a plain object, not a real bound class, per
+  `doc/opencv-js-api.md`) alongside the pre-existing callback form.
+  Updated `tests/unittests/test_contour_functions.js`'s
+  `minEnclosingCircle - Mat CV_32SC2` test, which was destructuring
+  `const [center, radius] = cv.minEnclosingCircle(contour)` - already
+  broken before this fix, since the old code returned `undefined` and
+  array-destructuring `undefined` throws - to `const {center, radius} =
+  ...` instead.
+
+    import * as cv from 'opencv';
+    let pts = cv.matFromArray(4, 1, cv.CV_32SC2, [0,0, 10,0, 10,10, 0,10]);
+    let {center, radius} = cv.minEnclosingCircle(pts);
+    // center.x === 5, center.y === 5 - was undefined (TypeError to destructure) before
+
+- FIXED: no-mat-copy-handle-constructor: `new cv.Mat(otherMat)` threw
+  `TypeError: argument 1 must be one of: Array, cv.Size, Contour, Number,
+  TypedArray` - `js_mat_initialize`'s dispatch chain (`js_mat.cpp`) had no
+  branch recognizing another `Mat` as `argv[0]`. opencv.js's `new
+  cv.Mat(other)` creates a shallow-copy handle sharing the source's
+  reference-counted buffer. Fixed by placement-newing a `cv::Mat` copy-
+  constructed from the source Mat's data when `argv[0]` is itself a Mat -
+  `cv::Mat`'s copy constructor already has this exact sharing semantics,
+  same as what the pre-existing `.dup()` method wraps into a new object
+  instead of `this`.
+
+    import * as cv from 'opencv';
+    let a = cv.matFromArray(2, 2, cv.CV_32FC1, [1, 2, 3, 4]);
+    let b = new cv.Mat(a);
+    b.data32F[0] = 99;
+    // a.data32F[0] === 99 too - shared buffer, matching opencv.js - was TypeError before
+

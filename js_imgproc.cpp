@@ -2191,6 +2191,10 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
           JS_FreeValue(ctx, r);
         }
 
+        /* opencv.js returns Circle {center, radius} directly. */
+        ret = JS_NewObject(ctx);
+        JS_SetPropertyStr(ctx, ret, "center", js_point_new(ctx, center));
+        JS_SetPropertyStr(ctx, ret, "radius", JS_NewFloat64(ctx, radius));
         break;
       }
 

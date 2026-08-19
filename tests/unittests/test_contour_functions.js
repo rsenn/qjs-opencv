@@ -112,7 +112,7 @@ tests({
     contour.data32S[4] = 150; contour.data32S[5] = 150;
     contour.data32S[6] = 50;  contour.data32S[7] = 150;
     
-    const [center, radius] = cv.minEnclosingCircle(contour);
+    const {center, radius} = cv.minEnclosingCircle(contour);
     if (!center) throw new Error('Should return center');
     if (Math.abs(center.x - 100) > 2) {
       throw new Error(`Expected center.x ~100, got ${center.x}`);

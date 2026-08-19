@@ -1219,6 +1219,14 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
             JS_Call(ctx, argv[i + 1], JS_NULL, 1, &results[i]);
 
         ret = js_array<JSValue>::from_sequence(ctx, const_cast<JSValue*>(&results[0]), const_cast<JSValue*>(&results[4]));
+
+        /* opencv.js returns {minVal, maxVal, minLoc, maxLoc}; attach the
+         * same fields by name on top of the positional array so both
+         * calling conventions work. */
+        JS_SetPropertyStr(ctx, ret, "minVal", JS_DupValue(ctx, results[0]));
+        JS_SetPropertyStr(ctx, ret, "maxVal", JS_DupValue(ctx, results[1]));
+        JS_SetPropertyStr(ctx, ret, "minLoc", JS_DupValue(ctx, results[2]));
+        JS_SetPropertyStr(ctx, ret, "maxLoc", JS_DupValue(ctx, results[3]));
         break;
       }
 
