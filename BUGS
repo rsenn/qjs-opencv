@@ -1617,7 +1617,7 @@
     orb.compute(img, kps, descriptors);
     // kps is now re-synced to whatever ORB actually kept descriptors for
 
-- tinytest-run-stops-silently-after-two-tests: `tests/unittests/tinytest.js`'s
+- FIXED: tinytest-run-stops-silently-after-two-tests: `tests/unittests/tinytest.js`'s
   `run()` (line 53) is supposed to `try`/`catch` around each test and keep
   going, but `test_contour_functions.js` (and presumably every other
   `tinytest`-based suite) stops after exactly 2 of its 16 tests print
@@ -1628,7 +1628,13 @@
   unmodified checkout (verified via `git stash`), so this is pre-existing,
   not caused by any change in this session - found incidentally while
   regression-checking after adding `js_ximgproc.cpp`'s edge-aware filters.
-  Not investigated further (out of scope for that task).
+  Not investigated further at the time (out of scope for that task). Root
+  cause found and fixed in a later session - see `tinytest-console-error-
+  not-a-function` below: `console.error()` itself throws in this `qjsm`
+  environment, and `run()`'s failure-path `catch` block called it, so the
+  3rd test (`test_contour_functions.js`'s first *failing* test, not a
+  fixed "test #3") threw a second, unhandled exception from inside the
+  `catch`, aborting the loop. Nothing to do with promise timing.
 
     QUICKJS_MODULE_PATH=build/x86_64-linux-gnu qjsm tests/unittests/test_contour_functions.js
     # prints "Possibly unhandled promise rejection: TypeError: not a function"
@@ -1903,4 +1909,222 @@
     import * as cv from 'opencv';
     let bf = cv.DescriptorMatcher.create('BruteForce-Hamming');
     // bf[Symbol.toStringTag] === 'DescriptorMatcher' - was TypeError: cv.DescriptorMatcher is undefined before
+
+- js-cv-inputarray-scalar-dangling-pointer: `js_cv_inputarray()`
+  (`include/js_inputoutputarray.hpp:78-91`) - the generic JS-value-to-
+  `cv::_InputArray` resolver used by most functions accepting a
+  color/bounds/Scalar argument (e.g. `inRange`'s `lowerb`/`upperb`,
+  likely others taking a plain-array Scalar) - silently returns a
+  `cv::_InputArray` that references a destroyed local variable whenever
+  the JS argument is a plain `Array` of 2-4 numbers. The code:
+
+      } else if(js_is_array(ctx, value)) {
+        std::vector<double> arr;
+        cv::Scalar scalar;              // <- stack-local
+        js_array_to(ctx, value, arr);
+        if(arr.size() >= 2 && arr.size() <= 4) {
+          for(size_t i = 0; i < arr.size(); i++)
+            scalar[i] = arr[i];
+          return JSInputArray(scalar);  // <- _InputArray(const Matx&) stores &mtx, not a copy
+        } ...
+
+  `cv::Scalar` is `Scalar_<double>`, which derives from `Matx<double,4,1>`;
+  OpenCV's `_InputArray(const Matx<_Tp,m,n>&)` constructor
+  (`opencv2/core/mat.inl.hpp:133-134`) stores a raw pointer to the
+  argument (`init(..., &mtx, ...)`), not a copy - it's designed for a
+  `Scalar`/`Matx` that outlives the call, e.g. a real argument passed
+  straight through to a `cv::` API, not one returned out of a helper
+  function. Here the `scalar` local's storage is gone the moment
+  `js_cv_inputarray()` returns, so the caller's `_InputArray` dereferences
+  a dangling stack slot - by the time `cv::inRange()` (or whatever
+  consumer) actually reads through it, the bytes have usually been
+  overwritten by the next call's stack frame, typically reading back as
+  all-zero. No exception, no obviously-missing output: `cv.inRange(img,
+  [0,0,0], [255,255,255], mask)` (a literal full-range bound, which
+  should mark every pixel in range) silently produces an all-zero mask
+  instead. Confirmed the array-typed path is genuinely broken and not
+  just an inRange-specific issue: the exact same bounds passed as a
+  `Float64Array(4)` (`cv.Scalar.all(0)`/`.all(255)`) - which takes a
+  completely different, safe code path earlier in the same function (the
+  `js_is_typedarray` branch's `reinterpret_cast<cv::Scalar*>` on the
+  typed array's own backing storage, which stays alive) - works
+  correctly. Found while writing `tests/unittests/test_core_arithmetic.js`
+  (opencv.js example-coverage tests): `js_colorspaces_inRange.html`'s
+  binding list includes `cv.inRange`. Not fixed here - this is a
+  foundational helper shared by many bindings, not scoped to one
+  function; the fix is presumably `return JSInputArray(cv::Mat(scalar))`
+  or similarly copying into caller-owned storage before returning, but
+  that needs auditing every call site's assumption about the returned
+  `_InputArray`'s lifetime, so flagging rather than changing inline.
+
+    import * as cv from 'opencv';
+    let img = new cv.Mat(3, 3, cv.CV_8UC3);
+    img.setTo([200, 50, 50]);
+    let mask = new cv.Mat();
+    cv.inRange(img, [0, 0, 0], [255, 255, 255], mask);
+    // [...mask.data] is all 0 - every pixel is well within [0,0,0]-[255,255,255]
+    // and should read all 255; cv.inRange(img, cv.Scalar.all(0), cv.Scalar.all(255), mask)
+    // (Float64Array bounds instead of plain arrays) gives the correct all-255 result
+
+- calchist-requires-8-args-throws-null: `cv.calcHist()` (`js_imgproc.cpp`'s
+  `js_cv_calc_hist`) hard-requires `argc >= 8` (`if(mask == nullptr ||
+  hist == nullptr || argc < 8) return JS_EXCEPTION;`) even though its
+  8th/9th parameters (`uniform`, `accumulate`) are otherwise read as
+  optional (`bool uniform = true; ... if(argc > 7) uniform = ...`) - so
+  the natural 7-argument opencv.js-style call `cv.calcHist(images,
+  channels, mask, hist, dims, histSize, ranges)` (omitting `uniform`
+  entirely, relying on its stated default) throws, and the 8th `uniform`
+  argument must always be passed explicitly despite the default existing
+  in the signature. Worse: it `return JS_EXCEPTION` without ever calling
+  a `JS_Throw*()` first, so whatever the exception value happens to be
+  is whatever's stale in the QuickJS exception slot - observed as the
+  thrown value literally being `null` (`e.message` throws/reads as
+  `undefined` on a `null` catch value) rather than an `Error` with a
+  useful message. Found while writing
+  `tests/unittests/test_core_arithmetic.js`; worked around there by
+  passing `uniform` explicitly. Not fixed here - two small, easy,
+  separable fixes (drop `uniform` from the hard `argc < 8` gate; throw a
+  real `TypeError` instead of a bare `JS_EXCEPTION`) but out of scope for
+  a test-writing pass.
+
+    import * as cv from 'opencv';
+    let hist = new cv.Mat();
+    try {
+      cv.calcHist([cv.Mat.zeros(4, 4, cv.CV_8UC1)], [0], new cv.Mat(), hist, 1, [256], [[0, 256]]);
+    } catch(e) {
+      console.log(e); // null - not an Error, and would work fine if `uniform` (true) were passed as an 8th arg
+
+- laplacian-pyrdown-pyrup-scharr-are-noop-stubs: `cv.Laplacian()`,
+  `cv.pyrDown()`, `cv.pyrUp()`, and `cv.Scharr()` (`js_imgproc.cpp`'s
+  `js_imgproc_filter`, cases `FILTER_LAPLACIAN`/`FILTER_PYR_DOWN`/
+  `FILTER_PYR_UP`/`FILTER_SCHARR`) are all registered, exported, and
+  callable with no argument-count/type errors, but their case bodies are
+  **empty** (`case FILTER_LAPLACIAN: { break; }` etc - no `cv::Laplacian`/
+  `cv::pyrDown`/`cv::pyrUp`/`cv::Scharr` call anywhere in any of the four
+  bodies). Calling any of them leaves the destination `Mat` completely
+  untouched (still empty if freshly constructed) and throws nothing -
+  the single most dangerous failure mode (silent total no-op, not even
+  "wrong output", just no computation at all). All four are referenced by
+  name in `doc/opencv-js-examples.md`'s catalog
+  (`js_gradients_Laplacian.html`, `js_pyramids_pyrDown.html`,
+  `js_pyramids_pyrUp.html`, `js_gradients_Sobel.html` also uses
+  `cv.Scharr`), so every one of those example pages silently produces a
+  blank/unchanged image instead of the documented effect. Found while
+  writing `tests/unittests/test_filtering_morphology.js` (opencv.js
+  example-coverage tests) - the sibling case `FILTER_SOBEL` two cases
+  below `FILTER_SCHARR` in the same function *is* fully implemented and
+  is the obvious template for `Scharr` (near-identical signature, just
+  `cv::Scharr(src, dst, ddepth, dx, dy, scale, delta, borderType)` instead
+  of `cv::Sobel`'s extra `ksize` parameter); `FILTER_BOX_FILTER`/
+  `FILTER_GET_STRUCTURING_ELEMENT` are reasonable templates for the
+  `pyrDown`/`pyrUp`/`Laplacian` argument-parsing shape. Not fixed here -
+  four real (if mechanical) implementations to write and verify, out of
+  scope for a test-writing pass - but this is a correctness-critical gap,
+  not a naming/shape mismatch; recommend prioritizing this fix over most
+  of the remaining TODO.md backlog.
+
+    import * as cv from 'opencv';
+    let src = cv.Mat.zeros(20, 20, cv.CV_8UC1);
+    cv.rectangle(src, {x:5,y:5,width:10,height:10}, 200, -1);
+    let dst = new cv.Mat();
+    cv.pyrDown(src, dst);
+    console.log(dst.empty); // true - pyrDown silently did nothing, no exception
+
+- FIXED: tinytest-console-error-not-a-function: root-caused the
+  previously-only-partially-diagnosed `tinytest-run-stops-silently-
+  after-two-tests` entry above. `console.error(...)` throws `TypeError:
+  not a function` unconditionally in this project's `qjsm` environment,
+  regardless of arguments (`console.error('x')` alone throws) - `console`
+  apparently only implements `.log`/some others, not `.error`.
+  `tests/unittests/tinytest.js`'s `run()` catch block
+  (`console.error('Test:', testName, 'FAILED', e); console.error(e.stack);`)
+  called it on every test *failure*, so the moment any test in a suite
+  failed, that `console.error` call itself threw inside the `catch`
+  block of an `async` function - a second, unhandled exception that
+  aborts the whole `for...in` loop silently (surfacing only as
+  `Possibly unhandled promise rejection: TypeError: not a function at
+  run (tinytest.js:53)` with zero indication that a real test failure
+  was the trigger, and no report of which test failed or why). This is
+  why `test_contour_functions.js` was observed stopping after exactly 2
+  "OK"s - the 3rd test happened to be the first one that failed. Fixed
+  by switching `tinytest.js`'s two `console.error` calls to
+  `console.log`. Also fixed as a byproduct: the entire test suite is
+  usable again for iterating on failures - every prior debugging session
+  that hit this had to bypass `tinytest.js` and hand-roll a plain
+  try/catch loop to see which test failed and why.
+
+    // before: any failing test in a tinytest-based suite silently aborted
+    // the whole run with no indication of which test failed:
+    QUICKJS_MODULE_PATH=build/x86_64-linux-gnu qjsm tests/unittests/test_contour_functions.js
+    // "Possibly unhandled promise rejection: TypeError: not a function" then nothing else
+
+- polylines-color-requires-4-element-array: `cv.polylines()`
+  (`js_draw.cpp`'s `js_draw_polylines`) reads its `color` argument via
+  `js_array_to(ctx, argv[i++], color.arr)` into a fixed `double[4]` -
+  unlike every other draw function in the same file (`rectangle`,
+  `circle`, `line`, all of which use `js_color_read`/`js_array_to`
+  patterns that tolerate 1-3 element arrays and a bare number), this one
+  silently produces a fully-zeroed (invisible) color and draws nothing -
+  no exception - for any array shorter than exactly 4 elements,
+  including a bare number like `255` (valid, common usage for a
+  grayscale image elsewhere in this codebase). Found while writing
+  `tests/unittests/test_segmentation_video.js`; worked around there by
+  always passing a full 4-element color array. Not fixed here - narrow,
+  cosmetic-severity, easy fix (reuse `js_color_read` like the sibling
+  draw functions) but out of scope for a test-writing pass.
+
+    import * as cv from 'opencv';
+    let img = cv.Mat.zeros(40, 40, cv.CV_8UC1);
+    let pts = cv.matFromArray(4, 1, cv.CV_32SC2, [5,5, 35,5, 35,35, 5,35]);
+    cv.polylines(img, pts, true, 255, 2);
+    // cv.countNonZero(img) === 0 - nothing drawn; [255,255,255,255] instead of 255 works
+
+- cv-psimpl-namespace-deleted-without-replacement: `cv.psimpl` (the 7
+  polyline-simplification algorithms - `douglasPeucker`, `nthPoint`,
+  `radialDistance`, `reumannWitkam`, `opheim`, `lang`,
+  `perpendicularDistance`) is completely absent from the built module -
+  `cv.psimpl === undefined`. This repo's own `CLAUDE.md` documents it as
+  done ("All seven `psimpl` algorithms are freestanding functions under
+  the `cv.psimpl.*` namespace") and `tests/unittests/test_psimpl_functions.js`
+  is a real, correctly-written 9-test suite for it - but commit `c1d96d4`
+  ("got rid of js_contour.[ch]pp completely", 2026-08-17) deleted
+  `js_contour.cpp` (652 lines) outright with no successor file
+  registering `cv.psimpl`, unlike the 16 shape-analysis functions from
+  the same class, which *were* migrated to freestanding functions per
+  `CLAUDE.md`'s own "Contour Migration Phase 1 complete" note. A
+  `psimpl.hpp`/`line.hpp`/`line.cpp` implementation still exists in the
+  tree (`include/psimpl.hpp`, `src/line.cpp`) and in the uncommitted
+  `worktree-js-read-points` branch's own `js_contour.cpp` - the
+  underlying algorithm code isn't gone, just its JS binding registration.
+  Found because `test_psimpl_functions.js` fails all 9 of its tests once
+  `tinytest-console-error-not-a-function` (above) stopped masking real
+  test failures - previously this suite silently reported nothing past
+  its first failure. `CLAUDE.md`'s "Already solved, don't rebuild" claim
+  about psimpl is now stale and should be corrected. Not fixed here -
+  substantial (needs a new binding file, not a one-liner) and well
+  outside the scope of a test-writing pass.
+
+    import * as cv from 'opencv';
+    console.log(cv.psimpl); // undefined - was documented as shipped
+
+- convexitydefects-wrong-column-count: `cv.convexityDefects()` returns a
+  `Mat` with the wrong number of columns per defect - opencv.js/native
+  OpenCV's `convexityDefects` always returns 4 columns per row
+  (`start_index, end_index, farthest_point_index, fixpt_depth`);
+  observed 2 columns instead on a real concave hexagon contour. Found via
+  `test_contour_functions.js`'s `convexityDefects - Mat CV_32SC2` test
+  (previously silently un-reported - see `tinytest-console-error-not-a-
+  function` above). Not investigated further or fixed - needs tracing
+  through `js_imgproc.cpp`'s `SHAPE_CONVEXITY_DEFECTS` to see whether the
+  output `Mat`'s column count is hardcoded wrong or the underlying
+  `cv::Vec4i` results are being reshaped incorrectly.
+
+    import * as cv from 'opencv';
+    let contour = new cv.Mat(6, 1, cv.CV_32SC2);
+    // ... (hexagon with one concave vertex - see test_contour_functions.js)
+    let hull = new cv.Mat();
+    cv.convexHull(contour, hull, false, false);
+    let defects = new cv.Mat();
+    cv.convexityDefects(contour, hull, defects);
+    console.log(defects.cols); // 2, expected 4
 

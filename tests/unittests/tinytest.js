@@ -50,8 +50,8 @@ const TinyTest = {
         console.log('Test:', testName, 'OK');
       } catch(e) {
         failures++;
-        console.error('Test:', testName, 'FAILED', e);
-        console.error(e.stack);
+        console.log('Test:', testName, 'FAILED', e);
+        console.log(e.stack);
       }
       count++;
     }

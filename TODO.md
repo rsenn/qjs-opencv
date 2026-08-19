@@ -88,7 +88,7 @@ opencvjs-fs-createdatafile-not-applicable`.
 ## Already solved, don't rebuild
 
 - **Contour → SVG bezier splines.** No OpenCV algorithm does this (checked the full coverage survey — no such symbol exists, bound or unbound). It doesn't need a library either: `js/cvVectorization.js` (uncommitted) already has a correct Schneider/Graphics-Gems `FitCurves` cubic-bezier fitter (`CurveFitter` — corner detection, chord-length parameterization, Newton-Raphson reparameterization, recursive error-based subdivision) consuming `contour.array` directly, plus `SvgBuilder` for multi-region path output with holes via `fill-rule="evenodd"`. Keep this in JS; it's O(n) per subdivision and QuickJS handles it fine. Only reconsider a C++ port if profiling on a real workload shows it's the bottleneck.
-- **Polyline simplification.** All seven `psimpl` algorithms are freestanding functions under the `cv.psimpl.*` namespace (`cv.psimpl.douglasPeucker`, `cv.psimpl.reumannWitkam`, etc.), accepting Mat CV_32SC2/JS arrays and returning Mat CV_32SC2. See `js_psimpl.cpp`.
+- ~~**Polyline simplification.** All seven `psimpl` algorithms are freestanding functions under the `cv.psimpl.*` namespace~~ **STALE as of 2026-08-19 - regressed, not solved.** Commit `c1d96d4` ("got rid of js_contour.[ch]pp completely") deleted the file registering `cv.psimpl` with no replacement; `cv.psimpl` is now `undefined`. `tests/unittests/test_psimpl_functions.js` (still present, still correct) fails all 9 tests. The underlying algorithm code is still in the tree (`include/psimpl.hpp`, `src/line.cpp`), just unregistered - and also still wired up in the uncommitted `worktree-js-read-points` branch's own `js_contour.cpp`. See `BUGS: cv-psimpl-namespace-deleted-without-replacement`.
 - **Contour → freestanding-function migration and the generic vector infrastructure.** The custom `Contour` class is gone entirely; all 16 shape-analysis functions (`contourArea`, `boundingRect`, `convexHull`, ...) are freestanding, and all 16 opencv.js vector-container types (`MatVector`, `PointVector`, `Point2fVector`, ..., `CharVectorVector`) are implemented via the generic `JSVector<T>` template (`include/js_vector.hpp`) with `push_back`/`get`/`set`/`size`/`Symbol.iterator`/`delete()`. `findContours` accepts `MatVector` or `PointVectorVector` as zero-copy output, alongside a plain-`Array` fallback. See `js_vector.hpp`, `js_vector.cpp`, and `tests/unittests/test_contour_functions.js`/`test_psimpl_functions.js`.
 - **Skeleton tracing.** `algorithms/skeleton_lines.hpp` (Guo-Hall thinning + topology-aware tracing that cuts at junctions) is fully bound: `skeletonizeGuohall`, `traceLines`, `degreeMap`, `skeletonizeAndTrace`. Distinct from `findContours` (region boundaries) and `LineSegmentDetector`/`FastLineDetector` (straight-line detection) — the three don't substitute for each other, pick per input character.
 - **Region proposal for collage-art's "several algorithms to pick a motive."** `grabCut` (bound) plus `ximgproc::segmentation` selective-search/graph-segmentation (already bound) cover this with zero new binding work.
@@ -197,6 +197,29 @@ flag, and `Mat.step` dropping the last dimension's stride. See `BUGS`
 `mat-step-drops-last-dimension`. No new pass has been done since to look
 for further instances of this category - worth another audit pass rather
 than assuming it's now exhaustively clean.
+
+**New, unfixed (2026-08-19), highest priority - worse than "wrong", a total no-op:**
+`cv.Laplacian()`, `cv.pyrDown()`, `cv.pyrUp()`, `cv.Scharr()`
+(`js_imgproc.cpp`'s `js_imgproc_filter`, cases `FILTER_LAPLACIAN`/
+`FILTER_PYR_DOWN`/`FILTER_PYR_UP`/`FILTER_SCHARR`) are registered and
+callable but their case bodies are literally empty (`{ break; }`) - the
+destination `Mat` is left untouched, no exception. All four are used by
+name in `doc/opencv-js-examples.md` (`js_gradients_Laplacian.html`,
+`js_pyramids_pyrDown.html`, `js_pyramids_pyrUp.html`,
+`js_gradients_Sobel.html`). `FILTER_SOBEL` (same function, fully
+implemented) is the template for `Scharr`. See `BUGS:
+laplacian-pyrdown-pyrup-scharr-are-noop-stubs`.
+
+**New, unfixed (2026-08-19):** `js_cv_inputarray()`'s plain-`Array`-of-
+2..4-numbers path (`include/js_inputoutputarray.hpp:78-91`) returns a
+`cv::_InputArray` that references a destroyed local `cv::Scalar` -
+`_InputArray(const Matx&)` stores a pointer, not a copy. Any function
+taking a color/bounds argument as a plain JS array (confirmed:
+`cv.inRange(img, [0,0,0], [255,255,255], mask)` silently returns an
+all-zero mask instead of all-255) is affected; the same bounds via
+`Float64Array`/`Scalar.all()` work correctly since that's a different,
+safe code path. Not scoped to one function - a shared helper bug. See
+`BUGS: js-cv-inputarray-scalar-dangling-pointer`.
 
 *(`Mat.diag()`, `Mat.data`/`.data8S`/`.data16U`/`.data16S`/`.data32S`/`.data32F`/`.data64F`, all seven `<type>At()` accessors, all seven `<type>Ptr()` accessors, and `StringVector`/`DMatchVectorVector`/`KeyPointVectorVector` from the 2026-08-12 audit's "not bound" list are now **implemented** — `js_mat.cpp:2051-2101`, `js_vector.cpp` — and removed from this list.)*
 
