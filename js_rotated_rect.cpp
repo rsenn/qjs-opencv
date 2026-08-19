@@ -213,6 +213,17 @@ js_rotated_rect_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
 }
 
 static JSValue
+js_rotated_rect_static_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  if(argc < 1)
+    return JS_ThrowTypeError(ctx, "argument 1 must be a RotatedRect");
+
+  /* opencv.js exposes these as static functions taking the RotatedRect as
+   * the first argument, rather than instance methods; forward straight
+   * into the existing instance-method implementation. */
+  return js_rotated_rect_method(ctx, argv[0], argc - 1, argv + 1, magic);
+}
+
+static JSValue
 js_rotated_rect_inspect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSRotatedRectData* rr = js_rotated_rect_data2(ctx, this_val);
   JSValue obj = JS_NewObjectClass(ctx, js_rotated_rect_class_id);
@@ -258,6 +269,9 @@ const JSCFunctionListEntry js_rotated_rect_proto_funcs[] = {
 
 const JSCFunctionListEntry js_rotated_rect_static_funcs[] = {
     JS_CFUNC_DEF("from", 1, js_rotated_rect_from),
+    JS_CFUNC_MAGIC_DEF("boundingRect", 1, js_rotated_rect_static_method, ROTATED_RECT_METHOD_BOUNDING_RECT),
+    JS_CFUNC_MAGIC_DEF("boundingRect2f", 1, js_rotated_rect_static_method, ROTATED_RECT_METHOD_BOUNDING_RECT2F),
+    JS_CFUNC_MAGIC_DEF("points", 2, js_rotated_rect_static_method, ROTATED_RECT_METHOD_POINTS),
 };
 
 int

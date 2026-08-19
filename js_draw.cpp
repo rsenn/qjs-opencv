@@ -486,16 +486,20 @@ js_draw_keypoints(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
   int i = 0, ret = -1;
   std::vector<JSKeyPointData> keypoints;
   JSColorData<double> color = {-1, -1, -1, -1};
+  int32_t flags = 0; /* cv::DrawMatchesFlags::DEFAULT */
   JSInputOutputArray image = js_cv_inputoutputarray(ctx, argv[0]);
   JSInputOutputArray dst = js_cv_inputoutputarray(ctx, argv[2]);
 
   js_array_to(ctx, argv[1], keypoints);
 
-  if(argc)
+  if(argc > 3)
     js_color_read(ctx, argv[3], &color);
 
+  if(argc > 4)
+    JS_ToInt32(ctx, &flags, argv[4]);
+
   try {
-    cv::drawKeypoints(image, keypoints, dst, *(cv::Scalar*)&color, cv::DrawMatchesFlags(0));
+    cv::drawKeypoints(image, keypoints, dst, *(cv::Scalar*)&color, cv::DrawMatchesFlags(flags));
   } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 
   return JS_UNDEFINED;

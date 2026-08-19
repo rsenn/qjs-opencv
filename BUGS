@@ -1838,3 +1838,69 @@
     b.data32F[0] = 99;
     // a.data32F[0] === 99 too - shared buffer, matching opencv.js - was TypeError before
 
+- FIXED: drawkeypoints-flags-hardcoded-color-check-broken:
+  `cv.drawKeypoints()` (`js_draw.cpp`'s `js_draw_keypoints`) always passed
+  `cv::DrawMatchesFlags(0)` to `cv::drawKeypoints()` regardless of the
+  `flags` argument (never read at all), and its guard for the optional
+  `color` argument was `if(argc)` - always true, since the function's
+  bound arity already requires 3 args minimum - so it always read
+  `argv[3]` as `color` instead of falling back to the default
+  `Scalar.all(-1)` when `color` was actually omitted. Fixed both: `color`
+  now gated on `argc > 3`, `flags` now read from `argv[4]` when `argc >
+  4` instead of being hardcoded. Two call sites in `tests/` and the
+  sibling `plot-cv` repo were already passing 5 args expecting `flags` to
+  take effect (`tests/test_video_homography.js`,
+  `plot-cv/test-features2d.js`) - their `flags` argument was silently
+  ignored before this fix and now actually applies.
+
+    import * as cv from 'opencv';
+    let img = new cv.Mat(64, 64, cv.CV_8UC3, new Uint8Array(64 * 64 * 3));
+    let kps = [new cv.KeyPoint(10, 10, 5)];
+    let out = new cv.Mat();
+    cv.drawKeypoints(img, kps, out, [0, 255, 0, 0], cv.DRAW_RICH_KEYPOINTS);
+    // now actually draws rich keypoints (size+orientation) - flags was silently ignored before
+
+- FIXED: rotatedrect-static-methods-missing: `RotatedRect.points`/
+  `.boundingRect`/`.boundingRect2f` (`js_rotated_rect.cpp`) existed only
+  as instance methods (`rr.points()`); opencv.js exposes all three as
+  static functions taking the `RotatedRect` as their first argument
+  (`RotatedRect.points(rr)`). Ported code calling the static form threw
+  `TypeError: cv.RotatedRect.points is not a function`. Fixed by adding
+  `js_rotated_rect_static_method`, a thin wrapper that forwards
+  `(rr, ...rest)` into the existing instance-method implementation
+  (`js_rotated_rect_method`) using `rr` as `this_val` - both the instance
+  and static forms now work side by side.
+
+    import * as cv from 'opencv';
+    let rr = new cv.RotatedRect(new cv.Point(50, 50), new cv.Size(20, 10), 30);
+    let pts = cv.RotatedRect.points(rr);
+    // pts.length === 4 - was TypeError before
+
+- FIXED: descriptormatcher-no-create-static-and-unexported:
+  `cv.DescriptorMatcher` had no `.create(type)` static factory (opencv.js
+  relies on `DescriptorMatcher.create(type)` - a string like
+  `'BruteForce'`/`'BruteForce-Hamming'`/`'FlannBased'`, or a
+  `DescriptorMatcher.MatcherType` int) - `js_descriptor_matcher_static_funcs`
+  (`js_feature2d.cpp`) was a literal empty array. Worse, while
+  investigating: `DescriptorMatcher` itself was never exported from the
+  module under any name at all (`js_feature2d_init`/`js_feature2d_export`
+  only ever exported `Feature2D` and the per-subclass `js_feature2d_classes`
+  entries, plus `BFMatcher`/`FlannBasedMatcher` via
+  `js_feature2d_global_funcs` - `cv.DescriptorMatcher` was `undefined`
+  regardless of its static-func table). Fixed both: added
+  `js_descriptor_matcher_create()` (accepts either a type-name string via
+  `cv::DescriptorMatcher::create(const String&)` or a `MatcherType` int
+  via the int overload) plus the six `MatcherType` enum constants to
+  `js_descriptor_matcher_static_funcs`, and added the missing
+  `JS_SetModuleExport`/`JS_AddModuleExport(ctx, m, "DescriptorMatcher")`
+  calls. Verified the created matcher is fully functional (`.match()`
+  works, subject to the separately-tracked `argc`-dispatch bug noted in
+  TODO.md). `BFMatcher.create(normType, crossCheck)` specifically (as
+  opposed to `DescriptorMatcher.create('BruteForce', ...)` or `new
+  cv.BFMatcher(...)`) is still not bound - left open, low priority given
+  the two working alternatives.
+
+    import * as cv from 'opencv';
+    let bf = cv.DescriptorMatcher.create('BruteForce-Hamming');
+    // bf[Symbol.toStringTag] === 'DescriptorMatcher' - was TypeError: cv.DescriptorMatcher is undefined before
+

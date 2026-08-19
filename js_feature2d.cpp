@@ -241,7 +241,48 @@ const JSCFunctionListEntry js_descriptor_matcher_proto_funcs[] = {
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "DescriptorMatcher", JS_PROP_CONFIGURABLE),
 };
 
-const JSCFunctionListEntry js_descriptor_matcher_static_funcs[] = {};
+static JSValue
+js_descriptor_matcher_create(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+  JSDescriptorMatcherData* dm;
+  cv::Ptr<cv::DescriptorMatcher> matcher;
+
+  if(argc < 1)
+    return JS_ThrowTypeError(ctx, "argument 1 must be a descriptorMatcherType string or MatcherType number");
+
+  try {
+    if(JS_IsString(argv[0])) {
+      std::string type;
+      js_value_to(ctx, argv[0], type);
+      matcher = cv::DescriptorMatcher::create(type);
+    } else {
+      int32_t type;
+      JS_ToInt32(ctx, &type, argv[0]);
+      matcher = cv::DescriptorMatcher::create(cv::DescriptorMatcher::MatcherType(type));
+    }
+  } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
+
+  if(!matcher)
+    return JS_ThrowInternalError(ctx, "DescriptorMatcher::create() failed");
+
+  if(!(dm = js_allocate<JSDescriptorMatcherData>(ctx)))
+    return JS_EXCEPTION;
+
+  new(dm) JSDescriptorMatcherData(matcher);
+
+  JSValue obj = JS_NewObjectProtoClass(ctx, descriptor_matcher_proto, js_descriptor_matcher_class_id);
+  JS_SetOpaque(obj, dm);
+  return obj;
+}
+
+const JSCFunctionListEntry js_descriptor_matcher_static_funcs[] = {
+    JS_CFUNC_DEF("create", 1, js_descriptor_matcher_create),
+    JS_PROP_INT32_DEF("FLANNBASED", cv::DescriptorMatcher::FLANNBASED, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("BRUTEFORCE", cv::DescriptorMatcher::BRUTEFORCE, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("BRUTEFORCE_L1", cv::DescriptorMatcher::BRUTEFORCE_L1, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("BRUTEFORCE_HAMMING", cv::DescriptorMatcher::BRUTEFORCE_HAMMING, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("BRUTEFORCE_HAMMINGLUT", cv::DescriptorMatcher::BRUTEFORCE_HAMMINGLUT, JS_PROP_ENUMERABLE),
+    JS_PROP_INT32_DEF("BRUTEFORCE_SL2", cv::DescriptorMatcher::BRUTEFORCE_SL2, JS_PROP_ENUMERABLE),
+};
 
 extern "C" {
 thread_local JSValue feature2d_proto = JS_UNDEFINED, feature2d_class = JS_UNDEFINED;
@@ -1305,6 +1346,7 @@ js_feature2d_init(JSContext* ctx, JSModuleDef* m) {
 
   if(m) {
     JS_SetModuleExport(ctx, m, "Feature2D", feature2d_class);
+    JS_SetModuleExport(ctx, m, "DescriptorMatcher", descriptor_matcher_class);
 
     for(const auto& cl : js_feature2d_classes)
       cl.set_export(ctx, m);
@@ -1324,6 +1366,7 @@ js_feature2d_init(JSContext* ctx, JSModuleDef* m) {
 extern "C" void
 js_feature2d_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "Feature2D");
+  JS_AddModuleExport(ctx, m, "DescriptorMatcher");
 
   for(const auto& cl : js_feature2d_classes)
     cl.add_export(ctx, m);
