@@ -779,8 +779,8 @@ js_cv_calc_hist(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
   mask = js_mat_data2(ctx, argv[2]);
   hist = js_mat_data2(ctx, argv[3]);
 
-  if(mask == nullptr || hist == nullptr || argc < 8)
-    return JS_EXCEPTION;
+  if(mask == nullptr || hist == nullptr || argc < 7)
+    return JS_ThrowTypeError(ctx, "calcHist expects (images, channels, mask, hist, dims, histSize, ranges[, uniform[, accumulate]])");
 
   JS_ToInt32(ctx, &dims, argv[4]);
 
@@ -2154,7 +2154,14 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
         JSInputOutputArray convexhull = js_shape_inputoutputarray(ctx, argv[1], convexhull_converted);
         JSInputOutputArray convexityDefects = js_cv_inputoutputarray(ctx, argv[2]);
 
-        cv::convexityDefects(src, convexhull, convexityDefects);
+        /* cv::convexityDefects() writes a CV_32SC4 Mat of Vec4i elements,
+         * but its own row/col split of those elements is inconsistent
+         * across OpenCV versions (Nx1 on 4.x, 1xN on the 5.0.0 geometry
+         * module build linked here). Reshape by element count so the
+         * result is always Nx4 single-channel CV_32S, matching opencv.js. */
+        cv::Mat defects;
+        cv::convexityDefects(src, convexhull, defects);
+        defects.reshape(1, int(defects.total())).copyTo(convexityDefects);
         break;
       }
 

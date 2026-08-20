@@ -159,7 +159,11 @@ for (const [label, rect] of rectByRepresentation) {
     cv.convexHull(rect, hullIdx, false, false); // returnPoints=false -> hull of indices, as convexityDefects requires
     const defects = new cv.Mat();
     cv.convexityDefects(rect, hullIdx, defects);
-    eq(4, defects.channels()); // [start, end, farthest, fixpt_depth] per defect
+    // a perfect rectangle has no convexity defects; only check the shape when some were found
+    if(defects.total() > 0) {
+      eq(4, defects.cols); // [start, end, farthest, fixpt_depth] per defect - opencv.js convention
+      eq(1, defects.channels());
+    }
   });
 
   addTest(`approxPolyDP - rectangle (${label})`, () => {

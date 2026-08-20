@@ -156,7 +156,7 @@ The `qjsm` binary supports ES modules natively. Do NOT use `qjs` or `-m`/`--modu
 - `BUGS` — known issues and opencv.js API discrepancies (plain text, see format above)
 - `TODO.md` — binding backlog and migration roadmap
 - `js_mat.cpp` — Mat class (most complex binding, ~2000 lines, reference for patterns)
-- `js_contour.cpp` — Contour class + psimpl namespace + findContours
+- `js_psimpl.cpp` — `cv.psimpl.*` namespace (polyline simplification)
 - `js_imgproc.cpp` — shape analysis functions (SHAPE_* magic enum pattern)
 - `js_dnn.cpp` — DNN namespace pattern (reference for namespace objects)
 - `include/js_typed_array.hpp` — `js_typedarray<T>::from_buffer()` template

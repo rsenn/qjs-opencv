@@ -1966,7 +1966,7 @@
     // and should read all 255; cv.inRange(img, cv.Scalar.all(0), cv.Scalar.all(255), mask)
     // (Float64Array bounds instead of plain arrays) gives the correct all-255 result
 
-- calchist-requires-8-args-throws-null: `cv.calcHist()` (`js_imgproc.cpp`'s
+- FIXED: calchist-requires-8-args-throws-null: `cv.calcHist()` (`js_imgproc.cpp`'s
   `js_cv_calc_hist`) hard-requires `argc >= 8` (`if(mask == nullptr ||
   hist == nullptr || argc < 8) return JS_EXCEPTION;`) even though its
   8th/9th parameters (`uniform`, `accumulate`) are otherwise read as
@@ -1993,6 +1993,13 @@
       cv.calcHist([cv.Mat.zeros(4, 4, cv.CV_8UC1)], [0], new cv.Mat(), hist, 1, [256], [[0, 256]]);
     } catch(e) {
       console.log(e); // null - not an Error, and would work fine if `uniform` (true) were passed as an 8th arg
+    }
+
+  Fixed by dropping `uniform` from the hard `argc < 8` gate (now `argc < 7`,
+  matching the 7 required parameters) and throwing a real `TypeError` with a
+  usage message via `JS_ThrowTypeError` instead of a bare `JS_EXCEPTION`.
+  Verified the 7-arg call above now succeeds and returns a populated
+  histogram Mat.
 
 - FIXED: laplacian-pyrdown-pyrup-scharr-are-noop-stubs: `cv.Laplacian()`,
   `cv.pyrDown()`, `cv.pyrUp()`, and `cv.Scharr()` (`js_imgproc.cpp`'s
@@ -2083,7 +2090,7 @@
     cv.polylines(img, pts, true, 255, 2);
     // cv.countNonZero(img) === 0 - nothing drawn; [255,255,255,255] instead of 255 works
 
-- cv-psimpl-namespace-deleted-without-replacement: `cv.psimpl` (the 7
+- FIXED: cv-psimpl-namespace-deleted-without-replacement: `cv.psimpl` (the 7
   polyline-simplification algorithms - `douglasPeucker`, `nthPoint`,
   `radialDistance`, `reumannWitkam`, `opheim`, `lang`,
   `perpendicularDistance`) is completely absent from the built module -
@@ -2104,24 +2111,158 @@
   `tinytest-console-error-not-a-function` (above) stopped masking real
   test failures - previously this suite silently reported nothing past
   its first failure. `CLAUDE.md`'s "Already solved, don't rebuild" claim
-  about psimpl is now stale and should be corrected. Not fixed here -
-  substantial (needs a new binding file, not a one-liner) and well
-  outside the scope of a test-writing pass.
+  about psimpl is now stale and should be corrected.
+
+  Fixed by adding a new `js_psimpl.cpp` registering the `cv.psimpl.*`
+  namespace (Contour support dropped since the Contour class itself is
+  gone). Accepts, each read zero-copy against the source's own backing
+  buffer (no per-point conversion of the input polyline): Mat CV_32SC2,
+  Mat CV_64FC2, cv.PointVector (binary-compatible with interleaved int32
+  pairs), cv.Point2fVector (binary-compatible with interleaved float
+  pairs), or a plain JS array (which does copy on read - no backing buffer
+  to share). Returns the *same type* it was given: Mat CV_32SC2 in ->
+  Mat CV_32SC2 out, Mat CV_64FC2 -> Mat CV_64FC2, PointVector ->
+  PointVector, Point2fVector -> Point2fVector; a plain JS array (no
+  matching C++ container to mirror) -> Mat CV_32SC2. Each algorithm runs
+  with a tolerance of the source's own coordinate type (integer tolerance
+  for int32 sources) via a `js_psimpl_run<T>()` template instantiated per
+  coordinate type, instead of always downcasting to `double`. The
+  simplification writes straight into the final output container -
+  `js_psimpl_run_to_mat()`/`js_psimpl_run_to_vector()` allocate the
+  destination (Mat or `JSVector<PointT>`) at the worst-case size up front
+  (simplification only ever removes points) and get a raw pointer into
+  *its own* storage as the algorithm's `OutputIterator`, then trim to the
+  actual result count afterwards (`cv::Mat::resize()` /
+  `std::vector::resize()` when shrinking only adjust the size, they don't
+  reallocate or copy) - so there's no separate result buffer plus a
+  memcpy into the return value.
+
+  While reimplementing, hit two more bugs:
+
+  1. (the original, pre-existing bug this namespace's absence had been
+     masking) the deleted code built the psimpl input/output buffers via
+     `reinterpret_cast<double*>(points.data())` on a `std::vector<cv::Point>`
+     - i.e. reinterpreting each 8-byte (x:int32, y:int32) pair's raw bits
+     as one IEEE-754 `double`, not converting the point's integer
+     coordinates to a double value. psimpl's simplification routines then
+     ran on that garbage, producing out-of-bounds iterator writes -
+     reproduced as `double free or corruption (out)` crashing the process.
+     Fixed (in the current zero-copy version) by having `js_psimpl_run<T>`
+     run natively in the source's own coordinate type instead of ever
+     reinterpreting through `double`.
+
+  2. `js_mat_data_nothrow()` vs `js_mat_data2()`: the first cut of the
+     Mat-vs-PointVector-vs-Point2fVector dispatch probed for a Mat via
+     `js_mat_data2(ctx, argv[0])`, which wraps `JS_GetOpaque2()` - that
+     call *throws* a `TypeError("Mat object expected")` (setting a
+     pending exception on `ctx`) whenever the class doesn't match, even
+     though the NULL return was meant to just mean "try the next type."
+     Passing a `PointVector` left that stale pending exception sitting on
+     the context while the PointVector branch below ran to completion and
+     produced a correct result - but `qjsm` then reported the leftover
+     exception anyway, as if the call had failed, right after printing the
+     correct output. Reproduced with `cv.psimpl.nthPoint(pointVector, 2)`:
+     prints the correct simplified size, then still prints `TypeError: Mat
+     object expected` pointing at the call site. Fixed by using
+     `js_mat_data_nothrow()` (wraps the non-throwing `JS_GetOpaque()`)
+     for this exploratory type check instead.
+
+  Verified: `cv.psimpl.douglasPeucker(contour, 5.0)` on a 20-point circle
+  approximation now simplifies without crashing and without a leftover
+  pending exception, for all four input types (Mat CV_32SC2, Mat CV_64FC2,
+  PointVector, Point2fVector) plus a plain JS array, each returning the
+  same type it was given (Mat CV_32SC2 in produces a Mat CV_32SC2 out,
+  PointVector in produces a PointVector out, etc.);
+  `tests/unittests/test_psimpl_functions.js` no longer crashes (3/9 pass:
+  `douglasPeucker`, the PointVector case, and the plain-JS-array-input
+  case). The other 6 test failures are the test file's own incorrect
+  expectations, not binding bugs - see `psimpl-test-file-wrong-
+  expectations` below.
 
     import * as cv from 'opencv';
-    console.log(cv.psimpl); // undefined - was documented as shipped
+    console.log(cv.psimpl); // now populated: douglasPeucker, nthPoint, etc.
+    const contour = new cv.Mat(20, 1, cv.CV_32SC2);
+    // ... fill with points ...
+    const simplified = cv.psimpl.douglasPeucker(contour, 5.0); // no longer crashes
 
-- convexitydefects-wrong-column-count: `cv.convexityDefects()` returns a
+- FIXED: psimpl-test-file-wrong-expectations: `tests/unittests/test_psimpl_functions.js`
+  encoded several incorrect assumptions about the `psimpl` library's actual
+  behavior (verified directly against `include/psimpl.hpp`, independent of
+  the qjs-opencv binding - see `cv-psimpl-namespace-deleted-without-
+  replacement` above for the binding fix):
+  - `reumannWitkam`, `radialDistance`, `opheim`, `lang`,
+    `perpendicularDistance` were tested with `tol` values (3.0, 10) far
+    smaller than the ~15.7-unit chord spacing between the test's 20
+    circle-approximation points, so genuinely 0 points got removed at that
+    tolerance - confirmed by calling `psimpl::simplify_radial_distance` and
+    `simplify_reumann_witkam` directly in a standalone C++ program with the
+    test's exact coordinates and tol=3.0: both returned all 20 points
+    unchanged. The test's "expected fewer points" assertion was simply
+    wrong for these tolerance values.
+  - `nthPoint` with n=2 on 20 points was asserted to return exactly 10
+    points, but `psimpl::simplify_nth_point` always force-keeps the last
+    point of the polyline in addition to every nth one, so a correct result
+    is 11 points (indices 0,2,4,...,18 plus 19) whenever the point count
+    isn't itself an exact multiple of n plus one.
+
+  Fixed by rewriting the whole file as a generated test matrix: every one
+  of the 7 `cv.psimpl.*` algorithms x every one of the 5 accepted argument
+  shapes (Mat CV_32SC2, Mat CV_64FC2, cv.PointVector, cv.Point2fVector,
+  plain JS array) = 35 cases, plus 2 argument-validation cases (37 total).
+  The shared test polyline (a 40-point sine wave, dx=2 between x-steps) and
+  every tolerance-based algorithm's arguments were chosen and verified
+  empirically against the actual built module - not guessed - specifically
+  to avoid repeating the mistake above: dense enough that the
+  distance-based routines genuinely merge points at the tolerances used,
+  curved enough that the perpendicular/collinearity-based routines have
+  real redundant points to remove. Each case checks: the result is an
+  instance of the type that mirrors the input (per
+  `cv-psimpl-namespace-deleted-without-replacement`'s type-mirroring
+  contract), strictly fewer points than the input, the polyline's first
+  and last point exactly preserved, and every returned point matching one
+  of the original vertices (all 7 algorithms select a subsequence of
+  existing vertices; none of them interpolate new points).
+  `nthPoint`'s cases assert its exact, deterministic result (every nth
+  point plus the forced last point, per the bug described above) rather
+  than just "fewer points". Point2fVector cases compare with a small
+  epsilon (cv::Point2f truncates to float32); every other type compares
+  exactly, since none of the algorithms modify a coordinate's value.
+
+- FIXED: convexitydefects-wrong-column-count: `cv.convexityDefects()` returns a
   `Mat` with the wrong number of columns per defect - opencv.js/native
   OpenCV's `convexityDefects` always returns 4 columns per row
   (`start_index, end_index, farthest_point_index, fixpt_depth`);
   observed 2 columns instead on a real concave hexagon contour. Found via
   `test_contour_functions.js`'s `convexityDefects - Mat CV_32SC2` test
   (previously silently un-reported - see `tinytest-console-error-not-a-
-  function` above). Not investigated further or fixed - needs tracing
-  through `js_imgproc.cpp`'s `SHAPE_CONVEXITY_DEFECTS` to see whether the
-  output `Mat`'s column count is hardcoded wrong or the underlying
-  `cv::Vec4i` results are being reshaped incorrectly.
+  function` above).
+
+  Root cause: this repo links against OpenCV 5.0.0 (`opencv_geometry`
+  module), whose `cv::convexityDefects` builds the output `Mat` with a
+  row/col split of the underlying `Vec4i` elements that is inconsistent
+  with OpenCV 4.x - confirmed with a standalone C++ program linked against
+  both `/opt/opencv-4.7.0-x86_64` (gives `rows=N, cols=1, channels=4`, the
+  documented native shape) and `/mnt/data/opt/opencv-5.0.0-x86_64` (gives
+  `rows=1, cols=N, channels=4` for the same input - element count is right,
+  but transposed into a row vector instead of a column vector). Neither
+  native shape matches opencv.js's own convention of `rows=N, cols=4,
+  channels=1` (columns, not channels, carry the 4 defect fields) - which is
+  what the test suite (correctly) expects.
+
+  Fixed `js_imgproc.cpp`'s `SHAPE_CONVEXITY_DEFECTS` case: call
+  `cv::convexityDefects()` into a local intermediate `cv::Mat`, then
+  `.reshape(1, int(defects.total()))` it (channel count -> 1, row count ->
+  element count, letting `reshape` compute the resulting column count from
+  total data size) before copying into the caller's output array. Using
+  `total()` (element count) rather than trusting `rows`/`cols` individually
+  makes this robust to either native row/col split. Verified:
+  `test_contour_functions.js`'s `convexityDefects - Mat CV_32SC2` test now
+  passes (`defects.cols === 4`); also updated
+  `test_imgproc.js`'s `convexityDefects - rectangle` test, which had
+  asserted the old `channels() === 4` shape unconditionally (also wrong for
+  a genuinely-convex rectangle with 0 defects, where the resulting Mat is
+  empty) - now checks `cols === 4 && channels() === 1` only when
+  `total() > 0`.
 
     import * as cv from 'opencv';
     let contour = new cv.Mat(6, 1, cv.CV_32SC2);
