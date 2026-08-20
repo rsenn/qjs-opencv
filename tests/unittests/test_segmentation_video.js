@@ -9,9 +9,11 @@ import * as cv from 'opencv';
  * Not testable here (genuinely unbound - see TODO.md's "opencv.js Example
  * Compatibility Gaps" section and BUGS' opencvjs-* entries):
  * cv.calcBackProject, cv.calcOpticalFlowPyrLK, cv.calcOpticalFlowFarneback,
- * cv.getOptimalDFTSize, cv.segmentation_IntelligentScissorsMB,
- * cv.TermCriteria (a plain [type, maxCount, epsilon] array is used
- * instead, matching this project's kmeans/CamShift/meanShift convention).
+ * cv.getOptimalDFTSize, cv.segmentation_IntelligentScissorsMB.
+ *
+ * cv.TermCriteria's own constructor contract has its own dedicated
+ * test_termcriteria.js; the meanShift/CamShift tests below just use it as
+ * an ordinary argument, same as any real opencv.js tracking snippet would.
  *
  * cv.BackgroundSubtractorMOG2 isn't directly constructible (see TODO.md) -
  * uses the working cv.createBackgroundSubtractorMOG2() factory instead.
@@ -120,7 +122,8 @@ addTest('meanShift - fixed-window object tracking', () => {
   const prob = cv.Mat.zeros(60, 60, cv.CV_8UC1);
   cv.rectangle(prob, { x: 25, y: 25, width: 20, height: 20 }, 200, -1);
   const window = new cv.Rect(20, 20, 24, 24);
-  const [n, updated] = cv.meanShift(prob, window, [cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_COUNT, 10, 1]);
+  const criteria = new cv.TermCriteria(cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_COUNT, 10, 1);
+  const [n, updated] = cv.meanShift(prob, window, criteria);
   assert(typeof n === 'number', 'expected meanShift to return an iteration count');
   assert(updated.x >= 20 && updated.x <= 30, `expected the window to stay near the bright blob, got x=${updated.x}`);
 });
@@ -129,7 +132,8 @@ addTest('CamShift - adaptive-window object tracking', () => {
   const prob = cv.Mat.zeros(60, 60, cv.CV_8UC1);
   cv.rectangle(prob, { x: 25, y: 25, width: 20, height: 20 }, 200, -1);
   const window = new cv.Rect(20, 20, 24, 24);
-  const [rr, updated] = cv.CamShift(prob, window, [cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_COUNT, 10, 1]);
+  const criteria = new cv.TermCriteria(cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_COUNT, 10, 1);
+  const [rr, updated] = cv.CamShift(prob, window, criteria);
   const pts = rr.points();
   assert(pts.length === 4, 'expected a RotatedRect with 4 corner points');
   assert(updated.x >= 15 && updated.x <= 35, `expected the window to stay near the bright blob, got x=${updated.x}`);

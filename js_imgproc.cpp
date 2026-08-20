@@ -761,6 +761,28 @@ js_cv_bilateral_filter(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
   return JS_UNDEFINED;
 }
 
+// cv.matchTemplate(image, templ, result, method[, mask]) - opencv.js's real
+// call shape (js_template_matching_matchTemplate.html always passes mask,
+// as an empty Mat when unused; cv::matchTemplate treats an empty _mask as
+// "no mask" internally, same as every other optional _InputArray in
+// OpenCV, so no special-casing is needed here).
+static JSValue
+js_cv_match_template(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+  if(argc < 4)
+    return JS_ThrowTypeError(ctx, "matchTemplate expects (image, templ, result, method[, mask])");
+
+  JSInputArray image = js_cv_inputarray(ctx, argv[0]);
+  JSInputArray templ = js_cv_inputarray(ctx, argv[1]);
+  JSOutputArray result = js_cv_outputarray(ctx, argv[2]);
+  int32_t method = 0;
+  JS_ToInt32(ctx, &method, argv[3]);
+  JSInputArray mask = argc > 4 ? js_cv_inputarray(ctx, argv[4]) : JSInputArray(cv::noArray());
+
+  cv::matchTemplate(image, templ, result, method, mask);
+
+  return JS_UNDEFINED;
+}
+
 static JSValue
 js_cv_calc_hist(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   std::vector<cv::Mat> images;
@@ -2426,6 +2448,7 @@ const JSCFunctionListEntry js_imgproc_static_funcs[] = {
 
     /* Histograms */
     JS_CFUNC_DEF("calcHist", 8, js_cv_calc_hist),
+    JS_CFUNC_DEF("matchTemplate", 4, js_cv_match_template),
     JS_CFUNC_DEF("equalizeHist", 2, js_cv_equalize_hist),
 
     /* Color Space Conversions */
@@ -2544,6 +2567,29 @@ const JSCFunctionListEntry js_imgproc_static_funcs[] = {
     JS_CV_CONSTANT(MORPH_TOPHAT),
     JS_CV_CONSTANT(MORPH_BLACKHAT),
     JS_CV_CONSTANT(MORPH_HITMISS),
+
+    /* matchTemplate() */
+    JS_CV_CONSTANT(TM_SQDIFF),
+    JS_CV_CONSTANT(TM_SQDIFF_NORMED),
+    JS_CV_CONSTANT(TM_CCORR),
+    JS_CV_CONSTANT(TM_CCORR_NORMED),
+    JS_CV_CONSTANT(TM_CCOEFF),
+    JS_CV_CONSTANT(TM_CCOEFF_NORMED),
+
+    /* fitLine(), distanceTransform() */
+    JS_CV_CONSTANT(DIST_USER),
+    JS_CV_CONSTANT(DIST_L1),
+    JS_CV_CONSTANT(DIST_L2),
+    JS_CV_CONSTANT(DIST_C),
+    JS_CV_CONSTANT(DIST_L12),
+    JS_CV_CONSTANT(DIST_FAIR),
+    JS_CV_CONSTANT(DIST_WELSCH),
+    JS_CV_CONSTANT(DIST_HUBER),
+
+    /* rotatedRectangleIntersection() */
+    JS_CV_CONSTANT(INTERSECT_NONE),
+    JS_CV_CONSTANT(INTERSECT_PARTIAL),
+    JS_CV_CONSTANT(INTERSECT_FULL),
 
     /* grabCut() */
     JS_CV_CONSTANT(GC_BGD),

@@ -7,9 +7,8 @@ import * as cv from 'opencv';
  * doc/opencv-js-examples.md (js_imgproc: geometric transforms, and the
  * Hough-transform half of shape detection). Synthetic Mats only.
  *
- * Not testable here (genuinely unbound - see TODO.md's "opencv.js Example
- * Compatibility Gaps" section and BUGS' opencvjs-* entries):
- * cv.matchTemplate, cv.TM_* constants.
+ * cv.matchTemplate and the cv.TM_* constants have their own dedicated
+ * test_template_matching.js.
  */
 
 const testCases = {};

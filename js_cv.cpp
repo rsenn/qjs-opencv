@@ -234,6 +234,40 @@ js_cv_matfromarray(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
   return js_mat_wrap(ctx, mat);
 }
 
+/* opencv.js's cv.TermCriteria (modules/js/src/helpers.js) is a plain JS
+ * constructor - `new cv.TermCriteria()` or `new cv.TermCriteria(type,
+ * maxCount, epsilon)` - producing an object with named .type/.maxCount/
+ * .epsilon fields, not a real embind class. qjs-opencv already treats a
+ * termination criteria argument as an ad-hoc 3-element array everywhere
+ * internally (js_cv.cpp's OTHER_KMEANS, js_imgproc.cpp's CamShift/
+ * meanShift track handling: both js_array_to() the argument directly) -
+ * so this returns a real Array with the same 3 named properties layered
+ * on top, satisfying both conventions at once without touching any of
+ * those existing call sites. */
+static JSValue
+js_cv_termcriteria_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
+  int32_t type = 0, maxCount = 0;
+  double epsilon = 0;
+
+  if(argc > 0 && argc < 3)
+    return JS_ThrowTypeError(ctx, "TermCriteria(): expected 0 or 3 arguments");
+
+  if(argc >= 3) {
+    if(JS_ToInt32(ctx, &type, argv[0]) || JS_ToInt32(ctx, &maxCount, argv[1]) || JS_ToFloat64(ctx, &epsilon, argv[2]))
+      return JS_ThrowTypeError(ctx, "TermCriteria(type, maxCount, epsilon): arguments must be numbers");
+  }
+
+  JSValue arr = JS_NewArray(ctx);
+  JS_SetPropertyUint32(ctx, arr, 0, JS_NewInt32(ctx, type));
+  JS_SetPropertyUint32(ctx, arr, 1, JS_NewInt32(ctx, maxCount));
+  JS_SetPropertyUint32(ctx, arr, 2, JS_NewFloat64(ctx, epsilon));
+  JS_DefinePropertyValueStr(ctx, arr, "type", JS_NewInt32(ctx, type), JS_PROP_ENUMERABLE);
+  JS_DefinePropertyValueStr(ctx, arr, "maxCount", JS_NewInt32(ctx, maxCount), JS_PROP_ENUMERABLE);
+  JS_DefinePropertyValueStr(ctx, arr, "epsilon", JS_NewFloat64(ctx, epsilon), JS_PROP_ENUMERABLE);
+
+  return arr;
+}
+
 static JSValue
 js_cv_split(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   cv::Mat* src;
@@ -1215,7 +1249,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
         results[3] = js_point_new(ctx, maxLoc);
 
         for(size_t i = 0; i < 4; i++)
-          if(js_is_function(ctx, argv[i + 1]))
+          if(argc > int(i) + 1 && js_is_function(ctx, argv[i + 1]))
             JS_Call(ctx, argv[i + 1], JS_NULL, 1, &results[i]);
 
         ret = js_array<JSValue>::from_sequence(ctx, const_cast<JSValue*>(&results[0]), const_cast<JSValue*>(&results[4]));
@@ -1691,6 +1725,7 @@ js_function_list_t js_cv_static_funcs{
     JS_CFUNC_DEF("imread", 1, js_cv_imread),
     JS_CFUNC_DEF("imwrite", 2, js_cv_imwrite),
     JS_CFUNC_DEF("matFromArray", 4, js_cv_matfromarray),
+    JS_CFUNC_SPECIAL_DEF("TermCriteria", 3, constructor, js_cv_termcriteria_constructor),
     JS_CFUNC_DEF("split", 2, js_cv_split),
     JS_CFUNC_DEF("normalize", 2, js_cv_normalize),
     JS_CFUNC_DEF("merge", 2, js_cv_merge),

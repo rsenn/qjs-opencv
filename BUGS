@@ -604,12 +604,18 @@
     examples/qwen25_inference.js
 
 
-- opencv-js-api-mismatch-camshift-meanshift: `CamShift` and `meanShift`
-  are bound in opencv.js (returning `[RotatedRect, updatedRect]` and
-  `[n, updatedRect]` arrays respectively) but not in qjs-opencv at all.
-  Only `pyrMeanShiftFiltering` exists (different algorithm). Ported
-  tracking code will throw `TypeError: cv.CamShift is not a function`.
-  Fix: bind both in js_video.cpp.
+- FIXED: opencv-js-api-mismatch-camshift-meanshift: stale entry - `CamShift`
+  and `meanShift` are actually already bound, in `js_imgproc.cpp`'s
+  `js_imgproc_track()` (`TRACK_CAMSHIFT`/`TRACK_MEANSHIFT`), returning the
+  documented `[RotatedRect, updatedRect]` / `[n, updatedRect]` arrays.
+  Not fixed by this change - found already working while implementing
+  `cv.TermCriteria` (see `opencvjs-termcriteria-constructor-missing`) and
+  confirmed end to end against both real opencv.js samples
+  (`js_camshift.html`, `js_meanshift.html`) in
+  `tests/unittests/test_segmentation_video.js` and
+  `tests/unittests/test_termcriteria.js`. Marking fixed to stop this
+  showing up as an open gap; whatever commit actually bound them didn't
+  update this entry.
 
 
 - FIXED: opencv-js-api-mismatch-mat-diag: `Mat.diag()` is now implemented
@@ -1369,7 +1375,7 @@
     let m = cv.matFromArray(2, 3, cv.CV_32FC1, [1,2,3,4,5,6]);
     // m.rows === 2, m.cols === 3, [...m.data32F] === [1,2,3,4,5,6]
 
-- opencvjs-termcriteria-constructor-missing: opencv.js exposes
+- FIXED: opencvjs-termcriteria-constructor-missing: opencv.js exposes
   `new cv.TermCriteria(type, maxCount, epsilon)` as a real constructor.
   qjs-opencv has no `cv.TermCriteria` export at all - `cv::TermCriteria`
   is only ever built internally from an ad-hoc 3-element array
@@ -1377,29 +1383,123 @@
   functions, never exposed as a constructible JS class. The `TERM_CRITERIA_
   COUNT`/`MAX_ITER`/`EPS` constants ARE exported (`js_cv.cpp:2077-2079`),
   so only the constructor itself is missing. Needed by 3 of the 80 example
-  pages (`js_meanshift`, `js_camshift`, `js_optical_flow_lucas_kanade`),
-  all of which are also blocked on CamShift/meanShift/calcOpticalFlowPyrLK
-  themselves being unbound (see the other opencvjs-* entries below).
+  pages (`js_meanshift`, `js_camshift`, `js_optical_flow_lucas_kanade`).
 
-    import('opencv').then(cv => {
-      new cv.TermCriteria(cv.TERM_CRITERIA_EPS | cv.TERM_CRITERIA_COUNT, 10, 1);
-      // TypeError: not a function
-    });
+  Checked all 3 against the actual OpenCV source tree
+  (`../../opencv/doc/js_tutorials/js_assets/*.html`) before implementing:
+  all 3 use the exact call shape `new cv.TermCriteria(cv.TERM_CRITERIA_EPS
+  | cv.TERM_CRITERIA_COUNT, 10, ...)` and just pass the result straight
+  through into another function - no property access on it in user code.
+  `CamShift`/`meanShift` turned out to already be bound (see
+  `opencv-js-api-mismatch-camshift-meanshift`, corrected above), so
+  `js_camshift.html`/`js_meanshift.html` are now fully supported end to
+  end; `js_optical_flow_lucas_kanade.html` still isn't, since it needs
+  `cv.calcOpticalFlowPyrLK` (see `opencvjs-video-tracking-module-unbound`
+  below, unaffected by this fix).
 
-- opencvjs-matchtemplate-missing: `cv::matchTemplate` (`opencv2/imgproc.hpp`)
+  opencv.js's own `cv.TermCriteria` (`modules/js/src/helpers.js`) is a
+  plain JS constructor (`function TermCriteria() { this.type = ...; }`),
+  not a real embind class - the `{type, maxCount, epsilon}` object it
+  produces has no relation to how qjs-opencv's own internal consumers
+  (`OTHER_KMEANS` in `js_cv.cpp`, `TRACK_CAMSHIFT`/`TRACK_MEANSHIFT` in
+  `js_imgproc.cpp`) already read a criteria argument: all of them
+  `js_array_to()` it as an ad-hoc `[type, maxCount, epsilon]` array.
+  Implemented `js_cv_termcriteria_constructor()` (`js_cv.cpp`, registered
+  via `JS_CFUNC_SPECIAL_DEF(..., constructor, ...)` since a plain
+  `JS_CFUNC_DEF` entry can't be called with `new` in QuickJS) to return a
+  real `Array` with the same 3 values also set as named `type`/`maxCount`/
+  `epsilon` properties - satisfies both conventions with zero changes to
+  any existing internal call site. Tested in
+  `tests/unittests/test_termcriteria.js` (7 tests, including an end-to-end
+  CamShift run) and used directly by `test_segmentation_video.js`'s
+  `meanShift`/`CamShift` tests.
+
+    import * as cv from 'opencv';
+    const c = new cv.TermCriteria(cv.TERM_CRITERIA_EPS | cv.TERM_CRITERIA_COUNT, 10, 1);
+    console.log(c.type, c.maxCount, c.epsilon); // 3 10 1
+    console.log(c[0], c[1], c[2]); // 3 10 1 - still works as the ad-hoc array form too
+
+- FIXED: opencvjs-matchtemplate-missing: `cv::matchTemplate` (`opencv2/imgproc.hpp`)
   is not bound anywhere in qjs-opencv - `grep -rn matchTemplate js_*.cpp`
   finds nothing. Blocks `js_template_matching_matchTemplate.html`.
 
-    import('opencv').then(cv => {
-      cv.matchTemplate(img, templ, result, cv.TM_CCOEFF); // TypeError: not a function
-    });
+  Checked the real example
+  (`../../opencv/doc/js_tutorials/js_assets/js_template_matching_
+  matchTemplate.html`) before implementing: it calls `cv.matchTemplate(src,
+  templ, dst, cv.TM_CCOEFF, mask)` (mask always passed, as an empty Mat
+  when unused) then `cv.minMaxLoc(dst, mask)` - `cv.minMaxLoc` was already
+  bound, so this example is now fully supported end to end. Implemented as
+  `js_cv_match_template()` in `js_imgproc.cpp` (own standalone function,
+  not folded into the `FILTER_*` magic-dispatch group - that group's
+  shared preamble treats `argv[0]` as a single `InputOutputArray`, but
+  `matchTemplate` takes 3 independent arrays). An empty mask `Mat` is
+  passed straight through to `cv::matchTemplate` unchanged - it already
+  checks `_mask.empty()` internally, same as every other optional
+  `_InputArray` in OpenCV, so no special-casing was needed. Tested in
+  `tests/unittests/test_template_matching.js` (10 tests: one per `TM_*`
+  mode round-tripping a known embedded patch through `matchTemplate` +
+  `minMaxLoc`, the exact 5-arg opencv.js call shape, result-Mat sizing,
+  and argument validation).
 
-- opencvjs-tm-constants-missing: No `cv.TM_*` (`cv::TemplateMatchModes`:
+  Found and fixed a real, severe, unrelated bug while writing that test
+  suite - see `minmaxloc-argv-out-of-bounds-read` below.
+
+    import * as cv from 'opencv';
+    cv.matchTemplate(img, templ, result, cv.TM_CCOEFF); // now works
+
+- FIXED: opencvjs-tm-constants-missing: No `cv.TM_*` (`cv::TemplateMatchModes`:
   TM_SQDIFF, TM_SQDIFF_NORMED, TM_CCORR, TM_CCORR_NORMED, TM_CCOEFF,
   TM_CCOEFF_NORMED) constants are exported at all. Blocks
   `js_template_matching_matchTemplate.html` even after matchTemplate()
   itself (opencvjs-matchtemplate-missing) is bound, since there'd still be
   no way to name the matching mode from JS.
+
+  Fixed alongside `opencvjs-matchtemplate-missing` above: all 6 added via
+  `JS_CV_CONSTANT(TM_*)` in `js_imgproc_static_funcs`, next to the existing
+  `MORPH_*` constant block. Verified against native `cv::TemplateMatchModes`
+  ordering (`TM_SQDIFF=0` ... `TM_CCOEFF_NORMED=5`) in
+  `tests/unittests/test_template_matching.js`.
+
+- minmaxloc-argv-out-of-bounds-read: `js_cv.cpp`'s `OTHER_MIN_MAX_LOC`
+  case (backing `cv.minMaxLoc()`) supports 4 optional trailing callback
+  arguments (`(minVal) => ..., (maxVal) => ..., (minLoc) => ..., (maxLoc)
+  => ...`) by unconditionally reading `argv[1]` through `argv[4]` and
+  checking `js_is_function()` on each - with no `argc` bound check at all:
+
+    for(size_t i = 0; i < 4; i++)
+      if(js_is_function(ctx, argv[i + 1]))
+        JS_Call(ctx, argv[i + 1], JS_NULL, 1, &results[i]);
+
+  QuickJS only guarantees `argv[]` has as many live slots as the
+  function's declared `.length` (2 for `minMaxLoc`, padded with
+  `undefined` up to that point) - anything beyond that is simply not part
+  of the call's argv array. Every ordinary call site in this codebase
+  (`cv.minMaxLoc(dst)`, `cv.minMaxLoc(dst, mask)`) reads past the end of
+  that array on `argc < 5`, interpreting whatever bytes happen to follow
+  as a `JSValue` and potentially dereferencing them as a heap object
+  pointer inside `JS_IsFunction`. This is memory corruption, not merely a
+  wrong-value bug - found because it crashed `tests/unittests/
+  test_template_matching.js` with a `SIGSEGV` deep inside an *unrelated*
+  later `cv.*` call (`js_cv_other()`, `argc` corrupted to `80`), i.e. the
+  corruption doesn't necessarily crash at its own call site, just
+  eventually. Reproducible standalone, though non-deterministically -
+  crashed reliably at a fixed point in one script, silently succeeded
+  6/6 and even 20/20 iterations in others depending on incidental
+  heap/stack layout:
+
+    import * as cv from 'opencv';
+    for (let i = 0; i < 6; i++) {
+      const dst = new cv.Mat(); // ... populated via matchTemplate or otherwise
+      cv.minMaxLoc(dst); // argc=1 here - argv[2..4] read out of bounds every time
+    }
+    // crashes unpredictably, sometimes several iterations in, sometimes not at all
+
+  Fixed by guarding each read with `argc > int(i) + 1` before touching
+  `argv[i + 1]`. This blocked writing `test_template_matching.js` (every
+  test there calls `matchTemplate` immediately followed by `minMaxLoc`),
+  so it was fixed as part of that work rather than only logged - not
+  otherwise in scope for the matchTemplate/TermCriteria task that surfaced
+  it.
 
 - opencvjs-getoptimaldftsize-missing: `cv::getOptimalDFTSize` (`opencv2/
   core.hpp`) is not bound - `cv.dft()` itself is bound (js_imgproc.cpp),
@@ -1410,7 +1510,7 @@
       cv.getOptimalDFTSize(100); // TypeError: not a function
     });
 
-- opencvjs-dist-constants-missing: No `cv.DIST_*` (`cv::DistanceTypes`:
+- FIXED: opencvjs-dist-constants-missing: No `cv.DIST_*` (`cv::DistanceTypes`:
   DIST_L1, DIST_L2, DIST_C, DIST_L12, DIST_FAIR, DIST_WELSCH, DIST_HUBER)
   constants are exported, even though `cv.distanceTransform()` itself is
   already bound and takes a `distanceType` parameter
@@ -1420,9 +1520,71 @@
   `js_watershed_watershed.html`) and `cv.fitLine()`'s `distType` parameter
   the same way.
 
-    import('opencv').then(cv => {
-      console.log(cv.DIST_L2); // undefined, not 4
-    });
+  Found and fixed while investigating `tests/unittests/
+  test_contour_functions.js`'s `fitLine - Mat CV_32SC2` failure: it passes
+  `cv.DIST_L2` (`undefined`), which `JS_ToInt32` coerces to `0` - not a
+  valid `cv::DistanceTypes` value (`DIST_USER=-1, DIST_L1=1 ...
+  DIST_HUBER=7`, no `0`) - so native `fitLine2D` threw "Unknown distance
+  type". Fixed by adding all 8 values (including `DIST_USER=-1`) via
+  `JS_CV_CONSTANT(DIST_*)` in `js_imgproc_static_funcs`, next to the
+  `TM_*` block. Verified against the real
+  `../../opencv/doc/js_tutorials/js_assets/js_contour_features_fitLine.html`
+  sample: `cv.fitLine(cnt, line, cv.DIST_L2, 0, 0.01, 0.01)` now runs and
+  produces the correct direction vector for a 45-degree test line
+  (`vx=vy≈0.7071`).
+
+  This did NOT make `test_contour_functions.js`'s `fitLine` test pass -
+  it still fails, but now on a different, second bug in the test itself
+  (not fixed, not this repo's convention to silently correct): it asserts
+  `line.rows === 1 && line.cols === 4`, but native `cv::fitLine`
+  (`opencv/modules/geometry/src/linefit.cpp:633`) always builds
+  `Mat(4, 1, CV_32F)` - 4 rows, 1 column - never 1x4. The binding's actual
+  4x1 output is correct; the real opencv.js sample above doesn't care
+  either way, since it only reads the flat `line.data32F[0..3]`.
+
+    import * as cv from 'opencv';
+    const line = new cv.Mat();
+    cv.fitLine(contour, line, cv.DIST_L2, 0, 0.01, 0.01); // was: throws "Unknown distance type"
+    console.log(line.rows, line.cols); // 4 1 - correct (native shape), NOT 1x4
+
+- FIXED: opencvjs-intersect-constants-missing: No `cv.INTERSECT_*`
+  (`cv::RectanglesIntersectTypes`: INTERSECT_NONE=0, INTERSECT_PARTIAL=1,
+  INTERSECT_FULL=2) constants are exported, even though
+  `cv.rotatedRectangleIntersection()` itself is already bound
+  (`js_imgproc.cpp:2357`) and returns exactly one of those 3 values -
+  callers have no way to name the result. Found via
+  `test_contour_functions.js`'s `rotatedRectangleIntersection` test, which
+  compares the return value against `cv.INTERSECT_PARTIAL` (`undefined`).
+  The function itself was already correct - verified it returns `1` and
+  populates a correct 4-point intersection polygon
+  (`(70,50),(70,70),(50,70),(50,50)`, the true 20x20 overlap) for two
+  offset 40x40 `RotatedRect`s - only the named constants were missing.
+  Fixed by adding all 3 via `JS_CV_CONSTANT(INTERSECT_*)` in
+  `js_imgproc_static_funcs`, next to the new `DIST_*` block.
+  `test_contour_functions.js`'s `rotatedRectangleIntersection` test now
+  passes.
+
+    import * as cv from 'opencv';
+    console.log(cv.INTERSECT_PARTIAL); // was undefined, now 1
+
+- boundingrect-test-file-wrong-expectation: `tests/unittests/
+  test_contour_functions.js`'s `boundingRect - Mat CV_32SC2` test asserts
+  `width===100, height===50` for a contour spanning x:[10,110], y:[20,70] -
+  not a binding bug, the test's own expected values are wrong. Native
+  `cv::boundingRect()` (`opencv/modules/geometry/src/geometry.cpp`'s
+  `pointSetBoundingRect()`) deliberately returns `Rect(xmin, ymin, xmax -
+  xmin + 1, ymax - ymin + 1)` - the source comments why: "right and bottom
+  sides of the bounding rectangle are not inclusive (note +1 in width and
+  height calculation)". For this contour that's `width=101, height=51`,
+  which is exactly what the binding (a direct passthrough to
+  `cv::boundingRect`) returns - confirmed correct, not touched. opencv.js
+  wraps the same native function, so it would return 101/51 too.
+
+    import * as cv from 'opencv';
+    const contour = new cv.Mat(4, 1, cv.CV_32SC2);
+    // corners (10,20),(110,20),(110,70),(10,70)
+    const rect = cv.boundingRect(contour);
+    console.log(rect.width, rect.height); // 101, 51 - correct; the test expects 100, 50
 
 - opencvjs-calcbackproject-missing: `cv::calcBackProject` (`opencv2/
   imgproc.hpp`) is not bound - `cv.calcHist()` itself is bound and used
