@@ -36,6 +36,37 @@ js_mat_umat_array(JSValueConst value, ArrayT& out) {
   return false;
 }
 
+/**
+ * @brief Backing storage for js_cv_inputarray()'s plain-JS-array branch.
+ * cv::_InputArray never copies - its Matx (cv::Scalar) and std::vector
+ * constructors store a raw pointer to the argument - so converting into a
+ * local cv::Scalar/std::vector<double> hands back an _InputArray that
+ * dereferences a dead stack slot (BUGS: js-cv-inputarray-scalar-dangling-
+ * pointer). js_cv_inputarray() returns a bare cv::_InputArray to ~370 call
+ * sites, so the storage can't live in the return value; instead each
+ * conversion takes the next slot of this thread-local ring, which outlives
+ * the call and is only recycled after JS_INPUTARRAY_SLOTS further
+ * plain-array conversions - far more than the handful of array arguments
+ * any single binding call resolves.
+ */
+#define JS_INPUTARRAY_SLOTS 16
+
+struct JSInputArraySlot {
+  cv::Scalar scalar;
+  std::vector<double> vec;
+};
+
+static inline JSInputArraySlot&
+js_inputarray_slot() {
+  static thread_local JSInputArraySlot slots[JS_INPUTARRAY_SLOTS];
+  static thread_local size_t next = 0;
+  JSInputArraySlot& slot = slots[next];
+
+  next = (next + 1) % JS_INPUTARRAY_SLOTS;
+
+  return slot;
+}
+
 static inline JSInputArray
 js_cv_inputarray(JSContext* ctx, JSValueConst value) {
   JSInputArray arr;
@@ -76,17 +107,20 @@ js_cv_inputarray(JSContext* ctx, JSValueConst value) {
       default: JS_ThrowTypeError(ctx, "No cv::InputArray for %s", JS_ToCString(ctx, value)); break;
     }
   } else if(js_is_array(ctx, value)) {
-    std::vector<double> arr;
-    cv::Scalar scalar;
-    js_array_to(ctx, value, arr);
+    JSInputArraySlot& slot = js_inputarray_slot();
 
-    if(arr.size() >= 2 && arr.size() <= 4) {
-      for(size_t i = 0; i < arr.size(); i++)
-        scalar[i] = arr[i];
+    slot.vec.clear();
+    js_array_to(ctx, value, slot.vec);
 
-      return JSInputArray(scalar);
+    if(slot.vec.size() >= 2 && slot.vec.size() <= 4) {
+      slot.scalar = cv::Scalar();
+
+      for(size_t i = 0; i < slot.vec.size(); i++)
+        slot.scalar[i] = slot.vec[i];
+
+      return JSInputArray(slot.scalar);
     } else {
-      return JSInputArray(arr);
+      return JSInputArray(slot.vec);
     }
   }
 

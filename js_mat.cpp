@@ -54,6 +54,7 @@ enum {
   METHOD_CLONE,
   METHOD_ROI,
   METHOD_RELEASE,
+  METHOD_DELETE,
   METHOD_DUP,
   METHOD_CLEAR,
   METHOD_RESET,
@@ -586,7 +587,12 @@ js_mat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
         break;
       }
 
-      case METHOD_RELEASE: {
+      case METHOD_RELEASE:
+      /* opencv.js has no GC: every Mat must be freed with .delete(). Here
+       * finalizers do that, so .delete() is an alias for release() - it
+       * frees the pixel data eagerly and leaves a valid (empty) Mat behind,
+       * which lets pasted-in opencv.js snippets run unmodified. */
+      case METHOD_DELETE: {
         m->release();
         break;
       }
@@ -2089,6 +2095,7 @@ const JSCFunctionListEntry js_mat_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("clone", 0, js_mat_funcs, METHOD_CLONE),
     JS_CFUNC_MAGIC_DEF("roi", 0, js_mat_funcs, METHOD_ROI),
     JS_CFUNC_MAGIC_DEF("release", 0, js_mat_funcs, METHOD_RELEASE),
+    JS_CFUNC_MAGIC_DEF("delete", 0, js_mat_funcs, METHOD_DELETE),
     JS_CFUNC_MAGIC_DEF("dup", 0, js_mat_funcs, METHOD_DUP),
     JS_CFUNC_MAGIC_DEF("clear", 0, js_mat_funcs, METHOD_CLEAR),
     JS_CFUNC_MAGIC_DEF("reset", 0, js_mat_funcs, METHOD_RESET),

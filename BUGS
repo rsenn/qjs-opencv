@@ -1334,7 +1334,7 @@
     // error: no matching function for call to
     // 'js_typedarray_remain(const __gnu_cxx::__normal_iterator<...>&, ...)'
 
-- opencvjs-mat-delete-missing: opencv.js requires every `cv.Mat` (and other
+- FIXED: opencvjs-mat-delete-missing: opencv.js requires every `cv.Mat` (and other
   embind value objects: `MatVector`, `RotatedRect`, ...) to be freed
   explicitly with `.delete()`, since Emscripten's wasm heap has no GC.
   qjs-opencv's design is the opposite - "no copies, mutable, finalizers do
@@ -1354,11 +1354,20 @@
   architectural difference. A harmless no-op `.delete()` stub on `Mat`
   would let opencv.js example code run unmodified without compromising the
   GC-based design; worth adding purely for source compatibility with
-  pasted-in opencv.js snippets.
+  pasted-in opencv.js snippets. **Fixed (2026-08-21):** added
+  `METHOD_DELETE` to `js_mat_funcs()` (`js_mat.cpp`), registered as
+  `.delete()` in `js_mat_proto_funcs` and sharing `METHOD_RELEASE`'s case
+  body. Not a pure no-op: it calls `cv::Mat::release()`, so the pixel data
+  is freed eagerly (which is what the opencv.js call sites actually mean)
+  while the JS object stays valid as an empty Mat - safer than
+  `JSVector<T>::delete_()`'s `delete vector; JS_SetOpaque(nullptr)`, since
+  a Mat can be an ROI view or alias other live Mats, and a
+  use-after-delete here degrades to an empty-Mat exception rather than a
+  null dereference.
 
     import('opencv').then(cv => {
       const m = new cv.Mat();
-      m.delete(); // TypeError: not a function
+      m.delete(); // was: TypeError: not a function; now frees the data, m.empty === true
     });
 
 - FIXED: opencvjs-matfromarray-missing: opencv.js's `cv.matFromArray(rows,
@@ -1567,7 +1576,33 @@
     import * as cv from 'opencv';
     console.log(cv.INTERSECT_PARTIAL); // was undefined, now 1
 
-- boundingrect-test-file-wrong-expectation: `tests/unittests/
+- FIXED: fitline-test-file-wrong-expectation: `tests/unittests/
+  test_contour_functions.js`'s `fitLine - Mat CV_32SC2` test asserts the
+  output Mat is `1x4` (`if(line.rows !== 1 || line.cols !== 4) throw`) -
+  not a binding bug, the test's own expected shape is wrong, same class as
+  [boundingrect-test-file-wrong-expectation] above. `cv::fitLine`'s docs
+  (`opencv2/imgproc.hpp`, `@param line`) specify the 2D output as "a vector
+  of 4 elements (like Vec4f) - (vx, vy, x0, y0)", and a `Vec4f` written
+  through an `OutputArray` materialises as a **4 rows x 1 col** CV_32FC1
+  Mat, not 1x4. `SHAPE_FIT_LINE` (`js_imgproc.cpp:2208`) is a direct
+  passthrough to `cv::fitLine`, and opencv.js binds that same native
+  function, so both produce 4x1 - the binding was already opencv.js-
+  compatible. Found while running the unit suite after the 2026-08-21
+  opencv.js-discrepancy fixes; confirmed pre-existing by stashing those
+  changes and rebuilding (identical failure). Fixed by correcting the test
+  to expect 4x1; the value assertions it makes after the shape check
+  (direction ~(0.707, 0.707), type CV_32FC1) already passed and were left
+  alone.
+
+    import * as cv from 'opencv';
+    const contour = new cv.Mat(10, 1, cv.CV_32SC2);
+    for(let i = 0; i < 10; i++) { contour.data32S[i*2] = i*10; contour.data32S[i*2+1] = i*10; }
+    const line = new cv.Mat();
+    cv.fitLine(contour, line, cv.DIST_L2, 0, 0.01, 0.01);
+    // line.rows === 4, line.cols === 1 (correct, per Vec4f); test expected 1x4
+    // [...line.data32F] === [0.7071067690849304, 0.7071067690849304, 45, 45]
+
+- FIXED: boundingrect-test-file-wrong-expectation: `tests/unittests/
   test_contour_functions.js`'s `boundingRect - Mat CV_32SC2` test asserts
   `width===100, height===50` for a contour spanning x:[10,110], y:[20,70] -
   not a binding bug, the test's own expected values are wrong. Native
@@ -1578,7 +1613,12 @@
   height calculation)". For this contour that's `width=101, height=51`,
   which is exactly what the binding (a direct passthrough to
   `cv::boundingRect`) returns - confirmed correct, not touched. opencv.js
-  wraps the same native function, so it would return 101/51 too.
+  wraps the same native function, so it would return 101/51 too. **Fixed
+  (2026-08-21, uncommitted at the time of the 2026-08-22 pass):** the test's
+  expectations were corrected in place to `eq(101, rect.width)` /
+  `eq(51, rect.height)` with a comment naming the exclusive-edge reason;
+  the binding was correct and is untouched. `test_contour_functions.js`
+  now passes 16/16, verified stable over 25 consecutive runs.
 
     import * as cv from 'opencv';
     const contour = new cv.Mat(4, 1, cv.CV_32SC2);
@@ -2072,7 +2112,7 @@
     let bf = cv.DescriptorMatcher.create('BruteForce-Hamming');
     // bf[Symbol.toStringTag] === 'DescriptorMatcher' - was TypeError: cv.DescriptorMatcher is undefined before
 
-- js-cv-inputarray-scalar-dangling-pointer: `js_cv_inputarray()`
+- FIXED: js-cv-inputarray-scalar-dangling-pointer: `js_cv_inputarray()`
   (`include/js_inputoutputarray.hpp:78-91`) - the generic JS-value-to-
   `cv::_InputArray` resolver used by most functions accepting a
   color/bounds/Scalar argument (e.g. `inRange`'s `lowerb`/`upperb`,
@@ -2118,6 +2158,21 @@
   or similarly copying into caller-owned storage before returning, but
   that needs auditing every call site's assumption about the returned
   `_InputArray`'s lifetime, so flagging rather than changing inline.
+  **Fixed (2026-08-21):** neither `cv::Mat(scalar)` nor any other copy
+  helps - *every* `_InputArray` constructor stores a pointer rather than a
+  copy, so any storage created inside the helper dangles the same way, and
+  the helper's return type can't own it either (it's a bare
+  `cv::_InputArray`, assigned by ~370 call sites that would slice off any
+  derived owner). Instead the conversion now writes into a thread-local
+  ring of `JS_INPUTARRAY_SLOTS` (16) `{cv::Scalar, std::vector<double>}`
+  slots (`js_inputarray_slot()`, same file), which outlive the call and are
+  only recycled after 16 further plain-array conversions - well beyond the
+  handful of array arguments any single binding call resolves. This covers
+  the `std::vector<double>` fallback branch (arrays of <2 or >4 elements),
+  which had exactly the same dangling-local bug via
+  `_InputArray(const std::vector<_Tp>&)`. Verified with the repro below
+  plus a negative control (`cv.inRange(img, [0,0,0], [10,10,10], mask)`
+  correctly stays all-zero, so the mask isn't just unconditionally set).
 
     import * as cv from 'opencv';
     let img = new cv.Mat(3, 3, cv.CV_8UC3);
@@ -2231,7 +2286,7 @@
     QUICKJS_MODULE_PATH=build/x86_64-linux-gnu qjsm tests/unittests/test_contour_functions.js
     // "Possibly unhandled promise rejection: TypeError: not a function" then nothing else
 
-- polylines-color-requires-4-element-array: `cv.polylines()`
+- FIXED: polylines-color-requires-4-element-array: `cv.polylines()`
   (`js_draw.cpp`'s `js_draw_polylines`) reads its `color` argument via
   `js_array_to(ctx, argv[i++], color.arr)` into a fixed `double[4]` -
   unlike every other draw function in the same file (`rectangle`,
@@ -2244,13 +2299,17 @@
   `tests/unittests/test_segmentation_video.js`; worked around there by
   always passing a full 4-element color array. Not fixed here - narrow,
   cosmetic-severity, easy fix (reuse `js_color_read` like the sibling
-  draw functions) but out of scope for a test-writing pass.
+  draw functions) but out of scope for a test-writing pass. **Fixed
+  (2026-08-21):** `js_draw_polylines()` now reads its color with
+  `js_color_read(ctx, argv[i++], &color)` like `line`/`circle`/
+  `rectangle` do, so a bare number and 3- or 4-element arrays all work
+  (`cv.countNonZero()` === 592 for all three in the repro below).
 
     import * as cv from 'opencv';
     let img = cv.Mat.zeros(40, 40, cv.CV_8UC1);
     let pts = cv.matFromArray(4, 1, cv.CV_32SC2, [5,5, 35,5, 35,35, 5,35]);
     cv.polylines(img, pts, true, 255, 2);
-    // cv.countNonZero(img) === 0 - nothing drawn; [255,255,255,255] instead of 255 works
+    // was: cv.countNonZero(img) === 0 - nothing drawn; now draws (592 nonzero pixels)
 
 - FIXED: cv-psimpl-namespace-deleted-without-replacement: `cv.psimpl` (the 7
   polyline-simplification algorithms - `douglasPeucker`, `nthPoint`,

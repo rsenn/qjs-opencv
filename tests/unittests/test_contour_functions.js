@@ -38,8 +38,10 @@ tests({
     const rect = cv.boundingRect(contour);
     eq(10, rect.x);
     eq(20, rect.y);
-    eq(100, rect.width);
-    eq(50, rect.height);
+    // cv::boundingRect()'s right/bottom edges are exclusive - it returns
+    // xmax - xmin + 1, so x:[10,110] is width 101, not 100.
+    eq(101, rect.width);
+    eq(51, rect.height);
   },
 
   'approxPolyDP - Mat CV_32SC2 input and output'() {
@@ -221,8 +223,9 @@ tests({
     const line = new cv.Mat();
     cv.fitLine(contour, line, cv.DIST_L2, 0, 0.01, 0.01);
     
-    if (line.rows !== 1 || line.cols !== 4) {
-      throw new Error(`Expected 1x4 Mat, got ${line.rows}x${line.cols}`);
+    // cv::fitLine's 2D output is a Vec4f (vx, vy, x0, y0) -> a 4x1 CV_32FC1 Mat
+    if (line.rows !== 4 || line.cols !== 1) {
+      throw new Error(`Expected 4x1 Mat, got ${line.rows}x${line.cols}`);
     }
     eq(cv.CV_32FC1, line.type());
     

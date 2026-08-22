@@ -395,7 +395,7 @@ js_draw_polylines(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
     is_closed = JS_ToBool(ctx, argv[i++]);
 
   if(argc > i)
-    js_array_to(ctx, argv[i++], color.arr);
+    js_color_read(ctx, argv[i++], &color);
 
   if(argc > i)
     JS_ToInt32(ctx, &thickness, argv[i++]);
