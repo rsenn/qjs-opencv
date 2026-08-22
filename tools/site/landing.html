@@ -1,0 +1,154 @@
+<main>
+
+<section class="hero">
+  <div>
+    <span class="eyebrow">QuickJS × OpenCV</span>
+    <h1>Live-code OpenCV pipelines from a REPL.</h1>
+    <p class="lede">
+      qjs-opencv binds <a href="https://opencv.org/" target="_blank" rel="noopener">OpenCV</a> into
+      <a href="https://bellard.org/quickjs/" target="_blank" rel="noopener">QuickJS</a> as a single
+      loadable module: <code>Mat</code>, contours, imgproc, calib3d, dnn and video I/O, with no copies
+      across the JS/C++ boundary and no build step between an edit and a frame on screen.
+    </p>
+    <div class="cta">
+      <a class="btn primary" href="getting-started.html">Get started</a>
+      <a class="btn" href="docs/algorithms.html">Read the docs</a>
+      <a class="btn" href="{{GITHUB}}" target="_blank" rel="noopener">GitHub</a>
+    </div>
+  </div>
+
+  <x-code lang="js">
+import * as cv from 'opencv';
+
+let mat = new cv.Mat();
+let cap = new cv.VideoCapture(0);
+
+for(;;) {
+  cap.read(mat);
+
+  let gray = new cv.Mat();
+  cv.cvtColor(mat, gray, cv.COLOR_BGR2GRAY);
+  cv.Canny(gray, gray, 50, 150);
+
+  let contours = new cv.MatVector();
+  cv.findContours(gray, contours, new cv.Mat(),
+                  cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE);
+
+  cv.imshow('qjs-opencv', mat);
+  if(cv.waitKey(20) == 27) break;
+}
+  </x-code>
+</section>
+
+<section class="section">
+  <h2>Why it exists</h2>
+  <p class="sub">
+    A C++ vision library and a very small interpreter, joined so that image data never
+    has to be copied to cross between them.
+  </p>
+
+  <div class="grid">
+    <div class="card">
+      <span class="ico">◇</span>
+      <h3>No copies</h3>
+      <p>
+        A <code>cv.Mat</code> is backed by a real <code>cv::Mat</code>. Pixel data is reached
+        through typed-array views (<code>.data</code>, <code>.data32F</code>, …) over the same
+        buffer, and iteration yields <code>Float64Array</code> views rather than fresh objects.
+        Finalizers do the freeing — no manual <code>delete()</code> discipline, though
+        <code>.delete()</code> exists so opencv.js snippets paste in unchanged.
+      </p>
+    </div>
+    <div class="card">
+      <span class="ico">◇</span>
+      <h3>Interchangeable arrays</h3>
+      <p>
+        Anything taking <code>cv::InputArray</code> accepts a <code>cv.Mat</code>,
+        a <code>cv.Contour</code>, a <code>MatVector</code>, a plain array or a TypedArray.
+        The unwrapping happens once, in the binding layer, so call sites stay short.
+      </p>
+    </div>
+    <div class="card">
+      <span class="ico">◇</span>
+      <h3>opencv.js-shaped</h3>
+      <p>
+        The API tracks the official Emscripten <code>opencv.js</code> surface — same function
+        names, same argument order, the same vector containers — so tutorial code and
+        StackOverflow answers transfer over. Divergences are tracked as bugs, not accepted
+        as design.
+      </p>
+    </div>
+    <div class="card">
+      <span class="ico">◇</span>
+      <h3>Native speed, script ergonomics</h3>
+      <p>
+        ES2020 modules, no bundler, no transpiler, no wasm. The module loads into
+        <code>qjsm</code> in milliseconds, so the edit-run loop is a keystroke — and it
+        cross-compiles to aarch64, mingw64 and wasm.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>What's bound</h2>
+  <p class="sub">
+    Confirmed against the C++ sources under <code>js_*.cpp</code> and exercised by the tests.
+  </p>
+
+  <div class="split">
+    <div>
+      <h3>Core &amp; imgproc</h3>
+      <p>
+        <code>Mat</code>, <code>UMat</code>, <code>Contour</code>, <code>Point</code>,
+        <code>Rect</code>, <code>RotatedRect</code>, <code>Size</code>, <code>KeyPoint</code>,
+        <code>Matx</code>, <code>Affine3</code> and their iterators — plus the classic pipeline:
+        <code>Canny</code>, <code>findContours</code>, <code>HoughLines</code>,
+        <code>cvtColor</code>, <code>threshold</code>, the blur/morphology families,
+        <code>warpAffine</code>, contour metrics, <code>watershed</code>, <code>grabCut</code>,
+        <code>calcHist</code>.
+      </p>
+    </div>
+    <div>
+      <h3>Beyond imgproc</h3>
+      <p>
+        <code>calibrateCamera</code>, <code>findHomography</code>, the <code>fisheye::*</code> set,
+        <code>VideoCapture</code>/<code>VideoWriter</code>, the MOG2/KNN/bgsegm background
+        subtractors, feature2d detectors and matchers, and <code>dnn</code> —
+        <code>readNet*</code>, <code>blobFromImage</code>, <code>NMSBoxes</code>.
+        Text rendering goes through FreeType.
+      </p>
+    </div>
+  </div>
+
+  <p class="note">
+    Custom, non-OpenCV extras — skeletonization, line tracing and palette reduction — live under
+    <a href="docs/algorithms.html">Custom algorithms</a>. What isn't bound yet is tracked in the
+    <a href="docs/roadmap.html">binding roadmap</a>.
+  </p>
+</section>
+
+<section class="section">
+  <h2>Get it running</h2>
+
+  <x-code lang="sh">
+git clone --recursive {{GITHUB}}
+cd qjs-opencv
+
+. ./cfg.sh
+prefix=/usr/local TYPE=Release cfg \
+  -DOpenCV_DIR=/opt/opencv-4.7.0-x86_64/lib/cmake/opencv4
+make -C build/x86_64-linux-gnu -j$(nproc)
+
+QUICKJS_MODULE_PATH=$PWD/build/x86_64-linux-gnu qjsm tests/unittests/test_imgproc.js
+  </x-code>
+
+  <p class="note">
+    Needs OpenCV 4.2 or newer and <code>qjsm</code> from
+    <a href="https://github.com/rsenn/quickjs" target="_blank" rel="noopener">rsenn/quickjs</a>.
+    Full option matrix, cross-compilation and build flavours are in
+    <a href="getting-started.html">Getting started</a>.
+  </p>
+</section>
+
+</main>
