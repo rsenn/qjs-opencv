@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TODO — binding backlog — qjs-opencv</title>
+<meta name="description" content="OpenCV bindings for QuickJS — Mat, contours, imgproc, calib3d, dnn and video I/O in a loadable QuickJS module.">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body class="has-sidebar">
+<header class="topbar">
+  <a class="brand" href="../index.html"><span class="mark">{ }</span> qjs-opencv</a>
+  <nav class="topnav">
+    <a href="../getting-started.html">Get started</a>
+    <a href="../docs/algorithms.html">Docs</a>
+    <a href="../docs/roadmap.html">Roadmap</a>
+    <a href="https://github.com/rsenn/qjs-opencv" target="_blank" rel="noopener">GitHub</a>
+  </nav>
+  <button class="themetoggle" type="button" aria-label="Toggle colour scheme">◐</button>
+</header>
+<div class="layout">
+<aside class="sidebar"><div class="navgroup"><h3>Start here</h3><ul><li><a href="../getting-started.html">Getting started</a></li></ul></div><div class="navgroup"><h3>Reference</h3><ul><li><a href="algorithms.html">Custom algorithms</a></li><li><a href="roadmap.html" class="here">Binding roadmap</a></li></ul></div></aside>
+<main class="doc">
+<article><h1 id="todo--binding-backlog"><a class="anchor" href="#todo--binding-backlog" aria-hidden="true">#</a>TODO — binding backlog</h1>
+<p>Prioritized by leverage for plot-cv's actual pipelines — laser-cutting SVG export, and three planned vectorization examples (<code>examples/sticker2svg.js</code>, <code>examples/collage-art.js</code>, <code>examples/vector-trace.js</code>) — not by raw OpenCV API surface. Derived from a <code>scripts/binding_coverage.js</code> run against <code>build/x86_64-linux-debug/opencv.so</code> (OpenCV 4.13.0), filtered to <code>cv::</code>-namespace symbols only.</p>
+<p>Regenerate the underlying data with:</p>
+<div class="codeblock" data-lang="bash"><pre><code class="language-bash"><span class="t-id">qjsm</span> <span class="t-id">scripts</span>/<span class="t-id">binding_coverage.js</span> <span class="t-op">--module</span>=<span class="t-id">build</span>/<span class="t-id">x86_64-linux-debug</span>/<span class="t-id">opencv.so</span> \
+  <span class="t-op">--lib-dir</span>=/<span class="t-id">opt</span>/<span class="t-id">opencv-4.13.0-x86_64</span>/<span class="t-id">lib</span> <span class="t-op">--namespace</span>=<span class="t-id">cv</span> <span class="t-op">--verbose</span> <span class="t-op">--out</span>=<span class="t-id">cov.txt</span></code></pre></div>
+<h2 id="opencvjs-example-compatibility-gaps-2026-08-17"><a class="anchor" href="#opencvjs-example-compatibility-gaps-2026-08-17" aria-hidden="true">#</a>opencv.js Example Compatibility Gaps (2026-08-17)</h2>
+<p>Cross-checked every <code>cv.*</code> binding referenced by the 80 opencv.js example
+pages cataloged in <code>doc/opencv-js-examples.md</code> (source: local checkout
+<code>/mnt/data/Projects/opencv/doc/js_tutorials/js_assets/*.html</code>) against this
+project's actual live exports (<code>Object.keys(cv)</code> from a built
+<code>build/x86_64-linux-gnu/opencv.so</code>, OpenCV 5.0.0). 158 unique <code>cv.*</code>
+symbols are referenced across all 80 pages; 143 already resolve as of
+2026-08-17 (<code>matFromArray</code> shipped - see <code>BUGS: opencvjs-matfromarray-missing</code>,
+now FIXED). The 15 gaps below block one or more example pages from
+running unmodified; full
+detail (repro, exact source locations) for each is filed as its own entry
+in <code>BUGS</code> under the <code>opencvjs-*</code> canonical-name prefix.</p>
+<p><strong>Highest impact - fix first:</strong></p>
+<ul>
+<li><strong><code>.delete()</code> missing on <code>Mat</code></strong> - not a binding gap, an architectural
+difference (QuickJS GC + finalizers vs opencv.js's manual wasm-heap
+<code>.delete()</code>). The <code>*Vector</code> classes already have a harmless no-op
+<code>.delete()</code> (<code>js_vector.hpp:289</code>); <code>Mat</code> is the one class that doesn't,
+and it's called <strong>349 times</strong> across the 80 pages, more than any other
+single symbol, so every unmodified example hits it immediately. A
+harmless no-op <code>.delete()</code> stub on <code>Mat</code> would fix all 80 pages' single
+biggest compatibility blocker in one change, without touching the GC
+design. See <code>BUGS: opencvjs-mat-delete-missing</code>.</li>
+</ul>
+<p><strong>New binding work, by tutorial category:</strong></p>
+<ul>
+<li><code>js_video</code> (5 example pages, all blocked): no <code>opencv2/video.hpp</code>
+tracking module bound at all - <code>cv.CamShift</code>, <code>cv.meanShift</code>,
+<code>cv.calcOpticalFlowPyrLK</code>, <code>cv.calcOpticalFlowFarneback</code> are all
+unimplemented, plus the <code>cv.TermCriteria</code> constructor two of them need.
+All four C++ functions are <code>CV_EXPORTS_W</code> in the local OpenCV headers -
+pure binding work, no missing dependency. Proposed: a new <code>js_video.cpp</code>
+mirroring the existing <code>js_calib3d.cpp</code>/<code>js_dnn.cpp</code> module pattern.
+See <code>BUGS: opencvjs-video-tracking-module-unbound</code>,
+<code>opencvjs-termcriteria-constructor-missing</code>.</li>
+<li><code>js_imgproc</code> (5 example pages blocked): <code>cv.matchTemplate</code> +
+<code>cv.TM_*</code> constants (<code>js_template_matching_matchTemplate.html</code>),
+<code>cv.getOptimalDFTSize</code> (<code>js_fourier_transform_dft.html</code>),
+<code>cv.calcBackProject</code> (<code>js_histogram_backprojection_calcBackProject.html</code>,
+plus 2 of the <code>js_video</code> pages above), <code>cv.DIST_*</code> constants (3
+<code>js_watershed_*</code> pages - <code>cv.distanceTransform()</code> itself is already
+bound and takes this parameter, it just can't be named from JS),
+<code>cv.segmentation_IntelligentScissorsMB</code> (<code>js_intelligent_scissors.html</code>
+<ul>
+<li>class exists in the local checkout's <code>opencv2/photo/segmentation.hpp</code>,</li>
+</ul>
+<p>and <code>js_photo.cpp</code> already exists as the place to add it).
+See <code>BUGS: opencvjs-matchtemplate-missing</code>, <code>opencvjs-tm-constants-missing</code>,
+<code>opencvjs-getoptimaldftsize-missing</code>, <code>opencvjs-calcbackproject-missing</code>,
+<code>opencvjs-dist-constants-missing</code>, <code>opencvjs-intelligentscissors-missing</code>.</p></li>
+</ul>
+<p><strong>Shape/naming mismatches (functionality exists, calling convention doesn't match):</strong></p>
+<ul>
+<li><code>cv.ellipse1(img, rotatedRect, color, thickness, lineType)</code> - the
+RotatedRect-taking overload of <code>ellipse()</code> - isn't implemented;
+<code>js_draw_ellipse</code> only parses the (center, axes, angle) shape. Blocks
+<code>js_contour_features_fitEllipse.html</code>.</li>
+<li><code>cv.rotatedRectPoints(rect)</code> doesn't exist as a free function; the same
+functionality is <code>rotatedRect.points()</code> (instance method). Blocks
+<code>js_camshift.html</code> as written (one-line fix to adapt).</li>
+<li><code>cv.BackgroundSubtractorMOG2</code> isn't directly constructible
+(<code>new cv.BackgroundSubtractorMOG2(...)</code>); only available via the
+<code>cv.createBackgroundSubtractorMOG2(...)</code> factory function under a
+generic <code>BackgroundSubtractor</code> class. Blocks <code>js_bg_subtraction.html</code> as
+written (one-line fix to adapt).</li>
+</ul>
+<p>See <code>BUGS: opencvjs-ellipse-rotatedrect-overload-missing</code>,
+<code>opencvjs-rotatedrectpoints-free-function-missing</code>,
+<code>opencvjs-bgsubtractormog2-class-shape-mismatch</code>.</p>
+<p><strong>Not applicable - don't implement:</strong> <code>cv.FS_createDataFile</code> is
+Emscripten's in-browser virtual filesystem, used by the 9 DNN examples
+purely to stage a downloaded model where wasm can see it. qjs-opencv reads
+model files directly off a real filesystem - the 9 DNN pages need this
+call deleted when adapted, not replicated. See `BUGS:
+opencvjs-fs-createdatafile-not-applicable`.</p>
+<h2 id="already-solved-dont-rebuild"><a class="anchor" href="#already-solved-dont-rebuild" aria-hidden="true">#</a>Already solved, don't rebuild</h2>
+<ul>
+<li><strong>Contour → SVG bezier splines.</strong> No OpenCV algorithm does this (checked the full coverage survey — no such symbol exists, bound or unbound). It doesn't need a library either: <code>js/cvVectorization.js</code> (uncommitted) already has a correct Schneider/Graphics-Gems <code>FitCurves</code> cubic-bezier fitter (<code>CurveFitter</code> — corner detection, chord-length parameterization, Newton-Raphson reparameterization, recursive error-based subdivision) consuming <code>contour.array</code> directly, plus <code>SvgBuilder</code> for multi-region path output with holes via <code>fill-rule="evenodd"</code>. Keep this in JS; it's O(n) per subdivision and QuickJS handles it fine. Only reconsider a C++ port if profiling on a real workload shows it's the bottleneck.</li>
+<li>~~<strong>Polyline simplification.</strong> All seven <code>psimpl</code> algorithms are freestanding functions under the <code>cv.psimpl.*</code> namespace~~ <strong>STALE as of 2026-08-19 - regressed, not solved.</strong> Commit <code>c1d96d4</code> ("got rid of js_contour.[ch]pp completely") deleted the file registering <code>cv.psimpl</code> with no replacement; <code>cv.psimpl</code> is now <code>undefined</code>. <code>tests/unittests/test_psimpl_functions.js</code> (still present, still correct) fails all 9 tests. The underlying algorithm code is still in the tree (<code>include/psimpl.hpp</code>, <code>src/line.cpp</code>), just unregistered - and also still wired up in the uncommitted <code>worktree-js-read-points</code> branch's own <code>js_contour.cpp</code>. See <code>BUGS: cv-psimpl-namespace-deleted-without-replacement</code>.</li>
+<li><strong>Contour → freestanding-function migration and the generic vector infrastructure.</strong> The custom <code>Contour</code> class is gone entirely; all 16 shape-analysis functions (<code>contourArea</code>, <code>boundingRect</code>, <code>convexHull</code>, ...) are freestanding, and all 16 opencv.js vector-container types (<code>MatVector</code>, <code>PointVector</code>, <code>Point2fVector</code>, ..., <code>CharVectorVector</code>) are implemented via the generic <code>JSVector&lt;T&gt;</code> template (<code>include/js_vector.hpp</code>) with <code>push_back</code>/<code>get</code>/<code>set</code>/<code>size</code>/<code>Symbol.iterator</code>/<code>delete()</code>. <code>findContours</code> accepts <code>MatVector</code> or <code>PointVectorVector</code> as zero-copy output, alongside a plain-<code>Array</code> fallback. See <code>js_vector.hpp</code>, <code>js_vector.cpp</code>, and <code>tests/unittests/test_contour_functions.js</code>/<code>test_psimpl_functions.js</code>.</li>
+<li><strong>Skeleton tracing.</strong> <code>algorithms/skeleton_lines.hpp</code> (Guo-Hall thinning + topology-aware tracing that cuts at junctions) is fully bound: <code>skeletonizeGuohall</code>, <code>traceLines</code>, <code>degreeMap</code>, <code>skeletonizeAndTrace</code>. Distinct from <code>findContours</code> (region boundaries) and <code>LineSegmentDetector</code>/<code>FastLineDetector</code> (straight-line detection) — the three don't substitute for each other, pick per input character.</li>
+<li><strong>Region proposal for collage-art's "several algorithms to pick a motive."</strong> <code>grabCut</code> (bound) plus <code>ximgproc::segmentation</code> selective-search/graph-segmentation (already bound) cover this with zero new binding work.</li>
+</ul>
+<h2 id="tier-1--bind-next"><a class="anchor" href="#tier-1--bind-next" aria-hidden="true">#</a>Tier 1 — bind next</h2>
+<p>Small, self-contained additions to files that already exist. Each one either completes a pipeline stage that's currently a dead end, or gives Canny→findContours a materially better input image.</p>
+<ul>
+<li><p>[x] <strong>photo module</strong> (was 0/30 bound) → <code>js_photo.cpp</code>, wired into <code>init_module.cpp</code>, <code>tests/test_photo.js</code> demonstrates all 7 functions.</p>
+<ul>
+<li><code>pencilSketch</code>, <code>stylization</code>, <code>detailEnhance</code>, <code>edgePreservingFilter</code> — non-photorealistic-rendering filters that convert a photo <em>directly</em> into line art; worth an A/B test against the current Canny+findContours approximation.</li>
+<li><code>fastNlMeansDenoising</code>/<code>fastNlMeansDenoisingColored</code> — strips webcam sensor noise that currently becomes spurious tiny contours in the SVG output.</li>
+<li><code>inpaint</code> — removes dust/scratches from scanned source images before vectorizing.</li>
+<li><strong>Gotcha found &amp; guarded:</strong> <code>cv.imread()</code> can return a 4-channel (BGRA) Mat for PNGs with alpha (this project's custom PNG reader preserves alpha; plain <code>cv::imread</code> would not). <code>pencilSketch</code>/<code>stylization</code>/<code>detailEnhance</code>/<code>edgePreservingFilter</code>/<code>fastNlMeansDenoisingColored</code> assume <code>CV_8UC3</code> with no validation of their own in this OpenCV build — a 4-channel input doesn't throw, it corrupts the heap (nondeterministic glibc <code>malloc</code> aborts, sometimes several calls later). Added an explicit channel-count check (<code>js_photo_require_channels</code>) that throws a clean <code>TypeError</code> instead; <code>inpaint</code> similarly checks for 1-or-3 channels. This was a real boundary-validation case, not speculative — first reproduction was exactly this PNG-with-alpha path.</li>
+<li>Build-hygiene note for next time: this repo's <code>build/x86_64-linux-gnu</code> had stale object files compiled with a different <code>USE_FEATURE2D</code>/<code>USE_BARCODE</code>/<code>CXX2A</code> flag set than current <code>compile_commands.json</code> (and <code>cmake .</code> reconfigure currently fails here with a <code>check_library_exists</code>/CXX-feature-detection error, unrelated to this change). A full recompile of all 55 files from <code>compile_commands.json</code> fixed a <code>js_feature2d.so</code> linking against an effectively-empty stale object. Worth a clean <code>rm -rf build/x86_64-linux-gnu &amp;&amp; cfg ...</code> at some point rather than continuing to patch around it.</li>
+</ul></li>
+<li><p>[ ] <strong>calib3d — finish the calibration round-trip</strong> → extend <code>js_calib3d.cpp</code> (86/106 bound)</p>
+<ul>
+<li><code>undistort</code>, <code>initUndistortRectifyMap</code>, <code>getOptimalNewCameraMatrix</code> — <code>calibrateCamera</code> is bound but nothing currently <em>applies</em> the resulting camera matrix/distortion coefficients; lens-distorted webcam/wide-angle rigs feed skewed contours straight into the SVG today.</li>
+<li><code>Rodrigues</code>, <code>solvePnP</code> — pose-from-known-points, useful for a fixed calibration jig on the cutting bed.</li>
+</ul></li>
+<li><p>[x] <strong>ximgproc — edge-aware smoothing filters</strong> → <code>js_ximgproc.cpp</code> (<code>cv.ximgproc.*</code> namespace)</p>
+<ul>
+<li><code>guidedFilter</code>, <code>dtFilter</code>, <code>l0Smooth</code>, <code>jointBilateralFilter</code>, <code>bilateralTextureFilter</code> — smooth flat regions while keeping strong edges crisp; run before Canny/findContours to cut noise contours in gradients/textures (skin, wood grain, fabric).</li>
+<li><code>fastBilateralSolverFilter</code> — upsamples a coarse/noisy edge or mask to full resolution snapped to real edges; useful now that DNN edge detection (below) can supply that coarse/noisy input.</li>
+</ul></li>
+<li><p>[ ] <strong>imgproc / draw — parity gaps</strong> → extend <code>js_imgproc.cpp</code>, <code>js_draw.cpp</code> (97/202 bound)</p>
+<ul>
+<li><code>Laplacian</code>, <code>Scharr</code> — standard second-derivative edge operators missing next to the already-bound <code>Sobel</code>.</li>
+<li><code>approxPolyN</code> — newer fixed-vertex-count replacement for <code>approxPolyDP</code>; useful for clean N-gon simplification of a contour for laser paths.</li>
+<li><code>arrowedLine</code> — one-line addition to the draw module for debugging pipeline direction/normals.</li>
+</ul></li>
+<li><p>[ ] <strong>xphoto — oil-painting stylization, stronger denoise</strong> → extend <code>js_white_balancer.cpp</code> (or split into <code>js_xphoto.cpp</code>) (7/11 bound)</p>
+<ul>
+<li><code>oilPainting</code> — alternative stylization look distinct from <code>pencilSketch</code>.</li>
+<li><code>bm3dDenoising</code> — stronger (slower) denoiser for genuinely noisy low-light frames.</li>
+</ul></li>
+</ul>
+<h2 id="tier-2--bind-if-the-use-case-shows-up"><a class="anchor" href="#tier-2--bind-if-the-use-case-shows-up" aria-hidden="true">#</a>Tier 2 — bind if the use case shows up</h2>
+<p>Real capability gains, but bigger binding surfaces or contingent on a workflow (live video, oversized stock, learned edge models) that isn't confirmed yet.</p>
+<ul>
+<li><p>[ ] <strong>video — optical flow &amp; frame stabilization</strong> → new <code>js_video.cpp</code> (22/24 bound)</p>
+<ul>
+<li><code>calcOpticalFlowPyrLK</code>, <code>calcOpticalFlowFarneback</code>, <code>findTransformECC</code> — frame alignment for a jittery handheld/clamped webcam feed before averaging or temporal denoising.</li>
+<li><code>cv::KalmanFilter</code> — smooth a tracked contour/point across frames instead of re-detecting from scratch.</li>
+<li>Only worth it once there's an actual live-capture workflow to stabilize.</li>
+</ul></li>
+<li><p>[ ] <strong>features2d — keypoint detectors &amp; matchers</strong> → extend <code>js_feature2d.cpp</code> (1/64 bound)</p>
+<ul>
+<li><code>ORB::create</code>, <code>AKAZE::create</code>, <code>BRISK::create</code>, <code>SIFT::create</code> + <code>BFMatcher</code>/<code>FlannBasedMatcher</code>.</li>
+<li>Note: these are only reachable via static <code>::create()</code> factories in modern OpenCV (no public constructor) — that's why they show as unbound classes in the raw coverage report even though the functionality exists as unbound factory functions.</li>
+<li>Enables keypoint-based frame registration: aligning multiple shots of an oversized workpiece, or de-jittering a handheld capture by homography instead of dense optical flow.</li>
+</ul></li>
+<li><p>[ ] <strong>stitching — <code>Stitcher</code> facade for oversized stock</strong> → new <code>js_stitching.cpp</code> (facade only, not the full module) (0/221 bound)</p>
+<ul>
+<li>Bind just <code>cv::Stitcher::create()</code>/<code>::stitch()</code>; almost all of the 221 unbound functions are internal (warpers, bundle adjusters, seam finders) that don't need direct exposure.</li>
+<li>Payoff if the cutting bed or workpiece is larger than one camera frame: photograph in overlapping tiles, stitch, then run the existing contour pipeline on the composite.</li>
+<li>Skip unless that's an actual scenario.</li>
+</ul></li>
+<li><p>[ ] <strong>objdetect — QR/fiducial markers, cascade detection</strong> → new <code>js_objdetect.cpp</code> (38/41 bound)</p>
+<ul>
+<li><code>QRCodeDetector</code>/<code>GraphicalCodeDetector</code> — printed fiducial marker for bed registration or scale calibration (derive a pixel-to-mm homography automatically from a known QR in-frame).</li>
+<li><code>CascadeClassifier</code> — lower priority, only if there's a concrete "find this specific object in frame" need.</li>
+<li><strong>Check first:</strong> the repo already ships <code>js_barcode_detector.cpp</code>, but <code>cv::barcode::BarcodeDetector</code> shows up as <em>unbound</em> in this scan — verify whether <code>USE_BARCODE</code> was off for this debug build, or whether the symbol moved when OpenCV merged barcode into <code>objdetect</code>. May be a build-config fix rather than new binding work.</li>
+</ul></li>
+<li><p>[x] <strong>dnn — learned edge detection (DexiNed)</strong> → <code>examples/edge_detection_dexined.js</code></p>
+<ul>
+<li><code>DetectionModel</code>/<code>SegmentationModel</code>/<code>ClassificationModel</code> were already bound in <code>js_dnn.cpp</code> (this TODO item was stale on that point) — the actual blocker was a model file. Fetched <code>examples/models/edge_detection_dexined/edge_detection_dexined_2024sep.onnx</code> (OpenCV's own <code>samples/dnn/models.yml</code> "dexined" entry, sha1 <code>f86f2d32c3cf892771f76b5e6b629b16a66510e9</code>, verified on download).</li>
+<li><code>examples/edge_detection_dexined.js</code>: <code>readNetFromONNX</code> + <code>blobFromImage</code> + <code>Net.forward()</code> (a 4D 1x1x512x512 blob, so post-processed via a flat sigmoid + min-max stretch over <code>.data32F</code> rather than <code>cv.normalize</code>/<code>cv.divide</code> — those Mat-arithmetic ops don't handle N-D blobs) → <code>matFromArray</code> back to a proper 2D Mat → <code>resize</code> to the source image size. Verified visually against <code>tests/smarties.png</code> — clean, semantically-aware ring outlines, no Canny-style texture noise.</li>
+</ul></li>
+</ul>
+<h2 id="tier-3--skip-for-this-project"><a class="anchor" href="#tier-3--skip-for-this-project" aria-hidden="true">#</a>Tier 3 — skip for this project</h2>
+<p>No clear path back to "video source → SVG for a laser cutter." Listed so the reasoning is on record.</p>
+<ul>
+<li><strong>rgbd, sfm, stereo, structured_light, surface_matching</strong> — 3D reconstruction; output is depth/point clouds, not 2D vector paths.</li>
+<li><strong>gapi</strong> — declarative graph-compute engine, not a vision algorithm; its 487 unbound functions are the largest raw count in the whole report but zero relevance.</li>
+<li><strong>ml</strong> — generic classifiers/regressors, no concrete use case in this pipeline yet.</li>
+<li><strong>text</strong> — OCR, only relevant if vectorizing scanned document text specifically.</li>
+<li><strong>tracking</strong> — legacy single-object trackers (KCF/CSRT/MIL); the Tier 2 video candidate covers the real motion need with less surface area.</li>
+<li><strong>optflow</strong> — exotic dense-flow variants (DIS, DeepFlow) beyond what Farneback/PyrLK in Tier 2 already cover.</li>
+<li><strong>face</strong> — face landmarks/recognition, out of scope.</li>
+<li><strong>xfeatures2d</strong> — SURF and other patent-encumbered/legacy descriptors; features2d (Tier 2) already covers the modern equivalents.</li>
+<li><strong>saliency, quality, img_hash</strong> — frame selection/scoring; nice-to-have, no current pipeline stage needs it.</li>
+<li><strong>line_descriptor</strong> — line-segment matching across frames; redundant with the already-bound LineSegmentDetector/FastLineDetector.</li>
+<li><strong>videostab</strong> — full video stabilization pipeline; Tier 2's ECC/optical-flow primitives cover the useful subset directly.</li>
+<li><strong>datasets, flann, reg, shape, fuzzy, hfs, hdf, dpm, mcc, rapid, wechat_qrcode, xobjdetect, bioinspired, alphamat, intensity_transform, phase_unwrapping, signal, plot, dnn_objdetect, dnn_superres, ccalib, cvv</strong> — niche, deprecated, or infrastructure-only; no identified use case.</li>
+</ul>
+<h2 id="api-discrepancies-vs-opencvjs-shared-surface-only"><a class="anchor" href="#api-discrepancies-vs-opencvjs-shared-surface-only" aria-hidden="true">#</a>API discrepancies vs opencv.js (shared surface only)</h2>
+<p><strong>IMPORTANT: When fixing opencv.js compatibility issues, always update all client scripts.</strong> After changing a C++ binding to match opencv.js behavior, you MUST update every JavaScript file that uses the affected function:</p>
+<div class="codeblock" data-lang="bash"><pre><code class="language-bash"><span class="t-id">grep</span> <span class="t-op">-r</span> <span class="t-op">-l</span> <span class="t-str">"^import.*'opencv"</span> <span class="t-id">examples</span>/ <span class="t-id">tests</span>/ *.<span class="t-id">js</span> ../*.<span class="t-id">js</span></code></pre></div>
+<p>Update the call sites to use the opencv.js-compatible form, even if qjs-opencv retains backward compatibility (e.g., supporting both 1-arg and 2-arg signatures). The goal is to make client scripts as opencv.js-portable as possible.</p>
+<p>Investigated 2026-08-17 (previous pass: 2026-08-12) by comparing <code>doc/opencv-js-api.md</code> (the official opencv.js binding surface, compiled from OpenCV 5.0.0's <code>platforms/js/opencv_js.config.py</code> + <code>modules/js/src/core_bindings.cpp</code> + <code>helpers.js</code>) against this project's own bindings, function-by-function, for names that exist <strong>on both sides</strong>. This is not a coverage comparison — qjs-opencv deliberately binds far more of <code>cv::</code> than opencv.js's hand-curated browser whitelist (see Tiers above). It's a divergence audit: where the same-named call exists in both, does it behave the same way? Anyone porting opencv.js snippets/tutorials into this project's <code>qjs</code> REPL will hit these.</p>
+<p>The codebase moved substantially since the 2026-08-12 pass: <code>js_contour.[ch]pp</code> (the custom <code>Contour</code> class), <code>js_point_iterator</code>, <code>js_line_iterator</code>, and <code>js_slice_iterator</code> were removed entirely; <code>findContours</code> now natively supports <code>MatVector</code>/<code>PointVectorVector</code> output; <code>drawContours</code> (plural) now threads a real <code>index</code>/<code>hierarchy</code> through instead of hardcoding <code>index=0</code>; <code>cv.Range</code> is now a real constructible class; <code>Mat.diag()</code>, the seven <code>.dataXX</code> typed views, the seven <code>&lt;type&gt;At()</code> accessors, and the seven <code>&lt;type&gt;Ptr()</code> accessors all shipped; <code>Scalar.all()</code> and <code>barcode_BarcodeDetector</code> both shipped. Several other entries from the old pass are unchanged — re-verified below, not just carried forward blindly. Entries marked "carried forward, not re-verified" cover files with no commits since 2026-08-12 — low risk of drift, flagged transparently rather than silently repeated as fresh findings.</p>
+<p>Grouped by how badly a naive port breaks.</p>
+<h3 id="silently-wrong-results-no-exception-no-obviously-missing-output--the-dangerous-category"><a class="anchor" href="#silently-wrong-results-no-exception-no-obviously-missing-output--the-dangerous-category" aria-hidden="true">#</a>Silently wrong results (no exception, no obviously-missing output — the dangerous category)</h3>
+<p>Every entry identified in this category as of the 2026-08-17/18 passes is
+now fixed: <code>HuMoments</code> dropping results for non-Array outputs, <code>Mat.mul</code>
+doing matrix multiplication instead of elementwise, three discarded
+output arguments (<code>estimateAffine2D</code>/<code>estimateAffinePartial2D</code>'s
+<code>inliers</code>, <code>floodFill</code>'s <code>rect</code>, <code>Feature2D.compute()</code>'s <code>keypoints</code>),
+<code>moments(points, binaryImage)</code> picking input interpretation off the wrong
+flag, and <code>Mat.step</code> dropping the last dimension's stride. See <code>BUGS</code>
+(all marked FIXED): <code>mat-mul-does-matrix-multiplication-not-elementwise</code>,
+<code>estimateaffine2d-inliers-output-discarded</code>,
+<code>floodfill-rect-output-not-written-back</code>,
+<code>feature2d-compute-keypoints-not-copied-back</code>,
+<code>moments-binaryimage-controls-input-interpretation</code>,
+<code>mat-step-drops-last-dimension</code>. Also fixed since: <code>Laplacian</code>/<code>pyrDown</code>/
+<code>pyrUp</code>/<code>Scharr</code> being literal no-op stubs (see `BUGS:
+laplacian-pyrdown-pyrup-scharr-are-noop-stubs`) - arguably the worst
+instance of this category found so far, since it wasn't even "wrong
+output", just no computation at all. No systematic new pass has been
+done since to look for further instances of this category - worth
+another audit pass rather than assuming it's now exhaustively clean.</p>
+<p><strong>New, unfixed (2026-08-19):</strong> <code>js_cv_inputarray()</code>'s plain-<code>Array</code>-of-
+2..4-numbers path (<code>include/js_inputoutputarray.hpp:78-91</code>) returns a
+<code>cv::_InputArray</code> that references a destroyed local <code>cv::Scalar</code> -
+<code>_InputArray(const Matx&amp;)</code> stores a pointer, not a copy. Any function
+taking a color/bounds argument as a plain JS array (confirmed:
+<code>cv.inRange(img, [0,0,0], [255,255,255], mask)</code> silently returns an
+all-zero mask instead of all-255) is affected; the same bounds via
+<code>Float64Array</code>/<code>Scalar.all()</code> work correctly since that's a different,
+safe code path. Not scoped to one function - a shared helper bug. See
+<code>BUGS: js-cv-inputarray-scalar-dangling-pointer</code>.</p>
+<p><em>(<code>Mat.diag()</code>, <code>Mat.data</code>/<code>.data8S</code>/<code>.data16U</code>/<code>.data16S</code>/<code>.data32S</code>/<code>.data32F</code>/<code>.data64F</code>, all seven <code>&lt;type&gt;At()</code> accessors, all seven <code>&lt;type&gt;Ptr()</code> accessors, and <code>StringVector</code>/<code>DMatchVectorVector</code>/<code>KeyPointVectorVector</code> from the 2026-08-12 audit's "not bound" list are now <strong>implemented</strong> — <code>js_mat.cpp:2051-2101</code>, <code>js_vector.cpp</code> — and removed from this list.)</em></p>
+<h3 id="different-return-shape--calling-convention-throws-or-misbehaves-on-an-opencvjs-style-call-but-obviously-so"><a class="anchor" href="#different-return-shape--calling-convention-throws-or-misbehaves-on-an-opencvjs-style-call-but-obviously-so" aria-hidden="true">#</a>Different return shape / calling convention (throws or misbehaves on an opencv.js-style call, but obviously so)</h3>
+<ul>
+<li><strong><code>kmeans</code>'s <code>criteria</code> argument shape differs, and no <code>TermCriteria</code> class exists anywhere.</strong> <em>(unchanged — still live)</em> <code>js_cv.cpp:1068-1092</code>: <code>criteria</code> is read via <code>js_array_to(ctx, argv[3], crit)</code> into a plain <code>std::vector&lt;double&gt;</code> (needs <code>crit.size() &gt;= 3</code>), not opencv.js's <code>TermCriteria {type, maxCount, epsilon}</code> object. Grepped the whole tree for a <code>TermCriteria</code> JS class — none exists; every internal use (<code>js_fisheye.cpp</code>, <code>js_calib3d.cpp</code>, <code>js_cv.cpp</code>, and now <code>CamShift</code>/<code>meanShift</code>'s <code>js_imgproc_track</code>) hardcodes its own C++-side <code>cv::TermCriteria</code>, none of it constructible/settable from JS.</li>
+<li><strong><code>Mat.empty</code>/<code>.continuous</code> are JS accessor properties, not callable methods.</strong> <em>(unchanged — still live)</em> <code>js_mat.cpp:2044,2046</code> (<code>JS_CGETSET_MAGIC_DEF</code>) — <code>mat.empty()</code>/<code>mat.continuous()</code> both throw (<code>TypeError: not a function</code>); must read <code>mat.empty</code>/<code>mat.continuous</code> with no parens. <code>.isContinuous()</code> (the opencv.js name) doesn't exist as a property or method name at all — only the renamed <code>.continuous</code> getter does.</li>
+<li><strong>No <code>cv.Scalar</code> constructible type, and it doesn't subclass <code>Array</code>.</strong> <em>(partially fixed since 2026-08-12)</em> <code>Scalar.all(v)</code> now exists (<code>js_cv.cpp:1440</code>, <code>:2605-2606</code>) and returns a uniform fill, matching opencv.js. But there's still no <code>new cv.Scalar(...)</code> constructor — only the <code>js_scalar_read</code>/<code>js_scalar_new</code> helpers operating on plain arrays/<code>Float64Array</code> — and the return type is a <code>Float64Array</code>, not an <code>Array</code> subclass (<code>scalar instanceof Array === false</code> here, <code>true</code> in opencv.js).</li>
+<li><strong><code>SimpleBlobDetector</code>'s constructor still ignores/has no way to take a <code>Params</code> argument.</strong> <em>(carried forward, not re-verified)</em></li>
+<li><strong><code>calibrateCameraExtended</code> doesn't exist as a separate name — folded into <code>calibrateCamera</code>.</strong> <em>(carried forward, not re-verified)</em></li>
+<li><strong><code>findHomography</code>'s point inputs go through a custom point-array reader, not a generic <code>InputArray</code>.</strong> <em>(carried forward, not re-verified)</em></li>
+<li><strong><code>DescriptorMatcher.match()</code> dispatches on <code>argc</code> rather than argument type</strong> — the <code>mask</code> argument (<code>js_feature2d.cpp</code>'s <code>DESCRIPTOR_MATCHER_MATCH</code>) is only read, and matching only actually runs, when <code>argc &gt; 3</code>; calling <code>matcher.match(query, train, matches)</code> (3 args, <code>mask</code> omitted — a perfectly valid opencv.js call) silently does nothing and leaves <code>matches</code> empty, no exception. <em>(newly split out as its own entry — previously bundled into the now-fixed "static function table is empty" entry above; found while verifying the <code>DescriptorMatcher.create()</code> fix below.)</em></li>
+</ul>
+<p><em>(Removed from this list, now fixed — 2026-08-19 passes: <code>minMaxLoc</code>/<code>minEnclosingCircle</code> return shapes and <code>new Mat(otherMat)</code> (see <code>BUGS</code>: <code>minmaxloc-positional-array-not-named-object</code>, <code>minenclosingcircle-no-return-value</code>, <code>no-mat-copy-handle-constructor</code>); <code>ORB</code>/<code>MSER</code>/<code>AKAZE</code>/<code>BRISK</code>/<code>FastFeatureDetector</code>/<code>GFTTDetector</code> <code>.create()</code> statics (<code>BUGS</code>: <code>feature2d-detectors-no-create-static</code>); <code>CamShift</code>/<code>meanShift</code> and <code>cv.createCLAHE()</code> (<code>BUGS</code>: <code>no-camshift-meanshift-bindings</code>, <code>no-free-function-createclahe</code>); <code>cv.drawKeypoints</code>'s hardcoded <code>flags</code>/broken <code>color</code>-optionality check — <code>js_draw.cpp</code>'s <code>js_draw_keypoints</code> now reads <code>color</code> from <code>argc &gt; 3</code> (was the always-true <code>argc</code> alone) and <code>flags</code> from a new <code>argc &gt; 4</code> check instead of hardcoding <code>cv::DrawMatchesFlags(0)</code> (see <code>BUGS</code>: <code>drawkeypoints-flags-hardcoded-color-check-broken</code>); <code>RotatedRect.points</code>/<code>.boundingRect</code>/<code>.boundingRect2f</code> being instance-only — <code>js_rotated_rect.cpp</code> now also exposes all three as static functions taking the <code>RotatedRect</code> as the first argument, forwarding into the same instance-method implementation, alongside the still-present instance methods (see <code>BUGS</code>: <code>rotatedrect-static-methods-missing</code>); <code>DescriptorMatcher</code>'s empty static-function table — <code>js_feature2d.cpp</code> now has <code>DescriptorMatcher.create(type)</code> (string or <code>MatcherType</code> int) plus the <code>MatcherType</code> enum constants, <strong>and</strong> <code>DescriptorMatcher</code> itself turned out to never be exported from the module at all (fixed as part of the same change — see <code>BUGS</code>: <code>descriptormatcher-no-create-static-and-unexported</code>). <code>BFMatcher.create(normType, crossCheck)</code> specifically is still not separately bound — <code>new cv.BFMatcher(...)</code> and <code>DescriptorMatcher.create('BruteForce'-family-string)</code> both work as the two ways to construct one, but the literal opencv.js <code>BFMatcher.create(...)</code> spelling still throws; low priority given the two working alternatives. Earlier fixes: <code>cv.createCLAHE()</code>, <code>CamShift</code>/<code>meanShift</code>, <code>BarcodeDetector</code> naming, <code>drawContours</code> hierarchy, <code>cv.Range</code>.)</em></p>
+<h3 id="vector-container-types--remaining-gaps"><a class="anchor" href="#vector-container-types--remaining-gaps" aria-hidden="true">#</a>Vector container types — remaining gaps</h3>
+<p>All 16 opencv.js vector-container types exist (see "Already solved, don't rebuild" above); <code>.delete()</code> is a no-op on all of them.</p>
+<ul>
+<li><strong>Still not migrated to <code>MatVector</code>/vector-of-vectors conventions:</strong> <code>split</code>/<code>merge</code> (<code>js_cv.cpp:194,333</code>, re-verified 2026-08-17 — still plain JS <code>Array</code> of <code>Mat</code>s). <code>HoughLines</code> (<code>js_imgproc.cpp:464</code>, re-verified 2026-08-17 — still requires a plain JS <code>Array</code> for <code>lines</code>, inconsistently with <code>HoughLinesP</code>/<code>HoughCircles</code>).</li>
+</ul>
+<h3 id="different-defaults--optionality-same-call-shape-different-silent-behavior"><a class="anchor" href="#different-defaults--optionality-same-call-shape-different-silent-behavior" aria-hidden="true">#</a>Different defaults / optionality (same call shape, different silent behavior)</h3>
+<ul>
+<li><strong>Default line type</strong>: <code>circle</code>/<code>ellipse</code>/<code>line</code>/<code>putText</code> default to <code>cv::LINE_AA</code> (antialiased) in this project; native OpenCV/opencv.js default to <code>cv::LINE_8</code>. <em>(carried forward, not re-verified)</em></li>
+<li><strong>Default thickness for <code>circle</code>/<code>ellipse</code></strong>: defaults to <code>-1</code> (filled) here vs <code>1</code> (1px outline) in opencv.js/native OpenCV. <em>(carried forward, not re-verified)</em></li>
+<li><strong><code>circle</code>/<code>ellipse</code> have no <code>shift</code> parameter</strong>. <em>(carried forward, not re-verified)</em></li>
+<li><strong><code>fillPoly</code> isn't independently callable</strong> — merged with <code>polylines</code> into one dispatcher. <em>(carried forward, not re-verified)</em></li>
+<li><strong><code>aruco.drawDetectedMarkers</code>'s default <code>borderColor</code></strong> is <code>{0,0,255}</code> (red-ish BGR) here vs opencv.js's <code>Scalar(0,255,0)</code> (green). <em>(re-verified this pass — <code>js_aruco.cpp:46,63</code> — still live)</em></li>
+<li><strong><code>inpaint</code>'s <code>flags</code> argument is optional here</strong> (defaults to <code>INPAINT_TELEA</code>), <strong>required with no default in opencv.js.</strong> <em>(re-verified this pass — <code>js_photo.cpp:180</code> — still live)</em> This project also adds a channel-count validation <code>TypeError</code> opencv.js doesn't have.</li>
+<li><strong><code>dnn.Net.setPreferableBackend</code> declares arity 0</strong> even though <code>backendId</code> is effectively required. <em>(carried forward, not re-verified — no <code>js_dnn.cpp</code> commits since 2026-08-12)</em></li>
+<li><strong><code>readNet</code>/<code>readNetFromTensorflow</code>/<code>readNetFromTFLite</code> don't expose OpenCV 5's <code>engine</code> parameter</strong>. <em>(carried forward, not re-verified — no <code>js_dnn.cpp</code> commits since 2026-08-12)</em></li>
+<li><strong><code>normalize</code> has no <code>mask</code> parameter</strong>. <em>(carried forward, not re-verified)</em></li>
+<li><strong><code>connectedComponents</code>/<code>connectedComponentsWithStats</code> require an extra mandatory <code>ccltype</code> argument with no default</strong>. <em>(carried forward, not re-verified)</em></li>
+<li><strong><code>mixChannels</code> accepts extra optional interleaved "count" arguments</strong>. <em>(carried forward, not re-verified)</em></li>
+<li><strong><code>DescriptorMatcher.match()</code> dispatches on <code>argc</code> rather than argument type</strong>. <em>(carried forward, not re-verified)</em></li>
+</ul>
+<hr>
+<h2 id="appendix--full-per-module-unbound-counts-cv-namespace-only"><a class="anchor" href="#appendix--full-per-module-unbound-counts-cv-namespace-only" aria-hidden="true">#</a>Appendix — full per-module unbound counts (cv:: namespace only)</h2>
+<p><code>detail::</code>/<code>cuda::</code>/<code>ocl::</code>/<code>hal::</code> internals and modules with zero unbound <code>cv::</code> symbols are excluded.</p>
+<div class="tablewrap"><table><thead><tr><th>module</th><th style="text-align:right">classes</th><th style="text-align:right">functions</th><th>tier</th></tr></thead><tbody><tr><td>core</td><td style="text-align:right">48 / 58</td><td style="text-align:right">608 / 753</td><td>internals</td></tr><tr><td>gapi</td><td style="text-align:right">57 / 57</td><td style="text-align:right">487 / 487</td><td>skip</td></tr><tr><td>stitching</td><td style="text-align:right">8 / 8</td><td style="text-align:right">213 / 213</td><td>tier 2</td></tr><tr><td>dnn</td><td style="text-align:right">13 / 15</td><td style="text-align:right">139 / 172</td><td>tier 2</td></tr><tr><td>imgproc</td><td style="text-align:right">3 / 5</td><td style="text-align:right">97 / 202</td><td>tier 1</td></tr><tr><td>calib3d</td><td style="text-align:right">3 / 3</td><td style="text-align:right">86 / 106</td><td>tier 1</td></tr><tr><td>features2d</td><td style="text-align:right">8 / 8</td><td style="text-align:right">63 / 64</td><td>tier 2</td></tr><tr><td>optflow</td><td style="text-align:right">2 / 2</td><td style="text-align:right">64 / 64</td><td>skip</td></tr><tr><td>tracking</td><td style="text-align:right">29 / 29</td><td style="text-align:right">34 / 34</td><td>skip</td></tr><tr><td>objdetect</td><td style="text-align:right">19 / 19</td><td style="text-align:right">38 / 41</td><td>tier 2</td></tr><tr><td>ximgproc</td><td style="text-align:right">1 / 1</td><td style="text-align:right">55 / 89</td><td>tier 1</td></tr><tr><td>xfeatures2d</td><td style="text-align:right">2 / 2</td><td style="text-align:right">53 / 53</td><td>skip</td></tr><tr><td>rgbd</td><td style="text-align:right">12 / 12</td><td style="text-align:right">40 / 40</td><td>skip</td></tr><tr><td>videostab</td><td style="text-align:right">15 / 15</td><td style="text-align:right">34 / 34</td><td>skip</td></tr><tr><td>face</td><td style="text-align:right">7 / 7</td><td style="text-align:right">40 / 40</td><td>skip</td></tr><tr><td>text</td><td style="text-align:right">4 / 4</td><td style="text-align:right">41 / 41</td><td>skip</td></tr><tr><td>video</td><td style="text-align:right">21 / 21</td><td style="text-align:right">22 / 24</td><td>tier 2</td></tr><tr><td>datasets</td><td style="text-align:right">0 / 0</td><td style="text-align:right">37 / 37</td><td>skip</td></tr><tr><td>ml</td><td style="text-align:right">4 / 4</td><td style="text-align:right">29 / 29</td><td>skip</td></tr><tr><td>sfm</td><td style="text-align:right">0 / 0</td><td style="text-align:right">32 / 32</td><td>skip</td></tr><tr><td>photo</td><td style="text-align:right">0 / 0</td><td style="text-align:right">30 / 30</td><td>tier 1</td></tr><tr><td>img_hash</td><td style="text-align:right">1 / 1</td><td style="text-align:right">25 / 25</td><td>skip</td></tr><tr><td>surface_matching</td><td style="text-align:right">1 / 1</td><td style="text-align:right">25 / 25</td><td>skip</td></tr><tr><td>imgcodecs</td><td style="text-align:right">4 / 4</td><td style="text-align:right">16 / 21</td><td>low priority</td></tr><tr><td>superres</td><td style="text-align:right">1 / 1</td><td style="text-align:right">19 / 19</td><td>skip</td></tr><tr><td>videoio</td><td style="text-align:right">2 / 4</td><td style="text-align:right">16 / 16</td><td>low priority</td></tr><tr><td>aruco</td><td style="text-align:right">1 / 1</td><td style="text-align:right">15 / 15</td><td>low priority</td></tr><tr><td>fuzzy</td><td style="text-align:right">0 / 0</td><td style="text-align:right">16 / 16</td><td>skip</td></tr><tr><td>highgui</td><td style="text-align:right">0 / 0</td><td style="text-align:right">16 / 41</td><td>low priority</td></tr><tr><td>line_descriptor</td><td style="text-align:right">7 / 7</td><td style="text-align:right">8 / 8</td><td>skip</td></tr><tr><td>ccalib</td><td style="text-align:right">4 / 4</td><td style="text-align:right">9 / 9</td><td>skip</td></tr><tr><td>quality</td><td style="text-align:right">3 / 3</td><td style="text-align:right">9 / 9</td><td>skip</td></tr><tr><td>saliency</td><td style="text-align:right">4 / 4</td><td style="text-align:right">8 / 8</td><td>skip</td></tr><tr><td>flann</td><td style="text-align:right">11 / 11</td><td style="text-align:right">0 / 0</td><td>skip</td></tr><tr><td>xphoto</td><td style="text-align:right">0 / 0</td><td style="text-align:right">7 / 11</td><td>tier 1</td></tr><tr><td>bgsegm</td><td style="text-align:right">1 / 1</td><td style="text-align:right">4 / 9</td><td>low priority</td></tr></tbody></table></div></article>
+<p class="editlink"><a href="https://github.com/rsenn/qjs-opencv/blob/main/TODO.md">Edit this page on GitHub →</a></p>
+</main>
+<nav class="toc"><h3>On this page</h3><ul><li class="lvl2"><a href="#opencvjs-example-compatibility-gaps-2026-08-17">opencv.js Example Compatibility Gaps (2026-08-17)</a></li><li class="lvl2"><a href="#already-solved-dont-rebuild">Already solved, don't rebuild</a></li><li class="lvl2"><a href="#tier-1--bind-next">Tier 1 — bind next</a></li><li class="lvl2"><a href="#tier-2--bind-if-the-use-case-shows-up">Tier 2 — bind if the use case shows up</a></li><li class="lvl2"><a href="#tier-3--skip-for-this-project">Tier 3 — skip for this project</a></li><li class="lvl2"><a href="#api-discrepancies-vs-opencvjs-shared-surface-only">API discrepancies vs opencv.js (shared surface only)</a></li><li class="lvl3"><a href="#silently-wrong-results-no-exception-no-obviously-missing-output--the-dangerous-category">Silently wrong results (no exception, no obviously-missing output — the dangerous category)</a></li><li class="lvl3"><a href="#different-return-shape--calling-convention-throws-or-misbehaves-on-an-opencvjs-style-call-but-obviously-so">Different return shape / calling convention (throws or misbehaves on an opencv.js-style call, but obviously so)</a></li><li class="lvl3"><a href="#vector-container-types--remaining-gaps">Vector container types — remaining gaps</a></li><li class="lvl3"><a href="#different-defaults--optionality-same-call-shape-different-silent-behavior">Different defaults / optionality (same call shape, different silent behavior)</a></li><li class="lvl2"><a href="#appendix--full-per-module-unbound-counts-cv-namespace-only">Appendix — full per-module unbound counts (cv:: namespace only)</a></li></ul></nav>
+</div>
+<footer class="sitefoot">
+  <p>qjs-opencv — MIT licensed. Built from the repo's own markdown by
+     <a href="https://github.com/rsenn/qjs-opencv/blob/main/tools/site/build.js">tools/site/build.js</a>, running on qjsm.</p>
+</footer>
+<script>
+document.querySelector('.themetoggle').addEventListener('click', function () {
+  var d = document.documentElement;
+  var dark = d.dataset.theme ? d.dataset.theme === 'dark'
+    : matchMedia('(prefers-color-scheme: dark)').matches;
+  d.dataset.theme = dark ? 'light' : 'dark';
+  try { localStorage.setItem('theme', d.dataset.theme); } catch (e) {}
+});
+</script>
+</body>
+</html>
