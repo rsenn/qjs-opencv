@@ -474,6 +474,15 @@ endif(USE_LIBCAMERA OR USE_LCCV)
 
 make_shared_module(opencv ${OPENCV_SOURCES})
 
+# Force-included into every TU so that a cv::Exception escaping any binding
+# becomes a catchable JS exception instead of unwinding through QuickJS's C
+# frames into std::terminate(). It shadows the JS_CFUNC_*/JS_CGETSET_*/JS_CTOR_*
+# macros, so it has to be seen before any function table - hence -include rather
+# than a #include in each file. See include/js_exception_guard.hpp.
+target_compile_options(
+  quickjs-opencv PRIVATE
+  "$<$<COMPILE_LANGUAGE:CXX>:-include${CMAKE_CURRENT_SOURCE_DIR}/include/js_exception_guard.hpp>")
+
 if(USE_LCCV)
   add_dependencies(quickjs-opencv liblccv)
 endif(USE_LCCV)

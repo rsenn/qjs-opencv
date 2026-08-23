@@ -1,6 +1,6 @@
 [submodule "pngpp"]
 	path = pngpp
-	url = git@github.com:rsenn/pngpp.git
+	url = https://github.com/rsenn/pngpp.git
 	branch = main
 [submodule "giflib-turbo"]
 	path = giflib-turbo
@@ -10,7 +10,7 @@
 	url = https://github.com/lecram/gifenc
 [submodule "libcamera-opencv"]
 	path = libcamera-opencv
-	url = git@github.com:rsenn/libcamera-opencv.git
+	url = https://github.com/rsenn/libcamera-opencv.git
 [submodule "LCCV"]
 	path = LCCV
-	url = git@github.com:rsenn/LCCV.git
+	url = https://github.com/rsenn/LCCV.git
