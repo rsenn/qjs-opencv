@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>qjs-opencv — OpenCV bindings for QuickJS</title>
+<meta name="description" content="OpenCV bindings for QuickJS — Mat, contours, imgproc, calib3d, dnn and video I/O in a loadable QuickJS module.">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body class="landing">
+<header class="topbar">
+  <a class="brand" href="index.html"><span class="mark">{ }</span> qjs-opencv</a>
+  <nav class="topnav">
+    <a href="getting-started.html">Get started</a>
+    <a href="docs/algorithms.html">Docs</a>
+    <a href="docs/roadmap.html">Roadmap</a>
+    <a href="https://github.com/rsenn/qjs-opencv" target="_blank" rel="noopener">GitHub</a>
+  </nav>
+  <button class="themetoggle" type="button" aria-label="Toggle colour scheme">◐</button>
+</header>
+<main>
+
+<section class="hero">
+  <div>
+    <span class="eyebrow">QuickJS × OpenCV</span>
+    <h1>Live-code OpenCV pipelines from a REPL.</h1>
+    <p class="lede">
+      qjs-opencv binds <a href="https://opencv.org/" target="_blank" rel="noopener">OpenCV</a> into
+      <a href="https://bellard.org/quickjs/" target="_blank" rel="noopener">QuickJS</a> as a single
+      loadable module: <code>Mat</code>, contours, imgproc, calib3d, dnn and video I/O, with no copies
+      across the JS/C++ boundary and no build step between an edit and a frame on screen.
+    </p>
+    <div class="cta">
+      <a class="btn primary" href="getting-started.html">Get started</a>
+      <a class="btn" href="docs/algorithms.html">Read the docs</a>
+      <a class="btn" href="https://github.com/rsenn/qjs-opencv" target="_blank" rel="noopener">GitHub</a>
+    </div>
+  </div>
+
+  <div class="codeblock" data-lang="js"><pre><code class="language-js"><span class="t-kw">import</span> <span class="t-op">*</span> <span class="t-id">as</span> <span class="t-id">cv</span> <span class="t-kw">from</span> <span class="t-str">'opencv'</span>;
+
+<span class="t-kw">let</span> <span class="t-id">mat</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-id">cv</span>.<span class="t-fn">Mat</span>();
+<span class="t-kw">let</span> <span class="t-id">cap</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-id">cv</span>.<span class="t-fn">VideoCapture</span>(<span class="t-num">0</span>);
+
+<span class="t-kw">for</span>(;;) {
+  <span class="t-id">cap</span>.<span class="t-fn">read</span>(<span class="t-id">mat</span>);
+
+  <span class="t-kw">let</span> <span class="t-id">gray</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-id">cv</span>.<span class="t-fn">Mat</span>();
+  <span class="t-id">cv</span>.<span class="t-fn">cvtColor</span>(<span class="t-id">mat</span>, <span class="t-id">gray</span>, <span class="t-id">cv</span>.<span class="t-type">COLOR_BGR2GRAY</span>);
+  <span class="t-id">cv</span>.<span class="t-fn">Canny</span>(<span class="t-id">gray</span>, <span class="t-id">gray</span>, <span class="t-num">50</span>, <span class="t-num">150</span>);
+
+  <span class="t-kw">let</span> <span class="t-id">contours</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-id">cv</span>.<span class="t-fn">MatVector</span>();
+  <span class="t-id">cv</span>.<span class="t-fn">findContours</span>(<span class="t-id">gray</span>, <span class="t-id">contours</span>, <span class="t-kw">new</span> <span class="t-id">cv</span>.<span class="t-fn">Mat</span>(),
+                  <span class="t-id">cv</span>.<span class="t-type">RETR_LIST</span>, <span class="t-id">cv</span>.<span class="t-type">CHAIN_APPROX_SIMPLE</span>);
+  <span class="t-id">cv</span>.<span class="t-fn">drawContours</span>(<span class="t-id">mat</span>, <span class="t-id">contours</span>, <span class="t-op">-</span><span class="t-num">1</span>, <span class="t-kw">new</span> <span class="t-id">cv</span>.<span class="t-fn">Scalar</span>(<span class="t-num">0</span>, <span class="t-num">255</span>, <span class="t-num">0</span>), <span class="t-num">2</span>);
+
+  <span class="t-id">cv</span>.<span class="t-fn">imshow</span>(<span class="t-str">'qjs-opencv'</span>, <span class="t-id">mat</span>);
+  <span class="t-kw">if</span>(<span class="t-id">cv</span>.<span class="t-fn">waitKey</span>(<span class="t-num">20</span>) <span class="t-op">==</span> <span class="t-num">27</span>) <span class="t-kw">break</span>;
+}</code></pre></div>
+</section>
+
+<section class="section">
+  <h2>Why it exists</h2>
+  <p class="sub">
+    A C++ vision library and a very small interpreter, joined so that image data never
+    has to be copied to cross between them.
+  </p>
+
+  <div class="grid">
+    <div class="card">
+      <span class="ico">◇</span>
+      <h3>No copies</h3>
+      <p>
+        A <code>cv.Mat</code> is backed by a real <code>cv::Mat</code>. Pixel data is reached
+        through typed-array views (<code>.data</code>, <code>.data32F</code>, …) over the same
+        buffer, and iteration yields <code>Float64Array</code> views rather than fresh objects.
+        Finalizers do the freeing — no manual <code>delete()</code> discipline, though
+        <code>.delete()</code> exists so opencv.js snippets paste in unchanged.
+      </p>
+    </div>
+    <div class="card">
+      <span class="ico">◇</span>
+      <h3>Interchangeable arrays</h3>
+      <p>
+        Anything taking <code>cv::InputArray</code> accepts a <code>cv.Mat</code>,
+        a <code>cv.Contour</code>, a <code>MatVector</code>, a plain array or a TypedArray.
+        The unwrapping happens once, in the binding layer, so call sites stay short.
+      </p>
+    </div>
+    <div class="card">
+      <span class="ico">◇</span>
+      <h3>opencv.js-shaped</h3>
+      <p>
+        The API tracks the official Emscripten <code>opencv.js</code> surface — same function
+        names, same argument order, the same vector containers — so tutorial code and
+        StackOverflow answers transfer over. Divergences are tracked as bugs, not accepted
+        as design.
+      </p>
+    </div>
+    <div class="card">
+      <span class="ico">◇</span>
+      <h3>Native speed, script ergonomics</h3>
+      <p>
+        ES2020 modules, no bundler, no transpiler, no wasm. The module loads into
+        <code>qjsm</code> in milliseconds, so the edit-run loop is a keystroke — and it
+        cross-compiles to aarch64, mingw64 and wasm.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>What's bound</h2>
+  <p class="sub">
+    Confirmed against the C++ sources under <code>js_*.cpp</code> and exercised by the tests.
+  </p>
+
+  <div class="split">
+    <div>
+      <h3>Core &amp; imgproc</h3>
+      <p>
+        <code>Mat</code>, <code>UMat</code>, <code>Contour</code>, <code>Point</code>,
+        <code>Rect</code>, <code>RotatedRect</code>, <code>Size</code>, <code>KeyPoint</code>,
+        <code>Matx</code>, <code>Affine3</code> and their iterators — plus the classic pipeline:
+        <code>Canny</code>, <code>findContours</code>, <code>HoughLines</code>,
+        <code>cvtColor</code>, <code>threshold</code>, the blur/morphology families,
+        <code>warpAffine</code>, contour metrics, <code>watershed</code>, <code>grabCut</code>,
+        <code>calcHist</code>.
+      </p>
+    </div>
+    <div>
+      <h3>Beyond imgproc</h3>
+      <p>
+        <code>calibrateCamera</code>, <code>findHomography</code>, the <code>fisheye::*</code> set,
+        <code>VideoCapture</code>/<code>VideoWriter</code>, the MOG2/KNN/bgsegm background
+        subtractors, feature2d detectors and matchers, and <code>dnn</code> —
+        <code>readNet*</code>, <code>blobFromImage</code>, <code>NMSBoxes</code>.
+        Text rendering goes through FreeType. On Raspberry Pi, the camera comes in directly as a
+        <code>cv.Mat</code> through <code>LCCV</code> or <code>libcamera-opencv</code> — no
+        V4L2 <code>VideoCapture</code> round-trip.
+      </p>
+    </div>
+  </div>
+
+  <p class="note">
+    Custom, non-OpenCV extras — skeletonization, line tracing and palette reduction — live under
+    <a href="docs/algorithms.html">Custom algorithms</a>. What isn't bound yet is tracked in the
+    <a href="docs/roadmap.html">binding roadmap</a>.
+  </p>
+</section>
+
+<section class="section">
+  <h2>Get it running</h2>
+
+  <div class="codeblock" data-lang="sh"><pre><code class="language-sh"><span class="t-id">git</span> <span class="t-id">clone</span> <span class="t-op">--recursive</span> <span class="t-id">https</span>://<span class="t-id">github.com</span>/<span class="t-id">rsenn</span>/<span class="t-id">qjs-opencv</span>
+<span class="t-id">cd</span> <span class="t-id">qjs-opencv</span>
+
+. ./<span class="t-id">cfg.sh</span>
+<span class="t-id">prefix</span>=/<span class="t-id">usr</span>/<span class="t-kw">local</span> <span class="t-id">TYPE</span>=<span class="t-id">Release</span> <span class="t-id">cfg</span> \
+  <span class="t-op">-DOpenCV_DIR</span>=/<span class="t-id">opt</span>/<span class="t-id">opencv-4.7.0-x86_64</span>/<span class="t-id">lib</span>/<span class="t-id">cmake</span>/<span class="t-id">opencv4</span>
+<span class="t-id">make</span> <span class="t-op">-C</span> <span class="t-id">build</span>/<span class="t-id">x86_64-linux-gnu</span> <span class="t-op">-j</span>$(<span class="t-id">nproc</span>)
+
+<span class="t-id">QUICKJS_MODULE_PATH</span>=<span class="t-var">$PWD</span>/<span class="t-id">build</span>/<span class="t-id">x86_64-linux-gnu</span> <span class="t-id">qjsm</span> <span class="t-id">tests</span>/<span class="t-id">unittests</span>/<span class="t-id">test_imgproc.js</span></code></pre></div>
+
+  <p class="note">
+    Needs OpenCV 4.2 or newer and <code>qjsm</code> from
+    <a href="https://github.com/rsenn/quickjs" target="_blank" rel="noopener">rsenn/quickjs</a>.
+    Full option matrix, cross-compilation and build flavours are in
+    <a href="getting-started.html">Getting started</a>.
+  </p>
+</section>
+
+</main>
+
+<footer class="sitefoot">
+  <p>qjs-opencv — MIT licensed. Built from the repo's own markdown by
+     <a href="https://github.com/rsenn/qjs-opencv/blob/main/tools/site/build.js">tools/site/build.js</a>, running on qjsm.</p>
+</footer>
+<script>
+document.querySelector('.themetoggle').addEventListener('click', function () {
+  var d = document.documentElement;
+  var dark = d.dataset.theme ? d.dataset.theme === 'dark'
+    : matchMedia('(prefers-color-scheme: dark)').matches;
+  d.dataset.theme = dark ? 'light' : 'dark';
+  try { localStorage.setItem('theme', d.dataset.theme); } catch (e) {}
+});
+</script>
+</body>
+</html>

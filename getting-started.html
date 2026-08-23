@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>qjs-opencv — qjs-opencv</title>
+<meta name="description" content="OpenCV bindings for QuickJS — Mat, contours, imgproc, calib3d, dnn and video I/O in a loadable QuickJS module.">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body class="has-sidebar">
+<header class="topbar">
+  <a class="brand" href="index.html"><span class="mark">{ }</span> qjs-opencv</a>
+  <nav class="topnav">
+    <a href="getting-started.html">Get started</a>
+    <a href="docs/algorithms.html">Docs</a>
+    <a href="docs/roadmap.html">Roadmap</a>
+    <a href="https://github.com/rsenn/qjs-opencv" target="_blank" rel="noopener">GitHub</a>
+  </nav>
+  <button class="themetoggle" type="button" aria-label="Toggle colour scheme">◐</button>
+</header>
+<div class="layout">
+<aside class="sidebar"><div class="navgroup"><h3>Start here</h3><ul><li><a href="getting-started.html" class="here">Getting started</a></li></ul></div><div class="navgroup"><h3>Reference</h3><ul><li><a href="docs/algorithms.html">Custom algorithms</a></li><li><a href="docs/roadmap.html">Binding roadmap</a></li></ul></div></aside>
+<main class="doc">
+<article><h1 id="qjs-opencv"><a class="anchor" href="#qjs-opencv" aria-hidden="true">#</a>qjs-opencv</h1>
+<p>OpenCV bindings for <a href="https://bellard.org/quickjs/" target="_blank" rel="noopener">QuickJS</a>, compiled into a single loadable module <code>opencv.so</code> (plus optional per-class <code>quickjs-*.so</code> modules). Import it as:</p>
+<div class="codeblock" data-lang="js"><pre><code class="language-js"><span class="t-kw">import</span> <span class="t-op">*</span> <span class="t-id">as</span> <span class="t-id">cv</span> <span class="t-kw">from</span> <span class="t-str">'opencv'</span>;
+
+<span class="t-kw">let</span> <span class="t-id">viewport</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-id">cv</span>.<span class="t-fn">Size</span>(<span class="t-num">640</span>, <span class="t-num">480</span>);
+<span class="t-kw">let</span> <span class="t-id">mat</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-id">cv</span>.<span class="t-fn">Mat</span>(<span class="t-id">viewport</span>, <span class="t-id">cv</span>.<span class="t-type">CV_8UC3</span>);
+<span class="t-kw">let</span> <span class="t-id">cap</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-id">cv</span>.<span class="t-fn">VideoCapture</span>(<span class="t-num">0</span>);
+
+<span class="t-id">cap</span>.<span class="t-fn">read</span>(<span class="t-id">mat</span>);
+<span class="t-id">cv</span>.<span class="t-fn">imshow</span>(<span class="t-str">'qjs-opencv'</span>, <span class="t-id">mat</span>);</code></pre></div>
+<p>This is the C++/JS sister project to <a href="https://github.com/rsenn/plot-cv" target="_blank" rel="noopener"><code>plot-cv</code></a>, which converts contours from a video source to SVG for LaserWeb4. Combined with the QuickJS REPL, it's a live-coding environment for OpenCV pipelines: ES2020 syntax, no build step, no copies of image data on the JS/C++ boundary.</p>
+<h2 id="design"><a class="anchor" href="#design" aria-hidden="true">#</a>Design</h2>
+<ul>
+<li><strong>No copies, mutable, finalizers do the work.</strong> A <code>cv.Mat</code> is backed by a <code>cv::Mat</code>; iteration yields <code>Float64Array(4)</code> views into the underlying buffer. <code>cv.Contour</code> is a <code>std::vector&lt;cv::Point3d&gt;</code> exposed directly as an iterable ArrayBuffer.</li>
+<li><strong>Interchangeable array types.</strong> Most free functions taking <code>cv::InputArray</code> / <code>cv::OutputArray</code> / <code>cv::InputOutputArray</code> accept <code>cv.Mat</code>, <code>cv.Contour</code>, or a plain TypedArray interchangeably (see <code>JSInputArgument</code> / <code>JSImageArgument</code> in <code>include/jsbindings.hpp</code>).</li>
+<li><strong>Iterators yield views, not copies.</strong> <code>MatIterator</code> yields <code>Float64Array(4)</code>, <code>PointIterator</code> yields <code>cv.Point</code>, <code>SliceIterator</code> partitions or slides across an ArrayBuffer yielding offset TypedArrays.</li>
+<li>One <code>.cpp</code> file per OpenCV concept — see <code>CLAUDE.md</code> for the full architecture breakdown.</li>
+</ul>
+<h2 id="build"><a class="anchor" href="#build" aria-hidden="true">#</a>Build</h2>
+<div class="codeblock" data-lang="bash"><pre><code class="language-bash">. ./<span class="t-id">cfg.sh</span>
+<span class="t-id">prefix</span>=/<span class="t-id">usr</span>/<span class="t-kw">local</span> <span class="t-id">TYPE</span>=<span class="t-id">Release</span> <span class="t-id">cfg</span> <span class="t-op">-DOpenCV_DIR</span>=/<span class="t-id">opt</span>/<span class="t-id">opencv-4.7.0-x86_64</span>/<span class="t-id">lib</span>/<span class="t-id">cmake</span>/<span class="t-id">opencv4</span>
+<span class="t-id">make</span> <span class="t-op">-C</span> <span class="t-id">build</span>/<span class="t-id">x86_64-linux-gnu</span> <span class="t-op">-j</span>$(<span class="t-id">nproc</span>)</code></pre></div>
+<p>Builds against OpenCV 4.2.0+ (NONFREE modules needed for <code>LineSegmentDetector</code>), against vanilla QuickJS or the <a href="https://github.com/rsenn/quickjs" target="_blank" rel="noopener">rsenn/quickjs</a> fork with C module search paths. Cross-compiles to aarch64, x86_64-w64-mingw32, and wasm32 (emscripten/clang) via <code>cfg.sh</code> toolchain functions (<code>cfg-clang</code>, <code>cfg-mingw64</code>, <code>cfg-wasm</code>, <code>cfg-aarch64</code>, <code>cfg-musl*</code>, <code>cfg-android*</code>). See <code>CLAUDE.md</code> for the full option/flavor matrix.</p>
+<h2 id="what-works"><a class="anchor" href="#what-works" aria-hidden="true">#</a>What works</h2>
+<p>Confirmed by both the C++ source under <code>js_*.cpp</code> and by what's actually exercised in <code>tests/*.js</code>.</p>
+<p><strong>Core value types</strong> — <code>Mat</code>, <code>UMat</code>, <code>Contour</code>, <code>Point</code>, <code>Rect</code>, <code>RotatedRect</code>, <code>Size</code>, <code>Line</code>, <code>KeyPoint</code>, <code>Matx</code>, <code>Affine3</code>, plus their iterators (<code>MatIterator</code>, <code>PointIterator</code>, <code>LineIterator</code>, <code>SliceIterator</code>).</p>
+<p><strong>imgproc</strong> — the bulk of the classic pipeline is bound and tested: <code>Canny</code>, <code>findContours</code>/<code>drawContours</code>, <code>HoughLines(P)</code>, <code>HoughCircles</code>, <code>cvtColor</code>, <code>threshold</code>/<code>adaptiveThreshold</code>, <code>blur</code>/<code>GaussianBlur</code>/<code>bilateralFilter</code>/<code>medianBlur</code>, <code>dilate</code>/<code>erode</code>/<code>morphologyEx</code>, <code>warpAffine</code>/<code>warpPerspective</code>/<code>resize</code>/<code>remap</code>, contour metrics (<code>contourArea</code>, <code>arcLength</code>, <code>approxPolyDP</code>, <code>convexHull</code>, <code>minAreaRect</code>, <code>fitEllipse</code>, <code>moments</code>/<code>HuMoments</code>), <code>watershed</code>, <code>grabCut</code>, <code>distanceTransform</code>, <code>floodFill</code>, <code>calcHist</code>, <code>connectedComponents(WithStats)</code>.</p>
+<p><strong>draw / highgui</strong> — <code>Draw</code> (circle/ellipse/contour/line/polygon/rect/keypoints), text via FreeType (<code>putText</code>, <code>loadFont</code>, <code>getTextSize</code>), <code>Window</code>/<code>imshow</code>/trackbars/mouse callback, all exercised through the <code>js/cvHighGUI.js</code> wrapper.</p>
+<p><strong>calib3d / fisheye</strong> — <code>calibrateCamera</code>, <code>findHomography</code>, <code>findChessboardCorners(SB)</code>, <code>estimateAffine2D/3D</code>, the full <code>fisheye::*</code> distortion/rectification set.</p>
+<p><strong>video I/O</strong> — <code>VideoCapture</code>, <code>VideoWriter</code> (FFMPEG), <code>MOG2</code>/<code>KNN</code> and the <code>bgsegm</code> background subtractor family (<code>CNT</code>, <code>GMG</code>, <code>GSOC</code>, <code>LSBP</code>, <code>MOG</code>).</p>
+<p><strong>dnn</strong> — <code>Net</code>, <code>blobFromImage(s)(WithParams)</code>, <code>NMSBoxes</code>, and <code>readNet</code>/<code>readNetFrom{Caffe,Darknet,ONNX,Tensorflow,TFLite,Torch,ModelOptimizer}</code> — loading and running pre-trained models works; the training/layer-introspection API does not.</p>
+<p><strong>ximgproc / xphoto</strong> — thinning, structured edge detection, superpixel segmentation (<code>SLIC</code>/<code>SEEDS</code>/<code>LSC</code>), selective search segmentation, <code>FastLineDetector</code>, <code>EdgeDrawing</code>, <code>weightedMedianFilter</code>, white balance (<code>Grayworld</code>/<code>LearningBased</code>/<code>SimpleWB</code>).</p>
+<p><strong>Persistence &amp; misc</strong> — <code>FileStorage</code>/<code>FileNode</code> (YAML/XML/JSON), <code>CommandLineParser</code>, <code>CLAHE</code>, <code>Subdiv2D</code> (Delaunay/Voronoi), <code>TickMeter</code>, OpenGL interop (<code>ogl::Buffer</code>/<code>Texture2D</code>, <code>imshow</code> with <code>WINDOW_OPENGL</code>).</p>
+<p><strong>In-tree algorithms not from OpenCV</strong> — skeletonization, pixel-neighborhood tracing, palette generation/reduction, low-bit-depth PNG/GIF encoding (<code>algorithms/</code>, <code>gifenc/</code>, <code>giflib-turbo/</code>).</p>
+<h2 id="whats-missing"><a class="anchor" href="#whats-missing" aria-hidden="true">#</a>What's missing</h2>
+<p>The binding surface is intentionally driven by what <code>plot-cv</code> pipelines need, not full API parity. Whole OpenCV modules are currently <strong>unbound</strong> (0% coverage as of the last <code>binding_coverage.js</code> run): <code>alphamat</code>, <code>aruco</code> (marker <em>detection</em> — only the debug-draw helpers are bound), <code>bioinspired</code>, <code>ccalib</code>, <code>datasets</code>, <code>dnn_objdetect</code>, <code>dnn_superres</code>, <code>dpm</code>, <code>face</code>, <code>flann</code>, <code>fuzzy</code>, <code>gapi</code>, <code>hdf</code>, <code>hfs</code>, <code>img_hash</code>, <code>line_descriptor</code>, <code>mcc</code>, <code>ml</code>, <code>optflow</code>, <code>phase_unwrapping</code>, <code>photo</code> (inpainting/HDR/seamless cloning), <code>plot</code>, <code>quality</code>, <code>rapid</code>, <code>reg</code>, <code>rgbd</code>, <code>saliency</code>, <code>sfm</code>, <code>shape</code>, <code>signal</code>, <code>stereo</code>, <code>stitching</code>, <code>structured_light</code>, <code>superres</code>, <code>surface_matching</code>, <code>text</code> (OCR), <code>tracking</code> (the legacy tracker API — <code>MOG2</code>/<code>KNN</code> background subtraction is bound via <code>video</code>, single-object trackers are not), <code>videostab</code>, <code>wechat_qrcode</code>, <code>xfeatures2d</code> (SURF/SIFT-adjacent extras), <code>xobjdetect</code>.</p>
+<p>Partially bound modules worth knowing about: <code>features2d</code> (only <code>drawKeypoints</code> — the detector/descriptor/matcher classes themselves, e.g. <code>ORB</code>, <code>BFMatcher</code>, are not exposed as <code>cv.*</code> bindings, unlike <code>js_feature2d.cpp</code>'s name might suggest), <code>objdetect</code> (only ArUco draw helpers — no <code>CascadeClassifier</code>/<code>HOGDescriptor</code>/QR code detection), <code>video</code> (background subtractors only — no optical flow, Kalman/particle filters, or object tracking).</p>
+<h2 id="binding-coverage"><a class="anchor" href="#binding-coverage" aria-hidden="true">#</a>Binding coverage</h2>
+<p><code>scripts/binding_coverage.js</code> measures this precisely rather than by inspection: it diffs <code>opencv.so</code>'s imported (undefined) mangled symbols against each <code>libopencv_*.so</code>'s exported symbols, classifying each as an implemented/missing class constructor or free function.</p>
+<div class="codeblock" data-lang="bash"><pre><code class="language-bash"><span class="t-id">qjsm</span> <span class="t-id">scripts</span>/<span class="t-id">binding_coverage.js</span> \
+  <span class="t-op">--module</span>=<span class="t-id">build</span>/<span class="t-id">x86_64-linux-gnu</span>/<span class="t-id">opencv.so</span> \
+  <span class="t-op">--lib-dir</span>=/<span class="t-id">opt</span>/<span class="t-id">opencv-4.13.0-x86_64</span>/<span class="t-id">lib</span> \
+  <span class="t-op">--namespace</span>=<span class="t-id">cv</span> \
+  <span class="t-op">--out</span>=<span class="t-id">report.txt</span></code></pre></div>
+<p>The script itself is generic — not specific to this project or to OpenCV — and works against any QuickJS native module and C++ library set via <code>--module</code>/<code>--lib</code>/<code>--lib-dir</code>/<code>--namespace</code>; run it with no arguments for the full option list.</p>
+<p>Last run against <code>build/x86_64-linux-gnu/opencv.so</code> (OpenCV 4.13.0):</p>
+<div class="tablewrap"><table><thead><tr><th></th><th>implemented</th><th>total</th><th>%</th></tr></thead><tbody><tr><td>classes</td><td>16</td><td>342</td><td>4.7%</td></tr><tr><td>functions</td><td>383</td><td>2873</td><td>13.3%</td></tr><tr><td><strong>overall</strong></td><td><strong>399</strong></td><td><strong>3215</strong></td><td><strong>12.4%</strong></td></tr></tbody></table></div>
+<p>Modules with the highest bound fraction: <code>imgproc</code> (107/207, 52%), <code>bgsegm</code> (5/10, 50%), <code>highgui</code> (25/41, 61%), <code>freetype</code> (1/2, 50%), <code>ximgproc</code> (34/90, 38%), <code>xphoto</code> (4/11, 36%), <code>core</code> (155/811, 19%), <code>dnn</code> (35/187, 19%), <code>calib3d</code> (20/109, 18%).</p>
+<p><strong>Read these numbers with caveats, not as a scorecard:</strong></p>
+<ul>
+<li>The method only counts symbols that are <em>exported from a shared object</em>. OpenCV's small value types (<code>cv::Point_&lt;T&gt;</code>, <code>cv::Rect_&lt;T&gt;</code>, <code>cv::Size_&lt;T&gt;</code>, <code>cv::Scalar_&lt;T&gt;</code>, ...) are header-only templates with no exported constructor symbol at all, so <code>cv.Point</code>/<code>cv.Rect</code>/<code>cv.Size</code> — fully implemented here — don't register as "implemented classes" in this report.</li>
+<li>Classes exposed only through a static <code>::create()</code> factory (common OpenCV pattern for <code>Ptr&lt;T&gt;</code>-returning algorithms) have no constructor symbol either; the factory function itself is what gets scored, under "functions," not "classes." This is why e.g. <code>bgsegm</code>'s background subtractors show <code>0/1</code> classes but <code>5/9</code> functions — the classes <em>are</em> usable from JS via their <code>create*</code> functions.</li>
+<li>Plain (non-constructor) member functions of a class that does export a constructor are not scored individually — only whether <em>any</em> constructor symbol was pulled in.</li>
+</ul>
+<p>So the overall 12.4% is a reasonable proxy for "fraction of the OpenCV C++ surface reachable from JS," but the per-module 0% entries for <code>ml</code>/<code>stitching</code>/<code>text</code>/etc. are the reliable signal — the modules genuinely have no binding — while a stated 17-20% on <code>core</code>/<code>calib3d</code> undercounts what's actually exposed once you account for the header-only types above.</p>
+<h2 id="repository-layout"><a class="anchor" href="#repository-layout" aria-hidden="true">#</a>Repository layout</h2>
+<p>See <code>CLAUDE.md</code> for the full architecture map: one <code>js_&lt;concept&gt;.cpp</code> per OpenCV class or module, wired together in <code>src/init_module.cpp</code>, with shared JS↔C++ glue in <code>include/jsbindings.hpp</code>. <code>js/*.js</code> are ES6 wrappers (<code>Window</code>, <code>TextStyle</code>, <code>Pipeline</code>, <code>VideoSource</code>, <code>ImageSequence</code>) built on top of the raw bindings; <code>tests/*.js</code> are standalone scripts run individually with <code>qjs</code>, not a test suite.</p></article>
+<p class="editlink"><a href="https://github.com/rsenn/qjs-opencv/blob/main/README.md">Edit this page on GitHub →</a></p>
+</main>
+<nav class="toc"><h3>On this page</h3><ul><li class="lvl2"><a href="#design">Design</a></li><li class="lvl2"><a href="#build">Build</a></li><li class="lvl2"><a href="#what-works">What works</a></li><li class="lvl2"><a href="#whats-missing">What's missing</a></li><li class="lvl2"><a href="#binding-coverage">Binding coverage</a></li><li class="lvl2"><a href="#repository-layout">Repository layout</a></li></ul></nav>
+</div>
+<footer class="sitefoot">
+  <p>qjs-opencv — MIT licensed. Built from the repo's own markdown by
+     <a href="https://github.com/rsenn/qjs-opencv/blob/main/tools/site/build.js">tools/site/build.js</a>, running on qjsm.</p>
+</footer>
+<script>
+document.querySelector('.themetoggle').addEventListener('click', function () {
+  var d = document.documentElement;
+  var dark = d.dataset.theme ? d.dataset.theme === 'dark'
+    : matchMedia('(prefers-color-scheme: dark)').matches;
+  d.dataset.theme = dark ? 'light' : 'dark';
+  try { localStorage.setItem('theme', d.dataset.theme); } catch (e) {}
+});
+</script>
+</body>
+</html>

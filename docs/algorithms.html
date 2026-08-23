@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>cv. algorithms (custom) — qjs-opencv</title>
+<meta name="description" content="OpenCV bindings for QuickJS — Mat, contours, imgproc, calib3d, dnn and video I/O in a loadable QuickJS module.">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body class="has-sidebar">
+<header class="topbar">
+  <a class="brand" href="../index.html"><span class="mark">{ }</span> qjs-opencv</a>
+  <nav class="topnav">
+    <a href="../getting-started.html">Get started</a>
+    <a href="../docs/algorithms.html">Docs</a>
+    <a href="../docs/roadmap.html">Roadmap</a>
+    <a href="https://github.com/rsenn/qjs-opencv" target="_blank" rel="noopener">GitHub</a>
+  </nav>
+  <button class="themetoggle" type="button" aria-label="Toggle colour scheme">◐</button>
+</header>
+<div class="layout">
+<aside class="sidebar"><div class="navgroup"><h3>Start here</h3><ul><li><a href="../getting-started.html">Getting started</a></li></ul></div><div class="navgroup"><h3>Reference</h3><ul><li><a href="algorithms.html" class="here">Custom algorithms</a></li><li><a href="roadmap.html">Binding roadmap</a></li></ul></div></aside>
+<main class="doc">
+<article><h1 id="cv-algorithms-custom"><a class="anchor" href="#cv-algorithms-custom" aria-hidden="true">#</a><code>cv.*</code> algorithms (custom)</h1>
+<p>Functions exported by <code>js_algorithms.cpp</code>. These are <em>not</em> OpenCV functions — they live under <code>algorithms/</code> in this repo and are surfaced on the <code>cv</code> module alongside the OpenCV-proper bindings.</p>
+<p>Two thematic groups:</p>
+<div class="tablewrap"><table><thead><tr><th>Group</th><th>Functions</th><th>Pipeline</th></tr></thead><tbody><tr><td>Skeleton / line extraction (Zhang-Suen + greedy tracer)</td><td><code>skeletonization</code>, <code>pixelNeighborhood</code>, <code>pixelNeighborhoodCross</code>, <code>pixelFindValue</code>, <code>traceSkeleton</code></td><td>binary mask → 1-px skeleton → degree map → ordered polylines</td></tr><tr><td>Skeleton / line extraction (Guo-Hall + topology tracer)</td><td><code>guohallIteration</code>, <code>guohallThinning</code>, <code>skeletonizeGuohall</code>, <code>degreeMap</code>, <code>traceLines</code>, <code>skeletonizeAndTrace</code></td><td>binary mask → Guo-Hall skeleton → degree map → polylines split at every junction</td></tr><tr><td>Palette reduction</td><td><code>paletteGenerate</code>, <code>paletteApply</code>, <code>paletteMatch</code></td><td>image → dominant colors → indexed image → recolored image</td></tr></tbody></table></div>
+<p>All functions are static methods on the <code>cv</code> namespace:</p>
+<div class="codeblock" data-lang="js"><pre><code class="language-js"><span class="t-kw">import</span> { <span class="t-id">skeletonization</span>, <span class="t-id">pixelNeighborhood</span>, <span class="t-id">traceSkeleton</span>,
+         <span class="t-id">skeletonizeGuohall</span>, <span class="t-id">traceLines</span>, <span class="t-id">skeletonizeAndTrace</span>,
+         <span class="t-id">paletteGenerate</span>, <span class="t-id">paletteApply</span>, <span class="t-id">paletteMatch</span>,
+         <span class="t-type">Mat</span>, <span class="t-type">CV_8UC1</span> } <span class="t-kw">from</span> <span class="t-str">'opencv'</span>;</code></pre></div>
+<p>The two skeleton/line groups produce subtly different results:</p>
+<ul>
+<li>The <strong>Zhang-Suen + greedy tracer</strong> path (<code>skeletonization</code> → <code>traceSkeleton</code>) walks past junctions following a direction-biased heuristic, so a <code>+</code> or <code>Y</code> junction is emitted as one or two long polylines that cross the junction. It also collapses collinear runs (<code>simplify=true</code> is hard-coded), so output points are <em>not</em> every skeleton pixel.</li>
+<li>The <strong>Guo-Hall + topology tracer</strong> path (<code>skeletonizeGuohall</code> → <code>traceLines</code>) cuts at every junction. The output is the edge set of the skeleton's topological graph: a junction with degree <em>k</em> shows up as the shared endpoint of exactly <em>k</em> polylines. Every skeleton pixel is kept.</li>
+</ul>
+<p>Use the first pipeline when you want long, smooth-looking curves; use the second when you need a faithful graph representation (e.g. for routing, simplification, SVG paths with explicit branches).</p>
+<hr>
+<h2 id="skeletonizationsrc-dst"><a class="anchor" href="#skeletonizationsrc-dst" aria-hidden="true">#</a><code>skeletonization(src, dst)</code></h2>
+<p>Zhang–Suen thinning of a binary image to a 1-pixel-wide skeleton.</p>
+<ul>
+<li><strong><code>src</code></strong> — <code>cv.Mat</code> or <code>cv.UMat</code>. Any number of channels; multi-channel input is converted to grayscale internally.</li>
+<li><strong><code>dst</code></strong> — <code>cv.Mat</code> or <code>cv.UMat</code>. Receives a <code>CV_8UC1</code> image with foreground pixels at 255 and background at 0.</li>
+<li><strong>Returns</strong> — <code>undefined</code>.</li>
+</ul>
+<h3 id="behavior"><a class="anchor" href="#behavior" aria-hidden="true">#</a>Behavior</h3>
+<ol>
+<li>Source is converted to grayscale (<code>COLOR_BGR2GRAY</code>) when it has more than one channel.</li>
+<li>Otsu thresholding (<code>THRESH_BINARY + THRESH_OTSU</code>) produces a 0/255 binary mask.</li>
+<li>Zhang–Suen thinning iterates two sub-passes (NE-peel, SW-peel) until no pixel changes between iterations. The result is rotation-symmetric and topology-preserving.</li>
+<li>Output is rescaled to 0/255.</li>
+</ol>
+<p>Source is not modified — the algorithm copies into an internal buffer first.</p>
+<h3 id="notes"><a class="anchor" href="#notes" aria-hidden="true">#</a>Notes</h3>
+<ul>
+<li>Border pixels (<code>y == 0</code>, <code>y == rows-1</code>, same for x) are never thinned because the kernel needs all 8 neighbours. A skeleton touching the image edge will retain a small "stub" outside the thinned region.</li>
+<li>Cost is dominated by <code>cv::Mat::at&lt;uchar&gt;</code> random access inside the inner loop and one <code>cv::Mat</code> allocation per sub-iteration. Acceptable for offline work; allocate-and-reuse before using in a real-time pipeline.</li>
+</ul>
+<h3 id="example"><a class="anchor" href="#example" aria-hidden="true">#</a>Example</h3>
+<div class="codeblock" data-lang="js"><pre><code class="language-js"><span class="t-kw">import</span> { <span class="t-type">Mat</span>, <span class="t-type">COLOR_BGR2GRAY</span>, <span class="t-id">cvtColor</span>, <span class="t-id">skeletonization</span> } <span class="t-kw">from</span> <span class="t-str">'opencv'</span>;
+<span class="t-kw">const</span> <span class="t-id">skel</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">Mat</span>();
+<span class="t-fn">skeletonization</span>(<span class="t-id">input</span>, <span class="t-id">skel</span>);   <span class="t-cm">// input can be color or grayscale</span></code></pre></div>
+<hr>
+<h2 id="pixelneighborhoodsrc-dst"><a class="anchor" href="#pixelneighborhoodsrc-dst" aria-hidden="true">#</a><code>pixelNeighborhood(src, dst)</code></h2>
+<p>8-neighbour foreground count for each foreground pixel. Operates on a binary <code>CV_8UC1</code> mask (typically a skeleton). The output is a <em>degree image</em>: for every non-zero pixel in <code>src</code>, <code>dst</code> holds the count of non-zero neighbours among <code>{NW, N, NE, W, E, SW, S, SE}</code>.</p>
+<ul>
+<li><strong><code>src</code></strong> — <code>cv.Mat</code> only (not UMat). <code>CV_8UC1</code>, continuous.</li>
+<li><strong><code>dst</code></strong> — <code>cv.Mat</code> or <code>cv.UMat</code>. Replaced with a <code>CV_8UC1</code> image of the same size.</li>
+<li><strong>Returns</strong> — <code>undefined</code>.</li>
+</ul>
+<p>Output values for skeleton pixels:</p>
+<div class="tablewrap"><table><thead><tr><th>value</th><th>meaning</th></tr></thead><tbody><tr><td>0</td><td>isolated pixel</td></tr><tr><td>1</td><td>endpoint of a polyline</td></tr><tr><td>2</td><td>mid-curve pixel</td></tr><tr><td>≥ 3</td><td>branch / junction</td></tr></tbody></table></div>
+<h3 id="notes-1"><a class="anchor" href="#notes-1" aria-hidden="true">#</a>Notes</h3>
+<ul>
+<li><code>dst</code> is <strong>not zero-initialized</strong> at non-foreground pixels — those cells contain garbage. Downstream <code>traceSkeleton</code> only consults the map at foreground positions, so this is safe in the intended pipeline; if you visualize the map directly, mask with <code>src</code> first.</li>
+<li>Border rows/columns (<code>y &lt; 1</code> or <code>y &gt; rows - 3</code>, same for x) are skipped.</li>
+</ul>
+<h3 id="example-1"><a class="anchor" href="#example-1" aria-hidden="true">#</a>Example</h3>
+<div class="codeblock" data-lang="js"><pre><code class="language-js"><span class="t-kw">import</span> { <span class="t-type">Mat</span>, <span class="t-id">pixelNeighborhood</span> } <span class="t-kw">from</span> <span class="t-str">'opencv'</span>;
+<span class="t-kw">const</span> <span class="t-id">deg</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">Mat</span>();
+<span class="t-fn">pixelNeighborhood</span>(<span class="t-id">skel</span>, <span class="t-id">deg</span>);</code></pre></div>
+<hr>
+<h2 id="pixelneighborhoodcrosssrc-dst"><a class="anchor" href="#pixelneighborhoodcrosssrc-dst" aria-hidden="true">#</a><code>pixelNeighborhoodCross(src, dst)</code></h2>
+<p>Identical to <code>pixelNeighborhood</code> except the kernel is 4-connected (N, W, E, S only). Output values are in <code>[0, 4]</code>.</p>
+<p>Use this when you want to ignore diagonal connections — e.g. for grids where diagonals are not considered adjacency.</p>
+<div class="codeblock" data-lang="js"><pre><code class="language-js"><span class="t-fn">pixelNeighborhoodCross</span>(<span class="t-id">skel</span>, <span class="t-id">deg4</span>);</code></pre></div>
+<hr>
+<h2 id="pixelfindvaluesrc-value"><a class="anchor" href="#pixelfindvaluesrc-value" aria-hidden="true">#</a><code>pixelFindValue(src, value)</code></h2>
+<p>Returns the coordinates of every pixel whose value equals <code>value</code>.</p>
+<ul>
+<li><strong><code>src</code></strong> — <code>cv.Mat</code>, <code>CV_8UC1</code>.</li>
+<li><strong><code>value</code></strong> — non-negative integer; values ≥ 256 are silently truncated to <code>uchar</code>.</li>
+<li><strong>Returns</strong> — array of <code>cv.Point</code> (integer coordinates).</li>
+</ul>
+<p>Useful as a seed picker after <code>pixelNeighborhood</code>: <code>pixelFindValue(deg, 1)</code> enumerates all skeleton endpoints; <code>pixelFindValue(deg, 3)</code> enumerates 3-way junctions.</p>
+<h3 id="example-2"><a class="anchor" href="#example-2" aria-hidden="true">#</a>Example</h3>
+<div class="codeblock" data-lang="js"><pre><code class="language-js"><span class="t-kw">import</span> { <span class="t-id">pixelNeighborhood</span>, <span class="t-id">pixelFindValue</span> } <span class="t-kw">from</span> <span class="t-str">'opencv'</span>;
+<span class="t-fn">pixelNeighborhood</span>(<span class="t-id">skel</span>, <span class="t-id">deg</span>);
+<span class="t-kw">const</span> <span class="t-id">endpoints</span> <span class="t-op">=</span> <span class="t-fn">pixelFindValue</span>(<span class="t-id">deg</span>, <span class="t-num">1</span>);
+<span class="t-kw">const</span> <span class="t-id">junctions</span> <span class="t-op">=</span> <span class="t-fn">pixelFindValue</span>(<span class="t-id">deg</span>, <span class="t-num">3</span>).<span class="t-fn">concat</span>(<span class="t-fn">pixelFindValue</span>(<span class="t-id">deg</span>, <span class="t-num">4</span>));</code></pre></div>
+<hr>
+<h2 id="traceskeletonsrc--contoursout--neighborhood--mapping"><a class="anchor" href="#traceskeletonsrc--contoursout--neighborhood--mapping" aria-hidden="true">#</a><code>traceSkeleton(src [, contoursOut [, neighborhood [, mapping]]])</code></h2>
+<p>Extracts ordered polylines from a 1-pixel-wide skeleton. The result is a set of <code>cv.Contour</code>s suitable for downstream <code>approxPolyDP</code>, <code>drawContours</code>, or SVG export.</p>
+<h3 id="signatures"><a class="anchor" href="#signatures" aria-hidden="true">#</a>Signatures</h3>
+<div class="codeblock" data-lang="js"><pre><code class="language-js"><span class="t-kw">const</span> <span class="t-id">contours</span> <span class="t-op">=</span> <span class="t-fn">traceSkeleton</span>(<span class="t-id">skel</span>);                          <span class="t-cm">// (1)</span>
+<span class="t-kw">const</span> <span class="t-id">count</span>    <span class="t-op">=</span> <span class="t-fn">traceSkeleton</span>(<span class="t-id">skel</span>, <span class="t-id">contoursArr</span>);             <span class="t-cm">// (2)</span>
+<span class="t-kw">const</span> <span class="t-id">count</span>    <span class="t-op">=</span> <span class="t-fn">traceSkeleton</span>(<span class="t-id">skel</span>, <span class="t-id">contoursArr</span>, <span class="t-id">neighborhood</span>);
+<span class="t-kw">const</span> <span class="t-id">count</span>    <span class="t-op">=</span> <span class="t-fn">traceSkeleton</span>(<span class="t-id">skel</span>, <span class="t-id">contoursArr</span>, <span class="t-id">neighborhood</span>, <span class="t-id">mapping</span>);</code></pre></div>
+<ul>
+<li><strong><code>src</code></strong> — <code>cv.Mat</code>. The skeleton mask (output of <code>skeletonization</code>). Not modified by the call.</li>
+<li><strong><code>contoursOut</code></strong> <em>(optional)</em> — an existing JS array; contours are pushed into it.</li>
+<li><strong><code>neighborhood</code></strong> <em>(optional)</em> — <code>cv.Mat</code> that receives the internal degree map (same as <code>pixelNeighborhood</code> would produce).</li>
+<li><strong><code>mapping</code></strong> <em>(optional)</em> — <code>cv.Mat</code>, <code>CV_32SC1</code>, that receives a per-pixel label image where each pixel holds the index of the contour that consumed it (or <code>-1</code> if untouched). Useful for debugging or for re-coloring the skeleton by contour.</li>
+</ul>
+<p>Return:</p>
+<ul>
+<li>form (1): a new array of <code>cv.Contour</code>.</li>
+<li>forms (2)–(4): the number of contours written.</li>
+</ul>
+<h3 id="behavior-1"><a class="anchor" href="#behavior-1" aria-hidden="true">#</a>Behavior</h3>
+<p>Greedy directional walk:</p>
+<ol>
+<li>Build the 8-neighbour degree map (<code>pixelNeighborhood</code>) and a label image (all −1).</li>
+<li>Scan in row-major order for an unclaimed pixel whose degree is &gt; 0.</li>
+<li>Walk: at each step, prefer the same step direction as last time, fall back to the step-before-that, then to any unclaimed neighbour in a narrow forward fan. Stop when no candidate is available.</li>
+<li>Each consumed pixel decrements the degree of its 8 neighbours, which makes already-used parts of the skeleton invisible to the seeding scan.</li>
+<li>Repeat from step 2 until no seed remains.</li>
+</ol>
+<p>Coordinates inside each returned contour are <code>double</code> so they are directly compatible with the rest of the <code>cv.Contour</code> API.</p>
+<h3 id="notes--caveats"><a class="anchor" href="#notes--caveats" aria-hidden="true">#</a>Notes / caveats</h3>
+<ul>
+<li><strong><code>simplify=true</code> is hard-coded.</strong> Strictly collinear runs of pixels are collapsed to their endpoints (RDP-lite). If you need every pixel — e.g. for animation along the curve — wrap the call in C++ or modify the binding.</li>
+<li><strong>Junction tie-breaking is row-major.</strong> At a Y-junction, which arm becomes the "main" contour and which gets emitted as a separate contour depends on which one the row-major seed scan reaches first. Deterministic, but not topology-aware.</li>
+<li>The four-argument form is the inspection mode — pass <code>neighborhood</code> and <code>mapping</code> to see what the tracer saw.</li>
+</ul>
+<h3 id="example-3"><a class="anchor" href="#example-3" aria-hidden="true">#</a>Example</h3>
+<div class="codeblock" data-lang="js"><pre><code class="language-js"><span class="t-kw">import</span> { <span class="t-type">Mat</span>, <span class="t-id">skeletonization</span>, <span class="t-id">traceSkeleton</span> } <span class="t-kw">from</span> <span class="t-str">'opencv'</span>;
+
+<span class="t-kw">const</span> <span class="t-id">skel</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">Mat</span>();
+<span class="t-fn">skeletonization</span>(<span class="t-id">input</span>, <span class="t-id">skel</span>);
+
+<span class="t-kw">const</span> <span class="t-id">contours</span> <span class="t-op">=</span> <span class="t-fn">traceSkeleton</span>(<span class="t-id">skel</span>);
+<span class="t-id">console</span>.<span class="t-fn">log</span>(<span class="t-str">`${contours.length} polylines, ${contours.reduce((n, c) =&gt; n + c.length, 0)} points`</span>);</code></pre></div>
+<hr>
+<h2 id="skeletonizeguohallsrc-dst"><a class="anchor" href="#skeletonizeguohallsrc-dst" aria-hidden="true">#</a><code>skeletonizeGuohall(src, dst)</code></h2>
+<p>Guo-Hall thinning. Same shape of API as <code>skeletonization</code> — different thinning predicate, intended to leave fewer staircase artefacts on diagonal strokes.</p>
+<ul>
+<li><strong><code>src</code></strong> — <code>cv.Mat</code> or <code>cv.UMat</code>. Any number of channels; multi-channel input is converted to grayscale internally.</li>
+<li><strong><code>dst</code></strong> — <code>cv.Mat</code> or <code>cv.UMat</code>. Receives a <code>CV_8UC1</code> image with foreground pixels at 255 and background at 0.</li>
+<li><strong>Returns</strong> — <code>undefined</code>.</li>
+</ul>
+<h3 id="behavior-2"><a class="anchor" href="#behavior-2" aria-hidden="true">#</a>Behavior</h3>
+<p>Identical surface to <code>skeletonization</code>:</p>
+<ol>
+<li>Convert to grayscale if needed.</li>
+<li>Otsu threshold to 0/255.</li>
+<li>Guo-Hall thinning (two sub-iterations per round, iterated until idempotent).</li>
+</ol>
+<p>The deletion predicate differs from Zhang-Suen — Guo-Hall computes <code>C</code>, <code>min(N1, N2)</code>, and a sub-iteration-specific <code>m</code> mask, deleting a pixel when <code>C == 1</code>, <code>2 ≤ N ≤ 3</code>, and <code>m == 0</code>. In practice the produced skeleton has a more uniform 1-pixel width and fewer 2-pixel-wide "stairs" on diagonals.</p>
+<p>Source is not modified.</p>
+<h3 id="example-4"><a class="anchor" href="#example-4" aria-hidden="true">#</a>Example</h3>
+<div class="codeblock" data-lang="js"><pre><code class="language-js"><span class="t-kw">import</span> { <span class="t-type">Mat</span>, <span class="t-id">skeletonizeGuohall</span> } <span class="t-kw">from</span> <span class="t-str">'opencv'</span>;
+<span class="t-kw">const</span> <span class="t-id">skel</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">Mat</span>();
+<span class="t-fn">skeletonizeGuohall</span>(<span class="t-id">input</span>, <span class="t-id">skel</span>);</code></pre></div>
+<hr>
+<h2 id="guohallthinningmat"><a class="anchor" href="#guohallthinningmat" aria-hidden="true">#</a><code>guohallThinning(mat)</code></h2>
+<p>In-place Guo-Hall thinning primitive. Lower level than <code>skeletonizeGuohall</code> — assumes you've already produced a 0/255 binary <code>CV_8UC1</code> mask.</p>
+<ul>
+<li><strong><code>mat</code></strong> — <code>cv.Mat</code>, <code>CV_8UC1</code>, values in <code>{0, 255}</code>. Modified in place.</li>
+<li><strong>Returns</strong> — <code>undefined</code>.</li>
+</ul>
+<p>Useful when you want to control the binarization step yourself (e.g. adaptive threshold, manual mask construction) rather than the built-in Otsu in <code>skeletonizeGuohall</code>.</p>
+<h3 id="example-5"><a class="anchor" href="#example-5" aria-hidden="true">#</a>Example</h3>
+<div class="codeblock" data-lang="js"><pre><code class="language-js"><span class="t-kw">import</span> { <span class="t-type">Mat</span>, <span class="t-id">threshold</span>, <span class="t-type">THRESH_BINARY</span>, <span class="t-id">adaptiveThreshold</span>,
+         <span class="t-type">ADAPTIVE_THRESH_GAUSSIAN_C</span>, <span class="t-id">guohallThinning</span> } <span class="t-kw">from</span> <span class="t-str">'opencv'</span>;
+
+<span class="t-kw">const</span> <span class="t-id">mask</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">Mat</span>();
+<span class="t-fn">adaptiveThreshold</span>(<span class="t-id">gray</span>, <span class="t-id">mask</span>, <span class="t-num">255</span>, <span class="t-type">ADAPTIVE_THRESH_GAUSSIAN_C</span>, <span class="t-type">THRESH_BINARY</span>, <span class="t-num">11</span>, <span class="t-num">2</span>);
+<span class="t-fn">guohallThinning</span>(<span class="t-id">mask</span>);   <span class="t-cm">// mask is now a 1-pixel skeleton</span></code></pre></div>
+<hr>
+<h2 id="guohalliterationmat-iter"><a class="anchor" href="#guohalliterationmat-iter" aria-hidden="true">#</a><code>guohallIteration(mat, iter)</code></h2>
+<p>One sub-iteration of Guo-Hall thinning. Mostly for debugging / visualizing the thinning process.</p>
+<ul>
+<li><strong><code>mat</code></strong> — <code>cv.Mat</code>, <code>CV_8UC1</code>. <strong>Foreground value must be 1</strong>, not 255, because this is the inner-loop primitive and assumes the <code>/255</code> rescale has already happened.</li>
+<li><strong><code>iter</code></strong> — <code>0</code> or <code>1</code>. Selects which of the two sub-passes to apply (the two passes peel from opposite sides; both are needed for symmetry).</li>
+<li><strong>Returns</strong> — <code>undefined</code>.</li>
+</ul>
+<p>A single call modifies <code>mat</code> in place, removing the pixels that match the predicate for the chosen sub-iteration. Calling <code>guohallIteration(mat, 0)</code> then <code>guohallIteration(mat, 1)</code> repeatedly until <code>mat</code> stops changing is exactly what <code>guohallThinning</code> does internally.</p>
+<h3 id="example-6"><a class="anchor" href="#example-6" aria-hidden="true">#</a>Example</h3>
+<div class="codeblock" data-lang="js"><pre><code class="language-js"><span class="t-kw">import</span> { <span class="t-id">guohallIteration</span>, <span class="t-type">Mat</span> } <span class="t-kw">from</span> <span class="t-str">'opencv'</span>;
+
+<span class="t-cm">// expects `bin01` to be CV_8UC1 with values 0 or 1</span>
+<span class="t-kw">let</span> <span class="t-id">changed</span> <span class="t-op">=</span> <span class="t-atom">true</span>;
+<span class="t-kw">while</span>(<span class="t-id">changed</span>) {
+  <span class="t-kw">const</span> <span class="t-id">before</span> <span class="t-op">=</span> <span class="t-id">bin01</span>.<span class="t-fn">clone</span>();
+  <span class="t-fn">guohallIteration</span>(<span class="t-id">bin01</span>, <span class="t-num">0</span>);
+  <span class="t-fn">guohallIteration</span>(<span class="t-id">bin01</span>, <span class="t-num">1</span>);
+  <span class="t-id">changed</span> <span class="t-op">=</span> <span class="t-cm">/* compare bin01 vs before */</span>;
+}</code></pre></div>
+<hr>
+<h2 id="degreemapsrc-dst"><a class="anchor" href="#degreemapsrc-dst" aria-hidden="true">#</a><code>degreeMap(src, dst)</code></h2>
+<p>8-neighbour degree map of a binary skeleton. Equivalent in result to <code>pixelNeighborhood</code> — same output values (0..8) with the same per-pixel semantics — but uses row-pointer iteration internally, which is noticeably faster than the per-pixel <code>at&lt;uchar&gt;</code> walk in <code>pixelNeighborhood</code>.</p>
+<ul>
+<li><strong><code>src</code></strong> — <code>cv.Mat</code> only (not UMat). <code>CV_8UC1</code>.</li>
+<li><strong><code>dst</code></strong> — <code>cv.Mat</code> or <code>cv.UMat</code>. Replaced with a <code>CV_8UC1</code> image of the same size.</li>
+<li><strong>Returns</strong> — <code>undefined</code>.</li>
+</ul>
+<p>Unlike <code>pixelNeighborhood</code>, <code>degreeMap</code> zero-initializes the output, so background pixels are reliably 0 — safe to visualize directly without masking against <code>src</code>.</p>
+<p>The same <code>value → meaning</code> table applies:</p>
+<div class="tablewrap"><table><thead><tr><th>value</th><th>meaning</th></tr></thead><tbody><tr><td>0</td><td>background (or border)</td></tr><tr><td>1</td><td>endpoint of a polyline</td></tr><tr><td>2</td><td>mid-curve pixel</td></tr><tr><td>≥ 3</td><td>branch / junction</td></tr></tbody></table></div>
+<h3 id="example-7"><a class="anchor" href="#example-7" aria-hidden="true">#</a>Example</h3>
+<div class="codeblock" data-lang="js"><pre><code class="language-js"><span class="t-kw">import</span> { <span class="t-type">Mat</span>, <span class="t-id">skeletonizeGuohall</span>, <span class="t-id">degreeMap</span>, <span class="t-id">pixelFindValue</span> } <span class="t-kw">from</span> <span class="t-str">'opencv'</span>;
+
+<span class="t-kw">const</span> <span class="t-id">skel</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">Mat</span>(), <span class="t-id">deg</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">Mat</span>();
+<span class="t-fn">skeletonizeGuohall</span>(<span class="t-id">input</span>, <span class="t-id">skel</span>);
+<span class="t-fn">degreeMap</span>(<span class="t-id">skel</span>, <span class="t-id">deg</span>);
+
+<span class="t-kw">const</span> <span class="t-id">endpoints</span> <span class="t-op">=</span> <span class="t-fn">pixelFindValue</span>(<span class="t-id">deg</span>, <span class="t-num">1</span>);     <span class="t-cm">// shares the pixelFindValue helper</span></code></pre></div>
+<hr>
+<h2 id="tracelinessrc--contoursout"><a class="anchor" href="#tracelinessrc--contoursout" aria-hidden="true">#</a><code>traceLines(src [, contoursOut])</code></h2>
+<p>Topology-aware line tracer. Walks the skeleton graph and emits one polyline per edge — every polyline starts and ends at a "special" pixel (degree 1 endpoint, or degree ≥ 3 junction). Junctions are shared: a junction of degree <em>k</em> appears as the start or end point of exactly <em>k</em> polylines.</p>
+<h3 id="signatures-1"><a class="anchor" href="#signatures-1" aria-hidden="true">#</a>Signatures</h3>
+<div class="codeblock" data-lang="js"><pre><code class="language-js"><span class="t-kw">const</span> <span class="t-id">contours</span> <span class="t-op">=</span> <span class="t-fn">traceLines</span>(<span class="t-id">skel</span>);            <span class="t-cm">// (1) → cv.Contour[]</span>
+<span class="t-kw">const</span> <span class="t-id">count</span>    <span class="t-op">=</span> <span class="t-fn">traceLines</span>(<span class="t-id">skel</span>, <span class="t-id">arr</span>);       <span class="t-cm">// (2) writes into `arr`, returns count</span></code></pre></div>
+<ul>
+<li><strong><code>src</code></strong> — <code>cv.Mat</code>, <code>CV_8UC1</code>. Thinned skeleton (any non-zero foreground value).</li>
+<li><strong><code>contoursOut</code></strong> <em>(optional)</em> — existing JS array; polylines are pushed into it.</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>form (1): a fresh array of <code>cv.Contour</code>.</li>
+<li>form (2): the number of polylines written.</li>
+</ul>
+<h3 id="behavior-3"><a class="anchor" href="#behavior-3" aria-hidden="true">#</a>Behavior</h3>
+<p>Two passes:</p>
+<ol>
+<li><strong>Edges through special pixels.</strong> Scan in row-major order for any pixel with degree ≠ 2. For each, walk every unused outgoing 8-direction along the degree-2 chain until reaching another special pixel. The reached pixel is included as the polyline's last point. A per-direction "used" bitmask prevents the other end of the edge from re-emitting it.</li>
+<li><strong>Pure loops.</strong> Any remaining degree-2 component (a closed curve with no junctions or endpoints) is emitted as a single closed polyline.</li>
+</ol>
+<h3 id="difference-from-traceskeleton"><a class="anchor" href="#difference-from-traceskeleton" aria-hidden="true">#</a>Difference from <code>traceSkeleton</code></h3>
+<div class="tablewrap"><table><thead><tr><th></th><th><code>traceSkeleton</code></th><th><code>traceLines</code></th></tr></thead><tbody><tr><td>Output type</td><td><code>cv.Contour[]</code> (double points)</td><td><code>cv.Contour[]</code> (int points, stored as double)</td></tr><tr><td>Behavior at junctions</td><td>walks past with direction bias</td><td>splits — every junction is a polyline endpoint</td></tr><tr><td>Simplification</td><td>collinear runs collapsed (forced)</td><td>every skeleton pixel kept</td></tr><tr><td>Junction multiplicity</td><td>each junction visited once total</td><td>a degree-<em>k</em> junction appears in <em>k</em> polylines</td></tr><tr><td>Closed loops</td><td>re-seeded as separate contours</td><td>first pass for special-bounded, second pass for pure loops</td></tr></tbody></table></div>
+<p>If you want every skeleton pixel and a faithful graph topology, use <code>traceLines</code>. If you want long smooth curves with fewer vertices, use <code>traceSkeleton</code>.</p>
+<h3 id="example-8"><a class="anchor" href="#example-8" aria-hidden="true">#</a>Example</h3>
+<div class="codeblock" data-lang="js"><pre><code class="language-js"><span class="t-kw">import</span> { <span class="t-type">Mat</span>, <span class="t-id">skeletonizeGuohall</span>, <span class="t-id">traceLines</span> } <span class="t-kw">from</span> <span class="t-str">'opencv'</span>;
+
+<span class="t-kw">const</span> <span class="t-id">skel</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">Mat</span>();
+<span class="t-fn">skeletonizeGuohall</span>(<span class="t-id">input</span>, <span class="t-id">skel</span>);
+
+<span class="t-kw">const</span> <span class="t-id">lines</span> <span class="t-op">=</span> <span class="t-fn">traceLines</span>(<span class="t-id">skel</span>);
+<span class="t-kw">for</span>(<span class="t-kw">const</span> <span class="t-id">line</span> <span class="t-kw">of</span> <span class="t-id">lines</span>) {
+  <span class="t-cm">// line[0] and line[line.length - 1] are always degree-1 or degree-≥3 pixels</span>
+  <span class="t-id">console</span>.<span class="t-fn">log</span>(<span class="t-str">`edge of ${line.length} px, ${line[0].x},${line[0].y} → ${line[line.length-1].x},${line[line.length-1].y}`</span>);
+}</code></pre></div>
+<hr>
+<h2 id="skeletonizeandtracesrc--contoursout--skeletonout"><a class="anchor" href="#skeletonizeandtracesrc--contoursout--skeletonout" aria-hidden="true">#</a><code>skeletonizeAndTrace(src [, contoursOut [, skeletonOut]])</code></h2>
+<p>One-shot wrapper: <code>skeletonizeGuohall</code> followed by <code>traceLines</code>.</p>
+<h3 id="signatures-2"><a class="anchor" href="#signatures-2" aria-hidden="true">#</a>Signatures</h3>
+<div class="codeblock" data-lang="js"><pre><code class="language-js"><span class="t-kw">const</span> <span class="t-id">contours</span> <span class="t-op">=</span> <span class="t-fn">skeletonizeAndTrace</span>(<span class="t-id">src</span>);                          <span class="t-cm">// (1)</span>
+<span class="t-kw">const</span> <span class="t-id">count</span>    <span class="t-op">=</span> <span class="t-fn">skeletonizeAndTrace</span>(<span class="t-id">src</span>, <span class="t-id">arr</span>);                     <span class="t-cm">// (2)</span>
+<span class="t-kw">const</span> <span class="t-id">count</span>    <span class="t-op">=</span> <span class="t-fn">skeletonizeAndTrace</span>(<span class="t-id">src</span>, <span class="t-id">arr</span>, <span class="t-id">skelOut</span>);            <span class="t-cm">// (3)</span></code></pre></div>
+<ul>
+<li><strong><code>src</code></strong> — <code>cv.Mat</code> or <code>cv.UMat</code>. Input image (any channels). Not modified.</li>
+<li><strong><code>contoursOut</code></strong> <em>(optional)</em> — existing JS array; polylines are pushed into it. Pass <code>undefined</code> to skip writing into an array while still asking for <code>skeletonOut</code>.</li>
+<li><strong><code>skeletonOut</code></strong> <em>(optional)</em> — <code>cv.Mat</code>. Receives the intermediate 0/255 Guo-Hall skeleton — handy for visualization or further processing without re-running the thinner.</li>
+</ul>
+<p>Returns the contour array (form 1) or the count of polylines written (forms 2–3).</p>
+<h3 id="example-9"><a class="anchor" href="#example-9" aria-hidden="true">#</a>Example</h3>
+<div class="codeblock" data-lang="js"><pre><code class="language-js"><span class="t-kw">import</span> { <span class="t-type">Mat</span>, <span class="t-id">skeletonizeAndTrace</span> } <span class="t-kw">from</span> <span class="t-str">'opencv'</span>;
+
+<span class="t-kw">const</span> <span class="t-id">skel</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">Mat</span>();
+<span class="t-kw">const</span> <span class="t-id">lines</span> <span class="t-op">=</span> <span class="t-fn">skeletonizeAndTrace</span>(<span class="t-id">input</span>, <span class="t-atom">undefined</span>, <span class="t-id">skel</span>);
+<span class="t-id">console</span>.<span class="t-fn">log</span>(<span class="t-str">`${lines.length} polylines, skeleton in skel`</span>);
+
+<span class="t-cm">// or write into your own array:</span>
+<span class="t-kw">const</span> <span class="t-id">out</span> <span class="t-op">=</span> [];
+<span class="t-kw">const</span> <span class="t-id">n</span> <span class="t-op">=</span> <span class="t-fn">skeletonizeAndTrace</span>(<span class="t-id">input</span>, <span class="t-id">out</span>, <span class="t-id">skel</span>);</code></pre></div>
+<hr>
+<h2 id="palettegeneratesrc--mode--count"><a class="anchor" href="#palettegeneratesrc--mode--count" aria-hidden="true">#</a><code>paletteGenerate(src [, mode [, count]])</code></h2>
+<p>Returns the dominant colors of an image as a JS array of <code>[B, G, R]</code> triplets.</p>
+<ul>
+<li><strong><code>src</code></strong> — <code>cv.Mat</code>. Color image.</li>
+<li><strong><code>mode</code></strong> <em>(optional, default 0)</em> — packed flags:
+<ul>
+<li>bit 0: color space (<code>0</code> = BGR, <code>1</code> = HSV).</li>
+<li>bits 1–2: distance metric (<code>0</code> = CUBE, <code>1</code> = CIE76, <code>2</code> = CIE94, <code>3</code> = K-means).</li>
+</ul></li>
+<li><strong><code>count</code></strong> <em>(optional, default 0 → 12)</em> — number of colors to extract. <code>0</code> uses the implementation default of 12.</li>
+<li><strong>Returns</strong> — array of <code>[B, G, R]</code> triplets (<code>Number[3]</code>), each component in <code>0..255</code>.</li>
+</ul>
+<p>Backed by <code>dominant_colors_grabber::GetDomColors</code>. The default mode (<code>0</code>) is BGR cube-distance, which matches the rest of OpenCV's color conventions.</p>
+<h3 id="example-10"><a class="anchor" href="#example-10" aria-hidden="true">#</a>Example</h3>
+<div class="codeblock" data-lang="js"><pre><code class="language-js"><span class="t-kw">import</span> { <span class="t-id">imread</span>, <span class="t-id">paletteGenerate</span> } <span class="t-kw">from</span> <span class="t-str">'opencv'</span>;
+<span class="t-kw">const</span> <span class="t-id">img</span> <span class="t-op">=</span> <span class="t-fn">imread</span>(<span class="t-str">'photo.jpg'</span>);
+<span class="t-kw">const</span> <span class="t-id">colors</span> <span class="t-op">=</span> <span class="t-fn">paletteGenerate</span>(<span class="t-id">img</span>, <span class="t-num">0</span>, <span class="t-num">8</span>);   <span class="t-cm">// 8 dominant BGR colors</span></code></pre></div>
+<hr>
+<h2 id="paletteapplysrc-dst-palette"><a class="anchor" href="#paletteapplysrc-dst-palette" aria-hidden="true">#</a><code>paletteApply(src, dst, palette)</code></h2>
+<p>Recolors an indexed (single-channel) image by looking each pixel value up in the supplied palette.</p>
+<ul>
+<li><strong><code>src</code></strong> — <code>cv.Mat</code>, <code>CV_8UC1</code>. Pixel values are treated as palette indices (0..255).</li>
+<li><strong><code>dst</code></strong> — <code>cv.Mat</code> or <code>cv.UMat</code>. <strong>The channel count of <code>dst</code> selects the output format</strong>:
+<ul>
+<li>1-channel <code>dst</code> is treated as a request for 3-channel BGR output.</li>
+<li>3-channel <code>dst</code> → BGR; palette is interpreted as RGBA from JS and the R/B channels are swapped on the way in.</li>
+<li>4-channel <code>dst</code> → BGRA; palette is used as-is (no swap).</li>
+<li>Any other channel count throws.</li>
+</ul></li>
+<li><strong><code>palette</code></strong> — JS array of <code>[R, G, B, A]</code> quadruplets (alpha optional). Up to 256 entries.</li>
+</ul>
+<h3 id="notes-2"><a class="anchor" href="#notes-2" aria-hidden="true">#</a>Notes</h3>
+<ul>
+<li>Because of the swap inconsistency between the 3- and 4-channel branches, colors will not match exactly between a BGR output and a BGRA output rendered from the same palette. Decide on a target channel count first and stick with it.</li>
+<li>The output is rebuilt as <code>CV_8UC3</code> internally regardless of <code>dst</code>'s channel count, then copied into <code>dst</code>.</li>
+</ul>
+<h3 id="example-11"><a class="anchor" href="#example-11" aria-hidden="true">#</a>Example</h3>
+<div class="codeblock" data-lang="js"><pre><code class="language-js"><span class="t-kw">import</span> { <span class="t-id">paletteGenerate</span>, <span class="t-id">paletteApply</span>, <span class="t-type">Mat</span>, <span class="t-type">CV_8UC3</span> } <span class="t-kw">from</span> <span class="t-str">'opencv'</span>;
+<span class="t-kw">const</span> <span class="t-id">palette</span> <span class="t-op">=</span> <span class="t-fn">paletteGenerate</span>(<span class="t-id">img</span>, <span class="t-num">0</span>, <span class="t-num">16</span>);          <span class="t-cm">// 16 dominant BGR colors</span>
+<span class="t-cm">// quantize img to a 1-channel index image first (e.g. via paletteMatch), then:</span>
+<span class="t-kw">const</span> <span class="t-id">recolored</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">Mat</span>(<span class="t-id">img</span>.<span class="t-fn">size</span>(), <span class="t-type">CV_8UC3</span>);
+<span class="t-fn">paletteApply</span>(<span class="t-id">indexImage</span>, <span class="t-id">recolored</span>, <span class="t-id">palette</span>);</code></pre></div>
+<hr>
+<h2 id="palettematchsrc-dst-palette"><a class="anchor" href="#palettematchsrc-dst-palette" aria-hidden="true">#</a><code>paletteMatch(src, dst, palette)</code></h2>
+<p>Quantizes a color image by replacing each pixel with the index of the nearest palette color.</p>
+<ul>
+<li><strong><code>src</code></strong> — <code>cv.Mat</code>. Color image (3- or 4-channel <code>CV_8U</code>).</li>
+<li><strong><code>dst</code></strong> — <code>cv.Mat</code> or <code>cv.UMat</code>. Receives a <code>CV_8UC1</code> index image: each pixel is the position in <code>palette</code> of its nearest match.</li>
+<li><strong><code>palette</code></strong> — JS array of <code>[R, G, B, A]</code> quadruplets.</li>
+</ul>
+<p>Distance is computed in a perceptually weighted RGB space (the "low-cost approximation" from &lt;https://www.compuphase.com/cmetric.htm&gt;), not plain Euclidean. The metric is:</p>
+<div class="codeblock"><pre><code>ΔE² = (2 + r̄/256) · ΔR² + 4 · ΔG² + (2 + (255 - r̄)/256) · ΔB²</code></pre></div>
+<p>where <code>r̄</code> is the mean red of the two colors (all components normalized to <code>[0,1]</code>). Green is weighted ~4× and red/blue tilt with the mean red value, giving green-heavy and skin-tone differences slightly more weight than a flat Euclidean distance would.</p>
+<h3 id="notes-3"><a class="anchor" href="#notes-3" aria-hidden="true">#</a>Notes</h3>
+<ul>
+<li>Pairs naturally with <code>paletteApply</code>: <code>paletteMatch</code> produces the index image, <code>paletteApply</code> recolors it. Together they implement a "quantize then recolor with a different palette" operation.</li>
+<li>For RGBA palettes with one transparent slot, the underlying C++ supports a <code>transparent</code> index; this is not currently exposed to JS (the binding always calls with the no-transparent branch).</li>
+</ul>
+<h3 id="example-12"><a class="anchor" href="#example-12" aria-hidden="true">#</a>Example</h3>
+<div class="codeblock" data-lang="js"><pre><code class="language-js"><span class="t-kw">import</span> { <span class="t-id">paletteGenerate</span>, <span class="t-id">paletteMatch</span>, <span class="t-id">paletteApply</span>, <span class="t-type">Mat</span>, <span class="t-type">CV_8UC3</span> } <span class="t-kw">from</span> <span class="t-str">'opencv'</span>;
+
+<span class="t-kw">const</span> <span class="t-id">palette</span>  <span class="t-op">=</span> <span class="t-fn">paletteGenerate</span>(<span class="t-id">img</span>, <span class="t-num">0</span>, <span class="t-num">16</span>);
+<span class="t-kw">const</span> <span class="t-id">indexed</span>  <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">Mat</span>();
+<span class="t-fn">paletteMatch</span>(<span class="t-id">img</span>, <span class="t-id">indexed</span>, <span class="t-id">palette</span>);                  <span class="t-cm">// 16-color quantization</span>
+
+<span class="t-kw">const</span> <span class="t-id">recolored</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">Mat</span>(<span class="t-id">img</span>.<span class="t-fn">size</span>(), <span class="t-type">CV_8UC3</span>);
+<span class="t-fn">paletteApply</span>(<span class="t-id">indexed</span>, <span class="t-id">recolored</span>, <span class="t-id">palette</span>);            <span class="t-cm">// back to BGR</span></code></pre></div>
+<hr>
+<h2 id="end-to-end-pipelines"><a class="anchor" href="#end-to-end-pipelines" aria-hidden="true">#</a>End-to-end pipelines</h2>
+<p>Either skeleton/line group chains the same way — pick the one that matches your needs:</p>
+<div class="codeblock" data-lang="js"><pre><code class="language-js"><span class="t-cm">// Zhang-Suen + greedy tracer (smooth curves, collinear pixels collapsed)</span>
+<span class="t-kw">import</span> { <span class="t-type">Mat</span>, <span class="t-type">COLOR_BGR2GRAY</span>, <span class="t-id">cvtColor</span>,
+         <span class="t-id">skeletonization</span>, <span class="t-id">pixelNeighborhood</span>, <span class="t-id">traceSkeleton</span> } <span class="t-kw">from</span> <span class="t-str">'opencv'</span>;
+
+<span class="t-kw">const</span> <span class="t-id">gray</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">Mat</span>();
+<span class="t-fn">cvtColor</span>(<span class="t-id">input</span>, <span class="t-id">gray</span>, <span class="t-type">COLOR_BGR2GRAY</span>);
+
+<span class="t-kw">const</span> <span class="t-id">skel</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">Mat</span>();
+<span class="t-fn">skeletonization</span>(<span class="t-id">gray</span>, <span class="t-id">skel</span>);                    <span class="t-cm">// stage 1</span>
+
+<span class="t-kw">const</span> <span class="t-id">deg</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">Mat</span>();
+<span class="t-fn">pixelNeighborhood</span>(<span class="t-id">skel</span>, <span class="t-id">deg</span>);                   <span class="t-cm">// stage 2 — optional inspection</span>
+
+<span class="t-kw">const</span> <span class="t-id">contours</span> <span class="t-op">=</span> <span class="t-fn">traceSkeleton</span>(<span class="t-id">skel</span>);           <span class="t-cm">// stage 3</span>
+<span class="t-cm">// contours: Array&lt;cv.Contour&gt; with double-precision points</span></code></pre></div>
+<div class="codeblock" data-lang="js"><pre><code class="language-js"><span class="t-cm">// Guo-Hall + topology tracer (every pixel, junction-cut)</span>
+<span class="t-kw">import</span> { <span class="t-type">Mat</span>, <span class="t-id">skeletonizeAndTrace</span>, <span class="t-id">degreeMap</span> } <span class="t-kw">from</span> <span class="t-str">'opencv'</span>;
+
+<span class="t-kw">const</span> <span class="t-id">skel</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">Mat</span>();
+<span class="t-kw">const</span> <span class="t-id">lines</span> <span class="t-op">=</span> <span class="t-fn">skeletonizeAndTrace</span>(<span class="t-id">input</span>, <span class="t-atom">undefined</span>, <span class="t-id">skel</span>);
+<span class="t-cm">// lines: Array&lt;cv.Contour&gt;, each polyline starts/ends at a special pixel</span>
+
+<span class="t-cm">// or do the two stages by hand if you want to see the degree map:</span>
+<span class="t-kw">import</span> { <span class="t-id">skeletonizeGuohall</span>, <span class="t-id">traceLines</span> } <span class="t-kw">from</span> <span class="t-str">'opencv'</span>;
+<span class="t-kw">const</span> <span class="t-id">deg</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">Mat</span>();
+<span class="t-fn">skeletonizeGuohall</span>(<span class="t-id">input</span>, <span class="t-id">skel</span>);
+<span class="t-fn">degreeMap</span>(<span class="t-id">skel</span>, <span class="t-id">deg</span>);
+<span class="t-kw">const</span> <span class="t-id">lines2</span> <span class="t-op">=</span> <span class="t-fn">traceLines</span>(<span class="t-id">skel</span>);</code></pre></div>
+<p>For palette reduction:</p>
+<div class="codeblock" data-lang="js"><pre><code class="language-js"><span class="t-kw">import</span> { <span class="t-id">paletteGenerate</span>, <span class="t-id">paletteMatch</span>, <span class="t-id">paletteApply</span>, <span class="t-type">Mat</span>, <span class="t-type">CV_8UC3</span> } <span class="t-kw">from</span> <span class="t-str">'opencv'</span>;
+
+<span class="t-kw">const</span> <span class="t-id">palette</span> <span class="t-op">=</span> <span class="t-fn">paletteGenerate</span>(<span class="t-id">input</span>, <span class="t-num">0</span>, <span class="t-num">8</span>);
+<span class="t-kw">const</span> <span class="t-id">indexed</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">Mat</span>();
+<span class="t-fn">paletteMatch</span>(<span class="t-id">input</span>, <span class="t-id">indexed</span>, <span class="t-id">palette</span>);
+
+<span class="t-kw">const</span> <span class="t-id">out</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">Mat</span>(<span class="t-id">input</span>.<span class="t-fn">size</span>(), <span class="t-type">CV_8UC3</span>);
+<span class="t-fn">paletteApply</span>(<span class="t-id">indexed</span>, <span class="t-id">out</span>, <span class="t-id">palette</span>);</code></pre></div></article>
+<p class="editlink"><a href="https://github.com/rsenn/qjs-opencv/blob/main/doc/algorithms.md">Edit this page on GitHub →</a></p>
+</main>
+<nav class="toc"><h3>On this page</h3><ul><li class="lvl2"><a href="#skeletonizationsrc-dst">skeletonization(src, dst)</a></li><li class="lvl3"><a href="#behavior">Behavior</a></li><li class="lvl3"><a href="#notes">Notes</a></li><li class="lvl3"><a href="#example">Example</a></li><li class="lvl2"><a href="#pixelneighborhoodsrc-dst">pixelNeighborhood(src, dst)</a></li><li class="lvl3"><a href="#notes-1">Notes</a></li><li class="lvl3"><a href="#example-1">Example</a></li><li class="lvl2"><a href="#pixelneighborhoodcrosssrc-dst">pixelNeighborhoodCross(src, dst)</a></li><li class="lvl2"><a href="#pixelfindvaluesrc-value">pixelFindValue(src, value)</a></li><li class="lvl3"><a href="#example-2">Example</a></li><li class="lvl2"><a href="#traceskeletonsrc--contoursout--neighborhood--mapping">traceSkeleton(src [, contoursOut [, neighborhood [, mapping]]])</a></li><li class="lvl3"><a href="#signatures">Signatures</a></li><li class="lvl3"><a href="#behavior-1">Behavior</a></li><li class="lvl3"><a href="#notes--caveats">Notes / caveats</a></li><li class="lvl3"><a href="#example-3">Example</a></li><li class="lvl2"><a href="#skeletonizeguohallsrc-dst">skeletonizeGuohall(src, dst)</a></li><li class="lvl3"><a href="#behavior-2">Behavior</a></li><li class="lvl3"><a href="#example-4">Example</a></li><li class="lvl2"><a href="#guohallthinningmat">guohallThinning(mat)</a></li><li class="lvl3"><a href="#example-5">Example</a></li><li class="lvl2"><a href="#guohalliterationmat-iter">guohallIteration(mat, iter)</a></li><li class="lvl3"><a href="#example-6">Example</a></li><li class="lvl2"><a href="#degreemapsrc-dst">degreeMap(src, dst)</a></li><li class="lvl3"><a href="#example-7">Example</a></li><li class="lvl2"><a href="#tracelinessrc--contoursout">traceLines(src [, contoursOut])</a></li><li class="lvl3"><a href="#signatures-1">Signatures</a></li><li class="lvl3"><a href="#behavior-3">Behavior</a></li><li class="lvl3"><a href="#difference-from-traceskeleton">Difference from traceSkeleton</a></li><li class="lvl3"><a href="#example-8">Example</a></li><li class="lvl2"><a href="#skeletonizeandtracesrc--contoursout--skeletonout">skeletonizeAndTrace(src [, contoursOut [, skeletonOut]])</a></li><li class="lvl3"><a href="#signatures-2">Signatures</a></li><li class="lvl3"><a href="#example-9">Example</a></li><li class="lvl2"><a href="#palettegeneratesrc--mode--count">paletteGenerate(src [, mode [, count]])</a></li><li class="lvl3"><a href="#example-10">Example</a></li><li class="lvl2"><a href="#paletteapplysrc-dst-palette">paletteApply(src, dst, palette)</a></li><li class="lvl3"><a href="#notes-2">Notes</a></li><li class="lvl3"><a href="#example-11">Example</a></li><li class="lvl2"><a href="#palettematchsrc-dst-palette">paletteMatch(src, dst, palette)</a></li><li class="lvl3"><a href="#notes-3">Notes</a></li><li class="lvl3"><a href="#example-12">Example</a></li><li class="lvl2"><a href="#end-to-end-pipelines">End-to-end pipelines</a></li></ul></nav>
+</div>
+<footer class="sitefoot">
+  <p>qjs-opencv — MIT licensed. Built from the repo's own markdown by
+     <a href="https://github.com/rsenn/qjs-opencv/blob/main/tools/site/build.js">tools/site/build.js</a>, running on qjsm.</p>
+</footer>
+<script>
+document.querySelector('.themetoggle').addEventListener('click', function () {
+  var d = document.documentElement;
+  var dark = d.dataset.theme ? d.dataset.theme === 'dark'
+    : matchMedia('(prefers-color-scheme: dark)').matches;
+  d.dataset.theme = dark ? 'light' : 'dark';
+  try { localStorage.setItem('theme', d.dataset.theme); } catch (e) {}
+});
+</script>
+</body>
+</html>
