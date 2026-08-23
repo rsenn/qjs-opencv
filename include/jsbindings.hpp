@@ -380,7 +380,7 @@ static inline JSValue
 js_arraybuffer_from(JSContext* ctx, const Ptr& begin, const Ptr& end, JSValueConst value) {
   assert(js_is_object(value));
 
-  JSObject* obj = JS_VALUE_GET_OBJ(value);
+  void* obj = JS_VALUE_GET_PTR(value);
   JS_DupValue(ctx, value);
 
   return js_arraybuffer_from(ctx, begin, end, js_arraybuffer_free, obj);
