@@ -37,8 +37,9 @@ export function slugify(text) {
 
 /* ---------------------------------------------------------------- inline */
 
-function inline(text, ctx) {
-  const slots = [];
+function inline(text, ctx, slots) {
+  const owns = !slots;
+  if (owns) slots = [];
   const put = html => NUL + (slots.push(html) - 1) + NUL;
 
   // 1. code spans, before anything else gets a chance to look inside them
@@ -54,7 +55,7 @@ function inline(text, ctx) {
       const url = ctx.link ? ctx.link(href) : href;
       const t = title ? ' title="' + escAttr(title) + '"' : '';
       const ext = /^[a-z][a-z0-9+.-]*:/i.test(url) ? ' target="_blank" rel="noopener"' : '';
-      return put('<a href="' + escAttr(url) + '"' + t + ext + '>' + inline(label, ctx) + '</a>');
+      return put('<a href="' + escAttr(url) + '"' + t + ext + '>' + inline(label, ctx, slots) + '</a>');
     });
 
   // 4. bare URLs
@@ -66,8 +67,9 @@ function inline(text, ctx) {
   text = text.replace(/(^|[^*\w])\*(?=[^\s*])([^*]*?[^\s*])\*(?!\*)/g, '$1<em>$2</em>');
 
   // 6. restore slots (a link slot can itself contain code slots)
-  for (let i = 0; i < 8 && text.indexOf(NUL) >= 0; i++)
-    text = text.replace(RE_SLOT, (m, n) => slots[+n]);
+  if (owns)
+    for (let i = 0; i < 8 && text.indexOf(NUL) >= 0; i++)
+      text = text.replace(RE_SLOT, (m, n) => slots[+n]);
 
   return text;
 }

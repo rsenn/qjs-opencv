@@ -33,6 +33,7 @@ for(;;) {
   let contours = new cv.MatVector();
   cv.findContours(gray, contours, new cv.Mat(),
                   cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE);
+  cv.drawContours(mat, contours, -1, new cv.Scalar(0, 255, 0), 2);
 
   cv.imshow('qjs-opencv', mat);
   if(cv.waitKey(20) == 27) break;
@@ -116,7 +117,9 @@ for(;;) {
         <code>VideoCapture</code>/<code>VideoWriter</code>, the MOG2/KNN/bgsegm background
         subtractors, feature2d detectors and matchers, and <code>dnn</code> —
         <code>readNet*</code>, <code>blobFromImage</code>, <code>NMSBoxes</code>.
-        Text rendering goes through FreeType.
+        Text rendering goes through FreeType. On Raspberry Pi, the camera comes in directly as a
+        <code>cv.Mat</code> through <code>LCCV</code> or <code>libcamera-opencv</code> — no
+        V4L2 <code>VideoCapture</code> round-trip.
       </p>
     </div>
   </div>
