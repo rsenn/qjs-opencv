@@ -4,6 +4,7 @@
 #include "js_mat.hpp"
 #include "js_point.hpp"
 #include "js_umat.hpp"
+#include "js_vector.hpp"
 #include "include/jsbindings.hpp"
 #include "algorithms/palette.hpp"
 #include "include/png_write.hpp"
@@ -1498,23 +1499,21 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       case OTHER_SCALAR: {
         cv::Scalar v;
 
-        /* Scalar(arrayBuffer, offset) */
-        if(argc >= 1 && js_is_arraybuffer(ctx, argv[0])) {
-          ArrayBufferProps ab = js_arraybuffer_props(ctx, argv[0]);
-          uint32_t offset = 0;
+        if(argc >= 1 && JS_IsObject(argv[0])) {
+          uint32_t index = 0;
 
           if(argc > 1)
-            if(js_number_read(ctx, argv[1], &offset))
-              offset *= sizeof(double);
+            js_number_read(ctx, argv[1], &index);
 
-          if(ab.len - offset < 4 * sizeof(double))
-            return JS_ThrowRangeError(ctx, "cv::Scalar not enough bytes left in buffer %" PRId32, int32_t(ab.len - offset));
+          std::vector<double> vec = js_is_iterable(ctx, argv[0])
+              ? JSConverter<std::vector<double>>::fromJS(ctx, argv[0])
+              : std::vector<double>();
 
-          ret = js_typedarray<double>::from_buffer(ctx, argv[0], offset, 4);
-          break;
-        }
-
-        if(argc == 1 && !JS_IsNumber(argv[0]) && js_scalar_read(ctx, argv[0], v)) {
+          if(uint64_t(index) + 4 <= vec.size())
+            for(int i = 0; i < 4; ++i)
+              v[i] = vec[index + i];
+          else
+            js_scalar_read(ctx, argv[0], v);
         } else
           for(int i = 0; i < 4 && i < argc; ++i)
             js_number_read(ctx, argv[i], &v[i]);
