@@ -2494,3 +2494,39 @@
     cv.convexityDefects(contour, hull, defects);
     console.log(defects.cols); // 2, expected 4
 
+- typedarraytype-flags-sets-signed-bit-for-float-arrays: `TypedArrayType::flags()`
+  (`include/js_typed_array.hpp`) always OR's in `TYPEDARRAY_SIGNED` (0x40)
+  whenever `is_signed` is true - but `js_typedarray_type()`'s string parser
+  initializes `is_signed = true` and never clears it for floating-point
+  types. So a `Float32Array`/`Float64Array` gets `flags() ==
+  FLOATING_POINT|SIGNED|BITS_n`, which never matches the `TYPEDARRAY_FLOAT32`/
+  `TYPEDARRAY_FLOAT64` case labels (`FLOATING_POINT|BITS_n`, without SIGNED)
+  in `js_typedarray_inputoutputarray`'s switch. Falls to `default:`, which
+  calls `JS_ThrowTypeError(ctx, "Expected TypedArray %s", ...)`.
+
+  That exception is never checked by the caller: `js_cv_output_argument()`
+  (`include/js_inputoutputarray.hpp`) calls `js_typedarray_inputoutputarray()`
+  and returns its result unchecked, and `js_cv_other()` (`js_cv.cpp`) runs
+  `js_cv_inputoutputarray(ctx, argv[0])` unconditionally in its prologue for
+  *every* magic case, even ones (like `OTHER_SCALAR`) that never use the
+  result. The pending exception silently sits on the context and resurfaces
+  later, misattributed to whatever native call frame is still active by the
+  time something (module teardown, next uncaught-exception check) reports it
+  - so it doesn't show up at the `cv.*()` call site itself, only after,
+  confusingly attributed to an unrelated-looking line. Affects any
+  `js_cv_other`-dispatched function given a Float32Array/Float64Array as an
+  argument that participates in the InputOutputArray prologue.
+
+  Fixed: `js_typedarray_type(const std::string&)` now clears `is_signed`
+  when `is_floating_point` is true, matching the other `TypedArrayType`
+  constructors (`mattype_signed()` already excludes `CV_32F`/`CV_64F`).
+  Verified `cv.sum(new Float64Array(...))` now resolves the array instead
+  of falling through to `noArray()`, and the stray exception no longer
+  appears. All `tests/unittests/*.js` still pass.
+
+    import * as cv from 'opencv';
+    let r = cv.Scalar(new Float64Array([1.5, 2.5, 3.5, 4.5]));
+    console.log('ok', r); // prints fine
+    // ... but the script later reports an uncaught exception anyway:
+    // TypeError: Expected TypedArray Float64Array
+

@@ -415,6 +415,9 @@ js_typedarray_type(const std::string& class_name) {
 
   is_floating_point = !strncmp(start, "Float", 5);
 
+  if(is_floating_point)
+    is_signed = false;
+
   return TypedArrayType(bits / 8, is_signed, is_floating_point);
 }
 
