@@ -125,7 +125,6 @@ js_cv_imread(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
 
 static JSValue
 js_cv_imwrite(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-
   const char* filename = JS_ToCString(ctx, argv[0]);
   JSInputOutputArray image;
   int32_t transparent = -1;

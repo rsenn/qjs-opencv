@@ -765,8 +765,8 @@ js_mat_expr(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
   if(argc > 1)
     output = js_mat_data2(ctx, argv[1]);
 
-  /*  if(output == nullptr)
-      output = input;*/
+  /*if(output == nullptr)
+  output = input;*/
 
   cv::MatExpr expr;
 
@@ -1672,11 +1672,9 @@ js_mat_copy_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
 
 static JSValue
 js_mat_reshape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  JSMatData *m, mat;
   int32_t cn, rows = 0;
   JSValue ret = JS_EXCEPTION;
-
-  m = js_mat_data2(ctx, this_val);
+ JSMatData mat,* m = js_mat_data2(ctx, this_val);
 
   if(m == nullptr || argc < 1)
     return ret;

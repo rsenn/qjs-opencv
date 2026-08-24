@@ -18,7 +18,7 @@ function main(input, algo = 'MOG2') {
     throw new Error('Unable to open: ' + input);
 
   const frame = new Mat(),
-    fgMask = new Mat();
+    fgMask = new Mat(),masked=new Mat();
 
   while(true) {
     capture.read(frame);
@@ -34,8 +34,12 @@ function main(input, algo = 'MOG2') {
 
     putText(frame, frameNumberString, new Point(15, 15), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 0, 0));
 
+    masked.clear();
+   frame.copyTo(masked, fgMask);
+
     // show the current frame and the fg masks
     imshow('Frame', frame);
+    imshow('Masked', masked);
     imshow('FG Mask', fgMask);
 
     // get the input from the keyboard
