@@ -296,8 +296,25 @@ js_bg_subtractor_init(JSContext* ctx, JSModuleDef* m) {
   /* set proto.constructor and ctor.prototype */
   JS_SetConstructor(ctx, bg_subtractor_class, bg_subtractor_proto);
 
+  /* opencv.js tutorials call `new cv.BackgroundSubtractorMOG2()` (etc.)
+   * directly, rather than the factory functions - support both call forms
+   * for every variant. */
+  static const struct { const char* name; int magic; } subtractor_ctors[] = {
+      {"BackgroundSubtractorMOG", BGSEGM_MOG},
+      {"BackgroundSubtractorGMG", BGSEGM_GMG},
+      {"BackgroundSubtractorCNT", BGSEGM_CNT},
+      {"BackgroundSubtractorGSOC", BGSEGM_GSOC},
+      {"BackgroundSubtractorLSBP", BGSEGM_LSBP},
+      {"BackgroundSubtractorMOG2", BGSEGM_MOG2},
+      {"BackgroundSubtractorKNN", BGSEGM_KNN},
+  };
+
   if(m) {
     JS_SetModuleExport(ctx, m, "BackgroundSubtractor", bg_subtractor_class);
+
+    for(const auto& ctor : subtractor_ctors)
+      JS_SetModuleExport(ctx, m, ctor.name, JS_NewCFunctionMagic(ctx, js_bg_subtractor_function, ctor.name, 0, JS_CFUNC_constructor_or_func_magic, ctor.magic));
+
     JS_SetModuleExportList(ctx, m, js_bg_subtractor_create_funcs, countof(js_bg_subtractor_create_funcs));
   }
 
@@ -321,6 +338,13 @@ js_bg_subtractor_constructor(JSContext* ctx, JSValue parent, const char* name) {
 extern "C" void
 js_bg_subtractor_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "BackgroundSubtractor");
+  JS_AddModuleExport(ctx, m, "BackgroundSubtractorMOG");
+  JS_AddModuleExport(ctx, m, "BackgroundSubtractorGMG");
+  JS_AddModuleExport(ctx, m, "BackgroundSubtractorCNT");
+  JS_AddModuleExport(ctx, m, "BackgroundSubtractorGSOC");
+  JS_AddModuleExport(ctx, m, "BackgroundSubtractorLSBP");
+  JS_AddModuleExport(ctx, m, "BackgroundSubtractorMOG2");
+  JS_AddModuleExport(ctx, m, "BackgroundSubtractorKNN");
   JS_AddModuleExportList(ctx, m, js_bg_subtractor_create_funcs, countof(js_bg_subtractor_create_funcs));
 }
 
