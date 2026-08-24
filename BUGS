@@ -348,9 +348,11 @@
 
 
 - opencv-js-api-mismatch-line-class: qjs-opencv provides a `Line` class
-  while opencv.js has no `Line` type — `HoughLinesP` returns a
-  `PointVector` (vector<Vec4i> mapped to points). Code using `Line`
-  must be reworked to use Point/Vec4i equivalents.
+  while opencv.js has no `Line` type — `HoughLinesP` writes into a
+  `PointVector` (vector<cv::Point> = vector<Vec2i>, NOT vector<Vec4i> -
+  each detected line lands as two consecutive Vec2i points, binary-
+  compatible with the native Vec4i output). Code using `Line` must be
+  reworked to use Point/Vec4i equivalents.
   Affected files:
     tests/test_fastlinedetector.js
     tests/test_linesegmentdetector.js
