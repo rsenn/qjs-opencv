@@ -1,8 +1,12 @@
 // Renders a TrueType/OpenType font's glyphs into a single 8-bit grayscale
 // PNG "font sheet" plus a JSON sidecar describing the cell grid, for use as
 // a source atlas by a bitmap font renderer. Cells are sized from the font's
-// own metrics (not fixed to 8x8) and can be packed as a square-ish grid, a
-// single horizontal row, or a single vertical column.
+// own metrics (not fixed to 8x8) and can be packed as a grid (power-of-2
+// column count, balanced toward square but preferring taller over wider), a
+// single horizontal row, or a single vertical column. Codepoints from 0 up
+// to the font's highest mapped codepoint (via fc-query) are covered by
+// default; ones the font doesn't map get an empty cell in the image and no
+// entry in the JSON.
 //
 // Usage: qjsm examples/render_font.js [options] <font.ttf>
 import * as std from 'std';
@@ -14,7 +18,7 @@ const KEYS = `
 {help h usage ? |      | print this help and exit}
 {@font          |      | path to a TrueType/OpenType font file}
 {size s         |      | font pixel size (default: the font's own bitmap size, via fc-query, or 16)}
-{start          |      | first character code to render (decimal or 0x.. hex; default: font's lowest mapped codepoint)}
+{start          |      | first character code to render (decimal or 0x.. hex; default: 0)}
 {end            |      | last character code to render, exclusive (default: font's highest mapped codepoint + 1)}
 {layout l       | grid | glyph layout: grid (square-ish), row (horizontal), or column (vertical)}
 {out o          |      | output basename (default: <fontname>@<size>)}
@@ -55,11 +59,31 @@ function queryFontMetadata(fontFile) {
 
   if(ranges.length === 0) return null;
 
+  ranges.sort((a, b) => a[0] - b[0]);
+
   return {
     pixelSize: !scalable && pixelSize ? parseFloat(pixelSize[1]) : null,
     lowestCodepoint: Math.min(...ranges.map(r => r[0])),
     highestCodepoint: Math.max(...ranges.map(r => r[1])),
+    ranges,
   };
+}
+
+// Binary search over queryFontMetadata()'s sorted [lo, hi] ranges.
+function isCovered(ranges, code) {
+  let lo = 0,
+    hi = ranges.length - 1;
+
+  while(lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    const [rlo, rhi] = ranges[mid];
+
+    if(code < rlo) hi = mid - 1;
+    else if(code > rhi) lo = mid + 1;
+    else return true;
+  }
+
+  return false;
 }
 
 function writeFile(filename, text) {
@@ -72,13 +96,39 @@ function parseCode(s) {
   return /^0x/i.test(s) ? parseInt(s, 16) : parseInt(s, 10);
 }
 
-function gridSize(n, layout) {
+// Picks a power-of-2 column count so the sheet stays viewable (never one
+// huge horizontal/vertical bar): evaluates the two powers of 2 bracketing
+// sqrt(n * cellHeight / cellWidth) (the column count that would make the
+// PIXEL dimensions square), scores each by how far its resulting aspect
+// ratio deviates from square in log-space (symmetric: 2x-too-wide and
+// 2x-too-tall score the same), and on a tie prefers the taller ( width <=
+// height) option per the "bigger height than width" preference.
+function chooseGridCols(n, cellWidth, cellHeight) {
+  const ideal = Math.sqrt((n * cellHeight) / cellWidth);
+  const lo = Math.max(1, Math.pow(2, Math.floor(Math.log2(Math.max(ideal, 1)))));
+  const hi = lo * 2;
+
+  const aspect = cols => {
+    const rows = Math.ceil(n / cols);
+    return (cols * cellWidth) / (rows * cellHeight);
+  };
+
+  const aLo = aspect(lo),
+    aHi = aspect(hi);
+  const devLo = Math.abs(Math.log(aLo)),
+    devHi = Math.abs(Math.log(aHi));
+
+  if(devLo !== devHi) return devLo < devHi ? lo : hi;
+  return aLo <= aHi ? lo : hi;
+}
+
+function gridSize(n, layout, cellWidth, cellHeight) {
   if(layout === 'row')
     return { cols: n, rows: 1 };
   if(layout === 'column')
     return { cols: 1, rows: n };
   if(layout === 'grid') {
-    const cols = Math.ceil(Math.sqrt(n));
+    const cols = chooseGridCols(n, cellWidth, cellHeight);
     return { cols, rows: Math.ceil(n / cols) };
   }
   throw new Error(`unknown layout '${layout}' (expected grid, row, or column)`);
@@ -107,7 +157,7 @@ function main() {
   const meta = queryFontMetadata(fontFile);
 
   const fontSize = parser.get('size') ? parseInt(parser.get('size'), 10) : (meta && meta.pixelSize) || 16;
-  const start = parser.get('start') ? parseCode(parser.get('start')) : (meta ? meta.lowestCodepoint : 32);
+  const start = parser.get('start') ? parseCode(parser.get('start')) : 0;
   const end = parser.get('end') ? parseCode(parser.get('end')) : (meta ? meta.highestCodepoint + 1 : 127);
   const layout = parser.get('layout');
   const fontName = path.basename(fontFile, path.extname(fontFile));
@@ -116,12 +166,14 @@ function main() {
   if(meta) console.log(`fc-query: pixelSize=${meta.pixelSize ?? '(scalable)'} codepoints=U+${meta.lowestCodepoint.toString(16)}..U+${meta.highestCodepoint.toString(16)}`);
 
   const style = new TextStyle(fontFile, fontSize);
-  const codes = [];
-  for(let code = start; code < end; code++) codes.push(code);
+  const n = end - start;
 
   // Measure every glyph individually (not just the whole string at once) so
   // proportional-width fonts and glyphs with unusual ascent/descent don't
-  // skew a shared cell size derived from an average.
+  // skew a shared cell size derived from an average. Codepoints the font
+  // doesn't map (per fc-query's charset - or all of them, if fc-query gave
+  // no metadata) are skipped entirely: no measurement, no draw, just an
+  // empty cell left at their grid slot.
   let cellWidth = 0,
     ascent = 0,
     descent = 0;
@@ -137,7 +189,11 @@ function main() {
   const isBogus = (h, d) => !Number.isFinite(h) || !Number.isFinite(d) || h < 0 || h > 10000 || Math.abs(d) > 10000;
 
   let bogusCount = 0;
-  const metrics = codes.map(code => {
+  const metrics = [];
+
+  for(let code = start; code < end; code++) {
+    if(meta && !isCovered(meta.ranges, code)) continue;
+
     const ch = String.fromCodePoint(code);
     let glyphDescent;
     const size = style.size(ch, y => (glyphDescent = y));
@@ -145,30 +201,38 @@ function main() {
     if(isBogus(size.height, glyphDescent)) {
       bogusCount++;
       cellWidth = Math.max(cellWidth, size.width);
-      return { code, ch, glyphAscent: 0, glyphDescent: 0, width: size.width };
+      metrics.push({ code, ch, glyphAscent: 0, glyphDescent: 0 });
+      continue;
     }
 
     cellWidth = Math.max(cellWidth, size.width);
     ascent = Math.max(ascent, size.height);
     descent = Math.max(descent, glyphDescent);
+    metrics.push({ code, ch, glyphAscent: size.height });
+  }
 
-    return { code, ch, glyphAscent: size.height };
-  });
+  if(metrics.length === 0) throw new Error(`no codepoint in U+${start.toString(16)}..U+${(end - 1).toString(16)} is covered by this font`);
 
-  if(bogusCount === codes.length)
+  if(bogusCount === metrics.length)
     throw new Error(
       `getTextSize returned bogus metrics for every glyph at size ${fontSize} - ` +
         `this font+size combination looks unusable (see BUGS: opencv-freetype-empty-bbox-garbage-metrics); try a different --size`,
     );
 
   const cellHeight = ascent + descent;
-  const { cols, rows } = gridSize(codes.length, layout);
+  const { cols, rows } = gridSize(n, layout, cellWidth, cellHeight);
 
   const sheet = Mat.zeros(rows * cellHeight, cols * cellWidth, CV_8UC1);
 
-  const glyphs = metrics.map(({ code, ch, glyphAscent }, i) => {
-    const col = i % cols;
-    const row = Math.floor(i / cols);
+  // Each glyph's index is its slot in the full [start, end) grid (including
+  // the empty slots skipped above), so the sidecar JSON can carry just this
+  // one number instead of x/y - a consumer recovers the cell position as
+  // `col = index % cols, row = Math.floor(index / cols)` (or `index &
+  // (cols - 1)` / `index >>> Math.log2(cols)`, since cols is a power of 2).
+  const glyphs = metrics.map(({ code, ch, glyphAscent }) => {
+    const index = code - start;
+    const col = index % cols;
+    const row = Math.floor(index / cols);
     const x = col * cellWidth;
     const y = row * cellHeight;
 
@@ -180,7 +244,7 @@ function main() {
     // BUGS (js_color_read-drops-short-arrays) - so pass a plain scalar.
     style.draw(sheet, ch, new Point(x, y + (ascent - glyphAscent)), 255, -1, LINE_AA);
 
-    return { code, char: ch, x, y };
+    return { code, char: ch, index };
   });
 
   const outImage = outBase + '.png';

@@ -1144,3 +1144,31 @@
     style = new TextStyle('/home/roman/.fonts/7x13.ttf', 13);
     console.log(style.size('A', y => (baseline = y)), baseline);
     // 8 -33554431 -33554432 - expected something like 8 9 2 (or similar sane values)
+
+- FIXED: imread-png-ignores-flags-always-rgba: `imread(filename, flags)` (`js_cv.cpp:101-124`)
+  used to dispatch every `.png` file to this project's own `png_read()`
+  helper (`include/png_read.hpp`) instead of `cv::imread`, and that helper
+  completely ignored the `flags` argument - it hardcodes
+  `png::image<png::rgba_pixel>` (via pngpp) and always builds a `CV_8UC4`
+  Mat, regardless of whether the caller asked for `IMREAD_GRAYSCALE` (0),
+  `IMREAD_COLOR` (1), or `IMREAD_UNCHANGED` (-1), and regardless of the
+  PNG's own actual color type (a genuinely 8-bit grayscale/`L`-mode PNG,
+  verified independently correct on disk via PIL, still came back
+  4-channel). Found while trying to round-trip a rendered CV_8UC1 Mat
+  through `imwrite`/`imread` for forensic pixel analysis -
+  `imread('grayscale.png', 0).channels()` was silently 4, and reading its
+  `.data` as if it were 1-channel produced nonsensical values (BGRA bytes
+  interpreted as consecutive grayscale samples). Fixed by only taking the
+  `png_read()` fast path when `flags == cv::IMREAD_UNCHANGED` (the one flag
+  that actually asks to keep the file's alpha/original channel layout
+  unchanged) - every other flag (`IMREAD_GRAYSCALE`, `IMREAD_COLOR`,
+  `IMREAD_ANYCOLOR`, `IMREAD_REDUCED_*`, ...) now goes through
+  `cv::imread(filename, flags)`, whose own PNG codec honors them correctly.
+  Verified:
+
+    import { CV_8UC1, IMREAD_GRAYSCALE, IMREAD_COLOR, IMREAD_UNCHANGED, Mat, imread, imwrite } from 'opencv';
+    const m = Mat.zeros(4, 4, CV_8UC1);
+    imwrite('gray.png', m);
+    console.log(imread('gray.png', IMREAD_GRAYSCALE).channels()); // 1 (was 4)
+    console.log(imread('gray.png', IMREAD_COLOR).channels());     // 3 (was 4)
+    console.log(imread('gray.png', IMREAD_UNCHANGED).channels()); // 4 - unchanged, as requested

@@ -112,7 +112,13 @@ js_cv_imread(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
     JS_ToInt32(ctx, &flags, argv[1]);
 
   try {
-    if(!strcasecmp(".png", (filename + len - 4)))
+    // png_read() (pngpp) always returns RGBA/CV_8UC4, ignoring `flags`
+    // entirely - only correct when the caller actually wants the file
+    // unchanged, alpha included. Anything else (IMREAD_GRAYSCALE,
+    // IMREAD_COLOR, IMREAD_ANYCOLOR, IMREAD_REDUCED_*, ...) asks for a
+    // specific channel layout without alpha/palette, which only
+    // cv::imread()'s own PNG codec honors.
+    if(!strcasecmp(".png", (filename + len - 4)) && flags == cv::IMREAD_UNCHANGED)
       mat = png_read(filename);
     else
       mat = cv::imread(filename, flags);
