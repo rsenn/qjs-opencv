@@ -1099,7 +1099,7 @@
   like main-file content). This closes off `-Wunused-function` entirely
   as a technique for this header, under either compiler.
 
-- opencv-freetype-empty-bbox-garbage-metrics: `cv::freetype::FreeType2::getTextSize()`
+- FIXED: opencv-freetype-empty-bbox-garbage-metrics: `cv::freetype::FreeType2::getTextSize()`
   (upstream `opencv_contrib/modules/freetype/src/freetype.cpp`, reached
   via this project's plain passthrough at `js_draw.cpp:639` -
   `freetype2->getTextSize(text, font_scale, thickness, &baseline)`, no
@@ -1116,23 +1116,51 @@
      This is NOT bitmap-strike-specific and will hit essentially any font
      sheet, since space/U+20 is almost always in range.
   2. A font with embedded fixed-size bitmap strikes (e.g. an X11 bitmap
-     font wrapped in TTF, `/home/roman/.fonts/7x13.ttf`) at a size that
-     *exactly* matches one of the font's own strikes - here EVERY glyph
-     tested (space through U+FFFD, including plainly-inked ones like 'A')
-     comes back garbage, not just whitespace. Requesting a *non*-matching
-     size correctly throws a clean assertion instead
-     (`!FT_Set_Pixel_Sizes(mFace, _fontHeight, _fontHeight)`), so this
-     looks like a separate bug in the exact-match bitmap-strike code path,
-     not simply "this glyph has no ink."
+     font wrapped in TTF) at a size that *exactly* matches one of the
+     font's own strikes - here EVERY glyph tested (space through U+FFFD,
+     including plainly-inked ones like 'A') comes back garbage, not just
+     whitespace. Requesting a *non*-matching size correctly throws a clean
+     assertion instead (`!FT_Set_Pixel_Sizes(mFace, _fontHeight,
+     _fontHeight)`), so this looks like a separate bug in the exact-match
+     bitmap-strike code path, not simply "this glyph has no ink." **This
+     makes case 2 universal for bitmap-strike fonts, not a corner case**:
+     every size either (a) exactly matches a strike and hits this bug, or
+     (b) doesn't match and throws the `FT_Set_Pixel_Sizes` assertion
+     instead - there is no size at which `getTextSize()` returns a sane
+     result for a pure bitmap-strike font. Confirmed independently across
+     three different local bitmap fonts, each at its own correct native
+     size (`fc-query`'s `pixelsize`):
 
-  Not investigated further or fixed - lives in a third-party vendored
-  dependency, not this project's own source. `examples/render_font.js`
-  works around both: a single bogus-metric glyph among otherwise-sane
-  ones is treated as legitimately empty-ink (zero height/descent
-  contribution, width kept) rather than an error; if EVERY sampled glyph
-  comes back bogus (case 2, genuinely unusable font+size combination) it
-  fails with a clear message instead of crashing later inside
-  `Mat.zeros()`/`putText` with an opaque OpenCV assertion.
+       /home/roman/.fonts/7x13.ttf  @ 13px -> width=8  height=-33554431 baseline=-33554432
+       /home/roman/.fonts/9x18.ttf  @ 18px -> width=10 height=-33554431 baseline=-33554432
+       /home/roman/.fonts/7x14.ttf  @ 14px -> width=8  height=-33554431 baseline=-33554432
+
+     Practical impact (before the fix below): `examples/render_font.js`
+     could not render ANY pure bitmap-strike font end-to-end at all - the
+     "every glyph bogus" guard always fired for such a font, regardless of
+     `--size`.
+
+  Fixed (2026-08-28) in this project's own binding, `js_get_text_size`
+  (`js_draw.cpp`) - not in the vendored library itself (still not
+  investigated/fixed there, and no local source checkout to patch, see
+  `/opt/opencv-4.7.0-x86_64`). When `freetype2->getTextSize()` returns a
+  value outside a generous sane range (`height < 0 || height > 100000 ||
+  baseline < -100000 || baseline > 100000`), height is substituted with
+  the requested pixel size and baseline with 0. This is exact, not a
+  guess, for case 2: a bitmap strike's line height *is* by definition the
+  pixel size it was matched at, and its glyphs are pre-composed bitmaps
+  with the baseline baked into their fixed cell position - there's no
+  separate ascent/descent split to recover by measurement. For case 1 (a
+  genuinely empty glyph like a space in a scalable font) the same
+  substitution is a safe, harmless default: something with zero ink draws
+  nothing regardless of what size is reported for it. `size.width` was
+  never affected by this bug and is left as returned. Verified: all three
+  bitmap fonts above now return sane values (e.g. `7x13.ttf` @ 13px ->
+  `8, 13, 0`), and `render_font.js` no longer throws before rendering a
+  bitmap font. **However**, actually rendering one end-to-end still
+  doesn't work - fixing this bug only stopped the pipeline from crashing
+  before drawing; it exposed a second, separate, deeper bug in the actual
+  glyph rasterization - see `opencv-freetype-bitmap-strike-glyphs-not-rasterized`.
 
     import { TextStyle } from './js/cvHighGUI.js';
     // case 1: scalable font, single whitespace glyph
@@ -1172,3 +1200,57 @@
     console.log(imread('gray.png', IMREAD_GRAYSCALE).channels()); // 1 (was 4)
     console.log(imread('gray.png', IMREAD_COLOR).channels());     // 3 (was 4)
     console.log(imread('gray.png', IMREAD_UNCHANGED).channels()); // 4 - unchanged, as requested
+
+- opencv-freetype-bitmap-strike-glyphs-not-rasterized: `cv::freetype::FreeType2::putText()`
+  (upstream `opencv_contrib/modules/freetype/src/freetype.cpp`, reached via
+  this project's plain passthrough at `js_draw.cpp:592` -
+  `freetype2->putText(*dst, text, point, font_scale, ...)`, no logic of
+  this project's own involved) does not actually rasterize the real glyph
+  bitmap for a font with embedded fixed-size bitmap strikes (confirmed with
+  three different local bitmap fonts: `7x13.ttf`, `9x18.ttf`, `7x14.ttf`,
+  all at their own correct native pixel size). Instead of the real glyph
+  shape, every character - regardless of which one, including wide ones
+  like 'M'/'W'/'@' - draws only a thin 1-pixel-wide vertical sliver in the
+  leftmost column of the glyph's cell, covering roughly the top 2/3 of the
+  cell height and nothing else. Dumped as ASCII art (`#`=255, `+`=mid,
+  `.`=faint, space=0) for 'M' on `7x13.ttf` @ 13px in an 8x13 cell:
+
+    +
+    #
+    #
+    #
+    #
+    +
+    +
+    +
+    +
+    (columns 1-7 are entirely blank; should be a full 7-wide 'M' glyph)
+
+  Distinct from, and found while re-verifying the fix for,
+  `opencv-freetype-empty-bbox-garbage-metrics` (getTextSize returning
+  garbage for bitmap-strike fonts) - that bug is now fixed (substituting
+  sane height/baseline values in `js_get_text_size`), which finally made it
+  possible to render a bitmap font through `examples/render_font.js`
+  end-to-end without throwing - but doing so revealed the output image is
+  visually wrong: every glyph cell contains only this same degenerate
+  sliver, not real character shapes. **Bitmap-strike fonts are therefore
+  still not usable end-to-end via this binding** - getTextSize returning
+  sane numbers just meant the pipeline no longer crashes; the actual pixels
+  `putText()` draws for such a font remain wrong. Not investigated further
+  - likely a stride/scaling bug in the vendored freetype module's own
+  monochrome-bitmap-blitting code path (as opposed to its outline
+  rasterization path, which works correctly - every scalable font tested
+  throughout this project renders properly). Not fixable from this
+  project's own source without either patching the vendored
+  `libopencv_freetype` (no local source checkout available - it's an
+  installed prebuilt library, see `/opt/opencv-4.7.0-x86_64`) or bypassing
+  `cv::freetype::FreeType2` entirely and blitting bitmap-strike glyphs via
+  raw FreeType2 API calls from scratch in this project's own code - a
+  substantial addition, not a small fix.
+
+    import { TextStyle } from './js/cvHighGUI.js';
+    import { CV_8UC1, LINE_AA, Mat, Point } from 'opencv';
+    const style = new TextStyle('/home/roman/.fonts/7x13.ttf', 13);
+    const mat = Mat.zeros(13, 8, CV_8UC1);
+    style.draw(mat, 'M', new Point(0, 0), 255, -1, LINE_AA);
+    console.log([...mat.data].filter(v => v != 0).length); // 9 - a sliver, not a glyph (~20-40+ expected for a real 'M')

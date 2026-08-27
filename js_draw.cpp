@@ -26,6 +26,14 @@
 
 extern "C" int js_draw_init(JSContext*, JSModuleDef*);
 
+// opencv2/core.hpp (via opencv2/core/base.hpp) is where OpenCV's own
+// generated opencv2/opencv_modules.hpp gets pulled in - on OpenCV builds
+// that #define HAVE_OPENCV_FREETYPE there (see CMakeLists.txt), this must
+// be included before the #ifdef below for that definition to be visible;
+// the other opencv2/*.hpp includes above likely already pull it in
+// transitively, but don't rely on that being incidental.
+#include <opencv2/core.hpp>
+
 #ifdef HAVE_OPENCV_FREETYPE
 #include <opencv2/freetype.hpp>
 cv::Ptr<cv::freetype::FreeType2> freetype2 = nullptr;
@@ -635,9 +643,31 @@ js_get_text_size(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
       freetype2_face = font_name;
     }
 
-    if(!font_name.empty())
+    if(!font_name.empty()) {
       size = freetype2->getTextSize(text, font_scale, thickness, &baseline);
-    else
+
+      // See BUGS (opencv-freetype-empty-bbox-garbage-metrics): upstream
+      // cv::freetype::FreeType2::getTextSize() returns huge-negative garbage
+      // (observed: height=-33554431, baseline=-33554432) instead of a sane
+      // result whenever the string's ink bounding box is empty - which is
+      // *every* call for a bitmap-strike font at its own exact native size,
+      // not just a rare all-whitespace edge case. `size.width` is unaffected
+      // (verified correct in every case seen); only height/baseline are
+      // garbage. A bitmap strike's line height is by definition exactly the
+      // pixel size it was matched at (that's what "matched a strike" means),
+      // and its glyphs are pre-composed bitmaps with the baseline baked into
+      // their fixed position in the cell - there's no separate ascent/descent
+      // split to recover by measurement, so substituting the requested pixel
+      // size for height and 0 for baseline is exact, not a guess, for that
+      // case. For a genuinely-empty glyph in an otherwise normal scalable
+      // font (e.g. a lone space), the same substitution is merely a safe,
+      // harmless default: something with zero ink draws nothing regardless of
+      // what size it's reported to have.
+      if(size.height < 0 || size.height > 100000 || baseline < -100000 || baseline > 100000) {
+        size.height = font_scale;
+        baseline = 0;
+      }
+    } else
 #endif
       size = cv::getTextSize(text, font_face, font_scale, thickness, &baseline);
   } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }

@@ -114,17 +114,38 @@ include_directories(include ${OPENCV_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}
                     lsd/include)
 
 include(CheckIncludeFileCXX)
+include(CheckCXXSourceCompiles)
 
 set(CMAKE_REQUIRED_INCLUDES "${OPENCV_INCLUDE_DIRS}")
 check_include_file_cxx(opencv2/freetype.hpp HAVE_OPENCV2_FREETYPE_HPP)
 #check_library_exists(opencv_freetype _ZN2cv8freetype13FreeType2ImplC1Ev "${OPENCV_PREFIX}" OPENCV_FREETYPE)
+
+# OpenCV's own opencv2/opencv_modules.hpp (pulled in transitively by
+# opencv2/core/base.hpp, hence by opencv2/core.hpp) is generated at OpenCV's
+# own build time and #defines HAVE_OPENCV_<MODULE> for every module that
+# build actually included - starting from some OpenCV 5.x builds, that now
+# covers contrib modules too, including HAVE_OPENCV_FREETYPE, whereas
+# OpenCV 4.x's opencv_modules.hpp never defined it. Check whether OpenCV's
+# own headers already provide it before we do, so we don't hand -D the same
+# macro a second time on OpenCV 5 (a harmless but noisy "redefinition of
+# HAVE_OPENCV_FREETYPE" warning on every translation unit that includes
+# opencv2/core.hpp after js_draw.cpp's own #ifdef guard).
+check_cxx_source_compiles("
+#include <opencv2/core.hpp>
+#ifndef HAVE_OPENCV_FREETYPE
+#error HAVE_OPENCV_FREETYPE not defined by OpenCV's own headers
+#endif
+int main() { return 0; }
+" OPENCV_HEADERS_DEFINE_HAVE_OPENCV_FREETYPE)
 
 if(HAVE_OPENCV2_FREETYPE_HPP)
   set(OPENCV_FREETYPE TRUE)
 endif(HAVE_OPENCV2_FREETYPE_HPP)
 
 if(HAVE_OPENCV2_FREETYPE_HPP AND OPENCV_FREETYPE)
-  add_definitions(-DHAVE_OPENCV_FREETYPE)
+  if(NOT OPENCV_HEADERS_DEFINE_HAVE_OPENCV_FREETYPE)
+    add_definitions(-DHAVE_OPENCV_FREETYPE)
+  endif(NOT OPENCV_HEADERS_DEFINE_HAVE_OPENCV_FREETYPE)
   set(OPENCV_FREETYPE_LIBRARY opencv_freetype)
 else(HAVE_OPENCV2_FREETYPE_HPP AND OPENCV_FREETYPE)
 

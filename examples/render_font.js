@@ -12,7 +12,7 @@
 import * as std from 'std';
 import * as path from 'path';
 import { TextStyle } from '../js/cvHighGUI.js';
-import { CommandLineParser, CV_8UC1, LINE_AA, Mat, Point, imwrite } from 'opencv';
+import { CommandLineParser, CV_8UC1, INTER_NEAREST, LINE_AA, Mat, Point, absdiff, countNonZero, imwrite, resize } from 'opencv';
 
 const KEYS = `
 {help h usage ? |      | print this help and exit}
@@ -134,6 +134,87 @@ function gridSize(n, layout, cellWidth, cellHeight) {
   throw new Error(`unknown layout '${layout}' (expected grid, row, or column)`);
 }
 
+// --- Post-render size sanity check ---
+//
+// A fixed-size bitmap font rendered at the wrong pixel size doesn't fail
+// loudly by itself in every renderer - here it either throws (this
+// binding's own FT_Set_Pixel_Sizes assertion for a non-matching size) or
+// silently exact-matches, but a bitmap-sourced glyph sheet dragged through
+// an unrelated Nx resize afterward, or fed through a renderer that DOES
+// rescale bitmaps instead of erroring, produces a recognizable artifact
+// instead: either "blockiness" (an exact Nx nearest-neighbor upscale) or
+// unexpectedly rich antialiasing (a non-integer mis-scale). Checking for
+// both on the actual rendered sheet catches that class of problem even
+// when fc-query's metadata alone wouldn't (unavailable, or simply wrong).
+
+// Is `mat` an exact `factor`x nearest-neighbor upscale of a smaller image?
+// Decimate by `factor` (nearest samples one pixel per block), re-expand by
+// `factor` (nearest replicates it back into a block) - if every factor x
+// factor block was already uniform, the round trip reproduces `mat` bit
+// for bit.
+function blockinessScore(mat, factor) {
+  const small = new Mat();
+  const back = new Mat();
+  resize(mat, small, [Math.round(mat.cols / factor), Math.round(mat.rows / factor)], 0, 0, INTER_NEAREST);
+  resize(small, back, [mat.cols, mat.rows], 0, 0, INTER_NEAREST);
+
+  const diff = new Mat();
+  absdiff(mat, back, diff);
+  return 1 - countNonZero(diff) / (mat.cols * mat.rows);
+}
+
+// Counts distinct antialiased gray levels actually used. LINE_AA smooths
+// edges of any shape it draws, bitmap-sourced or not, so "some gray
+// pixels exist" isn't a signal - what differs is the VARIETY of blend
+// ratios. A vector outline's antialiasing computes genuine sub-pixel
+// coverage along smooth/diagonal curves and sweeps most of the 8-bit
+// range (~150-200 distinct levels, stable across sizes); a bitmap
+// strike's already-pixel-snapped stair-step edges only ever produce a
+// handful of repeating blend ratios (~20-30 levels), independent of how
+// much text is drawn.
+function distinctMidgrayLevels(mat) {
+  const seen = new Set();
+  for(const v of mat.data) if(v > 0 && v < 255) seen.add(v);
+  return seen.size;
+}
+
+const BITMAP_LEVEL_THRESHOLD = 40;
+
+// Blockiness is checked unconditionally - a real Nx nearest-neighbor
+// upscale artifact is equally suspicious in a bitmap or vector-sourced
+// render, and a genuinely correct render of either kind essentially never
+// triggers it. The level-count/metadata checks below it, though, need a
+// ground-truth "this specific font should render crisp" fact to compare
+// against - without fc-query's pixelSize confirming this is a bitmap font,
+// there's no way to tell a blurred bitmap font from a small, legitimately
+// antialiased vector font from a single rendered image alone (verified:
+// blur inflates the level count enough to look exactly like a vector
+// font's normal antialiasing).
+function reportSizeSanity(sheet, fontSize, meta) {
+  for(const factor of [2, 3, 4]) {
+    if(blockinessScore(sheet, factor) > 0.98) {
+      console.log(`size sanity: WARNING - render looks like an exact ${factor}x nearest-neighbor upscale; true size is probably ${fontSize / factor}px, not ${fontSize}px`);
+      return;
+    }
+  }
+
+  if(!meta || !meta.pixelSize) return;
+
+  if(meta.pixelSize !== fontSize) {
+    console.log(`size sanity: WARNING - fc-query says this font's native size is ${meta.pixelSize}px, but it was rendered at ${fontSize}px`);
+    return;
+  }
+
+  const levels = distinctMidgrayLevels(sheet);
+
+  if(levels >= BITMAP_LEVEL_THRESHOLD) {
+    console.log(`size sanity: WARNING - bitmap font render has ${levels} distinct antialiased levels (expected < ${BITMAP_LEVEL_THRESHOLD}) - looks mis-scaled despite matching fc-query's native size`);
+    return;
+  }
+
+  console.log(`size sanity: OK (bitmap font, crisp render at ${fontSize}px, ${levels} distinct antialiased levels)`);
+}
+
 function main() {
   // No args array: the constructor then reads the global `scriptArgs`
   // (script path included), matching the argv[0]-is-the-program-name
@@ -250,6 +331,7 @@ function main() {
   const outImage = outBase + '.png';
   const outJson = outBase + '.json';
   imwrite(outImage, sheet);
+  reportSizeSanity(sheet, fontSize, meta);
 
   const metadata = {
     font: fontFile,
