@@ -15,24 +15,11 @@ pages cataloged in `doc/opencv-js-examples.md` (source: local checkout
 `/mnt/data/Projects/opencv/doc/js_tutorials/js_assets/*.html`) against this
 project's actual live exports (`Object.keys(cv)` from a built
 `build/x86_64-linux-gnu/opencv.so`, OpenCV 5.0.0). 158 unique `cv.*`
-symbols are referenced across all 80 pages; 143 already resolve as of
-2026-08-17 (`matFromArray` shipped - see `BUGS: opencvjs-matfromarray-missing`,
-now FIXED). The 15 gaps below block one or more example pages from
-running unmodified; full
-detail (repro, exact source locations) for each is filed as its own entry
-in `BUGS` under the `opencvjs-*` canonical-name prefix.
-
-**Highest impact - fix first:**
-
-- **`.delete()` missing on `Mat`** - not a binding gap, an architectural
-  difference (QuickJS GC + finalizers vs opencv.js's manual wasm-heap
-  `.delete()`). The `*Vector` classes already have a harmless no-op
-  `.delete()` (`js_vector.hpp:289`); `Mat` is the one class that doesn't,
-  and it's called **349 times** across the 80 pages, more than any other
-  single symbol, so every unmodified example hits it immediately. A
-  harmless no-op `.delete()` stub on `Mat` would fix all 80 pages' single
-  biggest compatibility blocker in one change, without touching the GC
-  design. See `BUGS: opencvjs-mat-delete-missing`.
+symbols are referenced across all 80 pages; 144 already resolve as of
+2026-08-24 (`matFromArray` and `Mat.delete()` both shipped). 14 gaps
+below still block one or more example pages from running unmodified;
+full detail (repro, exact source locations) for each is filed as its own
+entry in `BUGS` under the `opencvjs-*` canonical-name prefix.
 
 **New binding work, by tutorial category:**
 
@@ -88,7 +75,7 @@ opencvjs-fs-createdatafile-not-applicable`.
 ## Already solved, don't rebuild
 
 - **Contour → SVG bezier splines.** No OpenCV algorithm does this (checked the full coverage survey — no such symbol exists, bound or unbound). It doesn't need a library either: `js/cvVectorization.js` (uncommitted) already has a correct Schneider/Graphics-Gems `FitCurves` cubic-bezier fitter (`CurveFitter` — corner detection, chord-length parameterization, Newton-Raphson reparameterization, recursive error-based subdivision) consuming `contour.array` directly, plus `SvgBuilder` for multi-region path output with holes via `fill-rule="evenodd"`. Keep this in JS; it's O(n) per subdivision and QuickJS handles it fine. Only reconsider a C++ port if profiling on a real workload shows it's the bottleneck.
-- ~~**Polyline simplification.** All seven `psimpl` algorithms are freestanding functions under the `cv.psimpl.*` namespace~~ **STALE as of 2026-08-19 - regressed, not solved.** Commit `c1d96d4` ("got rid of js_contour.[ch]pp completely") deleted the file registering `cv.psimpl` with no replacement; `cv.psimpl` is now `undefined`. `tests/unittests/test_psimpl_functions.js` (still present, still correct) fails all 9 tests. The underlying algorithm code is still in the tree (`include/psimpl.hpp`, `src/line.cpp`), just unregistered - and also still wired up in the uncommitted `worktree-js-read-points` branch's own `js_contour.cpp`. See `BUGS: cv-psimpl-namespace-deleted-without-replacement`.
+- **Polyline simplification.** All seven `psimpl` algorithms are available under the `cv.psimpl.*` namespace via `js_psimpl.cpp`. Zero-copy across Mat CV_32SC2, Mat CV_64FC2, `PointVector`, and `Point2fVector`, with a plain-array fallback. `tests/unittests/test_psimpl_functions.js` passes 37/37 (7 algorithms x 5 input types, plus error-path tests).
 - **Contour → freestanding-function migration and the generic vector infrastructure.** The custom `Contour` class is gone entirely; all 16 shape-analysis functions (`contourArea`, `boundingRect`, `convexHull`, ...) are freestanding, and all 16 opencv.js vector-container types (`MatVector`, `PointVector`, `Point2fVector`, ..., `CharVectorVector`) are implemented via the generic `JSVector<T>` template (`include/js_vector.hpp`) with `push_back`/`get`/`set`/`size`/`Symbol.iterator`/`delete()`. `findContours` accepts `MatVector` or `PointVectorVector` as zero-copy output, alongside a plain-`Array` fallback. See `js_vector.hpp`, `js_vector.cpp`, and `tests/unittests/test_contour_functions.js`/`test_psimpl_functions.js`.
 - **Skeleton tracing.** `algorithms/skeleton_lines.hpp` (Guo-Hall thinning + topology-aware tracing that cuts at junctions) is fully bound: `skeletonizeGuohall`, `traceLines`, `degreeMap`, `skeletonizeAndTrace`. Distinct from `findContours` (region boundaries) and `LineSegmentDetector`/`FastLineDetector` (straight-line detection) — the three don't substitute for each other, pick per input character.
 - **Region proposal for collage-art's "several algorithms to pick a motive."** `grabCut` (bound) plus `ximgproc::segmentation` selective-search/graph-segmentation (already bound) cover this with zero new binding work.
@@ -182,36 +169,9 @@ Grouped by how badly a naive port breaks.
 
 ### Silently wrong results (no exception, no obviously-missing output — the dangerous category)
 
-Every entry identified in this category as of the 2026-08-17/18 passes is
-now fixed: `HuMoments` dropping results for non-Array outputs, `Mat.mul`
-doing matrix multiplication instead of elementwise, three discarded
-output arguments (`estimateAffine2D`/`estimateAffinePartial2D`'s
-`inliers`, `floodFill`'s `rect`, `Feature2D.compute()`'s `keypoints`),
-`moments(points, binaryImage)` picking input interpretation off the wrong
-flag, and `Mat.step` dropping the last dimension's stride. See `BUGS`
-(all marked FIXED): `mat-mul-does-matrix-multiplication-not-elementwise`,
-`estimateaffine2d-inliers-output-discarded`,
-`floodfill-rect-output-not-written-back`,
-`feature2d-compute-keypoints-not-copied-back`,
-`moments-binaryimage-controls-input-interpretation`,
-`mat-step-drops-last-dimension`. Also fixed since: `Laplacian`/`pyrDown`/
-`pyrUp`/`Scharr` being literal no-op stubs (see `BUGS:
-laplacian-pyrdown-pyrup-scharr-are-noop-stubs`) - arguably the worst
-instance of this category found so far, since it wasn't even "wrong
-output", just no computation at all. No systematic new pass has been
-done since to look for further instances of this category - worth
-another audit pass rather than assuming it's now exhaustively clean.
-
-**New, unfixed (2026-08-19):** `js_cv_inputarray()`'s plain-`Array`-of-
-2..4-numbers path (`include/js_inputoutputarray.hpp:78-91`) returns a
-`cv::_InputArray` that references a destroyed local `cv::Scalar` -
-`_InputArray(const Matx&)` stores a pointer, not a copy. Any function
-taking a color/bounds argument as a plain JS array (confirmed:
-`cv.inRange(img, [0,0,0], [255,255,255], mask)` silently returns an
-all-zero mask instead of all-255) is affected; the same bounds via
-`Float64Array`/`Scalar.all()` work correctly since that's a different,
-safe code path. Not scoped to one function - a shared helper bug. See
-`BUGS: js-cv-inputarray-scalar-dangling-pointer`.
+No systematic new pass has been done recently to look for further
+instances of this category - worth another audit pass rather than
+assuming it's now exhaustively clean.
 
 *(`Mat.diag()`, `Mat.data`/`.data8S`/`.data16U`/`.data16S`/`.data32S`/`.data32F`/`.data64F`, all seven `<type>At()` accessors, all seven `<type>Ptr()` accessors, and `StringVector`/`DMatchVectorVector`/`KeyPointVectorVector` from the 2026-08-12 audit's "not bound" list are now **implemented** — `js_mat.cpp:2051-2101`, `js_vector.cpp` — and removed from this list.)*
 
@@ -225,7 +185,12 @@ safe code path. Not scoped to one function - a shared helper bug. See
 - **`findHomography`'s point inputs go through a custom point-array reader, not a generic `InputArray`.** *(carried forward, not re-verified)*
 - **`DescriptorMatcher.match()` dispatches on `argc` rather than argument type** — the `mask` argument (`js_feature2d.cpp`'s `DESCRIPTOR_MATCHER_MATCH`) is only read, and matching only actually runs, when `argc > 3`; calling `matcher.match(query, train, matches)` (3 args, `mask` omitted — a perfectly valid opencv.js call) silently does nothing and leaves `matches` empty, no exception. *(newly split out as its own entry — previously bundled into the now-fixed "static function table is empty" entry above; found while verifying the `DescriptorMatcher.create()` fix below.)*
 
-*(Removed from this list, now fixed — 2026-08-19 passes: `minMaxLoc`/`minEnclosingCircle` return shapes and `new Mat(otherMat)` (see `BUGS`: `minmaxloc-positional-array-not-named-object`, `minenclosingcircle-no-return-value`, `no-mat-copy-handle-constructor`); `ORB`/`MSER`/`AKAZE`/`BRISK`/`FastFeatureDetector`/`GFTTDetector` `.create()` statics (`BUGS`: `feature2d-detectors-no-create-static`); `CamShift`/`meanShift` and `cv.createCLAHE()` (`BUGS`: `no-camshift-meanshift-bindings`, `no-free-function-createclahe`); `cv.drawKeypoints`'s hardcoded `flags`/broken `color`-optionality check — `js_draw.cpp`'s `js_draw_keypoints` now reads `color` from `argc > 3` (was the always-true `argc` alone) and `flags` from a new `argc > 4` check instead of hardcoding `cv::DrawMatchesFlags(0)` (see `BUGS`: `drawkeypoints-flags-hardcoded-color-check-broken`); `RotatedRect.points`/`.boundingRect`/`.boundingRect2f` being instance-only — `js_rotated_rect.cpp` now also exposes all three as static functions taking the `RotatedRect` as the first argument, forwarding into the same instance-method implementation, alongside the still-present instance methods (see `BUGS`: `rotatedrect-static-methods-missing`); `DescriptorMatcher`'s empty static-function table — `js_feature2d.cpp` now has `DescriptorMatcher.create(type)` (string or `MatcherType` int) plus the `MatcherType` enum constants, **and** `DescriptorMatcher` itself turned out to never be exported from the module at all (fixed as part of the same change — see `BUGS`: `descriptormatcher-no-create-static-and-unexported`). `BFMatcher.create(normType, crossCheck)` specifically is still not separately bound — `new cv.BFMatcher(...)` and `DescriptorMatcher.create('BruteForce'-family-string)` both work as the two ways to construct one, but the literal opencv.js `BFMatcher.create(...)` spelling still throws; low priority given the two working alternatives. Earlier fixes: `cv.createCLAHE()`, `CamShift`/`meanShift`, `BarcodeDetector` naming, `drawContours` hierarchy, `cv.Range`.)*
+`BFMatcher.create(normType, crossCheck)` specifically is still not
+separately bound — `new cv.BFMatcher(...)` and
+`DescriptorMatcher.create('BruteForce'-family-string)` both work as the
+two ways to construct one, but the literal opencv.js
+`BFMatcher.create(...)` spelling still throws; low priority given the
+two working alternatives.
 
 ### Vector container types — remaining gaps
 
@@ -292,3 +257,80 @@ All 16 opencv.js vector-container types exist (see "Already solved, don't rebuil
 | flann | 11 / 11 | 0 / 0 | skip |
 | xphoto | 0 / 0 | 7 / 11 | tier 1 |
 | bgsegm | 1 / 1 | 4 / 9 | low priority |
+
+## jsbindings.hpp Dead Code Audit (2026-08-27)
+
+`include/jsbindings.hpp` is almost entirely `static inline` free functions and
+function templates, which makes standard dead-code detection blind: neither
+`nm`/`objdump` linker-symbol analysis nor `-Wunused-function` (GCC *or*
+Clang) can see any of it - see `BUGS`: `std-file-methods-broken-after-opencv-import`
+is unrelated, but `wunused-function-cant-see-header-only-static-inline` and
+`js_iterable_to-array-overload-uncallable` are directly relevant background.
+
+What worked: a Clang `-ast-dump=json` scan (`-ast-dump-filter=js_`/`dump`,
+`-fsyntax-only`) run across all 54 of this project's `.cpp` translation
+units, reading each declaration's own `isUsed` flag (and, for templates,
+whether any instantiation child ever appears) rather than relying on a
+diagnostic. Aggregated by **(file, line)**, not by name - `jsbindings.hpp`
+has real overload sets sharing one name at different lines, and a couple of
+false leads below only surfaced by checking exact line/signature matches
+instead of a plain name grep.
+
+**Confirmed dead (independently verified by full-repo grep - zero callers anywhere):**
+
+- `js_number_read<int64_t>` (line 111, explicit specialization) - every real
+  call site passes fields that resolve to `int32_t`/generic-`double` paths;
+  nothing passes an actual `int64_t*`.
+- `js_object_tostringtag(ctx, obj)` - the 2-argument overload only, at line
+  326. The 3-argument overloads (`..., JSValue value` at 334, `..., const
+  char* str` at 341) are heavily used (25+ call sites in `js_feature2d.cpp`)
+  and must stay.
+- `dump(const ArrayBufferProps&)` (line 433) - distinct from the several
+  other `dump()` overloads in `util.hpp`/`js_typed_array.hpp` that *are*
+  called.
+- `js_is_iterator` (line 626) - only its own declaration appears anywhere;
+  even the newer `js_iterator`/`js_iterator_range` iterator-adapter code
+  never calls it.
+
+**False positive - do NOT remove:**
+
+- `js_iterable<T>::to_array` (line 873) - the scan flagged it dead, but it's
+  actually called (via the `js_iterable_to(ctx, arr, std::array<T,N>&)`
+  overload, which real code calls from `js_line.hpp:96` and
+  `src/jsbindings.cpp:28`). Root cause: it's a *member* function template of
+  a class template (`js_iterable<T>`) - its real instantiations live under a
+  separate `ClassTemplateSpecializationDecl` subtree that this scan never
+  walked (it only followed `FunctionDecl`/`FunctionTemplateDecl` nesting, not
+  `CXXMethodDecl`). Corollary: `to_vector`/`to_scalar` (siblings in the same
+  class, not flagged dead) were *not* independently verified either - their
+  "used" status might be coincidental rather than confirmed. **This scan
+  cannot be trusted for class members at all** - only evaluated free
+  functions/free function templates here.
+
+**Flagged dead by the scan, not yet independently verified - check each
+by exact signature/line (not just name) before touching, given the
+`js_object_tostringtag` overload trap above:**
+
+- `js_range_size`, `js_range_empty`, `js_range_valid` (lines 73-75) - only
+  prototypes here; bodies are defined out-of-line in `src/jsbindings.cpp`.
+  Found the definitions but haven't confirmed there's no caller anywhere.
+- `js_object_property<T>` (283)
+- `js_arraybuffer_range<T>` (360)
+- `js_arraybuffer_slice` (397)
+- `js_arraybuffer_from<T,N>(std::array<T,N>&, ...)` (409) - overload set:
+  its own body calls a *different* `js_arraybuffer_from` (iterator-pair)
+  overload internally, and a plain grep for the name found 5 references
+  elsewhere - need to confirm which overload those actually call before
+  trusting this one is dead.
+- `js_arraybuffer_props` (447)
+- `js_is_scalar` (521)
+- `js_iterable_to(ctx, arr, std::vector<T>&)` (934)
+- `js_iterable_to(ctx, arr, T (&out)[N])` (946) - note: this signature has
+  *already changed on disk* (not by this session) from the broken by-value
+  form (`T[N] out`) documented in `BUGS`
+  (`js_iterable_to-array-overload-uncallable`) to the correct
+  reference-to-array form. Re-verify and update/close that `BUGS` entry -
+  the exact bug it describes may no longer exist verbatim, though the
+  function could still be genuinely unused now that it's at least callable.
+- `js_atom_is_index`, `js_atom_is_length`, `js_atom_is_symbol` (971, 1007, 1017)
+- `js_scalar_new<T>` (1131)

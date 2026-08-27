@@ -6,10 +6,10 @@
 
 namespace skeleton_tracing {
 
-using std::vector;
 using cv::Mat;
 using cv::Point;
 using cv::PointVector;
+using std::vector;
 
 static const std::array<Point, 8> direction_points = {
     Point(0, 1),
@@ -234,11 +234,11 @@ trace_skeleton(Mat& mat, vector<vector<Point>>& out, bool simplify = false) {
   // return skeleton_tracing::run(mat, out, simplify);
 }
 
-  /*static inline vector<vector<Point>>
-  trace_skeleton(Mat& mat, bool simplify = false) {
-    vector<vector<Point>> contours;
-    trace_skeleton(mat, contours, simplify);
-    return contours;
-  }*/
+/*static inline vector<vector<Point>>
+trace_skeleton(Mat& mat, bool simplify = false) {
+  vector<vector<Point>> contours;
+  trace_skeleton(mat, contours, simplify);
+  return contours;
+}*/
 
 #endif /* TRACE_SKELETON_HPP */

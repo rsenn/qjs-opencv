@@ -34,9 +34,9 @@
 #include <utility>
 #include <vector>
 
-using std::vector;
-using cv::Point;
 using cv::Mat;
+using cv::Point;
+using std::vector;
 
 namespace skeleton_lines {
 
@@ -173,7 +173,7 @@ degree_map(const Mat& skel) {
  * the start or end point of exactly k polylines (one per incident edge).
  */
 static inline void
-trace_lines(const Mat& skel, vector<vector<Point>>&lines) {
+trace_lines(const Mat& skel, vector<vector<Point>>& lines) {
   /* 8-neighbour offsets. The layout is required to satisfy
    *   N8[i] + N8[(i + 4) & 7] == (0, 0)
    * so opposite directions differ by 4. */
@@ -187,7 +187,7 @@ trace_lines(const Mat& skel, vector<vector<Point>>&lines) {
       Point(-1, 1),
       Point(-1, 0),
   };
-  
+
   const Mat deg = degree_map(skel);
 
   /* Bit i of used(y,x) = the edge leaving (x,y) along N8[i] has been
@@ -326,10 +326,10 @@ trace_lines(const Mat& skel, vector<vector<Point>>&lines) {
  */
 template<class InputArray>
 static inline Mat
-skeletonize_and_trace(InputArray src, vector<vector<Point>>&lines) {
+skeletonize_and_trace(InputArray src, vector<vector<Point>>& lines) {
   Mat skel = skeletonize_guohall(src);
- trace_lines(skel, lines);
-return skel;
+  trace_lines(skel, lines);
+  return skel;
 }
 
 } /* namespace skeleton_lines */

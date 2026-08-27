@@ -77,8 +77,8 @@ js_barcode_detector_constructor(JSContext* ctx, JSValueConst new_target, int arg
         JS_FreeCString(ctx, model_path);
       js_deallocate(ctx, bd);
       return JS_ThrowTypeError(ctx,
-                                "single-argument super-resolution model loading requires OpenCV >= "
-                                "5.0; use new BarcodeDetector(prototxtPath, modelPath) instead");
+                               "single-argument super-resolution model loading requires OpenCV >= "
+                               "5.0; use new BarcodeDetector(prototxtPath, modelPath) instead");
     } else
       new(bd) cv::barcode::BarcodeDetector();
 #else
@@ -154,63 +154,63 @@ js_barcode_detector_method(JSContext* ctx, JSValueConst this_val, int argc, JSVa
   JSValue ret = JS_UNDEFINED;
 
   try {
-  switch(magic) {
+    switch(magic) {
 
-    case METHOD_DETECT: {
-      JSInputArray img = js_cv_inputarray(ctx, argv[0]);
-      std::vector<cv::Point2f> points;
-      // JSOutputArray points = js_cv_outputarray(ctx, argv[1]);
+      case METHOD_DETECT: {
+        JSInputArray img = js_cv_inputarray(ctx, argv[0]);
+        std::vector<cv::Point2f> points;
+        // JSOutputArray points = js_cv_outputarray(ctx, argv[1]);
 
-      BOOL result = wb->detect(img, points);
-      ret = JS_NewBool(ctx, result);
+        BOOL result = wb->detect(img, points);
+        ret = JS_NewBool(ctx, result);
 
-      js_array_copy(ctx, argv[1], points);
-      break;
+        js_array_copy(ctx, argv[1], points);
+        break;
+      }
+
+      case METHOD_DECODE: {
+        JSInputArray img = js_cv_inputarray(ctx, argv[0]);
+        JSInputArray points = js_cv_inputarray(ctx, argv[1]);
+        std::vector<std::string> decoded_info;
+        std::vector<std::string> decoded_type;
+
+        BOOL result = wb->decodeWithType(img, points, decoded_info, decoded_type);
+        ret = JS_NewBool(ctx, result);
+
+        js_array_clear(ctx, argv[2]);
+        js_array_copy(ctx, argv[2], decoded_info);
+
+        // std::vector<int32_t> decoded(decoded_type.size());
+        // std::copy(decoded_type.begin(), decoded_type.end(), decoded.begin());
+
+        js_array_clear(ctx, argv[3]);
+        js_array_copy(ctx, argv[3], decoded_type);
+
+        break;
+      }
+
+      case METHOD_DETECT_AND_DECODE: {
+        JSInputArray img = js_cv_inputarray(ctx, argv[0]);
+        std::vector<std::string> decoded_info;
+        std::vector<std::string> decoded_type;
+        std::vector<cv::Point2f> points;
+
+        BOOL result = wb->detectAndDecodeWithType(img, decoded_info, decoded_type, points);
+        ret = JS_NewBool(ctx, result);
+
+        js_array_copy(ctx, argv[1], decoded_info);
+
+        // std::vector<int32_t> decoded(decoded_type.size());
+        // std::copy(decoded_type.begin(), decoded_type.end(), decoded.begin());
+
+        js_array_clear(ctx, argv[2]);
+        js_array_copy(ctx, argv[2], decoded_type);
+        js_array_clear(ctx, argv[3]);
+        js_array_copy(ctx, argv[3], points);
+
+        break;
+      }
     }
-
-    case METHOD_DECODE: {
-      JSInputArray img = js_cv_inputarray(ctx, argv[0]);
-      JSInputArray points = js_cv_inputarray(ctx, argv[1]);
-      std::vector<std::string> decoded_info;
-      std::vector<std::string> decoded_type;
-
-      BOOL result = wb->decodeWithType(img, points, decoded_info, decoded_type);
-      ret = JS_NewBool(ctx, result);
-
-      js_array_clear(ctx, argv[2]);
-      js_array_copy(ctx, argv[2], decoded_info);
-
-      // std::vector<int32_t> decoded(decoded_type.size());
-      // std::copy(decoded_type.begin(), decoded_type.end(), decoded.begin());
-
-      js_array_clear(ctx, argv[3]);
-      js_array_copy(ctx, argv[3], decoded_type);
-
-      break;
-    }
-
-    case METHOD_DETECT_AND_DECODE: {
-      JSInputArray img = js_cv_inputarray(ctx, argv[0]);
-      std::vector<std::string> decoded_info;
-      std::vector<std::string> decoded_type;
-      std::vector<cv::Point2f> points;
-
-      BOOL result = wb->detectAndDecodeWithType(img, decoded_info, decoded_type, points);
-      ret = JS_NewBool(ctx, result);
-
-      js_array_copy(ctx, argv[1], decoded_info);
-
-      // std::vector<int32_t> decoded(decoded_type.size());
-      // std::copy(decoded_type.begin(), decoded_type.end(), decoded.begin());
-
-      js_array_clear(ctx, argv[2]);
-      js_array_copy(ctx, argv[2], decoded_type);
-      js_array_clear(ctx, argv[3]);
-      js_array_copy(ctx, argv[3], points);
-
-      break;
-    }
-  }
   } catch(const cv::Exception& e) { ret = js_cv_throw(ctx, e); }
 
   return ret;
@@ -257,13 +257,15 @@ js_barcode_detector_init(JSContext* ctx, JSModuleDef* bd) {
   /* Whether new BarcodeDetector(prototxtPath, modelPath) loads a real
    * two-file model (true, pre-5.x) or is emulated by using just modelPath
    * (false, 5.x - prototxtPath is ignored). See the constructor doc comment. */
-  JS_DefinePropertyValueStr(ctx, barcode_detector_class, "LEGACY_CTOR",
+  JS_DefinePropertyValueStr(ctx,
+                            barcode_detector_class,
+                            "LEGACY_CTOR",
 #ifdef HAVE_OPENCV_BARCODE_LEGACY_CTOR
-                             JS_NewBool(ctx, TRUE),
+                            JS_NewBool(ctx, TRUE),
 #else
-                             JS_NewBool(ctx, FALSE),
+                            JS_NewBool(ctx, FALSE),
 #endif
-                             JS_PROP_ENUMERABLE);
+                            JS_PROP_ENUMERABLE);
 
   /* set proto.constructor and ctor.prototype */
   JS_SetConstructor(ctx, barcode_detector_class, barcode_detector_proto);

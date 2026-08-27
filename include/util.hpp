@@ -28,6 +28,13 @@
 #define HIDDEN __attribute__((visibility("hidden")))
 #endif
 
+#ifndef __cplusplus
+/* thread_local is a language keyword in C++ (since C++11), not a macro - #ifndef
+ * thread_local is unconditionally true there and would clobber it with __thread,
+ * which (unlike thread_local) can't carry a non-trivial constructor/destructor;
+ * GCC tolerates that via a C++-mode extension, but Clang correctly rejects it
+ * for any thread_local variable of non-trivial type (e.g. JSInputArraySlot's
+ * std::vector member in js_inputoutputarray.hpp). Only needed pre-C11/for C. */
 #ifndef thread_local
 #ifdef _Thread_local
 #define thread_local _Thread_local
@@ -37,6 +44,7 @@
 #define thread_local __declspec(thread)
 #else
 #error No TLS implementation found.
+#endif
 #endif
 #endif
 

@@ -1674,7 +1674,7 @@ static JSValue
 js_mat_reshape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   int32_t cn, rows = 0;
   JSValue ret = JS_EXCEPTION;
- JSMatData mat,* m = js_mat_data2(ctx, this_val);
+  JSMatData mat, *m = js_mat_data2(ctx, this_val);
 
   if(m == nullptr || argc < 1)
     return ret;

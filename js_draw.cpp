@@ -754,7 +754,7 @@ js_fill_convex_poly(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   return JS_UNDEFINED;
 }
 
-JSValue draw_proto = JS_UNDEFINED, draw_class = JS_UNDEFINED;
+static JSValue draw_proto = JS_UNDEFINED, draw_class = JS_UNDEFINED;
 thread_local JSClassID js_draw_class_id = 0;
 
 JSClassDef js_draw_class = {
@@ -794,46 +794,18 @@ const JSCFunctionListEntry js_draw_global_funcs[] = {
     JS_CFUNC_DEF("fillConvexPoly", 3, js_fill_convex_poly),
 };
 
-static JSValue
-js_draw_constructor(JSContext* ctx, JSValueConst new_target, int argc, JSValueConst argv[]) {
-  JSValue obj, proto;
-
-  /* using new_target to get the prototype is necessary when the class is extended. */
-  proto = JS_GetPropertyStr(ctx, new_target, "prototype");
-  if(JS_IsException(proto))
-    goto fail;
-
-  obj = JS_NewObjectProtoClass(ctx, proto, js_draw_class_id);
-  JS_FreeValue(ctx, proto);
-
-  if(JS_IsException(obj))
-    goto fail;
-
-  return obj;
-
-fail:
-  JS_FreeValue(ctx, obj);
-  return JS_EXCEPTION;
-}
-
 int
 js_draw_init(JSContext* ctx, JSModuleDef* m) {
-  /* create the Draw class */
-  JS_NewClassID(&js_draw_class_id);
-  JS_NewClass(JS_GetRuntime(ctx), js_draw_class_id, &js_draw_class);
-
   draw_proto = JS_NewObject(ctx);
   JS_SetPropertyFunctionList(ctx, draw_proto, js_draw_proto_funcs, countof(js_draw_proto_funcs));
-  JS_SetClassProto(ctx, js_draw_class_id, draw_proto);
 
-  draw_class = JS_NewCFunction2(ctx, js_draw_constructor, "Draw", 2, JS_CFUNC_constructor, 0);
+  draw_class = JS_NewObjectProto(ctx, JS_NULL);
 
   /* set proto.constructor and ctor.prototype */
   JS_SetConstructor(ctx, draw_class, draw_proto);
   JS_SetPropertyFunctionList(ctx, draw_class, js_draw_static_funcs, countof(js_draw_static_funcs));
 
   JS_SetModuleExport(ctx, m, "Draw", draw_class);
-
   JS_SetModuleExportList(ctx, m, js_draw_global_funcs, countof(js_draw_global_funcs));
 
   return 0;
@@ -854,8 +826,10 @@ js_draw_export(JSContext* ctx, JSModuleDef* m) {
 JSModuleDef*
 JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
   JSModuleDef* m;
+
   if(!(m = JS_NewCModule(ctx, module_name, &js_draw_init)))
     return NULL;
+
   js_draw_export(ctx, m);
   return m;
 }

@@ -208,25 +208,32 @@ js_cv_matfromarray(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
 
   switch(mat.depth()) {
     case CV_8U:
-      for(size_t i = 0; i < total; i++) mat.ptr<uint8_t>()[i] = static_cast<uint8_t>(values[i]);
+      for(size_t i = 0; i < total; i++)
+        mat.ptr<uint8_t>()[i] = static_cast<uint8_t>(values[i]);
       break;
     case CV_8S:
-      for(size_t i = 0; i < total; i++) mat.ptr<int8_t>()[i] = static_cast<int8_t>(values[i]);
+      for(size_t i = 0; i < total; i++)
+        mat.ptr<int8_t>()[i] = static_cast<int8_t>(values[i]);
       break;
     case CV_16U:
-      for(size_t i = 0; i < total; i++) mat.ptr<uint16_t>()[i] = static_cast<uint16_t>(values[i]);
+      for(size_t i = 0; i < total; i++)
+        mat.ptr<uint16_t>()[i] = static_cast<uint16_t>(values[i]);
       break;
     case CV_16S:
-      for(size_t i = 0; i < total; i++) mat.ptr<int16_t>()[i] = static_cast<int16_t>(values[i]);
+      for(size_t i = 0; i < total; i++)
+        mat.ptr<int16_t>()[i] = static_cast<int16_t>(values[i]);
       break;
     case CV_32S:
-      for(size_t i = 0; i < total; i++) mat.ptr<int32_t>()[i] = static_cast<int32_t>(values[i]);
+      for(size_t i = 0; i < total; i++)
+        mat.ptr<int32_t>()[i] = static_cast<int32_t>(values[i]);
       break;
     case CV_32F:
-      for(size_t i = 0; i < total; i++) mat.ptr<float>()[i] = static_cast<float>(values[i]);
+      for(size_t i = 0; i < total; i++)
+        mat.ptr<float>()[i] = static_cast<float>(values[i]);
       break;
     case CV_64F:
-      for(size_t i = 0; i < total; i++) mat.ptr<double>()[i] = values[i];
+      for(size_t i = 0; i < total; i++)
+        mat.ptr<double>()[i] = values[i];
       break;
     default: return JS_ThrowTypeError(ctx, "matFromArray: unsupported Mat depth");
   }
@@ -1504,9 +1511,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
           if(argc > 1)
             js_number_read(ctx, argv[1], &index);
 
-          std::vector<double> vec = js_is_iterable(ctx, argv[0])
-              ? JSConverter<std::vector<double>>::fromJS(ctx, argv[0])
-              : std::vector<double>();
+          std::vector<double> vec = js_is_iterable(ctx, argv[0]) ? JSConverter<std::vector<double>>::fromJS(ctx, argv[0]) : std::vector<double>();
 
           if(uint64_t(index) + 4 <= vec.size())
             for(int i = 0; i < 4; ++i)

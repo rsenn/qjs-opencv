@@ -183,8 +183,7 @@ js_cv_outputarray(JSContext* ctx, JSValueConst value) {
  * InputArray/InputOutputArray base's constructor runs and takes a reference
  * to `vec`.
  */
-template<class T>
-struct JSArgumentStorage {
+template<class T> struct JSArgumentStorage {
   std::vector<T> vec;
   bool owns = false;
 };
@@ -236,8 +235,7 @@ js_argument_array(JSContext* ctx, JSValueConst val, std::vector<T>& vec, bool* o
  * (aliased by pointer), or otherwise a plain JS array/array-like, whose
  * elements are converted once into an owned std::vector<T>.
  */
-template<class T>
-class JSInputArrayOf : private JSArgumentStorage<T>, public JSInputArray {
+template<class T> class JSInputArrayOf : private JSArgumentStorage<T>, public JSInputArray {
 public:
   JSInputArrayOf(JSContext* ctx, JSValueConst val) : JSInputArray(js_argument_array<T, JSInputArray>(ctx, val, this->vec)) {}
 };
@@ -273,8 +271,7 @@ js_call_receiver(JSContext* ctx, JSValueConst fn, JSValue arg) {
  *   js_array_clear()/js_array_copy(), symmetric with JSInputArrayOf's
  *   read-side conversion.
  */
-template<class T>
-class JSOutputArrayOf : private JSArgumentStorage<T>, public JSInputOutputArray {
+template<class T> class JSOutputArrayOf : private JSArgumentStorage<T>, public JSInputOutputArray {
 public:
   JSOutputArrayOf(JSContext* ctx, JSValueConst val)
       : JSInputOutputArray(js_argument_array<T, JSInputOutputArray>(ctx, val, this->vec, &this->owns)), m_ctx(ctx), m_val(val) {}

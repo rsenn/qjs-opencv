@@ -299,7 +299,10 @@ js_bg_subtractor_init(JSContext* ctx, JSModuleDef* m) {
   /* opencv.js tutorials call `new cv.BackgroundSubtractorMOG2()` (etc.)
    * directly, rather than the factory functions - support both call forms
    * for every variant. */
-  static const struct { const char* name; int magic; } subtractor_ctors[] = {
+  static const struct {
+    const char* name;
+    int magic;
+  } subtractor_ctors[] = {
       {"BackgroundSubtractorMOG", BGSEGM_MOG},
       {"BackgroundSubtractorGMG", BGSEGM_GMG},
       {"BackgroundSubtractorCNT", BGSEGM_CNT},

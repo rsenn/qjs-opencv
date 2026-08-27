@@ -142,7 +142,8 @@ js_fisheye_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
       }
 
       case FISHEYE_STEREO_CALIBRATE: {
-        JSInputArray objectPoints = js_cv_inputarray(ctx, argv[0]), imagePoints1 = js_cv_inputarray(ctx, argv[1]), imagePoints2 = js_cv_inputarray(ctx, argv[2]);
+        JSInputArray objectPoints = js_cv_inputarray(ctx, argv[0]), imagePoints1 = js_cv_inputarray(ctx, argv[1]),
+                     imagePoints2 = js_cv_inputarray(ctx, argv[2]);
         JSInputOutputArray K1 = js_cv_inputoutputarray(ctx, argv[3]), D1 = js_cv_inputoutputarray(ctx, argv[4]), K2 = js_cv_inputoutputarray(ctx, argv[5]),
                            D2 = js_cv_inputoutputarray(ctx, argv[6]);
         JSSizeData<int> image_size;
@@ -173,7 +174,8 @@ js_fisheye_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
       }
 
       case FISHEYE_STEREO_RECTIFY: {
-        JSInputArray K1 = js_cv_inputarray(ctx, argv[0]), D1 = js_cv_inputarray(ctx, argv[1]), K2 = js_cv_inputarray(ctx, argv[2]), D2 = js_cv_inputarray(ctx, argv[3]);
+        JSInputArray K1 = js_cv_inputarray(ctx, argv[0]), D1 = js_cv_inputarray(ctx, argv[1]), K2 = js_cv_inputarray(ctx, argv[2]),
+                     D2 = js_cv_inputarray(ctx, argv[3]);
         JSSizeData<int> image_size;
         js_value_to(ctx, argv[4], image_size);
 

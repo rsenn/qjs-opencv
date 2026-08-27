@@ -27,14 +27,13 @@ js_array_length(JSContext* ctx, const JSValueConst& arr) {
   int64_t ret = -1;
 
   if(js_is_object(arr)) {
-    uint32_t len;
     JSValue v = JS_GetPropertyStr(ctx, arr, "length");
 
-    if(JS_IsNumber(v)) {
-      JS_ToUint32(ctx, &len, v);
-      JS_FreeValue(ctx, v);
-      ret = len;
-    }
+    if(!JS_IsException(v) && !js_is_nullish(v))
+      if(JS_ToInt64Ext(ctx, &ret, v))
+        ret = -1;
+
+    JS_FreeValue(ctx, v);
   }
 
   return ret;
@@ -46,10 +45,15 @@ js_array_truncate(JSContext* ctx, const JSValueConst& arr, int64_t len) {
     int64_t top = js_array_length(ctx, arr);
     int64_t newlen = std::min(top, len < 0 ? top + len : len);
 
-    JSValueConst args[] = {JS_NewInt64(ctx, newlen), JS_NewInt64(ctx, top - newlen)};
+    JSValueConst args[] = {
+        JS_NewInt64(ctx, newlen),
+        JS_NewInt64(ctx, top - newlen),
+    };
 
     JSValue ret = js_function_invoke(ctx, arr, "splice", countof(args), args);
     JS_FreeValue(ctx, ret);
+    JS_FreeValue(ctx, args[0]);
+    JS_FreeValue(ctx, args[1]);
     return newlen;
   }
 
@@ -64,12 +68,12 @@ js_array_clear(JSContext* ctx, const JSValueConst& arr) {
 template<class T> class js_array {
 public:
   static int64_t to_vector(JSContext* ctx, JSValueConst arr, std::vector<T>& out) {
-    int64_t i, n = js_array_length(ctx, arr);
+    int64_t n;
 
-    if(n != -1ll) {
+    if((n = js_array_length(ctx, arr)) != -1ll) {
       out.reserve(out.size() + n);
 
-      for(i = 0; i < n; i++) {
+      for(int64_t i = 0; i < n; i++) {
         T value;
         JSValue item = JS_GetPropertyUint32(ctx, arr, (uint32_t)i);
 
@@ -88,13 +92,13 @@ public:
   }
 
   template<int N> static int64_t to_cvvector(JSContext* ctx, JSValueConst arr, cv::Vec<T, N>& out) {
-    int64_t i, n = js_array_length(ctx, arr);
+    int64_t n;
 
-    if(n != -1ll) {
+    if((n = js_array_length(ctx, arr)) != -1ll) {
       if(n > N)
         n = N;
 
-      for(i = 0; i < n; i++) {
+      for(int64_t i = 0; i < n; i++) {
         JSValue item = JS_GetPropertyUint32(ctx, arr, (uint32_t)i);
 
         js_value_to<T>(ctx, item, out[i]);

@@ -22,12 +22,20 @@ js_arraybuffer_free(JSRuntime* rt, void* opaque, void* ptr) {
 int
 js_color_read(JSContext* ctx, JSValueConst color, JSColorData<double>* out) {
   int ret = 1;
-  std::array<double, 4> c = {0, 0, 0, 255};
+  auto& c = out->arr;
 
   if(JS_IsObject(color)) {
-    JSValue v[4];
+    if((ret = js_iterable_to(ctx, color, c)) > 0)
+      return ret;
 
-    if(js_is_array(ctx, color)) {
+    JSValue v[4] = {
+        JS_NewInt32(ctx, 0),
+        JS_NewInt32(ctx, 0),
+        JS_NewInt32(ctx, 0),
+        JS_NewInt32(ctx, 0),
+    };
+
+    if(js_is_arraylike(ctx, color)) {
       v[0] = JS_GetPropertyUint32(ctx, color, 0);
       v[1] = JS_GetPropertyUint32(ctx, color, 1);
       v[2] = JS_GetPropertyUint32(ctx, color, 2);
@@ -76,25 +84,12 @@ int
 js_color_read(JSContext* ctx, JSValueConst value, JSColorData<uint8_t>* out) {
   JSColorData<double> color;
 
-  if(js_is_array(ctx, value)) {
-    std::array<uint8_t, 4> a;
-
-    if(js_array_to(ctx, value, a) >= 3) {
-      out->arr[0] = a[0];
-      out->arr[1] = a[1];
-      out->arr[2] = a[2];
-      out->arr[3] = a[3];
-
+  if(js_is_arraylike(ctx, value))
+    if(js_array_to(ctx, value, out->arr) >= 3)
       return 1;
-    }
-  }
 
   if(js_color_read(ctx, value, &color)) {
-    out->arr[0] = color.arr[0];
-    out->arr[1] = color.arr[1];
-    out->arr[2] = color.arr[2];
-    out->arr[3] = color.arr[3];
-
+    std::copy(color.arr.begin(), color.arr.end(), out->arr.begin());
     return 1;
   }
 

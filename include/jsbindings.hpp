@@ -9,6 +9,7 @@
 #include <opencv2/videoio.hpp>
 #include <ostream>
 #include <array>
+#include <iterator>
 #include <string>
 #include <vector>
 #include <charconv>
@@ -72,6 +73,11 @@ int js_range_read(JSContext* ctx, JSValueConst value, cv::Range* range);
 int js_range_size(JSContext* ctx, JSValueConst value);
 bool js_range_empty(JSContext* ctx, JSValueConst value);
 bool js_range_valid(JSContext* ctx, JSValueConst value);
+
+static inline BOOL
+js_is_nullish(JSValueConst val) {
+  return JS_IsNull(val) || JS_IsUndefined(val);
+}
 
 /** @defgroup number
  *  @{
@@ -137,6 +143,7 @@ js_number_new<int64_t>(JSContext* ctx, int64_t num) {
  */
 template<class T> union JSColorData {
   std::array<T, 4> arr;
+  T pod[4];
   struct {
     T r, g, b, a;
   };
@@ -587,6 +594,10 @@ js_typedarray_constructor(JSContext* ctx) {
 static inline JSValue
 js_iterator_new(JSContext* ctx, JSValueConst obj) {
   JSValue fn = js_iterable_function(ctx, obj);
+
+  if(JS_IsException(fn))
+    return fn;
+
   JSValue ret = JS_Call(ctx, fn, obj, 0, 0);
   JS_FreeValue(ctx, fn);
   return ret;
@@ -597,6 +608,9 @@ js_iterator_next(JSContext* ctx, JSValueConst obj, BOOL& done) {
   JSValue fn = JS_GetPropertyStr(ctx, obj, "next");
   JSValue result = JS_Call(ctx, fn, obj, 0, 0);
   JS_FreeValue(ctx, fn);
+
+  if(JS_IsException(result))
+    return result;
 
   JSValue dval = JS_GetPropertyStr(ctx, result, "done");
   JSValue ret = JS_GetPropertyStr(ctx, result, "value");
@@ -618,6 +632,123 @@ js_is_iterator(JSContext* ctx, JSValueConst obj) {
   JS_FreeValue(ctx, fn);
   return ret;
 }
+
+/**
+ * @brief Iterator over a JS iterable's yielded values
+ *
+ * Holds a QuickJS-refcounted reference to the underlying JS iterator object
+ * (and to the last value fetched from it), so unlike a bare single-shot
+ * cursor this can be freely copied - which is what lets it live inside a
+ * std::ranges::subrange (see js_iterator_range() below) instead of needing
+ * a bespoke owning range class.
+ *
+ * `operator*()` hands the caller a fresh, independently-owned reference
+ * (JS_FreeValue it once done) rather than the iterator's own copy, so
+ * dereferencing twice or copying the iterator can't cause a double free.
+ *
+ * Only satisfies C++ InputIterator, not ForwardIterator, despite being
+ * copyable: the underlying JS iterator is single-pass, so advancing any
+ * copy consumes the one shared JS-side iterator state for every other copy
+ * too - copies don't give you independent replay the way a real
+ * ForwardIterator's would.
+ */
+class js_iterator {
+public:
+  using iterator_category = std::input_iterator_tag;
+  using value_type = JSValue;
+  using difference_type = std::ptrdiff_t;
+  using pointer = void;
+  using reference = JSValue;
+
+  // end/sentinel iterator
+  js_iterator() : ctx(nullptr), iter(JS_UNDEFINED), value(JS_UNDEFINED), done(TRUE) {}
+
+  // begin iterator; takes ownership of `iter` (a new reference, e.g. from js_iterator_new())
+  js_iterator(JSContext* ctx, JSValue iter) : ctx(ctx), iter(iter), value(JS_UNDEFINED), done(FALSE) { ++(*this); }
+
+  js_iterator(const js_iterator& other) : ctx(other.ctx), iter(JS_DupValue(ctx, other.iter)), value(JS_DupValue(ctx, other.value)), done(other.done) {}
+
+  js_iterator(js_iterator&& other) noexcept : ctx(other.ctx), iter(other.iter), value(other.value), done(other.done) {
+    other.iter = JS_UNDEFINED;
+    other.value = JS_UNDEFINED;
+  }
+
+  js_iterator& operator=(js_iterator other) {
+    swap(other);
+    return *this;
+  }
+
+  ~js_iterator() {
+    JS_FreeValue(ctx, iter);
+    JS_FreeValue(ctx, value);
+  }
+
+  JSValue operator*() const { return JS_DupValue(ctx, value); }
+
+  js_iterator& operator++() {
+    JS_FreeValue(ctx, value);
+    value = js_iterator_next(ctx, iter, done);
+    return *this;
+  }
+
+  js_iterator operator++(int) {
+    js_iterator tmp(*this);
+    ++(*this);
+    return tmp;
+  }
+
+  bool operator==(const js_iterator& other) const { return done == other.done; }
+  bool operator!=(const js_iterator& other) const { return !(*this == other); }
+
+private:
+  void swap(js_iterator& other) {
+    std::swap(ctx, other.ctx);
+    std::swap(iter, other.iter);
+    std::swap(value, other.value);
+    std::swap(done, other.done);
+  }
+
+  JSContext* ctx;
+  JSValue iter;
+  JSValue value;
+  BOOL done;
+};
+
+/**
+ * @brief begin/end pair returned by js_iterator_range()
+ *
+ * std::ranges::subrange is libstdc++'s standard adapter for exactly this
+ * (a pair of iterators exposed as a range) and would replace this struct
+ * outright, but it's C++20-only and this project's build effectively
+ * compiles as C++17 despite requesting c++2a - see BUGS
+ * (cmake-libcamera-forces-cxx17). Until that's resolved, this is the
+ * "other-pattern" fallback: it carries no logic of its own, since
+ * js_iterator already owns everything it holds via QuickJS refcounting.
+ */
+class js_iterator_range {
+  js_iterator first, last;
+
+  js_iterator_range& operator=(js_iterator_range other);
+
+public:
+  js_iterator_range(JSContext* ctx, JSValueConst obj) : first(js_iterator(ctx, js_iterator_new(ctx, obj))), last(js_iterator()) {}
+
+  js_iterator_range(js_iterator_range&& other) noexcept : first(other.first), last(other.last) {
+    other.first = js_iterator();
+    other.last = js_iterator();
+  }
+
+  js_iterator begin() const { return first; }
+  js_iterator end() const { return last; }
+};
+
+/**
+ * @brief Lets a JSValueConst iterable be used directly in `for(JSValue v : ...)`
+ */
+/*static inline js_iterator_span
+js_iterator_range(JSContext* ctx, JSValueConst obj) {
+  return {js_iterator(ctx, js_iterator_new(ctx, obj)), js_iterator()};
+}*/
 /**
  *  @}
  */
@@ -644,9 +775,8 @@ js_value_to(JSContext* ctx, JSValueConst value, int32_t& out) {
 
 static inline int
 js_value_to(JSContext* ctx, JSValueConst value, std::string& out) {
-  const char* str;
   size_t len;
-  str = JS_ToCStringLen(ctx, &len, value);
+  const char* str = JS_ToCStringLen(ctx, &len, value);
   out.clear();
   out.assign(str, len);
   JS_FreeCString(ctx, str);
@@ -718,6 +848,11 @@ public:
     JSValue iter = js_iterator_new(ctx, arg);
     out.clear();
 
+    if(JS_IsException(iter)) {
+      JS_GetException(ctx);
+      return -1;
+    }
+
     for(;;) {
       T value;
       BOOL done;
@@ -738,6 +873,11 @@ public:
   template<size_t N> static int64_t to_array(JSContext* ctx, JSValueConst arg, std::array<T, N>& out) {
     int64_t i = 0;
     JSValue iter = js_iterator_new(ctx, arg);
+
+    if(JS_IsException(iter)) {
+      JS_GetException(ctx);
+      return -1;
+    }
 
     for(i = 0; i < N; i++) {
       T value;
@@ -799,6 +939,12 @@ template<class T, size_t N>
 static inline int64_t
 js_iterable_to(JSContext* ctx, JSValueConst arr, std::array<T, N>& out) {
   return js_iterable<T>::to_array(ctx, arr, out);
+}
+
+template<class T, size_t N>
+static inline int64_t
+js_iterable_to(JSContext* ctx, JSValueConst arr, T (&out)[N]) {
+  return js_iterable<T>::to_array(ctx, arr, *reinterpret_cast<std::array<T, N>*>(&out[0]));
 }
 
 template<class T>
@@ -936,11 +1082,16 @@ js_scalar_read(JSContext* ctx, JSValueConst obj, cv::Scalar_<T>& scalar) {
   int i = 0;
 
   if(JS_IsObject(obj)) {
-    for(; i < 4; ++i) {
+    if((i = js_iterable_to(ctx, obj, scalar)) > 0)
+      return i;
+
+    for(i = 0; i < 4; ++i) {
       JSValue item = JS_GetPropertyUint32(ctx, obj, i);
 
-      if(JS_IsException(item))
+      if(JS_IsException(item)) {
+        JS_GetException(ctx);
         break;
+      }
 
       js_value_to(ctx, item, scalar[i]);
       JS_FreeValue(ctx, item);
@@ -951,10 +1102,14 @@ js_scalar_read(JSContext* ctx, JSValueConst obj, cv::Scalar_<T>& scalar) {
 
   std::string s;
   js_value_to(ctx, obj, s);
-  std::string::value_type const *p = s.data(), *e = s.data() + s.size();
+  auto const *p = s.data(), *e = s.data() + s.size();
 
   for(; i < 4 && p != e; ++i) {
-    /*while(p != e && *p != '+' && *p != '-' && !std::isdigit(*p) && *p != '.') ++p;*/
+    while(p != e) {
+      if(*p == '+' || *p == '-' || std::isdigit(*p) || *p == '.')
+        break;
+      ++p;
+    }
 
     while(p != e) {
       auto [q, ec] = std::from_chars(p, e, scalar[i]);

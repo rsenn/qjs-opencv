@@ -15,15 +15,13 @@ function main(...args) {
     },
   });
 
-  /* namedWindow('out');
-  resizeWindow('out', 640, 480);*/
+
   let mat;
   let colors = [
     [0, 0, 0],
     [255, 255, 255],
   ];
 
-  // rectangle(mat, [0, 0], [639, 479], colors[1], FILLED);
 
   let [fontFile = 'MiscFixedSC613.ttf', fontSize = 12] = args;
 
@@ -48,7 +46,7 @@ function main(...args) {
   console.log('step', step);
   console.log('rect.height', rect.height);
   let boxes = rect.hsplit(...util.range(0, rect.width, step));
-  // console.log('boxes', boxes);
+
 
   style.draw(mat, str, new Point(1, 0), colors[0], -1, LINE_AA);
 
@@ -74,7 +72,6 @@ function main(...args) {
   waitKey(-1);
 
   console.log('binary', binary);
-  //  console.log('binary.colRange()', binary.colRange());
 
   util.range(0x30, 0x39).forEach(code => {
     dumpChar(code);
@@ -86,7 +83,7 @@ function main(...args) {
 
     console.log('box', box);
     box.y1 += 1;
-    // box.x2 -= 1;
+
     console.log('box', box);
 
     let { area } = box.size;
@@ -115,7 +112,7 @@ function main(...args) {
     const PointReducer = list => {
       let first = new Point(...list.shift());
       let rect = new Rect(first.x, first.y, 0, 0);
-      
+
       console.log('rect', rect);
 
       return list.reduce((a, o) => {
@@ -132,10 +129,9 @@ function main(...args) {
     let contour = [...binary(box).entries()].filter(([coord, entry]) => entry != 0).map(p => new Point(...p));
 
     console.log('contour.boundingRect', contour.boundingRect);
-    //console.log('contour',[...contour]);
 
     let pointList = [...binary(box).entries()].filter(([coord, entry]) => entry != 0).map(([coord, entry]) => new Point(...coord));
-    //console.log('pointList',  (pointList));
+
     console.log('PointReducer(pointList)', PointReducer(pointList));
 
     let bf = util.arrayToBitfield(a);
@@ -160,16 +156,13 @@ function main(...args) {
     return m;
   }
 
-  /*  let hist = new Mat();
-    calcHist([dst], 1, 0, new Mat(), hist, 1,  [255],[0,256]);
-    console.log('hist', hist);*/
 
   function writeROI(i, rect) {
     let roi = mat(rect);
     let id = '0x' + (i + 0x20).toString(16).padStart(2, '0');
     let filename = fontName + '@' + fontSize + '-' + id + '.png';
     imwrite(filename, roi);
-    //console.log('write roi to', filename);
+
   }
 
   function writeFile(filename, s) {
@@ -194,7 +187,7 @@ function main(...args) {
     return util.inspect(obj, { reparseable: 1, colors: false, compact: 3, numberBase: 16 });
   }
 
-  //boxes.forEach((box, i) => writeROI(i, box));
+
   let b,
     i = 0;
   gray = Grayscale(mat);
@@ -206,7 +199,7 @@ function main(...args) {
     font.push([String.fromCodePoint(i + 0x20), outputBytes(m)]);
 
     let r = [...rowIterator(m)];
-    //   console.log(i, console.config({maxArrayLength:10}), rows);
+
 
     writeROI(i++, box);
     rectangle(mat, box.tl, box.br.sub(1, 1), [255, 0, 0], 1, LINE_8);
@@ -217,8 +210,7 @@ function main(...args) {
 
   console.log(boxes[0].size);
 
-  //imshow('out', mat);
-  //  waitKey(-1);
 }
 
 main(...scriptArgs.slice(1));
+
