@@ -2532,3 +2532,243 @@
     // ... but the script later reports an uncaught exception anyway:
     // TypeError: Expected TypedArray Float64Array
 
+- FIXED: std-file-methods-broken-after-opencv-import: When both `std` and
+  `opencv` were imported in the same `qjsm` script, `std.open()`'s returned
+  object ended up with the WRONG prototype entirely - not merely missing
+  methods, but literally aliased to one of opencv's own classes:
+
+    qjsm> std.open('blah', 'a').__proto__ == opencv.Line.prototype
+    true
+
+  Root cause: a `JSClassID` collision between two *independent* copies of
+  the QuickJS core that used to coexist in one process, not a bug in this
+  project's C++.
+  - `qjsm` statically embedded its own private QuickJS core. Confirmed via
+    `nm $(which qjsm) | grep -w 'JS_NewClassID\|js_class_id_alloc'` - both
+    were local/non-exported symbols (`T`/`d`) baked directly into the qjsm
+    executable, and `nm -D $(which qjsm) | grep JS_` matched nothing (no
+    `JS_*` symbol was in its dynamic symbol table at all). This private copy
+    owned the class-id counter used when `std` registered its own `FILE`
+    class.
+  - `opencv.so` instead dynamically links the separately-installed
+    `libquickjs.so.1.3` (`ldd build/.../opencv.so`), which has its own,
+    completely independent `JS_NewClassID` and class-id counter, disconnected
+    from qjsm's private one.
+
+  Both counters start from the same baseline (`JS_CLASS_INIT_COUNT`) and
+  increment independently, so a class ID `opencv.so` allocates for one of
+  its own classes (here, `cv.Line`) could numerically collide with an ID
+  qjsm's own private counter already handed out for `std`'s `FILE` class.
+  Since there is only one `JSRuntime` in the process and `class_array` is a
+  property of that shared runtime (indexed by the numeric class ID, not
+  scoped per compiled copy of quickjs.c), the later registration silently
+  overwrote the earlier class's slot - including its `.prototype` pointer.
+
+  Fixed (2026-08-27) by redeploying `/usr/local/bin/qjsm` linked against the
+  same `libquickjs.so` `opencv.so` is built against: `ldd $(which qjsm)` now
+  shows `libquickjs.so.1.3`, and `nm -D $(which qjsm) | grep -c JS_` is 119
+  instead of 0 - qjsm now shares quickjs's class-id counter with opencv.so
+  instead of embedding a private copy. Verified:
+  `std.open(...).__proto__ == cv.Line.prototype` is now `false`, and both
+  `std.open(...).puts()` and `std.popen(...).getline()` work correctly with
+  `opencv` imported. `examples/render_font.js`'s fd-based (`os.*`)
+  workarounds for this have been reverted back to plain
+  `std.open`/`std.popen`.
+
+    import * as std from 'std';
+    import * as cv from 'opencv';
+    let f = std.open('out.json', 'w+');
+    console.log(typeof f.puts); // now 'function' (was 'undefined')
+    f.puts('{}'); // works
+    console.log(std.open('blah', 'a').__proto__ == cv.Line.prototype); // now false (was true)
+
+- js_color_read-drops-short-arrays: `js_color_read(JSContext*, JSValueConst,
+  JSColorData<double>*)` (`src/jsbindings.cpp:23`) reads a JS array color as
+  `v[0..3] = JS_GetPropertyUint32(color, 0..3)` and only accepts the result
+  if `v[0]`, `v[1]`, AND `v[2]` are all numbers; otherwise it falls through
+  with `ret = 0` and leaves `c` at its all-zero default (`{0, 0, 0, 255}`),
+  silently discarding whatever *was* actually passed - including `v[0]`,
+  which was a real number. So any color array shorter than 3 elements (e.g.
+  `[255]` for a grayscale draw, or `[255, 0]`) reads as opaque black instead
+  of using the given component(s) and defaulting the rest, and any function
+  taking a color (`putText`, `rectangle`, `circle`, `Draw.text`/`style.draw`,
+  ...) silently draws nothing visible when given a 1- or 2-element color
+  array on top of a black/zero background. No exception is thrown, so it's
+  easy to mistake for the drawing call itself doing nothing. The
+  `uint8_t` overload (line 76) is unaffected when the array has length >= 3
+  (`js_array_to` fills it directly), but delegates to this same buggy path
+  for shorter arrays.
+
+    import { CV_8UC1, FONT_HERSHEY_SIMPLEX, LINE_AA, Mat, Point, putText } from 'opencv';
+    const m = new Mat(50, 50, CV_8UC1);
+    m.setTo(0);
+    putText(m, 'A', new Point(2, 30), FONT_HERSHEY_SIMPLEX, 1, [255], 2, LINE_AA);
+    // m is still all zero - expected the glyph drawn at value 255.
+    // putText(m, 'A', new Point(2, 30), FONT_HERSHEY_SIMPLEX, 1, 255, 2, LINE_AA)
+    // (a plain number instead of [255]) draws correctly.
+
+- cmake-libcamera-forces-cxx17: `cmake/libcamera.cmake:6` does
+  `set(CMAKE_CXX_STANDARD 17)` unconditionally (whenever `USE_LCCV`/libcamera
+  support is configured in - the CLAUDE.md-documented default), which makes
+  CMake append `-std=gnu++17` to every compile command, after the project's
+  own `-std=c++2a` from `cmake/CheckFlags.cmake`. Since gcc/clang take the
+  last `-std=` flag on the command line, the effective standard for the
+  whole project is C++17, not C++2a/C++20 as `CLAUDE.md` documents
+  ("C++ standard is -std=c++2a") and as `-DCXX_STANDARD=2a` misleadingly
+  suggests. Confirmed via `compile_commands.json` for
+  `build/x86_64-linux-gnu`: the generated command contains both
+  `-std=c++2a ... -std=gnu++17`, and `<ranges>`/`std::ranges::subrange`
+  (C++20-only) fail to compile with `'ranges' in namespace 'std' does not
+  name a type` when actually built through this build tree, despite
+  compiling fine standalone with an explicit `-std=c++2a`. Not investigated
+  for a fix (unclear whether libcamera's own headers actually require C++17,
+  in which case this is an intentional-but-undocumented downgrade rather
+  than a bug proper).
+
+    grep -o -- '-std=[a-z+0-9]*' build/x86_64-linux-gnu/compile_commands.json | sort -u
+    # -std=c++2a
+    # -std=gnu++17
+
+- js_iterable_to-array-overload-uncallable: The `js_iterable_to` overload at
+  `include/jsbindings.hpp:922-926` takes its array parameter by value,
+  `js_iterable_to(JSContext*, JSValueConst, T[N] out)`. A by-value array
+  parameter decays to a pointer at the parameter-list level before template
+  argument deduction runs, so the actual deduced signature is
+  `js_iterable_to(JSContext*, JSValueConst, T*)` - `N` never appears in it
+  and can never be deduced from a call. Confirmed with gcc, which reports
+  the decayed signature verbatim when deduction fails. Consequently this
+  overload is dead code: nothing in the codebase calls `js_iterable_to`
+  with explicit template arguments (the only way to reach it), so it's
+  never actually instantiated - which is also why a second bug inside it
+  has gone unnoticed: it calls `js_iterable<T>::to_array(ctx, arr,
+  reinterpret_cast<std::array<T, N>*>(&out[0]))`, passing a *pointer*, but
+  `to_array` (line 851) takes `std::array<T, N>&` by reference - a type
+  mismatch that would fail to compile if the overload were ever reachable.
+  The existing `js_iterable_to(JSContext*, JSValueConst, std::array<T, N>&)`
+  overload (line 916-920) already covers the fixed-size-array case via a
+  real `std::array`, so this raw-array overload may simply be redundant
+  once fixed, rather than needed. Fix (untested, not applied - see the
+  by-value-array decay explanation above for why): take the parameter by
+  reference-to-array, `T (&out)[N]`, matching the pattern
+  `JSConstructor`'s constructor already uses at line 33-35 for the same
+  reason, and dereference the reinterpret_cast before passing it to
+  `to_array`.
+
+    template<class T, size_t N>
+    static inline int64_t
+    js_iterable_to(JSContext* ctx, JSValueConst arr, T out[N]) { ... }
+
+    int arr[5];
+    js_iterable_to(ctx, someValue, arr);
+    // error: no matching function for call to 'js_iterable_to(...)'
+    // candidate: template<class T, long unsigned int N> int64_t js_iterable_to(JSContext*, JSValueConst, T*)
+    //   couldn't deduce template parameter 'N'
+
+- clang-thread-local-nontrivial-dtor-inputoutputarray: FIXED. Was:
+  `include/js_inputoutputarray.hpp:61`'s `static thread_local
+  JSInputArraySlot slots[JS_INPUTARRAY_SLOTS];` (where `JSInputArraySlot`
+  holds a `std::vector<double> vec` member, i.e. a non-trivial destructor)
+  failed to compile under Clang 22 with "error: type of thread-local
+  variable has non-trivial destruction". Root cause (confirmed via `-E`):
+  `include/util.hpp:31` had `#ifndef thread_local ... #define thread_local
+  __thread` (a C-only TLS-portability shim, meant for pre-C11 compilers
+  lacking the keyword). In C++, `thread_local` is a language keyword, not
+  a macro - `#ifndef thread_local` is unconditionally true regardless of
+  standard version, so this branch fired on every C++ compile (both GCC
+  and Clang) and silently rewrote every `thread_local X` in the codebase
+  to `__thread X`. `__thread` is the older GNU TLS extension and can't
+  carry a non-trivial constructor/destructor the way C++11 `thread_local`
+  can; GCC tolerates it anyway via a documented C++-mode extension, but
+  Clang correctly rejects it for a non-trivial type - which is what its
+  "use 'thread_local' to allow this" note was actually asking for, once
+  you know the compiler was really seeing `__thread`. `util.hpp` is a
+  `.hpp` that unconditionally includes C++-only headers
+  (`<opencv2/core/mat.hpp>`, `<iostream>`, ...), so it was never
+  reachable as valid C in the first place - the shim had no legitimate
+  case to cover in this file. Fix: wrapped the shim in `#ifndef
+  __cplusplus`. Verified: Clang now compiles
+  `include/js_inputoutputarray.hpp` cleanly (both standalone and via
+  `-E`, confirming `thread_local` is no longer rewritten), the full
+  project still builds clean under GCC, and
+  `tests/unittests/test_contour_functions.js` passes at runtime.
+
+- wunused-function-cant-see-header-only-static-inline: Neither GCC's nor
+  Clang's `-Wunused-function` can find dead `static inline` functions in a
+  header like `include/jsbindings.hpp` (every one of its 82 free functions
+  is `static inline`; it has zero plain-`static` ones - confirmed via
+  `grep -nE '^static [A-Za-z_<:].*$' include/jsbindings.hpp | grep -v
+  'static inline'`, no matches). Two independent, compiler-verified
+  reasons:
+    1. GCC never warns for `static inline`, only plain `static` - confirmed
+       on g++ 13.3.0 and 16.0.1 (trunk): `static inline int f(){}` vs
+       `static int g(){}`, neither called, only `g` warns (with or without
+       `-fsyntax-only`).
+    2. Clang *does* warn for an unused `static inline` function, but only
+       when it's declared directly in the main translation unit being
+       compiled - never for one reached via `#include`, regardless of
+       inline-ness otherwise. Confirmed with a 2x2 repro (static /
+       static-inline x header / main-file): header-declared `static`
+       warns, header-declared `static inline` doesn't; main-file-declared
+       `static` and `static inline` both warn. An earlier note in this
+       file claimed "Clang's -Wunused-function does fire for static
+       inline (verified)" - that verification was against a main-file-only
+       repro and doesn't hold for the header-inclusion case that actually
+       matters for `jsbindings.hpp`, corrected here.
+  Net effect: an aggregated `-Wunused-function` sweep across all 54 `.cpp`
+  files that include `jsbindings.hpp` (now working end-to-end after
+  clang-thread-local-nontrivial-dtor-inputoutputarray was fixed) ran
+  clean under Clang with zero compile errors, but also produced zero
+  findings - not because nothing is dead, but because nothing in the
+  header was ever eligible to be flagged in the first place. Confirmed
+  the flag genuinely fires in this exact build's command line (not
+  silently swallowed by some other flag) by injecting a deliberately
+  unused `static inline` canary via `-include`: still silent, consistent
+  with reason 2 above (force-included files behave like `#include`, not
+  like main-file content). This closes off `-Wunused-function` entirely
+  as a technique for this header, under either compiler.
+
+- opencv-freetype-empty-bbox-garbage-metrics: `cv::freetype::FreeType2::getTextSize()`
+  (upstream `opencv_contrib/modules/freetype/src/freetype.cpp`, reached
+  via this project's plain passthrough at `js_draw.cpp:639` -
+  `freetype2->getTextSize(text, font_scale, thickness, &baseline)`, no
+  logic of this project's own involved) returns nonsensical height/baseline
+  (`height=-33554431`, `baseline=-33554432` - suspicious round hex values
+  `0xFE000001`/`0xFE000000`, i.e. `-(1<<25)`-ish, consistent with a
+  sign/shift bug reading a glyph bbox) whenever the rendered string's ink
+  bounding box is empty. Confirmed two distinct triggers, both upstream:
+
+  1. Any single whitespace glyph (e.g. `' '`/U+20) in an otherwise-normal
+     *scalable* font (verified with `/usr/share/fonts/truetype/dejavu/
+     DejaVuSansMono.ttf` @ 16px) - only that glyph is garbage; `width` is
+     still correct, and other glyphs ('A', '!', 'g', '.') measure fine.
+     This is NOT bitmap-strike-specific and will hit essentially any font
+     sheet, since space/U+20 is almost always in range.
+  2. A font with embedded fixed-size bitmap strikes (e.g. an X11 bitmap
+     font wrapped in TTF, `/home/roman/.fonts/7x13.ttf`) at a size that
+     *exactly* matches one of the font's own strikes - here EVERY glyph
+     tested (space through U+FFFD, including plainly-inked ones like 'A')
+     comes back garbage, not just whitespace. Requesting a *non*-matching
+     size correctly throws a clean assertion instead
+     (`!FT_Set_Pixel_Sizes(mFace, _fontHeight, _fontHeight)`), so this
+     looks like a separate bug in the exact-match bitmap-strike code path,
+     not simply "this glyph has no ink."
+
+  Not investigated further or fixed - lives in a third-party vendored
+  dependency, not this project's own source. `examples/render_font.js`
+  works around both: a single bogus-metric glyph among otherwise-sane
+  ones is treated as legitimately empty-ink (zero height/descent
+  contribution, width kept) rather than an error; if EVERY sampled glyph
+  comes back bogus (case 2, genuinely unusable font+size combination) it
+  fails with a clear message instead of crashing later inside
+  `Mat.zeros()`/`putText` with an opaque OpenCV assertion.
+
+    import { TextStyle } from './js/cvHighGUI.js';
+    // case 1: scalable font, single whitespace glyph
+    let style = new TextStyle('/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf', 16);
+    let baseline;
+    console.log(style.size(' ', y => (baseline = y)), baseline); // height/baseline garbage; 'A' etc. are fine
+
+    // case 2: bitmap-strike font at its own exact native size - ALL glyphs garbage
+    style = new TextStyle('/home/roman/.fonts/7x13.ttf', 13);
+    console.log(style.size('A', y => (baseline = y)), baseline);
+    // 8 -33554431 -33554432 - expected something like 8 9 2 (or similar sane values)

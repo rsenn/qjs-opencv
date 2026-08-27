@@ -6,7 +6,6 @@
 //
 // Usage: qjsm examples/render_font.js [options] <font.ttf>
 import * as std from 'std';
-import * as os from 'os';
 import * as path from 'path';
 import { TextStyle } from '../js/cvHighGUI.js';
 import { CommandLineParser, CV_8UC1, LINE_AA, Mat, Point, imwrite } from 'opencv';
@@ -21,25 +20,11 @@ const KEYS = `
 {out o          |      | output basename (default: <fontname>@<size>)}
 `;
 
-// fd-based (os.exec/os.pipe/os.read), not std.popen(): same class as
-// std.open() (see BUGS: std-file-methods-broken-after-opencv-import), so its
-// returned FILE object loses .getline()/.readAsString() once opencv is
-// imported too.
 function runCommand(args) {
-  const [rfd, wfd] = os.pipe();
-  const pid = os.exec(args, { stdout: wfd, block: false });
-  os.close(wfd);
-
-  const chunks = [];
-  const buf = new Uint8Array(4096);
-  for(;;) {
-    const n = os.read(rfd, buf.buffer, 0, buf.length);
-    if(n <= 0) break;
-    chunks.push(String.fromCharCode(...buf.subarray(0, n)));
-  }
-  os.close(rfd);
-  os.waitpid(pid, 0);
-  return chunks.join('');
+  const f = std.popen(args.map(a => `'${a.replace(/'/g, `'\\''`)}'`).join(' '), 'r');
+  const out = f.readAsString();
+  f.close();
+  return out;
 }
 
 // fc-query wraps FreeType's own font-loading internally (FcFreeTypeQuery),
@@ -77,16 +62,10 @@ function queryFontMetadata(fontFile) {
   };
 }
 
-// os.open/write (fd-based) instead of std.open(...).puts(...): loading the
-// opencv module clobbers std's FILE prototype, see BUGS
-// (std-file-methods-broken-after-opencv-import).
 function writeFile(filename, text) {
-  const bytes = new Uint8Array(text.length);
-  for(let i = 0; i < text.length; i++) bytes[i] = text.charCodeAt(i) & 0xff;
-
-  const fd = os.open(filename, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o644);
-  os.write(fd, bytes.buffer, 0, bytes.length);
-  os.close(fd);
+  const f = std.open(filename, 'w');
+  f.puts(text);
+  f.close();
 }
 
 function parseCode(s) {
