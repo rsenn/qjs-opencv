@@ -153,6 +153,290 @@ No clear path back to "video source → SVG for a laser cutter." Listed so the r
 - **videostab** — full video stabilization pipeline; Tier 2's ECC/optical-flow primitives cover the useful subset directly.
 - **datasets, flann, reg, shape, fuzzy, hfs, hdf, dpm, mcc, rapid, wechat_qrcode, xobjdetect, bioinspired, alphamat, intensity_transform, phase_unwrapping, signal, plot, dnn_objdetect, dnn_superres, ccalib, cvv** — niche, deprecated, or infrastructure-only; no identified use case.
 
+## Font tool — `render_font.js` rebuild (2026-08-28)
+
+Goal: pick the tiniest-still-readable pixel fonts for an 84x48 or 128x128
+LCD out of `~/Downloads/fonts/` (56 files/dirs currently) plus system fonts
+(`fc-list`), and separately pick a few "design opportunity" fonts (artistic
+display faces, icon/UI-element fonts) — then convert selected fonts to the
+existing PNG+JSON glyph-sheet format, and from there to a bit-packed C
+array ready to blit to the display's native byte order.
+
+Current `render_font.js` (single-font PNG+JSON exporter, with an fc-query
+metadata pass and a bitmap-vs-vector size-sanity heuristic) is the base to
+extend, not throw away — its `queryFontMetadata`/`isCovered`/grid-layout/
+size-sanity code is reused as-is by later stages.
+
+Staged so each stage is reviewable and demoable on its own; **do not start
+a stage before the previous one is agreed** (this file records the plan,
+it doesn't authorize skipping ahead). Sub-stages within an info-gathering
+stage can land independently/out of order — call out below where that's
+true.
+
+### Stage 0 — directory walk, no analysis yet
+
+- [ ] Point `render_font.js` (or a new `examples/font_scan.js`) at a
+  directory (default `~/Downloads/fonts/`) or `fc-list` output, recursing
+  into subdirectories, and just list every `.ttf`/`.otf`/`.bdf`/`.pcf`
+  file found with its path and file size. No fc-query/FreeType calls yet.
+  Proves the traversal + font-format filtering before anything else is
+  layered on.
+
+### Stage 1 — terminal truecolor renderer (proof of concept)
+
+**User wants to see this before any deeper info-gathering work.**
+
+- [ ] Render one font's glyph sample to the terminal using 24-bit truecolor
+  ANSI escapes (`\x1b[38;2;R;G;Bm`) and the half-block trick (`▀`/`▄` with
+  independent fg/bg color per half-cell) to get ~2x vertical resolution
+  out of normal terminal cells for an 8-bit-grayscale glyph bitmap.
+  Input: a font file + size + a string (default something like
+  `ABCabc123!@#`). Output: the rendered sample printed directly to stdout.
+  No file I/O, no UI — just `qjsm examples/render_font.js --preview
+  <font> --size 16 --text "..."` printing to the terminal.
+- [ ] Extend to list samples for *multiple* fonts in one run (e.g. every
+  font in a directory), one sample block per font with the filename as a
+  header, printed top-to-bottom — this is the "let me list sample
+  renderings" step, still no interactive browsing.
+
+### Stage 2 — info-gathering, sub-stage A (cheap, `fc-query` only)
+
+Extends `queryFontMetadata()`. All fields come from a single `fc-query`
+call already being made — no new subprocess, no FreeType calls.
+
+- [ ] `family`, `style`, `weight`, `width`, `slant` — for grouping/sorting
+  in the eventual browser.
+- [ ] `spacing` (`mono`/`dual`/`charcell`/`proportional`) — **highest
+  priority signal**: charcell fonts guarantee a fixed advance, which a
+  byte-packed glyph table needs. Verify against Stage 2C's empirical
+  advance-width check (fontconfig's tag is sometimes wrong).
+- [ ] `outline`/`scalable` (already partially used), `fontformat`
+  (TrueType/CFF/Type1/BDF/PCF) — BDF/PCF are literal pre-rasterized bitmap
+  fonts, a different (simpler) code path than rasterizing an outline.
+- [ ] `pixelsize` as a **list**, not one value — multi-strike bitmap fonts
+  report several native sizes; report all of them, not just the first.
+- [ ] `fontversion`, `foundry`, `decorative` (fontconfig's own
+  "display/art font, not body text" flag — a cheap first pass at the
+  "artistic" bucket), `lang`/`capability` (rough language coverage).
+
+### Stage 2 — info-gathering, sub-stage B (font-program-level metrics)
+
+**Plan changed (2026-08-28): no native FreeType/HarfBuzz C++ binding.**
+The original idea here was a direct FreeType wrapper in `qjs-opencv`
+itself. Decided against it — checked whether that loses anything, and it
+doesn't: every fact on the list below (and the two extra ones the
+original note flagged as FreeType-only, hinting-program presence and
+`fvar` axes) is available from `fontTools` (already installed here,
+`pip show fontTools` → 4.61.1), shelled out to from `render_font.js`
+exactly the way `fc-query` already is — see `queryFontProgramInfo()`.
+A native binding would only add rendering-*path* detail (which rasterizer
+code path FreeType picks, exact hint bytecode execution) that nothing
+here needs. Implemented:
+
+- [x] Units-per-EM (`head.unitsPerEm`).
+- [x] Glyph count (`maxp.numGlyphs`), outline format (`CFF ` vs `glyf`
+  table presence).
+- [x] Hinting instructions present (`fpgm`/`prep` bytecode non-empty).
+- [x] Variable-font axes (`fvar.axes`), if present.
+- [x] Color-glyph tables present (`COLR`/`CPAL`/`sbix`/`CBDT`/`CBLC`).
+- [x] **New, not on the original list**: a best-effort "pixel grid unit"
+  for scalable fonts — GCD of glyph outline point coordinates sampled
+  across up to 60 glyphs, converted to a candidate crisp pixel size via
+  `unitsPerEm`. Added to answer the actual "why does this font render
+  antialiased" question (see Stage 2C below) — ascender/descender/
+  line-gap from the original list turned out not to be needed for that
+  and were dropped, not implemented.
+
+### Stage 2 — info-gathering, sub-stage C (pixel-level, rendered-glyph analysis)
+
+Extends the existing `blockinessScore`/`distinctMidgrayLevels` heuristics
+— same idea (render, then measure the Mat), applied per-glyph instead of
+whole-sheet.
+
+- [x] **Crisp-render-size search (`findCrispSize()`), implemented
+  2026-08-28.** The concrete problem that prompted this: fonts in
+  `~/Downloads/fonts/` that are genuinely pixel-art fonts (blocky glyph
+  *design*) are still ordinary scalable TrueType outlines under the
+  hood — not embedded bitmap strikes — so they only render bilevel/crisp
+  at the specific pixel size(s) that happen to make their outline's
+  design grid land on exact integer pixels; any other size antialiases
+  like any other vector font, and there's no metadata field that just
+  states that size. Bounded search (≤10 renders, run only for the one
+  font open in the detail view, never for a whole directory): candidates
+  are Stage 2B's glyph-outline grid hint (when it lands in a plausible
+  4-64px range) plus a fixed list of common pixel sizes
+  (`8,10,12,14,16,20,24,32`); each candidate is rendered once and scored
+  with the exporter's existing `distinctMidgrayLevels()` heuristic;
+  candidates below `BITMAP_LEVEL_THRESHOLD` (40) count as crisp. An
+  embedded-bitmap-strike font (fc-query `pixelsize`) skips the search
+  entirely — already known-crisp at its one native size. Verified against
+  real fonts: `monogram.ttf`/`LowRes 3x4.ttf`/`3x4dot.ttf` all found
+  crisp sizes (multiples of 8px in `LowRes 3x4.ttf`'s case, matching its
+  name); `DejaVuSansMono.ttf` (an ordinary vector font, correctly) found
+  none in range.
+- [ ] Tight ink-bbox vs advance-box padding per glyph — how many empty
+  rows/columns surround the glyph inside its cell; high padding wastes
+  pixels on a tiny LCD.
+- [x] Bilevel check — implemented as part of `findCrispSize()` above
+  (per-candidate-size, not per-glyph yet - a per-glyph breakdown at one
+  fixed size is still open if it turns out to matter).
+- [ ] Stroke weight / ink density — average ink-pixel % inside the tight
+  bbox; flags weights too light/heavy to survive a 1-bit threshold.
+- [ ] Counter (enclosed-hole) size in glyphs like `e a o g` — flood-fill
+  background, find holes fully enclosed by ink, measure smallest area.
+  Likely the best automatable proxy for "readable vs mush" at tiny sizes.
+- [ ] Confusable-pair check — pixel-diff `1`/`l`/`I`, `0`/`O`, `5`/`S` at
+  the target size; flag fonts where these render identically.
+- [ ] Baseline-consistency check across a full glyph run (catches broken
+  or hand-hacked bitmap fonts).
+- [ ] Empirical min/max/average advance width, to cross-check fontconfig's
+  `spacing` claim from Stage 2A.
+
+### Stage 2 — info-gathering, sub-stage D (special-range coverage)
+
+- [x] **Coverage summary against a curated named-block list
+  (`summarizeCoverage()`), implemented 2026-08-28** as part of the
+  detail-view work below — Basic Latin, Latin-1, Latin Extended-A/B,
+  Greek, Cyrillic, General Punctuation, Box Drawing, Block Elements,
+  Braille Patterns, Private Use Area, Powerline/Nerd symbols, Emoji, each
+  as covered/total/% against fc-query's charset ranges (already parsed by
+  `queryFontMetadata`). Not a full Unicode block database — deliberately
+  scoped to blocks relevant to this tool's actual use (LCD text/UI), same
+  list this stage originally proposed.
+- [ ] Box-drawing (`U+2500-257F`) / block-element (`U+2580-259F`)
+  presence, and whether *these specific* glyphs render crisp/bilevel even
+  when the rest of the font antialiases — needed for any UI-chrome use.
+- [ ] Braille patterns (`U+2800-28FF`) presence — enables a dense
+  sub-pixel-style rendering trick on 1-bit displays.
+- [ ] Emoji-range presence and whether it resolves color (via Stage 2B's
+  color-table check) or monochrome fallback.
+- [ ] Powerline (`U+E0A0-E0D4`) and Nerd Font PUA icon sub-block presence
+  — matches the "UI build elements" font category from the original ask.
+- [ ] General Private-Use-Area density vs Latin/ASCII density — a font
+  that's PUA-heavy but Latin-sparse is very likely an icon font, not a
+  text font; surface this as an automatic classification signal.
+- [ ] Roll sub-stages A-D up into one auto-tag per font: `pixel-mono` /
+  `pixel-proportional` / `icon-set` / `display-art` / `unknown`, so the
+  eventual browser can filter/sort by it without anyone eyeballing first.
+
+### Stage 3 — ncurses-style TUI browser
+
+No ncurses binding exists in this codebase; default to hand-rolled raw
+ANSI (alt-screen, cursor positioning, raw stdin key reads) rather than
+adding a new native dependency, unless a later stage shows that's not
+enough.
+
+- [x] Up/down/pageup/pagedown scrollable list of fonts gathered from the
+  three Stage 0 sources, each showing a truecolor half-block sample.
+  Space marks (not yet wired to anything — Stage 4). Not yet annotated
+  with a Stage 2D auto-tag (that roll-up bullet is still open).
+- [x] **List preview now uses each font's own detected crisp size and a
+  per-font sample text, implemented 2026-08-28.** `#preview()` calls
+  `#ensureDetail()` (runs `gatherDetailInfo()`/`findCrispSize()`) the
+  first time a font's row is actually drawn - i.e. detection happens as
+  part of reading/scrolling the list, not gated behind Enter - and uses
+  `crisp.best.size` instead of the fixed `--size` default once known.
+  `pickSampleText()` substitutes a sample built from the font's own
+  covered codepoints when the requested sample text has a character the
+  font doesn't map (avoids showing FreeType's `.notdef` "tofu" box in a
+  list of *font* previews, which reads as "this font is broken" rather
+  than "this sample string doesn't fit this font"). Deliberately still
+  lazy/per-row, never the whole directory up front - only rows that
+  actually get drawn incur the up-to-~10-renders cost, so opening a
+  large `--fclist` match set doesn't stall on fonts you never scroll to.
+  `main()` prints a one-line heads-up before entering the list, since the
+  very first screenful's rows haven't been drawn/cached yet and pay that
+  cost synchronously.
+- [x] **Enter → combined glyph-map + info-panel view, implemented
+  2026-08-28 (redesigned from an earlier two-separate-screens version
+  the same day) — per direct instruction, "font-info and glyph viewer
+  should really share the screen, with font-info being a panel overlay
+  and the glyph viewer in the back".** The 2D-pannable glyph map
+  (`#drawGlyphMapFrame()`) is always the full-screen background and stays
+  interactive; the font-info panel (`#drawInfoPanel()` - overview/
+  render-size/coverage, deliberately scoped down from "full metadata
+  dump" the same way it always was) draws as a bordered, centered overlay
+  box on top of it via terminal.js's new `Screen.box()`, toggled with `i`.
+  Map: 16 codepoints/row (`GLYPHMAP_COLS`) over the font's actual covered
+  codepoints (index-packed via `flattenCoveredCodepoints()`, not raw
+  codepoint value - most fonts here have sparse coverage with big gaps),
+  rendered at `findCrispSize()`'s best-guess size - confirmed on real
+  fonts from `~/Downloads/fonts/` to look correct at that size. Up/down/
+  pageup/pagedown scroll rows; left/right shift which of the 16 columns
+  is leftmost (16 cells at any real cell width is normally wider than one
+  terminal). Esc/Enter/q returns to the font list.
+  **Still open, deliberately deferred as out of scope for this pass:**
+  truecolor rendering of the special ranges themselves (box-drawing/
+  block/braille/emoji samples) as a distinct feature from the general
+  glyph map, the auto-tag roll-up, and the deeper per-glyph Stage 2C
+  items (padding, stroke weight, counter size, confusable pairs, baseline
+  consistency).
+
+**New reusable terminal.js primitives added for this** (`quickjs/
+qjs-modules/lib/terminal.js`, not `qjs-opencv`-local — flagged for the
+qjs-modules session too): `Screen.fillRect()`/`Screen.box()` (an
+ncurses/dialog-style bordered "window", filling its interior first so it
+occludes whatever else was drawn earlier in the same frame - draw order
+is z-order for a plain terminal, there's no real compositor to manage)
+and a free `centeredRect(termCols, termRows, width, height)` matching the
+curses `newwin()`-centered-on-screen idiom. `BOX_SINGLE`/`BOX_DOUBLE`
+export the border character sets. Kept general-purpose, not
+render_font.js-specific, per the earlier "keep terminal primitives at one
+point in terminal.js" instruction. Also added `hslToRgb(h, s, l)` (plain
+color-wheel math - h is the wheel angle) for the same reason: the info
+panel's pastel scheme and the glyph map's color-mode toggle (below) both
+need it, and it's no more app-specific than the RGB truecolor helpers
+already there.
+
+- [x] **Info panel color scheme + Unicode line-art/pictograms, implemented
+  2026-08-28.** Two pastel hues, each a light and dark shade: `PANEL_HUE`
+  (cool teal-blue) is the panel's structural color - light for the
+  border/title, dark for the background fill that occludes the glyph map
+  behind it; `ACCENT_HUE` (warm coral) highlights specific values inline
+  within the body text (`panelHighlight()` - a recommended size, a
+  coverage percentage, a hinting yes/no) via `Screen.fg()`/`bg()` set
+  before `Screen.box()`/each line write, always returning to the panel's
+  own base colors afterward rather than a blanket reset (which would also
+  wipe the background tint). Content reformatted to use `┄`/`▸`/`✓`/`✗`/
+  `⚠`/`▦`/`◆`/`·` instead of `--` headers, `->` arrows, and parenthetical
+  asides, per direct instruction - picked from Box Drawing/Geometric
+  Shapes/general punctuation (near-universal monospace font coverage)
+  rather than emoji, given the earlier `screen`/`TERM=screen-256color`
+  terminal-compatibility issue found in this same tool.
+- [x] **Toggleable glyph-map color mode, implemented 2026-08-28.** `c` in
+  the combined detail view switches the glyph map from plain grayscale to
+  `colorWheelPalette(hue)` - maps each pixel's intensity to a point on one
+  hue's arc of the color wheel (dark/desaturated at background level,
+  vivid/bright at ink level) instead of `[v,v,v]` gray, so the existing
+  antialiasing-level gradient becomes a real color gradient without losing
+  the light/dark contrast the glyph shape depends on. Each time the mode
+  is turned back on it advances the hue by the golden angle
+  (~137.508deg, `FontListBrowser#nextHue`) - a well-known technique for a
+  maximally-spread, non-clustering, non-repeating sequence of hues - so
+  repeated toggling (even across different fonts in one session) keeps
+  showing a genuinely different palette, per "a different (and calculated
+  to color wheels) color palette every time".
+
+### Stage 4 — PNG+JSON export of selected fonts
+
+- [ ] For every font selected in Stage 3, run (in effect) today's existing
+  `render_font.js` export path to produce the `.png` + `.json` sidecar
+  pair, unchanged in format from what's already produced.
+
+### Stage 5 — second browser, over generated sidecars
+
+- [ ] Separate top-down scrollable menu listing already-generated
+  `<name>@<size>.json`/`.png` sidecar pairs (not raw font files); select
+  a subset to carry into Stage 6.
+
+### Stage 6 — bit-packed C export
+
+- [ ] From the Stage 5 selection, emit a bit-in-bytes-encoded font-data
+  block in embedded C (`static const uint8_t font_x[] = {...}`), already
+  in the byte/bit order the target display expects (row-major vs
+  column-major, MSB/LSB-first — needs the specific display's native
+  format confirmed before writing this, not assumed).
+
 ## API discrepancies vs opencv.js (shared surface only)
 
 **IMPORTANT: When fixing opencv.js compatibility issues, always update all client scripts.** After changing a C++ binding to match opencv.js behavior, you MUST update every JavaScript file that uses the affected function:

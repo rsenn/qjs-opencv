@@ -1201,7 +1201,7 @@
     console.log(imread('gray.png', IMREAD_COLOR).channels());     // 3 (was 4)
     console.log(imread('gray.png', IMREAD_UNCHANGED).channels()); // 4 - unchanged, as requested
 
-- opencv-freetype-bitmap-strike-glyphs-not-rasterized: `cv::freetype::FreeType2::putText()`
+- FIXED: opencv-freetype-bitmap-strike-glyphs-not-rasterized: `cv::freetype::FreeType2::putText()`
   (upstream `opencv_contrib/modules/freetype/src/freetype.cpp`, reached via
   this project's plain passthrough at `js_draw.cpp:592` -
   `freetype2->putText(*dst, text, point, font_scale, ...)`, no logic of
@@ -1233,24 +1233,135 @@
   possible to render a bitmap font through `examples/render_font.js`
   end-to-end without throwing - but doing so revealed the output image is
   visually wrong: every glyph cell contains only this same degenerate
-  sliver, not real character shapes. **Bitmap-strike fonts are therefore
-  still not usable end-to-end via this binding** - getTextSize returning
-  sane numbers just meant the pipeline no longer crashes; the actual pixels
-  `putText()` draws for such a font remain wrong. Not investigated further
-  - likely a stride/scaling bug in the vendored freetype module's own
-  monochrome-bitmap-blitting code path (as opposed to its outline
-  rasterization path, which works correctly - every scalable font tested
-  throughout this project renders properly). Not fixable from this
-  project's own source without either patching the vendored
-  `libopencv_freetype` (no local source checkout available - it's an
-  installed prebuilt library, see `/opt/opencv-4.7.0-x86_64`) or bypassing
-  `cv::freetype::FreeType2` entirely and blitting bitmap-strike glyphs via
-  raw FreeType2 API calls from scratch in this project's own code - a
-  substantial addition, not a small fix.
+  sliver, not real character shapes. getTextSize returning sane numbers
+  just meant the pipeline no longer crashed; the actual pixels `putText()`
+  drew for such a font remained wrong. Not fixable from this project's own
+  source by patching the vendored `libopencv_freetype` itself (no local
+  source checkout available - it's an installed prebuilt library, see
+  `/opt/opencv-4.7.0-x86_64`).
+
+  Fixed (2026-08-28) by bypassing `cv::freetype::FreeType2` entirely for
+  bitmap-strike fonts and blitting their glyphs via raw FreeType2 API calls
+  instead - `include/js_freetype_bitmap.hpp` (`FreeTypeBitmapFont`), wired
+  into both `js_put_text` and `js_get_text_size` (`js_draw.cpp`) behind a
+  new `HAVE_RAW_FREETYPE2` build flag (`CMakeLists.txt`: `find_package(Freetype)`,
+  only attempted when `OPENCV_FREETYPE_LIBRARY` is already set). Scalable
+  fonts are untouched - they still go through `cv::freetype::FreeType2` as
+  before, which rasterizes them correctly. For a bitmap-strike font,
+  `FreeTypeBitmapFont` loads the same font file a second time through raw
+  FreeType2, decodes the UTF-8 string itself, and for each codepoint calls
+  `FT_Load_Glyph(..., FT_LOAD_RENDER)` and blits the real
+  `FT_GlyphSlot::bitmap` (handling both `FT_PIXEL_MODE_MONO` and
+  `FT_PIXEL_MODE_GRAY`) directly into the destination `cv::Mat`, alpha-blended
+  per channel by coverage. `getTextSize` for a bitmap-strike font now
+  returns REAL per-glyph metrics (`bitmap_top` for ascent,
+  `bitmap.rows - bitmap_top` for descent) instead of the
+  empty-bbox-garbage-metrics fix's substituted `(fontSize, 0)` - strictly
+  more accurate. Verified against all three local bitmap fonts end-to-end
+  through `examples/render_font.js`: real, correct glyph shapes, proper
+  baseline alignment for ascenders/descenders, `FT_Set_Pixel_Sizes` still
+  throws a clear error for a non-matching size. No regression on scalable
+  fonts or the contour/psimpl test suites.
 
     import { TextStyle } from './js/cvHighGUI.js';
     import { CV_8UC1, LINE_AA, Mat, Point } from 'opencv';
     const style = new TextStyle('/home/roman/.fonts/7x13.ttf', 13);
     const mat = Mat.zeros(13, 8, CV_8UC1);
     style.draw(mat, 'M', new Point(0, 0), 255, -1, LINE_AA);
-    console.log([...mat.data].filter(v => v != 0).length); // 9 - a sliver, not a glyph (~20-40+ expected for a real 'M')
+    console.log([...mat.data].filter(v => v != 0).length); // now 26, a real 'M' (was 9 - a sliver, not a glyph)
+
+- freetype-puttext-y-ignores-gettextsize-ascent: For a *scalable* (non
+  bitmap-strike) font, `cv::freetype::FreeType2::putText()`'s `point.y`
+  does not mean "top of the ink bbox that `getTextSize()`'s reported
+  ascent/height describes", contrary to this project's own doc comments
+  (`examples/render_font.js`'s "Draw.text's point is the glyph box's
+  top-left corner, not its baseline"). Found while building a small
+  single-string terminal preview renderer in `examples/render_font.js`
+  sized tightly to `ascent+descent` from `TextStyle.size()` - it rendered
+  entirely blank for characters that are provably non-empty (verified they
+  draw fine on a taller canvas).
+
+  Measured the actual offset between `point.y` and where ink actually
+  lands (draw at `point=(0, py)` on a generously tall canvas, scan for the
+  ink row range, subtract `py`) across 3 fonts x 4 sizes:
+
+    monogram.ttf        8px: ink at point+[4,7]     14px: point+[7,13]    24px: point+[13,23]   40px: point+[22,39]
+    Pixeletter.ttf       8px: ink at point+[1,7]      14px: point+[3,13]    24px: point+[5,23]    40px: point+[8,39]
+    DejaVuSansMono.ttf   8px: ink at point+[2,7]      14px: point+[4,13]    24px: point+[6,23]    40px: point+[11,39]
+
+  In every case the ink's top edge lands roughly `0.15-0.6 * fontSize`
+  *below* `point.y` (never above), and its bottom edge lands almost
+  exactly at `point.y + fontSize - 1` - i.e. `point.y` behaves like "top of
+  a full em-square line box", not "top of the measured glyph ink" the way
+  `size()`'s `ascent` (`height` field) would imply if you tried to size a
+  canvas as `ascent + descent` and draw at `y = ascent - glyphAscent` the
+  way this project's own `render_font.js` grid exporter does. `size()`'s
+  `.width` is unaffected - only vertical placement is wrong relative to
+  what `.height`/the baseline callback claim.
+
+  **Confirmed knock-on bug in the existing PNG/JSON grid exporter**
+  (`examples/render_font.js`'s `exportFontSheet`, unchanged by this
+  session, predates it): every glyph placed in **row 0** of the grid (the
+  common case - it's whichever codepoints sort first, typically space and
+  punctuation) silently renders nothing, because `y = row*cellHeight +
+  (ascent - glyphAscent)` puts row-0 glyphs right at the canvas top with no
+  headroom for this offset, and the top of a `Mat.zeros()` canvas simply
+  clips ink that would land above y=0 if this offset were even larger, or
+  in row 0's case, renders correctly-if-you-are-lucky since the offset here
+  is instead well *below* row 0's y - meaning the row-0 glyph is drawn far
+  enough down that it bleeds into row 1's cell rather than clipping, and
+  what actually shows up empty is row 0's expected cell position, not row 1
+  itself. Verified via `qjsm examples/render_font.js monogram.ttf
+  --end=0x7f` then checking pixel data at the JSON-reported cell for a
+  row-0 character (`!`, U+21): zero ink in that cell despite `!` being a
+  perfectly ordinary non-empty glyph.
+
+  Worked around (not fixed - this is upstream, same file/line as the two
+  bugs above) in the new terminal preview renderer added this session
+  (`TerminalGlyphRenderer` in `examples/render_font.js`): draws into a
+  generously tall scratch canvas (`fontSize*2 + 4`) at `point.y=0`, then
+  scans for the actual ink row range and crops to that before rendering -
+  sidesteps trusting `point.y` placement math entirely, at the cost of a
+  bit of wasted canvas per render. The grid exporter's row-0 bug is left
+  as-is per this project's "surgical changes" convention (not what this
+  session was asked to fix); worth doing the same generous-canvas-then-crop
+  treatment there if row-0 export fidelity ever matters.
+
+    import { TextStyle } from './js/cvHighGUI.js';
+    import { CV_8UC1, LINE_AA, Mat, Point } from 'opencv';
+    const style = new TextStyle('/home/roman/Downloads/fonts/monogram.ttf', 16);
+    const mat = Mat.zeros(8, 7, CV_8UC1); // sized to size('A').height (8) - looks reasonable, isn't
+    style.draw(mat, 'A', new Point(0, 0), 255, -1, LINE_AA);
+    console.log([...mat.data].filter(v => v != 0).length); // 0 - nothing drawn, despite 'A' being non-empty
+
+- render_font-single-strike-assumption: `render_font.js`'s `queryFontMetadata()`
+  only captures the FIRST `pixelsize` value fc-query prints
+  (`/^pixelsize=(\d+...)/m`, no `/g`), and `findCrispSize()`/the detail
+  view built on it accordingly only ever report ONE embedded-bitmap-strike
+  size as "the" crisp size. But the bitmap-strike table formats
+  (`EBLC`/`CBLC`/older `bloc`) are explicitly designed to hold a `strikes`
+  array - a single font FILE can legitimately bundle several distinct
+  fixed pixel sizes (e.g. 8/10/12/16px), each a genuine 1-bit/grayscale
+  bitmap, not a scaled copy. Confirmed the tables/API exist and are
+  queryable via fontTools on this machine (`NotoColorEmoji.ttf`'s `CBLC`
+  table, `TTFont(f)['CBLC'].strikes[i].bitmapSizeTable.ppemX/ppemY`) -
+  just didn't happen to find a genuinely multi-strike (>1 entry) file
+  installed locally to verify the multi-size case end-to-end against.
+  Not fixed this session (discovered while answering a direct question,
+  out of scope for the color-mode work in progress) - `queryFontProgramInfo()`
+  (already shells out to fontTools for other program-level facts) is the
+  natural place to add an `EBLC`/`CBLC`/`bloc` strikes list, and
+  `findCrispSize()` would need to report/offer all of them rather than
+  assuming one.
+
+    python3 -c "
+    from fontTools.ttLib import TTFont
+    t = TTFont('/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf', lazy=True)
+    for strike in t['CBLC'].strikes:
+        h = strike.bitmapSizeTable
+        print(h.ppemX, h.ppemY, h.bitDepth)
+    "
+    # -> one strike here (109 109 32) - single-strike on this machine, but
+    # the `strikes` list itself is exactly where a multi-strike font's
+    # sizes would show up if one were installed.
+

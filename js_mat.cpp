@@ -1871,7 +1871,7 @@ js_mat_typedarray(JSContext* ctx, JSValueConst this_val, int magic) {
 
 JSValue
 js_mat_call(JSContext* ctx, JSValueConst func_obj, JSValueConst this_val, int argc, JSValueConst argv[], int flags) {
-  JSRectData<double>* rect;
+  JSRectData<int> rect;
   JSMatData* src;
   std::vector<cv::Range> ranges;
   cv::Mat mat;
@@ -1879,14 +1879,14 @@ js_mat_call(JSContext* ctx, JSValueConst func_obj, JSValueConst this_val, int ar
   if((src = js_mat_data2(ctx, func_obj)) == nullptr)
     return JS_EXCEPTION;
 
-  if(argc == 1 && (rect = js_rect_data(argv[0]))) {
-    assert(rect->x >= 0);
-    assert(rect->y >= 0);
-    assert(rect->width <= src->cols - rect->x);
-    assert(rect->height <= src->rows - rect->y);
-
-    mat = src->operator()(*rect);
-  } else if(argc == 1 && js_is_array(ctx, argv[0]) && js_array_to(ctx, argv[0], ranges)) {
+  if(argc == 1 && js_rect_read(ctx, argv[0], &rect)) {
+      rect.x = std::max(0, std::min(rect.x, src->cols));
+      rect.y = std::max(0, std::min(rect.y, src->rows));
+      rect.width = std::max(0, std::min(rect.width, src->cols - rect.x));
+      rect.height = std::max(0, std::min(rect.height, src->rows - rect.y));
+      mat = src->operator()(rect);
+    }
+  else if(argc == 1 && js_is_array(ctx, argv[0]) && js_array_to(ctx, argv[0], ranges)) {
     mat = src->operator()(ranges);
   } else if(js_arguments_to(ctx, argc, argv, ranges) > 0) {
     mat = src->operator()(ranges);

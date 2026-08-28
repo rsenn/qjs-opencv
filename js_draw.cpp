@@ -36,8 +36,12 @@ extern "C" int js_draw_init(JSContext*, JSModuleDef*);
 
 #ifdef HAVE_OPENCV_FREETYPE
 #include <opencv2/freetype.hpp>
+#include "include/js_freetype_bitmap.hpp"
 cv::Ptr<cv::freetype::FreeType2> freetype2 = nullptr;
 std::string freetype2_face;
+#ifdef HAVE_RAW_FREETYPE2
+FreeTypeBitmapFont ft_bitmap_font;
+#endif
 #endif
 
 extern "C" {
@@ -579,6 +583,21 @@ js_put_text(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
 
   try {
 #ifdef HAVE_OPENCV_FREETYPE
+#ifdef HAVE_RAW_FREETYPE2
+    // See BUGS: opencv-freetype-bitmap-strike-glyphs-not-rasterized -
+    // cv::freetype::FreeType2 doesn't rasterize bitmap-strike fonts
+    // correctly, so those are routed through raw FreeType2 instead
+    // (FreeTypeBitmapFont, include/js_freetype_bitmap.hpp). Scalable fonts
+    // keep using cv::freetype::FreeType2 below, which handles them fine.
+    if(!font_name.empty()) {
+      ft_bitmap_font.load(font_name);
+
+      if(ft_bitmap_font.isBitmapStrike()) {
+        ft_bitmap_font.putText(*dst, text, point, (int)font_scale, cv::Scalar(color), bottomLeftOrigin);
+        return JS_UNDEFINED;
+      }
+    }
+#endif
     if(freetype2 == nullptr)
       freetype2 = cv::freetype::createFreeType2();
 
@@ -633,42 +652,55 @@ js_get_text_size(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
   if(argc > i)
     JS_ToInt32(ctx, &thickness, argv[i++]);
 
+  bool handled = false;
+
   try {
 #ifdef HAVE_OPENCV_FREETYPE
-    if(freetype2 == nullptr)
-      freetype2 = cv::freetype::createFreeType2();
-
-    if(!font_name.empty() && font_name != freetype2_face) {
-      freetype2->loadFontData(font_name, 0);
-      freetype2_face = font_name;
-    }
-
+#ifdef HAVE_RAW_FREETYPE2
+    // See BUGS: opencv-freetype-bitmap-strike-glyphs-not-rasterized - route
+    // bitmap-strike fonts through raw FreeType2 (real per-glyph
+    // bitmap_top/bitmap.rows, not a substitution) instead of
+    // cv::freetype::FreeType2, matching js_put_text above.
     if(!font_name.empty()) {
+      ft_bitmap_font.load(font_name);
+
+      if(ft_bitmap_font.isBitmapStrike()) {
+        size = ft_bitmap_font.getTextSize(text, (int)font_scale, &baseline);
+        handled = true;
+      }
+    }
+#endif
+
+    if(!handled && !font_name.empty()) {
+      if(freetype2 == nullptr)
+        freetype2 = cv::freetype::createFreeType2();
+
+      if(font_name != freetype2_face) {
+        freetype2->loadFontData(font_name, 0);
+        freetype2_face = font_name;
+      }
+
       size = freetype2->getTextSize(text, font_scale, thickness, &baseline);
 
       // See BUGS (opencv-freetype-empty-bbox-garbage-metrics): upstream
       // cv::freetype::FreeType2::getTextSize() returns huge-negative garbage
       // (observed: height=-33554431, baseline=-33554432) instead of a sane
-      // result whenever the string's ink bounding box is empty - which is
-      // *every* call for a bitmap-strike font at its own exact native size,
-      // not just a rare all-whitespace edge case. `size.width` is unaffected
-      // (verified correct in every case seen); only height/baseline are
-      // garbage. A bitmap strike's line height is by definition exactly the
-      // pixel size it was matched at (that's what "matched a strike" means),
-      // and its glyphs are pre-composed bitmaps with the baseline baked into
-      // their fixed position in the cell - there's no separate ascent/descent
-      // split to recover by measurement, so substituting the requested pixel
-      // size for height and 0 for baseline is exact, not a guess, for that
-      // case. For a genuinely-empty glyph in an otherwise normal scalable
-      // font (e.g. a lone space), the same substitution is merely a safe,
-      // harmless default: something with zero ink draws nothing regardless of
-      // what size it's reported to have.
+      // result whenever the string's ink bounding box is empty - harmless
+      // for a lone whitespace glyph in a scalable font (the only case that
+      // still reaches this branch; bitmap-strike fonts are handled above).
+      // Something with zero ink draws nothing regardless of what size is
+      // reported for it, so substituting the requested pixel size for
+      // height and 0 for baseline is a safe default.
       if(size.height < 0 || size.height > 100000 || baseline < -100000 || baseline > 100000) {
         size.height = font_scale;
         baseline = 0;
       }
-    } else
+
+      handled = true;
+    }
 #endif
+
+    if(!handled)
       size = cv::getTextSize(text, font_face, font_scale, thickness, &baseline);
   } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 

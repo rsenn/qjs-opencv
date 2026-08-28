@@ -147,6 +147,24 @@ if(HAVE_OPENCV2_FREETYPE_HPP AND OPENCV_FREETYPE)
     add_definitions(-DHAVE_OPENCV_FREETYPE)
   endif(NOT OPENCV_HEADERS_DEFINE_HAVE_OPENCV_FREETYPE)
   set(OPENCV_FREETYPE_LIBRARY opencv_freetype)
+
+  # cv::freetype::FreeType2::putText()/getTextSize() (the library set above)
+  # doesn't rasterize bitmap-strike (embedded fixed-size, non-scalable)
+  # glyphs correctly - see BUGS:
+  # opencv-freetype-bitmap-strike-glyphs-not-rasterized. js_draw.cpp works
+  # around that by loading such fonts a second time through raw FreeType2
+  # itself and blitting their glyph bitmaps directly, bypassing
+  # cv::freetype entirely for that case (scalable fonts still go through
+  # cv::freetype as before - that path works correctly). find_package(Freetype)
+  # is CMake's own module, independent of whatever copy of libfreetype
+  # OpenCV's own freetype module happens to be linked against.
+  find_package(Freetype)
+
+  if(FREETYPE_FOUND)
+    include_directories(${FREETYPE_INCLUDE_DIRS})
+    list(APPEND jsbindings_LIBRARIES ${FREETYPE_LIBRARIES})
+    add_definitions(-DHAVE_RAW_FREETYPE2)
+  endif(FREETYPE_FOUND)
 else(HAVE_OPENCV2_FREETYPE_HPP AND OPENCV_FREETYPE)
 
   dump(HAVE_OPENCV2_FREETYPE_HPP OPENCV_FREETYPE OPENCV_PREFIX)
