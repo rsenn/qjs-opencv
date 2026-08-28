@@ -668,6 +668,26 @@ function panelHighlight(text) {
   return `${ansiRgb(38, PANEL_ACCENT_RGB)}${text}${ansiRgb(38, PANEL_TEXT_RGB)}${ansiRgb(48, PANEL_BG_RGB)}`;
 }
 
+// The glyph map's coarse size-cycle list: every size findCrispSize()
+// actually tried (so cycling through it always lands on a size that's
+// been measured, crisp or not - see the tried/levels readout), plus the
+// "obviously good" 2x/4x of the best-guess (or fallback) size - an
+// integer multiple of an already-crisp pixel size stays crisp (just
+// blockier), the same logic the exporter's own blockiness check relies
+// on elsewhere in this file. Sorted ascending, deduplicated, floored at
+// 2px.
+function goodSizesFor(crisp, fallbackSize) {
+  const sizes = new Set();
+  const base = crisp && crisp.best ? crisp.best.size : fallbackSize;
+
+  if(crisp) for(const t of crisp.tried) sizes.add(t.size);
+  sizes.add(base);
+  sizes.add(base * 2);
+  sizes.add(base * 4);
+
+  return [...sizes].filter(s => s >= 2).sort((a, b) => a - b);
+}
+
 function gatherDetailInfo(fontFile) {
   const meta = queryFontMetadata(fontFile);
   const programInfo = queryFontProgramInfo(fontFile);
@@ -941,14 +961,42 @@ class FontListBrowser {
       const style = new TextStyle(font.path, size);
       const codepoints = flattenCoveredCodepoints(info.meta);
       const cellWidth = computeGlyphMapCellWidth(style, codepoints);
+      const goodSizes = goodSizesFor(info.crisp, size);
 
-      gm = { style, size, codepoints, cellWidth, rowOffset: 0, colOffset: 0 };
+      gm = { style, size, codepoints, cellWidth, goodSizes, rowOffset: 0, colOffset: 0 };
     } catch(e) {
       gm = { error: e.message };
     }
 
     this.#glyphMapCache.set(font.path, gm);
     return gm;
+  }
+
+  // Applies a candidate glyph-map font size, refusing (leaving `gm`
+  // unchanged) if it can't be constructed, or if it would leave fewer
+  // than 2 glyph cells visible at the current terminal width - the size
+  // control is otherwise happy to zoom a font map right off the edge of
+  // usefulness, per direct instruction to never let that happen.
+  #tryChangeGlyphMapSize(font, gm, newSize, termCols) {
+    newSize = Math.max(2, newSize);
+    if(newSize === gm.size) return false;
+
+    let style, cellWidth;
+
+    try {
+      style = new TextStyle(font.path, newSize);
+      cellWidth = computeGlyphMapCellWidth(style, gm.codepoints);
+    } catch(e) {
+      return false;
+    }
+
+    const maxCols = Math.max(0, termCols - 1);
+    if(cellWidth * 2 > maxCols) return false;
+
+    gm.size = newSize;
+    gm.style = style;
+    gm.cellWidth = cellWidth;
+    return true;
   }
 
   // Draws the 2D-pannable glyph map (GLYPHMAP_COLS=16 codepoints per row,
@@ -1065,7 +1113,7 @@ class FontListBrowser {
       const { visibleGlyphRows, totalRows } = this.#drawGlyphMapFrame(screen, font, gm, termCols, termRows, colorFn);
       if(showPanel) this.#drawInfoPanel(screen, info, termCols, termRows);
 
-      screen.moveTo(termRows, 1).clearLine(2).write(clipAnsiLine('arrows/pgup/pgdn pan   i info panel   c color mode   esc/enter/q back', maxCols));
+      screen.moveTo(termRows, 1).clearLine(2).write(clipAnsiLine('arrows/pgup/pgdn pan   -/= size   +/_ fine size   i info panel   c color mode   esc/enter/q back', maxCols));
       screen.flush();
 
       const key = readKey(std.in.fileno());
@@ -1084,6 +1132,24 @@ class FontListBrowser {
         } else {
           colorHue = null;
         }
+      }
+      // Coarse cycle ('-'/'=', the unshifted main-row +/- keys - also
+      // what a numpad '-' sends) steps through goodSizesFor()'s tried/2x/
+      // 4x list; fine step ('_'/'+' - literally shift+-/shift+= on a
+      // standard layout, i.e. holding shift while pressing +/-) moves by
+      // 0.5px, floored at 2px. Both refuse (leave gm.size unchanged) if
+      // the result would show fewer than 2 glyph cells - see
+      // #tryChangeGlyphMapSize().
+      else if(key.type === 'char' && key.char === '=') {
+        const target = gm.goodSizes.find(s => s > gm.size);
+        if(target !== undefined) this.#tryChangeGlyphMapSize(font, gm, target, termCols);
+      } else if(key.type === 'char' && key.char === '-') {
+        const target = [...gm.goodSizes].reverse().find(s => s < gm.size);
+        if(target !== undefined) this.#tryChangeGlyphMapSize(font, gm, target, termCols);
+      } else if(key.type === 'char' && key.char === '+') {
+        this.#tryChangeGlyphMapSize(font, gm, gm.size + 0.5, termCols);
+      } else if(key.type === 'char' && key.char === '_') {
+        this.#tryChangeGlyphMapSize(font, gm, gm.size - 0.5, termCols);
       } else if(key.type === 'escape' || key.type === 'enter' || key.type === 'ctrlc' || key.type === 'eof') break;
       else if(key.type === 'char' && key.char === 'q') break;
     }

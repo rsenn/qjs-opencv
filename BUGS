@@ -1365,3 +1365,40 @@
     # the `strikes` list itself is exactly where a multi-strike font's
     # sizes would show up if one were installed.
 
+- opencv-freetype-fontscale-truncated-to-int: `TextStyle`'s `fontScale`
+  (`js/cvHighGUI.js`) is passed through `js_draw.cpp` to
+  `cv::freetype::FreeType2::putText()`/`getTextSize()` as a genuine
+  `double`, unchanged and untruncated by this project's own binding code
+  (`js_draw.cpp:596-704` - `font_scale` stays a `double` the whole way
+  through). Found while adding fine-grained (0.5px) font-size stepping to
+  `render_font.js`'s glyph-map view: `TextStyle('font.ttf', 8.5).size('A')`
+  measures bit-for-bit identical to `size 8` - in fact `8, 8.5, 9, 9.5, 10`
+  all measured identical for `monogram.ttf`. Since this project's own code
+  doesn't truncate it, the rounding must happen inside
+  `opencv_contrib/modules/freetype/src/freetype.cpp` itself (almost
+  certainly an internal `FT_Set_Pixel_Sizes(face, (int)fontScale,
+  (int)fontScale)` - that FreeType call only accepts integer `FT_UInt`
+  pixel sizes; a fractional pixel size would need `FT_Set_Char_Size`'s
+  26.6 fixed-point sizing instead, which needs a DPI figure and isn't
+  what this call is using) - no local source checkout to confirm the
+  exact line (see other freetype.cpp findings above, same situation).
+  Practical effect: any fractional `--size`/`fontScale` silently behaves
+  like `Math.floor()`'d to the next integer down, with no error or
+  signal that the fractional part was ignored - and even *adjacent
+  integers* sometimes measure identical at these tiny sizes (`8`, `9`,
+  `10` all gave the same `4x5` for `monogram.ttf`), which is FreeType's
+  own internal pixel-grid rounding at very small sizes, not part of this
+  particular bug. Not worked around - `render_font.js`'s new fine-size
+  stepping still tracks/displays the requested fractional size (so
+  intermediate values aren't lost if the underlying rendering eventually
+  supports them), it just means some 0.5px steps currently look identical
+  to their neighbor on screen.
+
+    import { TextStyle } from './js/cvHighGUI.js';
+    const f = '/home/roman/Downloads/fonts/monogram.ttf';
+    for (const size of [8, 8.5, 9, 9.5, 10]) {
+      const s = new TextStyle(f, size).size('A');
+      console.log(size, '->', s.width, s.height);
+    }
+    // all five print the same "4 5" - the .5 (and the 8->9->10 step) has no effect
+

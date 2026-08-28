@@ -15,13 +15,11 @@ function main(...args) {
     },
   });
 
-
   let mat;
   let colors = [
     [0, 0, 0],
     [255, 255, 255],
   ];
-
 
   let [fontFile = 'MiscFixedSC613.ttf', fontSize = 12] = args;
 
@@ -46,7 +44,6 @@ function main(...args) {
   console.log('step', step);
   console.log('rect.height', rect.height);
   let boxes = rect.hsplit(...util.range(0, rect.width, step));
-
 
   style.draw(mat, str, new Point(1, 0), colors[0], -1, LINE_AA);
 
@@ -156,13 +153,11 @@ function main(...args) {
     return m;
   }
 
-
   function writeROI(i, rect) {
     let roi = mat(rect);
     let id = '0x' + (i + 0x20).toString(16).padStart(2, '0');
     let filename = fontName + '@' + fontSize + '-' + id + '.png';
     imwrite(filename, roi);
-
   }
 
   function writeFile(filename, s) {
@@ -187,7 +182,6 @@ function main(...args) {
     return util.inspect(obj, { reparseable: 1, colors: false, compact: 3, numberBase: 16 });
   }
 
-
   let b,
     i = 0;
   gray = Grayscale(mat);
@@ -200,7 +194,6 @@ function main(...args) {
 
     let r = [...rowIterator(m)];
 
-
     writeROI(i++, box);
     rectangle(mat, box.tl, box.br.sub(1, 1), [255, 0, 0], 1, LINE_8);
   }
@@ -209,8 +202,6 @@ function main(...args) {
   writeFile(fontName + '@' + fontSize + '.json', JSON.stringify(Object.fromEntries(font)));
 
   console.log(boxes[0].size);
-
 }
 
 main(...scriptArgs.slice(1));
-
