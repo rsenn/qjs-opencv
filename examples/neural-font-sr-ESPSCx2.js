@@ -62,6 +62,29 @@ function upscaleFontGlyphs(net, image) {
   }
 }
 
+function downscaleAndBinarize1Bit(upscaledMat, scaleBack = 0.5) {
+  const targetWidth = Math.floor(upscaledMat.cols * scaleBack);
+  const targetHeight = Math.floor(upscaledMat.rows * scaleBack);
+  
+  const downscaled = new cv.Mat();
+  // Use area interpolation (INTER_AREA) for downscaling to preserve clean weighted line densities
+  cv.resize(upscaledMat, downscaled, new cv.Size(targetWidth, targetHeight), 0, 0, cv.INTER_AREA);
+
+  // Convert to grayscale if needed
+  const gray = new cv.Mat();
+  if (downscaled.channels() > 1) {
+    cv.cvtColor(downscaled, gray, cv.COLOR_BGR2GRAY);
+  } else {
+    downscaled.copyTo(gray);
+  }
+
+  // Force clean 1-bit binarization (Otsu's thresholding automatically finds the optimal cutoff for sharp edges)
+  const binary1Bit = new cv.Mat();
+  cv.threshold(gray, binary1Bit, 0, 255, cv.THRESH_BINARY | cv.THRESH_OTSU);
+
+  return binary1Bit;
+}
+
 function main(input = 'tests/glyph_map.png', output = 'font_upscaled_espcn.png') {
   const src4 = cv.imread(input);
 
@@ -80,10 +103,12 @@ function main(input = 'tests/glyph_map.png', output = 'font_upscaled_espcn.png')
 
   cv.threshold(upscaled, upscaled, 127, 255, cv.THRESH_BINARY);
 
-  cv.imwrite(output, upscaled);
-  cv.imshow('upscaled', upscaled);
-  cv.waitKey(-1);
+const result=downscaleAndBinarize1Bit(upscaled);
+
+  cv.imwrite(output, result);
+  cv.imshow('result', result);
   console.log(`Successfully wrote upscaled font map to ${output}`);
+  cv.waitKey(-1);
 }
 
 main(...scriptArgs.slice(1));
