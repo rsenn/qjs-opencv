@@ -111,9 +111,7 @@ js_generalized_hough_finalizer(JSRuntime* rt, JSValue val) {
   JSGeneralizedHoughData* gh;
 
   if((gh = js_generalized_hough_data(val))) {
-    cv::Algorithm* ptr = gh->get();
-
-    ptr->~Algorithm();
+    gh->~JSGeneralizedHoughData();
 
     js_deallocate(rt, gh);
   }

@@ -5,6 +5,7 @@
 #include "js_umat.hpp"
 #include "include/jsbindings.hpp"
 #include "include/js_inputoutputarray.hpp"
+#include "js_cv.hpp"
 #include <opencv2/core/cvstd_wrapper.hpp>
 #include <opencv2/core/mat.inl.hpp>
 #include <opencv2/core/matx.hpp>
@@ -104,7 +105,9 @@ js_fast_line_detector_detect(JSContext* ctx, JSValueConst this_val, int argc, JS
   JSInputArray image = js_cv_inputarray(ctx, argv[0]);
   JSOutputArray lines = js_cv_outputarray(ctx, argv[1]);
 
-  (*s)->detect(image, lines);
+  try {
+    (*s)->detect(image, lines);
+  } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 
   /*if(argc >= 2 && js_is_array(ctx, argv[1])) {
     size_t i, length = lines.size();
@@ -143,7 +146,9 @@ js_fast_line_detector_draw_segments(JSContext* ctx, JSValueConst this_val, int a
   if(argc > 4)
     js_value_to(ctx, argv[4], linethickness);
 
-  (*s)->drawSegments(image, lines, draw_arrow, linecolor, linethickness);
+  try {
+    (*s)->drawSegments(image, lines, draw_arrow, linecolor, linethickness);
+  } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 
   return JS_UNDEFINED;
 }

@@ -4,6 +4,7 @@
 #include "js_rect.hpp"
 #include "js_vector.hpp"
 #include "include/jsbindings.hpp"
+#include "js_cv.hpp"
 #include <opencv2/core/matx.hpp>
 #include <quickjs.h>
 #include <stddef.h>
@@ -89,6 +90,7 @@ js_subdiv2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
   if((s = js_subdiv2d_data2(ctx, this_val)) == nullptr)
     return JS_EXCEPTION;
 
+  try {
   switch(magic) {
     case SUBDIV2D_EDGE_DST: {
       int32_t edge;
@@ -267,6 +269,7 @@ js_subdiv2d_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst
       break;
     }
   }
+  } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 
   return ret;
 }

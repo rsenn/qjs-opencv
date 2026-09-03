@@ -680,7 +680,7 @@
   type). A cv.Contour destination isn't special-cased the same way (its
   points are double-precision, not int) and still hits the assertion above.
 
-- js-typedarray-from-vector-iterator-mismatch: `js_typedarray<T>::from_vector()`
+- FIXED: js-typedarray-from-vector-iterator-mismatch: `js_typedarray<T>::from_vector()`
   (`include/js_typed_array.hpp`) forwards to `from_sequence(ctx, in.begin(),
   in.end())`, which calls `js_typedarray_remain()` on those iterators -
   but `js_typedarray_remain()` is only SFINAE-enabled for raw-pointer
@@ -704,7 +704,38 @@
     // error: no matching function for call to
     // 'js_typedarray_remain(const __gnu_cxx::__normal_iterator<...>&, ...)'
 
-- minmaxloc-argv-out-of-bounds-read: `js_cv.cpp`'s `OTHER_MIN_MAX_LOC`
+  Fixed (2026-09-04) by generalizing rather than SFINAE-gating: the real
+  root cause runs one level deeper than `js_typedarray_remain()` -
+  `include/jsbindings.hpp`'s `js_arraybuffer_from(ctx, begin, end)` (called
+  by `from_sequence()` just before `js_typedarray_remain()`) does the same
+  `reinterpret_cast<const uint8_t*>(begin)` directly on the iterator
+  object, which is equally illegal for a non-pointer iterator - confirmed
+  by compiling `js_arraybuffer_from(ctx, vec.begin(), vec.end())` in
+  isolation, same "invalid cast from ... to 'const uint8_t*'" error.
+  `js_arraybuffer_from` now goes through two new helpers,
+  `js_iterator_byte_ptr()`/`js_iterator_byte_len()`, that take the pointer
+  via `&*begin` (well-defined for any contiguous-storage iterator whenever
+  the range is non-empty, degrades to a no-op identity cast for raw
+  pointers) and the length via `(end - begin) * sizeof(value_type)`
+  instead of pointer-differencing two `reinterpret_cast`s - works
+  uniformly for `T*` and `std::vector<T>::iterator` alike, so the
+  pointer-only fast path is gone entirely rather than special-cased wider.
+  `js_typedarray_remain()` itself lost its `is_pointer` SFINAE gate the
+  same way - swapped its own `reinterpret_cast`-based length computation
+  for `std::iterator_traits<Iterator>::value_type` and `end - start`
+  (also picked up `const Iterator&` parameters instead of `Iterator&`;
+  otherwise a caller passing an already-const-qualified iterator, as
+  `from_sequence()`'s own `const Iterator& start` parameter is, deduces
+  `Iterator = float* const` - a const *pointer*, not "pointer to const" -
+  which `std::iterator_traits` has no specialization for). Restored
+  `include/js_inputoutputarray.hpp`'s `JSOutputArrayOf<T>` destructor to
+  call `js_typedarray<T>::from_vector(m_ctx, this->vec)` directly instead
+  of the `from_sequence(ctx, vec.data(), vec.data() + vec.size())`
+  workaround. Verified: the reproducer above now compiles and returns a
+  correctly-sized/valued Float32Array; all `tests/unittests/*.js` (154
+  tests) still pass, run 3x with identical results each time.
+
+- FIXED: minmaxloc-argv-out-of-bounds-read: `js_cv.cpp`'s `OTHER_MIN_MAX_LOC`
   case (backing `cv.minMaxLoc()`) supports 4 optional trailing callback
   arguments (`(minVal) => ..., (maxVal) => ..., (minLoc) => ..., (maxLoc)
   => ...`) by unconditionally reading `argv[1]` through `argv[4]` and
@@ -856,7 +887,7 @@
   model files directly, no staging step needed. Not a binding gap - the 9
   DNN example pages need this call deleted, not replicated, when adapted.
 
-- uncaught-cv-exception-aborts-process-in-unguarded-modules: Most js_*.cpp
+- PARTIALLY FIXED: uncaught-cv-exception-aborts-process-in-unguarded-modules: Most js_*.cpp
   files wrap their OpenCV calls in `try { ... } catch(const cv::Exception&
   e) { JS_ThrowInternalError(ctx, ...); }` so a bad argument turns into a
   catchable JS exception. 24 files have zero such try/catch anywhere,
@@ -884,6 +915,48 @@
   Fix is mechanical per file: wrap the call dispatch in the same
   try/catch-and-JS_ThrowInternalError pattern already used by the other 68
   occurrences across `js_cv.cpp`, `js_imgproc.cpp`, `js_photo.cpp`, etc.
+
+  Fixed (2026-09-04) for the 6 files explicitly named above - the ones
+  confirmed to wrap OpenCV calls with real precondition asserts -
+  following the `js_cv_throw(ctx, e)` pattern from `js_cv.hpp`/`js_photo.cpp`
+  rather than `JS_ThrowInternalError`, since `js_cv_throw` is the more
+  common of the two idioms in this codebase (70 vs. a handful of sites)
+  and already strips the `/opencv...` path prefix from the message.
+  `js_calib3d.cpp`'s `js_calib3d_functions`, `js_bg_subtractor.cpp`'s
+  `js_bg_subtractor_function`/`_method`, `js_white_balancer.cpp`'s
+  `js_white_balancer_function`/`_method`, `js_clahe.cpp`'s
+  `js_clahe_method`, and `js_subdiv2d.cpp`'s `js_subdiv2d_method` now each
+  wrap their `switch(magic)` dispatch in try/catch;
+  `js_fast_line_detector.cpp`'s `detect`/`drawSegments` methods (no
+  `switch` there, just two standalone functions) got their own try/catch
+  each. Verified the reproducer above now throws a catchable JS exception
+  instead of aborting (`SIGABRT`) - reran 5x, message and exit code
+  identical every run. All `tests/unittests/*.js` (154 tests) still pass,
+  reran 3x with identical results.
+
+  Still open: the other 18 of the original 24 files
+  (`js_affine3.cpp`, `js_dmatch.cpp`, `js_filenode.cpp`,
+  `js_filestorage.cpp`, `js_highgui.cpp`, `js_keypoint.cpp`,
+  `js_libcamera_app.cpp`, `js_line.cpp`, `js_matx.cpp`, `js_point.cpp`,
+  `js_psimpl.cpp`, `js_range.cpp`, `js_raspi_cam.cpp`, `js_rect.cpp`,
+  `js_rotated_rect.cpp`, `js_size.cpp`, `js_umat.cpp`, `js_utility.cpp`,
+  `js_vector.cpp`) still have zero `catch(const cv::Exception&...)`
+  anywhere. Most are plain value-type wrappers (Point/Rect/Size/Line/Matx/
+  Range/Affine3/DMatch/KeyPoint/Vector) unlikely to call anything that
+  throws a `cv::Exception`, but `js_filenode.cpp`, `js_filestorage.cpp`,
+  `js_highgui.cpp`, and `js_umat.cpp` do call real OpenCV algorithms and
+  were not audited in this pass - worth a follow-up sweep specifically on
+  those four before considering this entry fully closed.
+
+  New finding while fixing this: `js_fast_line_detector.cpp`'s finalizer
+  (`js_fast_line_detector_finalizer`, line ~88) has the exact same
+  `cv::Ptr`-refcount-bypass shape as the 9 finalizers fixed under
+  `cvptr-finalizer-bypasses-refcount-release` above - `s->get()` then
+  `lsd->~FastLineDetector()` then `js_deallocate(rt, s)`, never calling
+  `JSFastLineDetector`'s (i.e. `cv::Ptr<FastLineDetector>`'s) own
+  destructor - but it wasn't in that entry's list of 9. Not fixed here
+  (out of scope for this task); should be folded into that entry's fix
+  the next time it's touched.
 
 - typedarraytype-flags-sets-signed-bit-for-float-arrays: `TypedArrayType::flags()`
   (`include/js_typed_array.hpp`) always OR's in `TYPEDARRAY_SIGNED` (0x40)
@@ -1402,3 +1475,115 @@
     }
     // all five print the same "4 5" - the .5 (and the 8->9->10 step) has no effect
 
+- onnx-importer-rejects-dynamic-shape-graphs: OpenCV 5.0.0's `cv.readNetFromONNX`
+  fails to load any ONNX graph exported with HuggingFace/optimum's default
+  dynamic `batch_size`/`sequence_length` axes, regardless of model
+  architecture - confirmed identically on an XLM-R-style model and a
+  real-BERT model (LaBSE), both failing at the same `onnx_node!/embeddings/Shape`
+  node with "dynamic 'zero' shapes are not supported". Not a quantization or
+  download-corruption issue (ruled out separately). Workaround: re-export the
+  model with fully static shapes (`torch.onnx.export(..., dynamic_axes=None,
+  dynamo=False)`), which removes the offending Shape node entirely - see
+  `examples/models/setup-embedding-model.py`.
+
+- PARTIALLY FIXED: mat-mul-is-elementwise-not-matrix-multiplication: `Mat.mul(other)`
+  (magic `MAT_EXPR_MUL` in `js_mat.cpp`) calls `cv::Mat::mul()`, which is an
+  elementwise (Hadamard) product requiring both operands to have identical
+  rows/cols/type/channels - it throws "Mat dimensions mismatch" for a real
+  (n x k)*(k x m) multiply, despite the name suggesting matrix
+  multiplication. Checked against the real opencv.js (Mat.d.ts,
+  core_array.d.ts from the @techstark/opencv-js npm package, not just the
+  minified WASM glue, which doesn't keep method names as greppable text):
+  opencv.js has no `Mat.matMul()` either - its own `Mat.mul()` is the same
+  elementwise op, and real matrix multiplication is only available via the
+  free function `cv.gemm(src1, src2, alpha, src3, beta, dst, flags?)`.
+  `cv.gemm` is now implemented here too (`OTHER_GEMM` in `js_cv.cpp`),
+  matching that real signature exactly - so this is fixed for anyone calling
+  `cv.gemm` directly. Still open: `Mat.mul()`'s name remains misleading for
+  anyone who doesn't know to reach for `cv.gemm` instead. Before `cv.gemm`
+  existed, `mediathek-semantic.js`'s `rankByCosine()` (parent repo) batched a
+  dot product against many rows via `cv.repeat` + `cv.multiply` +
+  `cv.reduce(..., 0 /* REDUCE_SUM */)`; that workaround still works but
+  `cv.gemm` is the more direct fix now.
+
+    import * as cv from 'opencv';
+    const cand = new cv.Mat(3, 4, cv.CV_32F, Float32Array.from([1,0,0,0, 0,1,0,0, 0.6,0.8,0,0]).buffer);
+    const q = new cv.Mat(4, 1, cv.CV_32F, Float32Array.from([1,0,0,0]).buffer);
+    cand.mul(q); // throws: Mat dimensions mismatch (3x4 vs 4x1)
+
+- FIXED: cvptr-finalizer-bypasses-refcount-release: 9 finalizers store a
+  `cv::Ptr<Base>` as their opaque payload (the standard pattern for
+  wrapping an OpenCV class hierarchy behind one shared JSClassID, see
+  the correct version in `js_feature2d_finalizer`,
+  `js_feature2d.cpp:968-974`: `s->~JSFeature2DData()` destroys the
+  `cv::Ptr` itself, which is what actually releases the shared
+  reference and, on last release, invokes the type-erased deleter that
+  frees the real derived object) but instead destroy the raw pointee
+  directly (via `.get()`, `dynamic_cast`, or `cv::Ptr::operator->`) and
+  only `js_deallocate` the outer block afterward - never calling
+  `cv::Ptr`'s own destructor at all. The destructor *body* still runs
+  correctly (the pointee classes have virtual destructors, so dispatch
+  reaches the right derived type either way), but `cv::Ptr`'s own
+  refcount/release/deleter bookkeeping is skipped entirely - the shared
+  reference is never decremented and the control block's deleter never
+  invoked, an inconsistency between the two teardown paths rather than
+  a crash-on-every-call bug, so it doesn't reproduce as a visible JS
+  exception or immediate crash.
+
+  Affected (file:line, function):
+    js_bg_subtractor.cpp:215-222   js_bg_subtractor_finalizer
+    js_white_balancer.cpp:93-99    js_white_balancer_finalizer
+    js_ximgproc.cpp:596-615        js_superpixel_finalizer (dynamic_cast
+                                    chain to SuperpixelSLIC/LSC/SEEDS,
+                                    each destroyed directly - the whole
+                                    chain is unnecessary since
+                                    cv::Algorithm's virtual destructor
+                                    already dispatches correctly through
+                                    cv::Ptr's own teardown)
+    js_feature2d.cpp:220-227       js_descriptor_matcher_finalizer
+    js_imgproc.cpp:112-119         js_generalized_hough_finalizer
+    js_ximgproc.cpp:788-795        js_edgeboxes_finalizer
+    js_ximgproc.cpp:1085-1092      js_graph_segmentation_finalizer
+    js_ximgproc.cpp:1214-1221      js_search_segmentation_finalizer
+    js_ximgproc.cpp:1436-1443      js_segmentation_strategy_finalizer
+
+  The 6 `js_*_finalizer` entries besides bg_subtractor/white_balancer/
+  superpixel all share the identical shape:
+
+    cv::Algorithm* ptr = X->get();
+    ptr->~Algorithm();
+    js_deallocate(rt, X);
+
+  which should become (once per file, using that file's own opaque
+  variable name and `cv::Ptr<...>` typedef name, e.g.
+  `JSDescriptorMatcherData` for `dm`):
+
+    X->~JSWhateverData();
+    js_deallocate(rt, X);
+
+  NOT affected: `js_barcode_detector.cpp`'s `~JSBarcodeDetectorClass()`
+  calls (lines 123, 140) look similar but are correct as written - that
+  class's `JSBarcodeDetectorData` typedef is the object type itself
+  (`typedef JSBarcodeDetectorClass JSBarcodeDetectorData;`), not a
+  `cv::Ptr` wrapper, so there is no smart pointer being bypassed there.
+
+  Fixed (2026-09-04) by rewriting all 9 finalizers to call the opaque
+  `cv::Ptr<...>` block's own destructor (e.g. `s->~JSBackgroundSubtractorData()`)
+  instead of destroying the pointee directly, matching the
+  `js_feature2d_finalizer` pattern. `js_superpixel_finalizer`'s
+  dynamic_cast chain to SuperpixelSLIC/LSC/SEEDS was removed since it's
+  unnecessary - `cv::Ptr`'s own teardown already dispatches through
+  `cv::Algorithm`'s virtual destructor to the correct derived type.
+
+    // not directly reproducible as a JS-visible crash/exception - the
+    // bug is a skipped cv::Ptr refcount decrement/deleter invocation,
+    // observable via a leaked control block or, if a custom deleter
+    // were ever attached, a skipped cleanup step. Confirmed by reading
+    // each finalizer body directly and comparing against the correct
+    // js_feature2d_finalizer pattern, not by triggering a crash.
+    import * as cv from 'opencv';
+    let wb = cv.createGrayworldWB();
+    wb = null;
+    gc(); // js_white_balancer_finalizer runs (*wb)->~JSWhiteBalancerClass()
+          // instead of wb->~JSWhiteBalancerData() - no visible symptom
+          // from JS, but cv::Ptr's own release/deleter never runs

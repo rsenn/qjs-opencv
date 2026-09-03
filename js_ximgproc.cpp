@@ -597,18 +597,7 @@ js_superpixel_finalizer(JSRuntime* rt, JSValue val) {
   JSSuperpixelData* sp;
 
   if((sp = js_superpixel_data(val))) {
-    cv::Algorithm* ptr = sp->get();
-
-    cv::ximgproc::SuperpixelSLIC* slic;
-    cv::ximgproc::SuperpixelLSC* lsc;
-    cv::ximgproc::SuperpixelSEEDS* seeds;
-
-    if((slic = dynamic_cast<cv::ximgproc::SuperpixelSLIC*>(ptr)))
-      slic->~SuperpixelSLIC();
-    else if((lsc = dynamic_cast<cv::ximgproc::SuperpixelLSC*>(ptr)))
-      lsc->~SuperpixelLSC();
-    else if((seeds = dynamic_cast<cv::ximgproc::SuperpixelSEEDS*>(ptr)))
-      seeds->~SuperpixelSEEDS();
+    sp->~JSSuperpixelData();
 
     js_deallocate(rt, sp);
   }
@@ -787,9 +776,7 @@ js_edgeboxes_finalizer(JSRuntime* rt, JSValue val) {
   JSEdgeBoxesData* eb;
 
   if((eb = js_edgeboxes_data(val))) {
-    cv::Algorithm* ptr = eb->get();
-
-    ptr->~Algorithm();
+    eb->~JSEdgeBoxesData();
 
     js_deallocate(rt, eb);
   }
@@ -1084,9 +1071,7 @@ js_graph_segmentation_finalizer(JSRuntime* rt, JSValue val) {
   JSGraphSegmentationData* gs;
 
   if((gs = js_graph_segmentation_data(val))) {
-    cv::Algorithm* ptr = gs->get();
-
-    ptr->~Algorithm();
+    gs->~JSGraphSegmentationData();
 
     js_deallocate(rt, gs);
   }
@@ -1213,9 +1198,7 @@ js_search_segmentation_finalizer(JSRuntime* rt, JSValue val) {
   JSSelectiveSearchSegmentationData* sss;
 
   if((sss = js_search_segmentation_data(val))) {
-    cv::Algorithm* ptr = sss->get();
-
-    ptr->~Algorithm();
+    sss->~JSSelectiveSearchSegmentationData();
 
     js_deallocate(rt, sss);
   }
@@ -1435,9 +1418,7 @@ js_segmentation_strategy_finalizer(JSRuntime* rt, JSValue val) {
   JSSegmentationStrategyData* ssss;
 
   if((ssss = js_segmentation_strategy_data(val))) {
-    cv::Algorithm* ptr = ssss->get();
-
-    ptr->~Algorithm();
+    ssss->~JSSegmentationStrategyData();
 
     js_deallocate(rt, ssss);
   }

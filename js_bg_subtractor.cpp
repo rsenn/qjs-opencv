@@ -3,6 +3,7 @@
 #include "js_point.hpp"
 #include "js_mat.hpp"
 #include "js_umat.hpp"
+#include "js_cv.hpp"
 #include "include/js_inputoutputarray.hpp"
 #include <opencv2/video/background_segm.hpp>
 #include <opencv2/bgsegm.hpp>
@@ -46,6 +47,7 @@ static JSValue
 js_bg_subtractor_function(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSBackgroundSubtractorData s;
 
+  try {
   switch(magic) {
     case BGSEGM_MOG: {
       int32_t history = 200, nmixtures = 5;
@@ -202,6 +204,7 @@ js_bg_subtractor_function(JSContext* ctx, JSValueConst this_val, int argc, JSVal
       break;
     }
   }
+  } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 
   return s ? js_bg_subtractor_wrap(ctx, s) : JS_NULL;
 }
@@ -216,7 +219,7 @@ js_bg_subtractor_finalizer(JSRuntime* rt, JSValue val) {
   JSBackgroundSubtractorData* s = static_cast<JSBackgroundSubtractorData*>(JS_GetOpaque(val, js_bg_subtractor_class_id));
   /* Note: 's' can be NULL in case JS_SetOpaque() was not called */
 
-  (*s)->~JSBackgroundSubtractorClass();
+  s->~JSBackgroundSubtractorData();
 
   js_deallocate<JSBackgroundSubtractorData>(rt, s);
 }
@@ -230,6 +233,7 @@ static JSValue
 js_bg_subtractor_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSBackgroundSubtractorData* s = static_cast<JSBackgroundSubtractorData*>(JS_GetOpaque2(ctx, this_val, js_bg_subtractor_class_id));
 
+  try {
   switch(magic) {
     case METHOD_APPLY: {
       JSInputArray input = js_cv_inputarray(ctx, argv[0]);
@@ -253,6 +257,7 @@ js_bg_subtractor_method(JSContext* ctx, JSValueConst this_val, int argc, JSValue
       break;
     }
   }
+  } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 
   return JS_UNDEFINED;
 }

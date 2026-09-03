@@ -285,14 +285,7 @@ public:
 
     if(js_is_function(m_ctx, m_val)) {
       if constexpr(number_type<T>::typed_array) {
-        /* Not js_typedarray<T>::from_vector(m_ctx, this->vec) - it calls
-         * from_sequence(vec.begin(), vec.end()), and js_typedarray_remain()
-         * (used inside from_sequence) is only SFINAE-enabled for raw-pointer
-         * iterators; std::vector<T>::begin()/end() return
-         * __gnu_cxx::__normal_iterator, not T*, so from_vector() fails to
-         * compile for any real std::vector<T> - see BUGS. Pointers sidestep
-         * that entirely. */
-        js_call_receiver(m_ctx, m_val, js_typedarray<T>::from_sequence(m_ctx, this->vec.data(), this->vec.data() + this->vec.size()));
+        js_call_receiver(m_ctx, m_val, js_typedarray<T>::from_vector(m_ctx, this->vec));
       } else if(JSVector<T>::get_class_id() == 0) {
         /* A JSVector<T> class only exists for element types js_vector_init()
          * registered (Mat, Point, Point2f, Point3f, Rect, int, float, double,

@@ -3,6 +3,7 @@
 #include "js_point.hpp"
 #include "js_mat.hpp"
 #include "js_umat.hpp"
+#include "js_cv.hpp"
 #include "include/js_inputoutputarray.hpp"
 #include <opencv2/xphoto/white_balance.hpp>
 
@@ -42,6 +43,7 @@ static JSValue
 js_white_balancer_function(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSWhiteBalancerData wb;
 
+  try {
   switch(magic) {
 
     case WB_SIMPLE: {
@@ -80,6 +82,7 @@ js_white_balancer_function(JSContext* ctx, JSValueConst this_val, int argc, JSVa
       return JS_UNDEFINED;
     }
   }
+  } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 
   return wb ? js_white_balancer_wrap(ctx, wb) : JS_NULL;
 }
@@ -94,7 +97,7 @@ js_white_balancer_finalizer(JSRuntime* rt, JSValue val) {
   JSWhiteBalancerData* wb = static_cast<JSWhiteBalancerData*>(JS_GetOpaque(val, js_white_balancer_class_id));
   /* Note: 'wb' can be NULL in case JS_SetOpaque() was not called */
 
-  (*wb)->~JSWhiteBalancerClass();
+  wb->~JSWhiteBalancerData();
 
   js_deallocate<JSWhiteBalancerData>(rt, wb);
 }
@@ -107,6 +110,7 @@ static JSValue
 js_white_balancer_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSWhiteBalancerData* wb = static_cast<JSWhiteBalancerData*>(JS_GetOpaque2(ctx, this_val, js_white_balancer_class_id));
 
+  try {
   switch(magic) {
     case BALANCE_WHITE: {
       JSInputArray src = js_cv_inputarray(ctx, argv[0]);
@@ -116,6 +120,7 @@ js_white_balancer_method(JSContext* ctx, JSValueConst this_val, int argc, JSValu
       break;
     }
   }
+  } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 
   return JS_UNDEFINED;
 }

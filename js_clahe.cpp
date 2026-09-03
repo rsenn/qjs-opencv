@@ -3,6 +3,7 @@
 #include "js_point.hpp"
 #include "js_size.hpp"
 #include "include/jsbindings.hpp"
+#include "js_cv.hpp"
 #include <quickjs.h>
 #include <stddef.h>
 #include <new>
@@ -89,6 +90,7 @@ js_clahe_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
   JSValue ret = JS_UNDEFINED;
   JSPointData<double> point = js_point_get(ctx, argv[0]);
 
+  try {
   switch(magic) {
     case METHOD_APPLY: {
       cv::Mat *input, *output;
@@ -107,6 +109,7 @@ js_clahe_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
       break;
     }
   }
+  } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 
   return ret;
 }

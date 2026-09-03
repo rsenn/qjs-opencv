@@ -2,6 +2,7 @@
 #include "js_size.hpp"
 #include "js_mat.hpp"
 #include "js_umat.hpp"
+#include "js_cv.hpp"
 #include "include/js_inputoutputarray.hpp"
 #include <opencv2/calib3d.hpp>
 #include <opencv2/objdetect.hpp>
@@ -23,6 +24,7 @@ static JSValue
 js_calib3d_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSValue ret = JS_UNDEFINED;
 
+  try {
   switch(magic) {
     case CALIBRATE_CAMERA: {
       JSInputArray objectPoints = js_cv_inputarray(ctx, argv[0]), imagePoints = js_cv_inputarray(ctx, argv[1]);
@@ -250,6 +252,7 @@ js_calib3d_functions(JSContext* ctx, JSValueConst this_val, int argc, JSValueCon
       break;
     }
   }
+  } catch(const cv::Exception& e) { ret = js_cv_throw(ctx, e); }
 
   return ret;
 }

@@ -219,9 +219,7 @@ js_descriptor_matcher_finalizer(JSRuntime* rt, JSValue val) {
   JSDescriptorMatcherData* dm;
 
   if((dm = js_descriptor_matcher_data(val))) {
-    cv::Algorithm* ptr = dm->get();
-
-    ptr->~Algorithm();
+    dm->~JSDescriptorMatcherData();
 
     js_deallocate(rt, dm);
   }

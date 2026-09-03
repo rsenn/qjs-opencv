@@ -295,16 +295,13 @@ js_typedarray_new(JSContext* ctx, JSValueConst buffer, uint32_t byteOffset, uint
 }
 
 template<class Iterator>
-static inline typename std::enable_if<std::is_pointer<Iterator>::value>::type
-js_typedarray_remain(Iterator& start, Iterator& end, uint32_t byteOffset, uint32_t& length) {
-  typedef typename std::remove_pointer<Iterator>::type value_type;
+static inline void
+js_typedarray_remain(const Iterator& start, const Iterator& end, uint32_t byteOffset, uint32_t& length) {
+  typedef typename std::iterator_traits<Iterator>::value_type value_type;
 
-  const uint8_t* ptr;
-  size_t len;
-  ptr = reinterpret_cast<const uint8_t*>(start) + byteOffset;
-  len = reinterpret_cast<const uint8_t*>(end) - ptr;
-
-  len /= sizeof(value_type);
+  size_t len = static_cast<size_t>(end - start);
+  size_t offsetElems = byteOffset / sizeof(value_type);
+  len = len > offsetElems ? len - offsetElems : 0;
 
   if(length > len)
     len = length;

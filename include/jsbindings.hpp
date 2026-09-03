@@ -364,19 +364,35 @@ js_arraybuffer_range(JSContext* ctx, JSValueConst buffer) {
   return range_view<T>(reinterpret_cast<T>(byte_ptr), round_to(size, sizeof(value_type)));
 }
 
+/* Works for both raw pointers and contiguous-storage iterators (e.g.
+ * std::vector<T>::iterator) - avoids reinterpret_cast on the iterator
+ * object itself, which only raw pointers support. `&*begin` is well
+ * defined whenever the range is non-empty since it merely re-takes the
+ * address of an already-dereferenceable element. */
+template<class Ptr>
+static inline const uint8_t*
+js_iterator_byte_ptr(const Ptr& begin, const Ptr& end) {
+  return begin != end ? reinterpret_cast<const uint8_t*>(&*begin) : nullptr;
+}
+
+template<class Ptr>
+static inline size_t
+js_iterator_byte_len(const Ptr& begin, const Ptr& end) {
+  typedef typename std::iterator_traits<Ptr>::value_type value_type;
+  return static_cast<size_t>(end - begin) * sizeof(value_type);
+}
+
 template<class Ptr>
 static inline JSValue
 js_arraybuffer_from(JSContext* ctx, const Ptr& begin, const Ptr& end) {
-  const uint8_t* ptr = reinterpret_cast<const uint8_t*>(begin);
-  size_t len = reinterpret_cast<const uint8_t*>(end) - ptr;
-  return JS_NewArrayBufferCopy(ctx, ptr, len);
+  return JS_NewArrayBufferCopy(ctx, js_iterator_byte_ptr(begin, end), js_iterator_byte_len(begin, end));
 }
 
 template<class Ptr>
 static inline JSValue
 js_arraybuffer_from(JSContext* ctx, const Ptr& begin, const Ptr& end, JSFreeArrayBufferDataFunc& free_func, void* opaque = nullptr, bool is_shared = false) {
-  const uint8_t* ptr = reinterpret_cast<const uint8_t*>(begin);
-  size_t len = reinterpret_cast<const uint8_t*>(end) - ptr;
+  const uint8_t* ptr = js_iterator_byte_ptr(begin, end);
+  size_t len = js_iterator_byte_len(begin, end);
   return JS_NewArrayBuffer(ctx, const_cast<uint8_t*>(ptr), len, &free_func, opaque, is_shared);
 }
 
