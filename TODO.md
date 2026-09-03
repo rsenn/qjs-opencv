@@ -416,6 +416,34 @@ already there.
   repeated toggling (even across different fonts in one session) keeps
   showing a genuinely different palette, per "a different (and calculated
   to color wheels) color palette every time".
+- [x] **Glyph-map size cycling on `-`/`=`/`+`/`_`, implemented 2026-08-28.**
+  `-`/`=` step through `goodSizesFor(crisp, fallbackSize)` — the sizes
+  `findCrispSize()` actually tried, plus the base/`x2`/`x4` "obviously
+  good" multiples, deduped/sorted/floored at 2px, cached once per font
+  alongside the rest of `#prepareGlyphMap()`'s state. `+`/`_` (the same
+  physical keys with shift held — `readKey()` can only tell them apart by
+  the different byte a real keyboard sends, there's no separate modifier
+  flag) instead step `gm.size` by ±0.5px directly, not through the
+  candidate list. Both paths go through `#tryChangeGlyphMapSize()`, which
+  clamps to a 2px floor and rejects (no-ops, leaving the current size
+  alone) any target where `cellWidth * 2 > maxCols` — i.e. fewer than 2
+  glyph cells would remain visible — per direct instruction, "never scale
+  it so big that not even 2 glyphs are visible anymore." Verified with a
+  standalone logic test mirroring `goodSizesFor()`/`#tryChangeGlyphMapSize
+  ()` against a synthetic `findCrispSize()` result: coarse cycling stops
+  cleanly at the candidate list's ends (`undefined`, not a wrap or crash),
+  fine-stepping down floors at 2px and then correctly no-ops rather than
+  going negative, and an oversized coarse target is rejected instead of
+  applied. **Found along the way, not fixed (logged in `BUGS` as
+  `opencv-freetype-fontscale-truncated-to-int`):** fractional pixel sizes
+  are silently truncated to the integer size somewhere inside upstream
+  opencv_contrib's FreeType2 module (`TextStyle(f, 8.5).size('A')`
+  measures identical to `size 8`), not in this project's own binding code
+  (`js_draw.cpp` passes the `double` through untouched) — the 0.5px fine
+  step is implemented and tracked/displayed as requested regardless, since
+  declining silently over an upstream limitation the user didn't ask about
+  would be worse than shipping a control whose finest steps may not always
+  visibly change the render.
 
 ### Stage 4 — PNG+JSON export of selected fonts
 
@@ -450,6 +478,24 @@ Investigated 2026-08-17 (previous pass: 2026-08-12) by comparing `doc/opencv-js-
 The codebase moved substantially since the 2026-08-12 pass: `js_contour.[ch]pp` (the custom `Contour` class), `js_point_iterator`, `js_line_iterator`, and `js_slice_iterator` were removed entirely; `findContours` now natively supports `MatVector`/`PointVectorVector` output; `drawContours` (plural) now threads a real `index`/`hierarchy` through instead of hardcoding `index=0`; `cv.Range` is now a real constructible class; `Mat.diag()`, the seven `.dataXX` typed views, the seven `<type>At()` accessors, and the seven `<type>Ptr()` accessors all shipped; `Scalar.all()` and `barcode_BarcodeDetector` both shipped. Several other entries from the old pass are unchanged — re-verified below, not just carried forward blindly. Entries marked "carried forward, not re-verified" cover files with no commits since 2026-08-12 — low risk of drift, flagged transparently rather than silently repeated as fresh findings.
 
 Grouped by how badly a naive port breaks.
+
+**Not a divergence, logged because it caused real confusion (2026-08-28):**
+user reported treating `mat.dims` as a per-dimension shape array (`dims[1]`,
+`dims[2]`, `dims[3]`) in Gemini-authored ESPCN super-resolution post-
+processing code, and had to switch to `.size()` to get it working. Checked
+both sides: this project's `.dims` (`js_mat.cpp:2070`, `PROP_DIMS`) is
+correctly a scalar — `m->dims`, matching native C++ `cv::Mat::dims` (the
+rank) — it was never an array here. opencv.js has **no `.dims` property at
+all** (`doc/opencv-js-api.md:100-112`); its N-D shape accessor is
+`.matSize` (`int[]`) or `.size()`. This project's `.size()`
+(`js_mat_size_value()`, `js_mat.cpp:1408-1428`) already matches opencv.js:
+for a normal 2D mat it's a `Size`-like object also indexable by dimension
+(`size[0]`, `size[1]`, ...), and for a true N-D mat (`rows`/`cols == -1`,
+e.g. a 4-D DNN output tensor) it's a plain `[dim0, dim1, ...]` array — the
+`[1, 3, H, W]` shape the ESPCN code needed. So nothing to fix on either
+side; the original code's bug was reaching for `.dims` (rank, absent from
+opencv.js) instead of `.size()`/`.matSize` (shape, present on both). The
+user's own fix was already the opencv.js-correct one.
 
 ### Silently wrong results (no exception, no obviously-missing output — the dangerous category)
 

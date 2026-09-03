@@ -24,15 +24,23 @@ function upscaleFontGlyphs(net, image) {
 
   // FSRCNN takes standard 3-channel or 1-channel blobs scaled to [0, 1]
   const blob = cv.blobFromImage(
-    padded, 
-    1.0 / 255.0, 
-    new cv.Size(padded.cols, padded.rows), 
-    [0, 0, 0], 
-    /*swapRB*/ false, 
+    padded,
+    1.0 / 255.0,
+    new cv.Size(padded.cols, padded.rows),
+    [0, 0, 0],
+    /*swapRB*/ false,
     /*crop*/ false
   );
 
-  net.setInput(blob);
+  // blobFromImage always shapes its output NCHW (1,1,H,W); this
+  // particular ONNX graph (converted from the original TensorFlow
+  // FSRCNN model, which is NHWC-native) declares its input as (1,H,W,1)
+  // instead. With a single channel the underlying byte layout is
+  // identical either way (the channel dim is a singleton in both), so
+  // this is a pure shape-metadata relabel, not a data copy/transpose.
+  const reshaped = blob.reshape(1, [1, padded.rows, padded.cols, 1]);
+
+  net.setInput(reshaped);
   const out = net.forward();
 
   const dims = out.size();

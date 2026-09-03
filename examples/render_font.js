@@ -36,7 +36,13 @@ const KEYS = `
 `;
 
 function runCommand(args) {
-  const f = std.popen(args.map(a => `'${a.replace(/'/g, `'\\''`)}'`).join(' '), 'r');
+  // std.popen runs via a shell, and stderr defaults to this process's own
+  // (the raw-mode, alt-screen terminal) - any subprocess warning/traceback
+  // would otherwise print straight through underneath the UI instead of
+  // being caught by the try/catch call sites here that expect a clean
+  // failure (empty stdout). Redirect it away instead of inheriting it.
+  const cmd = args.map(a => `'${a.replace(/'/g, `'\\''`)}'`).join(' ') + ' 2>/dev/null';
+  const f = std.popen(cmd, 'r');
   const out = f.readAsString();
   f.close();
   return out;
@@ -168,8 +174,63 @@ const BITMAP_LEVEL_THRESHOLD = 40;
 // Returns null on any failure (fontTools not installed, corrupt font,
 // python3 missing) - the caller falls back to the empirical search alone.
 function queryFontProgramInfo(fontFile) {
-  const script = `
-import sys, json from math import gcd from functools import reduce try: from fontTools.ttLib import TTFont except Exception as e: print(json.dumps({"error": "fontTools not available: %s" % e})) sys.exit(0) try: f = TTFont(sys.argv[1], lazy=True, fontNumber=0) info = {} info["unitsPerEm"] = f["head"].unitsPerEm if "head" in f else None info["numGlyphs"] = f["maxp"].numGlyphs if "maxp" in f else None info["outline"] = "CFF" if "CFF " in f else ("glyf" if "glyf" in f else "bitmap-only") info["colorTables"] = [t for t in ("COLR", "CPAL", "sbix", "CBDT", "CBLC") if t in f] info["embeddedBitmaps"] = ("EBDT" in f) or ("CBDT" in f) info["variableAxes"] = [a.axisTag for a in f["fvar"].axes] if "fvar" in f else [] hasHinting = False try: if "fpgm" in f and len(f["fpgm"].program.getBytecode()) > 0: hasHinting = True elif "prep" in f and len(f["prep"].program.getBytecode()) > 0: hasHinting = True except Exception: pass info["hasHinting"] = hasHinting gridUnit = 0 if "glyf" in f: coords = [] count = 0 for name in f.getGlyphOrder(): if count >= 60: break g = f["glyf"][name] if g.isComposite() or not hasattr(g, "coordinates"): continue for(x, y) in g.coordinates: if x: coords.append(abs(int(x))) if y: coords.append(abs(int(y))) count += 1 if coords: gridUnit = reduce(gcd, coords) info["gridUnit"] = gridUnit info["gridSizeBase"] = (info["unitsPerEm"] // gcd(info["unitsPerEm"], gridUnit)) if(gridUnit and info["unitsPerEm"]) else None print(json.dumps(info)) except Exception as e: print(json.dumps({"error": str(e)})) `;
+  // One Python statement per array entry, joined with real '\n's - NOT a
+  // single template-literal string. A flattened one-liner here is a
+  // guaranteed Python SyntaxError (indentation-sensitive `try`/`for`/`if`
+  // blocks can't be space-joined onto one physical line), and since
+  // runCommand() doesn't redirect stderr, that traceback used to print
+  // straight through to the raw terminal underneath the alt-screen UI.
+  const script = [
+    'import sys, json',
+    'from math import gcd',
+    'from functools import reduce',
+    'try:',
+    '    from fontTools.ttLib import TTFont',
+    'except Exception as e:',
+    '    print(json.dumps({"error": "fontTools not available: %s" % e}))',
+    '    sys.exit(0)',
+    'try:',
+    '    f = TTFont(sys.argv[1], lazy=True, fontNumber=0)',
+    '    info = {}',
+    '    info["unitsPerEm"] = f["head"].unitsPerEm if "head" in f else None',
+    '    info["numGlyphs"] = f["maxp"].numGlyphs if "maxp" in f else None',
+    '    info["outline"] = "CFF" if "CFF " in f else ("glyf" if "glyf" in f else "bitmap-only")',
+    '    info["colorTables"] = [t for t in ("COLR", "CPAL", "sbix", "CBDT", "CBLC") if t in f]',
+    '    info["embeddedBitmaps"] = ("EBDT" in f) or ("CBDT" in f)',
+    '    info["variableAxes"] = [a.axisTag for a in f["fvar"].axes] if "fvar" in f else []',
+    '    hasHinting = False',
+    '    try:',
+    '        if "fpgm" in f and len(f["fpgm"].program.getBytecode()) > 0:',
+    '            hasHinting = True',
+    '        elif "prep" in f and len(f["prep"].program.getBytecode()) > 0:',
+    '            hasHinting = True',
+    '    except Exception:',
+    '        pass',
+    '    info["hasHinting"] = hasHinting',
+    '    gridUnit = 0',
+    '    if "glyf" in f:',
+    '        coords = []',
+    '        count = 0',
+    '        for name in f.getGlyphOrder():',
+    '            if count >= 60:',
+    '                break',
+    '            g = f["glyf"][name]',
+    '            if g.isComposite() or not hasattr(g, "coordinates"):',
+    '                continue',
+    '            for (x, y) in g.coordinates:',
+    '                if x:',
+    '                    coords.append(abs(int(x)))',
+    '                if y:',
+    '                    coords.append(abs(int(y)))',
+    '            count += 1',
+    '        if coords:',
+    '            gridUnit = reduce(gcd, coords)',
+    '    info["gridUnit"] = gridUnit',
+    '    info["gridSizeBase"] = (info["unitsPerEm"] // gcd(info["unitsPerEm"], gridUnit)) if (gridUnit and info["unitsPerEm"]) else None',
+    '    print(json.dumps(info))',
+    'except Exception as e:',
+    '    print(json.dumps({"error": str(e)}))',
+  ].join('\n');
   const out = runCommand(['python3', '-c', script, fontFile]);
   if(!out) return null;
 
@@ -1113,7 +1174,7 @@ class FontListBrowser {
       const { visibleGlyphRows, totalRows } = this.#drawGlyphMapFrame(screen, font, gm, termCols, termRows, colorFn);
       if(showPanel) this.#drawInfoPanel(screen, info, termCols, termRows);
 
-      screen.moveTo(termRows, 1).clearLine(2).write(clipAnsiLine('arrows/pgup/pgdn pan   -/= size   +/_ fine size   i info panel   c color mode   esc/enter/q back', maxCols));
+      screen.moveTo(termRows, 1).clearLine(2).write(clipAnsiLine('arrows/pgup/pgdn pan   s/b size   S/B fine size   i info panel   c color mode   esc/enter/q back', maxCols));
       screen.flush();
 
       const key = readKey(std.in.fileno());
@@ -1133,22 +1194,28 @@ class FontListBrowser {
           colorHue = null;
         }
       }
-      // Coarse cycle ('-'/'=', the unshifted main-row +/- keys - also
-      // what a numpad '-' sends) steps through goodSizesFor()'s tried/2x/
-      // 4x list; fine step ('_'/'+' - literally shift+-/shift+= on a
-      // standard layout, i.e. holding shift while pressing +/-) moves by
-      // 0.5px, floored at 2px. Both refuse (leave gm.size unchanged) if
-      // the result would show fewer than 2 glyph cells - see
-      // #tryChangeGlyphMapSize().
-      else if(key.type === 'char' && key.char === '=') {
+      // Size cycling: 's'/'b' (smaller/bigger) coarse-cycle through
+      // goodSizesFor()'s tried/2x/4x list; 'S'/'B' (shift held) fine-step
+      // by 0.5px, floored at 2px. Deliberately plain letters, not
+      // punctuation - a Swiss German QWERTZ keyboard (and many other
+      // non-US layouts) doesn't put '+'/'='/'_' where a US layout does
+      // (e.g. '=' needs AltGr, '_' needs AltGr+Shift), so the original
+      // -/=/+/_ bindings were effectively unreachable there. Letters are
+      // layout-stable (same key, same character) except y/z, which this
+      // avoids; Shift+letter reliably capitalizes on every layout, so the
+      // "hold shift for fine adjustment" gesture the coarse/fine split
+      // wants still works, just relocated off punctuation. Both refuse
+      // (leave gm.size unchanged) if the result would show fewer than 2
+      // glyph cells - see #tryChangeGlyphMapSize().
+      else if(key.type === 'char' && key.char === 'b') {
         const target = gm.goodSizes.find(s => s > gm.size);
         if(target !== undefined) this.#tryChangeGlyphMapSize(font, gm, target, termCols);
-      } else if(key.type === 'char' && key.char === '-') {
+      } else if(key.type === 'char' && key.char === 's') {
         const target = [...gm.goodSizes].reverse().find(s => s < gm.size);
         if(target !== undefined) this.#tryChangeGlyphMapSize(font, gm, target, termCols);
-      } else if(key.type === 'char' && key.char === '+') {
+      } else if(key.type === 'char' && key.char === 'B') {
         this.#tryChangeGlyphMapSize(font, gm, gm.size + 0.5, termCols);
-      } else if(key.type === 'char' && key.char === '_') {
+      } else if(key.type === 'char' && key.char === 'S') {
         this.#tryChangeGlyphMapSize(font, gm, gm.size - 0.5, termCols);
       } else if(key.type === 'escape' || key.type === 'enter' || key.type === 'ctrlc' || key.type === 'eof') break;
       else if(key.type === 'char' && key.char === 'q') break;

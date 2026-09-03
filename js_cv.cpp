@@ -947,6 +947,7 @@ enum {
   OTHER_DETERMINANT,
   OTHER_EIGEN,
   OTHER_EIGEN_NON_SYMMETRIC,
+  OTHER_GEMM,
   OTHER_CHECK_RANGE,
   OTHER_IN_RANGE,
   OTHER_INSERT_CHANNEL,
@@ -1097,6 +1098,34 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
           eigenvectors = js_cv_outputarray(ctx, argv[2]);
         cv::eigenNonSymmetric(src, eigenvalues, eigenvectors);
 
+        break;
+      }
+
+      /* Real matrix multiplication (opencv.js has no Mat.matMul() - this is
+       * the free function opencv.js itself exposes for it, per
+       * core_array.d.ts: gemm(src1, src2, alpha, src3, beta, dst, flags?).
+       * cv.Mat.mul() is a different, elementwise operation - see BUGS:
+       * mat-mul-is-elementwise-not-matrix-multiplication. */
+      case OTHER_GEMM: {
+        JSInputArray src2 = cv::noArray(), src3 = cv::noArray();
+        JSOutputArray dst = cv::noArray();
+        double alpha = 1, beta = 0;
+        int32_t flags = 0;
+
+        if(argc >= 2)
+          src2 = js_cv_inputarray(ctx, argv[1]);
+        if(argc >= 3)
+          JS_ToFloat64(ctx, &alpha, argv[2]);
+        if(argc >= 4)
+          src3 = js_cv_inputarray(ctx, argv[3]);
+        if(argc >= 5)
+          JS_ToFloat64(ctx, &beta, argv[4]);
+        if(argc >= 6)
+          dst = js_cv_outputarray(ctx, argv[5]);
+        if(argc >= 7)
+          JS_ToInt32(ctx, &flags, argv[6]);
+
+        cv::gemm(src, src2, alpha, src3, beta, dst, flags);
         break;
       }
 
@@ -1802,6 +1831,7 @@ js_function_list_t js_cv_static_funcs{
     JS_CFUNC_MAGIC_DEF("determinant", 1, js_cv_other, OTHER_DETERMINANT),
     JS_CFUNC_MAGIC_DEF("eigen", 2, js_cv_other, OTHER_EIGEN),
     JS_CFUNC_MAGIC_DEF("eigenNonSymmetric", 3, js_cv_other, OTHER_EIGEN_NON_SYMMETRIC),
+    JS_CFUNC_MAGIC_DEF("gemm", 7, js_cv_other, OTHER_GEMM),
     JS_CFUNC_MAGIC_DEF("inRange", 4, js_cv_other, OTHER_IN_RANGE),
     JS_CFUNC_MAGIC_DEF("insertChannel", 3, js_cv_other, OTHER_INSERT_CHANNEL),
     JS_CFUNC_MAGIC_DEF("kmeans", 3, js_cv_other, OTHER_KMEANS),
