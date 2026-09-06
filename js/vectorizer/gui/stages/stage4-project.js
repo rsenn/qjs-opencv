@@ -1,24 +1,30 @@
-// gui/stages/stage4-project.js
-//
-// Stage 4 — PROJECT. The output canvas is shown scaled-to-fit. Every vectorized
-// frame gets a placement: a 4-corner quad in canvas space. Dragging a corner
-// recomputes the homography H = rectToQuad(frameW, frameH, quad) and stores it
-// on the Model (model.setPlacement). The composite is previewed by rasterizing
-// each frame's VectorData through its H — the exact transform the SVG composer
-// bakes/emits, so preview == export.
-//
-// All projective math lives in core/geometry.js (pure JS). This stage only maps
-// between screen pixels and canvas coordinates and drives drag interaction; it
-// uses OpenCV solely to raster the preview.
+/*
+ * gui/stages/stage4-project.js
+ *
+ * Stage 4 - PROJECT. The output canvas is shown scaled-to-fit. Every vectorized
+ * frame gets a placement: a 4-corner quad in canvas space. Dragging a corner
+ * recomputes the homography H = rectToQuad(frameW, frameH, quad) and stores it
+ * on the Model (model.setPlacement). The composite is previewed by rasterizing
+ * each frame's VectorData through its H - the exact transform the SVG composer
+ * bakes/emits, so preview == export.
+ *
+ * All projective math lives in core/geometry.js (pure JS). This stage only maps
+ * between screen pixels and canvas coordinates and drives drag interaction; it
+ * uses OpenCV solely to raster the preview. The per-frame opacity control is a
+ * cvWidgets drawn trackbar (see cvWidgets.js's Hud.trackbar()), so switching
+ * the focused frame just draws a different value next frame - no window
+ * rebuild, unlike the native HighGUI trackbar this replaced.
+ */
 
-import { Mat, Size, Scalar, Rect, rectangle, FILLED } from 'opencv.so';
+import { Mat, Size, Scalar, Rect, rectangle, FILLED, CV_8UC3 } from 'opencv';
 import { Palette } from '../canvas.js';
 import { drawVectorData } from '../../cv/raster.js';
 import { rectToQuad } from '../../core/geometry.js';
 
 const FILL = typeof FILLED === 'number' ? FILLED : -1;
-const HANDLE = 7;          // corner handle radius in screen px
+const HANDLE = 7; /* corner handle radius in screen px */
 const COLORS = [[96, 168, 96], [70, 130, 200], [70, 170, 220], [180, 120, 90], [150, 90, 180], [90, 160, 160]];
+const OPACITY_SPEC = { key: 'opacity', label: 'opacity %', type: 'int', min: 0, max: 100, step: 1 };
 
 export class ProjectStage {
   constructor() {
@@ -42,24 +48,12 @@ export class ProjectStage {
       m.setPlacement(f.id, { quad, H: rectToQuad(f.w || w, f.h || h, quad), opacity: 1 });
     });
     if (vfs.length && !vfs.some((f) => f.id === this.focused)) this.focused = vfs[0].id;
-
-    // Opacity trackbar for the focused frame.
-    const pl = this.focused && m.placements.get(this.focused);
-    app.trackbars.add(
-      { key: 'opacity', label: 'opacity %', type: 'int', min: 0, max: 100, step: 1, default: 100 },
-      Math.round(((pl && pl.opacity) ?? 1) * 100),
-    );
   }
 
-  onParams(app, delta) {
-    if (delta.opacity != null && this.focused)
-      app.model.setPlacement(this.focused, { opacity: delta.opacity / 100 });
-  }
-
-  // ---- coordinate mapping --------------------------------------------------
+  /* ---- coordinate mapping -------------------------------------------------- */
   _fit(app) {
     const m = app.model, top = 92, pad = 16;
-    const aw = app.W - 2 * pad, ah = app.H - top - 28;
+    const aw = app.W - 2 * pad, ah = app.H - top - 62; /* leaves room for the opacity trackbar + frame strip */
     const s = Math.min(aw / m.canvas.width, ah / m.canvas.height);
     const dw = m.canvas.width * s, dh = m.canvas.height * s;
     this.view = { x: pad + (aw - dw) / 2, y: top + (ah - dh) / 2, s };
@@ -81,7 +75,7 @@ export class ProjectStage {
     // ---- composite raster preview -----------------------------------------
     // Render the whole canvas (in canvas resolution) then paste scaled. This is
     // the same path the SVG composer takes, just rasterized.
-    const cM = new Mat(new Size(m.canvas.width, m.canvas.height), 16);
+    const cM = new Mat(new Size(m.canvas.width, m.canvas.height), CV_8UC3);
     rectangle(cM, new Rect(0, 0, m.canvas.width, m.canvas.height), new Scalar(250, 250, 250), FILL);
     for (const f of vfs) {
       const pl = m.placements.get(f.id);
@@ -114,14 +108,21 @@ export class ProjectStage {
       cv.text(f.label, scr[0][0] + 8, scr[0][1] - 8, focused ? Palette.text : Palette.textDim, 0.4);
     });
 
+    // ---- opacity trackbar for the focused frame ---------------------------
+    if (this.focused) {
+      const pl = m.placements.get(this.focused);
+      const current = Math.round(((pl && pl.opacity) ?? 1) * 100);
+      const newOpacity = hud.trackbar(cv, 16, app.H - 56, app.W - 32, 24, OPACITY_SPEC, current);
+      if (newOpacity != null) m.setPlacement(this.focused, { opacity: newOpacity / 100 });
+    }
+
     // ---- frame selector strip ---------------------------------------------
     let bx = 16;
     vfs.forEach((f) => {
       const w = 120;
       if (hud.button(cv, bx, app.H - 26, w, 22, f.label.slice(0, 16),
         { active: f.id === this.focused, scale: 0.4 })) {
-        this.focused = f.id;
-        app.goTo(app.model.stage);   // rebuild opacity trackbar for new focus
+        this.focused = f.id; /* drawn trackbar picks up the new focus next frame, no rebuild */
       }
       bx += w + 6;
     });

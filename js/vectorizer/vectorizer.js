@@ -19,19 +19,14 @@
 // the loader (cv/loader.js) and the vectorization methods (vector/methods/*).
 
 import * as fs from 'fs';
+import { exit } from 'std';
 
 import { Model } from './core/model.js';
 import { Pipeline } from './core/pipeline.js';
 import { Composer } from './core/composer.js';
 import { defaultRegistry } from './vector/registry.js';
 import { Loader } from './cv/loader.js';
-import { JobRunner } from './cv/jobs.js';
 import { App } from './gui/app.js';
-
-// Resolve the os.Worker entry script relative to this module.
-const WORKER_PATH = import.meta.url
-  .replace(/^file:\/\//, '')
-  .replace(/[^/]+$/, '') + 'vector/worker.js';
 
 function parseArgs(argv) {
   const opts = { output: 'out.svg', method: 'canny', width: 1280, height: 720, paths: [] };
@@ -111,8 +106,7 @@ async function main(...args) {
     }
   }
 
-  const jobs = new JobRunner(WORKER_PATH);
-  const app = new App({ model, pipeline, registry, jobs });
+  const app = new App({ model, pipeline, registry });
 
   // When the user hits Export, assign the default method to anything still
   // unassigned (defensive), then write the composed SVG.
@@ -131,17 +125,22 @@ async function main(...args) {
   model.on('frames', () => pipeline.autoAssign(fallbackMethod));
 
   await app.run();
-  jobs.terminate();
   return 0;
 }
 
 // qjs passes script args to main(); fall back to scriptArgs for other runtimes.
 (async () => {
+  let code = 0;
   try {
     const args = globalThis['scriptArgs'];
     const argv = args ? args.slice(1) : [];
-    await main(...argv);
+    code = await main(...argv);
   } catch(e) {
     console.log('fatal:', String((e && e.stack) || e));
+    code = 1;
   }
+  // GTK's own thread pool (and, until jobs.terminate() lands, the worker
+  // thread) keep the process alive past main() returning - force the exit
+  // instead of waiting for the interpreter to notice every thread is done.
+  exit(code || 0);
 })();

@@ -5,7 +5,7 @@
 // the OpenCV build (per the qjs-opencv reference); if unavailable, the method
 // throws and the GUI shows the error in the preview pane.
 
-import { Mat, LineSegmentDetector } from 'opencv.so';
+import { Mat, LineSegmentDetector } from 'opencv';
 
 import { VectorMethod } from '../base.js';
 import { create } from '../../core/vectordata.js';
@@ -23,11 +23,13 @@ export class LSDLines extends VectorMethod {
     ];
   }
 
-  apply(mat, p, meta) {
+  async apply(mat, p, meta) {
+    const tick = meta.tick || (async () => {});
     const gray = toGray(mat);
     const lsd = new LineSegmentDetector();
     const linesMat = new Mat();
     lsd.detect(gray, linesMat);
+    await tick(0.6);
     const rows = [];
     try { for (const r of linesMat) rows.push(Array.from(r)); } catch (_) {}
     const filtered = rows.filter((l) => Math.hypot(l[2] - l[0], l[3] - l[1]) >= p.minLen);

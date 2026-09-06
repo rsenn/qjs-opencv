@@ -5,7 +5,7 @@
 // (mat.buffer is a view onto the Mat's pixel data); postMessage's structured
 // clone makes the copy on its own.
 
-import { Mat } from 'opencv.so';
+import { Mat } from 'opencv';
 
 export function matToMsg(mat) {
   return { rows: mat.rows, cols: mat.cols, type: mat.type(), buffer: mat.buffer };

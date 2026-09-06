@@ -12,9 +12,17 @@ export class Pipeline extends Function {
       }
       if(!(mat instanceof Mat)) mat = null;
 
+      let force = false;
+
       for(let [i, processor] of processors) {
         self.currentProcessor = i;
         let args = [mat ?? self.images[i - 1], self.images[i]];
+        let mustRun = !processor.managed || force || processor.isDirty;
+
+        if(!mustRun) {
+          mat = self.images[i];
+          continue;
+        }
 
         self.invokeCallback('before', ...args);
 
@@ -23,6 +31,10 @@ export class Pipeline extends Function {
         //console.log(`Pipeline \x1b[38;5;112m#${i} \x1b[38;5;32m'${processor.name}'\x1b[m`, mat);
 
         self.invokeCallback('after', ...args);
+
+        if(processor.managed) processor.clean();
+
+        force = true;
 
         //console.log(`Pipeline`, { i, mat, isObj: isObject(mat) });
 
@@ -153,6 +165,8 @@ export function Processor(fn, ...args) {
   };
   Object.defineProperty(self, 'name', { value: fn.name });
   Object.setPrototypeOf(self, Processor.prototype);
+  self.params = [];
+  self.dirty = true;
   return self;
 }
 Object.setPrototypeOf(Processor.prototype, Function.prototype);
@@ -162,5 +176,25 @@ Object.assign(Processor.prototype, {
   },
   get functionName() {
     return this.fnName;
+  },
+  /* Opt in to dirty-flag recompute: this processor and everything after it
+   * in the pipeline only reruns when `.dirty` was set manually or one of the
+   * watched Params changed value since the last run (see cvParam.js). */
+  watch(...params) {
+    this.params.push(...params);
+    this.managed = true;
+    return this;
+  },
+  clean() {
+    this.dirty = false;
+    for(let p of this.params) if(p) p.dirty = false;
+  },
+});
+/* Object.assign would invoke this getter immediately (reading it off the
+ * object-literal source above, with the wrong `this`) instead of copying it
+ * as an accessor - define it directly on the prototype instead. */
+Object.defineProperty(Processor.prototype, 'isDirty', {
+  get() {
+    return this.dirty || this.params.some(p => p && p.dirty);
   },
 });

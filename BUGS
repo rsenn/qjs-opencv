@@ -21,8 +21,24 @@
                            // exits 1 as expected.
 
 
-- contour-migration-strategy: Phased approach to replace Contour class
+- STALE (2026-09-05): contour-migration-strategy: Phased approach to replace Contour class
   with opencv.js-compatible API. See TODO.md for full details.
+
+  **This entire entry is out of date.** Verified directly against current
+  code (not this file) while answering a user question: `find . -maxdepth
+  1 -iname "js_contour*"` finds nothing, `cv.Contour` is `undefined` at
+  runtime, `findContours()` (`js_imgproc.cpp`) hands out each contour as
+  `Mat CV_32SC2`/`MatVector`/`PointVectorVector` (the opencv.js-compatible
+  shapes) rather than `JSContourData<double>`, and `Rect.contour()`
+  (`js_rect.cpp`'s `FUNC_CONTOUR`) returns a plain JS array of points, not
+  a `Contour` instance. The Phase 2 "MatVector - SECONDARY - Planned,
+  won't be 100% complete" framing below is wrong - it's done. Left the
+  rest of this entry as a historical record of the plan rather than
+  rewriting it; treat everything below as describing a completed effort,
+  not a current one. If a future session needs the real Contour-migration
+  status, verify against the actual source tree first - this file already
+  fooled one session (2026-09-05) into telling the user Contour class
+  removal "hasn't started."
 
   **Phase 1: Method Migration (PRIMARY - In Progress)**
   Migrate Contour methods to freestanding functions for opencv.js compatibility.
@@ -57,7 +73,7 @@
   - make-dormant-point-line-iterator-plug-into-point-mat-vector (binary compat)
 
 
-- contour-cleanup-plan: Systematic removal of non-standard Contour methods
+- STALE (2026-09-05, see contour-migration-strategy above): contour-cleanup-plan: Systematic removal of non-standard Contour methods
   to align with opencv.js API and reduce tech debt.
 
   **Audit Results (2026-08-13):**
@@ -107,22 +123,37 @@
 
   See: contour-migration-strategy for overall plan
 
-- findcontours-crash-opencv5: findContours crashes when writing to hierarchy
+- FIXED (stale by the time verified, 2026-09-05): findcontours-crash-opencv5: findContours crashes when writing to hierarchy
   vector with OpenCV 5.0.0. The crash occurs inside cv::findContours when it
   tries to populate the hierarchy vector via JSInputOutputArray wrapper.
   Error: "Assertion '__n < this->size()' failed" when accessing vec4i[i].
-  
+
   This appears to be a compatibility issue between JSInputOutputArray and
   OpenCV 5.0.0's findContours implementation. The crash happens before we
   even check if vec4i is empty, suggesting the issue is inside the OpenCV
   library itself when it tries to write to the output parameter.
-  
+
   Workaround: None currently. May need to investigate JSInputOutputArray
   implementation or use a different approach for hierarchy output.
-  
+
   Impact: findContours with hierarchy parameter is broken in OpenCV 5.0.0.
   findContours without hierarchy parameter works fine.
-- opencv-js-api-mismatch-contour-class: The Contour class is scheduled for
+
+  No longer reproduces (verified 2026-09-05, part of the same audit that
+  found the Contour class itself already fully removed - see
+  contour-migration-strategy): `cv.findContours(img, contours, hierarchy,
+  cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)` with a real nested-rectangle
+  image (5 contours, multiple hierarchy levels) runs cleanly and returns
+  a correctly populated `hierarchy` Mat (CV_32SC4, one row per contour) -
+  reran 5x, identical results every time. Almost certainly fixed as a
+  side effect of the `js_cv_find_contours()` rewrite that replaced
+  `JSContourData<double>` output with `std::vector<cv::Mat>` (see
+  `js_imgproc.cpp`'s current `findContours` - it no longer routes
+  hierarchy through the old `JSInputOutputArray` wrapper path this entry
+  blamed), not a change made to specifically fix this entry. Was blocking
+  a common opencv.js pattern (`RETR_TREE`/`RETR_CCOMP` with a hierarchy
+  output) - now works.
+- STALE (2026-09-05, see contour-migration-strategy above): opencv-js-api-mismatch-contour-class: The Contour class is scheduled for
   phase-out in favor of MatVector (vector<Mat> backed by memory). The
   plain-array approach used by findContours has performance problems when
   there are many contours.
@@ -227,7 +258,7 @@
   See: contour-migration-strategy entry for implementation plan.
 
 
-- make-dormant-point-line-iterator-plug-into-point-mat-vector: 
+- STALE (2026-09-05, see contour-migration-strategy above): make-dormant-point-line-iterator-plug-into-point-mat-vector:
   "Husarenstück" (brilliant maneuver) approach to phase out Contour class
   while preserving iteration capability via binary compatibility.
 
@@ -302,11 +333,23 @@
     ../test-diagram.js
 
 
-- opencv-js-api-mismatch-line-class: qjs-opencv provides a `Line` class
+- PARTIALLY STALE (2026-09-05): opencv-js-api-mismatch-line-class: qjs-opencv provides a `Line` class
   while opencv.js has no `Line` type — `HoughLinesP` writes into a
   `PointVector` (vector<cv::Point> = vector<Vec2i>, NOT vector<Vec4i> -
   each detected line lands as two consecutive Vec2i points, binary-
   compatible with the native Vec4i output). Code using `Line` must be
+
+  Correction: verified `js_cv_hough_lines_p()` (`js_imgproc.cpp:480`)
+  directly - it already writes results via `cv::Mat(lines).copyTo(dst)`
+  into whatever output argument the caller passes as `dst` (opencv.js's
+  own exact call convention: `cv.HoughLinesP(image, lines, rho, theta,
+  threshold, minLineLength, maxLineGap)` where `lines` is a Mat/
+  PointVector-shaped output). So opencv.js code calling `HoughLinesP`
+  already works unmodified - the `Line` class is an additional qjs-opencv
+  convenience type living alongside that, not a required replacement for
+  it. Lowered severity accordingly; the porting-blocker framing above is
+  what's stale, not the factual observation that `Line` exists and
+  opencv.js has no equivalent type.
   reworked to use Point/Vec4i equivalents.
   Affected files:
     tests/test_fastlinedetector.js
@@ -322,7 +365,7 @@
     ../test-opencv.js
 
 
-- opencv-js-api-mismatch-mat-accessors: qjs-opencv provides `mat.at(i,j)`
+- STALE (2026-09-05): opencv-js-api-mismatch-mat-accessors: qjs-opencv provides `mat.at(i,j)`
   (generic, type-inferred), `mat.set(i,j,v)`, and `mat.buffer`
   (raw ArrayBuffer). opencv.js provides type-specific accessors:
   `mat.ucharAt()`, `mat.intAt()`, `mat.floatAt()`, `mat.doubleAt()`,
@@ -776,7 +819,7 @@
   otherwise in scope for the matchTemplate/TermCriteria task that surfaced
   it.
 
-- opencvjs-getoptimaldftsize-missing: `cv::getOptimalDFTSize` (`opencv2/
+- FIXED: opencvjs-getoptimaldftsize-missing: `cv::getOptimalDFTSize` (`opencv2/
   core.hpp`) is not bound - `cv.dft()` itself is bound (js_imgproc.cpp),
   but the padding-size helper that real DFT code always calls first isn't.
   Blocks `js_fourier_transform_dft.html`.
@@ -785,7 +828,14 @@
       cv.getOptimalDFTSize(100); // TypeError: not a function
     });
 
-- opencvjs-calcbackproject-missing: `cv::calcBackProject` (`opencv2/
+  Fixed (2026-09-05): added `OTHER_GET_OPTIMAL_DFT_SIZE` to `js_cv.cpp`'s
+  `js_cv_other()` dispatch, same shape as the existing `OTHER_CVROUND`/
+  `OTHER_CVFLOOR`/`OTHER_CVCEIL` cases (plain int in, plain int out - the
+  unused `src` InputOutputArray conversion at the top of `js_cv_other()`
+  is harmless here, same as those three). Test:
+  tests/unittests/test_segmentation_video.js.
+
+- FIXED: opencvjs-calcbackproject-missing: `cv::calcBackProject` (`opencv2/
   imgproc.hpp`) is not bound - `cv.calcHist()` itself is bound and used
   as the first step of every back-projection example, but the
   back-projection call itself isn't. Blocks 3 of the 80 example pages
@@ -796,10 +846,18 @@
       cv.calcBackProject([hsv], [0], hist, backproj, [0, 180]); // TypeError: not a function
     });
 
-- opencvjs-video-tracking-module-unbound: qjs-opencv includes no
+  Fixed (2026-09-05): added `js_cv_calc_back_project()` to `js_imgproc.cpp`,
+  mirroring the existing `js_cv_calc_hist()` parameter parsing (same
+  `std::vector<std::vector<float>>` ranges shape). Note the repro above
+  is misleading about call shape - `ranges` takes calcHist's own nested
+  per-channel `[[min,max],...]` shape, not a flat `[min,max]` pair;
+  confirmed via `histPrepareImages` assertion failure when passing it
+  flat. Test: tests/unittests/test_segmentation_video.js.
+
+- PARTIALLY FIXED: opencvjs-video-tracking-module-unbound: qjs-opencv included no
   `opencv2/video.hpp` / `opencv2/video/tracking.hpp` binding file at all
   (`grep -rln "opencv2/video" js_*.cpp` finds nothing) - the entire
-  `js_video` tutorial category (object tracking / optical flow) is
+  `js_video` tutorial category (object tracking / optical flow) was
   unimplemented, not just individually missing functions. Specifically
   blocks all 5 of the `js_video` example pages:
   - `cv.CamShift(probImage, window, criteria)` - `js_camshift.html`
@@ -819,7 +877,17 @@
       // all undefined
     });
 
-- opencvjs-bgsubtractormog2-class-shape-mismatch: opencv.js exposes
+  Correction (2026-09-05): `cv.CamShift`/`cv.meanShift` were already bound
+  (`js_imgproc.cpp`'s `js_imgproc_track()`, which already includes
+  `opencv2/video/tracking.hpp`) - this entry's premise that the whole
+  category was unbound was stale by the time this was investigated; only
+  the two optical-flow functions were actually missing. Fixed those two:
+  added `js_cv_calc_optical_flow_pyr_lk()` and
+  `js_cv_calc_optical_flow_farneback()` to `js_imgproc.cpp` (same file,
+  no new `js_video.cpp` needed since the include was already there).
+  Tests: tests/unittests/test_segmentation_video.js.
+
+- FIXED: opencvjs-bgsubtractormog2-class-shape-mismatch: opencv.js exposes
   `BackgroundSubtractorMOG2` as its own directly-constructible class
   (`new cv.BackgroundSubtractorMOG2(history, varThreshold, detectShadows)`,
   with `.apply()`/`.getBackgroundImage()` methods). qjs-opencv
@@ -835,7 +903,16 @@
       // works today as: cv.createBackgroundSubtractorMOG2(500, 16, true)
     });
 
-- opencvjs-ellipse-rotatedrect-overload-missing: opencv.js binds two
+  Correction (2026-09-05): already fixed by the time this was
+  investigated - `js_bg_subtractor.cpp`'s `js_bg_subtractor_init()`
+  already registers `new cv.BackgroundSubtractorMOG2(...)` (and all 6
+  other variants) as real constructors via
+  `JS_NewCFunctionMagic(..., JS_CFUNC_constructor_or_func_magic, ...)`.
+  Verified `new cv.BackgroundSubtractorMOG2(500, 16, true)` constructs and
+  `.apply()` works. Just missing this header's tag. Test:
+  tests/unittests/test_segmentation_video.js.
+
+- FIXED: opencvjs-ellipse-rotatedrect-overload-missing: opencv.js binds two
   overloads of `ellipse()` under separate JS names (embind can't overload
   on argument shape) - `cv.ellipse(img, center, axes, angle, startAngle,
   endAngle, color, thickness, lineType)` and `cv.ellipse1(img,
@@ -851,7 +928,13 @@
       cv.ellipse1; // undefined
     });
 
-- opencvjs-rotatedrectpoints-free-function-missing: opencv.js exposes
+  Fixed (2026-09-05): added `js_draw_ellipse1()` to `js_draw.cpp`, a
+  separate function (not folded into `js_draw_ellipse`'s argv parsing)
+  that reads a `RotatedRect` via `js_rotated_rect_data2()` and calls
+  `cv::ellipse`'s RotatedRect overload directly. Test:
+  tests/unittests/test_imgproc.js.
+
+- FIXED: opencvjs-rotatedrectpoints-free-function-missing: opencv.js exposes
   `cv.rotatedRectPoints(rotatedRect)` as a free function returning the 4
   corner points. qjs-opencv has the same functionality only as an instance
   method, `rotatedRect.points()` (`js_rotated_rect.cpp:195,255`) - same
@@ -863,7 +946,31 @@
       cv.rotatedRectPoints; // undefined - use rotatedRect.points() instead
     });
 
-- opencvjs-intelligentscissors-missing: `cv::segmentation::
+  Fixed (2026-09-05): added a `js_rotated_rect_module_funcs[]` list
+  (installed directly on the module, alongside the existing
+  `RotatedRect` class export) exposing the existing
+  `js_rotated_rect_static_method`/`ROTATED_RECT_METHOD_POINTS` handler
+  under the top-level name `rotatedRectPoints`, in `js_rotated_rect.cpp`.
+
+  New bug found and fixed while adding this (same shape as the already-
+  fixed `minmaxloc-argv-out-of-bounds-read`): the new
+  `JS_CFUNC_MAGIC_DEF` entry must declare arg count 2, matching the
+  existing `RotatedRect.points` static entry - `js_rotated_rect_
+  static_method()` forwards into `js_rotated_rect_method(ctx, argv[0],
+  argc - 1, argv + 1, magic)`, and `ROTATED_RECT_METHOD_POINTS`
+  unconditionally reads the shifted `argv[0]` (the optional
+  result-array argument). QuickJS only guarantees `argv[]` has as many
+  live slots as the declared length; declaring 1 (matching the JS call
+  shape `rotatedRectPoints(rr)` - one real argument) meant a real call
+  with `argc=1` shifted to `argc=0, argv+1` reads one slot past the
+  guaranteed end. Reproduced as a SIGSEGV in `tests/unittests/
+  test_imgproc.js` (silent when run standalone/isolated - only crashed
+  in the full suite, depending on incidental stack contents past the
+  guaranteed slot, same nondeterminism note as the minmaxloc bug). Fixed
+  by declaring arg count 2 instead of 1. Test:
+  tests/unittests/test_imgproc.js.
+
+- FIXED: opencvjs-intelligentscissors-missing: `cv::segmentation::
   IntelligentScissorsMB` (live-wire interactive segmentation) is not
   bound. The class exists in the local OpenCV 5.0.0 checkout under
   `opencv2/photo/segmentation.hpp` (photo module - NOT imgproc, despite
@@ -876,6 +983,24 @@
       cv.segmentation_IntelligentScissorsMB; // undefined
     });
 
+  Fixed (2026-09-05): added a new `js_intelligent_scissors.cpp` module
+  (not folded into `js_photo.cpp` - kept separate since the class lives
+  under its own `cv::segmentation` namespace and needs its own guarded
+  include). Bound as a plain default-constructible value class (like
+  `js_dmatch.cpp`'s DMatch), not a `cv::Ptr`-wrapped Algorithm (like
+  CLAHE/BackgroundSubtractor) - `IntelligentScissorsMB` has no `create*`
+  factory. Chaining methods (`setWeights` etc., which return
+  `IntelligentScissorsMB&` in C++) return `JS_DupValue(ctx, this_val)` so
+  `new cv.segmentation_IntelligentScissorsMB().setWeights(...).
+  applyImage(...)` chains the same way in JS. `opencv2/photo/
+  segmentation.hpp` isn't present in every OpenCV build in this project's
+  toolchain set (present in the local OpenCV 5.0.0 checkout, absent from
+  the 4.7.0/4.11.0 ones also configured here) - guarded the whole file
+  and its `init_module.cpp` registration behind a new
+  `HAVE_OPENCV2_PHOTO_SEGMENTATION_HPP` `check_include_cxx_def()` in
+  CMakeLists.txt, same pattern as `HAVE_OPENCV2_XIMGPROC_HPP`. Test:
+  tests/unittests/test_segmentation_video.js.
+
 - NOT-A-BUG: opencvjs-fs-createdatafile-not-applicable:
   `cv.FS_createDataFile(...)` is Emscripten's virtual in-memory filesystem
   API (`FS.createDataFile`), used by the 9 DNN example pages purely to
@@ -887,7 +1012,7 @@
   model files directly, no staging step needed. Not a binding gap - the 9
   DNN example pages need this call deleted, not replicated, when adapted.
 
-- PARTIALLY FIXED: uncaught-cv-exception-aborts-process-in-unguarded-modules: Most js_*.cpp
+- FIXED: uncaught-cv-exception-aborts-process-in-unguarded-modules: Most js_*.cpp
   files wrap their OpenCV calls in `try { ... } catch(const cv::Exception&
   e) { JS_ThrowInternalError(ctx, ...); }` so a bad argument turns into a
   catchable JS exception. 24 files have zero such try/catch anywhere,
@@ -934,19 +1059,36 @@
   identical every run. All `tests/unittests/*.js` (154 tests) still pass,
   reran 3x with identical results.
 
-  Still open: the other 18 of the original 24 files
-  (`js_affine3.cpp`, `js_dmatch.cpp`, `js_filenode.cpp`,
-  `js_filestorage.cpp`, `js_highgui.cpp`, `js_keypoint.cpp`,
-  `js_libcamera_app.cpp`, `js_line.cpp`, `js_matx.cpp`, `js_point.cpp`,
-  `js_psimpl.cpp`, `js_range.cpp`, `js_raspi_cam.cpp`, `js_rect.cpp`,
-  `js_rotated_rect.cpp`, `js_size.cpp`, `js_umat.cpp`, `js_utility.cpp`,
-  `js_vector.cpp`) still have zero `catch(const cv::Exception&...)`
-  anywhere. Most are plain value-type wrappers (Point/Rect/Size/Line/Matx/
-  Range/Affine3/DMatch/KeyPoint/Vector) unlikely to call anything that
-  throws a `cv::Exception`, but `js_filenode.cpp`, `js_filestorage.cpp`,
-  `js_highgui.cpp`, and `js_umat.cpp` do call real OpenCV algorithms and
-  were not audited in this pass - worth a follow-up sweep specifically on
-  those four before considering this entry fully closed.
+  Correction (2026-09-05): this entry is actually fully closed, and was
+  already fully closed *before* the 6-file fix above ever happened -
+  `include/js_exception_guard.hpp` (present since 2026-08-27, i.e.
+  predating both this entry's "Still open" note and the 6-file fix)
+  force-included into every translation unit via `CMakeLists.txt`'s
+  `-include${CMAKE_CURRENT_SOURCE_DIR}/include/js_exception_guard.hpp`,
+  shadows the `JS_CFUNC_*`/`JS_CGETSET_*`/`JS_CTOR_*` macros so that
+  *every* function registered through the standard `JSCFunctionListEntry`
+  tables - not just the 6 files with manual try/catch - is wrapped in a
+  template trampoline that catches `cv::Exception` (and `std::exception`/
+  `std::bad_alloc`/anything else) and converts it to a proper JS
+  exception, independent of whether the binding itself has a try/catch.
+  Verified directly against one of the files this entry's "Still open"
+  note listed as unaudited and unguarded, `js_umat.cpp` (zero
+  `catch(const cv::Exception&...)` in the file): `new
+  cv.UMat(10,10,cv.CV_8UC1).reshape(1, 999999)` (an incompatible reshape,
+  `CV_Assert`-fails inside `cv::UMat::reshape`) throws a catchable JS
+  exception and the process survives, with no manual try/catch anywhere
+  in that file's own source. The 6-file manual fix above is therefore
+  redundant (each of those files already had this global backstop) but
+  harmless - the guard's own doc comment says as much: "Per-binding
+  try/catch blocks still work and still run first - they are inside the
+  trampoline. This is only the backstop for what they miss." Left the
+  6-file manual try/catch in place rather than reverting it (still
+  correct, just double-wrapped; reverting working code to "simplify" is
+  its own risk for no behavior change). The real, complete fix for this
+  entire class of bug was the guard header, not per-file edits - worth
+  remembering next time a "some files lack try/catch" audit comes up in
+  this codebase: check for a global backstop before assuming per-file
+  wrapping is the only fix.
 
   New finding while fixing this: `js_fast_line_detector.cpp`'s finalizer
   (`js_fast_line_detector_finalizer`, line ~88) has the exact same
@@ -958,7 +1100,7 @@
   (out of scope for this task); should be folded into that entry's fix
   the next time it's touched.
 
-- typedarraytype-flags-sets-signed-bit-for-float-arrays: `TypedArrayType::flags()`
+- FIXED: typedarraytype-flags-sets-signed-bit-for-float-arrays: `TypedArrayType::flags()`
   (`include/js_typed_array.hpp`) always OR's in `TYPEDARRAY_SIGNED` (0x40)
   whenever `is_signed` is true - but `js_typedarray_type()`'s string parser
   initializes `is_signed = true` and never clears it for floating-point
@@ -1587,6 +1729,165 @@
     gc(); // js_white_balancer_finalizer runs (*wb)->~JSWhiteBalancerClass()
           // instead of wb->~JSWhiteBalancerData() - no visible symptom
           // from JS, but cv::Ptr's own release/deleter never runs
+
+- FIXED: minmaxloc-stdarray-one-past-end-assertion: `js_cv.cpp`'s
+  `OTHER_MIN_MAX_LOC` case (`cv.minMaxLoc()`) takes the one-past-the-end
+  pointer for its 4-element results list as `&results[4]` on a
+  `std::array<JSValueConst, 4> results` - valid for a raw C array (the
+  sibling `OTHER_MIN_MAX_IDX` case two cases up uses exactly that,
+  `JSValueConst results[4]`, and `&results[4]` there is fine), but
+  `std::array::operator[]` bounds-checks its index even when only taking
+  an address, never dereferencing it. In a Debug build (this project's
+  CMake default `CMAKE_BUILD_TYPE`), libstdc++'s hardened `operator[]`
+  asserts `__n < size()` and aborts the whole process - `4 < 4` is false.
+  In a Release build this was silently fine (assertions compiled out),
+  which is why it went unnoticed until wiring `tests/unittests/*.js` into
+  `ctest` (this project's default build type doesn't match the
+  hand-configured `build/x86_64-linux-gnu` Release dir CLAUDE.md
+  documents, which never hit this). Reproduced via `ctest` on a from-
+  scratch `cmake -S . -B <dir>` configure (no `TYPE=` override) crashing
+  `test_core_arithmetic.js` and `test_template_matching.js`
+  (`cv.minMaxLoc()` call sites) with:
+
+    /usr/include/c++/.../array: ... operator[](size_type): Assertion
+    '__n < this->size()' failed.
+
+  Fixed by using `results.data() + 4` instead of `&results[4]` (`.data()`
+  returns the plain pointer directly, no bounds-checked indexing
+  involved). Verified via `ctest` in a fresh Debug configure - all 9
+  test files now pass; reran 3x with identical results.
+
+- FIXED: minmaxidx-argv-out-of-bounds-read: `js_cv.cpp`'s
+  `OTHER_MIN_MAX_IDX` case (`cv.minMaxIdx()`) has the exact same shape as
+  the already-fixed `minmaxloc-argv-out-of-bounds-read`: its optional
+  4-callback loop (`for(i=0;i<4;i++) if(js_is_function(ctx, argv[i+1]))
+  ...`) reads `argv[1]` through `argv[4]` with no `argc` bound check at
+  all - the same out-of-bounds `argv[]` read/potential heap-pointer
+  dereference inside `JS_IsFunction`, just never separately audited
+  because `OTHER_MIN_MAX_IDX`/`OTHER_MIN_MAX_LOC` are two different
+  `case` blocks in the same `js_cv_other()` switch. Found while fixing
+  the `std::array` crash above, in the same function. Fixed by adding the
+  same `argc > int(i) + 1` guard `OTHER_MIN_MAX_LOC` already got.
+
+- Wired `tests/unittests/test_*.js` into CMake/CTest (2026-09-05):
+  `cmake/FindQuickJS.cmake` now also `find_program(QJSM qjsm ...)`
+  (qjsm, not qjs - see CLAUDE.md's "Use qjsm, Not qjs"), and
+  `CMakeLists.txt` registers one `add_test()` per
+  `tests/unittests/test_*.js` file (glob, so a new test file needs no
+  CMake edit), each with `QUICKJS_MODULE_PATH` pointed at
+  `CMAKE_CURRENT_BINARY_DIR` (where `make_shared_module()` puts
+  `opencv.so`) so tests exercise the just-built module, not any
+  previously installed one. Run via `ctest` or `make test` after
+  building `quickjs-opencv` - CTest itself does not build first (a
+  standard CMake/CTest limitation, not specific to this wiring), so
+  `make quickjs-opencv && make test` is the real sequence, not `make
+  test` alone from a stale or nonexistent build.
+
+  Also fixed in the same pass, found only because this was the first
+  time anyone ran a from-scratch `cmake -S . -B <dir>` configure (every
+  documented workflow in CLAUDE.md/cfg.sh reuses an existing configured
+  `build/<host-triple>` directory instead): `CMakeLists.txt` had
+  `project(qjs-opencv VERSION 0.9 LANGUAGES C CXX)` on line 1, before
+  `cmake_minimum_required(VERSION 3.5)` on line 3 - `project()`'s
+  `VERSION` keyword requires CMake policy CMP0048, which isn't set until
+  `cmake_minimum_required()` runs, so a genuinely fresh configure failed
+  outright with "VERSION not allowed unless CMP0048 is set to NEW"
+  (an incremental re-configure of an already-configured build directory
+  didn't hit this, since the policy was already resolved from that
+  directory's existing cache - which is how this went unnoticed since
+  the `VERSION` line was added). Fixed by swapping the two lines.
+
+- js-cv-math-no-scalar-operand: `compare()`/`absdiff()`/`add()`/`divide()`/
+  `max()`/`min()`/`multiply()`/`subtract()` (all JS_CFUNC_MAGIC_DEF'd onto
+  `js_cv_math()` in js_cv.cpp) resolve *both* operands via
+  `js_cv_inputoutputarray()`, which (unlike `js_cv_inputarray()`) has no
+  plain-JS-array/number-to-cv::Scalar fallback - only Mat/UMat/JSVector/
+  Line/ArrayBuffer/TypedArray convert. Passing a bare number or plain array
+  as the second operand (e.g. `compare(idxMat, 3, mask, CMP_EQ)` to test an
+  index Mat against a constant) silently resolves that operand to
+  `cv::noArray()`, and `cv::compare()` then throws
+  `(-215:Assertion failed) _src1.empty() == _src2.empty()` since one side is
+  empty and the other isn't - found while fixing
+  js/vectorizer/vector/methods/palette-regions.js, which needed to test a
+  CV_8U index map against a per-band integer constant. `inRange(src,
+  lowerb, upperb, dst)` (js_cv_other/OTHER_IN_RANGE) DOES accept a
+  plain array for its Scalar bounds (via `js_cv_inputarray()`, which has the
+  array-to-cv::Scalar branch) and was used as the workaround:
+  `inRange(idx, [k,k,k,k], [k,k,k,k], mask)` instead of
+  `compare(idx, k, mask, CMP_EQ)`.
+
+    import { imread, Mat, compare, CMP_EQ } from 'opencv';
+    const mat = imread('some.png');
+    const mask = new Mat();
+    compare(mat, 128, mask, CMP_EQ); // throws: _src1.empty() == _src2.empty()
+
+    import { Mat, Size } from 'opencv';
+    const m = new Mat(new Size(10, 10), 16); // meant to be CV_8UC3
+    console.log(m.channels(), m.depth()); // 1, 16 - not 3, 8
+
+- highgui-gtk-getwindowproperty-unimplemented: `cv::getWindowProperty(name,
+  prop_id)` (js_highgui.cpp:js_cv_get_window_property) always returns -1 for
+  EVERY prop_id on this build's GTK backend, even `WND_PROP_VISIBLE` queried
+  against a window that was just created and is actively being drawn to -
+  `window_gtk.cpp` has zero `getWindowProperty`-related code, so
+  `CvWindow::getProperty()` falls through to NaN for any prop_id, which
+  `cv::getWindowProperty` (window.cpp) converts to -1. This makes -1
+  useless as an "is the window still open" signal on GTK: it's returned
+  whether the window is open, closed, or the property is simply
+  unsupported. Found while trying to detect the WM's X (close) button in
+  js/vectorizer/gui/app.js's run loop - the first attempt polled
+  `getWindowProperty(WIN, WND_PROP_VISIBLE) < 1` once per frame, which is
+  always true, so the app tore its own window down after exactly one loop
+  iteration (looked like "the GUI won't show up" from outside). The working
+  substitute is `cv::getWindowImageRect()`/`getWindowImageRect(name)`:
+  GTK's `cvGetWindowRect_GTK` throws `cv::Error::StsNullPtr` ("NULL
+  window") once `icvOnClose`/`icvDeleteWindow_` has torn the window down,
+  which is a real, catchable signal - poll it once per frame in a
+  try/catch instead.
+
+    import { namedWindow, getWindowProperty, getWindowImageRect,
+             WINDOW_AUTOSIZE, WND_PROP_VISIBLE } from 'opencv';
+    namedWindow('w', WINDOW_AUTOSIZE);
+    console.log(getWindowProperty('w', WND_PROP_VISIBLE)); // -1, window IS open
+    // after the user clicks the titlebar X:
+    try { getWindowImageRect('w'); } catch (e) { /* now it throws - window is gone */ }
+
+- NOT a qjs-opencv bug - os.Worker message delivery is broken in the
+  currently-installed `qjsm` (`/usr/local/bin/qjsm`, built 2026-08-27,
+  reports "QuickJS version 2024-01-13"): the vectorizer GUI's "vectorizing…
+  0%" never advances because `cv/jobs.js`'s `JobRunner` never receives even
+  the worker's first `{type:'progress', value:0}` message, let alone
+  `'done'`. Confirmed this is not vectorizer-specific and not opencv-related
+  at all by running the QuickJS project's own pristine, unmodified
+  `tests/test_worker.js` + `tests/test_worker_module.js` (from
+  `/mnt/data/Projects/plot-cv/quickjs/tests/`, no opencv import anywhere) -
+  it hangs identically, with zero messages delivered in either direction
+  (parent->worker or worker->parent), even after uncommenting the test's
+  own diagnostic `print()` calls. `os.Worker` threads are actually spawned
+  (visible as real OS threads via `ps -T` on a running process) but
+  `parent.postMessage()`/`worker.postMessage()` never triggers the other
+  side's `onmessage`. Machine has several other quickjs source checkouts
+  under `/mnt/data/Projects/quickjs-*` and `/mnt/data/Projects/plot-cv/quickjs/quickjs-*`
+  (2024-01-13, 2025-04-26, 2025-09-13, 2026-06-04) - worth trying a rebuild
+  from a newer one, or bisecting, to fix `os.Worker` itself; out of scope
+  to fix from qjs-opencv. Until fixed, `js/vectorizer/cv/jobs.js`'s
+  `os.Worker`-based `JobRunner` cannot work at all on this host, regardless
+  of anything in this repo's own JS/C++ code.
+
+    cd /mnt/data/Projects/plot-cv/quickjs/tests
+    qjsm test_worker.js   # hangs forever, no output, on the installed qjsm
+
+- vectorizer-worker-thread-blocks-process-exit: `js/vectorizer/vectorizer.js`
+  relied on the interpreter exiting naturally once `main()`'s top-level
+  async IIFE settles, but GTK's own thread pool (`gmain`/`gdbus`/
+  `pool-spawner` plus several `qjsm`-named worker threads - `ps -T` on a
+  live run shows a dozen+) and the `os.Worker` spawned by
+  `cv/jobs.js`'s `JobRunner` keep the process alive long after `app.run()`
+  returns and `jobs.terminate()` has been called: the process sat at
+  15-25% CPU indefinitely instead of exiting. Fixed by calling
+  `std.exit(code)` explicitly at the end of the top-level IIFE instead of
+  letting the interpreter fall off the end of main().
+
 
 - qjs-opencv-static-classid-race-in-worker-threads: found and fixed via
   `tests/test_threadpool.js` (a 4-worker os.Worker pool where every

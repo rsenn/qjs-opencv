@@ -5,7 +5,7 @@
 // main loop rather than inside the callback. This keeps the MVC flow single
 // threaded and predictable.
 
-import { setMouseCallback, EVENT_LBUTTONDOWN, EVENT_LBUTTONUP, EVENT_MOUSEMOVE, EVENT_MOUSEWHEEL } from 'opencv.so';
+import { setMouseCallback, getMouseWheelDelta, EVENT_LBUTTONDOWN, EVENT_LBUTTONUP, EVENT_MOUSEMOVE, EVENT_MOUSEWHEEL } from 'opencv';
 
 export const MouseEvent = {
   DOWN: EVENT_LBUTTONDOWN,
@@ -13,6 +13,8 @@ export const MouseEvent = {
   MOVE: EVENT_MOUSEMOVE,
   WHEEL: EVENT_MOUSEWHEEL,
 };
+
+export { getMouseWheelDelta };
 
 export class Mouse {
   constructor(windowName) {

@@ -132,4 +132,47 @@ addTest('createCLAHE - local contrast', () => {
   assert(dst.rows === 20 && dst.cols === 20, 'expected same spatial size');
 });
 
+addTest('CLAHE.apply - throws a catchable exception on a wrong-type Mat instead of aborting', () => {
+  // CLAHE::apply() only accepts CV_8UC1/CV_16UC1 - a 4-channel Mat trips
+  // an OpenCV precondition assert. See BUGS:
+  // uncaught-cv-exception-aborts-process-in-unguarded-modules - before
+  // that fix, this crashed (SIGABRT) the whole qjsm process instead of
+  // throwing.
+  const rgba = cv.Mat.zeros(20, 20, cv.CV_8UC4);
+  const clahe = cv.createCLAHE(2.0, new cv.Size(4, 4));
+  const dst = new cv.Mat();
+  let threw = false;
+  try {
+    clahe.apply(rgba, dst);
+  } catch (e) {
+    threw = true;
+  }
+  assert(threw, 'expected a catchable exception for a 4-channel Mat');
+});
+
+addTest('gemm - real matrix multiplication', () => {
+  // Mat.mul() is elementwise (Hadamard), not matrix multiplication - see
+  // BUGS: mat-mul-is-elementwise-not-matrix-multiplication. cv.gemm is
+  // the real (n x k)*(k x m) multiply, matching opencv.js's own free
+  // function signature: gemm(src1, src2, alpha, src3, beta, dst, flags?).
+  const a = new cv.Mat(2, 3, cv.CV_32F, Float32Array.from([1, 2, 3, 4, 5, 6]).buffer);
+  const b = new cv.Mat(3, 2, cv.CV_32F, Float32Array.from([7, 8, 9, 10, 11, 12]).buffer);
+  const dst = new cv.Mat();
+  cv.gemm(a, b, 1, new cv.Mat(), 0, dst);
+  assert(dst.rows === 2 && dst.cols === 2, `expected a 2x2 result, got ${dst.rows}x${dst.cols}`);
+  const expected = [58, 64, 139, 154];
+  for (let i = 0; i < 4; i++)
+    assert(Math.abs(dst.data32F[i] - expected[i]) < 1e-4, `expected dst[${i}] === ${expected[i]}, got ${dst.data32F[i]}`);
+});
+
+addTest('gemm - alpha/beta and src3 addend', () => {
+  const a = new cv.Mat(1, 2, cv.CV_32F, Float32Array.from([1, 2]).buffer);
+  const b = new cv.Mat(2, 1, cv.CV_32F, Float32Array.from([3, 4]).buffer);
+  const src3 = new cv.Mat(1, 1, cv.CV_32F, Float32Array.from([100]).buffer);
+  const dst = new cv.Mat();
+  cv.gemm(a, b, 2, src3, 10, dst);
+  // a*b = [1*3 + 2*4] = [11]; alpha*a*b + beta*src3 = 2*11 + 10*100 = 1022
+  assert(Math.abs(dst.data32F[0] - 1022) < 1e-3, `expected 1022, got ${dst.data32F[0]}`);
+});
+
 tests(testCases);

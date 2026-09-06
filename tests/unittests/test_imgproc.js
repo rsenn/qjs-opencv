@@ -238,4 +238,27 @@ for (const [label, circle] of circleByRepresentation) {
   });
 }
 
+addTest('ellipse1 - draw directly from a RotatedRect (fitEllipse result)', () => {
+  // opencv.js's second ellipse() overload, exposed under a separate name
+  // since embind can't overload on argument shape - see BUGS:
+  // opencvjs-ellipse-rotatedrect-overload-missing.
+  const rr = new cv.RotatedRect({ x: 15, y: 15 }, { width: 20, height: 10 }, 0);
+  const img = cv.Mat.zeros(30, 30, cv.CV_8UC1);
+  cv.ellipse1(img, rr, 255, -1, cv.LINE_8);
+  assert(cv.countNonZero(img) > 0, 'expected ellipse1 to draw nonzero pixels');
+  assert(img.data[15 * 30 + 15] === 255, 'expected the ellipse center pixel to be filled');
+});
+
+addTest('rotatedRectPoints - free function equivalent of RotatedRect.points()', () => {
+  // opencv.js exposes this as a free function, not only an instance
+  // method - see BUGS: opencvjs-rotatedrectpoints-free-function-missing.
+  const rr = new cv.RotatedRect({ x: 10, y: 10 }, { width: 6, height: 4 }, 0);
+  const pts = cv.rotatedRectPoints(rr);
+  const instancePts = rr.points();
+  assert(pts.length === 4, `expected 4 corner points, got ${pts.length}`);
+  for (let i = 0; i < 4; i++) {
+    assert(pts[i].x === instancePts[i].x && pts[i].y === instancePts[i].y, `expected point ${i} to match RotatedRect.points()`);
+  }
+});
+
 tests(testCases);

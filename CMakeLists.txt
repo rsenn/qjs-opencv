@@ -1,6 +1,6 @@
-project(qjs-opencv VERSION 0.9 LANGUAGES C CXX)
-
 cmake_minimum_required(VERSION 3.5)
+
+project(qjs-opencv VERSION 0.9 LANGUAGES C CXX)
 
 message("Building project [1;31m${PROJECT_NAME}[0m")
 
@@ -213,6 +213,7 @@ if(USE_BARCODE)
   endif(HAVE_OPENCV2_BARCODE_HPP)
 endif()
 
+check_include_cxx_def(opencv2/photo/segmentation.hpp HAVE_OPENCV2_PHOTO_SEGMENTATION_HPP)
 check_include_cxx_def(opencv2/ximgproc.hpp HAVE_OPENCV2_XIMGPROC_HPP)
 check_include_cxx_def(opencv2/ximgproc/find_ellipses.hpp
                       HAVE_OPENCV2_XIMGPROC_FIND_ELLIPSES_HPP)
@@ -531,3 +532,22 @@ endif(USE_LCCV)
 if(OPENCV_FREETYPE_LIBRARY)
   message(STATUS "OpenCV freetype: ${OPENCV_FREETYPE_LIBRARY}")
 endif(OPENCV_FREETYPE_LIBRARY)
+
+# tests/unittests/*.js (tinytest-based) run under qjsm against the
+# freshly built opencv.so - QUICKJS_MODULE_PATH points at this build
+# directory (where make_shared_module() puts it) rather than any
+# previously installed copy. tinytest.js itself isn't a test file.
+enable_testing()
+
+if(QJSM)
+  file(GLOB QJS_UNITTEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/tests/unittests/test_*.js")
+  foreach(QJS_UNITTEST_FILE ${QJS_UNITTEST_FILES})
+    get_filename_component(QJS_UNITTEST_NAME "${QJS_UNITTEST_FILE}" NAME_WE)
+    add_test(NAME "${QJS_UNITTEST_NAME}" COMMAND "${QJSM}" "${QJS_UNITTEST_FILE}")
+    set_tests_properties(
+      "${QJS_UNITTEST_NAME}" PROPERTIES ENVIRONMENT
+      "QUICKJS_MODULE_PATH=${CMAKE_CURRENT_BINARY_DIR}")
+  endforeach()
+else(QJSM)
+  message(WARNING "qjsm not found - tests/unittests/*.js will not be registered with ctest/make test")
+endif(QJSM)

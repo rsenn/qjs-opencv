@@ -7,7 +7,7 @@ import {
   Mat, Size, GaussianBlur, threshold, adaptiveThreshold, findContours,
   THRESH_BINARY, THRESH_BINARY_INV, THRESH_OTSU,
   ADAPTIVE_THRESH_GAUSSIAN_C, RETR_CCOMP, CHAIN_APPROX_SIMPLE,
-} from 'opencv.so';
+} from 'opencv';
 
 import { VectorMethod } from '../base.js';
 import { create } from '../../core/vectordata.js';
@@ -31,7 +31,8 @@ export class ThresholdContours extends VectorMethod {
     ];
   }
 
-  apply(mat, p, meta) {
+  async apply(mat, p, meta) {
+    const tick = meta.tick || (async () => {});
     const gray = toGray(mat);
     GaussianBlur(gray, gray, new Size(3, 3), 0);
     const bin = new Mat();
@@ -44,13 +45,16 @@ export class ThresholdContours extends VectorMethod {
     } else {
       threshold(gray, bin, p.thresh, 255, type);
     }
-    const [contours, hierarchy] = findContours(bin, RETR_CCOMP, CHAIN_APPROX_SIMPLE);
+    await tick(0.4);
+    const contours = [], hierarchy = new Mat();
+    findContours(bin, contours, hierarchy, RETR_CCOMP, CHAIN_APPROX_SIMPLE);
+    await tick(0.7);
     let shapes = [...hierarchyToPaths(contours, hierarchy, {
       epsilon: p.epsilon,
       style: { stroke: null, fill: '#1a1a1a' },
     })];
     if (p.minArea) shapes = shapes.filter((s) => approxPathArea(s) >= p.minArea);
-    release(gray, bin);
+    release(gray, bin, hierarchy);
     return create(meta.width, meta.height, { shapes });
   }
 }

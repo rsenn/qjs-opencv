@@ -4,7 +4,7 @@
 // darkness. Cell colour is the cell's mean (via ROI mean, no per-pixel API).
 // Gives an engraving / pointillist look that scales cleanly as SVG.
 
-import { Mat, Rect, mean } from 'opencv.so';
+import { Mat, Rect, mean } from 'opencv';
 
 import { VectorMethod } from '../base.js';
 import { create, point } from '../../core/vectordata.js';
@@ -25,11 +25,14 @@ export class Stipple extends VectorMethod {
     ];
   }
 
-  apply(mat, p, meta) {
+  async apply(mat, p, meta) {
+    const tick = meta.tick || (async () => {});
     const W = meta.width, H = meta.height;
     const gray = toGray(mat);
     const shapes = [];
     const cell = Math.max(2, p.cell);
+    const rows = Math.ceil(H / cell);
+    let row = 0;
     for (let y = 0; y < H; y += cell) {
       for (let x = 0; x < W; x += cell) {
         const w = Math.min(cell, W - x), h = Math.min(cell, H - y);
@@ -44,6 +47,8 @@ export class Stipple extends VectorMethod {
         const fill = p.colour ? sampleColour(mat, x, y, w, h) : '#111111';
         shapes.push(point([x + w / 2 + jx, y + h / 2 + jy], r, { fill, stroke: null }));
       }
+      row++;
+      if (row % 20 === 0) await tick(row / rows);
     }
     release(gray);
     return create(W, H, { shapes });

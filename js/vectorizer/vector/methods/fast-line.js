@@ -3,7 +3,7 @@
 // FastLineDetector — faster, fewer spurious segments than LSD. Same VectorData
 // output (line shapes), so it is interchangeable downstream.
 
-import { Mat, FastLineDetector } from 'opencv.so';
+import { Mat, FastLineDetector } from 'opencv';
 
 import { VectorMethod } from '../base.js';
 import { create } from '../../core/vectordata.js';
@@ -25,13 +25,15 @@ export class FastLines extends VectorMethod {
     ];
   }
 
-  apply(mat, p, meta) {
+  async apply(mat, p, meta) {
+    const tick = meta.tick || (async () => {});
     const gray = toGray(mat);
     // Constructor args follow OpenCV's FastLineDetector(length_threshold,
     // distance_threshold, canny_th1, canny_th2, canny_aperture, do_merge).
     const fld = new FastLineDetector(p.lengthThresh, p.distThresh, p.cannyTh1, p.cannyTh2, p.cannyAp, false);
     const linesMat = new Mat();
     fld.detect(gray, linesMat);
+    await tick(0.6);
     const rows = [];
     try { for (const r of linesMat) rows.push(Array.from(r)); } catch (_) {}
     const shapes = linesToShapes(rows, { stroke: '#141414', strokeWidth: p.strokeW, fill: null });

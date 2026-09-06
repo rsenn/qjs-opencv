@@ -6,7 +6,7 @@
 
 import {
   Mat, Rect, Point, Subdiv2D, goodFeaturesToTrack, Canny,
-} from 'opencv.so';
+} from 'opencv';
 
 import { VectorMethod } from '../base.js';
 import { create, polygon } from '../../core/vectordata.js';
@@ -27,12 +27,14 @@ export class LowPolyDelaunay extends VectorMethod {
     ];
   }
 
-  apply(mat, p, meta) {
+  async apply(mat, p, meta) {
+    const tick = meta.tick || (async () => {});
     const W = meta.width, H = meta.height;
     const gray = toGray(mat);
     const corners = new Mat();
     goodFeaturesToTrack(gray, corners, p.maxPts, p.quality, p.minDist);
     const pts = pointsOf(corners);
+    await tick(0.2);
 
     // Always include the four canvas corners + a jittered grid so the whole
     // frame is tessellated, not just the high-detail areas.
@@ -47,13 +49,18 @@ export class LowPolyDelaunay extends VectorMethod {
     }
 
     const subdiv = new Subdiv2D(new Rect(0, 0, W, H));
-    for (const [x, y] of pts) {
+    for (let i = 0; i < pts.length; i++) {
+      const [x, y] = pts[i];
       try { subdiv.insert(new Point(x, y)); } catch (_) {}
+      if (i % 300 === 299) await tick(0.2 + 0.4 * (i / pts.length));
     }
-    const tris = subdiv.getTriangleList();   // -> rows of [x1,y1,x2,y2,x3,y3]
+    const tris = [];   // rows of [x1,y1,x2,y2,x3,y3] - out-param, like findContours
+    subdiv.getTriangleList(tris);
+    await tick(0.65);
 
     const shapes = [];
-    for (const t of tris) {
+    for (let i = 0; i < tris.length; i++) {
+      const t = tris[i];
       const a = [t[0], t[1]], b = [t[2], t[3]], c = [t[4], t[5]];
       if (![a, b, c].every((q) => q[0] >= 0 && q[1] >= 0 && q[0] <= W && q[1] <= H)) continue;
       const cx = (a[0] + b[0] + c[0]) / 3, cy = (a[1] + b[1] + c[1]) / 3;
@@ -61,6 +68,7 @@ export class LowPolyDelaunay extends VectorMethod {
       shapes.push(polygon([a, b, c], {
         fill, stroke: p.stroke ? fill : null, strokeWidth: 0.5,
       }));
+      if (i % 300 === 299) await tick(0.65 + 0.3 * (i / tris.length));
     }
     release(gray, corners);
     return create(W, H, { shapes });

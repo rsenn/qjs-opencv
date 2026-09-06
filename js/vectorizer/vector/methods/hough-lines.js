@@ -3,7 +3,7 @@
 // Probabilistic Hough transform on Canny edges -> straight line segments.
 // Good for architectural / geometric subjects.
 
-import { Mat, Size, GaussianBlur, Canny, HoughLinesP } from 'opencv.so';
+import { Mat, Size, GaussianBlur, Canny, HoughLinesP } from 'opencv';
 
 import { VectorMethod } from '../base.js';
 import { create } from '../../core/vectordata.js';
@@ -25,13 +25,16 @@ export class HoughLines extends VectorMethod {
     ];
   }
 
-  apply(mat, p, meta) {
+  async apply(mat, p, meta) {
+    const tick = meta.tick || (async () => {});
     const gray = toGray(mat);
     GaussianBlur(gray, gray, new Size(3, 3), 0);
     const edges = new Mat();
     Canny(gray, edges, p.thresh1, p.thresh2);
+    await tick(0.4);
     const linesMat = new Mat();
     HoughLinesP(edges, linesMat, 1, Math.PI / 180, p.votes, p.minLen, p.maxGap);
+    await tick(0.75);
     const shapes = linesToShapes(iterRows(linesMat), {
       stroke: '#101010', strokeWidth: p.strokeW, fill: null,
     });

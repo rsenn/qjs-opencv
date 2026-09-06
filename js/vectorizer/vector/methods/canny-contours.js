@@ -6,7 +6,7 @@
 import {
   Mat, Size, GaussianBlur, Canny, findContours,
   RETR_LIST, CHAIN_APPROX_SIMPLE,
-} from 'opencv.so';
+} from 'opencv';
 
 import { VectorMethod } from '../base.js';
 import { create } from '../../core/vectordata.js';
@@ -28,19 +28,20 @@ export class CannyContours extends VectorMethod {
     ];
   }
 
-  apply(mat, p, meta) {
-    const tick = meta.onProgress || (() => {});
+  async apply(mat, p, meta) {
+    const tick = meta.tick || (async () => {});
     const gray = toGray(mat);
     if (p.blur >= 3) {
       const k = p.blur % 2 ? p.blur : p.blur + 1;
       GaussianBlur(gray, gray, new Size(k, k), 0);
     }
-    tick(0.25);
+    await tick(0.25);
     const edges = new Mat();
     Canny(gray, edges, p.thresh1, p.thresh2);
-    tick(0.55);
-    const contours = findContours(edges, RETR_LIST, CHAIN_APPROX_SIMPLE)[0];
-    tick(0.75);
+    await tick(0.55);
+    const contours = [], hierarchy = [];
+    findContours(edges, contours, hierarchy, RETR_LIST, CHAIN_APPROX_SIMPLE);
+    await tick(0.75);
     const shapes = contoursToShapes(contours, {
       mode: 'stroke',
       epsilon: p.epsilon,

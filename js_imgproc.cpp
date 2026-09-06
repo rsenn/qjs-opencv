@@ -831,6 +831,57 @@ js_cv_calc_hist(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
   return JS_UNDEFINED;
 }
 
+// cv.calcBackProject(images, channels, hist, backProject, ranges[, scale])
+// - opencv.js's real call shape (js_histogram_backprojection_calcBackProject
+// .html/js_meanshift.html/js_camshift.html all use it as the second step
+// right after calcHist). See BUGS: opencvjs-calcbackproject-missing.
+static JSValue
+js_cv_calc_back_project(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+  std::vector<cv::Mat> images;
+  std::vector<int> channels;
+  std::vector<std::vector<float>> ranges;
+  cv::Mat* hist;
+  cv::Mat* backProject;
+  double scale = 1;
+
+  if(argc < 5)
+    return JS_ThrowTypeError(ctx, "calcBackProject expects (images, channels, hist, backProject, ranges[, scale])");
+
+  if(js_array_to(ctx, argv[0], images) == -1)
+    return JS_EXCEPTION;
+
+  if(js_array_to(ctx, argv[1], channels) == -1)
+    return JS_EXCEPTION;
+
+  hist = js_mat_data2(ctx, argv[2]);
+  backProject = js_mat_data2(ctx, argv[3]);
+
+  if(hist == nullptr || backProject == nullptr)
+    return JS_ThrowTypeError(ctx, "calcBackProject expects (images, channels, hist, backProject, ranges[, scale])");
+
+  if(js_array_to(ctx, argv[4], ranges) == -1)
+    return JS_EXCEPTION;
+
+  if(argc > 5)
+    JS_ToFloat64(ctx, &scale, argv[5]);
+
+  std::vector<const float*> rangePtr(ranges.size());
+
+  for(size_t i = 0; i < ranges.size(); i++) {
+    if(ranges[i].size() < 2)
+      ranges[i].resize(2);
+
+    rangePtr[i] = ranges[i].data();
+  }
+
+  try {
+    cv::calcBackProject(
+        const_cast<const cv::Mat*>(images.data()), images.size(), channels.data(), *hist, *backProject, rangePtr.data(), scale);
+  } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
+
+  return JS_UNDEFINED;
+}
+
 static JSValue
 js_cv_morphology(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSPointData<double> anchor = cv::Point(-1, -1);
@@ -2431,9 +2482,85 @@ js_imgproc_track(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
   return ret;
 }
 
+// cv.calcOpticalFlowPyrLK(prevImg, nextImg, prevPts, nextPts, status, err
+// [, winSize[, maxLevel[, criteria[, flags[, minEigThreshold]]]]]) -
+// opencv.js's real call shape (js_optical_flow_lucas_kanade.html). See
+// BUGS: opencvjs-video-tracking-module-unbound.
+static JSValue
+js_cv_calc_optical_flow_pyr_lk(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+  if(argc < 6)
+    return JS_ThrowTypeError(ctx, "calcOpticalFlowPyrLK expects (prevImg, nextImg, prevPts, nextPts, status, err[, winSize[, maxLevel[, criteria[, flags[, minEigThreshold]]]]])");
+
+  JSInputArray prevImg = js_cv_inputarray(ctx, argv[0]);
+  JSInputArray nextImg = js_cv_inputarray(ctx, argv[1]);
+  JSInputArray prevPts = js_cv_inputarray(ctx, argv[2]);
+  JSInputOutputArray nextPts = js_cv_inputoutputarray(ctx, argv[3]);
+  JSOutputArray status = js_cv_outputarray(ctx, argv[4]);
+  JSOutputArray err = js_cv_outputarray(ctx, argv[5]);
+  JSSizeData<int> winSize(21, 21);
+  int32_t maxLevel = 3;
+  cv::TermCriteria criteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 30, 0.01);
+  int32_t flags = 0;
+  double minEigThreshold = 1e-4;
+  std::vector<double> crit;
+
+  if(argc > 6)
+    js_size_read(ctx, argv[6], &winSize);
+
+  if(argc > 7)
+    JS_ToInt32(ctx, &maxLevel, argv[7]);
+
+  if(argc > 8 && js_array_to(ctx, argv[8], crit) != -1 && crit.size() >= 3)
+    criteria = cv::TermCriteria(int(crit[0]), int(crit[1]), crit[2]);
+
+  if(argc > 9)
+    JS_ToInt32(ctx, &flags, argv[9]);
+
+  if(argc > 10)
+    JS_ToFloat64(ctx, &minEigThreshold, argv[10]);
+
+  try {
+    cv::calcOpticalFlowPyrLK(prevImg, nextImg, prevPts, nextPts, status, err, winSize, maxLevel, criteria, flags, minEigThreshold);
+  } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
+
+  return JS_UNDEFINED;
+}
+
+// cv.calcOpticalFlowFarneback(prev, next, flow, pyr_scale, levels,
+// winsize, iterations, poly_n, poly_sigma, flags) - opencv.js's real call
+// shape (js_optical_flow_dense.html). See BUGS:
+// opencvjs-video-tracking-module-unbound.
+static JSValue
+js_cv_calc_optical_flow_farneback(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+  if(argc < 10)
+    return JS_ThrowTypeError(ctx, "calcOpticalFlowFarneback expects (prev, next, flow, pyr_scale, levels, winsize, iterations, poly_n, poly_sigma, flags)");
+
+  JSInputArray prev = js_cv_inputarray(ctx, argv[0]);
+  JSInputArray next = js_cv_inputarray(ctx, argv[1]);
+  JSInputOutputArray flow = js_cv_inputoutputarray(ctx, argv[2]);
+  double pyr_scale, poly_sigma;
+  int32_t levels, winsize, iterations, poly_n, flags;
+
+  JS_ToFloat64(ctx, &pyr_scale, argv[3]);
+  JS_ToInt32(ctx, &levels, argv[4]);
+  JS_ToInt32(ctx, &winsize, argv[5]);
+  JS_ToInt32(ctx, &iterations, argv[6]);
+  JS_ToInt32(ctx, &poly_n, argv[7]);
+  JS_ToFloat64(ctx, &poly_sigma, argv[8]);
+  JS_ToInt32(ctx, &flags, argv[9]);
+
+  try {
+    cv::calcOpticalFlowFarneback(prev, next, flow, pyr_scale, levels, winsize, iterations, poly_n, poly_sigma, flags);
+  } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
+
+  return JS_UNDEFINED;
+}
+
 const JSCFunctionListEntry js_imgproc_static_funcs[] = {
     JS_CFUNC_MAGIC_DEF("CamShift", 3, js_imgproc_track, TRACK_CAMSHIFT),
     JS_CFUNC_MAGIC_DEF("meanShift", 3, js_imgproc_track, TRACK_MEANSHIFT),
+    JS_CFUNC_DEF("calcOpticalFlowPyrLK", 6, js_cv_calc_optical_flow_pyr_lk),
+    JS_CFUNC_DEF("calcOpticalFlowFarneback", 10, js_cv_calc_optical_flow_farneback),
     JS_CFUNC_DEF("HoughLines", 5, js_cv_hough_lines),
     JS_CFUNC_DEF("HoughLinesP", 5, js_cv_hough_lines_p),
     JS_CFUNC_DEF("HoughCircles", 5, js_cv_hough_circles),
@@ -2446,6 +2573,7 @@ const JSCFunctionListEntry js_imgproc_static_funcs[] = {
 
     /* Histograms */
     JS_CFUNC_DEF("calcHist", 8, js_cv_calc_hist),
+    JS_CFUNC_DEF("calcBackProject", 5, js_cv_calc_back_project),
     JS_CFUNC_DEF("matchTemplate", 4, js_cv_match_template),
     JS_CFUNC_DEF("equalizeHist", 2, js_cv_equalize_hist),
 

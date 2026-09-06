@@ -6,19 +6,9 @@ import * as cv from 'opencv';
  * by the opencv.js example pages cataloged in doc/opencv-js-examples.md
  * (js_imgproc: segmentation & misc, and js_video). Synthetic Mats only.
  *
- * Not testable here (genuinely unbound - see TODO.md's "opencv.js Example
- * Compatibility Gaps" section and BUGS' opencvjs-* entries):
- * cv.calcBackProject, cv.calcOpticalFlowPyrLK, cv.calcOpticalFlowFarneback,
- * cv.getOptimalDFTSize, cv.segmentation_IntelligentScissorsMB.
- *
  * cv.TermCriteria's own constructor contract has its own dedicated
  * test_termcriteria.js; the meanShift/CamShift tests below just use it as
  * an ordinary argument, same as any real opencv.js tracking snippet would.
- *
- * cv.BackgroundSubtractorMOG2 isn't directly constructible (see TODO.md) -
- * uses the working cv.createBackgroundSubtractorMOG2() factory instead.
- * cv.rotatedRectPoints() doesn't exist as a free function (see TODO.md) -
- * uses the working RotatedRect.points() instance method instead.
  */
 
 const testCases = {};
@@ -153,6 +143,84 @@ addTest('cartToPolar - vector field to magnitude/angle', () => {
   const angle = new cv.Mat();
   cv.cartToPolar(x, y, mag, angle);
   assert(Math.abs(mag.data32F[0] - 5) < 1e-4, `expected magnitude(3,4) == 5, got ${mag.data32F[0]}`);
+});
+
+addTest('getOptimalDFTSize - DFT padding helper', () => {
+  // See BUGS: opencvjs-getoptimaldftsize-missing.
+  const padded = cv.getOptimalDFTSize(100);
+  assert(padded >= 100, `expected a padded size >= 100, got ${padded}`);
+  assert(cv.getOptimalDFTSize(1) === 1, 'expected getOptimalDFTSize(1) === 1');
+});
+
+addTest('calcBackProject - histogram back-projection', () => {
+  // See BUGS: opencvjs-calcbackproject-missing. Note the ranges argument
+  // takes the same nested-array shape as calcHist's ranges (one [min,max]
+  // pair per channel), not a flat [min,max] pair.
+  const hsv = new cv.Mat(20, 20, cv.CV_8UC3);
+  hsv.setTo([90, 128, 128]);
+  const hist = new cv.Mat();
+  const mask = new cv.Mat();
+  cv.calcHist([hsv], [0], mask, hist, 1, [180], [[0, 180]], true);
+  const backproj = new cv.Mat();
+  cv.calcBackProject([hsv], [0], hist, backproj, [[0, 180]]);
+  assert(backproj.rows === 20 && backproj.cols === 20, 'expected a full-size back-projection map');
+  assert(backproj.data[0] > 0, 'expected a nonzero back-projection value for a pixel matching the histogram');
+});
+
+addTest('BackgroundSubtractorMOG2 - directly constructible (new)', () => {
+  // opencv.js exposes this as `new cv.BackgroundSubtractorMOG2(...)`, not
+  // only a factory function - see BUGS:
+  // opencvjs-bgsubtractormog2-class-shape-mismatch.
+  const mog2 = new cv.BackgroundSubtractorMOG2(500, 16, true);
+  const frame = cv.Mat.zeros(20, 20, cv.CV_8UC3);
+  const fgmask = new cv.Mat();
+  mog2.apply(frame, fgmask);
+  assert(fgmask.rows === 20 && fgmask.cols === 20, 'expected a full-size foreground mask');
+});
+
+addTest('calcOpticalFlowPyrLK - sparse feature tracking', () => {
+  // See BUGS: opencvjs-video-tracking-module-unbound.
+  const prev = cv.Mat.zeros(40, 40, cv.CV_8UC1);
+  cv.rectangle(prev, { x: 10, y: 10, width: 10, height: 10 }, 200, -1);
+  const next = cv.Mat.zeros(40, 40, cv.CV_8UC1);
+  cv.rectangle(next, { x: 12, y: 12, width: 10, height: 10 }, 200, -1);
+  const prevPts = new cv.Mat(1, 1, cv.CV_32FC2, Float32Array.from([15, 15]).buffer);
+  const nextPts = new cv.Mat();
+  const status = new cv.Mat();
+  const err = new cv.Mat();
+  cv.calcOpticalFlowPyrLK(prev, next, prevPts, nextPts, status, err);
+  assert(status.rows === 1, `expected one status entry, got ${status.rows}`);
+  assert(status.data[0] === 1, 'expected the point to be found');
+  assert(nextPts.data32F.length === 2, 'expected one tracked point (x,y)');
+});
+
+addTest('calcOpticalFlowFarneback - dense optical flow', () => {
+  // See BUGS: opencvjs-video-tracking-module-unbound.
+  const prev = cv.Mat.zeros(40, 40, cv.CV_8UC1);
+  cv.rectangle(prev, { x: 10, y: 10, width: 10, height: 10 }, 200, -1);
+  const next = cv.Mat.zeros(40, 40, cv.CV_8UC1);
+  cv.rectangle(next, { x: 12, y: 12, width: 10, height: 10 }, 200, -1);
+  const flow = new cv.Mat();
+  cv.calcOpticalFlowFarneback(prev, next, flow, 0.5, 1, 15, 3, 5, 1.2, 0);
+  assert(flow.rows === 40 && flow.cols === 40, 'expected a full-size flow field');
+  assert(flow.channels() === 2, 'expected a 2-channel (dx,dy) flow field');
+});
+
+addTest('segmentation_IntelligentScissorsMB - live-wire contour extraction', () => {
+  // See BUGS: opencvjs-intelligentscissors-missing. Method calls chain
+  // (each returns `this`, matching the C++ API's `IntelligentScissorsMB&`
+  // return type for chaining).
+  const tool = new cv.segmentation_IntelligentScissorsMB();
+  assert(tool.setWeights(0.43, 0.43, 0.14) === tool, 'expected setWeights to return `this` for chaining');
+
+  const img = cv.Mat.zeros(30, 30, cv.CV_8UC1);
+  cv.rectangle(img, { x: 5, y: 5, width: 20, height: 20 }, 255, 2);
+  tool.applyImage(img);
+  tool.buildMap(new cv.Point(5, 5));
+
+  const contour = new cv.Mat();
+  tool.getContour(new cv.Point(24, 24), contour);
+  assert(contour.rows > 0, `expected a nonempty contour, got ${contour.rows} points`);
 });
 
 tests(testCases);

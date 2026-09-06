@@ -8,6 +8,66 @@ qjsm scripts/binding_coverage.js --module=build/x86_64-linux-debug/opencv.so \
   --lib-dir=/opt/opencv-4.13.0-x86_64/lib --namespace=cv --verbose --out=cov.txt
 ```
 
+## Up next — vectorization pipeline leverage (2026-09-05)
+
+Surfaced while researching a conditioning/vectorization/post-processing
+pipeline for `js/vectorizer/` (schematic/line-drawing tracing goal). Not
+started — noted for later.
+
+- [ ] **`dnn_superres::DnnSuperResImpl` convenience API** → extend `js_dnn.cpp`.
+  ESPCN/FSRCNN currently load through the generic `readNetFromONNX` +
+  `Net.forward()` path (works today, see the recent ESPCN fix), but
+  opencv.js/native OpenCV also expose a dedicated `setModel(name, scale)` /
+  `upsample(src, dst)` API on `DnnSuperResImpl` that hides the
+  blob-shape/scale bookkeeping. Bind `dnn_superres::DnnSuperResImpl::create`,
+  `.readModel`, `.setModel`, `.upsample`, `.getScale`, `.getAlgorithm` —
+  small, self-contained, matches the existing `js_dnn.cpp` factory pattern.
+- [ ] **Page dewarping (DocTr/DocUNet-style) for photographed book pages.**
+  No OpenCV C++ module does this (checked: no `cv::dewarp`/equivalent
+  anywhere in `cv::`) — it has to come from a DNN. Two separate pieces of
+  work, in order:
+  1. **Export script, `scripts/export_docunet_onnx.py`** (new file, Python
+     + PyTorch, not yet started) — fetch a pretrained DocTr or DocUNet
+     checkpoint (DocTr: https://github.com/fh2019ustc/DocTr; DocUNet:
+     https://github.com/cvlab-stonybrook/DocUNet — confirm which has usable
+     pretrained weights and a permissive-enough license before picking one),
+     load it in PyTorch, and `torch.onnx.export()` it with a fixed square
+     input size (mirror the fixed-`inferSize` pattern `js/cvVectorization.js`
+     already uses for its optional segmenter) since this project's `Net`
+     binding doesn't exercise dynamic-axes ONNX. Verify the exported graph's
+     op set is covered by OpenCV's ONNX importer (or by `ENGINE_ORT`, now
+     confirmed available in this build — see BUGS/session notes on
+     `cv.dnn.ENGINE_ORT`) before considering this step done.
+  2. **Inference + apply, JS-only, no new C++ expected**: once the ONNX file
+     exists, loading and running it needs nothing beyond what already
+     works — `readNetFromONNX` + `blobFromImage` + `Net.forward()` (proven
+     end-to-end against a real transformer-ish segmentation model this
+     session). The model's output is a dense per-pixel displacement/flow
+     field; applying it is exactly `cv.remap()` (already bound,
+     `js_imgproc.cpp`) with the field converted to the `CV_32FC1` x/y maps
+     `remap` expects. Only fall back to new C++ if profiling shows the
+     field-to-maps conversion needs to leave JS.
+- [ ] **Trainable pipeline-permutation evaluator.** Given the ~500 "sensible"
+  conditioning/vectorization/post-processing permutations already possible
+  in `js/cvVectorization.js` (see session notes 2026-09-05), build a scorer
+  that ranks a permutation's polyline output on several qualitative axes
+  without needing a ground-truth vector drawing to compare against:
+  1. **Reference-free metrics** computed from `(sourceImage, VectorData)`
+     pairs - edge fidelity (rasterize the output polylines and compare
+     against the source's own Canny/EdgeDrawing edge map via IoU or Chamfer
+     distance), compactness (point/shape count relative to image area),
+     geometric regularity (angle-histogram peakiness at 0°/45°/90°, a real
+     signal for architectural/schematic line art specifically), and noise
+     (count of tiny disconnected fragments below some length threshold).
+  2. **Trainable layer on top**: a plain linear/logistic regression over
+     that metric vector (not deep learning - the label budget will always
+     be tiny), fit from a small set of the user's own thumbs-up/down ratings
+     on actual pipeline runs (expect ~20-30 rated examples before it tracks
+     taste meaningfully). Worth building step 1 alone first and checking
+     whether the unweighted/heuristic ranking already correlates with
+     judgment before investing in the regression step.
+  Not started - scoped in conversation, no code written yet.
+
 ## opencv.js Example Compatibility Gaps (2026-08-17)
 
 Cross-checked every `cv.*` binding referenced by the 80 opencv.js example

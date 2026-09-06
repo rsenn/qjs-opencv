@@ -8,7 +8,7 @@ import {
   Mat, Size, GaussianBlur, threshold, skeletonization, findContours,
   THRESH_BINARY, THRESH_BINARY_INV, THRESH_OTSU,
   RETR_LIST, CHAIN_APPROX_NONE,
-} from 'opencv.so';
+} from 'opencv';
 
 import { VectorMethod } from '../base.js';
 import { create } from '../../core/vectordata.js';
@@ -29,17 +29,21 @@ export class Skeleton extends VectorMethod {
     ];
   }
 
-  apply(mat, p, meta) {
+  async apply(mat, p, meta) {
+    const tick = meta.tick || (async () => {});
     const gray = toGray(mat);
     GaussianBlur(gray, gray, new Size(3, 3), 0);
     const bin = new Mat();
     const type = p.invert ? THRESH_BINARY_INV : THRESH_BINARY;
     if (p.otsu) threshold(gray, bin, 0, 255, type | THRESH_OTSU);
     else threshold(gray, bin, p.thresh, 255, type);
+    await tick(0.3);
 
     const skel = new Mat();
     skeletonization(bin, skel);
-    const contours = findContours(skel, RETR_LIST, CHAIN_APPROX_NONE)[0];
+    await tick(0.6);
+    const contours = [], hierarchy = [];
+    findContours(skel, contours, hierarchy, RETR_LIST, CHAIN_APPROX_NONE);
     const shapes = contoursToShapes(contours, {
       mode: 'stroke',
       epsilon: p.epsilon,

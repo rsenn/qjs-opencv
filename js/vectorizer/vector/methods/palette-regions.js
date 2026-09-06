@@ -6,22 +6,22 @@
 // of the methods.
 //
 // NOTE: paletteGenerate/paletteMatch are rsenn-binding extras (not stock
-// OpenCV). Assumed signatures:
-//   paletteGenerate(src, k)      -> palette Mat (k colours)
-//   paletteMatch(src, palette)   -> CV_8U index map (values 0..k-1)
-// If your build differs, only this file needs adjusting.
+// OpenCV). Real signatures (js_algorithms.cpp):
+//   paletteGenerate(src, mode, count) -> array of [b,g,r] colours (mode 0 =
+//     BGR colour space + cube distance, see dominant_colors_grabber.hpp)
+//   paletteMatch(src, dstOut, palette) -> writes a CV_8U index map (values
+//     0..palette.length-1) into dstOut (must be a pre-allocated Mat/output
+//     array - a plain [] resolves to cv::noArray() and is never filled).
 
 import {
-  Mat, GaussianBlur, Size, compare, findContours, pyrMeanShiftFiltering,
+  Mat, GaussianBlur, Size, inRange, findContours, pyrMeanShiftFiltering,
   paletteGenerate, paletteMatch,
-  CMP_EQ, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE,
-} from 'opencv.so';
+  RETR_EXTERNAL, CHAIN_APPROX_SIMPLE,
+} from 'opencv';
 
 import { VectorMethod } from '../base.js';
 import { create } from '../../core/vectordata.js';
 import { contoursToShapes, meanColorMasked, release } from '../../cv/convert.js';
-
-const CMP_EQ_V = typeof CMP_EQ === 'number' ? CMP_EQ : 0;
 
 export class PaletteRegions extends VectorMethod {
   static id = 'palette';
@@ -39,8 +39,8 @@ export class PaletteRegions extends VectorMethod {
     ];
   }
 
-  apply(mat, p, meta) {
-    const tick = meta.onProgress || (() => {});
+  async apply(mat, p, meta) {
+    const tick = meta.tick || (async () => {});
     let src = mat;
     let smoothed = null;
     if (p.meanShift) {
@@ -48,16 +48,18 @@ export class PaletteRegions extends VectorMethod {
       pyrMeanShiftFiltering(mat, smoothed, p.spatial, p.color);
       src = smoothed;
     }
-    tick(0.15);
-    const palette = paletteGenerate(src, p.colors);
-    const idx = paletteMatch(src, palette);   // CV_8U single-channel index map
-    tick(0.25);
+    await tick(0.15);
+    const palette = paletteGenerate(src, 0, p.colors);   // array of [b,g,r]
+    const idx = new Mat();
+    paletteMatch(src, idx, palette);   // CV_8U single-channel index map
+    await tick(0.25);
 
     const shapes = [];
-    for (let k = 0; k < p.colors; k++) {
+    for (let k = 0; k < palette.length; k++) {
       const mask = new Mat();
-      compare(idx, k, mask, CMP_EQ_V);
-      const contours = findContours(mask, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE)[0];
+      inRange(idx, [k, k, k, k], [k, k, k, k], mask);
+      const contours = [], hierarchy = [];
+      findContours(mask, contours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
       const fill = meanColorMasked(mat, mask);
       const band = contoursToShapes(contours, {
         mode: 'fill',
@@ -68,7 +70,7 @@ export class PaletteRegions extends VectorMethod {
       });
       shapes.push(...band);
       release(mask);
-      tick(0.25 + 0.7 * ((k + 1) / p.colors));
+      await tick(0.25 + 0.7 * ((k + 1) / palette.length));
     }
     release(idx, palette, smoothed);
     // Largest regions first so small detail paints on top.

@@ -45,8 +45,8 @@ JSValue cv_proto = JS_UNDEFINED, cv_class = JS_UNDEFINED;
 thread_local JSClassID js_cv_class_id = 0;
 }*/
 
-static JSValue exception_proto = JS_UNDEFINED, exception_class = JS_UNDEFINED;
-static JSClassID js_exception_class_id = 0;
+thread_local JSValue exception_proto = JS_UNDEFINED, exception_class = JS_UNDEFINED;
+thread_local JSClassID js_exception_class_id = 0;
 
 static JSValue
 js_cv_imdecode(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
@@ -948,6 +948,7 @@ enum {
   OTHER_EIGEN,
   OTHER_EIGEN_NON_SYMMETRIC,
   OTHER_GEMM,
+  OTHER_GET_OPTIMAL_DFT_SIZE,
   OTHER_CHECK_RANGE,
   OTHER_IN_RANGE,
   OTHER_INSERT_CHANNEL,
@@ -1129,6 +1130,15 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
         break;
       }
 
+      /* The padding-size helper real DFT code always calls first - see
+       * BUGS: opencvjs-getoptimaldftsize-missing. Takes/returns a plain
+       * int, not an InputArray - `src` above is unused here, same as
+       * OTHER_CVROUND/OTHER_CVFLOOR/OTHER_CVCEIL. */
+      case OTHER_GET_OPTIMAL_DFT_SIZE: {
+        ret = JS_NewInt32(ctx, cv::getOptimalDFTSize(js_value_to<int32_t>(ctx, argv[0])));
+        break;
+      }
+
       case OTHER_CHECK_RANGE: {
         BOOL result, quiet = TRUE;
         JSPointData<int> position, *pos = 0;
@@ -1267,7 +1277,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
         results[3] = js_value_from(ctx, maxIdx);
 
         for(size_t i = 0; i < 4; i++)
-          if(js_is_function(ctx, argv[i + 1]))
+          if(argc > int(i) + 1 && js_is_function(ctx, argv[i + 1]))
             JS_Call(ctx, argv[i + 1], JS_NULL, 1, results + i);
 
         ret = js_array<JSValue>::from_sequence(ctx, const_cast<JSValue*>(&results[0]), const_cast<JSValue*>(&results[4]));
@@ -1294,7 +1304,7 @@ js_cv_other(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
           if(argc > int(i) + 1 && js_is_function(ctx, argv[i + 1]))
             JS_Call(ctx, argv[i + 1], JS_NULL, 1, &results[i]);
 
-        ret = js_array<JSValue>::from_sequence(ctx, const_cast<JSValue*>(&results[0]), const_cast<JSValue*>(&results[4]));
+        ret = js_array<JSValue>::from_sequence(ctx, const_cast<JSValue*>(results.data()), const_cast<JSValue*>(results.data() + 4));
 
         /* opencv.js returns {minVal, maxVal, minLoc, maxLoc}; attach the
          * same fields by name on top of the positional array so both
@@ -1832,6 +1842,7 @@ js_function_list_t js_cv_static_funcs{
     JS_CFUNC_MAGIC_DEF("eigen", 2, js_cv_other, OTHER_EIGEN),
     JS_CFUNC_MAGIC_DEF("eigenNonSymmetric", 3, js_cv_other, OTHER_EIGEN_NON_SYMMETRIC),
     JS_CFUNC_MAGIC_DEF("gemm", 7, js_cv_other, OTHER_GEMM),
+    JS_CFUNC_MAGIC_DEF("getOptimalDFTSize", 1, js_cv_other, OTHER_GET_OPTIMAL_DFT_SIZE),
     JS_CFUNC_MAGIC_DEF("inRange", 4, js_cv_other, OTHER_IN_RANGE),
     JS_CFUNC_MAGIC_DEF("insertChannel", 3, js_cv_other, OTHER_INSERT_CHANNEL),
     JS_CFUNC_MAGIC_DEF("kmeans", 3, js_cv_other, OTHER_KMEANS),

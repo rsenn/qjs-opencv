@@ -8,11 +8,14 @@
 #include <quickjs.h>
 
 #include <opencv2/core/opengl.hpp>
+#include <opencv2/highgui.hpp>
+#include <map>
+#include <string>
 
 typedef cv::ogl::Buffer JSBufferData;
 
-static JSValue buffer_proto = JS_UNDEFINED, buffer_class = JS_UNDEFINED, buffer_params_proto = JS_UNDEFINED;
-static JSClassID js_buffer_class_id = 0;
+thread_local JSValue buffer_proto = JS_UNDEFINED, buffer_class = JS_UNDEFINED, buffer_params_proto = JS_UNDEFINED;
+thread_local JSClassID js_buffer_class_id = 0;
 
 static JSBufferData*
 js_buffer_data(JSValueConst val) {
@@ -402,8 +405,8 @@ static const JSCFunctionListEntry js_buffer_static_funcs[] = {
 
 typedef cv::ogl::Texture2D JSTexture2DData;
 
-static JSValue texture2d_proto = JS_UNDEFINED, texture2d_class = JS_UNDEFINED, texture2d_params_proto = JS_UNDEFINED;
-static JSClassID js_texture2d_class_id = 0;
+thread_local JSValue texture2d_proto = JS_UNDEFINED, texture2d_class = JS_UNDEFINED, texture2d_params_proto = JS_UNDEFINED;
+thread_local JSClassID js_texture2d_class_id = 0;
 
 static JSTexture2DData*
 js_texture2d_data(JSValueConst val) {
@@ -683,8 +686,8 @@ static const JSCFunctionListEntry js_texture2d_static_funcs[] = {
 
 typedef cv::ogl::Arrays JSArraysData;
 
-static JSValue arrays_proto = JS_UNDEFINED, arrays_class = JS_UNDEFINED, arrays_params_proto = JS_UNDEFINED;
-static JSClassID js_arrays_class_id = 0;
+thread_local JSValue arrays_proto = JS_UNDEFINED, arrays_class = JS_UNDEFINED, arrays_params_proto = JS_UNDEFINED;
+thread_local JSClassID js_arrays_class_id = 0;
 
 static JSArraysData*
 js_arrays_data(JSValueConst val) {
@@ -995,6 +998,131 @@ js_opengl_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
   return ret;
 }
 
+/*
+ * HighGUI <-> OpenGL interop (cv::setOpenGlContext/setOpenGlDrawCallback/
+ * updateWindow, opencv2/highgui.hpp - distinct from the cv::ogl::* buffer/
+ * texture wrappers above). This is the piece a window needs to have a JS
+ * callback issue raw GL draw calls (e.g. from a library like nanovg) each
+ * time the window repaints, instead of only ever showing Mats via imshow().
+ */
+
+struct JSGlDrawCallback {
+  JSValue window;
+  JSValueConst handler;
+  JSContext* ctx;
+};
+
+// One window has one draw callback at a time (matches cv::setOpenGlDrawCallback's
+// own last-one-wins semantics); replacing it releases the previous JS
+// references instead of leaking them the way setMouseCallback's userdata does
+// above (that one is fire-and-forget for the process lifetime; a
+// vectorizer-playground draw callback is expected to be swapped often as
+// panes/widgets change, so leaking here would actually show up).
+thread_local std::map<std::string, JSGlDrawCallback*> js_gl_draw_callbacks;
+
+static JSValue
+js_opengl_set_context(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+  const char* name = JS_ToCString(ctx, argv[0]);
+
+  if(name == nullptr)
+    return JS_EXCEPTION;
+
+  try {
+    cv::setOpenGlContext(name);
+  } catch(const cv::Exception& e) {
+    JS_FreeCString(ctx, name);
+    return js_cv_throw(ctx, e);
+  }
+
+  JS_FreeCString(ctx, name);
+  return JS_UNDEFINED;
+}
+
+static JSValue
+js_opengl_set_draw_callback(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+  const char* name = JS_ToCString(ctx, argv[0]);
+
+  if(name == nullptr)
+    return JS_EXCEPTION;
+
+  std::string key(name);
+  auto it = js_gl_draw_callbacks.find(key);
+
+  if(it != js_gl_draw_callbacks.end()) {
+    JS_FreeValue(it->second->ctx, it->second->window);
+    JS_FreeValue(it->second->ctx, it->second->handler);
+    js_deallocate(ctx, it->second);
+    js_gl_draw_callbacks.erase(it);
+  }
+
+  if(argc < 2 || !js_is_function(ctx, argv[1])) {
+    // no/non-function callback: clear it, matching cv::setOpenGlDrawCallback(name, 0)
+    try {
+      cv::setOpenGlDrawCallback(name, nullptr, nullptr);
+    } catch(const cv::Exception& e) {
+      JS_FreeCString(ctx, name);
+      return js_cv_throw(ctx, e);
+    }
+
+    JS_FreeCString(ctx, name);
+    return JS_UNDEFINED;
+  }
+
+  JSGlDrawCallback* userdata = js_allocate<JSGlDrawCallback>(ctx);
+  userdata->window = JS_DupValue(ctx, argv[0]);
+  userdata->handler = JS_DupValue(ctx, argv[1]);
+  userdata->ctx = ctx;
+
+  js_gl_draw_callbacks[key] = userdata;
+
+  try {
+    cv::setOpenGlDrawCallback(
+        name,
+        [](void* ptr) {
+          JSGlDrawCallback const& data = *static_cast<JSGlDrawCallback*>(ptr);
+
+          // Called once per repaint (potentially every frame) - free the
+          // return value/exception immediately rather than leaking it, unlike
+          // the fire-once-in-a-while setMouseCallback trampoline above.
+          if(js_is_function(data.ctx, data.handler)) {
+            JSValueConst argv[] = {data.window};
+            JS_FreeValue(data.ctx, JS_Call(data.ctx, data.handler, JS_UNDEFINED, 1, argv));
+          }
+        },
+        userdata);
+  } catch(const cv::Exception& e) {
+    JS_FreeCString(ctx, name);
+    return js_cv_throw(ctx, e);
+  }
+
+  JS_FreeCString(ctx, name);
+  return JS_UNDEFINED;
+}
+
+static JSValue
+js_opengl_update_window(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+  const char* name = JS_ToCString(ctx, argv[0]);
+
+  if(name == nullptr)
+    return JS_EXCEPTION;
+
+  try {
+    cv::updateWindow(name);
+  } catch(const cv::Exception& e) {
+    JS_FreeCString(ctx, name);
+    return js_cv_throw(ctx, e);
+  }
+
+  JS_FreeCString(ctx, name);
+  return JS_UNDEFINED;
+}
+
+js_function_list_t js_opengl_static_funcs{
+    JS_CFUNC_DEF("setOpenGlContext", 1, js_opengl_set_context),
+    JS_CFUNC_DEF("setOpenGlDrawCallback", 1, js_opengl_set_draw_callback),
+    JS_CFUNC_DEF("updateWindow", 1, js_opengl_update_window),
+};
+
 js_function_list_t js_opengl_ogl_funcs{
     JS_CFUNC_MAGIC_DEF("convertFromGLTexture2D", 2, js_opengl_func, OPENGL_CONVERT_FROM_GL_TEXTURE_2D),
     JS_CFUNC_MAGIC_DEF("convertToGLTexture2D", 2, js_opengl_func, OPENGL_CONVERT_TO_GL_TEXTURE_2D),
@@ -1021,7 +1149,7 @@ js_function_list_t js_opengl_ogl_funcs{
     JS_OBJECT_DEF("ogl", js_opengl_ogl_funcs.data(), int(js_opengl_ogl_funcs.size()), JS_PROP_C_W_E),
 };*/
 
-static JSValue ogl_object;
+thread_local JSValue ogl_object;
 
 extern "C" int
 js_opengl_init(JSContext* ctx, JSModuleDef* m) {
@@ -1029,6 +1157,9 @@ js_opengl_init(JSContext* ctx, JSModuleDef* m) {
   ogl_object = JS_NewObjectProto(ctx, JS_NULL);
 
   JS_SetPropertyFunctionList(ctx, ogl_object, js_opengl_ogl_funcs.data(), js_opengl_ogl_funcs.size());
+
+  if(m)
+    JS_SetModuleExportList(ctx, m, js_opengl_static_funcs.data(), js_opengl_static_funcs.size());
 
   JS_NewClassID(&js_buffer_class_id);
   JS_NewClass(JS_GetRuntime(ctx), js_buffer_class_id, &js_buffer_class);
@@ -1082,6 +1213,7 @@ js_opengl_init(JSContext* ctx, JSModuleDef* m) {
 extern "C" void
 js_opengl_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "ogl");
+  JS_AddModuleExportList(ctx, m, js_opengl_static_funcs.data(), js_opengl_static_funcs.size());
 }
 
 #if defined(JS_CV_MODULE)

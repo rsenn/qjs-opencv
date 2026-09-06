@@ -16,7 +16,7 @@ import { msgToMat } from '../cv/marshal.js';
 const parent = os.Worker.parent;
 const registry = defaultRegistry();
 
-parent.onmessage = (e) => {
+parent.onmessage = async (e) => {
   const msg = e.data;
   if (msg.type !== 'run') return;
   const { id, methodId, params, frame, meta } = msg;
@@ -28,8 +28,8 @@ parent.onmessage = (e) => {
   try {
     mat = msgToMat(frame);
     post({ type: 'progress', value: 0 });
-    const onProgress = (t) => post({ type: 'progress', value: Math.max(0, Math.min(1, +t || 0)) });
-    const vd = method.apply(mat, params, Object.assign({}, meta, { onProgress }));
+    const tick = async (t) => post({ type: 'progress', value: Math.max(0, Math.min(1, +t || 0)) });
+    const vd = await method.apply(mat, params, Object.assign({}, meta, { tick }));
     post({ type: 'progress', value: 1 });
     post({ type: 'done', vd });
   } catch (err) {

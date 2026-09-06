@@ -8,7 +8,7 @@ import {
   Mat, Size, GaussianBlur, threshold, findContours, contourArea,
   fitEllipse, minAreaRect, boxPoints, minEnclosingCircle,
   THRESH_BINARY_INV, THRESH_OTSU, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE,
-} from 'opencv.so';
+} from 'opencv';
 
 import { VectorMethod } from '../base.js';
 import { create, ellipse, polygon, circle } from '../../core/vectordata.js';
@@ -29,12 +29,15 @@ export class ShapeFit extends VectorMethod {
     ];
   }
 
-  apply(mat, p, meta) {
+  async apply(mat, p, meta) {
+    const tick = meta.tick || (async () => {});
     const gray = toGray(mat);
     GaussianBlur(gray, gray, new Size(5, 5), 0);
     const bin = new Mat();
     threshold(gray, bin, 0, 255, THRESH_BINARY_INV | THRESH_OTSU);
-    const contours = findContours(bin, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE)[0];
+    const contours = [], hierarchy = [];
+    findContours(bin, contours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
+    await tick(0.4);
 
     const shapes = [];
     for (const c of contours) {
@@ -59,6 +62,7 @@ export class ShapeFit extends VectorMethod {
         }
       } catch (_) { /* skip degenerate contour */ }
     }
+    await tick(0.8);
     release(gray, bin);
     return create(meta.width, meta.height, { shapes });
   }

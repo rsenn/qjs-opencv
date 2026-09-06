@@ -6,6 +6,7 @@
 #include "js_mat.hpp"
 #include "js_point.hpp"
 #include "js_rect.hpp"
+#include "js_rotated_rect.hpp"
 #include "js_size.hpp"
 #include "js_umat.hpp"
 #include "js_keypoint.hpp"
@@ -178,6 +179,47 @@ js_draw_ellipse(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
 
   try {
     cv::ellipse(dst, center, axes, angle, start_angle, end_angle, cv::Scalar(color), thickness < 0 ? cv::FILLED : thickness, line_type);
+  } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
+
+  return JS_UNDEFINED;
+}
+
+/* opencv.js's second ellipse() overload (embind can't overload on
+ * argument shape, so it's exposed under a separate JS name) - draws
+ * directly from a RotatedRect, e.g. cv.fitEllipse()'s return value.
+ * See BUGS: opencvjs-ellipse-rotatedrect-overload-missing. */
+static JSValue
+js_draw_ellipse1(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+  JSInputOutputArray dst;
+  int i = 0;
+  JSRotatedRectData* box;
+  JSColorData<double> color;
+  int thickness = 1;
+  int line_type = cv::LINE_8;
+
+  if(argc > i) {
+    if(!js_is_noarray((dst = js_cv_inputoutputarray(ctx, argv[i]))))
+      i++;
+  } else
+    dst = *dptr;
+
+  if(js_is_noarray(dst))
+    return JS_EXCEPTION;
+
+  if(!(box = js_rotated_rect_data2(ctx, argv[i++])))
+    return JS_ThrowTypeError(ctx, "argument must be a RotatedRect");
+
+  if(argc > i)
+    js_color_read(ctx, argv[i++], &color);
+
+  if(argc > i)
+    js_value_to(ctx, argv[i++], thickness);
+
+  if(argc > i)
+    js_value_to(ctx, argv[i++], line_type);
+
+  try {
+    cv::ellipse(dst, *box, cv::Scalar(color), thickness, line_type);
   } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
 
   return JS_UNDEFINED;
@@ -816,7 +858,7 @@ js_fill_convex_poly(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   return JS_UNDEFINED;
 }
 
-static JSValue draw_proto = JS_UNDEFINED, draw_class = JS_UNDEFINED;
+thread_local JSValue draw_proto = JS_UNDEFINED, draw_class = JS_UNDEFINED;
 thread_local JSClassID js_draw_class_id = 0;
 
 JSClassDef js_draw_class = {
@@ -841,6 +883,7 @@ const JSCFunctionListEntry js_draw_static_funcs[] = {
 const JSCFunctionListEntry js_draw_global_funcs[] = {
     JS_CFUNC_DEF("circle", 1, &js_draw_circle),
     JS_CFUNC_DEF("ellipse", 2, &js_draw_ellipse),
+    JS_CFUNC_DEF("ellipse1", 2, &js_draw_ellipse1),
     JS_CFUNC_DEF("drawContour", 1, &js_draw_contour),
     JS_CFUNC_DEF("drawContours", 4, &js_draw_contours),
     JS_CFUNC_DEF("line", 1, &js_draw_line),

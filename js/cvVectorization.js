@@ -1,4 +1,8 @@
-import { Mat, Size, Point, CV_8UC1, CV_8UC3, CV_32FC1, CV_32S, cvtColor, COLOR_BGR2Lab, COLOR_Lab2BGR, pyrMeanShiftFiltering, kmeans, KMEANS_PP_CENTERS, TERM_CRITERIA_COUNT, TERM_CRITERIA_EPS, resize, INTER_NEAREST, morphologyEx, getStructuringElement, MORPH_RECT, MORPH_OPEN, MORPH_CLOSE, connectedComponentsWithStats, findContours, RETR_CCOMP, CHAIN_APPROX_NONE, bitwise_and, imread, readNetFromONNX, blobFromImage, } from 'opencv';
+import { Mat, Size, Point, CV_8UC1, CV_8UC3, CV_32FC1, CV_32FC3, CV_32S, CV_32SC2, cvtColor, COLOR_BGR2GRAY, COLOR_BGR2Lab, COLOR_Lab2BGR, pyrMeanShiftFiltering, kmeans, KMEANS_PP_CENTERS, TERM_CRITERIA_COUNT, TERM_CRITERIA_EPS, resize, INTER_NEAREST, morphologyEx, getStructuringElement, MORPH_RECT, MORPH_OPEN, MORPH_CLOSE, connectedComponentsWithStats, findContours, RETR_LIST, RETR_CCOMP, CHAIN_APPROX_NONE, CHAIN_APPROX_SIMPLE, bitwise_and, imread, readNetFromONNX, blobFromImage, GaussianBlur, Canny, createCLAHE, ximgproc, psimpl, approxPolyDP, arcLength, PointVectorVector, traceSkeleton, } from 'opencv';
+import { Processor } from './cvPipeline.js';
+import { NumericParam } from './cvParam.js';
+import { create as createVectorData } from './vectorizer/core/vectordata.js';
+import { contoursToShapes, linesToShapes } from './vectorizer/cv/convert.js';
 
 /**
  * Full-color image to SVG vectorizer (vectorizer.ai style).
@@ -785,7 +789,7 @@ export class Vectorizer {
     const opts = this.options;
     const mat = typeof input == 'string' ? imread(input) : input;
 
-    if(!mat || mat.empty) throw new Error(`Vectorizer: cannot read input ${typeof input == 'string' ? `'${input}'` : 'Mat'}`);
+    if(!mat || mat.empty()) throw new Error(`Vectorizer: cannot read input ${typeof input == 'string' ? `'${input}'` : 'Mat'}`);
 
     const { cols: width, rows: height } = mat;
     let masks = null;
@@ -881,5 +885,302 @@ export class Vectorizer {
     this.#log(`${name}: ${Date.now() - start} ms`);
 
     return result;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Playground: pluggable conditioning / vectorization / post-processing
+ * processors, decomposed out of the monolithic vectorizer/vector/methods/*
+ * strategies so they can be freely recombined (e.g. swap Canny for a DNN
+ * edge model upstream of the same line tracer).
+ *
+ * Conditioning stages are cv.Mat -> cv.Mat and run through cvPipeline's
+ * `Processor` (Mat-reuse + `.watch(params)` dirty tracking, see
+ * cvPipeline.js). Vectorization/post stages produce VectorData, not Mats,
+ * so they use the lighter `Stage` cache below instead of forcing a Mat
+ * allocation on data that isn't image-shaped — same dirty-flag contract
+ * (`.watch(...)`, recompute cascades downstream once anything upstream
+ * actually reran), just without cvPipeline's Mat-reuse mapper.
+ * ------------------------------------------------------------------ */
+
+/* A memoized pipeline node for stages that don't output a Mat (contours,
+ * VectorData, ...). `forced=true` means an upstream stage already reran this
+ * call, so this one must too regardless of its own params. */
+class Stage {
+  constructor(id, fn, params = []) {
+    this.id = id;
+    this.fn = fn;
+    this.params = params;
+    this.dirty = true;
+    this.cached = undefined;
+  }
+
+  get isDirty() {
+    return this.dirty || this.params.some(p => p && p.dirty);
+  }
+
+  run(input, forced = false) {
+    if(forced || this.isDirty || this.cached === undefined) {
+      this.cached = this.fn(input, this.params);
+      this.dirty = false;
+      for(const p of this.params) if(p) p.dirty = false;
+      return { value: this.cached, recomputed: true };
+    }
+    return { value: this.cached, recomputed: false };
+  }
+}
+
+/* --- conditioning (Mat -> Mat), cvPipeline Processors --- */
+
+export const ConditioningProcessors = {
+  /* Plain grayscale - the baseline everything else compares against. */
+  grayscale() {
+    return Processor(function grayscale(src, dst) {
+      if(src.channels() === 1) src.copyTo(dst);
+      else cvtColor(src, dst, COLOR_BGR2GRAY);
+    });
+  },
+
+  /* CLAHE local-contrast equalization - helps uneven book-page lighting.
+   * Expects a single-channel input (chain after grayscale()). */
+  clahe() {
+    const clipLimit = new NumericParam(2, 1, 40, 0.5);
+    const tileSize = new NumericParam(8, 2, 32, 1);
+    let clahe = null,
+      lastTile = -1;
+
+    const proc = Processor(function clahe_(src, dst) {
+      if(!clahe || lastTile !== tileSize.get()) {
+        lastTile = tileSize.get();
+        clahe = createCLAHE(clipLimit.get(), new Size(lastTile, lastTile));
+      } else {
+        clahe.clipLimit = clipLimit.get();
+      }
+      clahe.apply(src, dst);
+    });
+
+    return proc.watch(clipLimit, tileSize);
+  },
+
+  /* Gaussian blur - cheap denoise before edge extraction. */
+  blur() {
+    const ksize = new NumericParam(3, 0, 15, 2);
+
+    const proc = Processor(function blur(src, dst) {
+      const k = ksize.get();
+      if(k < 3) src.copyTo(dst);
+      else GaussianBlur(src, dst, new Size(k | 1, k | 1), 0);
+    });
+
+    return proc.watch(ksize);
+  },
+
+  /* DexiNed learned edge detector - semantic edges, no texture noise.
+   * Model: examples/models/edge_detection_dexined/edge_detection_dexined_2024sep.onnx */
+  dexined(modelPath = 'examples/models/edge_detection_dexined/edge_detection_dexined_2024sep.onnx') {
+    let net = null;
+
+    return Processor(function dexined_(src, dst) {
+      net ??= readNetFromONNX(modelPath);
+
+      const size = new Size(512, 512);
+      const blob = new Mat();
+      blobFromImage(src, blob, 1.0, size, [103.939, 116.779, 123.68, 0], false, false);
+      net.setInput(blob);
+
+      const out = net.forward();
+      const data = new Float32Array(out.buffer);
+      let min = Infinity,
+        max = -Infinity;
+      for(const v of data) {
+        if(v < min) min = v;
+        if(v > max) max = v;
+      }
+      const range = max - min || 1;
+      const small = new Mat(size, CV_8UC1);
+      const u8 = new Uint8Array(small.buffer);
+      for(let i = 0; i < data.length; i++) u8[i] = Math.round(((data[i] - min) / range) * 255);
+
+      resize(small, dst, src.size(), 0, 0, INTER_NEAREST);
+      blob.delete?.();
+      out.delete?.();
+      small.delete?.();
+    });
+  },
+
+  /* Structured (Dollar/Zitnick) edge forest - classic ML, not deep, often
+   * cleaner than Canny on line-art/scans. Needs tests/model.yml.gz. */
+  structuredEdges(modelPath = 'tests/model.yml.gz') {
+    let detector = null;
+
+    return Processor(function structuredEdges_(src, dst) {
+      detector ??= ximgproc.createStructuredEdgeDetection(modelPath);
+
+      const floatSrc = new Mat();
+      src.convertTo(floatSrc, CV_32FC3, 1 / 255.0);
+
+      const edges = new Mat();
+      detector.detectEdges(floatSrc, edges);
+      edges.convertTo(dst, CV_8UC1, 255.0);
+
+      floatSrc.delete?.();
+      edges.delete?.();
+    });
+  },
+};
+
+/* --- vectorization (Mat -> VectorData), Stage --- */
+
+export const VectorizationStages = {
+  /* The baseline: Canny -> findContours -> stroked polylines. */
+  cannyContours() {
+    const thresh1 = new NumericParam(50, 0, 255, 1);
+    const thresh2 = new NumericParam(150, 0, 255, 1);
+
+    return new Stage(
+      'cannyContours',
+      mat => {
+        const edges = new Mat();
+        Canny(mat, edges, thresh1.get(), thresh2.get());
+        const contours = [],
+          hierarchy = [];
+        findContours(edges, contours, hierarchy, RETR_LIST, CHAIN_APPROX_SIMPLE);
+        const shapes = contoursToShapes(contours, { mode: 'stroke', minPoints: 2 });
+        edges.delete?.();
+        return createVectorData(mat.cols, mat.rows, { shapes });
+      },
+      [thresh1, thresh2],
+    );
+  },
+
+  /* EdgeDrawing (EDPF): parametric line tracing, not a contour-around-edges
+   * approximation - the closer match for straight schematic wires/borders. */
+  edgeDrawingLines() {
+    let ed = null;
+
+    return new Stage('edgeDrawingLines', mat => {
+      ed ??= ximgproc.createEdgeDrawing();
+      const lines = new Mat();
+      ed.detectEdges(mat);
+      ed.detectLines(lines);
+      const shapes = linesToShapes(lines);
+      lines.delete?.();
+      return createVectorData(mat.cols, mat.rows, { shapes });
+    });
+  },
+
+  /* Topology-aware skeleton tracing (algorithms/skeleton_lines.hpp): needs a
+   * binary (thinned or not) input; cuts polylines at junctions rather than
+   * walking through them, unlike a plain contour trace. */
+  skeletonTrace() {
+    return new Stage('skeletonTrace', mat => {
+      const pvv = new PointVectorVector();
+      traceSkeleton(mat, pvv);
+      const shapes = [];
+      for(const pts of pvv) {
+        const flat = [];
+        for(const p of pts) flat.push([p.x ?? p[0], p.y ?? p[1]]);
+        if(flat.length >= 2) shapes.push({ kind: 'polyline', points: flat, style: { stroke: '#101010', strokeWidth: 1, fill: null } });
+      }
+      return createVectorData(mat.cols, mat.rows, { shapes });
+    });
+  },
+};
+
+/* --- post-processing (VectorData -> VectorData), Stage --- */
+
+export const PostProcessingStages = {
+  /* approxPolyDP per shape. */
+  approxPoly() {
+    const epsilon = new NumericParam(1.5, 0.1, 20, 0.1);
+
+    return new Stage(
+      'approxPoly',
+      vd => {
+        const shapes = vd.shapes.map(sh => {
+          if(sh.kind !== 'polyline' && sh.kind !== 'polygon') return sh;
+          const flat = new Mat(new Size(1, sh.points.length), CV_32SC2);
+          const d = new Int32Array(flat.buffer);
+          sh.points.forEach(([x, y], i) => {
+            d[i * 2] = Math.round(x);
+            d[i * 2 + 1] = Math.round(y);
+          });
+          const approx = new Mat();
+          approxPolyDP(flat, approx, epsilon.get(), sh.kind === 'polygon');
+          const out = Array.from(new Int32Array(approx.buffer));
+          const points = [];
+          for(let i = 0; i + 1 < out.length; i += 2) points.push([out[i], out[i + 1]]);
+          flat.delete?.();
+          approx.delete?.();
+          return { ...sh, points };
+        });
+        return { ...vd, shapes };
+      },
+      [epsilon],
+    );
+  },
+
+  /* psimpl polyline simplification (Reumann-Witkam by default). */
+  psimplSimplify(method = 'douglasPeucker') {
+    const tolerance = new NumericParam(1, 0.1, 20, 0.1);
+    const fn = psimpl[method];
+    if(typeof fn !== 'function') throw new Error(`PostProcessingStages.psimplSimplify: unknown method '${method}'`);
+
+    return new Stage(
+      `psimpl:${method}`,
+      vd => {
+        const shapes = vd.shapes.map(sh => {
+          if(sh.kind !== 'polyline' && sh.kind !== 'polygon') return sh;
+          const out = fn(sh.points, tolerance.get());
+          const d = new Int32Array(out.buffer);
+          const points = [];
+          for(let i = 0; i + 1 < d.length; i += 2) points.push([d[i], d[i + 1]]);
+          out.delete?.();
+          return { ...sh, points };
+        });
+        return { ...vd, shapes };
+      },
+      [tolerance],
+    );
+  },
+};
+
+/* Composes conditioning Processors (Mat->Mat, cvPipeline-style) with one
+ * vectorization Stage and a chain of post-processing Stages. Only the
+ * stages whose own params changed (plus everything after the earliest such
+ * stage) get recomputed on `.run()` - see cvPipeline.js's `.watch()`. */
+export class VectorizationPipeline {
+  constructor({ conditioning = [], vectorize, post = [] }) {
+    this.conditioning = conditioning;
+    this.vectorize = vectorize;
+    this.post = post;
+  }
+
+  run(srcMat) {
+    let mat = srcMat;
+    let force = false;
+
+    for(const proc of this.conditioning) {
+      const mustRun = !proc.managed || force || proc.isDirty;
+      if(mustRun) {
+        mat = proc(mat, proc.out);
+        if(proc.managed) proc.clean();
+        force = true;
+      } else {
+        mat = proc.out;
+      }
+    }
+
+    const vecResult = this.vectorize.run(mat, force);
+    force = force || vecResult.recomputed;
+    let data = vecResult.value;
+
+    for(const stage of this.post) {
+      const r = stage.run(data, force);
+      data = r.value;
+      force = force || r.recomputed;
+    }
+
+    return data;
   }
 }

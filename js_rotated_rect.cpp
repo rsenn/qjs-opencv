@@ -274,6 +274,25 @@ const JSCFunctionListEntry js_rotated_rect_static_funcs[] = {
     JS_CFUNC_MAGIC_DEF("points", 2, js_rotated_rect_static_method, ROTATED_RECT_METHOD_POINTS),
 };
 
+/* opencv.js also exposes RotatedRect::points() as a free function on `cv`
+ * itself (`cv.rotatedRectPoints(rr)`), not only as `RotatedRect.points(rr)`
+ * - see BUGS: opencvjs-rotatedrectpoints-free-function-missing.
+ *
+ * Declared arg count must be 2, matching the existing "points" static
+ * entry below - js_rotated_rect_static_method() forwards into
+ * js_rotated_rect_method(ctx, argv[0], argc - 1, argv + 1, magic), and
+ * ROTATED_RECT_METHOD_POINTS unconditionally reads (shifted) argv[0]
+ * (the optional result-array argument). QuickJS only guarantees argv[]
+ * has as many live slots as the function's declared length - with length
+ * 1 and a real call of `cv.rotatedRectPoints(rr)` (argc=1), the shifted
+ * argv+1 read is one slot past the guaranteed end: the exact same
+ * out-of-bounds shape as BUGS' (fixed) minmaxloc-argv-out-of-bounds-read.
+ * Reproduced as a SIGSEGV under tests/unittests/test_imgproc.js before
+ * this fix. */
+const JSCFunctionListEntry js_rotated_rect_module_funcs[] = {
+    JS_CFUNC_MAGIC_DEF("rotatedRectPoints", 2, js_rotated_rect_static_method, ROTATED_RECT_METHOD_POINTS),
+};
+
 int
 js_rotated_rect_init(JSContext* ctx, JSModuleDef* m) {
 
@@ -294,8 +313,10 @@ js_rotated_rect_init(JSContext* ctx, JSModuleDef* m) {
     // js_object_inspect(ctx, rotated_rect_proto, js_rotated_rect_inspect);
   }
 
-  if(m)
+  if(m) {
     JS_SetModuleExport(ctx, m, "RotatedRect", rotated_rect_class);
+    JS_SetModuleExportList(ctx, m, js_rotated_rect_module_funcs, countof(js_rotated_rect_module_funcs));
+  }
 
   return 0;
 }
@@ -303,6 +324,7 @@ js_rotated_rect_init(JSContext* ctx, JSModuleDef* m) {
 extern "C" void
 js_rotated_rect_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "RotatedRect");
+  JS_AddModuleExportList(ctx, m, js_rotated_rect_module_funcs, countof(js_rotated_rect_module_funcs));
 }
 
 #ifdef JS_ROTATED_RECT_MODULE

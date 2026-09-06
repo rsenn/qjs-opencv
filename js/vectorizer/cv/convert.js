@@ -87,10 +87,12 @@ export function hierarchyToPaths(contours, hierarchy, opts = {}) {
 
 function hierarchyRows(h, n) {
   if(!h) return null;
-  // hierarchy may be a Mat (1 x n x 4) or nested arrays; normalize to rows.
+  // hierarchy may be a Mat (1 x n x 4, findContours' actual out-param type -
+  // a plain JS array resolves to cv::noArray() and never gets filled) or
+  // nested arrays; normalize to rows.
   try {
-    const flat = [];
-    for(const r of h) for (const v of r) flat.push(Number(v));
+    const flat = h.data32S ? Array.from(h.data32S) : [];
+    if(!flat.length) for(const r of h) for (const v of r) flat.push(Number(v));
     if(flat.length >= n * 4) {
       const rows = [];
       for(let i = 0; i < n; i++) rows.push(flat.slice(i * 4, i * 4 + 4));
