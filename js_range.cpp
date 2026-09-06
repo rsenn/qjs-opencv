@@ -231,7 +231,7 @@ js_range_to_array(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst 
   return js_typedarray_from(ctx, arr.cbegin(), arr.cend());
 }
 
-static JSAtom iterator_symbol;
+static thread_local JSAtom iterator_symbol = 0;
 
 static JSValue
 js_range_symbol_iterator(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {

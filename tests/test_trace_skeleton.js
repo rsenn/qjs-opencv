@@ -22,7 +22,7 @@ function main(filename = 'tests/test_linesegmentdetector.jpg') {
   console.log('input:', filename);
 
   const input = imread(filename);
-  if(input.empty) {
+  if(input.empty()) {
     console.log('failed to load', filename);
     return 1;
   }

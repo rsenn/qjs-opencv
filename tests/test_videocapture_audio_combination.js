@@ -39,12 +39,12 @@ function main() {
       for(let nCh = 0; nCh < numberOfChannels; nCh++) {
         cap.retrieve(audioFrame, audioBaseIndex + nCh);
 
-        if(!audioFrame.empty) audioData[nCh].push(audioFrame);
+        if(!audioFrame.empty()) audioData[nCh].push(audioFrame);
         numberOfSamples += audioFrame.cols;
         console.log('Number of audio samples: ' + numberOfSamples);
       }
 
-      if(false && !videoFrame.empty) {
+      if(false && !videoFrame.empty()) {
         numberOfFrames++;
 
         imshow('Live', videoFrame);

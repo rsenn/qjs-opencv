@@ -171,7 +171,7 @@ function main(...args) {
   const outBase = args[1] ?? filename.replace(/\.[^.]+$/, '') + '.packed';
 
   const source = imread(filename, IMREAD_UNCHANGED);
-  if(source.empty) {
+  if(source.empty()) {
     console.log('failed to load', filename);
     return 1;
   }

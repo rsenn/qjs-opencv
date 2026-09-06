@@ -645,7 +645,7 @@ js_rect_method(JSContext* ctx, JSValueConst rect, int argc, JSValueConst argv[],
   return ret;
 }
 
-static JSAtom iterator_symbol;
+static thread_local JSAtom iterator_symbol = 0;
 
 static JSValue
 js_rect_symbol_iterator(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {

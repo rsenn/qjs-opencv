@@ -13,6 +13,16 @@
 import { Mat } from 'opencv';
 
 const TAG = '__sab';
+// Expando marking a Mat as a live view over a SharedArrayBuffer we already
+// know about (set by newSharedMat/sharedToMat below). mat.buffer (js_mat.cpp)
+// always wraps the pixel pointer in a *fresh plain* ArrayBuffer, even for a
+// Mat constructed over a SAB - so `mat.buffer instanceof SharedArrayBuffer`
+// can never be true, and this is the only way to recognize such a Mat later.
+const SAB_TAG = Symbol('sab');
+
+function isWholeSabView(mat, sab) {
+  return mat.isContinuous() && mat.step * mat.rows === sab.byteLength;
+}
 
 // ---------- primitive ----------
 
@@ -26,20 +36,26 @@ export function copyToShared(u8) {
 // ---------- cv.Mat ----------
 
 export function matToShared(mat) {
-  const src = new Uint8Array(mat.buffer);
-  const sab = copyToShared(src);
+  // Already a whole-buffer view over a SAB we handed out earlier (via
+  // newSharedMat/sharedToMat) - reuse that same SharedArrayBuffer instead of
+  // copying. Structured-clone of a SAB shares memory rather than copying it,
+  // so the receiving side ends up with a live alias, not a stale snapshot.
+  const sab = mat[SAB_TAG];
+  const reuse = sab && isWholeSabView(mat, sab);
   return {
     [TAG]: 'mat',
     rows: mat.rows,
     cols: mat.cols,
     type: mat.type(),
     step: mat.step,
-    sab,
+    sab: reuse ? sab : copyToShared(new Uint8Array(mat.buffer)),
   };
 }
 
 export function sharedToMat(d) {
-  return new Mat(d.rows, d.cols, d.type, d.sab, d.step);
+  const mat = new Mat(d.rows, d.cols, d.type, d.sab, d.step);
+  mat[SAB_TAG] = d.sab;
+  return mat;
 }
 
 // Allocate a fresh SAB and a Mat that aliases it. Returns { mat, desc } where
@@ -51,8 +67,17 @@ export function newSharedMat(rows, cols, type) {
   const step = cols * elemBytes;
   const sab = new SharedArrayBuffer(rows * step);
   const mat = new Mat(rows, cols, type, sab, step);
+  mat[SAB_TAG] = sab;
   const desc = { [TAG]: 'mat', rows, cols, type, step, sab };
   return { mat, desc };
+}
+
+// True if `mat` is a live, whole-buffer view over a SharedArrayBuffer (i.e.
+// a worker writing into it is visible to every other holder of that same
+// Mat/SAB immediately - no postMessage round trip needed to see the result).
+export function isSharedMat(mat) {
+  const sab = mat && mat[SAB_TAG];
+  return !!sab && isWholeSabView(mat, sab);
 }
 
 // ---------- TypedArray ----------

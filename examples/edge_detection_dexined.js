@@ -58,7 +58,7 @@ function detectEdges(net, image) {
 function main(input = 'tests/smarties.png', output = 'edge_detection_dexined.png') {
   const src4 = cv.imread(input);
 
-  if(src4.empty) throw new Error(`Error opening image: ${input}`);
+  if(src4.empty()) throw new Error(`Error opening image: ${input}`);
 
   const src = new cv.Mat();
   cv.cvtColor(src4, src, src4.channels() === 4 ? cv.COLOR_BGRA2BGR : cv.COLOR_GRAY2BGR);

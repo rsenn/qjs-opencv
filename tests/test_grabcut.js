@@ -32,9 +32,9 @@ const BGD_KEY = EVENT_FLAG_CTRLKEY;
 const FGD_KEY = EVENT_FLAG_SHIFTKEY;
 
 function getBinMask(/*const Mat&*/ comMask, /*Mat& */ binMask) {
-  if(comMask.empty || comMask.type() != CV_8UC1) throw new Error('comMask is empty or has incorrect type (not CV_8UC1)');
+  if(comMask.empty() || comMask.type() != CV_8UC1) throw new Error('comMask is empty or has incorrect type (not CV_8UC1)');
 
-  if(binMask.empty || !binMask.size().equals(comMask.size())) binMask.create(comMask.size(), CV_8UC1);
+  if(binMask.empty() || !binMask.size().equals(comMask.size())) binMask.create(comMask.size(), CV_8UC1);
 
   //comMask.and(Scalar(1));
 
@@ -54,7 +54,7 @@ class GCApplication {
   static thickness = -1;
 
   reset() {
-    if(!this.mask.empty) this.mask.setTo(Scalar(GC_BGD, GC_BGD, GC_BGD, GC_BGD));
+    if(!this.mask.empty()) this.mask.setTo(Scalar(GC_BGD, GC_BGD, GC_BGD, GC_BGD));
 
     this.bgdPxls.length = 0;
     this.fgdPxls.length = 0;
@@ -69,7 +69,7 @@ class GCApplication {
   }
 
   setImageAndWinName(_image, _winName) {
-    if(_image.empty || _winName.empty) return;
+    if(_image.empty() || _winName.empty) return;
 
     this.image = _image;
     this.winName = _winName;
@@ -79,7 +79,7 @@ class GCApplication {
   }
 
   showImage() {
-    if(!this.image || this.image.empty || !this.winName) return;
+    if(!this.image || this.image.empty() || !this.winName) return;
 
     const res = new Mat();
     const binMask = new Mat();
@@ -109,7 +109,7 @@ class GCApplication {
   setRectInMask() {
     const { rect, mask } = this;
 
-    assert(!mask.empty);
+    assert(!mask.empty());
     mask.setTo(GC_BGD);
     rect.x = Math.max(0, rect.x);
     rect.y = Math.max(0, rect.y);
@@ -318,7 +318,7 @@ function main(input) {
 
   console.log('image', image);
 
-  if(image.empty) {
+  if(image.empty()) {
     console.log("\n Durn, couldn't read image filename ", filename);
     return 1;
   }

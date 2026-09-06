@@ -11,7 +11,7 @@
 
 import * as os from 'os';
 import { Mat, imshow, namedWindow, waitKey, WINDOW_AUTOSIZE, applyColorMap, COLORMAP_TURBO, convertScaleAbs, rectangle, putText, FONT_HERSHEY_SIMPLEX, FILLED, LINE_AA, CV_32FC1, } from 'opencv';
-import { SharedChannel, newSharedMat } from '../js/cvWorker.js';
+import { SharedChannel, newSharedMat } from '../js/cvChannel.js';
 
 const WIN = 'mandelbrot';
 const W = 480,

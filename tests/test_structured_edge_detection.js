@@ -3,7 +3,7 @@ import { ximgproc, imread, Mat, CV_32FC1, imshow, waitKey } from 'opencv';
 function main(filename = 'tests/test_linesegmentdetector.jpg') {
   const src = imread(filename);
 
-  if(src.empty) throw new Error(`Error opening image: ${filename}`);
+  if(src.empty()) throw new Error(`Error opening image: ${filename}`);
 
   const pDollar = ximgproc.createStructuredEdgeDetection('tests/model.yml.gz');
 

@@ -3,7 +3,7 @@ import { Size, CV_8UC1, blur, getStructuringElement, MORPH_RECT, IMREAD_COLOR, m
 function main(input = './samples/samples/data/notes.png') {
   const src = imread(input, IMREAD_COLOR);
 
-  if(src.empty) {
+  if(src.empty()) {
     console.log('Could not open or find the image!\n');
     console.log('Usage: ' + scriptArgs[0] + ' <Input image>');
     return -1;

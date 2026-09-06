@@ -5,7 +5,7 @@
 // parent-side code that spawns this worker is tests/test_worker.js.
 
 import * as os from 'os';
-import { SharedChannel } from '../js/cvWorker.js';
+import { SharedChannel } from '../js/cvChannel.js';
 
 const parent = os.Worker.parent;
 const chan = new SharedChannel(parent);

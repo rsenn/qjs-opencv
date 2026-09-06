@@ -23,7 +23,7 @@ function main(input, algo = 'MOG2') {
   while(true) {
     capture.read(frame);
 
-    if(frame.empty) break;
+    if(frame.empty()) break;
 
     // update the background model
     pBackSub.apply(frame, fgMask);

@@ -39,9 +39,7 @@ enum {
   PROP_COLS = 0,
   PROP_ROWS,
   PROP_DIMS,
-  PROP_EMPTY,
   PROP_MATSIZE,
-  PROP_CONTINUOUS,
   PROP_SUBMATRIX,
   PROP_STEP,
 };
@@ -71,6 +69,8 @@ enum {
   METHOD_ELEMSIZE,
   METHOD_ELEMSIZE1,
   METHOD_DIAG,
+  METHOD_EMPTY,
+  METHOD_CONTINUOUS,
 };
 enum {
   MAT_EXPR_AND = 0,
@@ -116,8 +116,8 @@ js_mat_free_func(JSRuntime* rt, void* opaque, void* ptr) {
 }
 }
 
-static std::vector<JSMatData*> mat_list;
-static std::list<JSMatData*> mat_freed;
+thread_local std::vector<JSMatData*> mat_list;
+thread_local std::list<JSMatData*> mat_freed;
 
 static inline std::vector<int>
 js_mat_sizes(const JSMatData& mat) {
@@ -725,6 +725,16 @@ js_mat_funcs(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
         if(argc > 0)
           JS_ToInt32(ctx, &d, argv[0]);
         ret = js_mat_wrap(ctx, m->diag(d));
+        break;
+      }
+
+      case METHOD_EMPTY: {
+        ret = JS_NewBool(ctx, m->empty());
+        break;
+      }
+
+      case METHOD_CONTINUOUS: {
+        ret = JS_NewBool(ctx, m->isContinuous());
         break;
       }
     }
@@ -1454,11 +1464,6 @@ js_mat_get_props(JSContext* ctx, JSValueConst this_val, int magic) {
       break;
     }
 
-    case PROP_EMPTY: {
-      ret = JS_NewBool(ctx, m->empty());
-      break;
-    }
-
       /*case PROP_TOTAL: {
         ret = JS_NewFloat64(ctx, m->total());
         break;
@@ -1471,11 +1476,6 @@ js_mat_get_props(JSContext* ctx, JSValueConst this_val, int magic) {
         sizes.push_back(m->size[i]);
 
       ret = js_array_from(ctx, sizes);
-      break;
-    }
-
-    case PROP_CONTINUOUS: {
-      ret = JS_NewBool(ctx, m->isContinuous());
       break;
     }
 
@@ -2068,9 +2068,7 @@ const JSCFunctionListEntry js_mat_proto_funcs[] = {
     JS_CGETSET_MAGIC_DEF("cols", js_mat_get_props, NULL, PROP_COLS),
     JS_CGETSET_MAGIC_DEF("rows", js_mat_get_props, NULL, PROP_ROWS),
     JS_CGETSET_MAGIC_DEF("dims", js_mat_get_props, NULL, PROP_DIMS),
-    JS_CGETSET_MAGIC_DEF("empty", js_mat_get_props, NULL, PROP_EMPTY),
     JS_CGETSET_MAGIC_DEF("matSize", js_mat_get_props, NULL, PROP_MATSIZE),
-    JS_CGETSET_MAGIC_DEF("continuous", js_mat_get_props, NULL, PROP_CONTINUOUS),
     JS_CGETSET_MAGIC_DEF("submatrix", js_mat_get_props, NULL, PROP_SUBMATRIX),
     JS_CGETSET_MAGIC_DEF("step", js_mat_get_props, NULL, PROP_STEP),
     JS_CGETSET_DEF("buffer", js_mat_buffer, NULL),
@@ -2108,6 +2106,8 @@ const JSCFunctionListEntry js_mat_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("type", 0, js_mat_funcs, METHOD_TYPE),
     JS_CFUNC_MAGIC_DEF("depth", 0, js_mat_funcs, METHOD_DEPTH),
     JS_CFUNC_MAGIC_DEF("size", 0, js_mat_funcs, METHOD_SIZE),
+    JS_CFUNC_MAGIC_DEF("empty", 0, js_mat_funcs, METHOD_EMPTY),
+    JS_CFUNC_MAGIC_DEF("isContinuous", 0, js_mat_funcs, METHOD_CONTINUOUS),
     JS_CFUNC_MAGIC_DEF("elemSize", 0, js_mat_funcs, METHOD_ELEMSIZE),
     JS_CFUNC_MAGIC_DEF("elemSize1", 0, js_mat_funcs, METHOD_ELEMSIZE1),
     JS_CFUNC_MAGIC_DEF("diag", 0, js_mat_funcs, METHOD_DIAG),

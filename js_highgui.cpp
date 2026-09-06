@@ -33,8 +33,8 @@ struct Trackbar {
   JSContext* ctx;
 };
 
-static std::vector<cv::String> window_list;
-static std::map<cv::String, std::map<cv::String, Trackbar*>> trackbar_list;
+thread_local std::vector<cv::String> window_list;
+thread_local std::map<cv::String, std::map<cv::String, Trackbar*>> trackbar_list;
 
 static JSValue
 js_cv_display_overlay(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {

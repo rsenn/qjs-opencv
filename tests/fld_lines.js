@@ -6,7 +6,7 @@ function main(...args) {
   for(const input of args) {
     const image = imread(input, IMREAD_GRAYSCALE);
 
-    if(image.empty) throw new Error('Unable to open: ' + input);
+    if(image.empty()) throw new Error('Unable to open: ' + input);
 
     // Create FLD detector
     // Param               Default value   Description

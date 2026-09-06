@@ -3,7 +3,7 @@ import { HoughCircles, HOUGH_GRADIENT_ALT, HOUGH_GRADIENT, circle, COLOR_BGR2GRA
 function main(filename = 'smarties.png') {
   const src = imread(filename);
 
-  if(src.empty) throw new Error(`Error opening image: ${filename}`);
+  if(src.empty()) throw new Error(`Error opening image: ${filename}`);
 
   const gray = new Mat();
   cvtColor(src, gray, COLOR_BGR2GRAY);

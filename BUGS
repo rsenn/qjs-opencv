@@ -1587,3 +1587,137 @@
     gc(); // js_white_balancer_finalizer runs (*wb)->~JSWhiteBalancerClass()
           // instead of wb->~JSWhiteBalancerData() - no visible symptom
           // from JS, but cv::Ptr's own release/deleter never runs
+
+- qjs-opencv-static-classid-race-in-worker-threads: found and fixed via
+  `tests/test_threadpool.js` (a 4-worker os.Worker pool where every
+  worker `import * as cv from 'opencv'`s for the first time
+  concurrently). `opencv.so` is one shared library loaded once per
+  process, so any file-scope `static` (non-`thread_local`) mutable state
+  it holds is one memory location shared by every worker thread's own
+  JSRuntime - each thread's own `js_*_init()` call writes its own
+  thread's JSValue/JSClassID into that same shared slot, racing with
+  every other thread doing the same. Confirmed via gdb across several
+  crashes (SIGSEGV inside `js_free_shape`/`add_property`, SIGABRT from
+  "malloc(): unaligned tcache chunk detected" / "malloc_consolidate():
+  unaligned fastbin chunk detected" - i.e. one thread's JS heap getting
+  corrupted by a pointer that actually belongs to a different thread's
+  heap). Four distinct instances found and fixed, all by changing
+  `static` to `thread_local` (matching the convention every other
+  js_*.cpp in this project already followed for its own class
+  id/proto/class globals - e.g. `js_mat_class_id`, `js_size_class_id`):
+    - `js_cv.cpp`: `js_exception_class_id`, `exception_proto`, `exception_class`
+    - `js_opengl.cpp`: `js_buffer_class_id`/`js_texture2d_class_id`/
+      `js_arrays_class_id` and their `*_proto`/`*_class` JSValues, plus
+      `ogl_object` and the `js_gl_draw_callbacks` map
+    - `js_draw.cpp`: `draw_proto`, `draw_class`
+    - `js_mat.cpp`: `mat_list`/`mat_freed` (debug tracking vectors, pushed
+      to on every Mat construction - the highest-traffic instance of this
+      bug, since it fired on literally every Mat any worker created)
+    - `js_highgui.cpp`: `window_list`, `trackbar_list`
+    - `js_range.cpp`/`js_rect.cpp`/`js_size.cpp`/`js_point.cpp`: each had
+      their own file-local `static JSAtom iterator_symbol` (kept
+      `static` for internal linkage, but each is now also
+      `thread_local` - a `JSAtom` is an index into one JSRuntime's own
+      atom table, meaningless/dangerous read from a different runtime)
+    - `js_feature2d.cpp`: `js_feature2d_classes[]` - the actual dominant
+      cause (found last, after the other six were already fixed and the
+      crash rate had dropped from ~40% to ~5%). This is a fixed-size
+      array of `JSConstructor` (include/jsbindings.hpp) structs, and
+      `JSConstructor::class_obj` is a mutable `JSValue` *member field*
+      written by `.create(ctx)` during `js_feature2d_init()` - so every
+      worker thread importing 'opencv' for the first time wrote its own
+      thread's `class_obj` pointer into the same shared array elements,
+      and `.set_export()` could then hand a *different thread's* JSValue
+      to `JS_SetModuleExport` on the current thread's module. 0 crashes
+      in 60 consecutive runs of tests/test_threadpool.js after this fix
+      (vs. ~40% before the first six fixes, ~5% after them but before
+      this one).
+  Worth an audit for the same `static JSConstructor foo[]` pattern (or
+  any other struct with a JSValue/JSClassID *member* mutated by an
+  init-time method call, stored in a `static` array or global) in any
+  future js_*.cpp - `grep -rn "static JSConstructor" js_*.cpp` currently
+  comes back empty, so js_feature2d.cpp was the only instance, but a new
+  file copying that pattern would reintroduce this exact bug class.
+
+    QUICKJS_MODULE_PATH=build/x86_64-linux-gnu qjsm tests/test_threadpool.js
+    # (segfaults intermittently before the thread_local fix; a 4-worker
+    # ThreadPool all importing 'opencv' at once is enough to trigger it)
+
+- mat-continuous-not-a-method: `Mat.continuous` is a getter
+  (`JS_CGETSET_MAGIC_DEF("continuous", ...)`, js_mat.cpp) but
+  opencv.js's real API (doc/opencv-js-api.md:122) exposes this as the
+  method `mat.isContinuous()`. Same category of discrepancy that e9995bb
+  fixed for `.channels`/`.type`/`.depth`/`.elemSize`/`.elemSize1`/`.size`
+  (left `.empty` alone deliberately, since a boolean getter can't be
+  boxed callable-and-truthy without breaking `if (mat.empty)`, but
+  `continuous` has no such conflict - it's the same shape as the six
+  already fixed). Not fixed here: found while writing
+  tests/test_threadpool.js's SharedArrayBuffer-reuse check
+  (js/cvChannel.js's `isWholeSabView`), out of scope for that change.
+
+- cvchannel-getter-only-classes-lost-in-encode: `js/cvChannel.js`'s
+  `encode()` walks plain objects via `Object.keys(value)` to recurse into
+  RPC payloads sent through SharedChannel/os.Worker. `cv.Size` (and
+  presumably `cv.Rect`/`cv.Point`/other geometry classes) expose their
+  fields as getters on the prototype, not as own enumerable properties -
+  confirmed `Object.keys(new cv.Size(5,5))` returns `[]` and
+  `JSON.stringify(new cv.Size(5,5))` returns `'{}'` even though
+  `.width`/`.height` read correctly. So passing a `new cv.Size(...)` (or
+  similar) as an argument through `ThreadPool.run()`/`SharedChannel` is
+  silently corrupted into `{}` on the other side, which then fails
+  wherever the receiving cv.* binding requires a valid ksize/size arg
+  (hit this via `GaussianBlur(gray, blurred, new Size(5,5), 0)` in a
+  worker - failed with an opaque error). Worked around in
+  tests/test_threadpool.js by passing a plain `[w, h]` array instead
+  (cv's own arg parsing, e.g. js_size.hpp's `js_size_read`, already
+  accepts arrays or plain objects, not just Size instances) rather than
+  fixing encode() itself.
+
+    import { encode } from '../js/cvChannel.js';
+    import { Size } from 'opencv';
+    console.log(encode(new Size(5, 5)));   // {} - width/height lost
+
+- qjsm-worker-self-reference-drops-messages: on the qjsm build used in
+  this project, `new os.Worker(import.meta.url)` (the same file sourced
+  as both the main-thread module and the worker's own entry module)
+  silently drops every worker -> parent `postMessage()` - the worker
+  side runs fine (imports resolve, `onmessage` fires, its own
+  `postMessage()` calls return normally) but the main thread's
+  `worker.onmessage` never fires, even with extended polling via
+  `os.sleepAsync`. Confirmed this is specific to same-file
+  self-reference, not a general worker -> parent pipe bug: an identical
+  setup using two separate files (one importing/constructing the
+  Worker, a sibling file as its entry point) delivers worker -> parent
+  messages correctly via the same `Worker.onmessage` API. This matches
+  pre-existing comments already in tests/test_worker.js and
+  tests/test_worker_body.js ("qjs os.Worker drops worker->parent
+  messages when the same file is used for both branches"). Root cause
+  not isolated further (likely in qjsm.c's or quickjs-libc.c's
+  worker/module bootstrap, given the two related `jsm_context_new()`
+  bugs already found and fixed upstream in
+  ../quickjs/qjs-modules/src/qjsm.c - missing `JS_SetModuleLoaderFunc`
+  and `init_list_head(&loaded_modules)` for worker runtimes). Worked
+  around throughout this project (js/cvThreadPool.js +
+  js/cvThreadPoolWorker.js, tests/test_worker.js +
+  tests/test_worker_body.js) by always using two separate files instead
+  of the self-referencing `import.meta.url` pattern.
+
+    # worker_self.js - sourced as both branches, worker -> parent silently dropped
+    import * as os from 'os';
+    if (os.Worker.parent) {
+      os.Worker.parent.onmessage = (e) => os.Worker.parent.postMessage('pong');
+    } else {
+      const w = new os.Worker(import.meta.url);
+      w.onmessage = (e) => console.log('never printed:', e.data);
+      w.postMessage('ping');
+    }
+
+- umat-empty-continuous-not-methods: `js_umat.cpp`'s `.empty`/`.continuous`
+  are getters (`JS_CGETSET_MAGIC_DEF`, PROP_EMPTY/PROP_CONTINUOUS at
+  js_umat.cpp:1026,1029), the exact same discrepancy vs. opencv.js
+  (`mat.empty()`/`mat.isContinuous()` are methods there) that js_mat.cpp's
+  Mat class had before this session's fix. Not fixed here - only Mat was
+  in scope for this pass - but should get the identical treatment
+  (JS_CFUNC_MAGIC_DEF methods named `empty`/`isContinuous`) plus a sweep
+  of every JS caller in this repo currently reading `.empty`/`.continuous`
+  on a UMat instance as a bare property.

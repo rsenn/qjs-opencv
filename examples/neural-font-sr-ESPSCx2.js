@@ -94,7 +94,7 @@ function cleanAndDownscale1Bit(upscaledMat, scaleBack = 0.5) {
 
 function main(input = 'Diamonaire.png', output = 'font_cleaned_fsrcnn.png') {
   const src4 = cv.imread(input);
-  if (src4.empty) throw new Error(`Error opening image: ${input}`);
+  if (src4.empty()) throw new Error(`Error opening image: ${input}`);
 
   const src = new cv.Mat();
   if (src4.channels() === 1) {

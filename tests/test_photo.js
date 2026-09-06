@@ -29,7 +29,7 @@ function show_wait_destroy(name, mat) {
 function main(filename = 'smarties.png') {
   const src4 = imread(filename);
 
-  if(src4.empty) throw new Error(`Error opening image: ${filename}`);
+  if(src4.empty()) throw new Error(`Error opening image: ${filename}`);
 
   /* cv.imread() can return a 4-channel (BGRA) Mat for PNGs with alpha; the
    * photo module's NPR filters (pencilSketch, stylization, detailEnhance,

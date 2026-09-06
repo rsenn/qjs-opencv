@@ -1279,7 +1279,7 @@ const JSCFunctionListEntry js_feature2d_static_funcs[] = {
     JS_CFUNC_DEF("[Symbol.hasInstance]", 1, js_feature2d_hasinstance),
 };
 
-static JSConstructor js_feature2d_classes[] = {
+thread_local JSConstructor js_feature2d_classes[] = {
     JSConstructor(js_feature2d_affine, "AffineFeature"),
     JSConstructor(js_feature2d_agast, "AgastFeatureDetector", js_feature2d_agast_static_funcs),
     JSConstructor(js_feature2d_akaze, "AKAZE", js_feature2d_akaze_static_funcs),

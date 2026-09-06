@@ -103,6 +103,17 @@ Common JS↔C++ glue lives in `include/jsbindings.hpp` (single file, ~1000 lines
 
 The README's design intent: **no copies, mutable, finalizers do the work.** A `cv.Mat` is backed by a `cv::Mat`; iteration yields `Float64Array(4)` views into the underlying buffer; `cv.Contour` is a `std::vector<cv::Point3d>` exposed as an iterable ArrayBuffer. Many functions accept `cv.Mat | cv.Contour | TypedArray` interchangeably because they unwrap through `cv::_InputArray` / `cv::_InputOutputArray` (`JSInputArgument`, `JSImageArgument` in `jsbindings.hpp`). When editing a binding, preserve this: do not silently copy through `cv::Mat::clone()` or allocate a new buffer just to simplify the signature.
 
+### opencv.js API compatibility is mandatory, not backlog
+
+This project is heading toward a release that is a drop-in replacement for opencv.js. Because of that, an opencv.js discrepancy is not a "someday" TODO:
+
+- If you discover a binding that behaves differently from real opencv.js (wrong calling convention - property vs. method, wrong argument order/defaults, wrong return shape, silently-dropped outputs), **fix it immediately** as part of the current change, not later.
+- If you already know of one from prior work in this repo, and it's touched by what you're doing, fix it now rather than deferring.
+- `doc/opencv-js-api.md` is the reference (compiled from OpenCV's own embind sources, not tutorials) - check it when in doubt rather than guessing.
+- Still update every JS caller in this repo (`js/`, `tests/`, `examples/`) that relied on the old (wrong) shape, the same way commit `e9995bb` did when it fixed `.channels`/`.type`/`.depth`/`.elemSize`/`.elemSize1`/`.size`.
+- Also check the sibling `plot-cv` project (`../*.js` relative to this repo - the parent `plot-cv` directory has its own top-level scripts that `import * as cv from 'opencv'` against this same binding, e.g. `imagePipeline.js`, `scan.js`, `object_detection.js`) for callers of whatever you just changed, and update those too. `grep -rl "from 'opencv'" ../*.js` finds them.
+- The one exception needing a judgment call, not a default deferral: a fix that would make a JS-truthy check silently wrong everywhere (e.g. a boolean-returning method can't also be truthy-as-a-property) - `.empty`'s history in `js_mat.cpp` is the worked example. Weigh that tradeoff explicitly rather than skipping the fix.
+
 ### Contour Migration Strategy (Phase 1 COMPLETE)
 
 **Status:** Phase 1 complete (2026-08-13). Phase 2 (MatVector) is lower priority.

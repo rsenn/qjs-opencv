@@ -13,7 +13,7 @@ console.log("  q or escape: quit");
 
 function drawMatchesRelative(train, query, matches, img, mask) {
   for(let i = 0; i < matches.length; i++) {
-    if(mask.empty || mask[i]) {
+    if(mask.empty() || mask[i]) {
       const pt_new = query[matches[i].queryIdx].pt;
       const pt_old = train[matches[i].trainIdx].pt;
 
@@ -135,7 +135,7 @@ function main(cam = 0) {
   for(;;) {
     capture.read(frame);
 
-    if(frame.empty) break;
+    if(frame.empty()) break;
 
     cvtColor(frame, gray, COLOR_RGB2GRAY);
 

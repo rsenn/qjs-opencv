@@ -526,7 +526,7 @@ js_size_div(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
   return ret;
 }
 
-static JSAtom iterator_symbol;
+static thread_local JSAtom iterator_symbol = 0;
 
 static JSValue
 js_size_symbol_iterator(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
