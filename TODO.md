@@ -67,6 +67,37 @@ started — noted for later.
      whether the unweighted/heuristic ranking already correlates with
      judgment before investing in the regression step.
   Not started - scoped in conversation, no code written yet.
+- [ ] **os.Worker termination (experimental, C-level, risky).** Checked
+  `quickjs-libc.c` (`js_worker_proto_funcs`, ~line 3538): `os.Worker`
+  exposes only `postMessage`/`onmessage` - there is no `terminate()` at
+  all, and `js_worker_finalizer` (~line 3245) only frees the JS-side
+  pipe wrappers on GC, never touches the underlying OS thread. A worker
+  thread runs `js_std_loop()` (poll loop) forever until the whole
+  process exits - there is currently no way, from JS or from another
+  thread, to stop one early, and no cooperative cancellation point
+  inside a blocking native call like `cv.Canny()` either.
+  This matters for `js/cvThreadPool.js`: when the vectorizer GUI
+  supersedes an in-flight pool job (e.g. the user drags a trackbar
+  again before the previous run finishes), the worker computing the
+  stale result can't be stopped - it runs to completion regardless.
+  `ThreadPool.runLatest()` (js/cvThreadPool.js) already discards the
+  stale *result* for free, so correctness isn't at stake, only wasted
+  CPU/latency on that one worker until it's free again.
+  A real fix would need new C-level work in
+  `../quickjs/quickjs-libc.c` (a separate project from this repo):
+  add `Worker.prototype.terminate()`, most plausibly `pthread_cancel()`
+  or a self-pipe/eventfd wakeup + a checked flag in `js_std_loop`'s
+  poll. Both are genuinely risky mid-`cv::Mat`/OpenCV-call: a
+  `pthread_cancel()` landing inside a C++ destructor stack, or between
+  two calls that assume the first completed, can corrupt state or leak
+  native buffers (`cv::Mat` ref-counting, ONNX `Net` internals) rather
+  than cleanly unwinding. Before attempting it: (1) confirm OpenCV's
+  own build enables cancellation points safely (or forces
+  `PTHREAD_CANCEL_DISABLE` around risky sections), (2) prototype
+  against a throwaway worker doing a slow `cv.dnn.Net.forward()` call
+  and verify no corruption across repeated cancel/respawn cycles before
+  trusting it in the real pool. Deliberately not attempted in this pass
+  - `runLatest()`'s discard-stale-result approach is the shipped fix.
 
 ## opencv.js Example Compatibility Gaps (2026-08-17)
 

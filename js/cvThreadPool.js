@@ -21,6 +21,20 @@
 // for why the self-referencing form silently drops worker -> parent
 // messages on this engine.
 //
+// terminate() is currently a best-effort no-op: quickjs-libc.c's os.Worker
+// (see TODO.md, "os.Worker termination (experimental, C-level, risky)")
+// exposes no terminate() at all, and its finalizer only frees the JS-side
+// pipe wrappers - the underlying OS thread runs forever regardless. Don't
+// create/destroy pools repeatedly; make one for the process's lifetime.
+//
+// For a caller that reissues the same logical job as its input changes
+// (a trackbar being dragged) use runLatest(key, method, args) instead of
+// run(): a job still waiting in the queue when a newer call for the same
+// key arrives is skipped for free, and a job already executing in a
+// worker (which can't be stopped - see the TODO.md entry above) has its
+// result silently discarded if it's no longer the latest by the time it
+// finishes, so a stale result can never reach the caller.
+//
 // Example:
 //   const pool = new ThreadPool();
 //   const edges = new Mat();
@@ -85,6 +99,17 @@ class PoolWorker {
   }
 }
 
+// Thrown by a runLatest() call that a newer call (same key) has superseded -
+// either skipped before ever reaching a worker, or discarded after the
+// worker finished. Callers that don't care why a run didn't produce a
+// result can just swallow this specific error.
+export class Superseded extends Error {
+  constructor(key) {
+    super(`superseded by a newer runLatest('${key}', ...) call`);
+    this.key = key;
+  }
+}
+
 export class ThreadPool {
   constructor(size = 4, { workerPath = WORKER_PATH } = {}) {
     this.size = size;
@@ -92,6 +117,7 @@ export class ThreadPool {
     for (let i = 0; i < size; i++) this.workers.push(new PoolWorker(workerPath));
     this.queue = [];
     this._nextId = 1;
+    this._latestGen = new Map(); // runLatest key -> generation counter
   }
 
   // Runs cv.<method>(...args) on a pooled worker; resolves with its return
@@ -99,6 +125,23 @@ export class ThreadPool {
   run(method, args = []) {
     return new Promise((resolve, reject) => {
       this.queue.push({ id: this._nextId++, method, args, resolve, reject });
+      this._pump();
+    });
+  }
+
+  // Like run(), but for a job that's about to be made obsolete by the next
+  // call under the same `key` (e.g. "stage3:canny-contours" while a trackbar
+  // is being dragged). Only the most recently issued call for a given key
+  // ever resolves; every earlier one rejects with Superseded - either
+  // immediately if it was still queued (skipped, never dispatched to a
+  // worker), or once the worker's already-in-flight result comes back (the
+  // worker itself can't be interrupted - see TODO.md).
+  runLatest(key, method, args = []) {
+    const gen = (this._latestGen.get(key) || 0) + 1;
+    this._latestGen.set(key, gen);
+    const isLatest = () => this._latestGen.get(key) === gen;
+    return new Promise((resolve, reject) => {
+      this.queue.push({ id: this._nextId++, method, args, key, gen, isLatest, resolve, reject });
       this._pump();
     });
   }
@@ -114,7 +157,19 @@ export class ThreadPool {
       const w = this.workers.find((w) => !w.busy);
       if (!w) break; // all busy - next _pump() call (on any job completion) retries
       const job = this.queue.shift();
-      w.run(job.id, job.method, job.args).then(job.resolve, job.reject).finally(() => this._pump());
+      if (job.isLatest && !job.isLatest()) {
+        // A newer runLatest() call for this key arrived while this one was
+        // still queued - skip it for free, no worker time spent at all.
+        job.reject(new Superseded(job.key));
+        continue;
+      }
+      w.run(job.id, job.method, job.args)
+        .then((result) => {
+          if (job.isLatest && !job.isLatest()) throw new Superseded(job.key);
+          return result;
+        })
+        .then(job.resolve, job.reject)
+        .finally(() => this._pump());
     }
   }
 
