@@ -55,7 +55,7 @@ public:
    * Each vector type needs its own class ID.
    */
   static JSClassID& get_class_id() {
-    static JSClassID class_id = 0;
+    static thread_local JSClassID class_id = 0;
     return class_id;
   }
 
@@ -65,7 +65,7 @@ public:
    * Stores the constructor so it can be exported later.
    */
   static JSValue& get_ctor() {
-    static JSValue ctor = JS_UNDEFINED;
+    static thread_local JSValue ctor = JS_UNDEFINED;
     return ctor;
   }
 
@@ -369,7 +369,7 @@ public:
    * @brief Get the class ID for this vector iterator type
    */
   static JSClassID& get_class_id() {
-    static JSClassID class_id = 0;
+    static thread_local JSClassID class_id = 0;
     return class_id;
   }
 

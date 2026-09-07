@@ -21,7 +21,7 @@
 #define M_PI 3.1415926535897932384626433832795029
 #endif
 
-std::vector<JSPointData<double>*> points;
+thread_local std::vector<JSPointData<double>*> points;
 
 extern "C" {
 thread_local JSValue point_proto = JS_UNDEFINED, point_class = JS_UNDEFINED;

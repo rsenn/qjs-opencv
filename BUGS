@@ -2022,3 +2022,98 @@
   (JS_CFUNC_MAGIC_DEF methods named `empty`/`isContinuous`) plus a sweep
   of every JS caller in this repo currently reading `.empty`/`.continuous`
   on a UMat instance as a bare property.
+
+- minmaxloc-mask-arg-returns-empty-on-real-size-mats: `cv.minMaxLoc(src, cb1,
+  cb2, cb3, cb4, mask)` (js_cv.cpp OTHER_MIN_MAX_LOC) works correctly with a
+  mask on a small (10x10) synthetic Mat, but on a real-size (1280x960)
+  CV_8UC1 mask built via `cv.Mat.zeros(rows, cols, cv.CV_8UC1)` +
+  `cv.drawContours(mask, [contour], -1, new cv.Scalar(255), -1)`, it always
+  returns `{minVal: 0, maxVal: 0, minLoc: (-1,-1), maxLoc: (-1,-1)}` - the
+  exact result OpenCV documents for an all-zero mask, even though the
+  contour's fill area is nonzero (confirmed indirectly: a manual per-pixel
+  scan restricted to the same mask/contour finds real min/max values, e.g.
+  439 vs. the 0 minMaxLoc-with-mask reported). Root cause not isolated -
+  could be the mask Mat, the src Mat (CV_32FC1 from distanceTransform), or
+  their combination; not narrowed further because a manual per-pixel loop
+  was a sufficient workaround for the immediate task (skywatch contrail
+  detection, examples/skywatch_contrail_detect.js). Reproduced during that
+  work on 2026-09-07.
+
+    import * as cv from 'opencv';
+    // Any real-size Mat pair reproduces it; the 10x10 case below happens to
+    // work, so shrinking further to isolate the size/type boundary is the
+    // next step.
+    const src = cv.Mat.zeros(1280, 960, cv.CV_32FC1);
+    // ... fill src with a distanceTransform() result and build `mask` via
+    // cv.Mat.zeros(1280, 960, cv.CV_8UC1) + drawContours(mask, [c], -1,
+    // new cv.Scalar(255), -1) ...
+    console.log(cv.minMaxLoc(src, null, null, null, null, mask));
+    // -> 0, 0, (-1,-1), (-1,-1) even when mask has nonzero pixels over a
+    // region where src is nonzero.
+
+- drawcontours-silently-noops-on-plain-array: `cv.drawContours(dst, contours,
+  ...)` (js_draw.cpp:274 js_draw_contours) reads `contours` via
+  `js_cv_inputoutputarray(ctx, argv[1])` - i.e. it only accepts a single
+  InputOutputArray-compatible container (a `cv.MatVector`, or a Mat
+  CV_32SC2), not a plain JS array of per-contour Mats. `cv.findContours`
+  (js_imgproc.cpp js_cv_find_contours), however, happily fills a *plain JS
+  array* with one Mat per contour when handed one (the `contours_array`
+  branch) - this is the opencv.js-compatible calling convention and is
+  documented/relied on elsewhere in this repo (test_contour_functions.js
+  etc). Chaining the two - `cv.findContours(mask, contours, hier, ...)`
+  into a plain `[]`, then `cv.drawContours(dst, [contours[i]], -1, color,
+  -1)` - silently draws *nothing* and throws no error, because
+  `js_cv_inputoutputarray` on a plain JS array of Mats doesn't produce a
+  usable contours container for `cv::drawContours`. Confirmed by wrapping
+  the same contour in a `cv.MatVector` instead, which draws correctly.
+  Found while building examples/skywatch_contrail_detect.js (2026-09-07):
+  cost real debugging time since there's no exception, just an
+  all-zero-pixels result several steps downstream. Fix should make
+  js_draw_contours accept a plain JS array the same way js_cv_find_contours
+  produces one (mirroring the flexibility already on the findContours
+  side), or at minimum throw instead of silently no-op'ing when given a
+  container it can't use.
+
+    import * as cv from 'opencv';
+    const mask = cv.Mat.zeros(100, 100, cv.CV_8UC1);
+    cv.rectangle(mask, new cv.Point(20, 20), new cv.Point(60, 60), new cv.Scalar(255), -1);
+    const contours = [];
+    const hierarchy = new cv.Mat();
+    cv.findContours(mask, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+    const out = cv.Mat.zeros(100, 100, cv.CV_8UC1);
+    cv.drawContours(out, contours, -1, new cv.Scalar(255), -1); // no error
+    console.log(cv.countNonZero(out)); // 0 - nothing was drawn
+    const mv = new cv.MatVector();
+    for (const c of contours) mv.push_back(c);
+    const out2 = cv.Mat.zeros(100, 100, cv.CV_8UC1);
+    cv.drawContours(out2, mv, -1, new cv.Scalar(255), -1);
+    console.log(cv.countNonZero(out2)); // works, e.g. 1681
+
+- jsvector-classid-ctor-not-threadlocal: `js_vector.hpp`'s `JSVector<T>`
+  and `JSVectorIterator<T>` templates (backing `cv.MatVector`,
+  `cv.PointVector`, `cv.IntVector`, etc. - `js_vector.cpp`'s
+  `js_vector_init()`) cached their per-T class id and constructor in
+  function-local `static` variables (`get_class_id()`'s `static
+  JSClassID class_id`, `get_ctor()`'s `static JSValue ctor`) - a C++11
+  magic static guarantees thread-safe *initialization*, but the storage
+  itself is still one process-wide location per template instantiation,
+  shared by every os.Worker thread's own JSRuntime. Same bug class as
+  qjs-opencv-static-classid-race-in-worker-threads (js_feature2d.cpp's
+  JSConstructor table was the same shape: a class_id/JSValue meant to be
+  per-JSRuntime, actually shared). Whichever thread's `js_vector_init()`
+  ran first "won" the class id/ctor for every other thread too - a
+  worker's own `JS_NewClass()` call for that class id was then skipped
+  entirely (the `if(class_id == 0)` guard was already false), leaving
+  vector objects created in a worker registered under a class id that
+  was never actually created on *that* JSRuntime. Fixed by adding
+  `thread_local` to both statics (`get_class_id()` in both classes,
+  `get_ctor()` in JSVector<T>). Found by code inspection (not from an
+  observed crash) while auditing every js_*.?pp file for this exact
+  static-vs-thread_local pattern after qjs-feature2d's JSConstructor bug;
+  verified the fix (not the pre-fix bug) with 6 concurrent os.Worker
+  threads each constructing MatVector/PointVector/IntVector immediately
+  after importing 'opencv' fresh - all 6 succeeded with correct
+  `.constructor.name`/`.size()`/`.get()`, 0 failures. Not yet a
+  committed regression test - reproduce via 4+ os.Worker threads, each
+  running `new cv.MatVector()` right after `import * as cv from
+  'opencv'`.

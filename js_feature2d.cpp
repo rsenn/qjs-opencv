@@ -55,7 +55,7 @@ using cv::ORB;
 using cv::SIFT;
 using cv::SimpleBlobDetector;
 
-static SimpleBlobDetector::Params simple_blob_params;
+thread_local SimpleBlobDetector::Params simple_blob_params;
 
 typedef cv::Ptr<cv::DescriptorMatcher> JSDescriptorMatcherData;
 
