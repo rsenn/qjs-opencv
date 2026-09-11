@@ -66,6 +66,7 @@ class PoolWorker {
     this._pending = new Map(); // id -> {resolve, reject, args}
     this.chan.onmessage = (e) => {
       const { id, result, args, error } = e.data;
+      console.log(`[DIAG] PoolWorker onmessage id=${id} error=${error} pending=${this._pending.has(id)}`); // TEMP
       const p = this._pending.get(id);
       if (!p) return;
       this._pending.delete(id);
@@ -76,10 +77,17 @@ class PoolWorker {
       }
       // SAB-backed args already alias the worker's memory directly - nothing
       // to copy. A plain Mat's mutations only exist in the worker's own
-      // reconstructed copy, so bring those back into the caller's Mat.
-      for (let i = 0; i < p.args.length; i++) {
-        if (p.args[i] instanceof Mat && args[i] instanceof Mat && !isSharedMat(p.args[i])) {
-          copyMatInto(p.args[i], args[i]);
+      // reconstructed copy, so bring those back into the caller's Mat. Not
+      // every worker echoes `args` back (only cvThreadPoolWorker.js's
+      // out-param convention does - see its header comment); a worker whose
+      // methods return their result instead of mutating in place, like
+      // vector/poolWorker.js, replies with no `args` at all, so skip this
+      // entirely rather than throw on `args[i]` of undefined.
+      if (Array.isArray(args)) {
+        for (let i = 0; i < p.args.length; i++) {
+          if (p.args[i] instanceof Mat && args[i] instanceof Mat && !isSharedMat(p.args[i])) {
+            copyMatInto(p.args[i], args[i]);
+          }
         }
       }
       p.resolve(result);
@@ -90,6 +98,7 @@ class PoolWorker {
     return new Promise((resolve, reject) => {
       this.busy = true;
       this._pending.set(id, { resolve, reject, args });
+      console.log(`[DIAG] PoolWorker.run() dispatching id=${id} method=${method}`); // TEMP
       this.chan.postMessage({ id, method, args });
     });
   }

@@ -5,7 +5,7 @@
 // Produces a clean, abstracted "Bauhaus" reduction of the image.
 
 import {
-  Mat, Size, GaussianBlur, threshold, findContours, contourArea,
+  Mat, MatVector, Size, GaussianBlur, threshold, findContours, contourArea,
   fitEllipse, minAreaRect, boxPoints, minEnclosingCircle,
   THRESH_BINARY_INV, THRESH_OTSU, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE,
 } from 'opencv';
@@ -29,15 +29,15 @@ export class ShapeFit extends VectorMethod {
     ];
   }
 
-  async apply(mat, p, meta) {
-    const tick = meta.tick || (async () => {});
+  apply(mat, p, meta) {
+    const tick = meta.tick || (() => {});
     const gray = toGray(mat);
     GaussianBlur(gray, gray, new Size(5, 5), 0);
     const bin = new Mat();
     threshold(gray, bin, 0, 255, THRESH_BINARY_INV | THRESH_OTSU);
-    const contours = [], hierarchy = [];
+    const contours = new MatVector(), hierarchy = [];
     findContours(bin, contours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
-    await tick(0.4);
+    tick(0.4);
 
     const shapes = [];
     for (const c of contours) {
@@ -62,7 +62,7 @@ export class ShapeFit extends VectorMethod {
         }
       } catch (_) { /* skip degenerate contour */ }
     }
-    await tick(0.8);
+    tick(0.8);
     release(gray, bin);
     return create(meta.width, meta.height, { shapes });
   }

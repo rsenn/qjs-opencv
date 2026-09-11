@@ -12,6 +12,7 @@
 
 import {
   namedWindow, destroyWindow, imshow, waitKeyEx, getWindowImageRect, setWindowProperty, resizeWindow,
+  moveWindow, getScreenResolution,
   WINDOW_NORMAL, WINDOW_FULLSCREEN, WND_PROP_FULLSCREEN,
 } from 'opencv';
 import * as os from 'os';
@@ -40,8 +41,24 @@ export class App {
     this.pipeline = pipeline;
     this.registry = registry;
 
-    this.W = 1180;
-    this.H = 740;
+    // Fill the available screen instead of opening at a small fixed size -
+    // leave a margin for window-manager decorations/taskbar rather than
+    // requesting the literal full resolution (which on many WMs either gets
+    // clamped anyway or hides window-manager chrome behind panels/docks).
+    // getScreenResolution() was returning uninitialized-memory garbage on
+    // some Linux builds where CMake's HAVE_LIBX11 check fails (now fixed at
+    // the source to deterministically return {0,0} in that case - see
+    // js_highgui.cpp/TODO.md) - but don't trust a single native call for
+    // something that can crash the app (an earlier version of this fallback
+    // only rejected <= 0 and a large-but-positive garbage value still slipped
+    // through, allocating a multi-terabyte canvas Mat). Require the reported
+    // size to fall within a plausible real-monitor range.
+    const plausible = (n) => Number.isFinite(n) && n >= 320 && n <= 16384;
+    const screen = getScreenResolution();
+    const screenW = plausible(screen.width) ? screen.width : 1920;
+    const screenH = plausible(screen.height) ? screen.height : 1080;
+    this.W = Math.max(MIN_W, screenW - 40);
+    this.H = Math.max(MIN_H, screenH - 80);
     this.canvas = new Canvas(this.W, this.H);
     this.hud = new Hud();
     this.events = [];
@@ -66,6 +83,22 @@ export class App {
     // did - without this the window opens at the backend's small default
     // and our own resize-detection loop then shrinks the canvas to match.
     resizeWindow(WIN, this.W, this.H);
+    // Anchor to the top-left corner so the near-screen-size window (set
+    // above) actually lands fully on screen instead of wherever the WM's
+    // default placement (often centered, which can clip off-screen at this
+    // size) puts it.
+    moveWindow(WIN, 0, 0);
+    // getWindowImageRect() right after resizeWindow()/moveWindow() can
+    // report a stale pre-resize size for the first few calls (confirmed:
+    // the very first call after this constructor returns 320x240 - GTK's
+    // default pre-realize size - even though every call from the second
+    // one on correctly reports what resizeWindow() just requested). run()'s
+    // live-resize-detection loop trusted that first stale read and shrank
+    // the canvas to MIN_W x MIN_H while the actual window frame stayed at
+    // the size requested above, producing a canvas visibly smaller than
+    // its own window (gray bars down both sides). Give GTK a few frames to
+    // catch up before trusting getWindowImageRect() for resize detection.
+    this._resizeGraceFrames = 5;
     this.mouse = new Mouse(WIN);
     this._enterStage(this.model.stage);
   }
@@ -145,14 +178,21 @@ export class App {
       if(running) {
         try {
           const rect = getWindowImageRect(WIN);
-          const w = Math.max(MIN_W, rect.width), h = Math.max(MIN_H, rect.height);
-          if(w !== this.W || h !== this.H) this._resize(w, h);
+          if(this._resizeGraceFrames > 0) {
+            // Still within the post-construction grace period (see the
+            // constructor comment) - getWindowImageRect() may still be
+            // reporting a stale pre-resize size, so don't act on it yet.
+            this._resizeGraceFrames--;
+          } else {
+            const w = Math.max(MIN_W, rect.width), h = Math.max(MIN_H, rect.height);
+            if(w !== this.W || h !== this.H) this._resize(w, h);
+          }
         } catch(_) {
           running = false;
         }
       }
 
-      // pump qjs event loop so os.Worker messages (progress/done) fire.
+      // pump qjs event loop (mouse callback, timers) between frames.
       await os.sleepAsync(0);
     }
     try {

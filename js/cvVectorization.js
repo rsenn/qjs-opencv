@@ -1,4 +1,4 @@
-import { Mat, Size, Point, CV_8UC1, CV_8UC3, CV_32FC1, CV_32FC3, CV_32S, CV_32SC2, cvtColor, COLOR_BGR2GRAY, COLOR_BGR2Lab, COLOR_Lab2BGR, pyrMeanShiftFiltering, kmeans, KMEANS_PP_CENTERS, TERM_CRITERIA_COUNT, TERM_CRITERIA_EPS, resize, INTER_NEAREST, morphologyEx, getStructuringElement, MORPH_RECT, MORPH_OPEN, MORPH_CLOSE, connectedComponentsWithStats, findContours, RETR_LIST, RETR_CCOMP, CHAIN_APPROX_NONE, CHAIN_APPROX_SIMPLE, bitwise_and, imread, readNetFromONNX, blobFromImage, GaussianBlur, Canny, createCLAHE, ximgproc, psimpl, approxPolyDP, arcLength, PointVectorVector, traceSkeleton, } from 'opencv';
+import { Mat, Size, Point, CV_8UC1, CV_8UC3, CV_32FC1, CV_32FC3, CV_32S, CV_32SC2, cvtColor, COLOR_BGR2GRAY, COLOR_BGR2Lab, COLOR_Lab2BGR, pyrMeanShiftFiltering, kmeans, KMEANS_PP_CENTERS, TERM_CRITERIA_COUNT, TERM_CRITERIA_EPS, resize, INTER_NEAREST, morphologyEx, getStructuringElement, MORPH_RECT, MORPH_OPEN, MORPH_CLOSE, connectedComponentsWithStats, findContours, RETR_LIST, RETR_CCOMP, CHAIN_APPROX_NONE, CHAIN_APPROX_SIMPLE, bitwise_and, imread, readNetFromONNX, blobFromImage, GaussianBlur, Canny, createCLAHE, ximgproc, psimpl, approxPolyDP, arcLength, PointVectorVector, traceSkeleton, MatVector, } from 'opencv';
 import { Processor } from './cvPipeline.js';
 import { NumericParam } from './cvParam.js';
 import { create as createVectorData } from './vectorizer/core/vectordata.js';
@@ -277,20 +277,20 @@ export class ContourTracer {
     if(kept > 0) {
       for(let i = 0; i < lb.length; i++) if(cb[i] && st[lb[i] * 5 + 4] < minArea) cb[i] = 0;
 
-      const contours = [],
+      const contours = new MatVector(),
         hierarchy = [];
 
       findContours(cleaned, contours, hierarchy, RETR_CCOMP, CHAIN_APPROX_NONE, new Point(0, 0));
 
-      for(let i = 0; i < contours.length; i++) {
+      for(let i = 0; i < contours.size(); i++) {
         if(hierarchy[i][3] != -1) continue; /* holes are collected via their parent */
-        if(contours[i].length < 3 || contours[i].area < minArea) continue;
+        if(contours.get(i).length < 3 || contours.get(i).area < minArea) continue;
 
         const holes = [];
 
-        for(let j = hierarchy[i][2]; j != -1; j = hierarchy[j][0]) if(contours[j].length >= 3) holes.push(contours[j]);
+        for(let j = hierarchy[i][2]; j != -1; j = hierarchy[j][0]) if(contours.get(j).length >= 3) holes.push(contours.get(j));
 
-        regions.push({ outer: contours[i], holes, area: contours[i].area });
+        regions.push({ outer: contours.get(i), holes, area: contours.get(i).area });
       }
     }
 
@@ -1042,7 +1042,7 @@ export const VectorizationStages = {
       mat => {
         const edges = new Mat();
         Canny(mat, edges, thresh1.get(), thresh2.get());
-        const contours = [],
+        const contours = new MatVector(),
           hierarchy = [];
         findContours(edges, contours, hierarchy, RETR_LIST, CHAIN_APPROX_SIMPLE);
         const shapes = contoursToShapes(contours, { mode: 'stroke', minPoints: 2 });

@@ -58,8 +58,13 @@ export function contoursToShapes(contours, opts = {}) {
 
 // Build a single even-odd <path> from a contour hierarchy (outer + holes).
 // hierarchy rows are [next, prev, firstChild, parent] as OpenCV returns.
-export function hierarchyToPaths(contours, hierarchy, opts = {}) {
+export function hierarchyToPaths(contoursIn, hierarchy, opts = {}) {
   const { style = {}, epsilon = 0 } = opts;
+  // findContours() only accepts a cv.MatVector/PointVectorVector (see BUGS:
+  // drawcontours-silently-noops-on-plain-array) - normalize to a plain
+  // array here so the rest of this function's bracket indexing works
+  // regardless of which container the caller passed.
+  const contours = contoursIn.get ? Array.from({ length: contoursIn.size() }, (_, i) => contoursIn.get(i)) : contoursIn;
   const rows = hierarchyRows(hierarchy, contours.length);
   const shapes = [];
   const taken = new Set();

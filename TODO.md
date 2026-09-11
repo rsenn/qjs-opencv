@@ -8,6 +8,131 @@ qjsm scripts/binding_coverage.js --module=build/x86_64-linux-debug/opencv.so \
   --lib-dir=/opt/opencv-4.13.0-x86_64/lib --namespace=cv --verbose --out=cov.txt
 ```
 
+## getScreenResolution() build-config fix (2026-09-08, root cause fixed 2026-09-09)
+
+`js_highgui.cpp`'s `getScreenResolution()` has an `#if _WIN32 / #elif
+defined(HAVE_X11)` gate, but this build's CMake `HAVE_LIBX11` check fails
+even though X11 clearly works (namedWindow/imshow/etc. all work fine), so
+`HAVE_X11` never gets set and neither branch compiles - `width`/`height`
+were left uninitialized. Symptom escalated across a real session: first
+observed as a GUI window opening too small (garbage happened to read as
+`{0,0}` in that environment), then as a hard crash on another machine -
+`cv::Exception ... Failed to allocate 34558810068822 bytes` - because
+there the same uninitialized memory happened to read as a large positive
+number, which `js/vectorizer/gui/app.js`'s first-pass fix (`> 0` check
+only) let through straight into `new Canvas(w, h)` → `new Mat(...)`.
+
+Fixed *for now* at both layers (both left in place as defense in depth):
+- `js_highgui.cpp`: zero-initialize `width`/`height`, so a build where
+  neither branch compiles deterministically returns `{0,0}` instead of
+  random stack garbage.
+- `js/vectorizer/gui/app.js`: check the reported size against a plausible
+  real-monitor range (320..16384 per axis), not just `> 0`, before trusting
+  it - falls back to a 1920x1080 guess otherwise.
+
+**Root cause found and fixed (2026-09-09):** it was never a detection
+failure - `CMakeCache.txt` already had `HAVE_LIBX11:INTERNAL=1` and
+`HAVE_X11_X_H:INTERNAL=TRUE`, and `CMakeConfigureLog.yaml` shows the
+`check_library_exists(X11 XOpenDisplay ...)` try-compile succeeding
+(`exitCode: 0`). The actual bug: `CMakeLists.txt:99-101` computed
+`HAVE_X11` via a plain `set(HAVE_X11 TRUE)` but never forwarded it to the
+compiler as a `-D` flag, unlike every other `HAVE_*` flag in that file
+(all go through `add_definitions(-D...)` or `functions.cmake`'s
+`var2define`). `HAVE_X11` was true in CMake's own variable scope the whole
+time; the compiler just never saw it. Fixed by adding
+`add_definitions(-DHAVE_X11)` inside the `if(HAVE_LIBX11 AND
+HAVE_X11_X_H)` block. Rebuilt clean, confirmed `-DHAVE_X11` now appears in
+`build/x86_64-linux-gnu/CMakeFiles/quickjs-opencv.dir/flags.make`, and
+`cv.getScreenResolution()` now returns the real display size (1920x1080)
+instead of the `{0,0}` fallback. No explicit `-lX11` link line was needed -
+the symbols (`XOpenDisplay`, `DefaultScreenOfDisplay`) resolve fine at
+module-load time since OpenCV's own GTK/X11 highgui backend already pulls
+libX11 into the process.
+
+## skywatch — hierarchy contract fix + ML contrail detector (2026-09-07)
+
+Picked back up from `js/skywatch/skywatch.md` (contrail/aircraft
+correlation project). Ran out of session budget partway through; two
+pieces of follow-up work for next time.
+
+### 1. findContours hierarchy-argument opencv.js contract fix
+
+See BUGS: `findcontours-hierarchy-arg-silently-empty-on-plain-array`.
+Mirror the fix already done for the *contours* argument
+(`drawcontours-silently-noops-on-plain-array`, fixed this session):
+
+- In `js_imgproc.cpp`'s `js_cv_find_contours`: require `argv[2]`
+  (hierarchy) to resolve to a real Mat/UMat when passed, throw a
+  `TypeError` otherwise (matching opencv.js, which also requires a Mat
+  there - no plain-array convenience). Leave it optional (omitted →
+  `cv::noArray()`) same as today.
+- Fix `js/cvVectorization.js`'s two call sites that currently pass
+  `hierarchy = []` and then read `hierarchy[i][3]`/`hierarchy[i][2]`
+  afterward - this never worked (hierarchy was always empty), so this is
+  an actual runtime bug fix, not just a contract migration. Reuse
+  `js/vectorizer/cv/convert.js`'s existing `hierarchyRows()` helper
+  (already handles the Mat 1×N×4 CV_32S parsing correctly) instead of
+  hand-rolling the parse again.
+- Switch the four vectorizer methods that pass `hierarchy = []` but never
+  read it (`skeleton.js`, `canny-contours.js`, `shape-fit.js`,
+  `palette-regions.js`) to `new Mat()` for contract cleanliness, even
+  though it's a no-op behaviorally for them.
+- Rebuild, rerun `tests/unittests/test_imgproc.js` + the vectorizer
+  smoke-tests from this session (see conversation for the harness script
+  shape - `apply()` each vectorizer method against a synthetic image with
+  a rectangle + circle) to confirm nothing regressed.
+
+### 2. ML-based contrail detector, trained via ADS-B weak supervision
+
+The pure-vision detector (`examples/skywatch_contrail_detect.js`) works
+on clear-sky frames but can't reliably separate a contrail from linear
+natural cirrus on its own (see `js/skywatch.md` phase 3a - LSD and Hough
+were both tried and both failed for principled reasons, not tuning gaps).
+The user wants to add ML, specifically asked whether an RNN is the right
+call, and wants training feedback sourced from real ADS-B position fixes.
+Notes for that conversation, not yet designed in detail:
+
+- **Not an RNN for the core detection.** An RNN is for sequential data
+  (time series, text); the per-frame contrail-vs-sky decision is a
+  spatial/pixel problem, which is what CNN-based semantic segmentation
+  architectures (U-Net and descendants) are for. A temporal model (small
+  RNN, or more likely just a Kalman filter given how little data this
+  project will realistically have) could sit on *top* of per-frame
+  detections to track a trail's width growth smoothly across frames, but
+  that's a secondary refinement over the primary detector, not the
+  detector itself - don't let "we want temporal reasoning" become "so
+  the core model must be an RNN."
+- **The genuinely good idea in the user's ask: ADS-B as weak/distant
+  supervision.** Once phase 4 (ADS-B pixel-matching, see skywatch.md) is
+  running, every *matched* trail is a high-confidence, auto-generated
+  training label - no manual annotation needed. This is the actual
+  labeled-data source: accumulate (frame crop, ADS-B-confirmed trail
+  mask) pairs over weeks/months of real operation before training
+  anything.
+- **Realistic data-volume check needed before committing to a from-
+  scratch deep model.** A home ADS-B+camera setup will generate at most
+  low hundreds of confirmed-trail frames in the first months. That's not
+  enough to train a segmentation CNN from scratch. Options to weigh next
+  session: (a) fine-tune a small pretrained segmentation backbone
+  (MobileNet-UNet or similar) once enough weak labels exist, deployed via
+  ONNX + `cv.dnn.readNetFromONNX` (already used elsewhere in this repo -
+  `examples/edge_detection_dexined.js`, `examples/neural-font-sr-
+  ESPSCx2.js` - same pattern would apply here: train off-Pi on a machine
+  with a GPU, export ONNX, run inference on the Pi); (b) skip deep
+  learning for now and instead try a **Frangi/vesselness-style filter**
+  (multi-scale Hessian-eigenvalue ridge detector, originally for medical
+  vessel segmentation) - not currently bound in this project, would need
+  implementing via existing Sobel/second-derivative bindings - which is
+  purpose-built for exactly this shape of problem (thin curvilinear
+  bright structure against a textured background) and needs zero training
+  data; likely the better near-term ROI than jumping straight to ML given
+  the data-volume reality. Worth prototyping (b) before committing to (a).
+- Whichever direction: keep the ADS-B match as the *ground truth signal*
+  a candidate is checked against, not something the vision model has to
+  independently reconstruct - the whole reason this project anchors to
+  ADS-B in the first place is that vision alone is provably ambiguous on
+  a cirrus-heavy sky (see skywatch.md phase 3a's LSD/Hough findings).
+
 ## Up next — vectorization pipeline leverage (2026-09-05)
 
 Surfaced while researching a conditioning/vectorization/post-processing

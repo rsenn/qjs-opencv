@@ -4,7 +4,7 @@
 // as stroked polylines. Good for line-art / engraving looks.
 
 import {
-  Mat, Size, GaussianBlur, Canny, findContours,
+  Mat, MatVector, Size, GaussianBlur, Canny, findContours,
   RETR_LIST, CHAIN_APPROX_SIMPLE,
 } from 'opencv';
 
@@ -28,20 +28,20 @@ export class CannyContours extends VectorMethod {
     ];
   }
 
-  async apply(mat, p, meta) {
-    const tick = meta.tick || (async () => {});
+  apply(mat, p, meta) {
+    const tick = meta.tick || (() => {});
     const gray = toGray(mat);
     if (p.blur >= 3) {
       const k = p.blur % 2 ? p.blur : p.blur + 1;
       GaussianBlur(gray, gray, new Size(k, k), 0);
     }
-    await tick(0.25);
+    tick(0.25);
     const edges = new Mat();
     Canny(gray, edges, p.thresh1, p.thresh2);
-    await tick(0.55);
-    const contours = [], hierarchy = [];
+    tick(0.55);
+    const contours = new MatVector(), hierarchy = [];
     findContours(edges, contours, hierarchy, RETR_LIST, CHAIN_APPROX_SIMPLE);
-    await tick(0.75);
+    tick(0.75);
     const shapes = contoursToShapes(contours, {
       mode: 'stroke',
       epsilon: p.epsilon,

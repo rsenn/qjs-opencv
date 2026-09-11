@@ -25,16 +25,16 @@ export class HoughLines extends VectorMethod {
     ];
   }
 
-  async apply(mat, p, meta) {
-    const tick = meta.tick || (async () => {});
+  apply(mat, p, meta) {
+    const tick = meta.tick || (() => {});
     const gray = toGray(mat);
     GaussianBlur(gray, gray, new Size(3, 3), 0);
     const edges = new Mat();
     Canny(gray, edges, p.thresh1, p.thresh2);
-    await tick(0.4);
+    tick(0.4);
     const linesMat = new Mat();
     HoughLinesP(edges, linesMat, 1, Math.PI / 180, p.votes, p.minLen, p.maxGap);
-    await tick(0.75);
+    tick(0.75);
     const shapes = linesToShapes(iterRows(linesMat), {
       stroke: '#101010', strokeWidth: p.strokeW, fill: null,
     });

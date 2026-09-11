@@ -27,14 +27,14 @@ export class LowPolyDelaunay extends VectorMethod {
     ];
   }
 
-  async apply(mat, p, meta) {
-    const tick = meta.tick || (async () => {});
+  apply(mat, p, meta) {
+    const tick = meta.tick || (() => {});
     const W = meta.width, H = meta.height;
     const gray = toGray(mat);
     const corners = new Mat();
     goodFeaturesToTrack(gray, corners, p.maxPts, p.quality, p.minDist);
     const pts = pointsOf(corners);
-    await tick(0.2);
+    tick(0.2);
 
     // Always include the four canvas corners + a jittered grid so the whole
     // frame is tessellated, not just the high-detail areas.
@@ -52,11 +52,11 @@ export class LowPolyDelaunay extends VectorMethod {
     for (let i = 0; i < pts.length; i++) {
       const [x, y] = pts[i];
       try { subdiv.insert(new Point(x, y)); } catch (_) {}
-      if (i % 300 === 299) await tick(0.2 + 0.4 * (i / pts.length));
+      if (i % 300 === 299) tick(0.2 + 0.4 * (i / pts.length));
     }
     const tris = [];   // rows of [x1,y1,x2,y2,x3,y3] - out-param, like findContours
     subdiv.getTriangleList(tris);
-    await tick(0.65);
+    tick(0.65);
 
     const shapes = [];
     for (let i = 0; i < tris.length; i++) {
@@ -68,7 +68,7 @@ export class LowPolyDelaunay extends VectorMethod {
       shapes.push(polygon([a, b, c], {
         fill, stroke: p.stroke ? fill : null, strokeWidth: 0.5,
       }));
-      if (i % 300 === 299) await tick(0.65 + 0.3 * (i / tris.length));
+      if (i % 300 === 299) tick(0.65 + 0.3 * (i / tris.length));
     }
     release(gray, corners);
     return create(W, H, { shapes });

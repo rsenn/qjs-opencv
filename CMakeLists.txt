@@ -98,6 +98,7 @@ check_library_exists(X11 XOpenDisplay /usr/lib HAVE_LIBX11)
 
 if(HAVE_LIBX11 AND HAVE_X11_X_H)
   set(HAVE_X11 TRUE)
+  add_definitions(-DHAVE_X11)
 endif(HAVE_LIBX11 AND HAVE_X11_X_H)
 
 find_quickjs()

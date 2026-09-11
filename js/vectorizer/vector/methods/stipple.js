@@ -25,8 +25,8 @@ export class Stipple extends VectorMethod {
     ];
   }
 
-  async apply(mat, p, meta) {
-    const tick = meta.tick || (async () => {});
+  apply(mat, p, meta) {
+    const tick = meta.tick || (() => {});
     const W = meta.width, H = meta.height;
     const gray = toGray(mat);
     const shapes = [];
@@ -48,7 +48,7 @@ export class Stipple extends VectorMethod {
         shapes.push(point([x + w / 2 + jx, y + h / 2 + jy], r, { fill, stroke: null }));
       }
       row++;
-      if (row % 20 === 0) await tick(row / rows);
+      if (row % 20 === 0) tick(row / rows);
     }
     release(gray);
     return create(W, H, { shapes });

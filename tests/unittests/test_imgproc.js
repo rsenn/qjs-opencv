@@ -9,8 +9,12 @@ import * as cv from 'opencv';
  * isContourConvex, matchShapes, minAreaRect, minEnclosingCircle,
  * minEnclosingTriangle) against real contours: draw a filled rectangle and a
  * filled circle into a Mat, then run cv.findContours() twice - once
- * collecting plain cv.Contour objects into a JS array ("Contours" mode),
- * once into a cv.PointVectorVector - and use both to test each method.
+ * into a cv.MatVector, once into a cv.PointVectorVector - and use both to
+ * test each method. (findContours used to also accept a plain JS array as
+ * a non-opencv.js-compatible convenience, but that silently broke
+ * cv.drawContours - which only ever accepted the opencv.js-compatible
+ * container types - so it was dropped; see BUGS:
+ * drawcontours-silently-noops-on-plain-array.)
  */
 
 const IMG_SIZE = 240;
@@ -26,13 +30,16 @@ function drawShapesImage() {
   return img;
 }
 
-// findContours(image, [], hierarchy) fills the array with cv.Mat CV_32SC2
-// instances ("Contours" mode).
-function findContoursAsContours(img) {
-  const contours = [];
-  const hierarchy = [];
-  cv.findContours(img, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
-  return contours;
+// findContours(image, MatVector, hierarchy) fills the vector with cv.Mat
+// CV_32SC2 instances, zero-copy on the C++ side.
+function findContoursAsMatVector(img) {
+  const mv = new cv.MatVector();
+  const hierarchy = new cv.Mat();
+  cv.findContours(img, mv, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+
+  const result = [];
+  for (let i = 0; i < mv.size(); i++) result.push(mv.get(i));
+  return result;
 }
 
 // findContours(image, PointVectorVector, hierarchy) fills nested
@@ -70,10 +77,10 @@ function classify(items, lengthOf) {
 
 const img = drawShapesImage();
 
-const contoursFromArray = findContoursAsContours(img);
-const arrayShapes = classify(contoursFromArray, mat => mat.rows);
-const rectMat = arrayShapes.rect;
-const circleMat = arrayShapes.circle;
+const contoursFromMatVector = findContoursAsMatVector(img);
+const matVectorShapes = classify(contoursFromMatVector, mat => mat.rows);
+const rectMat = matVectorShapes.rect;
+const circleMat = matVectorShapes.circle;
 
 const contoursFromPVV = findContoursAsPointVectors(img);
 const pvvShapes = classify(contoursFromPVV, pv => pv.size());
@@ -91,8 +98,8 @@ const circleByRepresentation = [
 ];
 
 const testCases = {
-  'findContours - Contours (array) mode finds both shapes'() {
-    eq(2, contoursFromArray.length);
+  'findContours - MatVector mode finds both shapes'() {
+    eq(2, contoursFromMatVector.length);
   },
 
   'findContours - PointVectorVector mode finds both shapes'() {

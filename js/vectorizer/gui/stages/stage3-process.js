@@ -15,7 +15,6 @@
  * see cvWidgets.js's Hud.trackbar().
  */
 
-import * as os from 'os';
 import { Mat, Size, Scalar, rectangle, Rect, FILLED, CV_8UC3 } from 'opencv';
 import { Palette } from '../canvas.js';
 import { drawVectorData } from '../../cv/raster.js';
@@ -38,8 +37,7 @@ export class ProcessStage {
   constructor() {
     this.idx = 0;
     this.preview = null;
-    this.busy = false; /* a vectorize call is in flight */
-    this.progress = 0; /* 0..1 from the current method.apply() call */
+    this.busy = false; /* a vectorize call is in flight (coarse - see _run()) */
     this.lastError = null; /* last error message, if any */
     this.params = null; /* current param values, drawn as trackbar widgets */
     this._dirty = false; /* params changed since the last _run() */
@@ -78,31 +76,34 @@ export class ProcessStage {
     this._run(app, f, this.params);
   }
 
-  // Runs on the main thread - os.Worker's message delivery is broken in the
-  // installed qjsm (confirmed with QuickJS's own unmodified
-  // tests/test_worker.js, see BUGS), so cv/jobs.js's JobRunner never gets a
-  // 'progress'/'done' message back and the UI sat at 0% forever. Instead,
-  // method.apply() cooperatively yields via meta.tick() between named
-  // stages, and each yield here does an actual os.sleepAsync(0) so
-  // app.run()'s frame loop gets a turn between stages instead of the whole
-  // vectorize blocking the GUI for its full duration.
-  async _run(app, frame, params) {
-    const methodId = app.model.assignments.get(frame.id);
+  // Runs the method directly, in-process, on the GUI thread - a deliberate
+  // pivot away from the os.Worker-based app.vectorPool (js/cvThreadPool.js +
+  // vector/poolWorker.js), which had an unresolved hang where a dispatched
+  // job's message was never observed arriving at the worker (see
+  // vectorizer-debug.md). vectorizer-repl.js exercises this exact same
+  // direct Pipeline.process() call path and resolves reliably, which is why
+  // it's the fallback here too - see BUGS. This blocks app.run()'s frame
+  // loop for the call's duration, but with cv/loader.js's load-time
+  // downscale to MAX_DIM already in place, that's under a second for most
+  // methods on real photos; a persistently slow method is a follow-up
+  // problem to solve once the app is reliable again, not before.
+  //
+  // No supersession/race guard is needed any more: since apply() runs
+  // synchronously to completion before this function returns, there is
+  // never a second _run() in flight to race against - unlike the async
+  // runLatest()-based version this replaced, frame can't change mid-call.
+  _run(app, frame, params) {
+    const frameId = frame.id;
+    const methodId = app.model.assignments.get(frameId);
     const method = app.registry.get(methodId);
     if (!method) return;
     const merged = Object.assign(method.defaults(), params || {});
     this.busy = true;
-    this.progress = 0;
     this.lastError = null;
     try {
-      const vd = await method.apply(frame.mat, merged, {
-        width: frame.w,
-        height: frame.h,
-        tick: async (t) => { this.progress = t; await os.sleepAsync(0); },
-      });
+      const vd = method.apply(frame.mat, merged, { width: frame.w, height: frame.h, tick: () => {} });
+      app.model.setResult(frameId, merged, vd);
       this.busy = false;
-      this.progress = 1;
-      app.model.setResult(frame.id, merged, vd);
       this._renderPreview(app, frame, vd);
     } catch (e) {
       this.busy = false;
@@ -152,7 +153,7 @@ export class ProcessStage {
     const status = this.lastError
       ? `error: ${this.lastError.split('\n')[0]}`
       : this.busy
-        ? `vectorizing… ${Math.round(this.progress * 100)}%`
+        ? 'vectorizing…'
         : this.preview ? `vectorized · ${this.preview.count} shapes` : 'idle';
     cv.text(status, rx + 8, top + 18, this.lastError ? Palette.danger : Palette.textDim, 0.4);
     const rightRect = { x: rx + 6, y: top + 24, w: halfW - 12, h: ph - 36 };
@@ -163,11 +164,13 @@ export class ProcessStage {
     }
     if (this.preview) cv.pasteViewport(this.preview.mat, rightRect.x, rightRect.y, rightRect.w, rightRect.h, this.view);
 
-    // progress bar across the bottom of the preview pane
+    // busy indicator (coarse - _run() is synchronous, so this only ever
+    // renders on the frame right after a call already finished) across the
+    // bottom of the preview pane
     if (this.busy) {
       const by = top + ph - 14, bx = rx + 6, bw = halfW - 12;
       cv.rect(bx, by, bw, 6, Palette.panel2, true);
-      cv.rect(bx, by, Math.max(2, Math.round(bw * this.progress)), 6, Palette.accent || Palette.text, true);
+      cv.rect(bx, by, bw, 6, Palette.accent || Palette.text, true);
     }
 
     // one drawn trackbar per paramsSpec() entry - no window rebuild needed
@@ -232,9 +235,10 @@ export class ProcessStage {
 
   // Decides whether this frame is the moment to actually pay for a
   // vectorize (see the pacing comment above the class). Never starts one
-  // while another is still running - _run() is async and cooperatively
-  // yields mid-flight, so without this.busy gating, a fast trackbar drag
-  // could fire overlapping runs that stomp each other's results.
+  // while another is still running - _run() awaits the pool call, so
+  // without this.busy gating, a fast trackbar drag could fire overlapping
+  // runs (runLatest() keeps only the newest one, but there is no reason to
+  // even queue the earlier ones).
   _maybeRun(app, frame) {
     if (!this._dirty || this.busy) {
       this._wasDragging = app.hud.dragKey != null;

@@ -14,7 +14,7 @@
 //     array - a plain [] resolves to cv::noArray() and is never filled).
 
 import {
-  Mat, GaussianBlur, Size, inRange, findContours, pyrMeanShiftFiltering,
+  Mat, MatVector, GaussianBlur, Size, inRange, findContours, pyrMeanShiftFiltering,
   paletteGenerate, paletteMatch,
   RETR_EXTERNAL, CHAIN_APPROX_SIMPLE,
 } from 'opencv';
@@ -39,8 +39,8 @@ export class PaletteRegions extends VectorMethod {
     ];
   }
 
-  async apply(mat, p, meta) {
-    const tick = meta.tick || (async () => {});
+  apply(mat, p, meta) {
+    const tick = meta.tick || (() => {});
     let src = mat;
     let smoothed = null;
     if (p.meanShift) {
@@ -48,17 +48,17 @@ export class PaletteRegions extends VectorMethod {
       pyrMeanShiftFiltering(mat, smoothed, p.spatial, p.color);
       src = smoothed;
     }
-    await tick(0.15);
+    tick(0.15);
     const palette = paletteGenerate(src, 0, p.colors);   // array of [b,g,r]
     const idx = new Mat();
     paletteMatch(src, idx, palette);   // CV_8U single-channel index map
-    await tick(0.25);
+    tick(0.25);
 
     const shapes = [];
     for (let k = 0; k < palette.length; k++) {
       const mask = new Mat();
       inRange(idx, [k, k, k, k], [k, k, k, k], mask);
-      const contours = [], hierarchy = [];
+      const contours = new MatVector(), hierarchy = [];
       findContours(mask, contours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
       const fill = meanColorMasked(mat, mask);
       const band = contoursToShapes(contours, {
@@ -70,7 +70,7 @@ export class PaletteRegions extends VectorMethod {
       });
       shapes.push(...band);
       release(mask);
-      await tick(0.25 + 0.7 * ((k + 1) / palette.length));
+      tick(0.25 + 0.7 * ((k + 1) / palette.length));
     }
     release(idx, palette, smoothed);
     // Largest regions first so small detail paints on top.

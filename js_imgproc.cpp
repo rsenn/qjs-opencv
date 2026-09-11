@@ -1035,61 +1035,37 @@ js_vec4i_free_func(JSRuntime* rt, void* opaque, void* ptr) {
 static JSValue
 js_cv_find_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSInputArray input = js_cv_inputarray(ctx, argv[0]);
-  JSValue ret = JS_UNDEFINED;
   int32_t mode = cv::RETR_TREE;
   int32_t approx = cv::CHAIN_APPROX_SIMPLE;
-  bool contours_array, contours_matvector, contours_pointvectorvector;
   cv::Point offset(0, 0);
 
-  contours_array = JS_IsArray(ctx, argv[1]);
   JSOutputArray hier = js_cv_outputarray(ctx, argv[2]);
 
-  // Detect if contours argument is MatVector or PointVectorVector
-  contours_matvector = false;
-  contours_pointvectorvector = false;
+  // contours must be a cv.MatVector or cv.PointVectorVector, matching
+  // opencv.js exactly (findContours there returns/accepts a MatVector too -
+  // see doc/opencv-js-api.md's "no bare-JS-array marshaling" note). A plain
+  // JS array used to be silently supported here as an extra convenience,
+  // but cv.drawContours never got the same treatment (it only ever accepted
+  // the opencv.js-compatible container types), so findContours(mask, [],
+  // ...) followed by drawContours(dst, thatArray, ...) would silently draw
+  // nothing - see BUGS: drawcontours-silently-noops-on-plain-array.
+  auto* matvector = JSVector<cv::Mat>::fromJS(argv[1]);
+  auto* pointvectorvector = matvector ? nullptr : JSVector<std::vector<cv::Point>>::fromJS(argv[1]);
 
-  if(!contours_array) {
-    auto* matvector = JSVector<cv::Mat>::fromJS(argv[1]);
-
-    if(matvector) {
-      contours_matvector = true;
-    } else {
-      auto* pointvectorvector = JSVector<std::vector<cv::Point>>::fromJS(argv[1]);
-
-      if(pointvectorvector)
-        contours_pointvectorvector = true;
-    }
-  }
+  if(!matvector && !pointvectorvector)
+    return JS_ThrowTypeError(ctx, "findContours() argument 2 must be a MatVector or PointVectorVector");
 
   if(argc > 3)
     JS_ToInt32(ctx, &mode, argv[3]);
   if(argc > 4)
     JS_ToInt32(ctx, &approx, argv[4]);
 
-  // Call findContours with appropriate type
-  if(contours_matvector) {
-    // Use MatVector directly (zero-copy)
+  if(matvector)
     cv::findContours(input, *JSVector<cv::Mat>::fromJS(ctx, argv[1]), hier, mode, approx, offset);
-  } else if(contours_pointvectorvector) {
-    // Use PointVectorVector directly (zero-copy)
+  else
     cv::findContours(input, *JSVector<std::vector<cv::Point>>::fromJS(ctx, argv[1]), hier, mode, approx, offset);
-  } else {
-    // Use std::vector<cv::Mat> (zero-copy, same as the MatVector branch
-    // above) and hand out each contour as a Mat CV_32SC2 - the
-    // opencv.js-compatible representation - instead of copying through
-    // JSContourData<double>/cv.Contour.
-    std::vector<cv::Mat> contours;
-    cv::findContours(input, contours, hier, mode, approx, offset);
 
-    if(contours_array) {
-      js_array_truncate(ctx, argv[1], 0);
-
-      for(size_t i = 0; i < contours.size(); i++)
-        JS_SetPropertyUint32(ctx, argv[1], i, js_mat_wrap(ctx, contours[i]));
-    }
-  }
-
-  return ret;
+  return JS_UNDEFINED;
 }
 
 /**
@@ -2338,7 +2314,14 @@ js_imgproc_shape(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
       case SHAPE_BOX_POINTS: {
         JSRotatedRectData* rr = js_rotated_rect_data2(ctx, argv[0]);
 
-        if(auto* pv = JSVector<cv::Point>::fromJS(argv[1])) {
+        if(argc < 2) {
+          // opencv.js's cv.boxPoints(rotatedRect) takes no destination
+          // argument and returns the 4x2 Mat directly - see BUGS:
+          // boxpoints-single-arg-throws-missing-output-array.
+          cv::Mat local;
+          cv::boxPoints(*rr, local);
+          ret = js_mat_wrap(ctx, local);
+        } else if(auto* pv = JSVector<cv::Point>::fromJS(argv[1])) {
           // cv::boxPoints() always creates its output as a literal 4x2
           // matrix, which a std::vector<Point>-backed OutputArray (a
           // PointVector's storage) can't satisfy - see BUGS:

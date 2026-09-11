@@ -4,7 +4,7 @@
 // contour hierarchy and even-odd fill. Good for silhouettes / stencils.
 
 import {
-  Mat, Size, GaussianBlur, threshold, adaptiveThreshold, findContours,
+  Mat, MatVector, Size, GaussianBlur, threshold, adaptiveThreshold, findContours,
   THRESH_BINARY, THRESH_BINARY_INV, THRESH_OTSU,
   ADAPTIVE_THRESH_GAUSSIAN_C, RETR_CCOMP, CHAIN_APPROX_SIMPLE,
 } from 'opencv';
@@ -31,8 +31,8 @@ export class ThresholdContours extends VectorMethod {
     ];
   }
 
-  async apply(mat, p, meta) {
-    const tick = meta.tick || (async () => {});
+  apply(mat, p, meta) {
+    const tick = meta.tick || (() => {});
     const gray = toGray(mat);
     GaussianBlur(gray, gray, new Size(3, 3), 0);
     const bin = new Mat();
@@ -45,10 +45,10 @@ export class ThresholdContours extends VectorMethod {
     } else {
       threshold(gray, bin, p.thresh, 255, type);
     }
-    await tick(0.4);
-    const contours = [], hierarchy = new Mat();
+    tick(0.4);
+    const contours = new MatVector(), hierarchy = new Mat();
     findContours(bin, contours, hierarchy, RETR_CCOMP, CHAIN_APPROX_SIMPLE);
-    await tick(0.7);
+    tick(0.7);
     let shapes = [...hierarchyToPaths(contours, hierarchy, {
       epsilon: p.epsilon,
       style: { stroke: null, fill: '#1a1a1a' },

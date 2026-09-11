@@ -5,7 +5,7 @@
 // `skeletonization` extra; if absent, swap in an erode/dilate thinning loop.
 
 import {
-  Mat, Size, GaussianBlur, threshold, skeletonization, findContours,
+  Mat, MatVector, Size, GaussianBlur, threshold, skeletonization, findContours,
   THRESH_BINARY, THRESH_BINARY_INV, THRESH_OTSU,
   RETR_LIST, CHAIN_APPROX_NONE,
 } from 'opencv';
@@ -29,20 +29,20 @@ export class Skeleton extends VectorMethod {
     ];
   }
 
-  async apply(mat, p, meta) {
-    const tick = meta.tick || (async () => {});
+  apply(mat, p, meta) {
+    const tick = meta.tick || (() => {});
     const gray = toGray(mat);
     GaussianBlur(gray, gray, new Size(3, 3), 0);
     const bin = new Mat();
     const type = p.invert ? THRESH_BINARY_INV : THRESH_BINARY;
     if (p.otsu) threshold(gray, bin, 0, 255, type | THRESH_OTSU);
     else threshold(gray, bin, p.thresh, 255, type);
-    await tick(0.3);
+    tick(0.3);
 
     const skel = new Mat();
     skeletonization(bin, skel);
-    await tick(0.6);
-    const contours = [], hierarchy = [];
+    tick(0.6);
+    const contours = new MatVector(), hierarchy = [];
     findContours(skel, contours, hierarchy, RETR_LIST, CHAIN_APPROX_NONE);
     const shapes = contoursToShapes(contours, {
       mode: 'stroke',

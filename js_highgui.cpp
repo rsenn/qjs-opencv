@@ -111,7 +111,14 @@ js_cv_resize_window(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 
 static JSValue
 js_cv_get_screen_resolution(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  int width, height;
+  // Zero-initialized: on a build where neither branch below compiles (e.g.
+  // HAVE_X11 not defined because CMake's HAVE_LIBX11 check failed even
+  // though X11 itself works fine - see TODO.md), this must come back as a
+  // deterministic {0,0}, not uninitialized stack garbage. A caller can
+  // reliably detect and fall back on {0,0}; garbage int values (observed:
+  // large enough to make a caller allocate a multi-terabyte Mat and crash)
+  // can't be distinguished from a real screen size.
+  int width = 0, height = 0;
 
 #if _WIN32
   width = (int)GetSystemMetrics(SM_CXSCREEN);

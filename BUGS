@@ -2023,33 +2023,16 @@
   of every JS caller in this repo currently reading `.empty`/`.continuous`
   on a UMat instance as a bare property.
 
-- minmaxloc-mask-arg-returns-empty-on-real-size-mats: `cv.minMaxLoc(src, cb1,
-  cb2, cb3, cb4, mask)` (js_cv.cpp OTHER_MIN_MAX_LOC) works correctly with a
-  mask on a small (10x10) synthetic Mat, but on a real-size (1280x960)
-  CV_8UC1 mask built via `cv.Mat.zeros(rows, cols, cv.CV_8UC1)` +
-  `cv.drawContours(mask, [contour], -1, new cv.Scalar(255), -1)`, it always
-  returns `{minVal: 0, maxVal: 0, minLoc: (-1,-1), maxLoc: (-1,-1)}` - the
-  exact result OpenCV documents for an all-zero mask, even though the
-  contour's fill area is nonzero (confirmed indirectly: a manual per-pixel
-  scan restricted to the same mask/contour finds real min/max values, e.g.
-  439 vs. the 0 minMaxLoc-with-mask reported). Root cause not isolated -
-  could be the mask Mat, the src Mat (CV_32FC1 from distanceTransform), or
-  their combination; not narrowed further because a manual per-pixel loop
-  was a sufficient workaround for the immediate task (skywatch contrail
-  detection, examples/skywatch_contrail_detect.js). Reproduced during that
-  work on 2026-09-07.
-
-    import * as cv from 'opencv';
-    // Any real-size Mat pair reproduces it; the 10x10 case below happens to
-    // work, so shrinking further to isolate the size/type boundary is the
-    // next step.
-    const src = cv.Mat.zeros(1280, 960, cv.CV_32FC1);
-    // ... fill src with a distanceTransform() result and build `mask` via
-    // cv.Mat.zeros(1280, 960, cv.CV_8UC1) + drawContours(mask, [c], -1,
-    // new cv.Scalar(255), -1) ...
-    console.log(cv.minMaxLoc(src, null, null, null, null, mask));
-    // -> 0, 0, (-1,-1), (-1,-1) even when mask has nonzero pixels over a
-    // region where src is nonzero.
+[RETRACTED 2026-09-07: not a real bug. The mask used in the original repro
+was built via `cv.drawContours(mask, [contour], -1, ...)` with a plain JS
+array - i.e. it hit the drawcontours-silently-noops-on-plain-array bug
+below, which left `mask` silently all-zero. minMaxLoc's `{0, 0, (-1,-1),
+(-1,-1)}` result was the documented-correct answer for an all-zero mask,
+not a minMaxLoc defect. Verified with a mask built via cv.rectangle instead
+(known-good drawing path): minMaxLoc respects the mask correctly, including
+rejecting an extremum placed outside it. No entry needed - keeping this
+note only so a future session doesn't re-suspect minMaxLoc from a
+similar-looking symptom without checking how its mask was built first.]
 
 - drawcontours-silently-noops-on-plain-array: `cv.drawContours(dst, contours,
   ...)` (js_draw.cpp:274 js_draw_contours) reads `contours` via
@@ -2117,3 +2100,213 @@
   committed regression test - reproduce via 4+ os.Worker threads, each
   running `new cv.MatVector()` right after `import * as cv from
   'opencv'`.
+
+- FIXED (2026-09-07): boxpoints-single-arg-throws-missing-output-array:
+  `js/vectorizer/vector/methods/shape-fit.js`'s Rect mode called
+  `boxPoints(rr)` with a single argument (RotatedRect only, no destination
+  Mat), matching opencv.js's `cv.boxPoints(rotatedRect)` signature (returns
+  a Mat directly). The binding required an explicit destination array as
+  argument 2 and threw `(-27:Null pointer) create() called for the missing
+  output array` otherwise - silently swallowed by shape-fit.js's
+  surrounding try/catch, so ShapeFit produced zero shapes in Rect mode
+  instead of erroring visibly. Fixed in js_imgproc.cpp's SHAPE_BOX_POINTS
+  case: when called with argc < 2, compute into a local Mat and return it
+  wrapped, matching opencv.js's single-argument calling convention. The
+  2-argument Mat/PointVector-destination form still works unchanged.
+  Verified: `cv.boxPoints(rr)` now returns a proper 4x2 Mat.
+
+- findcontours-hierarchy-arg-silently-empty-on-plain-array:
+  `cv.findContours(image, contours, hierarchy, ...)`'s hierarchy argument
+  (argv[2], js_imgproc.cpp js_cv_find_contours) is resolved via the shared
+  `js_cv_outputarray()` helper (include/js_inputoutputarray.hpp), which
+  only recognizes Mat/UMat, JSVector-backed containers, Line, ArrayBuffer,
+  and TypedArray - a plain JS array `[]` matches none of those and
+  silently resolves to `cv::noArray()`, so hierarchy is never filled and
+  no error is thrown. opencv.js's own findContours also requires hierarchy
+  to be a Mat (no array convenience there either), so `hierarchy = []` is
+  an opencv.js-contract discrepancy the same way the now-fixed plain-array
+  `contours` argument was (see drawcontours-silently-noops-on-plain-array
+  above) - only findContours' *contours* argument got the "must be a
+  container type, throw otherwise" treatment; hierarchy did not.
+  Confirmed multiple real callers in this repo currently pass `hierarchy =
+  []` and never notice: `js/cvVectorization.js` (2 call sites) actually
+  *reads* `hierarchy[i][3]`/`hierarchy[i][2]` afterward assuming nested-
+  array content that was never populated (`hierarchy[i]` is always
+  `undefined`, so `hierarchy[i][3]` should throw a TypeError whenever that
+  code path executes with `kept > 0`, though this session did not exercise
+  that branch to confirm at runtime); `js/vectorizer/vector/methods/{skel
+  eton,canny-contours,shape-fit,palette-regions}.js` pass `hierarchy = []`
+  too but never read it, so they're silently fine only because they don't
+  need the hierarchy at all. `js/vectorizer/vector/methods/threshold-
+  contours.js` already passes a real `new Mat()` and is unaffected.
+  Not fixed here - out of tokens this session; see TODO.md for the
+  fix-and-migrate plan (mirror the contours-argument fix: require
+  hierarchy to be a Mat when passed, throw otherwise; fix
+  js/cvVectorization.js's two hierarchy-array-indexing call sites to parse
+  a real hierarchy Mat instead, e.g. reusing js/vectorizer/cv/convert.js's
+  existing `hierarchyRows()` helper; switch the four hierarchy-less
+  vectorizer methods' `hierarchy = []` to `new Mat()` for contract
+  cleanliness even though they never read it).
+
+    import * as cv from 'opencv';
+    const img = cv.Mat.zeros(100, 100, cv.CV_8UC1);
+    cv.rectangle(img, new cv.Point(20, 20), new cv.Point(60, 60), new cv.Scalar(255), -1);
+    const contours = new cv.MatVector();
+    const hierarchy = []; // opencv.js requires a Mat here too - silently wrong
+    cv.findContours(img, contours, hierarchy, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE);
+    console.log(hierarchy.length); // 0 - never filled, no error raised
+
+- installed-qjsm-binary-was-stale-not-os-worker-broken (FIXED, was a false
+  lead): this session initially concluded (see the since-retracted entry
+  this replaces) that os.Worker on this engine "never drains its promise/
+  timer job queue" and is fundamentally unusable for async code. That
+  conclusion was wrong - the actual cause was that `/usr/local/bin/qjsm`
+  (dated Aug 27, found via `which qjsm`) predates
+  ../quickjs/qjs-modules commit fde86180 ("Fix os.Worker being completely
+  broken: install module loader and init loaded_modules for worker
+  JSRuntimes", committed today) and was never reinstalled after that fix
+  landed. Running against the STALE installed binary, even the most
+  minimal possible worker (`new os.Worker(path)` + a synchronous, no-await
+  onmessage handler that just postMessage()s back, matching js/
+  cvThreadPoolWorker.js's pattern exactly) hung forever with zero output -
+  not just async handlers. Running the exact same repro against the
+  freshly-built (but never-installed) binary at
+  ../quickjs/qjs-modules/build/x86_64-linux-gnu/qjsm worked immediately,
+  both for a synchronous handler and for one that does `await
+  Promise.resolve()` before replying. So: os.Worker with async/await
+  inside onmessage is FINE on this engine once the fix from fde86180 is
+  actually installed - do not avoid async worker code on this basis.
+  Action needed: `make install` (or whatever this repo's install step is)
+  in ../quickjs/qjs-modules so `/usr/local/bin/qjsm` picks up fde86180 -
+  not done yet as of this entry, so any shell that resolves `qjsm` via
+  PATH is still running the broken binary. Until that install happens,
+  either invoke the fresh binary directly by its build path, or add it
+  earlier in PATH, when testing anything worker-related in this repo.
+
+    # confirms which binary a shell will actually run, and how stale it is
+    which qjsm
+    ls -la "$(which qjsm)"
+    ls -la ../quickjs/qjs-modules/build/x86_64-linux-gnu/qjsm
+
+- cvthreadpool-copyback-assumes-worker-echoes-args (FIXED): js/
+  cvThreadPool.js's PoolWorker.onmessage handler unconditionally looped
+  over `args[i]` (the worker's reply) to copy any mutated plain-Mat
+  out-params back into the caller's original Mat - `for (let i = 0; i <
+  p.args.length; i++) { if (p.args[i] instanceof Mat && args[i] instanceof
+  Mat ...` - which assumes every worker echoes the whole `args` array back
+  in its reply the way js/cvThreadPoolWorker.js does. A worker whose
+  methods return their result instead of mutating an out-param in place -
+  js/vectorizer/vector/poolWorker.js, added this session, replies with
+  just `{ id, result }` and no `args` at all - hit `args[i]` of `undefined`
+  and threw `TypeError: cannot read property '0' of undefined` inside the
+  onmessage handler for every single call, which surfaces to the caller as
+  the returned Promise simply never settling (the throw happens inside a
+  message-channel callback with nothing downstream to catch it). Fixed by
+  guarding the whole copy-back loop behind `if (Array.isArray(args))`.
+
+    // repro (before the fix): reply with no `args` at all
+    // worker.js
+    import * as os from 'os';
+    os.Worker.parent.onmessage = (e) => {
+      os.Worker.parent.postMessage({ id: e.data.id, result: 42 }); // no `args`
+    };
+    // main.js used js/cvThreadPool.js's PoolWorker against that worker with
+    // a Mat in args - threw inside onmessage, caller's Promise never settled
+
+- vectorizer-stage3-wired-to-worker-pool-for-real-parallelism (current
+  design, replaces two earlier same-session attempts): js/vectorizer/gui/
+  stages/stage3-process.js's _run() now runs VectorMethod.apply() through
+  js/cvThreadPool.js (js/vectorizer/vector/poolWorker.js) on a real OS
+  worker thread, using runLatest() so a trackbar drag's superseded calls
+  are skipped/discarded rather than piling up. Getting here took two false
+  starts in this same session, both now corrected: (1) wiring it up while
+  running against the stale installed qjsm (see
+  installed-qjsm-binary-was-stale-not-os-worker-broken above) made every
+  method call hang forever with "vectorizing..." never resolving, which
+  was wrongly diagnosed as an os.Worker engine limitation and led to (2)
+  reverting to the original in-process cooperative-yield design (method.
+  apply() run on the GUI thread, `await meta.tick(...)` yielding via
+  `os.sleepAsync(0)`) - which in turn froze the GUI for the full duration
+  of every vectorize call, since that design has no real concurrency at
+  all (the "yield" only helps if something else is also awaiting on the
+  main thread's own loop, and a slow method's synchronous stretches
+  between tick() calls block everything regardless). The actual fix,
+  once the stale-binary issue was found: (a) made VectorMethod.apply()
+  fully synchronous across all of vector/methods/*.js and vector/base.js
+  (no async/await anywhere in the call chain - meta.tick(progress), if
+  called, is now a plain synchronous call, a no-op in the worker) so the
+  worker side matches js/cvThreadPoolWorker.js's proven-working
+  synchronous pattern regardless of which qjsm binary ends up installed;
+  (b) fixed cvthreadpool-copyback-assumes-worker-echoes-args above; (c)
+  restored the pool wiring in app.js/stage3-process.js. Verified all 10
+  registered methods (canny, threshold, palette, lowpoly, hough, lsd, fld,
+  skeleton, shapefit, stipple) resolve real VectorData through the actual
+  pool against tests/box_in_scene.png. Still depends on
+  installed-qjsm-binary-was-stale-not-os-worker-broken being resolved
+  (i.e. the fixed qjsm actually installed) to work outside of invoking the
+  fresh build path directly - see that entry.
+
+- vectorizer-stage3-worker-pool-dispatch-never-received (UNRESOLVED, worker
+  pool now disabled): despite everything in
+  vectorizer-stage3-wired-to-worker-pool-for-real-parallelism above being
+  genuinely fixed and verified, a live GUI session still hung on a clean,
+  single-frame, no-navigation vectorize call. Diagnostic logging added
+  directly to js/cvThreadPool.js and js/vectorizer/vector/poolWorker.js
+  showed: all 4 pool workers boot and report ready at App construction
+  time; PoolWorker.run() logs `dispatching id=1 method=canny` (i.e.
+  chan.postMessage() was called on the main thread); and then nothing -
+  no `onmessage id=1` is ever logged on the worker side, even after 8+
+  seconds. A structurally different earlier repro (which involved
+  navigating between frames, confounding it with the separate,
+  since-fixed cross-frame race - see stage3-process.js's git history)
+  showed the opposite: the worker completed and posted a reply that the
+  main thread never logged receiving. Both point at message loss
+  somewhere in the os.Worker/SharedChannel transport, not in this
+  project's own JS logic - a standalone headless script
+  (tests/vectorizer_pool_cli.js) driving the exact same ThreadPool code
+  path has never once reproduced this, every run resolving in well under a
+  second. Leading unconfirmed hypothesis (see vectorizer-debug.md §3.1):
+  workers sit idle for real user-navigation time (seconds to tens of
+  seconds) before their first job in the GUI, vs. milliseconds in the CLI
+  script, and something about that idle period breaks the pipe. Not
+  root-caused this session - ran out of time/attempts. Action taken
+  instead of chasing this further live: stage3-process.js's _run() no
+  longer uses app.vectorPool at all - it now calls
+  VectorMethod.apply(frame.mat, params, meta) directly, synchronously, on
+  the GUI thread (see vectorizer-pipeline-run-in-process-not-worker-pool
+  below). js/cvThreadPool.js and js/vectorizer/vector/poolWorker.js are
+  left in the tree, unused, for whoever picks this back up -
+  vectorizer-debug.md's §5 has the ranked next steps (env-gated
+  permanent logging, an idle-delay repro via a CLI flag, a payload-free
+  ping test, qjsm-debugger single-stepping).
+
+- vectorizer-pipeline-run-in-process-not-worker-pool: pivot away from
+  vectorizer-stage3-worker-pool-dispatch-never-received above, done
+  instead of continuing to chase that hang live. Two changes: (1) new
+  js/vectorizer/vectorizer-repl.js - a REPL-based, non-GUI client (using
+  the `repl` module, same one cv-shell.js uses) exposing load()/use()/
+  set()/go()/svg() etc. as globals over the real Model/Pipeline/Loader/
+  Registry/Composer, calling Pipeline.process() -> VectorMethod.apply()
+  directly with no worker/thread involved at all. Verified: all 10
+  registered methods run successfully against tests/box.png (9ms-2045ms
+  each), 5/5 identical-output repeat runs (no flakiness), and a full
+  load->use->go->svg round trip against a second image
+  (tests/opencv-logo.png) writes a valid SVG. (2)
+  js/vectorizer/gui/stages/stage3-process.js's _run() rewritten the same
+  way: no more app.vectorPool.runLatest(), just a direct, synchronous
+  method.apply() call. This also let the per-frame supersession/race
+  guard (isCurrent() checks, the Superseded import) be deleted outright -
+  with the call now synchronous end-to-end, there is never a second
+  _run() in flight to race against. js/vectorizer/gui/app.js no longer
+  constructs a ThreadPool at all. Trade-off, explicit: a slow method now
+  blocks app.run()'s frame loop (the window stops redrawing/responding to
+  input) for the call's duration instead of running off-thread - with
+  cv/loader.js's load-time downscale to 1600px already in place, that's
+  under ~2s for every method tested so far on a small image, but has NOT
+  yet been verified against the large real photos that originally
+  motivated real parallelism (see vectorizer-debug.md). Not yet re-tested
+  against a live GUI session (needs the user's own hands - see
+  vectorizer-debug.md's constraints on unreliable xdotool-driven GUI
+  testing in this sandbox); the REPL is the verified-tonight artifact,
+  the GUI rewrite is the same code path but not independently re-run
+  live.

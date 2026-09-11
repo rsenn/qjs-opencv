@@ -5,7 +5,7 @@
 //   - id / label / description           : identity for the registry + GUI
 //   - paramsSpec()                        : declarative parameter schema, which
 //                                           the stage-3 View turns into widgets
-//   - async apply(mat, params, meta)      : the only place OpenCV runs; returns
+//   - apply(mat, params, meta)            : the only place OpenCV runs; returns
 //                                           VectorData (see core/vectordata.js)
 //
 // Because apply() returns the generic VectorData, the GUI, the projector and the
@@ -20,14 +20,17 @@
 // switch and enum to radio buttons. Keeping it declarative means stage 3 is
 // 100% generic across methods.
 //
-// apply() is async and must `await meta.tick(progress)` (progress 0..1)
-// between named stages (grayscale -> blur -> edges -> contours, etc), not
-// just call it. `tick()` also yields the event loop (an `os.sleepAsync(0)`
-// under the hood), which is what lets the GUI keep redrawing/responding
-// while a vectorize runs on the main thread instead of freezing for its
-// whole duration - see BUGS: os.Worker is broken in the installed qjsm, so
-// this cooperative-yield scheme is the actual concurrency model here, not
-// a real background thread.
+// apply() must be FULLY SYNCHRONOUS - no async/await anywhere in it or in
+// anything it calls. stage3-process.js currently calls it directly,
+// in-process, on the GUI thread (a pivot away from running it inside a real
+// os.Worker via js/cvThreadPool.js + vector/poolWorker.js, which had an
+// unresolved hang - see vectorizer-debug.md and BUGS). Those pool files are
+// left in place, unused for now, in case the worker-transport bug gets
+// root-caused later. Keeping apply() synchronous-only regardless: it's also
+// what lets vectorizer-repl.js call it directly with no event-loop
+// plumbing. meta.tick(progress) may still be called (plain call, no await)
+// for optional coarse progress reporting; it is a no-op unless a caller
+// supplies one.
 
 export class VectorMethod {
   static id = 'base';
@@ -58,7 +61,7 @@ export class VectorMethod {
 
   // Override: produce VectorData from a cv.Mat. Must not mutate `mat`.
   // eslint-disable-next-line no-unused-vars
-  async apply(mat, params, meta) {
+  apply(mat, params, meta) {
     throw new Error(`${this.id}.apply() not implemented`);
   }
 }
