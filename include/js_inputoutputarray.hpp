@@ -90,9 +90,7 @@ js_cv_inputarray(JSContext* ctx, JSValueConst value) {
       case TYPEDARRAY_INT16: return typed_input_array<int16_t>(props);
       case TYPEDARRAY_UINT32: JS_ThrowTypeError(ctx, "No cv::InputArray for uint32_t"); break;
       case TYPEDARRAY_INT32: return typed_input_array<int32_t>(props);
-      case TYPEDARRAY_FLOAT32 | TYPEDARRAY_SIGNED:
       case TYPEDARRAY_FLOAT32: return typed_input_array<float>(props);
-      case TYPEDARRAY_FLOAT64 | TYPEDARRAY_SIGNED:
       case TYPEDARRAY_FLOAT64:
 
         if(props.size() == 4) {
