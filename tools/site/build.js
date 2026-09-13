@@ -16,8 +16,7 @@
  * https://rsenn.github.io/qjs-opencv/ and from a local file:// checkout.
  */
 
-import * as std from 'std';
-import * as os from 'os';
+import * as fs from 'fs';
 import { render } from './markdown.js';
 import { highlight } from './highlight.js';
 
@@ -77,26 +76,21 @@ function relative(fromDir, to) {
 }
 
 function mkdirp(path) {
-  let cur = path.startsWith('/') ? '' : '.';
+  let cur = path.startsWith('/') ? '/' : '';
   for(const part of path.split('/')) {
     if(!part) continue;
-    cur += '/' + part;
-    os.mkdir(cur, 0o755);
+    cur += (cur ? '/' : '') + part;
+    if(!fs.existsSync(cur)) fs.mkdirSync(cur, 0o755);
   }
 }
 
 function read(path) {
-  const text = std.loadFile(path);
-  if(text === null) throw new Error('cannot read ' + path);
-  return text;
+  return fs.readFileSync(path, 'utf8');
 }
 
 function write(path, text) {
   mkdirp(dirname(path));
-  const f = std.open(path, 'w');
-  if(!f) throw new Error('cannot write ' + path);
-  f.puts(text);
-  f.close();
+  fs.writeFileSync(path, text);
 }
 
 /* --------------------------------------------------------- link rewriting */
@@ -248,7 +242,7 @@ function buildLanding() {
 }
 
 const SELF = dirname(import.meta.url.replace(/^file:\/\//, '')) || '.';
-const OUT = scriptArgs[1] || '_site';
+const OUT = process.argv[2] || '_site';
 
 buildLanding();
 for(const page of PAGES) buildPage(page);
