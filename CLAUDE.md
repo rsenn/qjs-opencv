@@ -175,3 +175,22 @@ The `qjsm` binary supports ES modules natively. Do NOT use `qjs` or `-m`/`--modu
 - `test_matvector.cpp` / `test_pointvector_contours.cpp` — C++ feasibility tests for MatVector
 - `test_binary_compat.cpp` — binary compatibility verification (Point=Vec2i, Vec4i=2×Point)
 - `doc/opencv-js-api.md` — target API specification (what opencv.js exposes)
+
+## GitHub Pages site
+
+This project's GitHub Pages site (the `gh-pages` branch) is **generated, not
+hand-maintained here**. Use the global `github-pages` skill and the shared site
+build tool in the `rsenn/rsenn` repo, at `../../rsenn/rsenn` (relative to this repo root;
+i.e. `~/Projects/rsenn/rsenn`):
+
+- site definition, landing page, theme, favicon: `../../rsenn/rsenn/sites/qjs-opencv/`
+- generator and publisher: `../../rsenn/rsenn/tools/site/` (see its `README.md`)
+  - build: `qjsm ../../rsenn/rsenn/tools/site/build.js qjs-opencv` (`node` works too)
+  - publish: `../../rsenn/rsenn/tools/site/sync.sh qjs-opencv` (commits locally; `--push` only after the user confirms)
+- the markdown that becomes the site's pages is **this repo's own** `README.md`,
+  `doc/` and `examples/`; a doc page appears on the site only once it is listed in
+  `nav` in `../../rsenn/rsenn/sites/qjs-opencv/site.config.js`.
+
+Do not add or extend a `tools/site/`, Pages workflow or `publish.sh` in this repo (any
+existing ones are superseded and slated for removal), and do
+not edit `gh-pages` by hand.
