@@ -1,0 +1,799 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Examples — qjs-opencv</title>
+<meta name="description" content="qjs-opencv — OpenCV bindings for QuickJS. Mat, contours, imgproc, calib3d, dnn and video I/O in a loadable QuickJS module.">
+<link rel="stylesheet" href="assets/base.css">
+<link rel="stylesheet" href="assets/theme.css">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body class="has-sidebar" data-site="qjs-opencv" data-root="">
+<header class="topbar">
+  <a class="brand" href="index.html"><span class="mark">{ }</span> <span class="brand-name">qjs-opencv</span></a>
+  <nav class="topnav">
+    <a href="getting-started.html">Get started</a>
+    <a href="docs/algorithms.html">Docs</a>
+    <a href="examples.html">Examples</a>
+    <a href="docs/roadmap.html">Roadmap</a>
+    <a href="https://github.com/rsenn/qjs-opencv" target="_blank" rel="noopener">GitHub</a>
+  </nav>
+  <button class="themetoggle" type="button" aria-label="Toggle colour scheme">◐</button>
+</header>
+<div class="layout">
+<aside class="sidebar"><div class="navgroup"><h3>Start here</h3><ul><li><a href="getting-started.html">Getting started</a></li></ul></div><div class="navgroup"><h3>Reference</h3><ul><li><a href="docs/algorithms.html">Custom algorithms</a></li><li><a href="docs/roadmap.html">Binding roadmap</a></li></ul></div><div class="navgroup"><h3>Examples</h3><ul><li><a href="examples.html" class="here">Examples</a></li></ul></div></aside>
+<main class="doc">
+<article><h1 id="examples"><a class="anchor" href="#examples" aria-hidden="true">#</a>Examples</h1>
+<p>Every file below lives in <a href="https://github.com/rsenn/qjs-opencv/tree/main/examples/" target="_blank" rel="noopener"><code>examples/</code></a> and is shown here as it ships.</p>
+<h2 id="edge_detection_dexinedjs"><a class="anchor" href="#edge_detection_dexinedjs" aria-hidden="true">#</a>edge_detection_dexined.js</h2>
+<p>Learned (DNN) edge detection, DexiNed-style — see TODO.md "dnn — high-level Model wrappers for learned edge detection". Produces a cleaner, semantically-aware edge map than Canny for feeding into findContours/vectorization on complex photographs.</p>
+<p><a href="https://github.com/rsenn/qjs-opencv/blob/main/examples/edge_detection_dexined.js" target="_blank" rel="noopener">source on GitHub</a></p>
+<div class="codeblock" data-lang="js"><pre><code class="language-js"><span class="t-cm">/* Learned (DNN) edge detection, DexiNed-style — see TODO.md "dnn — high-level
+ * Model wrappers for learned edge detection". Produces a cleaner,
+ * semantically-aware edge map than Canny for feeding into
+ * findContours/vectorization on complex photographs.
+ *
+ * Model: examples/models/edge_detection_dexined/edge_detection_dexined_2024sep.onnx
+ * (fetched from https://github.com/opencv/opencv_zoo, sha1
+ * f86f2d32c3cf892771f76b5e6b629b16a66510e9 — matches OpenCV's own
+ * samples/dnn/models.yml entry for the "dexined" edge_detection sample).
+ *
+ * Usage: qjsm examples/edge_detection_dexined.js &lt;input.png&gt; [output.png]
+ */</span>
+<span class="t-kw">import</span> <span class="t-op">*</span> <span class="t-id">as</span> <span class="t-id">cv</span> <span class="t-kw">from</span> <span class="t-str">'opencv'</span>;
+
+<span class="t-kw">const</span> <span class="t-type">MODEL</span> <span class="t-op">=</span> <span class="t-str">'examples/models/edge_detection_dexined/edge_detection_dexined_2024sep.onnx'</span>;
+<span class="t-kw">const</span> <span class="t-type">NET_SIZE</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-id">cv</span>.<span class="t-fn">Size</span>(<span class="t-num">512</span>, <span class="t-num">512</span>);
+<span class="t-kw">const</span> <span class="t-type">MEAN</span> <span class="t-op">=</span> [<span class="t-num">103.5</span>, <span class="t-num">116.2</span>, <span class="t-num">123.6</span>];
+
+<span class="t-cm">/* The network's forward() output is a 4D (1,1,512,512) blob, so it has no
+ * usable .rows/.cols (both -1) - reshape via a flat sigmoid + min-max stretch
+ * over its .data32F view, then hand the result to matFromArray to get a
+ * proper 2D Mat back. */</span>
+<span class="t-kw">function</span> <span class="t-fn">sigmoidStretchTo8U</span>(<span class="t-id">out</span>, <span class="t-id">side</span>) {
+  <span class="t-kw">const</span> <span class="t-id">src</span> <span class="t-op">=</span> <span class="t-id">out</span>.<span class="t-prop">data32F</span>;
+  <span class="t-kw">const</span> <span class="t-id">n</span> <span class="t-op">=</span> <span class="t-id">src</span>.<span class="t-prop">length</span>;
+  <span class="t-kw">const</span> <span class="t-id">sig</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">Float64Array</span>(<span class="t-id">n</span>);
+  <span class="t-kw">let</span> <span class="t-id">min</span> <span class="t-op">=</span> <span class="t-atom">Infinity</span>, <span class="t-id">max</span> <span class="t-op">=</span> <span class="t-op">-</span><span class="t-atom">Infinity</span>;
+
+  <span class="t-kw">for</span>(<span class="t-kw">let</span> <span class="t-id">i</span> <span class="t-op">=</span> <span class="t-num">0</span>; <span class="t-id">i</span> <span class="t-op">&lt;</span> <span class="t-id">n</span>; <span class="t-id">i</span><span class="t-op">++</span>) {
+    <span class="t-kw">const</span> <span class="t-id">v</span> <span class="t-op">=</span> <span class="t-num">1.0</span> <span class="t-op">/</span> (<span class="t-num">1.0</span> <span class="t-op">+</span> <span class="t-type">Math</span>.<span class="t-fn">exp</span>(<span class="t-op">-</span><span class="t-id">src</span>[<span class="t-id">i</span>]));
+    <span class="t-id">sig</span>[<span class="t-id">i</span>] <span class="t-op">=</span> <span class="t-id">v</span>;
+    <span class="t-kw">if</span>(<span class="t-id">v</span> <span class="t-op">&lt;</span> <span class="t-id">min</span>) <span class="t-id">min</span> <span class="t-op">=</span> <span class="t-id">v</span>;
+    <span class="t-kw">if</span>(<span class="t-id">v</span> <span class="t-op">&gt;</span> <span class="t-id">max</span>) <span class="t-id">max</span> <span class="t-op">=</span> <span class="t-id">v</span>;
+  }
+
+  <span class="t-kw">const</span> <span class="t-id">range</span> <span class="t-op">=</span> <span class="t-id">max</span> <span class="t-op">-</span> <span class="t-id">min</span> <span class="t-op">||</span> <span class="t-num">1</span>;
+  <span class="t-kw">const</span> <span class="t-id">u8</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">Float64Array</span>(<span class="t-id">n</span>);
+
+  <span class="t-kw">for</span>(<span class="t-kw">let</span> <span class="t-id">i</span> <span class="t-op">=</span> <span class="t-num">0</span>; <span class="t-id">i</span> <span class="t-op">&lt;</span> <span class="t-id">n</span>; <span class="t-id">i</span><span class="t-op">++</span>) <span class="t-id">u8</span>[<span class="t-id">i</span>] <span class="t-op">=</span> ((<span class="t-id">sig</span>[<span class="t-id">i</span>] <span class="t-op">-</span> <span class="t-id">min</span>) <span class="t-op">/</span> <span class="t-id">range</span>) <span class="t-op">*</span> <span class="t-num">255</span>;
+
+  <span class="t-kw">return</span> <span class="t-id">cv</span>.<span class="t-fn">matFromArray</span>(<span class="t-id">side</span>, <span class="t-id">side</span>, <span class="t-id">cv</span>.<span class="t-type">CV_8UC1</span>, <span class="t-id">u8</span>);
+}
+
+<span class="t-kw">function</span> <span class="t-fn">detectEdges</span>(<span class="t-id">net</span>, <span class="t-id">image</span>) {
+  <span class="t-kw">const</span> <span class="t-id">blob</span> <span class="t-op">=</span> <span class="t-id">cv</span>.<span class="t-fn">blobFromImage</span>(<span class="t-id">image</span>, <span class="t-num">1.0</span>, <span class="t-type">NET_SIZE</span>, <span class="t-type">MEAN</span>, <span class="t-cm">/*swapRB*/</span> <span class="t-atom">false</span>, <span class="t-cm">/*crop*/</span> <span class="t-atom">false</span>);
+
+  <span class="t-id">net</span>.<span class="t-fn">setInput</span>(<span class="t-id">blob</span>);
+
+  <span class="t-kw">const</span> <span class="t-id">out</span> <span class="t-op">=</span> <span class="t-id">net</span>.<span class="t-fn">forward</span>();
+  <span class="t-kw">const</span> <span class="t-id">edges8u</span> <span class="t-op">=</span> <span class="t-fn">sigmoidStretchTo8U</span>(<span class="t-id">out</span>, <span class="t-type">NET_SIZE</span>.<span class="t-prop">width</span>);
+
+  <span class="t-kw">const</span> <span class="t-id">resized</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-id">cv</span>.<span class="t-fn">Mat</span>();
+  <span class="t-id">cv</span>.<span class="t-fn">resize</span>(<span class="t-id">edges8u</span>, <span class="t-id">resized</span>, <span class="t-kw">new</span> <span class="t-id">cv</span>.<span class="t-fn">Size</span>(<span class="t-id">image</span>.<span class="t-prop">cols</span>, <span class="t-id">image</span>.<span class="t-prop">rows</span>));
+
+  <span class="t-kw">return</span> <span class="t-id">resized</span>;
+}
+
+<span class="t-kw">function</span> <span class="t-fn">main</span>(<span class="t-id">input</span> <span class="t-op">=</span> <span class="t-str">'tests/smarties.png'</span>, <span class="t-id">output</span> <span class="t-op">=</span> <span class="t-str">'edge_detection_dexined.png'</span>) {
+  <span class="t-kw">const</span> <span class="t-id">src4</span> <span class="t-op">=</span> <span class="t-id">cv</span>.<span class="t-fn">imread</span>(<span class="t-id">input</span>);
+
+  <span class="t-kw">if</span>(<span class="t-id">src4</span>.<span class="t-fn">empty</span>()) <span class="t-kw">throw</span> <span class="t-kw">new</span> <span class="t-fn">Error</span>(<span class="t-str">`Error opening image: ${input}`</span>);
+
+  <span class="t-kw">const</span> <span class="t-id">src</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-id">cv</span>.<span class="t-fn">Mat</span>();
+  <span class="t-id">cv</span>.<span class="t-fn">cvtColor</span>(<span class="t-id">src4</span>, <span class="t-id">src</span>, <span class="t-id">src4</span>.<span class="t-fn">channels</span>() <span class="t-op">===</span> <span class="t-num">4</span> <span class="t-op">?</span> <span class="t-id">cv</span>.<span class="t-type">COLOR_BGRA2BGR</span> <span class="t-op">:</span> <span class="t-id">cv</span>.<span class="t-type">COLOR_GRAY2BGR</span>);
+
+  <span class="t-kw">const</span> <span class="t-id">net</span> <span class="t-op">=</span> <span class="t-id">cv</span>.<span class="t-fn">readNetFromONNX</span>(<span class="t-type">MODEL</span>);
+  <span class="t-kw">const</span> <span class="t-id">edges</span> <span class="t-op">=</span> <span class="t-fn">detectEdges</span>(<span class="t-id">net</span>, <span class="t-id">src</span>);
+
+  <span class="t-id">cv</span>.<span class="t-fn">imwrite</span>(<span class="t-id">output</span>, <span class="t-id">edges</span>);
+  <span class="t-id">console</span>.<span class="t-fn">log</span>(<span class="t-str">`wrote ${output}`</span>);
+}
+
+<span class="t-fn">main</span>(...<span class="t-prop">scriptArgs</span>.<span class="t-fn">slice</span>(<span class="t-num">1</span>));</code></pre></div>
+<h2 id="neural-font-sr-espscx2js"><a class="anchor" href="#neural-font-sr-espscx2js" aria-hidden="true">#</a>neural-font-sr-ESPSCx2.js</h2>
+<p>Neural Font Super-Resolution (FSRCNN x2) via OpenCV 5 DNN &amp; ONNX</p>
+<p><a href="https://github.com/rsenn/qjs-opencv/blob/main/examples/neural-font-sr-ESPSCx2.js" target="_blank" rel="noopener">source on GitHub</a></p>
+<div class="codeblock" data-lang="js"><pre><code class="language-js"><span class="t-cm">/* Neural Font Super-Resolution (FSRCNN x2) via OpenCV 5 DNN &amp; ONNX
+ * 
+ * Reconstructs clean, high-precision font contours and strips stray pixels.
+ * Model: FSRCNN x2 (Fast Super-Resolution Convolutional Neural Network)
+ * 
+ * Usage: qjsm examples/neural_font_sr_fsrcnn.js &lt;input.png&gt; [output.png]
+ */</span>
+<span class="t-kw">import</span> <span class="t-op">*</span> <span class="t-id">as</span> <span class="t-id">cv</span> <span class="t-kw">from</span> <span class="t-str">'opencv'</span>;
+
+<span class="t-kw">const</span> <span class="t-type">MODEL</span> <span class="t-op">=</span> <span class="t-str">'examples/models/super_res_fsrcnn/fsrcnn_x2.onnx'</span>;
+
+<span class="t-kw">function</span> <span class="t-fn">upscaleFontGlyphs</span>(<span class="t-id">net</span>, <span class="t-id">image</span>) {
+  <span class="t-cm">// Ensure we operate cleanly within a bounds-checked ROI</span>
+  <span class="t-kw">const</span> <span class="t-id">maxW</span> <span class="t-op">=</span> <span class="t-num">224</span>;
+  <span class="t-kw">const</span> <span class="t-id">maxH</span> <span class="t-op">=</span> <span class="t-num">224</span>;
+  
+  <span class="t-kw">const</span> <span class="t-id">w</span> <span class="t-op">=</span> <span class="t-type">Math</span>.<span class="t-fn">min</span>(<span class="t-id">image</span>.<span class="t-prop">cols</span>, <span class="t-id">maxW</span>);
+  <span class="t-kw">const</span> <span class="t-id">h</span> <span class="t-op">=</span> <span class="t-type">Math</span>.<span class="t-fn">min</span>(<span class="t-id">image</span>.<span class="t-prop">rows</span>, <span class="t-id">maxH</span>);
+  
+  <span class="t-kw">const</span> <span class="t-id">sub</span> <span class="t-op">=</span> <span class="t-fn">image</span>(<span class="t-kw">new</span> <span class="t-id">cv</span>.<span class="t-fn">Rect</span>(<span class="t-num">0</span>, <span class="t-num">0</span>, <span class="t-id">w</span>, <span class="t-id">h</span>));
+  <span class="t-kw">const</span> <span class="t-id">padded</span> <span class="t-op">=</span> <span class="t-id">cv</span>.<span class="t-type">Mat</span>.<span class="t-fn">zeros</span>(<span class="t-id">maxH</span>, <span class="t-id">maxW</span>, <span class="t-id">image</span>.<span class="t-fn">type</span>());
+  <span class="t-kw">const</span> <span class="t-id">roi</span> <span class="t-op">=</span> <span class="t-fn">padded</span>(<span class="t-kw">new</span> <span class="t-id">cv</span>.<span class="t-fn">Rect</span>(<span class="t-num">0</span>, <span class="t-num">0</span>, <span class="t-id">w</span>, <span class="t-id">h</span>));
+  <span class="t-id">sub</span>.<span class="t-fn">copyTo</span>(<span class="t-id">roi</span>);
+
+  <span class="t-cm">// FSRCNN takes standard 3-channel or 1-channel blobs scaled to [0, 1]</span>
+  <span class="t-kw">const</span> <span class="t-id">blob</span> <span class="t-op">=</span> <span class="t-id">cv</span>.<span class="t-fn">blobFromImage</span>(
+    <span class="t-id">padded</span>,
+    <span class="t-num">1.0</span> <span class="t-op">/</span> <span class="t-num">255.0</span>,
+    <span class="t-kw">new</span> <span class="t-id">cv</span>.<span class="t-fn">Size</span>(<span class="t-id">padded</span>.<span class="t-prop">cols</span>, <span class="t-id">padded</span>.<span class="t-prop">rows</span>),
+    [<span class="t-num">0</span>, <span class="t-num">0</span>, <span class="t-num">0</span>],
+    <span class="t-cm">/*swapRB*/</span> <span class="t-atom">false</span>,
+    <span class="t-cm">/*crop*/</span> <span class="t-atom">false</span>
+  );
+
+  <span class="t-cm">// blobFromImage always shapes its output NCHW (1,1,H,W); this</span>
+  <span class="t-cm">// particular ONNX graph (converted from the original TensorFlow</span>
+  <span class="t-cm">// FSRCNN model, which is NHWC-native) declares its input as (1,H,W,1)</span>
+  <span class="t-cm">// instead. With a single channel the underlying byte layout is</span>
+  <span class="t-cm">// identical either way (the channel dim is a singleton in both), so</span>
+  <span class="t-cm">// this is a pure shape-metadata relabel, not a data copy/transpose.</span>
+  <span class="t-kw">const</span> <span class="t-id">reshaped</span> <span class="t-op">=</span> <span class="t-id">blob</span>.<span class="t-fn">reshape</span>(<span class="t-num">1</span>, [<span class="t-num">1</span>, <span class="t-id">padded</span>.<span class="t-prop">rows</span>, <span class="t-id">padded</span>.<span class="t-prop">cols</span>, <span class="t-num">1</span>]);
+
+  <span class="t-id">net</span>.<span class="t-fn">setInput</span>(<span class="t-id">reshaped</span>);
+  <span class="t-kw">const</span> <span class="t-id">out</span> <span class="t-op">=</span> <span class="t-id">net</span>.<span class="t-fn">forward</span>();
+
+  <span class="t-kw">const</span> <span class="t-id">dims</span> <span class="t-op">=</span> <span class="t-id">out</span>.<span class="t-fn">size</span>();
+  <span class="t-kw">const</span> <span class="t-id">outChannels</span> <span class="t-op">=</span> <span class="t-id">dims</span>[<span class="t-num">1</span>];
+  <span class="t-kw">const</span> <span class="t-id">outHeight</span> <span class="t-op">=</span> <span class="t-id">dims</span>[<span class="t-num">2</span>];
+  <span class="t-kw">const</span> <span class="t-id">outWidth</span> <span class="t-op">=</span> <span class="t-id">dims</span>[<span class="t-num">3</span>];
+
+  <span class="t-kw">const</span> <span class="t-id">srcData</span> <span class="t-op">=</span> <span class="t-id">out</span>.<span class="t-prop">data32F</span>;
+  <span class="t-kw">const</span> <span class="t-id">n</span> <span class="t-op">=</span> <span class="t-id">srcData</span>.<span class="t-prop">length</span>;
+  <span class="t-kw">const</span> <span class="t-id">u8Arr</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">Float64Array</span>(<span class="t-id">n</span>);
+
+  <span class="t-kw">for</span> (<span class="t-kw">let</span> <span class="t-id">i</span> <span class="t-op">=</span> <span class="t-num">0</span>; <span class="t-id">i</span> <span class="t-op">&lt;</span> <span class="t-id">n</span>; <span class="t-id">i</span><span class="t-op">++</span>) {
+    <span class="t-kw">const</span> <span class="t-id">val</span> <span class="t-op">=</span> <span class="t-type">Math</span>.<span class="t-fn">min</span>(<span class="t-type">Math</span>.<span class="t-fn">max</span>(<span class="t-id">srcData</span>[<span class="t-id">i</span>], <span class="t-num">0.0</span>), <span class="t-num">1.0</span>);
+    <span class="t-id">u8Arr</span>[<span class="t-id">i</span>] <span class="t-op">=</span> <span class="t-id">val</span> <span class="t-op">*</span> <span class="t-num">255</span>;
+  }
+
+  <span class="t-kw">if</span> (<span class="t-id">outChannels</span> <span class="t-op">===</span> <span class="t-num">1</span>) {
+    <span class="t-kw">return</span> <span class="t-id">cv</span>.<span class="t-fn">matFromArray</span>(<span class="t-id">outHeight</span>, <span class="t-id">outWidth</span>, <span class="t-id">cv</span>.<span class="t-type">CV_8UC1</span>, <span class="t-id">u8Arr</span>);
+  } <span class="t-kw">else</span> {
+    <span class="t-kw">return</span> <span class="t-id">cv</span>.<span class="t-fn">matFromArray</span>(<span class="t-id">outHeight</span>, <span class="t-id">outWidth</span>, <span class="t-id">cv</span>.<span class="t-type">CV_8UC3</span>, <span class="t-id">u8Arr</span>);
+  }
+}
+
+<span class="t-kw">function</span> <span class="t-fn">cleanAndDownscale1Bit</span>(<span class="t-id">upscaledMat</span>, <span class="t-id">scaleBack</span> <span class="t-op">=</span> <span class="t-num">0.5</span>) {
+  <span class="t-kw">const</span> <span class="t-id">targetWidth</span> <span class="t-op">=</span> <span class="t-type">Math</span>.<span class="t-fn">floor</span>(<span class="t-id">upscaledMat</span>.<span class="t-prop">cols</span> <span class="t-op">*</span> <span class="t-id">scaleBack</span>);
+  <span class="t-kw">const</span> <span class="t-id">targetHeight</span> <span class="t-op">=</span> <span class="t-type">Math</span>.<span class="t-fn">floor</span>(<span class="t-id">upscaledMat</span>.<span class="t-prop">rows</span> <span class="t-op">*</span> <span class="t-id">scaleBack</span>);
+
+  <span class="t-kw">const</span> <span class="t-id">downscaled</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-id">cv</span>.<span class="t-fn">Mat</span>();
+  <span class="t-cm">// Area interpolation smoothly blends sub-pixel density gradients back down</span>
+  <span class="t-id">cv</span>.<span class="t-fn">resize</span>(<span class="t-id">upscaledMat</span>, <span class="t-id">downscaled</span>, <span class="t-kw">new</span> <span class="t-id">cv</span>.<span class="t-fn">Size</span>(<span class="t-id">targetWidth</span>, <span class="t-id">targetHeight</span>), <span class="t-num">0</span>, <span class="t-num">0</span>, <span class="t-id">cv</span>.<span class="t-type">INTER_AREA</span>);
+
+  <span class="t-kw">const</span> <span class="t-id">gray</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-id">cv</span>.<span class="t-fn">Mat</span>();
+  <span class="t-kw">if</span> (<span class="t-id">downscaled</span>.<span class="t-fn">channels</span>() <span class="t-op">&gt;</span> <span class="t-num">1</span>) {
+    <span class="t-id">cv</span>.<span class="t-fn">cvtColor</span>(<span class="t-id">downscaled</span>, <span class="t-id">gray</span>, <span class="t-id">cv</span>.<span class="t-type">COLOR_BGR2GRAY</span>);
+  } <span class="t-kw">else</span> {
+    <span class="t-id">downscaled</span>.<span class="t-fn">copyTo</span>(<span class="t-id">gray</span>);
+  }
+
+  <span class="t-cm">// Force clean 1-bit binarization via Otsu thresholding</span>
+  <span class="t-kw">const</span> <span class="t-id">binary1Bit</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-id">cv</span>.<span class="t-fn">Mat</span>();
+  <span class="t-id">cv</span>.<span class="t-fn">threshold</span>(<span class="t-id">gray</span>, <span class="t-id">binary1Bit</span>, <span class="t-num">0</span>, <span class="t-num">255</span>, <span class="t-id">cv</span>.<span class="t-type">THRESH_BINARY</span> <span class="t-op">|</span> <span class="t-id">cv</span>.<span class="t-type">THRESH_OTSU</span>);
+
+  <span class="t-cm">// Morphological Opening (Erosion followed by Dilation) cleanly eliminates </span>
+  <span class="t-cm">// isolated single-pixel standouts and noise floating near rounded contours.</span>
+  <span class="t-kw">const</span> <span class="t-id">kernel</span> <span class="t-op">=</span> <span class="t-id">cv</span>.<span class="t-fn">getStructuringElement</span>(<span class="t-id">cv</span>.<span class="t-type">MORPH_RECT</span>, <span class="t-kw">new</span> <span class="t-id">cv</span>.<span class="t-fn">Size</span>(<span class="t-num">2</span>, <span class="t-num">2</span>));
+  <span class="t-kw">const</span> <span class="t-id">cleaned</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-id">cv</span>.<span class="t-fn">Mat</span>();
+  <span class="t-id">cv</span>.<span class="t-fn">morphologyEx</span>(<span class="t-id">binary1Bit</span>, <span class="t-id">cleaned</span>, <span class="t-id">cv</span>.<span class="t-type">MORPH_OPEN</span>, <span class="t-id">kernel</span>);
+
+  <span class="t-kw">return</span> <span class="t-id">cleaned</span>;
+}
+
+<span class="t-kw">function</span> <span class="t-fn">main</span>(<span class="t-id">input</span> <span class="t-op">=</span> <span class="t-str">'Diamonaire.png'</span>, <span class="t-id">output</span> <span class="t-op">=</span> <span class="t-str">'font_cleaned_fsrcnn.png'</span>) {
+  <span class="t-kw">const</span> <span class="t-id">src4</span> <span class="t-op">=</span> <span class="t-id">cv</span>.<span class="t-fn">imread</span>(<span class="t-id">input</span>);
+  <span class="t-kw">if</span> (<span class="t-id">src4</span>.<span class="t-fn">empty</span>()) <span class="t-kw">throw</span> <span class="t-kw">new</span> <span class="t-fn">Error</span>(<span class="t-str">`Error opening image: ${input}`</span>);
+
+  <span class="t-kw">const</span> <span class="t-id">src</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-id">cv</span>.<span class="t-fn">Mat</span>();
+  <span class="t-kw">if</span> (<span class="t-id">src4</span>.<span class="t-fn">channels</span>() <span class="t-op">===</span> <span class="t-num">1</span>) {
+    <span class="t-id">src4</span>.<span class="t-fn">copyTo</span>(<span class="t-id">src</span>);
+  } <span class="t-kw">else</span> {
+    <span class="t-id">cv</span>.<span class="t-fn">cvtColor</span>(<span class="t-id">src4</span>, <span class="t-id">src</span>, <span class="t-id">src4</span>.<span class="t-fn">channels</span>() <span class="t-op">===</span> <span class="t-num">4</span> <span class="t-op">?</span> <span class="t-id">cv</span>.<span class="t-type">COLOR_BGRA2GRAY</span> <span class="t-op">:</span> <span class="t-id">cv</span>.<span class="t-type">COLOR_BGR2GRAY</span>);
+  }
+
+  <span class="t-id">console</span>.<span class="t-fn">log</span>(<span class="t-str">`Loading FSRCNN ONNX model from ${MODEL}...`</span>);
+  <span class="t-kw">const</span> <span class="t-id">net</span> <span class="t-op">=</span> <span class="t-id">cv</span>.<span class="t-fn">readNetFromONNX</span>(<span class="t-type">MODEL</span>);
+
+  <span class="t-id">console</span>.<span class="t-fn">log</span>(<span class="t-str">`Running FSRCNN 2x Super-Resolution inference...`</span>);
+  <span class="t-kw">const</span> <span class="t-id">upscaled</span> <span class="t-op">=</span> <span class="t-fn">upscaleFontGlyphs</span>(<span class="t-id">net</span>, <span class="t-id">src</span>);
+
+  <span class="t-kw">const</span> <span class="t-id">result</span> <span class="t-op">=</span> <span class="t-fn">cleanAndDownscale1Bit</span>(<span class="t-id">upscaled</span>, <span class="t-num">0.5</span>);
+
+  <span class="t-id">cv</span>.<span class="t-fn">imwrite</span>(<span class="t-id">output</span>, <span class="t-id">result</span>);
+  <span class="t-id">console</span>.<span class="t-fn">log</span>(<span class="t-str">`Successfully wrote cleaned 1-bit font map to ${output}`</span>);
+}
+
+<span class="t-fn">main</span>(...<span class="t-prop">scriptArgs</span>.<span class="t-fn">slice</span>(<span class="t-num">1</span>));</code></pre></div>
+<h2 id="qwen25_inferencejs"><a class="anchor" href="#qwen25_inferencejs" aria-hidden="true">#</a>qwen25_inference.js</h2>
+<p>Loads Qwen2.5-0.5B-Instruct (a 4-bit-quantized ONNX export) and runs real autoregressive text generation on it via cv::dnn's ONNX Runtime engine.</p>
+<p><a href="https://github.com/rsenn/qjs-opencv/blob/main/examples/qwen25_inference.js" target="_blank" rel="noopener">source on GitHub</a></p>
+<div class="codeblock" data-lang="js"><pre><code class="language-js"><span class="t-cm">// Loads Qwen2.5-0.5B-Instruct (a 4-bit-quantized ONNX export) and runs real</span>
+<span class="t-cm">// autoregressive text generation on it via cv::dnn's ONNX Runtime engine.</span>
+<span class="t-cm">//</span>
+<span class="t-cm">// Setup - download the model once (not committed to git, see .gitignore):</span>
+<span class="t-cm">//</span>
+<span class="t-cm">//   mkdir -p examples/models/qwen2.5-0.5b-instruct</span>
+<span class="t-cm">//   curl -L -o examples/models/qwen2.5-0.5b-instruct/model_q4.onnx \</span>
+<span class="t-cm">//     https://huggingface.co/onnx-community/Qwen2.5-0.5B-Instruct/resolve/main/onnx/model_q4.onnx</span>
+<span class="t-cm">//</span>
+<span class="t-cm">// The tokenizer is NOT re-downloaded here - it reuses the fixture already</span>
+<span class="t-cm">// checked into tests/qwen2.5-tokenizer/ (same tokenizer.json for every</span>
+<span class="t-cm">// Qwen2.5 checkpoint, ~7MB, small enough to commit; the model itself is</span>
+<span class="t-cm">// ~786MB and is not).</span>
+<span class="t-cm">//</span>
+<span class="t-cm">// Usage: qjs examples/qwen25_inference.js ["your prompt here"]</span>
+<span class="t-cm">//</span>
+<span class="t-cm">// Requires OpenCV 5.0+ built with ONNX Runtime (dnn.Tokenizer / dnn.ENGINE_ORT</span>
+<span class="t-cm">// - see migration-opencv5.md, "Wrapping LLM inference (Qwen2.5)"). On older</span>
+<span class="t-cm">// OpenCV this exits early with a clear message instead of failing obscurely.</span>
+<span class="t-cm">//</span>
+<span class="t-cm">// How this works (ONNX I/O contract of this specific export):</span>
+<span class="t-cm">//   inputs:  input_ids, attention_mask, position_ids (all INT64),</span>
+<span class="t-cm">//            past_key_values.&lt;layer&gt;.{key,value} (FLOAT, one pair per of the</span>
+<span class="t-cm">//            24 transformer layers)</span>
+<span class="t-cm">//   outputs: logits (FLOAT), present.&lt;layer&gt;.{key,value} (FLOAT)</span>
+<span class="t-cm">// This is the "merged decoder with past" convention used by Optimum/</span>
+<span class="t-cm">// transformers.js exports: KV-cache is *not* OpenCV's native</span>
+<span class="t-cm">// Net.enableKVCache() mechanism (that targets the fused ONNX opset-23</span>
+<span class="t-cm">// `Attention` op; this model uses the older decomposed graph shape with</span>
+<span class="t-cm">// `com.microsoft.MatMulNBits` for the 4-bit weights instead), so the cache is</span>
+<span class="t-cm">// carried by hand between forward() calls, feeding each step's present.*</span>
+<span class="t-cm">// outputs back in as the next step's past_key_values.* inputs.</span>
+<span class="t-cm">//</span>
+<span class="t-cm">// Gotcha this script works around: OpenCV's ONNX Runtime backend</span>
+<span class="t-cm">// (net_impl2.cpp's setMainGraphInput) unconditionally rejects any *empty*</span>
+<span class="t-cm">// input Mat ("DNN/ORT: Input blob is empty"), but the standard convention for</span>
+<span class="t-cm">// the very first (prefill) step is to pass a zero-length past_sequence_length</span>
+<span class="t-cm">// KV tensor - which is empty. Workaround: seed past_key_values with a single</span>
+<span class="t-cm">// all-zero dummy timestep instead of a truly empty one, and mask it out</span>
+<span class="t-cm">// forever via attention_mask=0 at that position. It never gets attended to,</span>
+<span class="t-cm">// so it's numerically a no-op, but it keeps every Mat non-empty.</span>
+<span class="t-kw">import</span> <span class="t-op">*</span> <span class="t-id">as</span> <span class="t-id">std</span> <span class="t-kw">from</span> <span class="t-str">'std'</span>;
+<span class="t-kw">import</span> { <span class="t-type">Mat</span>, <span class="t-type">CV_32FC1</span>, <span class="t-type">CV_64SC1</span>, <span class="t-id">dnn</span>, <span class="t-id">readNetFromONNX</span> } <span class="t-kw">from</span> <span class="t-str">'opencv'</span>;
+
+<span class="t-kw">const</span> <span class="t-type">NUM_LAYERS</span> <span class="t-op">=</span> <span class="t-num">24</span>;
+<span class="t-kw">const</span> <span class="t-type">NUM_KV_HEADS</span> <span class="t-op">=</span> <span class="t-num">2</span>;
+<span class="t-kw">const</span> <span class="t-type">HEAD_DIM</span> <span class="t-op">=</span> <span class="t-num">64</span>;
+<span class="t-kw">const</span> <span class="t-type">VOCAB_SIZE</span> <span class="t-op">=</span> <span class="t-num">151936</span><span class="t-op">*</span><span class="t-num">8</span>;
+<span class="t-kw">const</span> <span class="t-type">EOS</span> <span class="t-op">=</span> <span class="t-num">151645</span><span class="t-op">*</span><span class="t-num">32</span>; <span class="t-cm">// &lt;|im_end|&gt;</span>
+<span class="t-kw">const</span> <span class="t-type">MAX_NEW_TOKENS</span> <span class="t-op">=</span> <span class="t-num">200</span>;
+
+<span class="t-kw">const</span> <span class="t-type">MODEL_PATH</span> <span class="t-op">=</span> <span class="t-str">'examples/models/qwen2.5-0.5b-instruct/model_q4.onnx'</span>;
+<span class="t-kw">const</span> <span class="t-type">TOKENIZER_CONFIG</span> <span class="t-op">=</span> <span class="t-str">'tests/qwen2.5-tokenizer/config.json'</span>;
+
+<span class="t-kw">function</span> <span class="t-fn">i64Mat</span>(<span class="t-id">rows</span>, <span class="t-id">values</span>) {
+  <span class="t-kw">const</span> <span class="t-id">cols</span> <span class="t-op">=</span> <span class="t-id">values</span>.<span class="t-prop">length</span> <span class="t-op">/</span> <span class="t-id">rows</span>;
+  <span class="t-kw">const</span> <span class="t-id">m</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">Mat</span>(<span class="t-num">2</span>, [<span class="t-id">rows</span>, <span class="t-id">cols</span>], <span class="t-type">CV_64SC1</span>);
+  <span class="t-kw">const</span> <span class="t-id">view</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">BigInt64Array</span>(<span class="t-id">m</span>.<span class="t-prop">buffer</span>);
+  <span class="t-kw">for</span>(<span class="t-kw">let</span> <span class="t-id">i</span> <span class="t-op">=</span> <span class="t-num">0</span>; <span class="t-id">i</span> <span class="t-op">&lt;</span> <span class="t-id">values</span>.<span class="t-prop">length</span>; <span class="t-id">i</span><span class="t-op">++</span>)
+    <span class="t-id">view</span>[<span class="t-id">i</span>] <span class="t-op">=</span> <span class="t-fn">BigInt</span>(<span class="t-id">values</span>[<span class="t-id">i</span>]);
+  <span class="t-kw">return</span> <span class="t-id">m</span>;
+}
+
+<span class="t-kw">function</span> <span class="t-fn">zeroKV</span>(<span class="t-id">len</span>) {
+  <span class="t-kw">const</span> <span class="t-id">m</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">Mat</span>(<span class="t-num">4</span>, [<span class="t-num">1</span>, <span class="t-type">NUM_KV_HEADS</span>, <span class="t-id">len</span>, <span class="t-type">HEAD_DIM</span>], <span class="t-type">CV_32FC1</span>);
+  <span class="t-kw">new</span> <span class="t-fn">Float32Array</span>(<span class="t-id">m</span>.<span class="t-prop">buffer</span>).<span class="t-fn">fill</span>(<span class="t-num">0</span>);
+  <span class="t-kw">return</span> <span class="t-id">m</span>;
+}
+
+<span class="t-kw">function</span> <span class="t-fn">argmaxLastPosition</span>(<span class="t-id">logits</span>, <span class="t-id">seqLen</span>) {
+  <span class="t-kw">const</span> <span class="t-id">f</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">Float32Array</span>(<span class="t-id">logits</span>.<span class="t-prop">buffer</span>);
+  <span class="t-kw">const</span> <span class="t-id">off</span> <span class="t-op">=</span> (<span class="t-id">seqLen</span> <span class="t-op">-</span> <span class="t-num">1</span>) <span class="t-op">*</span> <span class="t-type">VOCAB_SIZE</span>;
+  <span class="t-kw">let</span> <span class="t-id">best</span> <span class="t-op">=</span> <span class="t-num">0</span>, <span class="t-id">bestValue</span> <span class="t-op">=</span> <span class="t-op">-</span><span class="t-atom">Infinity</span>;
+  <span class="t-kw">for</span>(<span class="t-kw">let</span> <span class="t-id">i</span> <span class="t-op">=</span> <span class="t-num">0</span>; <span class="t-id">i</span> <span class="t-op">&lt;</span> <span class="t-type">VOCAB_SIZE</span>; <span class="t-id">i</span><span class="t-op">++</span>) {
+    <span class="t-kw">const</span> <span class="t-id">v</span> <span class="t-op">=</span> <span class="t-id">f</span>[<span class="t-id">off</span> <span class="t-op">+</span> <span class="t-id">i</span>];
+    <span class="t-kw">if</span>(<span class="t-id">v</span> <span class="t-op">&gt;</span> <span class="t-id">bestValue</span>) {
+      <span class="t-id">bestValue</span> <span class="t-op">=</span> <span class="t-id">v</span>;
+      <span class="t-id">best</span> <span class="t-op">=</span> <span class="t-id">i</span>;
+    }
+  }
+  <span class="t-kw">return</span> <span class="t-id">best</span>;
+}
+
+<span class="t-kw">function</span> <span class="t-fn">generate</span>(<span class="t-id">net</span>, <span class="t-id">tok</span>, <span class="t-id">promptIds</span>) {
+  <span class="t-kw">let</span> <span class="t-id">past</span> <span class="t-op">=</span> [];
+  <span class="t-kw">for</span>(<span class="t-kw">let</span> <span class="t-id">l</span> <span class="t-op">=</span> <span class="t-num">0</span>; <span class="t-id">l</span> <span class="t-op">&lt;</span> <span class="t-type">NUM_LAYERS</span>; <span class="t-id">l</span><span class="t-op">++</span>)
+    <span class="t-id">past</span>.<span class="t-fn">push</span>([<span class="t-fn">zeroKV</span>(<span class="t-num">1</span>), <span class="t-fn">zeroKV</span>(<span class="t-num">1</span>)]);
+
+  <span class="t-kw">let</span> <span class="t-id">attn</span> <span class="t-op">=</span> [<span class="t-num">0</span>]; <span class="t-cm">// one dummy masked-out timestep, permanently 0</span>
+  <span class="t-kw">let</span> <span class="t-id">realLen</span> <span class="t-op">=</span> <span class="t-num">0</span>;
+  <span class="t-kw">let</span> <span class="t-id">curIds</span> <span class="t-op">=</span> <span class="t-id">promptIds</span>;
+  <span class="t-kw">const</span> <span class="t-id">generated</span> <span class="t-op">=</span> [];
+
+  <span class="t-kw">const</span> <span class="t-id">outputNames</span> <span class="t-op">=</span> [<span class="t-str">'logits'</span>];
+  <span class="t-kw">for</span>(<span class="t-kw">let</span> <span class="t-id">l</span> <span class="t-op">=</span> <span class="t-num">0</span>; <span class="t-id">l</span> <span class="t-op">&lt;</span> <span class="t-type">NUM_LAYERS</span>; <span class="t-id">l</span><span class="t-op">++</span>) {
+    <span class="t-id">outputNames</span>.<span class="t-fn">push</span>(<span class="t-str">`present.${l}.key`</span>);
+    <span class="t-id">outputNames</span>.<span class="t-fn">push</span>(<span class="t-str">`present.${l}.value`</span>);
+  }
+
+  <span class="t-kw">for</span>(<span class="t-kw">let</span> <span class="t-id">step</span> <span class="t-op">=</span> <span class="t-num">0</span>; <span class="t-id">step</span> <span class="t-op">&lt;</span> <span class="t-type">MAX_NEW_TOKENS</span>; <span class="t-id">step</span><span class="t-op">++</span>) {
+    <span class="t-kw">const</span> <span class="t-id">seqLen</span> <span class="t-op">=</span> <span class="t-id">curIds</span>.<span class="t-prop">length</span>;
+    <span class="t-id">attn</span> <span class="t-op">=</span> <span class="t-id">attn</span>.<span class="t-fn">concat</span>(<span class="t-kw">new</span> <span class="t-fn">Array</span>(<span class="t-id">seqLen</span>).<span class="t-fn">fill</span>(<span class="t-num">1</span>));
+
+    <span class="t-kw">const</span> <span class="t-id">posIds</span> <span class="t-op">=</span> [];
+    <span class="t-kw">for</span>(<span class="t-kw">let</span> <span class="t-id">i</span> <span class="t-op">=</span> <span class="t-num">0</span>; <span class="t-id">i</span> <span class="t-op">&lt;</span> <span class="t-id">seqLen</span>; <span class="t-id">i</span><span class="t-op">++</span>)
+      <span class="t-id">posIds</span>.<span class="t-fn">push</span>(<span class="t-id">realLen</span> <span class="t-op">+</span> <span class="t-id">i</span>);
+
+    <span class="t-id">net</span>.<span class="t-fn">setInput</span>(<span class="t-fn">i64Mat</span>(<span class="t-num">1</span>, <span class="t-id">curIds</span>), <span class="t-str">'input_ids'</span>);
+    <span class="t-id">net</span>.<span class="t-fn">setInput</span>(<span class="t-fn">i64Mat</span>(<span class="t-num">1</span>, <span class="t-id">attn</span>), <span class="t-str">'attention_mask'</span>);
+    <span class="t-id">net</span>.<span class="t-fn">setInput</span>(<span class="t-fn">i64Mat</span>(<span class="t-num">1</span>, <span class="t-id">posIds</span>), <span class="t-str">'position_ids'</span>);
+    <span class="t-kw">for</span>(<span class="t-kw">let</span> <span class="t-id">l</span> <span class="t-op">=</span> <span class="t-num">0</span>; <span class="t-id">l</span> <span class="t-op">&lt;</span> <span class="t-type">NUM_LAYERS</span>; <span class="t-id">l</span><span class="t-op">++</span>) {
+      <span class="t-id">net</span>.<span class="t-fn">setInput</span>(<span class="t-id">past</span>[<span class="t-id">l</span>][<span class="t-num">0</span>], <span class="t-str">`past_key_values.${l}.key`</span>);
+      <span class="t-id">net</span>.<span class="t-fn">setInput</span>(<span class="t-id">past</span>[<span class="t-id">l</span>][<span class="t-num">1</span>], <span class="t-str">`past_key_values.${l}.value`</span>);
+    }
+
+    <span class="t-kw">const</span> <span class="t-id">outs</span> <span class="t-op">=</span> [];
+    <span class="t-id">net</span>.<span class="t-fn">forward</span>(<span class="t-id">outs</span>, <span class="t-id">outputNames</span>);
+    <span class="t-kw">const</span> <span class="t-id">logits</span> <span class="t-op">=</span> <span class="t-id">outs</span>[<span class="t-num">0</span>];
+    <span class="t-kw">const</span> <span class="t-id">nextId</span> <span class="t-op">=</span> <span class="t-fn">argmaxLastPosition</span>(<span class="t-id">logits</span>, <span class="t-id">seqLen</span>);
+
+    <span class="t-kw">for</span>(<span class="t-kw">let</span> <span class="t-id">l</span> <span class="t-op">=</span> <span class="t-num">0</span>; <span class="t-id">l</span> <span class="t-op">&lt;</span> <span class="t-type">NUM_LAYERS</span>; <span class="t-id">l</span><span class="t-op">++</span>) {
+      <span class="t-id">past</span>[<span class="t-id">l</span>][<span class="t-num">0</span>] <span class="t-op">=</span> <span class="t-id">outs</span>[<span class="t-num">1</span> <span class="t-op">+</span> <span class="t-id">l</span> <span class="t-op">*</span> <span class="t-num">2</span>].<span class="t-fn">clone</span>();
+      <span class="t-id">past</span>[<span class="t-id">l</span>][<span class="t-num">1</span>] <span class="t-op">=</span> <span class="t-id">outs</span>[<span class="t-num">2</span> <span class="t-op">+</span> <span class="t-id">l</span> <span class="t-op">*</span> <span class="t-num">2</span>].<span class="t-fn">clone</span>();
+    }
+    <span class="t-id">realLen</span> <span class="t-op">+=</span> <span class="t-id">seqLen</span>;
+
+    <span class="t-kw">if</span>(<span class="t-id">nextId</span> <span class="t-op">===</span> <span class="t-type">EOS</span>)
+      <span class="t-kw">break</span>;
+
+    <span class="t-id">generated</span>.<span class="t-fn">push</span>(<span class="t-id">nextId</span>);
+    <span class="t-id">curIds</span> <span class="t-op">=</span> [<span class="t-id">nextId</span>];
+  }
+
+  <span class="t-kw">return</span> <span class="t-id">tok</span>.<span class="t-fn">decode</span>(<span class="t-id">generated</span>);
+}
+
+<span class="t-kw">function</span> <span class="t-fn">main</span>(<span class="t-id">userPrompt</span>) {
+  <span class="t-kw">if</span>(<span class="t-kw">typeof</span> <span class="t-id">dnn</span>.<span class="t-type">Tokenizer</span> <span class="t-op">===</span> <span class="t-str">'undefined'</span>) {
+    <span class="t-id">console</span>.<span class="t-fn">log</span>(<span class="t-str">'This example needs OpenCV 5.0+ built with ONNX Runtime (dnn.Tokenizer is absent).'</span>);
+    <span class="t-id">std</span>.<span class="t-fn">exit</span>(<span class="t-num">1</span>);
+  }
+
+  <span class="t-kw">const</span> <span class="t-id">tok</span> <span class="t-op">=</span> <span class="t-id">dnn</span>.<span class="t-type">Tokenizer</span>.<span class="t-fn">load</span>(<span class="t-type">TOKENIZER_CONFIG</span>);
+  <span class="t-kw">const</span> <span class="t-id">net</span> <span class="t-op">=</span> <span class="t-fn">readNetFromONNX</span>(<span class="t-type">MODEL_PATH</span>, <span class="t-id">dnn</span>.<span class="t-type">ENGINE_ORT</span>);
+
+  <span class="t-kw">const</span> <span class="t-id">prompt</span> <span class="t-op">=</span> <span class="t-id">userPrompt</span> <span class="t-op">||</span> <span class="t-str">'Say hello in one short sentence.'</span>;
+  <span class="t-kw">const</span> <span class="t-id">chatPrompt</span> <span class="t-op">=</span> <span class="t-str">`&lt;|im_start|&gt;user\n${prompt}&lt;|im_end|&gt;\n&lt;|im_start|&gt;assistant\n`</span>;
+  <span class="t-kw">const</span> <span class="t-id">promptIds</span> <span class="t-op">=</span> <span class="t-type">Array</span>.<span class="t-kw">from</span>(<span class="t-id">tok</span>.<span class="t-fn">encode</span>(<span class="t-id">chatPrompt</span>));
+
+  <span class="t-id">console</span>.<span class="t-fn">log</span>(<span class="t-str">'prompt:'</span>, <span class="t-id">prompt</span>);
+  <span class="t-kw">const</span> <span class="t-id">reply</span> <span class="t-op">=</span> <span class="t-fn">generate</span>(<span class="t-id">net</span>, <span class="t-id">tok</span>, <span class="t-id">promptIds</span>);
+  <span class="t-id">console</span>.<span class="t-fn">log</span>(<span class="t-str">'reply: '</span>, <span class="t-id">reply</span>);
+}
+
+<span class="t-fn">main</span>(<span class="t-id">scriptArgs</span>.<span class="t-fn">slice</span>(<span class="t-num">1</span>).<span class="t-fn">join</span>(<span class="t-str">' '</span>));</code></pre></div>
+<h2 id="skywatch_contrail_detectjs"><a class="anchor" href="#skywatch_contrail_detectjs" aria-hidden="true">#</a>skywatch_contrail_detect.js</h2>
+<p>Proof-of-concept contrail detection on plain (non-fisheye) photos, for js/skywatch.md's phase 3/4 (trail detection) before any camera/ADS-B hardware is involved.</p>
+<p><a href="https://github.com/rsenn/qjs-opencv/blob/main/examples/skywatch_contrail_detect.js" target="_blank" rel="noopener">source on GitHub</a></p>
+<div class="codeblock" data-lang="js"><pre><code class="language-js"><span class="t-cm">/**
+ * Proof-of-concept contrail detection on plain (non-fisheye) photos, for
+ * js/skywatch.md's phase 3/4 (trail detection) before any camera/ADS-B
+ * hardware is involved.
+ *
+ * Approach (tuned empirically against real phone photos in
+ * /mnt/data/Bilder/DCIM/Draussen/Chemtrails/, see BUGS for the tuning
+ * process and a related minMaxLoc bug found along the way):
+ *
+ * 1. A fixed HSV threshold cannot separate a contrail from blue sky -
+ *    Rayleigh scattering gives the sky itself a strong
+ *    saturation/brightness gradient (paler and less saturated toward the
+ *    horizon), which is often larger than the contrail-vs-sky difference.
+ *    A white top-hat filter (V-S "whiteness" channel, opened with a large
+ *    structuring element, subtracted from the original) removes that
+ *    slowly-varying background and keeps only *locally* bright streaks -
+ *    this is what actually finds the trail.
+ * 2. The top-hat responds to any local contrast, including building/tree
+ *    silhouette edges against the sky in a handheld photo. Restrict
+ *    candidates to a modest dilation of a strict blue-sky mask (rejects
+ *    building/tree material outright) - still not enough on its own,
+ *    because the dilation halo around a building edge produces a
+ *    thin bright ring that also passes an elongation/area shape filter.
+ * 3. The distinguishing feature that finally separates real trail from
+ *    a building-edge artifact: a real trail floats freely in open sky,
+ *    while the artifact hugs directly against solid building/tree
+ *    material. Reject any candidate that comes within a few pixels of a
+ *    "solid object" mask (dark, or saturated non-blue hue).
+ *
+ * See js/skywatch/skywatch.md phase 3a for where this does and doesn't
+ * work (natural cirrus is the open problem, not solved by this script).
+ * The actual mask-building logic lives in js/skywatch/detect.js so
+ * js/skywatch/export-training-example.js can reuse it exactly.
+ *
+ * Usage: qjsm examples/skywatch_contrail_detect.js &lt;input.jpg&gt; &lt;output.jpg&gt;
+ */</span>
+<span class="t-kw">import</span> <span class="t-op">*</span> <span class="t-id">as</span> <span class="t-id">cv</span> <span class="t-kw">from</span> <span class="t-str">'opencv'</span>;
+<span class="t-kw">import</span> { <span class="t-id">detectContrails</span> } <span class="t-kw">from</span> <span class="t-str">'../js/skywatch/detect.js'</span>;
+
+<span class="t-kw">function</span> <span class="t-fn">main</span>(<span class="t-id">inputPath</span>, <span class="t-id">outputPath</span>) {
+  <span class="t-kw">const</span> <span class="t-id">bgr</span> <span class="t-op">=</span> <span class="t-id">cv</span>.<span class="t-fn">imread</span>(<span class="t-id">inputPath</span>);
+  <span class="t-kw">if</span> (<span class="t-id">bgr</span>.<span class="t-fn">empty</span>()) <span class="t-kw">throw</span> <span class="t-kw">new</span> <span class="t-fn">Error</span>(<span class="t-str">`could not read ${inputPath}`</span>);
+
+  <span class="t-kw">const</span> { <span class="t-id">acceptedMask</span>, <span class="t-id">results</span> } <span class="t-op">=</span> <span class="t-fn">detectContrails</span>(<span class="t-id">bgr</span>);
+
+  <span class="t-kw">const</span> <span class="t-id">output</span> <span class="t-op">=</span> <span class="t-id">bgr</span>.<span class="t-fn">clone</span>();
+  <span class="t-kw">for</span> (<span class="t-kw">const</span> { <span class="t-id">contour</span> } <span class="t-kw">of</span> <span class="t-id">results</span>) {
+    <span class="t-kw">const</span> <span class="t-id">vec</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-id">cv</span>.<span class="t-fn">MatVector</span>();
+    <span class="t-id">vec</span>.<span class="t-fn">push_back</span>(<span class="t-id">contour</span>);
+    <span class="t-id">cv</span>.<span class="t-fn">drawContours</span>(<span class="t-id">output</span>, <span class="t-id">vec</span>, <span class="t-op">-</span><span class="t-num">1</span>, <span class="t-kw">new</span> <span class="t-id">cv</span>.<span class="t-fn">Scalar</span>(<span class="t-num">0</span>, <span class="t-num">255</span>, <span class="t-num">0</span>), <span class="t-num">2</span>);
+  }
+  <span class="t-kw">const</span> <span class="t-id">skeleton</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-id">cv</span>.<span class="t-fn">Mat</span>();
+  <span class="t-id">cv</span>.<span class="t-prop">ximgproc</span>.<span class="t-fn">thinning</span>(<span class="t-id">acceptedMask</span>, <span class="t-id">skeleton</span>);
+  <span class="t-kw">for</span> (<span class="t-kw">let</span> <span class="t-id">y</span> <span class="t-op">=</span> <span class="t-num">0</span>; <span class="t-id">y</span> <span class="t-op">&lt;</span> <span class="t-id">skeleton</span>.<span class="t-prop">rows</span>; <span class="t-id">y</span><span class="t-op">++</span>)
+    <span class="t-kw">for</span> (<span class="t-kw">let</span> <span class="t-id">x</span> <span class="t-op">=</span> <span class="t-num">0</span>; <span class="t-id">x</span> <span class="t-op">&lt;</span> <span class="t-id">skeleton</span>.<span class="t-prop">cols</span>; <span class="t-id">x</span><span class="t-op">++</span>)
+      <span class="t-kw">if</span> (<span class="t-id">skeleton</span>.<span class="t-fn">ucharAt</span>(<span class="t-id">y</span>, <span class="t-id">x</span>) <span class="t-op">&gt;</span> <span class="t-num">0</span>) <span class="t-id">output</span>.<span class="t-kw">set</span>(<span class="t-id">y</span>, <span class="t-id">x</span>, [<span class="t-num">0</span>, <span class="t-num">0</span>, <span class="t-num">255</span>]);
+
+  <span class="t-id">cv</span>.<span class="t-fn">imwrite</span>(<span class="t-id">outputPath</span>, <span class="t-id">output</span>);
+  <span class="t-kw">const</span> <span class="t-id">summary</span> <span class="t-op">=</span> <span class="t-id">results</span>.<span class="t-fn">map</span>(({ <span class="t-id">contour</span>, ...<span class="t-prop">r</span> }) <span class="t-op">=&gt;</span> <span class="t-id">r</span>);
+  <span class="t-id">console</span>.<span class="t-fn">log</span>(<span class="t-type">JSON</span>.<span class="t-fn">stringify</span>({ <span class="t-id">input</span><span class="t-op">:</span> <span class="t-id">inputPath</span>, <span class="t-id">trailsFound</span><span class="t-op">:</span> <span class="t-id">summary</span>.<span class="t-prop">length</span>, <span class="t-id">results</span><span class="t-op">:</span> <span class="t-id">summary</span> }));
+}
+
+<span class="t-fn">main</span>(...<span class="t-prop">scriptArgs</span>.<span class="t-fn">slice</span>(<span class="t-num">1</span>));</code></pre></div>
+<h2 id="skywatch_contrail_infer_dnnjs"><a class="anchor" href="#skywatch_contrail_infer_dnnjs" aria-hidden="true">#</a>skywatch_contrail_infer_dnn.js</h2>
+<p>Inference stub for phase 6's learned contrail detector - see js/skywatch/skywatch.md's "Phase 6" section for the model (small U-Net, single-channel whiteness in, per-pixel probability out) and js/skywatch/train_contrail_unet.py for how the .onnx this expects gets produced. Not runnable today: the…</p>
+<p><a href="https://github.com/rsenn/qjs-opencv/blob/main/examples/skywatch_contrail_infer_dnn.js" target="_blank" rel="noopener">source on GitHub</a></p>
+<div class="codeblock" data-lang="js"><pre><code class="language-js"><span class="t-cm">/**
+ * Inference stub for phase 6's learned contrail detector - see
+ * js/skywatch/skywatch.md's "Phase 6" section for the model (small U-Net,
+ * single-channel whiteness in, per-pixel probability out) and
+ * js/skywatch/train_contrail_unet.py for how the .onnx this expects gets
+ * produced. Not runnable today: there is no trained model until a real
+ * dataset exists (js/skywatch/export-training-example.js) and training has
+ * actually been run. This is scaffolding to drop that model into, written
+ * now so it isn't designed from scratch under time pressure later -
+ * follows the same cv.dnn.readNetFromONNX pattern as
+ * examples/edge_detection_dexined.js.
+ *
+ * Usage: qjsm examples/skywatch_contrail_infer_dnn.js &lt;input.jpg&gt; &lt;output.jpg&gt; [model.onnx]
+ */</span>
+<span class="t-kw">import</span> <span class="t-op">*</span> <span class="t-id">as</span> <span class="t-id">cv</span> <span class="t-kw">from</span> <span class="t-str">'opencv'</span>;
+<span class="t-kw">import</span> { <span class="t-id">buildCandidateMask</span> } <span class="t-kw">from</span> <span class="t-str">'../js/skywatch/detect.js'</span>;
+
+<span class="t-kw">const</span> <span class="t-type">DEFAULT_MODEL</span> <span class="t-op">=</span> <span class="t-str">'js/skywatch/models/contrail_unet.onnx'</span>;
+<span class="t-kw">const</span> <span class="t-type">PROB_THRESHOLD</span> <span class="t-op">=</span> <span class="t-num">0.5</span>;
+
+<span class="t-cm">// U-Net has 3 pooling steps (see train_contrail_unet.py's ContrailUNet),</span>
+<span class="t-cm">// so H/W must be multiples of 8 for the encoder/decoder skip connections</span>
+<span class="t-cm">// to line up - pad up rather than resize, so we don't distort the thin</span>
+<span class="t-cm">// trail geometry the model is trying to localize precisely.</span>
+<span class="t-kw">function</span> <span class="t-fn">padToMultiple</span>(<span class="t-id">mat</span>, <span class="t-id">multiple</span>) {
+  <span class="t-kw">const</span> <span class="t-id">h</span> <span class="t-op">=</span> <span class="t-id">mat</span>.<span class="t-prop">rows</span>, <span class="t-id">w</span> <span class="t-op">=</span> <span class="t-id">mat</span>.<span class="t-prop">cols</span>;
+  <span class="t-kw">const</span> <span class="t-id">padH</span> <span class="t-op">=</span> (<span class="t-id">multiple</span> <span class="t-op">-</span> (<span class="t-id">h</span> <span class="t-op">%</span> <span class="t-id">multiple</span>)) <span class="t-op">%</span> <span class="t-id">multiple</span>;
+  <span class="t-kw">const</span> <span class="t-id">padW</span> <span class="t-op">=</span> (<span class="t-id">multiple</span> <span class="t-op">-</span> (<span class="t-id">w</span> <span class="t-op">%</span> <span class="t-id">multiple</span>)) <span class="t-op">%</span> <span class="t-id">multiple</span>;
+  <span class="t-kw">if</span> (<span class="t-id">padH</span> <span class="t-op">===</span> <span class="t-num">0</span> <span class="t-op">&amp;&amp;</span> <span class="t-id">padW</span> <span class="t-op">===</span> <span class="t-num">0</span>) <span class="t-kw">return</span> { <span class="t-id">padded</span><span class="t-op">:</span> <span class="t-id">mat</span>, <span class="t-id">padH</span>, <span class="t-id">padW</span> };
+  <span class="t-kw">const</span> <span class="t-id">padded</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-id">cv</span>.<span class="t-fn">Mat</span>();
+  <span class="t-id">cv</span>.<span class="t-fn">copyMakeBorder</span>(<span class="t-id">mat</span>, <span class="t-id">padded</span>, <span class="t-num">0</span>, <span class="t-id">padH</span>, <span class="t-num">0</span>, <span class="t-id">padW</span>, <span class="t-id">cv</span>.<span class="t-type">BORDER_REPLICATE</span>);
+  <span class="t-kw">return</span> { <span class="t-id">padded</span>, <span class="t-id">padH</span>, <span class="t-id">padW</span> };
+}
+
+<span class="t-kw">function</span> <span class="t-fn">runModel</span>(<span class="t-id">net</span>, <span class="t-id">whiteness</span>) {
+  <span class="t-kw">const</span> { <span class="t-id">padded</span>, <span class="t-id">padH</span>, <span class="t-id">padW</span> } <span class="t-op">=</span> <span class="t-fn">padToMultiple</span>(<span class="t-id">whiteness</span>, <span class="t-num">8</span>);
+
+  <span class="t-cm">// Single-channel input, [0,1] range (matches ContrailDataset's</span>
+  <span class="t-cm">// `/ 255.0` normalization in train_contrail_unet.py) - blobFromImage's</span>
+  <span class="t-cm">// scalefactor does that division, mean=0, no channel swap needed for a</span>
+  <span class="t-cm">// 1-channel image.</span>
+  <span class="t-kw">const</span> <span class="t-id">blob</span> <span class="t-op">=</span> <span class="t-id">cv</span>.<span class="t-fn">blobFromImage</span>(<span class="t-id">padded</span>, <span class="t-num">1.0</span> <span class="t-op">/</span> <span class="t-num">255.0</span>, <span class="t-kw">new</span> <span class="t-id">cv</span>.<span class="t-fn">Size</span>(<span class="t-id">padded</span>.<span class="t-prop">cols</span>, <span class="t-id">padded</span>.<span class="t-prop">rows</span>), [<span class="t-num">0</span>], <span class="t-atom">false</span>, <span class="t-atom">false</span>);
+  <span class="t-id">net</span>.<span class="t-fn">setInput</span>(<span class="t-id">blob</span>);
+  <span class="t-kw">const</span> <span class="t-id">out</span> <span class="t-op">=</span> <span class="t-id">net</span>.<span class="t-fn">forward</span>(); <span class="t-cm">// (1,1,H,W) probability map</span>
+
+  <span class="t-kw">const</span> <span class="t-id">probMat</span> <span class="t-op">=</span> <span class="t-id">cv</span>.<span class="t-fn">matFromArray</span>(<span class="t-id">padded</span>.<span class="t-prop">rows</span>, <span class="t-id">padded</span>.<span class="t-prop">cols</span>, <span class="t-id">cv</span>.<span class="t-type">CV_32FC1</span>, <span class="t-id">out</span>.<span class="t-prop">data32F</span>);
+  <span class="t-kw">const</span> <span class="t-id">cropped</span> <span class="t-op">=</span> <span class="t-id">padH</span> <span class="t-op">||</span> <span class="t-id">padW</span>
+    <span class="t-op">?</span> <span class="t-fn">probMat</span>(<span class="t-kw">new</span> <span class="t-id">cv</span>.<span class="t-fn">Rect</span>(<span class="t-num">0</span>, <span class="t-num">0</span>, <span class="t-id">whiteness</span>.<span class="t-prop">cols</span>, <span class="t-id">whiteness</span>.<span class="t-prop">rows</span>))
+    <span class="t-op">:</span> <span class="t-id">probMat</span>;
+
+  <span class="t-kw">const</span> <span class="t-id">mask</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-id">cv</span>.<span class="t-fn">Mat</span>();
+  <span class="t-id">cv</span>.<span class="t-fn">threshold</span>(<span class="t-id">cropped</span>, <span class="t-id">mask</span>, <span class="t-type">PROB_THRESHOLD</span>, <span class="t-num">255</span>, <span class="t-id">cv</span>.<span class="t-type">THRESH_BINARY</span>);
+  <span class="t-id">mask</span>.<span class="t-fn">convertTo</span>(<span class="t-id">mask</span>, <span class="t-id">cv</span>.<span class="t-type">CV_8UC1</span>);
+  <span class="t-kw">return</span> <span class="t-id">mask</span>;
+}
+
+<span class="t-kw">function</span> <span class="t-fn">main</span>(<span class="t-id">inputPath</span>, <span class="t-id">outputPath</span>, <span class="t-id">modelPath</span> <span class="t-op">=</span> <span class="t-type">DEFAULT_MODEL</span>) {
+  <span class="t-kw">const</span> <span class="t-id">bgr</span> <span class="t-op">=</span> <span class="t-id">cv</span>.<span class="t-fn">imread</span>(<span class="t-id">inputPath</span>);
+  <span class="t-kw">if</span> (<span class="t-id">bgr</span>.<span class="t-fn">empty</span>()) <span class="t-kw">throw</span> <span class="t-kw">new</span> <span class="t-fn">Error</span>(<span class="t-str">`could not read ${inputPath}`</span>);
+
+  <span class="t-kw">const</span> <span class="t-id">hsv</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-id">cv</span>.<span class="t-fn">Mat</span>();
+  <span class="t-id">cv</span>.<span class="t-fn">cvtColor</span>(<span class="t-id">bgr</span>, <span class="t-id">hsv</span>, <span class="t-id">cv</span>.<span class="t-type">COLOR_BGR2HSV</span>);
+  <span class="t-kw">const</span> { <span class="t-id">whiteness</span> } <span class="t-op">=</span> <span class="t-fn">buildCandidateMask</span>(<span class="t-id">hsv</span>);
+
+  <span class="t-kw">const</span> <span class="t-id">net</span> <span class="t-op">=</span> <span class="t-id">cv</span>.<span class="t-fn">readNetFromONNX</span>(<span class="t-id">modelPath</span>);
+  <span class="t-kw">const</span> <span class="t-id">mask</span> <span class="t-op">=</span> <span class="t-fn">runModel</span>(<span class="t-id">net</span>, <span class="t-id">whiteness</span>);
+
+  <span class="t-kw">const</span> <span class="t-id">output</span> <span class="t-op">=</span> <span class="t-id">bgr</span>.<span class="t-fn">clone</span>();
+  <span class="t-id">output</span>.<span class="t-fn">setTo</span>(<span class="t-kw">new</span> <span class="t-id">cv</span>.<span class="t-fn">Scalar</span>(<span class="t-num">0</span>, <span class="t-num">0</span>, <span class="t-num">255</span>), <span class="t-id">mask</span>);
+  <span class="t-id">cv</span>.<span class="t-fn">imwrite</span>(<span class="t-id">outputPath</span>, <span class="t-id">output</span>);
+  <span class="t-id">console</span>.<span class="t-fn">log</span>(<span class="t-type">JSON</span>.<span class="t-fn">stringify</span>({ <span class="t-id">input</span><span class="t-op">:</span> <span class="t-id">inputPath</span>, <span class="t-id">model</span><span class="t-op">:</span> <span class="t-id">modelPath</span>, <span class="t-id">contrailPixels</span><span class="t-op">:</span> <span class="t-id">cv</span>.<span class="t-fn">countNonZero</span>(<span class="t-id">mask</span>) }));
+}
+
+<span class="t-fn">main</span>(...<span class="t-prop">scriptArgs</span>.<span class="t-fn">slice</span>(<span class="t-num">1</span>));</code></pre></div>
+<h2 id="tileset_gridjs"><a class="anchor" href="#tileset_gridjs" aria-hidden="true">#</a>tileset_grid.js</h2>
+<p>Detects the tile grid in a tileset image, cuts it into tiles, drops empty and duplicate tiles by image similarity, and repacks the survivors into a new (smaller) tileset image plus a JSON sidecar describing the mapping.</p>
+<p><a href="https://github.com/rsenn/qjs-opencv/blob/main/examples/tileset_grid.js" target="_blank" rel="noopener">source on GitHub</a></p>
+<div class="codeblock" data-lang="js"><pre><code class="language-js"><span class="t-cm">// Detects the tile grid in a tileset image, cuts it into tiles, drops empty</span>
+<span class="t-cm">// and duplicate tiles by image similarity, and repacks the survivors into a</span>
+<span class="t-cm">// new (smaller) tileset image plus a JSON sidecar describing the mapping.</span>
+<span class="t-cm">//</span>
+<span class="t-cm">// Usage: qjs examples/tileset_grid.js &lt;tileset.png&gt; [outBasename]</span>
+<span class="t-kw">import</span> <span class="t-op">*</span> <span class="t-id">as</span> <span class="t-id">std</span> <span class="t-kw">from</span> <span class="t-str">'std'</span>;
+<span class="t-kw">import</span> {
+  <span class="t-type">Mat</span>,
+  <span class="t-type">Rect</span>,
+  <span class="t-type">CV_32S</span>,
+  <span class="t-type">COLOR_BGR2GRAY</span>,
+  <span class="t-type">COLOR_BGRA2GRAY</span>,
+  <span class="t-type">INTER_AREA</span>,
+  <span class="t-type">IMREAD_UNCHANGED</span>,
+  <span class="t-id">absdiff</span>,
+  <span class="t-id">cvtColor</span>,
+  <span class="t-id">imread</span>,
+  <span class="t-id">imwrite</span>,
+  <span class="t-id">meanStdDev</span>,
+  <span class="t-id">reduce</span>,
+  <span class="t-id">resize</span>,
+  <span class="t-id">split</span>,
+} <span class="t-kw">from</span> <span class="t-str">'opencv'</span>;
+
+<span class="t-kw">const</span> <span class="t-type">REDUCE_SUM</span> <span class="t-op">=</span> <span class="t-num">0</span>; <span class="t-cm">// cv::REDUCE_SUM; not exposed as a named constant by this binding</span>
+
+<span class="t-cm">// Minimum/maximum tile size (in pixels) to consider while searching for the</span>
+<span class="t-cm">// grid period. Narrow this if you know roughly how big the tiles are.</span>
+<span class="t-kw">const</span> <span class="t-type">MIN_TILE</span> <span class="t-op">=</span> <span class="t-num">8</span>;
+<span class="t-kw">const</span> <span class="t-type">MAX_TILE</span> <span class="t-op">=</span> <span class="t-num">128</span>;
+
+<span class="t-cm">// For images without an alpha channel, a tile counts as "empty" when its</span>
+<span class="t-cm">// content is (near-)uniform, i.e. a flat fill with no detail.</span>
+<span class="t-kw">const</span> <span class="t-type">EMPTY_STDDEV_THRESHOLD</span> <span class="t-op">=</span> <span class="t-num">2.0</span>;
+
+<span class="t-cm">// Two tiles count as duplicates when the mean absolute difference of their</span>
+<span class="t-cm">// downsampled thumbnails falls below this (0..255 scale).</span>
+<span class="t-kw">const</span> <span class="t-type">DUPLICATE_THRESHOLD</span> <span class="t-op">=</span> <span class="t-num">4.0</span>;
+<span class="t-kw">const</span> <span class="t-type">THUMB_SIZE</span> <span class="t-op">=</span> <span class="t-num">8</span>;
+
+<span class="t-kw">function</span> <span class="t-fn">toGray</span>(<span class="t-id">mat</span>) {
+  <span class="t-kw">const</span> <span class="t-id">gray</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">Mat</span>();
+  <span class="t-fn">cvtColor</span>(<span class="t-id">mat</span>, <span class="t-id">gray</span>, <span class="t-id">mat</span>.<span class="t-fn">channels</span>() <span class="t-op">===</span> <span class="t-num">4</span> <span class="t-op">?</span> <span class="t-type">COLOR_BGRA2GRAY</span> <span class="t-op">:</span> <span class="t-type">COLOR_BGR2GRAY</span>);
+  <span class="t-kw">return</span> <span class="t-id">gray</span>;
+}
+
+<span class="t-cm">// Edge-energy profile: profile[i] is the total absolute difference between</span>
+<span class="t-cm">// column i and column i+1 (or row i and row i+1), summed over the whole</span>
+<span class="t-cm">// image. Tile boundaries in a uniform grid tend to show up as periodic</span>
+<span class="t-cm">// spikes in this profile, even without an explicit separator line, because</span>
+<span class="t-cm">// tile art usually changes abruptly at its edges.</span>
+<span class="t-kw">function</span> <span class="t-fn">edgeProfile</span>(<span class="t-id">gray</span>, <span class="t-id">axis</span>) {
+  <span class="t-kw">const</span> { <span class="t-id">cols</span>, <span class="t-id">rows</span> } <span class="t-op">=</span> <span class="t-id">gray</span>;
+  <span class="t-kw">const</span> <span class="t-id">n</span> <span class="t-op">=</span> (<span class="t-id">axis</span> <span class="t-op">===</span> <span class="t-str">'x'</span> <span class="t-op">?</span> <span class="t-id">cols</span> <span class="t-op">:</span> <span class="t-id">rows</span>) <span class="t-op">-</span> <span class="t-num">1</span>;
+  <span class="t-kw">const</span> <span class="t-id">a</span> <span class="t-op">=</span> <span class="t-id">axis</span> <span class="t-op">===</span> <span class="t-str">'x'</span> <span class="t-op">?</span> <span class="t-fn">gray</span>(<span class="t-kw">new</span> <span class="t-fn">Rect</span>(<span class="t-num">0</span>, <span class="t-num">0</span>, <span class="t-id">cols</span> <span class="t-op">-</span> <span class="t-num">1</span>, <span class="t-id">rows</span>)) <span class="t-op">:</span> <span class="t-fn">gray</span>(<span class="t-kw">new</span> <span class="t-fn">Rect</span>(<span class="t-num">0</span>, <span class="t-num">0</span>, <span class="t-id">cols</span>, <span class="t-id">rows</span> <span class="t-op">-</span> <span class="t-num">1</span>));
+  <span class="t-kw">const</span> <span class="t-id">b</span> <span class="t-op">=</span> <span class="t-id">axis</span> <span class="t-op">===</span> <span class="t-str">'x'</span> <span class="t-op">?</span> <span class="t-fn">gray</span>(<span class="t-kw">new</span> <span class="t-fn">Rect</span>(<span class="t-num">1</span>, <span class="t-num">0</span>, <span class="t-id">cols</span> <span class="t-op">-</span> <span class="t-num">1</span>, <span class="t-id">rows</span>)) <span class="t-op">:</span> <span class="t-fn">gray</span>(<span class="t-kw">new</span> <span class="t-fn">Rect</span>(<span class="t-num">0</span>, <span class="t-num">1</span>, <span class="t-id">cols</span>, <span class="t-id">rows</span> <span class="t-op">-</span> <span class="t-num">1</span>));
+
+  <span class="t-kw">const</span> <span class="t-id">diff</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">Mat</span>();
+  <span class="t-fn">absdiff</span>(<span class="t-id">a</span>, <span class="t-id">b</span>, <span class="t-id">diff</span>);
+
+  <span class="t-kw">const</span> <span class="t-id">sums</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">Mat</span>();
+  <span class="t-fn">reduce</span>(<span class="t-id">diff</span>, <span class="t-id">sums</span>, <span class="t-id">axis</span> <span class="t-op">===</span> <span class="t-str">'x'</span> <span class="t-op">?</span> <span class="t-num">0</span> <span class="t-op">:</span> <span class="t-num">1</span>, <span class="t-type">REDUCE_SUM</span>, <span class="t-type">CV_32S</span>);
+
+  <span class="t-kw">const</span> <span class="t-id">flat</span> <span class="t-op">=</span> <span class="t-id">axis</span> <span class="t-op">===</span> <span class="t-str">'x'</span> <span class="t-op">?</span> <span class="t-id">sums</span>.<span class="t-prop">array</span>[<span class="t-num">0</span>] <span class="t-op">:</span> <span class="t-id">sums</span>.<span class="t-prop">array</span>.<span class="t-fn">map</span>(<span class="t-id">row</span> <span class="t-op">=&gt;</span> <span class="t-id">row</span>[<span class="t-num">0</span>]);
+  <span class="t-kw">return</span> <span class="t-type">Array</span>.<span class="t-kw">from</span>(<span class="t-id">flat</span>).<span class="t-fn">slice</span>(<span class="t-num">0</span>, <span class="t-id">n</span>);
+}
+
+<span class="t-cm">// Scores every (step, phase) pair by the average edge energy along the</span>
+<span class="t-cm">// grid lines it implies, and returns the best step/offset pair.</span>
+<span class="t-cm">// Requires at least this many grid lines on a candidate period before it's</span>
+<span class="t-cm">// eligible to win — otherwise a single strong (but non-periodic) edge would</span>
+<span class="t-cm">// trivially "win" any step that isolates it as a lone sample.</span>
+<span class="t-kw">const</span> <span class="t-type">MIN_LINES</span> <span class="t-op">=</span> <span class="t-num">3</span>;
+
+<span class="t-kw">function</span> <span class="t-fn">findPeriod</span>(<span class="t-id">profile</span>, <span class="t-id">minStep</span>, <span class="t-id">maxStep</span>) {
+  <span class="t-kw">const</span> <span class="t-id">n</span> <span class="t-op">=</span> <span class="t-id">profile</span>.<span class="t-prop">length</span>;
+  <span class="t-kw">let</span> <span class="t-id">best</span> <span class="t-op">=</span> { <span class="t-id">step</span><span class="t-op">:</span> <span class="t-id">n</span>, <span class="t-id">offset</span><span class="t-op">:</span> <span class="t-num">0</span>, <span class="t-id">score</span><span class="t-op">:</span> <span class="t-op">-</span><span class="t-num">1</span> };
+
+  <span class="t-kw">for</span>(<span class="t-kw">let</span> <span class="t-id">step</span> <span class="t-op">=</span> <span class="t-id">minStep</span>; <span class="t-id">step</span> <span class="t-op">&lt;=</span> <span class="t-type">Math</span>.<span class="t-fn">min</span>(<span class="t-id">maxStep</span>, <span class="t-id">n</span>); <span class="t-id">step</span><span class="t-op">++</span>) {
+    <span class="t-kw">if</span>(<span class="t-type">Math</span>.<span class="t-fn">floor</span>(<span class="t-id">n</span> <span class="t-op">/</span> <span class="t-id">step</span>) <span class="t-op">&lt;</span> <span class="t-type">MIN_LINES</span>)
+      <span class="t-kw">continue</span>;
+
+    <span class="t-kw">let</span> <span class="t-id">bestPhaseScore</span> <span class="t-op">=</span> <span class="t-op">-</span><span class="t-num">1</span>;
+    <span class="t-kw">let</span> <span class="t-id">bestPhase</span> <span class="t-op">=</span> <span class="t-num">0</span>;
+
+    <span class="t-kw">for</span>(<span class="t-kw">let</span> <span class="t-id">phase</span> <span class="t-op">=</span> <span class="t-num">0</span>; <span class="t-id">phase</span> <span class="t-op">&lt;</span> <span class="t-id">step</span>; <span class="t-id">phase</span><span class="t-op">++</span>) {
+      <span class="t-kw">let</span> <span class="t-id">sum</span> <span class="t-op">=</span> <span class="t-num">0</span>,
+        <span class="t-id">count</span> <span class="t-op">=</span> <span class="t-num">0</span>;
+
+      <span class="t-kw">for</span>(<span class="t-kw">let</span> <span class="t-id">k</span> <span class="t-op">=</span> <span class="t-id">phase</span>; <span class="t-id">k</span> <span class="t-op">&lt;</span> <span class="t-id">n</span>; <span class="t-id">k</span> <span class="t-op">+=</span> <span class="t-id">step</span>) {
+        <span class="t-id">sum</span> <span class="t-op">+=</span> <span class="t-id">profile</span>[<span class="t-id">k</span>];
+        <span class="t-id">count</span><span class="t-op">++</span>;
+      }
+      <span class="t-kw">if</span>(<span class="t-id">count</span> <span class="t-op">&lt;</span> <span class="t-type">MIN_LINES</span>)
+        <span class="t-kw">continue</span>;
+
+      <span class="t-kw">const</span> <span class="t-id">avg</span> <span class="t-op">=</span> <span class="t-id">sum</span> <span class="t-op">/</span> <span class="t-id">count</span>;
+      <span class="t-kw">if</span>(<span class="t-id">avg</span> <span class="t-op">&gt;</span> <span class="t-id">bestPhaseScore</span>) {
+        <span class="t-id">bestPhaseScore</span> <span class="t-op">=</span> <span class="t-id">avg</span>;
+        <span class="t-id">bestPhase</span> <span class="t-op">=</span> <span class="t-id">phase</span>;
+      }
+    }
+
+    <span class="t-kw">if</span>(<span class="t-id">bestPhaseScore</span> <span class="t-op">&gt;</span> <span class="t-id">best</span>.<span class="t-prop">score</span>)
+      <span class="t-id">best</span> <span class="t-op">=</span> { <span class="t-id">step</span>, <span class="t-id">offset</span><span class="t-op">:</span> <span class="t-id">bestPhase</span>, <span class="t-id">score</span><span class="t-op">:</span> <span class="t-id">bestPhaseScore</span> };
+  }
+
+  <span class="t-cm">// profile[k] is the boundary between pixel k and k+1, so the tile that</span>
+  <span class="t-cm">// starts *after* that boundary begins at column/row k+1.</span>
+  <span class="t-kw">return</span> { <span class="t-id">size</span><span class="t-op">:</span> <span class="t-id">best</span>.<span class="t-prop">step</span>, <span class="t-id">offset</span><span class="t-op">:</span> (<span class="t-id">best</span>.<span class="t-prop">offset</span> <span class="t-op">+</span> <span class="t-num">1</span>) <span class="t-op">%</span> <span class="t-id">best</span>.<span class="t-prop">step</span> };
+}
+
+<span class="t-kw">function</span> <span class="t-fn">detectGrid</span>(<span class="t-id">source</span>) {
+  <span class="t-kw">const</span> <span class="t-id">gray</span> <span class="t-op">=</span> <span class="t-fn">toGray</span>(<span class="t-id">source</span>);
+  <span class="t-kw">const</span> { <span class="t-id">size</span><span class="t-op">:</span> <span class="t-id">tileWidth</span>, <span class="t-id">offset</span><span class="t-op">:</span> <span class="t-id">offsetX</span> } <span class="t-op">=</span> <span class="t-fn">findPeriod</span>(<span class="t-fn">edgeProfile</span>(<span class="t-id">gray</span>, <span class="t-str">'x'</span>), <span class="t-type">MIN_TILE</span>, <span class="t-type">MAX_TILE</span>);
+  <span class="t-kw">const</span> { <span class="t-id">size</span><span class="t-op">:</span> <span class="t-id">tileHeight</span>, <span class="t-id">offset</span><span class="t-op">:</span> <span class="t-id">offsetY</span> } <span class="t-op">=</span> <span class="t-fn">findPeriod</span>(<span class="t-fn">edgeProfile</span>(<span class="t-id">gray</span>, <span class="t-str">'y'</span>), <span class="t-type">MIN_TILE</span>, <span class="t-type">MAX_TILE</span>);
+
+  <span class="t-kw">return</span> { <span class="t-id">tileWidth</span>, <span class="t-id">tileHeight</span>, <span class="t-id">offsetX</span>, <span class="t-id">offsetY</span> };
+}
+
+<span class="t-kw">function</span> <span class="t-fn">stdDev</span>(<span class="t-id">mat</span>) {
+  <span class="t-kw">const</span> <span class="t-id">mean</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">Mat</span>(),
+    <span class="t-id">std</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">Mat</span>();
+  <span class="t-fn">meanStdDev</span>(<span class="t-id">mat</span>, <span class="t-id">mean</span>, <span class="t-id">std</span>);
+  <span class="t-kw">return</span> <span class="t-type">Math</span>.<span class="t-fn">max</span>(...<span class="t-prop">std</span>.<span class="t-prop">array</span>.<span class="t-fn">map</span>(<span class="t-id">row</span> <span class="t-op">=&gt;</span> <span class="t-id">row</span>[<span class="t-num">0</span>]));
+}
+
+<span class="t-kw">function</span> <span class="t-fn">meanOf</span>(<span class="t-id">mat</span>) {
+  <span class="t-kw">const</span> <span class="t-id">mean</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">Mat</span>(),
+    <span class="t-id">std</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">Mat</span>();
+  <span class="t-fn">meanStdDev</span>(<span class="t-id">mat</span>, <span class="t-id">mean</span>, <span class="t-id">std</span>);
+  <span class="t-kw">return</span> <span class="t-id">mean</span>.<span class="t-prop">array</span>[<span class="t-num">0</span>][<span class="t-num">0</span>];
+}
+
+<span class="t-cm">// With an alpha channel, transparency is the only reliable "empty" signal —</span>
+<span class="t-cm">// a flat opaque fill (e.g. a solid-color sky tile) is real content and must</span>
+<span class="t-cm">// not be dropped just because it also has near-zero variance. Without</span>
+<span class="t-cm">// alpha, fall back to the variance check since there's nothing else to go</span>
+<span class="t-cm">// on.</span>
+<span class="t-kw">function</span> <span class="t-fn">isEmptyTile</span>(<span class="t-id">tile</span>) {
+  <span class="t-kw">if</span>(<span class="t-id">tile</span>.<span class="t-fn">channels</span>() <span class="t-op">===</span> <span class="t-num">4</span>) {
+    <span class="t-kw">const</span> <span class="t-id">channels</span> <span class="t-op">=</span> [];
+    <span class="t-fn">split</span>(<span class="t-id">tile</span>, <span class="t-id">channels</span>);
+    <span class="t-kw">return</span> <span class="t-fn">meanOf</span>(<span class="t-id">channels</span>[<span class="t-num">3</span>]) <span class="t-op">&lt;</span> <span class="t-num">1</span>;
+  }
+  <span class="t-kw">return</span> <span class="t-fn">stdDev</span>(<span class="t-id">tile</span>) <span class="t-op">&lt;</span> <span class="t-type">EMPTY_STDDEV_THRESHOLD</span>;
+}
+
+<span class="t-kw">function</span> <span class="t-fn">thumbnail</span>(<span class="t-id">tile</span>) {
+  <span class="t-kw">const</span> <span class="t-id">gray</span> <span class="t-op">=</span> <span class="t-fn">toGray</span>(<span class="t-id">tile</span>);
+  <span class="t-kw">const</span> <span class="t-id">thumb</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">Mat</span>();
+  <span class="t-fn">resize</span>(<span class="t-id">gray</span>, <span class="t-id">thumb</span>, { <span class="t-id">width</span><span class="t-op">:</span> <span class="t-type">THUMB_SIZE</span>, <span class="t-id">height</span><span class="t-op">:</span> <span class="t-type">THUMB_SIZE</span> }, <span class="t-num">0</span>, <span class="t-num">0</span>, <span class="t-type">INTER_AREA</span>);
+  <span class="t-kw">return</span> <span class="t-id">thumb</span>;
+}
+
+<span class="t-kw">function</span> <span class="t-fn">similar</span>(<span class="t-id">a</span>, <span class="t-id">b</span>) {
+  <span class="t-kw">const</span> <span class="t-id">diff</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">Mat</span>();
+  <span class="t-fn">absdiff</span>(<span class="t-id">a</span>, <span class="t-id">b</span>, <span class="t-id">diff</span>);
+  <span class="t-kw">const</span> <span class="t-id">mean</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">Mat</span>(),
+    <span class="t-id">std</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">Mat</span>();
+  <span class="t-fn">meanStdDev</span>(<span class="t-id">diff</span>, <span class="t-id">mean</span>, <span class="t-id">std</span>);
+  <span class="t-kw">return</span> <span class="t-id">mean</span>.<span class="t-prop">array</span>[<span class="t-num">0</span>][<span class="t-num">0</span>] <span class="t-op">&lt;</span> <span class="t-type">DUPLICATE_THRESHOLD</span>;
+}
+
+<span class="t-kw">function</span> <span class="t-fn">main</span>(...<span class="t-prop">args</span>) {
+  <span class="t-kw">const</span> <span class="t-id">filename</span> <span class="t-op">=</span> <span class="t-id">args</span>[<span class="t-num">0</span>];
+  <span class="t-kw">if</span>(<span class="t-op">!</span><span class="t-id">filename</span>) {
+    <span class="t-id">console</span>.<span class="t-fn">log</span>(<span class="t-str">'usage: qjs examples/tileset_grid.js &lt;tileset.png&gt; [outBasename]'</span>);
+    <span class="t-kw">return</span> <span class="t-num">1</span>;
+  }
+  <span class="t-kw">const</span> <span class="t-id">outBase</span> <span class="t-op">=</span> <span class="t-id">args</span>[<span class="t-num">1</span>] <span class="t-op">??</span> <span class="t-id">filename</span>.<span class="t-fn">replace</span>(<span class="t-op">/</span>\.[<span class="t-op">^</span>.]<span class="t-op">+</span>$<span class="t-op">/</span>, <span class="t-str">''</span>) <span class="t-op">+</span> <span class="t-str">'.packed'</span>;
+
+  <span class="t-kw">const</span> <span class="t-id">source</span> <span class="t-op">=</span> <span class="t-fn">imread</span>(<span class="t-id">filename</span>, <span class="t-type">IMREAD_UNCHANGED</span>);
+  <span class="t-kw">if</span>(<span class="t-id">source</span>.<span class="t-fn">empty</span>()) {
+    <span class="t-id">console</span>.<span class="t-fn">log</span>(<span class="t-str">'failed to load'</span>, <span class="t-id">filename</span>);
+    <span class="t-kw">return</span> <span class="t-num">1</span>;
+  }
+
+  <span class="t-kw">const</span> { <span class="t-id">tileWidth</span>, <span class="t-id">tileHeight</span>, <span class="t-id">offsetX</span>, <span class="t-id">offsetY</span> } <span class="t-op">=</span> <span class="t-fn">detectGrid</span>(<span class="t-id">source</span>);
+  <span class="t-id">console</span>.<span class="t-fn">log</span>(<span class="t-str">'detected grid:'</span>, { <span class="t-id">tileWidth</span>, <span class="t-id">tileHeight</span>, <span class="t-id">offsetX</span>, <span class="t-id">offsetY</span> });
+
+  <span class="t-kw">const</span> <span class="t-id">cols</span> <span class="t-op">=</span> <span class="t-type">Math</span>.<span class="t-fn">floor</span>((<span class="t-id">source</span>.<span class="t-prop">cols</span> <span class="t-op">-</span> <span class="t-id">offsetX</span>) <span class="t-op">/</span> <span class="t-id">tileWidth</span>);
+  <span class="t-kw">const</span> <span class="t-id">rows</span> <span class="t-op">=</span> <span class="t-type">Math</span>.<span class="t-fn">floor</span>((<span class="t-id">source</span>.<span class="t-prop">rows</span> <span class="t-op">-</span> <span class="t-id">offsetY</span>) <span class="t-op">/</span> <span class="t-id">tileHeight</span>);
+  <span class="t-id">console</span>.<span class="t-fn">log</span>(<span class="t-str">'grid dimensions:'</span>, { <span class="t-id">cols</span>, <span class="t-id">rows</span>, <span class="t-id">tileCount</span><span class="t-op">:</span> <span class="t-id">cols</span> <span class="t-op">*</span> <span class="t-id">rows</span> });
+
+  <span class="t-kw">const</span> <span class="t-id">unique</span> <span class="t-op">=</span> []; <span class="t-cm">// { thumb, mat, outX, outY }</span>
+  <span class="t-kw">const</span> <span class="t-id">tiles</span> <span class="t-op">=</span> []; <span class="t-cm">// metadata for every source cell</span>
+
+  <span class="t-kw">for</span>(<span class="t-kw">let</span> <span class="t-id">gy</span> <span class="t-op">=</span> <span class="t-num">0</span>; <span class="t-id">gy</span> <span class="t-op">&lt;</span> <span class="t-id">rows</span>; <span class="t-id">gy</span><span class="t-op">++</span>) {
+    <span class="t-kw">for</span>(<span class="t-kw">let</span> <span class="t-id">gx</span> <span class="t-op">=</span> <span class="t-num">0</span>; <span class="t-id">gx</span> <span class="t-op">&lt;</span> <span class="t-id">cols</span>; <span class="t-id">gx</span><span class="t-op">++</span>) {
+      <span class="t-kw">const</span> <span class="t-id">rect</span> <span class="t-op">=</span> <span class="t-kw">new</span> <span class="t-fn">Rect</span>(<span class="t-id">offsetX</span> <span class="t-op">+</span> <span class="t-id">gx</span> <span class="t-op">*</span> <span class="t-id">tileWidth</span>, <span class="t-id">offsetY</span> <span class="t-op">+</span> <span class="t-id">gy</span> <span class="t-op">*</span> <span class="t-id">tileHeight</span>, <span class="t-id">tileWidth</span>, <span class="t-id">tileHeight</span>);
+      <span class="t-kw">const</span> <span class="t-id">tile</span> <span class="t-op">=</span> <span class="t-fn">source</span>(<span class="t-id">rect</span>);
+
+      <span class="t-kw">if</span>(<span class="t-fn">isEmptyTile</span>(<span class="t-id">tile</span>)) {
+        <span class="t-id">tiles</span>.<span class="t-fn">push</span>({ <span class="t-id">col</span><span class="t-op">:</span> <span class="t-id">gx</span>, <span class="t-id">row</span><span class="t-op">:</span> <span class="t-id">gy</span>, <span class="t-id">x</span><span class="t-op">:</span> <span class="t-id">rect</span>.<span class="t-prop">x</span>, <span class="t-id">y</span><span class="t-op">:</span> <span class="t-id">rect</span>.<span class="t-prop">y</span>, <span class="t-id">empty</span><span class="t-op">:</span> <span class="t-atom">true</span> });
+        <span class="t-kw">continue</span>;
+      }
+
+      <span class="t-kw">const</span> <span class="t-id">thumb</span> <span class="t-op">=</span> <span class="t-fn">thumbnail</span>(<span class="t-id">tile</span>);
+      <span class="t-kw">const</span> <span class="t-id">match</span> <span class="t-op">=</span> <span class="t-id">unique</span>.<span class="t-fn">find</span>(<span class="t-id">u</span> <span class="t-op">=&gt;</span> <span class="t-fn">similar</span>(<span class="t-id">u</span>.<span class="t-prop">thumb</span>, <span class="t-id">thumb</span>));
+
+      <span class="t-kw">if</span>(<span class="t-id">match</span>) {
+        <span class="t-id">tiles</span>.<span class="t-fn">push</span>({ <span class="t-id">col</span><span class="t-op">:</span> <span class="t-id">gx</span>, <span class="t-id">row</span><span class="t-op">:</span> <span class="t-id">gy</span>, <span class="t-id">x</span><span class="t-op">:</span> <span class="t-id">rect</span>.<span class="t-prop">x</span>, <span class="t-id">y</span><span class="t-op">:</span> <span class="t-id">rect</span>.<span class="t-prop">y</span>, <span class="t-id">uniqueIndex</span><span class="t-op">:</span> <span class="t-id">match</span>.<span class="t-prop">index</span> });
+      } <span class="t-kw">else</span> {
+        <span class="t-kw">const</span> <span class="t-id">index</span> <span class="t-op">=</span> <span class="t-id">unique</span>.<span class="t-prop">length</span>;
+        <span class="t-id">unique</span>.<span class="t-fn">push</span>({ <span class="t-id">index</span>, <span class="t-id">thumb</span>, <span class="t-id">mat</span><span class="t-op">:</span> <span class="t-id">tile</span>, <span class="t-id">x</span><span class="t-op">:</span> <span class="t-id">rect</span>.<span class="t-prop">x</span>, <span class="t-id">y</span><span class="t-op">:</span> <span class="t-id">rect</span>.<span class="t-prop">y</span> });
+        <span class="t-id">tiles</span>.<span class="t-fn">push</span>({ <span class="t-id">col</span><span class="t-op">:</span> <span class="t-id">gx</span>, <span class="t-id">row</span><span class="t-op">:</span> <span class="t-id">gy</span>, <span class="t-id">x</span><span class="t-op">:</span> <span class="t-id">rect</span>.<span class="t-prop">x</span>, <span class="t-id">y</span><span class="t-op">:</span> <span class="t-id">rect</span>.<span class="t-prop">y</span>, <span class="t-id">uniqueIndex</span><span class="t-op">:</span> <span class="t-id">index</span> });
+      }
+    }
+  }
+
+  <span class="t-id">console</span>.<span class="t-fn">log</span>(<span class="t-str">'unique tiles:'</span>, <span class="t-id">unique</span>.<span class="t-prop">length</span>, <span class="t-str">'/'</span>, <span class="t-id">cols</span> <span class="t-op">*</span> <span class="t-id">rows</span>);
+
+  <span class="t-kw">const</span> <span class="t-id">packCols</span> <span class="t-op">=</span> <span class="t-type">Math</span>.<span class="t-fn">ceil</span>(<span class="t-type">Math</span>.<span class="t-fn">sqrt</span>(<span class="t-id">unique</span>.<span class="t-prop">length</span> <span class="t-op">||</span> <span class="t-num">1</span>));
+  <span class="t-kw">const</span> <span class="t-id">packRows</span> <span class="t-op">=</span> <span class="t-type">Math</span>.<span class="t-fn">ceil</span>((<span class="t-id">unique</span>.<span class="t-prop">length</span> <span class="t-op">||</span> <span class="t-num">1</span>) <span class="t-op">/</span> <span class="t-id">packCols</span>);
+  <span class="t-kw">const</span> <span class="t-id">packed</span> <span class="t-op">=</span> <span class="t-type">Mat</span>.<span class="t-fn">zeros</span>(<span class="t-id">packRows</span> <span class="t-op">*</span> <span class="t-id">tileHeight</span>, <span class="t-id">packCols</span> <span class="t-op">*</span> <span class="t-id">tileWidth</span>, <span class="t-id">source</span>.<span class="t-fn">type</span>());
+
+  <span class="t-kw">const</span> <span class="t-id">packedTiles</span> <span class="t-op">=</span> <span class="t-id">unique</span>.<span class="t-fn">map</span>((<span class="t-id">u</span>, <span class="t-id">i</span>) <span class="t-op">=&gt;</span> {
+    <span class="t-kw">const</span> <span class="t-id">outX</span> <span class="t-op">=</span> (<span class="t-id">i</span> <span class="t-op">%</span> <span class="t-id">packCols</span>) <span class="t-op">*</span> <span class="t-id">tileWidth</span>;
+    <span class="t-kw">const</span> <span class="t-id">outY</span> <span class="t-op">=</span> <span class="t-type">Math</span>.<span class="t-fn">floor</span>(<span class="t-id">i</span> <span class="t-op">/</span> <span class="t-id">packCols</span>) <span class="t-op">*</span> <span class="t-id">tileHeight</span>;
+    <span class="t-id">u</span>.<span class="t-prop">mat</span>.<span class="t-fn">copyTo</span>(<span class="t-fn">packed</span>(<span class="t-kw">new</span> <span class="t-fn">Rect</span>(<span class="t-id">outX</span>, <span class="t-id">outY</span>, <span class="t-id">tileWidth</span>, <span class="t-id">tileHeight</span>)));
+    <span class="t-kw">return</span> { <span class="t-id">index</span><span class="t-op">:</span> <span class="t-id">u</span>.<span class="t-prop">index</span>, <span class="t-id">outX</span>, <span class="t-id">outY</span>, <span class="t-id">sourceX</span><span class="t-op">:</span> <span class="t-id">u</span>.<span class="t-prop">x</span>, <span class="t-id">sourceY</span><span class="t-op">:</span> <span class="t-id">u</span>.<span class="t-prop">y</span> };
+  });
+
+  <span class="t-kw">const</span> <span class="t-id">outImage</span> <span class="t-op">=</span> <span class="t-id">outBase</span> <span class="t-op">+</span> <span class="t-str">'.png'</span>;
+  <span class="t-kw">const</span> <span class="t-id">outJson</span> <span class="t-op">=</span> <span class="t-id">outBase</span> <span class="t-op">+</span> <span class="t-str">'.json'</span>;
+  <span class="t-fn">imwrite</span>(<span class="t-id">outImage</span>, <span class="t-id">packed</span>);
+
+  <span class="t-kw">const</span> <span class="t-id">metadata</span> <span class="t-op">=</span> {
+    <span class="t-id">source</span><span class="t-op">:</span> <span class="t-id">filename</span>,
+    <span class="t-id">sourceSize</span><span class="t-op">:</span> { <span class="t-id">width</span><span class="t-op">:</span> <span class="t-id">source</span>.<span class="t-prop">cols</span>, <span class="t-id">height</span><span class="t-op">:</span> <span class="t-id">source</span>.<span class="t-prop">rows</span> },
+    <span class="t-id">tileWidth</span>,
+    <span class="t-id">tileHeight</span>,
+    <span class="t-id">offsetX</span>,
+    <span class="t-id">offsetY</span>,
+    <span class="t-id">grid</span><span class="t-op">:</span> { <span class="t-id">cols</span>, <span class="t-id">rows</span> },
+    <span class="t-id">packedImage</span><span class="t-op">:</span> <span class="t-id">outImage</span>,
+    <span class="t-id">packedGrid</span><span class="t-op">:</span> { <span class="t-id">cols</span><span class="t-op">:</span> <span class="t-id">packCols</span>, <span class="t-id">rows</span><span class="t-op">:</span> <span class="t-id">packRows</span> },
+    <span class="t-id">uniqueTiles</span><span class="t-op">:</span> <span class="t-id">packedTiles</span>,
+    <span class="t-id">tiles</span>,
+  };
+
+  <span class="t-kw">const</span> <span class="t-id">f</span> <span class="t-op">=</span> <span class="t-id">std</span>.<span class="t-fn">open</span>(<span class="t-id">outJson</span>, <span class="t-str">'w+'</span>);
+  <span class="t-id">f</span>.<span class="t-fn">puts</span>(<span class="t-type">JSON</span>.<span class="t-fn">stringify</span>(<span class="t-id">metadata</span>, <span class="t-atom">null</span>, <span class="t-num">2</span>));
+  <span class="t-id">f</span>.<span class="t-fn">close</span>();
+
+  <span class="t-id">console</span>.<span class="t-fn">log</span>(<span class="t-str">'wrote'</span>, <span class="t-id">outImage</span>, <span class="t-str">'and'</span>, <span class="t-id">outJson</span>);
+  <span class="t-kw">return</span> <span class="t-num">0</span>;
+}
+
+<span class="t-fn">main</span>(...<span class="t-prop">scriptArgs</span>.<span class="t-fn">slice</span>(<span class="t-num">1</span>));</code></pre></div></article>
+</main>
+<nav class="toc"><h3>On this page</h3><ul><li class="lvl2"><a href="#edge_detection_dexinedjs">edge_detection_dexined.js</a></li><li class="lvl2"><a href="#neural-font-sr-espscx2js">neural-font-sr-ESPSCx2.js</a></li><li class="lvl2"><a href="#qwen25_inferencejs">qwen25_inference.js</a></li><li class="lvl2"><a href="#skywatch_contrail_detectjs">skywatch_contrail_detect.js</a></li><li class="lvl2"><a href="#skywatch_contrail_infer_dnnjs">skywatch_contrail_infer_dnn.js</a></li><li class="lvl2"><a href="#tileset_gridjs">tileset_grid.js</a></li></ul></nav>
+</div>
+<footer class="sitefoot">
+  <p>qjs-opencv — MIT. Built from the repo's own markdown by
+     <a href="https://github.com/rsenn/rsenn/tree/main/tools/site">rsenn/rsenn tools/site</a>.</p>
+</footer>
+<script>
+document.querySelector('.themetoggle').addEventListener('click', function () {
+  var d = document.documentElement;
+  var dark = d.dataset.theme ? d.dataset.theme === 'dark'
+    : matchMedia('(prefers-color-scheme: dark)').matches;
+  d.dataset.theme = dark ? 'light' : 'dark';
+  try { localStorage.setItem('theme', d.dataset.theme); } catch (e) {}
+});
+</script>
+</body>
+</html>

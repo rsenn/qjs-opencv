@@ -4,24 +4,26 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>qjs-opencv — qjs-opencv</title>
-<meta name="description" content="OpenCV bindings for QuickJS — Mat, contours, imgproc, calib3d, dnn and video I/O in a loadable QuickJS module.">
-<link rel="stylesheet" href="assets/style.css">
+<meta name="description" content="qjs-opencv — OpenCV bindings for QuickJS. Mat, contours, imgproc, calib3d, dnn and video I/O in a loadable QuickJS module.">
+<link rel="stylesheet" href="assets/base.css">
+<link rel="stylesheet" href="assets/theme.css">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 </head>
-<body class="has-sidebar">
+<body class="has-sidebar" data-site="qjs-opencv" data-root="">
 <header class="topbar">
-  <a class="brand" href="index.html"><span class="mark">{ }</span> qjs-opencv</a>
+  <a class="brand" href="index.html"><span class="mark">{ }</span> <span class="brand-name">qjs-opencv</span></a>
   <nav class="topnav">
     <a href="getting-started.html">Get started</a>
     <a href="docs/algorithms.html">Docs</a>
+    <a href="examples.html">Examples</a>
     <a href="docs/roadmap.html">Roadmap</a>
     <a href="https://github.com/rsenn/qjs-opencv" target="_blank" rel="noopener">GitHub</a>
   </nav>
   <button class="themetoggle" type="button" aria-label="Toggle colour scheme">◐</button>
 </header>
 <div class="layout">
-<aside class="sidebar"><div class="navgroup"><h3>Start here</h3><ul><li><a href="getting-started.html" class="here">Getting started</a></li></ul></div><div class="navgroup"><h3>Reference</h3><ul><li><a href="docs/algorithms.html">Custom algorithms</a></li><li><a href="docs/roadmap.html">Binding roadmap</a></li></ul></div></aside>
+<aside class="sidebar"><div class="navgroup"><h3>Start here</h3><ul><li><a href="getting-started.html" class="here">Getting started</a></li></ul></div><div class="navgroup"><h3>Reference</h3><ul><li><a href="docs/algorithms.html">Custom algorithms</a></li><li><a href="docs/roadmap.html">Binding roadmap</a></li></ul></div><div class="navgroup"><h3>Examples</h3><ul><li><a href="examples.html">Examples</a></li></ul></div></aside>
 <main class="doc">
 <article><h1 id="qjs-opencv"><a class="anchor" href="#qjs-opencv" aria-hidden="true">#</a>qjs-opencv</h1>
 <p>OpenCV bindings for <a href="https://bellard.org/quickjs/" target="_blank" rel="noopener">QuickJS</a>, compiled into a single loadable module <code>opencv.so</code> (plus optional per-class <code>quickjs-*.so</code> modules). Import it as:</p>
@@ -85,8 +87,8 @@
 <nav class="toc"><h3>On this page</h3><ul><li class="lvl2"><a href="#design">Design</a></li><li class="lvl2"><a href="#build">Build</a></li><li class="lvl2"><a href="#what-works">What works</a></li><li class="lvl2"><a href="#whats-missing">What's missing</a></li><li class="lvl2"><a href="#binding-coverage">Binding coverage</a></li><li class="lvl2"><a href="#repository-layout">Repository layout</a></li></ul></nav>
 </div>
 <footer class="sitefoot">
-  <p>qjs-opencv — MIT licensed. Built from the repo's own markdown by
-     <a href="https://github.com/rsenn/qjs-opencv/blob/main/tools/site/build.js">tools/site/build.js</a>, running on qjsm.</p>
+  <p>qjs-opencv — MIT. Built from the repo's own markdown by
+     <a href="https://github.com/rsenn/rsenn/tree/main/tools/site">rsenn/rsenn tools/site</a>.</p>
 </footer>
 <script>
 document.querySelector('.themetoggle').addEventListener('click', function () {

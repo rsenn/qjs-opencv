@@ -1,0 +1,32 @@
+/* qjs-opencv — computer vision. Signal blue on graph paper: a pixel grid
+   behind the hero, square corners, crosshair rule under section headings. */
+:root {
+  --bg:          light-dark(#fafdfb, #0e1810);
+  --bg-raised:   light-dark(#ffffff, #152418);
+  --bg-sunken:   light-dark(#eef8f0, #0a130c);
+  --bg-code:     light-dark(#f1faf3, #152418);
+  --fg:          light-dark(#162419, #e4f2e7);
+  --fg-muted:    light-dark(#55755c, #93b89b);
+  --fg-faint:    light-dark(#84a68b, #628c6b);
+  --line:        light-dark(#dff0e3, #1f3624);
+  --line-strong: light-dark(#c6e2cc, #2f5036);
+  --accent:      light-dark(#1f7a33, #baffc9);
+  --accent-fg:   light-dark(#ffffff, #071c0c);
+  --accent-soft: light-dark(#e0fbe6, #144a20);
+
+  --t-kw:   light-dark(#7c3aed, #b69cff);
+  --t-type: light-dark(#1dc942, #5aff7e);
+
+  --radius: 3px;
+  --heading-tracking: -0.025em;
+  --mark-fg: var(--accent);
+  --hero-bg: linear-gradient(color-mix(in srgb, var(--accent) 12%, transparent) 1px, transparent 1px) 0 0 / 24px 24px,
+             linear-gradient(90deg, color-mix(in srgb, var(--accent) 12%, transparent) 1px, transparent 1px) 0 0 / 24px 24px;
+  --h2-rule: 0;
+}
+
+.doc h2 { padding-top: 0; }
+.doc h2::before { content: "⌖"; color: var(--accent); margin-right: 0.4em; font-weight: 400; }
+.hero { padding-left: 1.5rem; padding-right: 1.5rem; }
+.hero h1 { font-weight: 800; }
+.codeblock { border-left: 3px solid var(--accent); }

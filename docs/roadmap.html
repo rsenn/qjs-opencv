@@ -4,54 +4,260 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TODO — binding backlog — qjs-opencv</title>
-<meta name="description" content="OpenCV bindings for QuickJS — Mat, contours, imgproc, calib3d, dnn and video I/O in a loadable QuickJS module.">
-<link rel="stylesheet" href="../assets/style.css">
+<meta name="description" content="qjs-opencv — OpenCV bindings for QuickJS. Mat, contours, imgproc, calib3d, dnn and video I/O in a loadable QuickJS module.">
+<link rel="stylesheet" href="../assets/base.css">
+<link rel="stylesheet" href="../assets/theme.css">
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 </head>
-<body class="has-sidebar">
+<body class="has-sidebar" data-site="qjs-opencv" data-root="../">
 <header class="topbar">
-  <a class="brand" href="../index.html"><span class="mark">{ }</span> qjs-opencv</a>
+  <a class="brand" href="../index.html"><span class="mark">{ }</span> <span class="brand-name">qjs-opencv</span></a>
   <nav class="topnav">
     <a href="../getting-started.html">Get started</a>
     <a href="../docs/algorithms.html">Docs</a>
+    <a href="../examples.html">Examples</a>
     <a href="../docs/roadmap.html">Roadmap</a>
     <a href="https://github.com/rsenn/qjs-opencv" target="_blank" rel="noopener">GitHub</a>
   </nav>
   <button class="themetoggle" type="button" aria-label="Toggle colour scheme">◐</button>
 </header>
 <div class="layout">
-<aside class="sidebar"><div class="navgroup"><h3>Start here</h3><ul><li><a href="../getting-started.html">Getting started</a></li></ul></div><div class="navgroup"><h3>Reference</h3><ul><li><a href="algorithms.html">Custom algorithms</a></li><li><a href="roadmap.html" class="here">Binding roadmap</a></li></ul></div></aside>
+<aside class="sidebar"><div class="navgroup"><h3>Start here</h3><ul><li><a href="../getting-started.html">Getting started</a></li></ul></div><div class="navgroup"><h3>Reference</h3><ul><li><a href="algorithms.html">Custom algorithms</a></li><li><a href="roadmap.html" class="here">Binding roadmap</a></li></ul></div><div class="navgroup"><h3>Examples</h3><ul><li><a href="../examples.html">Examples</a></li></ul></div></aside>
 <main class="doc">
 <article><h1 id="todo--binding-backlog"><a class="anchor" href="#todo--binding-backlog" aria-hidden="true">#</a>TODO — binding backlog</h1>
 <p>Prioritized by leverage for plot-cv's actual pipelines — laser-cutting SVG export, and three planned vectorization examples (<code>examples/sticker2svg.js</code>, <code>examples/collage-art.js</code>, <code>examples/vector-trace.js</code>) — not by raw OpenCV API surface. Derived from a <code>scripts/binding_coverage.js</code> run against <code>build/x86_64-linux-debug/opencv.so</code> (OpenCV 4.13.0), filtered to <code>cv::</code>-namespace symbols only.</p>
 <p>Regenerate the underlying data with:</p>
 <div class="codeblock" data-lang="bash"><pre><code class="language-bash"><span class="t-id">qjsm</span> <span class="t-id">scripts</span>/<span class="t-id">binding_coverage.js</span> <span class="t-op">--module</span>=<span class="t-id">build</span>/<span class="t-id">x86_64-linux-debug</span>/<span class="t-id">opencv.so</span> \
   <span class="t-op">--lib-dir</span>=/<span class="t-id">opt</span>/<span class="t-id">opencv-4.13.0-x86_64</span>/<span class="t-id">lib</span> <span class="t-op">--namespace</span>=<span class="t-id">cv</span> <span class="t-op">--verbose</span> <span class="t-op">--out</span>=<span class="t-id">cov.txt</span></code></pre></div>
+<h2 id="getscreenresolution-build-config-fix-2026-09-08-root-cause-fixed-2026-09-09"><a class="anchor" href="#getscreenresolution-build-config-fix-2026-09-08-root-cause-fixed-2026-09-09" aria-hidden="true">#</a>getScreenResolution() build-config fix (2026-09-08, root cause fixed 2026-09-09)</h2>
+<p><code>js_highgui.cpp</code>'s <code>getScreenResolution()</code> has an `#if _WIN32 / #elif
+defined(HAVE_X11)<code>gate, but this build's CMake</code>HAVE_LIBX11` check fails
+even though X11 clearly works (namedWindow/imshow/etc. all work fine), so
+<code>HAVE_X11</code> never gets set and neither branch compiles - <code>width</code>/<code>height</code>
+were left uninitialized. Symptom escalated across a real session: first
+observed as a GUI window opening too small (garbage happened to read as
+<code>{0,0}</code> in that environment), then as a hard crash on another machine -
+<code>cv::Exception ... Failed to allocate 34558810068822 bytes</code> - because
+there the same uninitialized memory happened to read as a large positive
+number, which <code>js/vectorizer/gui/app.js</code>'s first-pass fix (<code>&gt; 0</code> check
+only) let through straight into <code>new Canvas(w, h)</code> → <code>new Mat(...)</code>.</p>
+<p>Fixed <em>for now</em> at both layers (both left in place as defense in depth):</p>
+<ul>
+<li><code>js_highgui.cpp</code>: zero-initialize <code>width</code>/<code>height</code>, so a build where
+neither branch compiles deterministically returns <code>{0,0}</code> instead of
+random stack garbage.</li>
+<li><code>js/vectorizer/gui/app.js</code>: check the reported size against a plausible
+real-monitor range (320..16384 per axis), not just <code>&gt; 0</code>, before trusting
+it - falls back to a 1920x1080 guess otherwise.</li>
+</ul>
+<p><strong>Root cause found and fixed (2026-09-09):</strong> it was never a detection
+failure - <code>CMakeCache.txt</code> already had <code>HAVE_LIBX11:INTERNAL=1</code> and
+<code>HAVE_X11_X_H:INTERNAL=TRUE</code>, and <code>CMakeConfigureLog.yaml</code> shows the
+<code>check_library_exists(X11 XOpenDisplay ...)</code> try-compile succeeding
+(<code>exitCode: 0</code>). The actual bug: <code>CMakeLists.txt:99-101</code> computed
+<code>HAVE_X11</code> via a plain <code>set(HAVE_X11 TRUE)</code> but never forwarded it to the
+compiler as a <code>-D</code> flag, unlike every other <code>HAVE_*</code> flag in that file
+(all go through <code>add_definitions(-D...)</code> or <code>functions.cmake</code>'s
+<code>var2define</code>). <code>HAVE_X11</code> was true in CMake's own variable scope the whole
+time; the compiler just never saw it. Fixed by adding
+<code>add_definitions(-DHAVE_X11)</code> inside the `if(HAVE_LIBX11 AND
+HAVE_X11_X_H)<code>block. Rebuilt clean, confirmed</code>-DHAVE_X11` now appears in
+<code>build/x86_64-linux-gnu/CMakeFiles/quickjs-opencv.dir/flags.make</code>, and
+<code>cv.getScreenResolution()</code> now returns the real display size (1920x1080)
+instead of the <code>{0,0}</code> fallback. No explicit <code>-lX11</code> link line was needed -
+the symbols (<code>XOpenDisplay</code>, <code>DefaultScreenOfDisplay</code>) resolve fine at
+module-load time since OpenCV's own GTK/X11 highgui backend already pulls
+libX11 into the process.</p>
+<h2 id="skywatch--hierarchy-contract-fix--ml-contrail-detector-2026-09-07"><a class="anchor" href="#skywatch--hierarchy-contract-fix--ml-contrail-detector-2026-09-07" aria-hidden="true">#</a>skywatch — hierarchy contract fix + ML contrail detector (2026-09-07)</h2>
+<p>Picked back up from <code>js/skywatch/skywatch.md</code> (contrail/aircraft
+correlation project). Ran out of session budget partway through; two
+pieces of follow-up work for next time.</p>
+<h3 id="1-findcontours-hierarchy-argument-opencvjs-contract-fix"><a class="anchor" href="#1-findcontours-hierarchy-argument-opencvjs-contract-fix" aria-hidden="true">#</a>1. findContours hierarchy-argument opencv.js contract fix</h3>
+<p>See BUGS: <code>findcontours-hierarchy-arg-silently-empty-on-plain-array</code>.
+Mirror the fix already done for the <em>contours</em> argument
+(<code>drawcontours-silently-noops-on-plain-array</code>, fixed this session):</p>
+<ul>
+<li>In <code>js_imgproc.cpp</code>'s <code>js_cv_find_contours</code>: require <code>argv[2]</code>
+(hierarchy) to resolve to a real Mat/UMat when passed, throw a
+<code>TypeError</code> otherwise (matching opencv.js, which also requires a Mat
+there - no plain-array convenience). Leave it optional (omitted →
+<code>cv::noArray()</code>) same as today.</li>
+<li>Fix <code>js/cvVectorization.js</code>'s two call sites that currently pass
+<code>hierarchy = []</code> and then read <code>hierarchy[i][3]</code>/<code>hierarchy[i][2]</code>
+afterward - this never worked (hierarchy was always empty), so this is
+an actual runtime bug fix, not just a contract migration. Reuse
+<code>js/vectorizer/cv/convert.js</code>'s existing <code>hierarchyRows()</code> helper
+(already handles the Mat 1×N×4 CV_32S parsing correctly) instead of
+hand-rolling the parse again.</li>
+<li>Switch the four vectorizer methods that pass <code>hierarchy = []</code> but never
+read it (<code>skeleton.js</code>, <code>canny-contours.js</code>, <code>shape-fit.js</code>,
+<code>palette-regions.js</code>) to <code>new Mat()</code> for contract cleanliness, even
+though it's a no-op behaviorally for them.</li>
+<li>Rebuild, rerun <code>tests/unittests/test_imgproc.js</code> + the vectorizer
+smoke-tests from this session (see conversation for the harness script
+shape - <code>apply()</code> each vectorizer method against a synthetic image with
+a rectangle + circle) to confirm nothing regressed.</li>
+</ul>
+<h3 id="2-ml-based-contrail-detector-trained-via-ads-b-weak-supervision"><a class="anchor" href="#2-ml-based-contrail-detector-trained-via-ads-b-weak-supervision" aria-hidden="true">#</a>2. ML-based contrail detector, trained via ADS-B weak supervision</h3>
+<p>The pure-vision detector (<code>examples/skywatch_contrail_detect.js</code>) works
+on clear-sky frames but can't reliably separate a contrail from linear
+natural cirrus on its own (see <code>js/skywatch.md</code> phase 3a - LSD and Hough
+were both tried and both failed for principled reasons, not tuning gaps).
+The user wants to add ML, specifically asked whether an RNN is the right
+call, and wants training feedback sourced from real ADS-B position fixes.
+Notes for that conversation, not yet designed in detail:</p>
+<ul>
+<li><strong>Not an RNN for the core detection.</strong> An RNN is for sequential data
+(time series, text); the per-frame contrail-vs-sky decision is a
+spatial/pixel problem, which is what CNN-based semantic segmentation
+architectures (U-Net and descendants) are for. A temporal model (small
+RNN, or more likely just a Kalman filter given how little data this
+project will realistically have) could sit on <em>top</em> of per-frame
+detections to track a trail's width growth smoothly across frames, but
+that's a secondary refinement over the primary detector, not the
+detector itself - don't let "we want temporal reasoning" become "so
+the core model must be an RNN."</li>
+<li><strong>The genuinely good idea in the user's ask: ADS-B as weak/distant
+supervision.</strong> Once phase 4 (ADS-B pixel-matching, see skywatch.md) is
+running, every <em>matched</em> trail is a high-confidence, auto-generated
+training label - no manual annotation needed. This is the actual
+labeled-data source: accumulate (frame crop, ADS-B-confirmed trail
+mask) pairs over weeks/months of real operation before training
+anything.</li>
+<li><strong>Realistic data-volume check needed before committing to a from-
+scratch deep model.</strong> A home ADS-B+camera setup will generate at most
+low hundreds of confirmed-trail frames in the first months. That's not
+enough to train a segmentation CNN from scratch. Options to weigh next
+session: (a) fine-tune a small pretrained segmentation backbone
+(MobileNet-UNet or similar) once enough weak labels exist, deployed via
+ONNX + <code>cv.dnn.readNetFromONNX</code> (already used elsewhere in this repo -
+<code>examples/edge_detection_dexined.js</code>, `examples/neural-font-sr-
+ESPSCx2.js` - same pattern would apply here: train off-Pi on a machine
+with a GPU, export ONNX, run inference on the Pi); (b) skip deep
+learning for now and instead try a <strong>Frangi/vesselness-style filter</strong>
+(multi-scale Hessian-eigenvalue ridge detector, originally for medical
+vessel segmentation) - not currently bound in this project, would need
+implementing via existing Sobel/second-derivative bindings - which is
+purpose-built for exactly this shape of problem (thin curvilinear
+bright structure against a textured background) and needs zero training
+data; likely the better near-term ROI than jumping straight to ML given
+the data-volume reality. Worth prototyping (b) before committing to (a).</li>
+<li>Whichever direction: keep the ADS-B match as the <em>ground truth signal</em>
+a candidate is checked against, not something the vision model has to
+independently reconstruct - the whole reason this project anchors to
+ADS-B in the first place is that vision alone is provably ambiguous on
+a cirrus-heavy sky (see skywatch.md phase 3a's LSD/Hough findings).</li>
+</ul>
+<h2 id="up-next--vectorization-pipeline-leverage-2026-09-05"><a class="anchor" href="#up-next--vectorization-pipeline-leverage-2026-09-05" aria-hidden="true">#</a>Up next — vectorization pipeline leverage (2026-09-05)</h2>
+<p>Surfaced while researching a conditioning/vectorization/post-processing
+pipeline for <code>js/vectorizer/</code> (schematic/line-drawing tracing goal). Not
+started — noted for later.</p>
+<ul>
+<li>[ ] <strong><code>dnn_superres::DnnSuperResImpl</code> convenience API</strong> → extend <code>js_dnn.cpp</code>.
+ESPCN/FSRCNN currently load through the generic <code>readNetFromONNX</code> +
+<code>Net.forward()</code> path (works today, see the recent ESPCN fix), but
+opencv.js/native OpenCV also expose a dedicated <code>setModel(name, scale)</code> /
+<code>upsample(src, dst)</code> API on <code>DnnSuperResImpl</code> that hides the
+blob-shape/scale bookkeeping. Bind <code>dnn_superres::DnnSuperResImpl::create</code>,
+<code>.readModel</code>, <code>.setModel</code>, <code>.upsample</code>, <code>.getScale</code>, <code>.getAlgorithm</code> —
+small, self-contained, matches the existing <code>js_dnn.cpp</code> factory pattern.</li>
+<li>[ ] <strong>Page dewarping (DocTr/DocUNet-style) for photographed book pages.</strong>
+No OpenCV C++ module does this (checked: no <code>cv::dewarp</code>/equivalent
+anywhere in <code>cv::</code>) — it has to come from a DNN. Two separate pieces of
+work, in order:
+<ol>
+<li><strong>Export script, <code>scripts/export_docunet_onnx.py</code></strong> (new file, Python
+<ul>
+<li>PyTorch, not yet started) — fetch a pretrained DocTr or DocUNet</li>
+</ul>
+<p>checkpoint (DocTr: <a href="https://github.com/fh2019ustc/DocTr" target="_blank" rel="noopener">https://github.com/fh2019ustc/DocTr</a>; DocUNet:
+<a href="https://github.com/cvlab-stonybrook/DocUNet" target="_blank" rel="noopener">https://github.com/cvlab-stonybrook/DocUNet</a> — confirm which has usable
+pretrained weights and a permissive-enough license before picking one),
+load it in PyTorch, and <code>torch.onnx.export()</code> it with a fixed square
+input size (mirror the fixed-<code>inferSize</code> pattern <code>js/cvVectorization.js</code>
+already uses for its optional segmenter) since this project's <code>Net</code>
+binding doesn't exercise dynamic-axes ONNX. Verify the exported graph's
+op set is covered by OpenCV's ONNX importer (or by <code>ENGINE_ORT</code>, now
+confirmed available in this build — see BUGS/session notes on
+<code>cv.dnn.ENGINE_ORT</code>) before considering this step done.</p></li>
+<li><strong>Inference + apply, JS-only, no new C++ expected</strong>: once the ONNX file
+exists, loading and running it needs nothing beyond what already
+works — <code>readNetFromONNX</code> + <code>blobFromImage</code> + <code>Net.forward()</code> (proven
+end-to-end against a real transformer-ish segmentation model this
+session). The model's output is a dense per-pixel displacement/flow
+field; applying it is exactly <code>cv.remap()</code> (already bound,
+<code>js_imgproc.cpp</code>) with the field converted to the <code>CV_32FC1</code> x/y maps
+<code>remap</code> expects. Only fall back to new C++ if profiling shows the
+field-to-maps conversion needs to leave JS.</li>
+</ol></li>
+<li>[ ] <strong>Trainable pipeline-permutation evaluator.</strong> Given the ~500 "sensible"
+conditioning/vectorization/post-processing permutations already possible
+in <code>js/cvVectorization.js</code> (see session notes 2026-09-05), build a scorer
+that ranks a permutation's polyline output on several qualitative axes
+without needing a ground-truth vector drawing to compare against:
+<ol>
+<li><strong>Reference-free metrics</strong> computed from <code>(sourceImage, VectorData)</code>
+pairs - edge fidelity (rasterize the output polylines and compare
+against the source's own Canny/EdgeDrawing edge map via IoU or Chamfer
+distance), compactness (point/shape count relative to image area),
+geometric regularity (angle-histogram peakiness at 0°/45°/90°, a real
+signal for architectural/schematic line art specifically), and noise
+(count of tiny disconnected fragments below some length threshold).</li>
+<li><strong>Trainable layer on top</strong>: a plain linear/logistic regression over
+that metric vector (not deep learning - the label budget will always
+be tiny), fit from a small set of the user's own thumbs-up/down ratings
+on actual pipeline runs (expect ~20-30 rated examples before it tracks
+taste meaningfully). Worth building step 1 alone first and checking
+whether the unweighted/heuristic ranking already correlates with
+judgment before investing in the regression step.</li>
+</ol>
+<p>Not started - scoped in conversation, no code written yet.</p></li>
+<li>[ ] <strong>os.Worker termination (experimental, C-level, risky).</strong> Checked
+<code>quickjs-libc.c</code> (<code>js_worker_proto_funcs</code>, ~line 3538): <code>os.Worker</code>
+exposes only <code>postMessage</code>/<code>onmessage</code> - there is no <code>terminate()</code> at
+all, and <code>js_worker_finalizer</code> (~line 3245) only frees the JS-side
+pipe wrappers on GC, never touches the underlying OS thread. A worker
+thread runs <code>js_std_loop()</code> (poll loop) forever until the whole
+process exits - there is currently no way, from JS or from another
+thread, to stop one early, and no cooperative cancellation point
+inside a blocking native call like <code>cv.Canny()</code> either.
+This matters for <code>js/cvThreadPool.js</code>: when the vectorizer GUI
+supersedes an in-flight pool job (e.g. the user drags a trackbar
+again before the previous run finishes), the worker computing the
+stale result can't be stopped - it runs to completion regardless.
+<code>ThreadPool.runLatest()</code> (js/cvThreadPool.js) already discards the
+stale <em>result</em> for free, so correctness isn't at stake, only wasted
+CPU/latency on that one worker until it's free again.
+A real fix would need new C-level work in
+<code>../quickjs/quickjs-libc.c</code> (a separate project from this repo):
+add <code>Worker.prototype.terminate()</code>, most plausibly <code>pthread_cancel()</code>
+or a self-pipe/eventfd wakeup + a checked flag in <code>js_std_loop</code>'s
+poll. Both are genuinely risky mid-<code>cv::Mat</code>/OpenCV-call: a
+<code>pthread_cancel()</code> landing inside a C++ destructor stack, or between
+two calls that assume the first completed, can corrupt state or leak
+native buffers (<code>cv::Mat</code> ref-counting, ONNX <code>Net</code> internals) rather
+than cleanly unwinding. Before attempting it: (1) confirm OpenCV's
+own build enables cancellation points safely (or forces
+<code>PTHREAD_CANCEL_DISABLE</code> around risky sections), (2) prototype
+against a throwaway worker doing a slow <code>cv.dnn.Net.forward()</code> call
+and verify no corruption across repeated cancel/respawn cycles before
+trusting it in the real pool. Deliberately not attempted in this pass
+<ul>
+<li><code>runLatest()</code>'s discard-stale-result approach is the shipped fix.</li>
+</ul></li>
+</ul>
 <h2 id="opencvjs-example-compatibility-gaps-2026-08-17"><a class="anchor" href="#opencvjs-example-compatibility-gaps-2026-08-17" aria-hidden="true">#</a>opencv.js Example Compatibility Gaps (2026-08-17)</h2>
 <p>Cross-checked every <code>cv.*</code> binding referenced by the 80 opencv.js example
 pages cataloged in <code>doc/opencv-js-examples.md</code> (source: local checkout
 <code>/mnt/data/Projects/opencv/doc/js_tutorials/js_assets/*.html</code>) against this
 project's actual live exports (<code>Object.keys(cv)</code> from a built
 <code>build/x86_64-linux-gnu/opencv.so</code>, OpenCV 5.0.0). 158 unique <code>cv.*</code>
-symbols are referenced across all 80 pages; 143 already resolve as of
-2026-08-17 (<code>matFromArray</code> shipped - see <code>BUGS: opencvjs-matfromarray-missing</code>,
-now FIXED). The 15 gaps below block one or more example pages from
-running unmodified; full
-detail (repro, exact source locations) for each is filed as its own entry
-in <code>BUGS</code> under the <code>opencvjs-*</code> canonical-name prefix.</p>
-<p><strong>Highest impact - fix first:</strong></p>
-<ul>
-<li><strong><code>.delete()</code> missing on <code>Mat</code></strong> - not a binding gap, an architectural
-difference (QuickJS GC + finalizers vs opencv.js's manual wasm-heap
-<code>.delete()</code>). The <code>*Vector</code> classes already have a harmless no-op
-<code>.delete()</code> (<code>js_vector.hpp:289</code>); <code>Mat</code> is the one class that doesn't,
-and it's called <strong>349 times</strong> across the 80 pages, more than any other
-single symbol, so every unmodified example hits it immediately. A
-harmless no-op <code>.delete()</code> stub on <code>Mat</code> would fix all 80 pages' single
-biggest compatibility blocker in one change, without touching the GC
-design. See <code>BUGS: opencvjs-mat-delete-missing</code>.</li>
-</ul>
+symbols are referenced across all 80 pages; 144 already resolve as of
+2026-08-24 (<code>matFromArray</code> and <code>Mat.delete()</code> both shipped). 14 gaps
+below still block one or more example pages from running unmodified;
+full detail (repro, exact source locations) for each is filed as its own
+entry in <code>BUGS</code> under the <code>opencvjs-*</code> canonical-name prefix.</p>
 <p><strong>New binding work, by tutorial category:</strong></p>
 <ul>
 <li><code>js_video</code> (5 example pages, all blocked): no <code>opencv2/video.hpp</code>
@@ -106,7 +312,7 @@ opencvjs-fs-createdatafile-not-applicable`.</p>
 <h2 id="already-solved-dont-rebuild"><a class="anchor" href="#already-solved-dont-rebuild" aria-hidden="true">#</a>Already solved, don't rebuild</h2>
 <ul>
 <li><strong>Contour → SVG bezier splines.</strong> No OpenCV algorithm does this (checked the full coverage survey — no such symbol exists, bound or unbound). It doesn't need a library either: <code>js/cvVectorization.js</code> (uncommitted) already has a correct Schneider/Graphics-Gems <code>FitCurves</code> cubic-bezier fitter (<code>CurveFitter</code> — corner detection, chord-length parameterization, Newton-Raphson reparameterization, recursive error-based subdivision) consuming <code>contour.array</code> directly, plus <code>SvgBuilder</code> for multi-region path output with holes via <code>fill-rule="evenodd"</code>. Keep this in JS; it's O(n) per subdivision and QuickJS handles it fine. Only reconsider a C++ port if profiling on a real workload shows it's the bottleneck.</li>
-<li>~~<strong>Polyline simplification.</strong> All seven <code>psimpl</code> algorithms are freestanding functions under the <code>cv.psimpl.*</code> namespace~~ <strong>STALE as of 2026-08-19 - regressed, not solved.</strong> Commit <code>c1d96d4</code> ("got rid of js_contour.[ch]pp completely") deleted the file registering <code>cv.psimpl</code> with no replacement; <code>cv.psimpl</code> is now <code>undefined</code>. <code>tests/unittests/test_psimpl_functions.js</code> (still present, still correct) fails all 9 tests. The underlying algorithm code is still in the tree (<code>include/psimpl.hpp</code>, <code>src/line.cpp</code>), just unregistered - and also still wired up in the uncommitted <code>worktree-js-read-points</code> branch's own <code>js_contour.cpp</code>. See <code>BUGS: cv-psimpl-namespace-deleted-without-replacement</code>.</li>
+<li><strong>Polyline simplification.</strong> All seven <code>psimpl</code> algorithms are available under the <code>cv.psimpl.*</code> namespace via <code>js_psimpl.cpp</code>. Zero-copy across Mat CV_32SC2, Mat CV_64FC2, <code>PointVector</code>, and <code>Point2fVector</code>, with a plain-array fallback. <code>tests/unittests/test_psimpl_functions.js</code> passes 37/37 (7 algorithms x 5 input types, plus error-path tests).</li>
 <li><strong>Contour → freestanding-function migration and the generic vector infrastructure.</strong> The custom <code>Contour</code> class is gone entirely; all 16 shape-analysis functions (<code>contourArea</code>, <code>boundingRect</code>, <code>convexHull</code>, ...) are freestanding, and all 16 opencv.js vector-container types (<code>MatVector</code>, <code>PointVector</code>, <code>Point2fVector</code>, ..., <code>CharVectorVector</code>) are implemented via the generic <code>JSVector&lt;T&gt;</code> template (<code>include/js_vector.hpp</code>) with <code>push_back</code>/<code>get</code>/<code>set</code>/<code>size</code>/<code>Symbol.iterator</code>/<code>delete()</code>. <code>findContours</code> accepts <code>MatVector</code> or <code>PointVectorVector</code> as zero-copy output, alongside a plain-<code>Array</code> fallback. See <code>js_vector.hpp</code>, <code>js_vector.cpp</code>, and <code>tests/unittests/test_contour_functions.js</code>/<code>test_psimpl_functions.js</code>.</li>
 <li><strong>Skeleton tracing.</strong> <code>algorithms/skeleton_lines.hpp</code> (Guo-Hall thinning + topology-aware tracing that cuts at junctions) is fully bound: <code>skeletonizeGuohall</code>, <code>traceLines</code>, <code>degreeMap</code>, <code>skeletonizeAndTrace</code>. Distinct from <code>findContours</code> (region boundaries) and <code>LineSegmentDetector</code>/<code>FastLineDetector</code> (straight-line detection) — the three don't substitute for each other, pick per input character.</li>
 <li><strong>Region proposal for collage-art's "several algorithms to pick a motive."</strong> <code>grabCut</code> (bound) plus <code>ximgproc::segmentation</code> selective-search/graph-segmentation (already bound) cover this with zero new binding work.</li>
@@ -193,6 +399,309 @@ opencvjs-fs-createdatafile-not-applicable`.</p>
 <li><strong>videostab</strong> — full video stabilization pipeline; Tier 2's ECC/optical-flow primitives cover the useful subset directly.</li>
 <li><strong>datasets, flann, reg, shape, fuzzy, hfs, hdf, dpm, mcc, rapid, wechat_qrcode, xobjdetect, bioinspired, alphamat, intensity_transform, phase_unwrapping, signal, plot, dnn_objdetect, dnn_superres, ccalib, cvv</strong> — niche, deprecated, or infrastructure-only; no identified use case.</li>
 </ul>
+<h2 id="font-tool--render_fontjs-rebuild-2026-08-28"><a class="anchor" href="#font-tool--render_fontjs-rebuild-2026-08-28" aria-hidden="true">#</a>Font tool — <code>render_font.js</code> rebuild (2026-08-28)</h2>
+<p>Goal: pick the tiniest-still-readable pixel fonts for an 84x48 or 128x128
+LCD out of <code>~/Downloads/fonts/</code> (56 files/dirs currently) plus system fonts
+(<code>fc-list</code>), and separately pick a few "design opportunity" fonts (artistic
+display faces, icon/UI-element fonts) — then convert selected fonts to the
+existing PNG+JSON glyph-sheet format, and from there to a bit-packed C
+array ready to blit to the display's native byte order.</p>
+<p>Current <code>render_font.js</code> (single-font PNG+JSON exporter, with an fc-query
+metadata pass and a bitmap-vs-vector size-sanity heuristic) is the base to
+extend, not throw away — its <code>queryFontMetadata</code>/<code>isCovered</code>/grid-layout/
+size-sanity code is reused as-is by later stages.</p>
+<p>Staged so each stage is reviewable and demoable on its own; <strong>do not start
+a stage before the previous one is agreed</strong> (this file records the plan,
+it doesn't authorize skipping ahead). Sub-stages within an info-gathering
+stage can land independently/out of order — call out below where that's
+true.</p>
+<h3 id="stage-0--directory-walk-no-analysis-yet"><a class="anchor" href="#stage-0--directory-walk-no-analysis-yet" aria-hidden="true">#</a>Stage 0 — directory walk, no analysis yet</h3>
+<ul>
+<li>[ ] Point <code>render_font.js</code> (or a new <code>examples/font_scan.js</code>) at a
+directory (default <code>~/Downloads/fonts/</code>) or <code>fc-list</code> output, recursing
+into subdirectories, and just list every <code>.ttf</code>/<code>.otf</code>/<code>.bdf</code>/<code>.pcf</code>
+file found with its path and file size. No fc-query/FreeType calls yet.
+Proves the traversal + font-format filtering before anything else is
+layered on.</li>
+</ul>
+<h3 id="stage-1--terminal-truecolor-renderer-proof-of-concept"><a class="anchor" href="#stage-1--terminal-truecolor-renderer-proof-of-concept" aria-hidden="true">#</a>Stage 1 — terminal truecolor renderer (proof of concept)</h3>
+<p><strong>User wants to see this before any deeper info-gathering work.</strong></p>
+<ul>
+<li>[ ] Render one font's glyph sample to the terminal using 24-bit truecolor
+ANSI escapes (<code>\x1b[38;2;R;G;Bm</code>) and the half-block trick (<code>▀</code>/<code>▄</code> with
+independent fg/bg color per half-cell) to get ~2x vertical resolution
+out of normal terminal cells for an 8-bit-grayscale glyph bitmap.
+Input: a font file + size + a string (default something like
+<code>ABCabc123!@#</code>). Output: the rendered sample printed directly to stdout.
+No file I/O, no UI — just `qjsm examples/render_font.js --preview
+&lt;font&gt; --size 16 --text "..."` printing to the terminal.</li>
+<li>[ ] Extend to list samples for <em>multiple</em> fonts in one run (e.g. every
+font in a directory), one sample block per font with the filename as a
+header, printed top-to-bottom — this is the "let me list sample
+renderings" step, still no interactive browsing.</li>
+</ul>
+<h3 id="stage-2--info-gathering-sub-stage-a-cheap-fc-query-only"><a class="anchor" href="#stage-2--info-gathering-sub-stage-a-cheap-fc-query-only" aria-hidden="true">#</a>Stage 2 — info-gathering, sub-stage A (cheap, <code>fc-query</code> only)</h3>
+<p>Extends <code>queryFontMetadata()</code>. All fields come from a single <code>fc-query</code>
+call already being made — no new subprocess, no FreeType calls.</p>
+<ul>
+<li>[ ] <code>family</code>, <code>style</code>, <code>weight</code>, <code>width</code>, <code>slant</code> — for grouping/sorting
+in the eventual browser.</li>
+<li>[ ] <code>spacing</code> (<code>mono</code>/<code>dual</code>/<code>charcell</code>/<code>proportional</code>) — <strong>highest
+priority signal</strong>: charcell fonts guarantee a fixed advance, which a
+byte-packed glyph table needs. Verify against Stage 2C's empirical
+advance-width check (fontconfig's tag is sometimes wrong).</li>
+<li>[ ] <code>outline</code>/<code>scalable</code> (already partially used), <code>fontformat</code>
+(TrueType/CFF/Type1/BDF/PCF) — BDF/PCF are literal pre-rasterized bitmap
+fonts, a different (simpler) code path than rasterizing an outline.</li>
+<li>[ ] <code>pixelsize</code> as a <strong>list</strong>, not one value — multi-strike bitmap fonts
+report several native sizes; report all of them, not just the first.</li>
+<li>[ ] <code>fontversion</code>, <code>foundry</code>, <code>decorative</code> (fontconfig's own
+"display/art font, not body text" flag — a cheap first pass at the
+"artistic" bucket), <code>lang</code>/<code>capability</code> (rough language coverage).</li>
+</ul>
+<h3 id="stage-2--info-gathering-sub-stage-b-font-program-level-metrics"><a class="anchor" href="#stage-2--info-gathering-sub-stage-b-font-program-level-metrics" aria-hidden="true">#</a>Stage 2 — info-gathering, sub-stage B (font-program-level metrics)</h3>
+<p><strong>Plan changed (2026-08-28): no native FreeType/HarfBuzz C++ binding.</strong>
+The original idea here was a direct FreeType wrapper in <code>qjs-opencv</code>
+itself. Decided against it — checked whether that loses anything, and it
+doesn't: every fact on the list below (and the two extra ones the
+original note flagged as FreeType-only, hinting-program presence and
+<code>fvar</code> axes) is available from <code>fontTools</code> (already installed here,
+<code>pip show fontTools</code> → 4.61.1), shelled out to from <code>render_font.js</code>
+exactly the way <code>fc-query</code> already is — see <code>queryFontProgramInfo()</code>.
+A native binding would only add rendering-<em>path</em> detail (which rasterizer
+code path FreeType picks, exact hint bytecode execution) that nothing
+here needs. Implemented:</p>
+<ul>
+<li>[x] Units-per-EM (<code>head.unitsPerEm</code>).</li>
+<li>[x] Glyph count (<code>maxp.numGlyphs</code>), outline format (<code>CFF </code> vs <code>glyf</code>
+table presence).</li>
+<li>[x] Hinting instructions present (<code>fpgm</code>/<code>prep</code> bytecode non-empty).</li>
+<li>[x] Variable-font axes (<code>fvar.axes</code>), if present.</li>
+<li>[x] Color-glyph tables present (<code>COLR</code>/<code>CPAL</code>/<code>sbix</code>/<code>CBDT</code>/<code>CBLC</code>).</li>
+<li>[x] <strong>New, not on the original list</strong>: a best-effort "pixel grid unit"
+for scalable fonts — GCD of glyph outline point coordinates sampled
+across up to 60 glyphs, converted to a candidate crisp pixel size via
+<code>unitsPerEm</code>. Added to answer the actual "why does this font render
+antialiased" question (see Stage 2C below) — ascender/descender/
+line-gap from the original list turned out not to be needed for that
+and were dropped, not implemented.</li>
+</ul>
+<h3 id="stage-2--info-gathering-sub-stage-c-pixel-level-rendered-glyph-analysis"><a class="anchor" href="#stage-2--info-gathering-sub-stage-c-pixel-level-rendered-glyph-analysis" aria-hidden="true">#</a>Stage 2 — info-gathering, sub-stage C (pixel-level, rendered-glyph analysis)</h3>
+<p>Extends the existing <code>blockinessScore</code>/<code>distinctMidgrayLevels</code> heuristics
+— same idea (render, then measure the Mat), applied per-glyph instead of
+whole-sheet.</p>
+<ul>
+<li>[x] <strong>Crisp-render-size search (<code>findCrispSize()</code>), implemented
+2026-08-28.</strong> The concrete problem that prompted this: fonts in
+<code>~/Downloads/fonts/</code> that are genuinely pixel-art fonts (blocky glyph
+<em>design</em>) are still ordinary scalable TrueType outlines under the
+hood — not embedded bitmap strikes — so they only render bilevel/crisp
+at the specific pixel size(s) that happen to make their outline's
+design grid land on exact integer pixels; any other size antialiases
+like any other vector font, and there's no metadata field that just
+states that size. Bounded search (≤10 renders, run only for the one
+font open in the detail view, never for a whole directory): candidates
+are Stage 2B's glyph-outline grid hint (when it lands in a plausible
+4-64px range) plus a fixed list of common pixel sizes
+(<code>8,10,12,14,16,20,24,32</code>); each candidate is rendered once and scored
+with the exporter's existing <code>distinctMidgrayLevels()</code> heuristic;
+candidates below <code>BITMAP_LEVEL_THRESHOLD</code> (40) count as crisp. An
+embedded-bitmap-strike font (fc-query <code>pixelsize</code>) skips the search
+entirely — already known-crisp at its one native size. Verified against
+real fonts: <code>monogram.ttf</code>/<code>LowRes 3x4.ttf</code>/<code>3x4dot.ttf</code> all found
+crisp sizes (multiples of 8px in <code>LowRes 3x4.ttf</code>'s case, matching its
+name); <code>DejaVuSansMono.ttf</code> (an ordinary vector font, correctly) found
+none in range.</li>
+<li>[ ] Tight ink-bbox vs advance-box padding per glyph — how many empty
+rows/columns surround the glyph inside its cell; high padding wastes
+pixels on a tiny LCD.</li>
+<li>[x] Bilevel check — implemented as part of <code>findCrispSize()</code> above
+(per-candidate-size, not per-glyph yet - a per-glyph breakdown at one
+fixed size is still open if it turns out to matter).</li>
+<li>[ ] Stroke weight / ink density — average ink-pixel % inside the tight
+bbox; flags weights too light/heavy to survive a 1-bit threshold.</li>
+<li>[ ] Counter (enclosed-hole) size in glyphs like <code>e a o g</code> — flood-fill
+background, find holes fully enclosed by ink, measure smallest area.
+Likely the best automatable proxy for "readable vs mush" at tiny sizes.</li>
+<li>[ ] Confusable-pair check — pixel-diff <code>1</code>/<code>l</code>/<code>I</code>, <code>0</code>/<code>O</code>, <code>5</code>/<code>S</code> at
+the target size; flag fonts where these render identically.</li>
+<li>[ ] Baseline-consistency check across a full glyph run (catches broken
+or hand-hacked bitmap fonts).</li>
+<li>[ ] Empirical min/max/average advance width, to cross-check fontconfig's
+<code>spacing</code> claim from Stage 2A.</li>
+</ul>
+<h3 id="stage-2--info-gathering-sub-stage-d-special-range-coverage"><a class="anchor" href="#stage-2--info-gathering-sub-stage-d-special-range-coverage" aria-hidden="true">#</a>Stage 2 — info-gathering, sub-stage D (special-range coverage)</h3>
+<ul>
+<li>[x] <strong>Coverage summary against a curated named-block list
+(<code>summarizeCoverage()</code>), implemented 2026-08-28</strong> as part of the
+detail-view work below — Basic Latin, Latin-1, Latin Extended-A/B,
+Greek, Cyrillic, General Punctuation, Box Drawing, Block Elements,
+Braille Patterns, Private Use Area, Powerline/Nerd symbols, Emoji, each
+as covered/total/% against fc-query's charset ranges (already parsed by
+<code>queryFontMetadata</code>). Not a full Unicode block database — deliberately
+scoped to blocks relevant to this tool's actual use (LCD text/UI), same
+list this stage originally proposed.</li>
+<li>[ ] Box-drawing (<code>U+2500-257F</code>) / block-element (<code>U+2580-259F</code>)
+presence, and whether <em>these specific</em> glyphs render crisp/bilevel even
+when the rest of the font antialiases — needed for any UI-chrome use.</li>
+<li>[ ] Braille patterns (<code>U+2800-28FF</code>) presence — enables a dense
+sub-pixel-style rendering trick on 1-bit displays.</li>
+<li>[ ] Emoji-range presence and whether it resolves color (via Stage 2B's
+color-table check) or monochrome fallback.</li>
+<li>[ ] Powerline (<code>U+E0A0-E0D4</code>) and Nerd Font PUA icon sub-block presence
+— matches the "UI build elements" font category from the original ask.</li>
+<li>[ ] General Private-Use-Area density vs Latin/ASCII density — a font
+that's PUA-heavy but Latin-sparse is very likely an icon font, not a
+text font; surface this as an automatic classification signal.</li>
+<li>[ ] Roll sub-stages A-D up into one auto-tag per font: <code>pixel-mono</code> /
+<code>pixel-proportional</code> / <code>icon-set</code> / <code>display-art</code> / <code>unknown</code>, so the
+eventual browser can filter/sort by it without anyone eyeballing first.</li>
+</ul>
+<h3 id="stage-3--ncurses-style-tui-browser"><a class="anchor" href="#stage-3--ncurses-style-tui-browser" aria-hidden="true">#</a>Stage 3 — ncurses-style TUI browser</h3>
+<p>No ncurses binding exists in this codebase; default to hand-rolled raw
+ANSI (alt-screen, cursor positioning, raw stdin key reads) rather than
+adding a new native dependency, unless a later stage shows that's not
+enough.</p>
+<ul>
+<li>[x] Up/down/pageup/pagedown scrollable list of fonts gathered from the
+three Stage 0 sources, each showing a truecolor half-block sample.
+Space marks (not yet wired to anything — Stage 4). Not yet annotated
+with a Stage 2D auto-tag (that roll-up bullet is still open).</li>
+<li>[x] <strong>List preview now uses each font's own detected crisp size and a
+per-font sample text, implemented 2026-08-28.</strong> <code>#preview()</code> calls
+<code>#ensureDetail()</code> (runs <code>gatherDetailInfo()</code>/<code>findCrispSize()</code>) the
+first time a font's row is actually drawn - i.e. detection happens as
+part of reading/scrolling the list, not gated behind Enter - and uses
+<code>crisp.best.size</code> instead of the fixed <code>--size</code> default once known.
+<code>pickSampleText()</code> substitutes a sample built from the font's own
+covered codepoints when the requested sample text has a character the
+font doesn't map (avoids showing FreeType's <code>.notdef</code> "tofu" box in a
+list of <em>font</em> previews, which reads as "this font is broken" rather
+than "this sample string doesn't fit this font"). Deliberately still
+lazy/per-row, never the whole directory up front - only rows that
+actually get drawn incur the up-to-~10-renders cost, so opening a
+large <code>--fclist</code> match set doesn't stall on fonts you never scroll to.
+<code>main()</code> prints a one-line heads-up before entering the list, since the
+very first screenful's rows haven't been drawn/cached yet and pay that
+cost synchronously.</li>
+<li>[x] <strong>Enter → combined glyph-map + info-panel view, implemented
+2026-08-28 (redesigned from an earlier two-separate-screens version
+the same day) — per direct instruction, "font-info and glyph viewer
+should really share the screen, with font-info being a panel overlay
+and the glyph viewer in the back".</strong> The 2D-pannable glyph map
+(<code>#drawGlyphMapFrame()</code>) is always the full-screen background and stays
+interactive; the font-info panel (<code>#drawInfoPanel()</code> - overview/
+render-size/coverage, deliberately scoped down from "full metadata
+dump" the same way it always was) draws as a bordered, centered overlay
+box on top of it via terminal.js's new <code>Screen.box()</code>, toggled with <code>i</code>.
+Map: 16 codepoints/row (<code>GLYPHMAP_COLS</code>) over the font's actual covered
+codepoints (index-packed via <code>flattenCoveredCodepoints()</code>, not raw
+codepoint value - most fonts here have sparse coverage with big gaps),
+rendered at <code>findCrispSize()</code>'s best-guess size - confirmed on real
+fonts from <code>~/Downloads/fonts/</code> to look correct at that size. Up/down/
+pageup/pagedown scroll rows; left/right shift which of the 16 columns
+is leftmost (16 cells at any real cell width is normally wider than one
+terminal). Esc/Enter/q returns to the font list.
+<strong>Still open, deliberately deferred as out of scope for this pass:</strong>
+truecolor rendering of the special ranges themselves (box-drawing/
+block/braille/emoji samples) as a distinct feature from the general
+glyph map, the auto-tag roll-up, and the deeper per-glyph Stage 2C
+items (padding, stroke weight, counter size, confusable pairs, baseline
+consistency).</li>
+</ul>
+<p><strong>New reusable terminal.js primitives added for this</strong> (`quickjs/
+qjs-modules/lib/terminal.js<code>, not </code>qjs-opencv`-local — flagged for the
+qjs-modules session too): <code>Screen.fillRect()</code>/<code>Screen.box()</code> (an
+ncurses/dialog-style bordered "window", filling its interior first so it
+occludes whatever else was drawn earlier in the same frame - draw order
+is z-order for a plain terminal, there's no real compositor to manage)
+and a free <code>centeredRect(termCols, termRows, width, height)</code> matching the
+curses <code>newwin()</code>-centered-on-screen idiom. <code>BOX_SINGLE</code>/<code>BOX_DOUBLE</code>
+export the border character sets. Kept general-purpose, not
+render_font.js-specific, per the earlier "keep terminal primitives at one
+point in terminal.js" instruction. Also added <code>hslToRgb(h, s, l)</code> (plain
+color-wheel math - h is the wheel angle) for the same reason: the info
+panel's pastel scheme and the glyph map's color-mode toggle (below) both
+need it, and it's no more app-specific than the RGB truecolor helpers
+already there.</p>
+<ul>
+<li>[x] <strong>Info panel color scheme + Unicode line-art/pictograms, implemented
+2026-08-28.</strong> Two pastel hues, each a light and dark shade: <code>PANEL_HUE</code>
+(cool teal-blue) is the panel's structural color - light for the
+border/title, dark for the background fill that occludes the glyph map
+behind it; <code>ACCENT_HUE</code> (warm coral) highlights specific values inline
+within the body text (<code>panelHighlight()</code> - a recommended size, a
+coverage percentage, a hinting yes/no) via <code>Screen.fg()</code>/<code>bg()</code> set
+before <code>Screen.box()</code>/each line write, always returning to the panel's
+own base colors afterward rather than a blanket reset (which would also
+wipe the background tint). Content reformatted to use <code>┄</code>/<code>▸</code>/<code>✓</code>/<code>✗</code>/
+<code>⚠</code>/<code>▦</code>/<code>◆</code>/<code>·</code> instead of <code>--</code> headers, <code>-&gt;</code> arrows, and parenthetical
+asides, per direct instruction - picked from Box Drawing/Geometric
+Shapes/general punctuation (near-universal monospace font coverage)
+rather than emoji, given the earlier <code>screen</code>/<code>TERM=screen-256color</code>
+terminal-compatibility issue found in this same tool.</li>
+<li>[x] <strong>Toggleable glyph-map color mode, implemented 2026-08-28.</strong> <code>c</code> in
+the combined detail view switches the glyph map from plain grayscale to
+<code>colorWheelPalette(hue)</code> - maps each pixel's intensity to a point on one
+hue's arc of the color wheel (dark/desaturated at background level,
+vivid/bright at ink level) instead of <code>[v,v,v]</code> gray, so the existing
+antialiasing-level gradient becomes a real color gradient without losing
+the light/dark contrast the glyph shape depends on. Each time the mode
+is turned back on it advances the hue by the golden angle
+(~137.508deg, <code>FontListBrowser#nextHue</code>) - a well-known technique for a
+maximally-spread, non-clustering, non-repeating sequence of hues - so
+repeated toggling (even across different fonts in one session) keeps
+showing a genuinely different palette, per "a different (and calculated
+to color wheels) color palette every time".</li>
+<li>[x] <strong>Glyph-map size cycling on <code>-</code>/<code>=</code>/<code>+</code>/<code>_</code>, implemented 2026-08-28.</strong>
+<code>-</code>/<code>=</code> step through <code>goodSizesFor(crisp, fallbackSize)</code> — the sizes
+<code>findCrispSize()</code> actually tried, plus the base/<code>x2</code>/<code>x4</code> "obviously
+good" multiples, deduped/sorted/floored at 2px, cached once per font
+alongside the rest of <code>#prepareGlyphMap()</code>'s state. <code>+</code>/<code>_</code> (the same
+physical keys with shift held — <code>readKey()</code> can only tell them apart by
+the different byte a real keyboard sends, there's no separate modifier
+flag) instead step <code>gm.size</code> by ±0.5px directly, not through the
+candidate list. Both paths go through <code>#tryChangeGlyphMapSize()</code>, which
+clamps to a 2px floor and rejects (no-ops, leaving the current size
+alone) any target where <code>cellWidth * 2 &gt; maxCols</code> — i.e. fewer than 2
+glyph cells would remain visible — per direct instruction, "never scale
+it so big that not even 2 glyphs are visible anymore." Verified with a
+standalone logic test mirroring <code>goodSizesFor()</code>/`#tryChangeGlyphMapSize
+()<code>against a synthetic</code>findCrispSize()` result: coarse cycling stops
+cleanly at the candidate list's ends (<code>undefined</code>, not a wrap or crash),
+fine-stepping down floors at 2px and then correctly no-ops rather than
+going negative, and an oversized coarse target is rejected instead of
+applied. <strong>Found along the way, not fixed (logged in <code>BUGS</code> as
+<code>opencv-freetype-fontscale-truncated-to-int</code>):</strong> fractional pixel sizes
+are silently truncated to the integer size somewhere inside upstream
+opencv_contrib's FreeType2 module (<code>TextStyle(f, 8.5).size('A')</code>
+measures identical to <code>size 8</code>), not in this project's own binding code
+(<code>js_draw.cpp</code> passes the <code>double</code> through untouched) — the 0.5px fine
+step is implemented and tracked/displayed as requested regardless, since
+declining silently over an upstream limitation the user didn't ask about
+would be worse than shipping a control whose finest steps may not always
+visibly change the render.</li>
+</ul>
+<h3 id="stage-4--pngjson-export-of-selected-fonts"><a class="anchor" href="#stage-4--pngjson-export-of-selected-fonts" aria-hidden="true">#</a>Stage 4 — PNG+JSON export of selected fonts</h3>
+<ul>
+<li>[ ] For every font selected in Stage 3, run (in effect) today's existing
+<code>render_font.js</code> export path to produce the <code>.png</code> + <code>.json</code> sidecar
+pair, unchanged in format from what's already produced.</li>
+</ul>
+<h3 id="stage-5--second-browser-over-generated-sidecars"><a class="anchor" href="#stage-5--second-browser-over-generated-sidecars" aria-hidden="true">#</a>Stage 5 — second browser, over generated sidecars</h3>
+<ul>
+<li>[ ] Separate top-down scrollable menu listing already-generated
+<code>&lt;name&gt;@&lt;size&gt;.json</code>/<code>.png</code> sidecar pairs (not raw font files); select
+a subset to carry into Stage 6.</li>
+</ul>
+<h3 id="stage-6--bit-packed-c-export"><a class="anchor" href="#stage-6--bit-packed-c-export" aria-hidden="true">#</a>Stage 6 — bit-packed C export</h3>
+<ul>
+<li>[ ] From the Stage 5 selection, emit a bit-in-bytes-encoded font-data
+block in embedded C (<code>static const uint8_t font_x[] = {...}</code>), already
+in the byte/bit order the target display expects (row-major vs
+column-major, MSB/LSB-first — needs the specific display's native
+format confirmed before writing this, not assumed).</li>
+</ul>
 <h2 id="api-discrepancies-vs-opencvjs-shared-surface-only"><a class="anchor" href="#api-discrepancies-vs-opencvjs-shared-surface-only" aria-hidden="true">#</a>API discrepancies vs opencv.js (shared surface only)</h2>
 <p><strong>IMPORTANT: When fixing opencv.js compatibility issues, always update all client scripts.</strong> After changing a C++ binding to match opencv.js behavior, you MUST update every JavaScript file that uses the affected function:</p>
 <div class="codeblock" data-lang="bash"><pre><code class="language-bash"><span class="t-id">grep</span> <span class="t-op">-r</span> <span class="t-op">-l</span> <span class="t-str">"^import.*'opencv"</span> <span class="t-id">examples</span>/ <span class="t-id">tests</span>/ *.<span class="t-id">js</span> ../*.<span class="t-id">js</span></code></pre></div>
@@ -200,36 +709,27 @@ opencvjs-fs-createdatafile-not-applicable`.</p>
 <p>Investigated 2026-08-17 (previous pass: 2026-08-12) by comparing <code>doc/opencv-js-api.md</code> (the official opencv.js binding surface, compiled from OpenCV 5.0.0's <code>platforms/js/opencv_js.config.py</code> + <code>modules/js/src/core_bindings.cpp</code> + <code>helpers.js</code>) against this project's own bindings, function-by-function, for names that exist <strong>on both sides</strong>. This is not a coverage comparison — qjs-opencv deliberately binds far more of <code>cv::</code> than opencv.js's hand-curated browser whitelist (see Tiers above). It's a divergence audit: where the same-named call exists in both, does it behave the same way? Anyone porting opencv.js snippets/tutorials into this project's <code>qjs</code> REPL will hit these.</p>
 <p>The codebase moved substantially since the 2026-08-12 pass: <code>js_contour.[ch]pp</code> (the custom <code>Contour</code> class), <code>js_point_iterator</code>, <code>js_line_iterator</code>, and <code>js_slice_iterator</code> were removed entirely; <code>findContours</code> now natively supports <code>MatVector</code>/<code>PointVectorVector</code> output; <code>drawContours</code> (plural) now threads a real <code>index</code>/<code>hierarchy</code> through instead of hardcoding <code>index=0</code>; <code>cv.Range</code> is now a real constructible class; <code>Mat.diag()</code>, the seven <code>.dataXX</code> typed views, the seven <code>&lt;type&gt;At()</code> accessors, and the seven <code>&lt;type&gt;Ptr()</code> accessors all shipped; <code>Scalar.all()</code> and <code>barcode_BarcodeDetector</code> both shipped. Several other entries from the old pass are unchanged — re-verified below, not just carried forward blindly. Entries marked "carried forward, not re-verified" cover files with no commits since 2026-08-12 — low risk of drift, flagged transparently rather than silently repeated as fresh findings.</p>
 <p>Grouped by how badly a naive port breaks.</p>
+<p><strong>Not a divergence, logged because it caused real confusion (2026-08-28):</strong>
+user reported treating <code>mat.dims</code> as a per-dimension shape array (<code>dims[1]</code>,
+<code>dims[2]</code>, <code>dims[3]</code>) in Gemini-authored ESPCN super-resolution post-
+processing code, and had to switch to <code>.size()</code> to get it working. Checked
+both sides: this project's <code>.dims</code> (<code>js_mat.cpp:2070</code>, <code>PROP_DIMS</code>) is
+correctly a scalar — <code>m-&gt;dims</code>, matching native C++ <code>cv::Mat::dims</code> (the
+rank) — it was never an array here. opencv.js has <strong>no <code>.dims</code> property at
+all</strong> (<code>doc/opencv-js-api.md:100-112</code>); its N-D shape accessor is
+<code>.matSize</code> (<code>int[]</code>) or <code>.size()</code>. This project's <code>.size()</code>
+(<code>js_mat_size_value()</code>, <code>js_mat.cpp:1408-1428</code>) already matches opencv.js:
+for a normal 2D mat it's a <code>Size</code>-like object also indexable by dimension
+(<code>size[0]</code>, <code>size[1]</code>, ...), and for a true N-D mat (<code>rows</code>/<code>cols == -1</code>,
+e.g. a 4-D DNN output tensor) it's a plain <code>[dim0, dim1, ...]</code> array — the
+<code>[1, 3, H, W]</code> shape the ESPCN code needed. So nothing to fix on either
+side; the original code's bug was reaching for <code>.dims</code> (rank, absent from
+opencv.js) instead of <code>.size()</code>/<code>.matSize</code> (shape, present on both). The
+user's own fix was already the opencv.js-correct one.</p>
 <h3 id="silently-wrong-results-no-exception-no-obviously-missing-output--the-dangerous-category"><a class="anchor" href="#silently-wrong-results-no-exception-no-obviously-missing-output--the-dangerous-category" aria-hidden="true">#</a>Silently wrong results (no exception, no obviously-missing output — the dangerous category)</h3>
-<p>Every entry identified in this category as of the 2026-08-17/18 passes is
-now fixed: <code>HuMoments</code> dropping results for non-Array outputs, <code>Mat.mul</code>
-doing matrix multiplication instead of elementwise, three discarded
-output arguments (<code>estimateAffine2D</code>/<code>estimateAffinePartial2D</code>'s
-<code>inliers</code>, <code>floodFill</code>'s <code>rect</code>, <code>Feature2D.compute()</code>'s <code>keypoints</code>),
-<code>moments(points, binaryImage)</code> picking input interpretation off the wrong
-flag, and <code>Mat.step</code> dropping the last dimension's stride. See <code>BUGS</code>
-(all marked FIXED): <code>mat-mul-does-matrix-multiplication-not-elementwise</code>,
-<code>estimateaffine2d-inliers-output-discarded</code>,
-<code>floodfill-rect-output-not-written-back</code>,
-<code>feature2d-compute-keypoints-not-copied-back</code>,
-<code>moments-binaryimage-controls-input-interpretation</code>,
-<code>mat-step-drops-last-dimension</code>. Also fixed since: <code>Laplacian</code>/<code>pyrDown</code>/
-<code>pyrUp</code>/<code>Scharr</code> being literal no-op stubs (see `BUGS:
-laplacian-pyrdown-pyrup-scharr-are-noop-stubs`) - arguably the worst
-instance of this category found so far, since it wasn't even "wrong
-output", just no computation at all. No systematic new pass has been
-done since to look for further instances of this category - worth
-another audit pass rather than assuming it's now exhaustively clean.</p>
-<p><strong>New, unfixed (2026-08-19):</strong> <code>js_cv_inputarray()</code>'s plain-<code>Array</code>-of-
-2..4-numbers path (<code>include/js_inputoutputarray.hpp:78-91</code>) returns a
-<code>cv::_InputArray</code> that references a destroyed local <code>cv::Scalar</code> -
-<code>_InputArray(const Matx&amp;)</code> stores a pointer, not a copy. Any function
-taking a color/bounds argument as a plain JS array (confirmed:
-<code>cv.inRange(img, [0,0,0], [255,255,255], mask)</code> silently returns an
-all-zero mask instead of all-255) is affected; the same bounds via
-<code>Float64Array</code>/<code>Scalar.all()</code> work correctly since that's a different,
-safe code path. Not scoped to one function - a shared helper bug. See
-<code>BUGS: js-cv-inputarray-scalar-dangling-pointer</code>.</p>
+<p>No systematic new pass has been done recently to look for further
+instances of this category - worth another audit pass rather than
+assuming it's now exhaustively clean.</p>
 <p><em>(<code>Mat.diag()</code>, <code>Mat.data</code>/<code>.data8S</code>/<code>.data16U</code>/<code>.data16S</code>/<code>.data32S</code>/<code>.data32F</code>/<code>.data64F</code>, all seven <code>&lt;type&gt;At()</code> accessors, all seven <code>&lt;type&gt;Ptr()</code> accessors, and <code>StringVector</code>/<code>DMatchVectorVector</code>/<code>KeyPointVectorVector</code> from the 2026-08-12 audit's "not bound" list are now <strong>implemented</strong> — <code>js_mat.cpp:2051-2101</code>, <code>js_vector.cpp</code> — and removed from this list.)</em></p>
 <h3 id="different-return-shape--calling-convention-throws-or-misbehaves-on-an-opencvjs-style-call-but-obviously-so"><a class="anchor" href="#different-return-shape--calling-convention-throws-or-misbehaves-on-an-opencvjs-style-call-but-obviously-so" aria-hidden="true">#</a>Different return shape / calling convention (throws or misbehaves on an opencv.js-style call, but obviously so)</h3>
 <ul>
@@ -241,7 +741,12 @@ safe code path. Not scoped to one function - a shared helper bug. See
 <li><strong><code>findHomography</code>'s point inputs go through a custom point-array reader, not a generic <code>InputArray</code>.</strong> <em>(carried forward, not re-verified)</em></li>
 <li><strong><code>DescriptorMatcher.match()</code> dispatches on <code>argc</code> rather than argument type</strong> — the <code>mask</code> argument (<code>js_feature2d.cpp</code>'s <code>DESCRIPTOR_MATCHER_MATCH</code>) is only read, and matching only actually runs, when <code>argc &gt; 3</code>; calling <code>matcher.match(query, train, matches)</code> (3 args, <code>mask</code> omitted — a perfectly valid opencv.js call) silently does nothing and leaves <code>matches</code> empty, no exception. <em>(newly split out as its own entry — previously bundled into the now-fixed "static function table is empty" entry above; found while verifying the <code>DescriptorMatcher.create()</code> fix below.)</em></li>
 </ul>
-<p><em>(Removed from this list, now fixed — 2026-08-19 passes: <code>minMaxLoc</code>/<code>minEnclosingCircle</code> return shapes and <code>new Mat(otherMat)</code> (see <code>BUGS</code>: <code>minmaxloc-positional-array-not-named-object</code>, <code>minenclosingcircle-no-return-value</code>, <code>no-mat-copy-handle-constructor</code>); <code>ORB</code>/<code>MSER</code>/<code>AKAZE</code>/<code>BRISK</code>/<code>FastFeatureDetector</code>/<code>GFTTDetector</code> <code>.create()</code> statics (<code>BUGS</code>: <code>feature2d-detectors-no-create-static</code>); <code>CamShift</code>/<code>meanShift</code> and <code>cv.createCLAHE()</code> (<code>BUGS</code>: <code>no-camshift-meanshift-bindings</code>, <code>no-free-function-createclahe</code>); <code>cv.drawKeypoints</code>'s hardcoded <code>flags</code>/broken <code>color</code>-optionality check — <code>js_draw.cpp</code>'s <code>js_draw_keypoints</code> now reads <code>color</code> from <code>argc &gt; 3</code> (was the always-true <code>argc</code> alone) and <code>flags</code> from a new <code>argc &gt; 4</code> check instead of hardcoding <code>cv::DrawMatchesFlags(0)</code> (see <code>BUGS</code>: <code>drawkeypoints-flags-hardcoded-color-check-broken</code>); <code>RotatedRect.points</code>/<code>.boundingRect</code>/<code>.boundingRect2f</code> being instance-only — <code>js_rotated_rect.cpp</code> now also exposes all three as static functions taking the <code>RotatedRect</code> as the first argument, forwarding into the same instance-method implementation, alongside the still-present instance methods (see <code>BUGS</code>: <code>rotatedrect-static-methods-missing</code>); <code>DescriptorMatcher</code>'s empty static-function table — <code>js_feature2d.cpp</code> now has <code>DescriptorMatcher.create(type)</code> (string or <code>MatcherType</code> int) plus the <code>MatcherType</code> enum constants, <strong>and</strong> <code>DescriptorMatcher</code> itself turned out to never be exported from the module at all (fixed as part of the same change — see <code>BUGS</code>: <code>descriptormatcher-no-create-static-and-unexported</code>). <code>BFMatcher.create(normType, crossCheck)</code> specifically is still not separately bound — <code>new cv.BFMatcher(...)</code> and <code>DescriptorMatcher.create('BruteForce'-family-string)</code> both work as the two ways to construct one, but the literal opencv.js <code>BFMatcher.create(...)</code> spelling still throws; low priority given the two working alternatives. Earlier fixes: <code>cv.createCLAHE()</code>, <code>CamShift</code>/<code>meanShift</code>, <code>BarcodeDetector</code> naming, <code>drawContours</code> hierarchy, <code>cv.Range</code>.)</em></p>
+<p><code>BFMatcher.create(normType, crossCheck)</code> specifically is still not
+separately bound — <code>new cv.BFMatcher(...)</code> and
+<code>DescriptorMatcher.create('BruteForce'-family-string)</code> both work as the
+two ways to construct one, but the literal opencv.js
+<code>BFMatcher.create(...)</code> spelling still throws; low priority given the
+two working alternatives.</p>
 <h3 id="vector-container-types--remaining-gaps"><a class="anchor" href="#vector-container-types--remaining-gaps" aria-hidden="true">#</a>Vector container types — remaining gaps</h3>
 <p>All 16 opencv.js vector-container types exist (see "Already solved, don't rebuild" above); <code>.delete()</code> is a no-op on all of them.</p>
 <ul>
@@ -265,14 +770,90 @@ safe code path. Not scoped to one function - a shared helper bug. See
 <hr>
 <h2 id="appendix--full-per-module-unbound-counts-cv-namespace-only"><a class="anchor" href="#appendix--full-per-module-unbound-counts-cv-namespace-only" aria-hidden="true">#</a>Appendix — full per-module unbound counts (cv:: namespace only)</h2>
 <p><code>detail::</code>/<code>cuda::</code>/<code>ocl::</code>/<code>hal::</code> internals and modules with zero unbound <code>cv::</code> symbols are excluded.</p>
-<div class="tablewrap"><table><thead><tr><th>module</th><th style="text-align:right">classes</th><th style="text-align:right">functions</th><th>tier</th></tr></thead><tbody><tr><td>core</td><td style="text-align:right">48 / 58</td><td style="text-align:right">608 / 753</td><td>internals</td></tr><tr><td>gapi</td><td style="text-align:right">57 / 57</td><td style="text-align:right">487 / 487</td><td>skip</td></tr><tr><td>stitching</td><td style="text-align:right">8 / 8</td><td style="text-align:right">213 / 213</td><td>tier 2</td></tr><tr><td>dnn</td><td style="text-align:right">13 / 15</td><td style="text-align:right">139 / 172</td><td>tier 2</td></tr><tr><td>imgproc</td><td style="text-align:right">3 / 5</td><td style="text-align:right">97 / 202</td><td>tier 1</td></tr><tr><td>calib3d</td><td style="text-align:right">3 / 3</td><td style="text-align:right">86 / 106</td><td>tier 1</td></tr><tr><td>features2d</td><td style="text-align:right">8 / 8</td><td style="text-align:right">63 / 64</td><td>tier 2</td></tr><tr><td>optflow</td><td style="text-align:right">2 / 2</td><td style="text-align:right">64 / 64</td><td>skip</td></tr><tr><td>tracking</td><td style="text-align:right">29 / 29</td><td style="text-align:right">34 / 34</td><td>skip</td></tr><tr><td>objdetect</td><td style="text-align:right">19 / 19</td><td style="text-align:right">38 / 41</td><td>tier 2</td></tr><tr><td>ximgproc</td><td style="text-align:right">1 / 1</td><td style="text-align:right">55 / 89</td><td>tier 1</td></tr><tr><td>xfeatures2d</td><td style="text-align:right">2 / 2</td><td style="text-align:right">53 / 53</td><td>skip</td></tr><tr><td>rgbd</td><td style="text-align:right">12 / 12</td><td style="text-align:right">40 / 40</td><td>skip</td></tr><tr><td>videostab</td><td style="text-align:right">15 / 15</td><td style="text-align:right">34 / 34</td><td>skip</td></tr><tr><td>face</td><td style="text-align:right">7 / 7</td><td style="text-align:right">40 / 40</td><td>skip</td></tr><tr><td>text</td><td style="text-align:right">4 / 4</td><td style="text-align:right">41 / 41</td><td>skip</td></tr><tr><td>video</td><td style="text-align:right">21 / 21</td><td style="text-align:right">22 / 24</td><td>tier 2</td></tr><tr><td>datasets</td><td style="text-align:right">0 / 0</td><td style="text-align:right">37 / 37</td><td>skip</td></tr><tr><td>ml</td><td style="text-align:right">4 / 4</td><td style="text-align:right">29 / 29</td><td>skip</td></tr><tr><td>sfm</td><td style="text-align:right">0 / 0</td><td style="text-align:right">32 / 32</td><td>skip</td></tr><tr><td>photo</td><td style="text-align:right">0 / 0</td><td style="text-align:right">30 / 30</td><td>tier 1</td></tr><tr><td>img_hash</td><td style="text-align:right">1 / 1</td><td style="text-align:right">25 / 25</td><td>skip</td></tr><tr><td>surface_matching</td><td style="text-align:right">1 / 1</td><td style="text-align:right">25 / 25</td><td>skip</td></tr><tr><td>imgcodecs</td><td style="text-align:right">4 / 4</td><td style="text-align:right">16 / 21</td><td>low priority</td></tr><tr><td>superres</td><td style="text-align:right">1 / 1</td><td style="text-align:right">19 / 19</td><td>skip</td></tr><tr><td>videoio</td><td style="text-align:right">2 / 4</td><td style="text-align:right">16 / 16</td><td>low priority</td></tr><tr><td>aruco</td><td style="text-align:right">1 / 1</td><td style="text-align:right">15 / 15</td><td>low priority</td></tr><tr><td>fuzzy</td><td style="text-align:right">0 / 0</td><td style="text-align:right">16 / 16</td><td>skip</td></tr><tr><td>highgui</td><td style="text-align:right">0 / 0</td><td style="text-align:right">16 / 41</td><td>low priority</td></tr><tr><td>line_descriptor</td><td style="text-align:right">7 / 7</td><td style="text-align:right">8 / 8</td><td>skip</td></tr><tr><td>ccalib</td><td style="text-align:right">4 / 4</td><td style="text-align:right">9 / 9</td><td>skip</td></tr><tr><td>quality</td><td style="text-align:right">3 / 3</td><td style="text-align:right">9 / 9</td><td>skip</td></tr><tr><td>saliency</td><td style="text-align:right">4 / 4</td><td style="text-align:right">8 / 8</td><td>skip</td></tr><tr><td>flann</td><td style="text-align:right">11 / 11</td><td style="text-align:right">0 / 0</td><td>skip</td></tr><tr><td>xphoto</td><td style="text-align:right">0 / 0</td><td style="text-align:right">7 / 11</td><td>tier 1</td></tr><tr><td>bgsegm</td><td style="text-align:right">1 / 1</td><td style="text-align:right">4 / 9</td><td>low priority</td></tr></tbody></table></div></article>
+<div class="tablewrap"><table><thead><tr><th>module</th><th style="text-align:right">classes</th><th style="text-align:right">functions</th><th>tier</th></tr></thead><tbody><tr><td>core</td><td style="text-align:right">48 / 58</td><td style="text-align:right">608 / 753</td><td>internals</td></tr><tr><td>gapi</td><td style="text-align:right">57 / 57</td><td style="text-align:right">487 / 487</td><td>skip</td></tr><tr><td>stitching</td><td style="text-align:right">8 / 8</td><td style="text-align:right">213 / 213</td><td>tier 2</td></tr><tr><td>dnn</td><td style="text-align:right">13 / 15</td><td style="text-align:right">139 / 172</td><td>tier 2</td></tr><tr><td>imgproc</td><td style="text-align:right">3 / 5</td><td style="text-align:right">97 / 202</td><td>tier 1</td></tr><tr><td>calib3d</td><td style="text-align:right">3 / 3</td><td style="text-align:right">86 / 106</td><td>tier 1</td></tr><tr><td>features2d</td><td style="text-align:right">8 / 8</td><td style="text-align:right">63 / 64</td><td>tier 2</td></tr><tr><td>optflow</td><td style="text-align:right">2 / 2</td><td style="text-align:right">64 / 64</td><td>skip</td></tr><tr><td>tracking</td><td style="text-align:right">29 / 29</td><td style="text-align:right">34 / 34</td><td>skip</td></tr><tr><td>objdetect</td><td style="text-align:right">19 / 19</td><td style="text-align:right">38 / 41</td><td>tier 2</td></tr><tr><td>ximgproc</td><td style="text-align:right">1 / 1</td><td style="text-align:right">55 / 89</td><td>tier 1</td></tr><tr><td>xfeatures2d</td><td style="text-align:right">2 / 2</td><td style="text-align:right">53 / 53</td><td>skip</td></tr><tr><td>rgbd</td><td style="text-align:right">12 / 12</td><td style="text-align:right">40 / 40</td><td>skip</td></tr><tr><td>videostab</td><td style="text-align:right">15 / 15</td><td style="text-align:right">34 / 34</td><td>skip</td></tr><tr><td>face</td><td style="text-align:right">7 / 7</td><td style="text-align:right">40 / 40</td><td>skip</td></tr><tr><td>text</td><td style="text-align:right">4 / 4</td><td style="text-align:right">41 / 41</td><td>skip</td></tr><tr><td>video</td><td style="text-align:right">21 / 21</td><td style="text-align:right">22 / 24</td><td>tier 2</td></tr><tr><td>datasets</td><td style="text-align:right">0 / 0</td><td style="text-align:right">37 / 37</td><td>skip</td></tr><tr><td>ml</td><td style="text-align:right">4 / 4</td><td style="text-align:right">29 / 29</td><td>skip</td></tr><tr><td>sfm</td><td style="text-align:right">0 / 0</td><td style="text-align:right">32 / 32</td><td>skip</td></tr><tr><td>photo</td><td style="text-align:right">0 / 0</td><td style="text-align:right">30 / 30</td><td>tier 1</td></tr><tr><td>img_hash</td><td style="text-align:right">1 / 1</td><td style="text-align:right">25 / 25</td><td>skip</td></tr><tr><td>surface_matching</td><td style="text-align:right">1 / 1</td><td style="text-align:right">25 / 25</td><td>skip</td></tr><tr><td>imgcodecs</td><td style="text-align:right">4 / 4</td><td style="text-align:right">16 / 21</td><td>low priority</td></tr><tr><td>superres</td><td style="text-align:right">1 / 1</td><td style="text-align:right">19 / 19</td><td>skip</td></tr><tr><td>videoio</td><td style="text-align:right">2 / 4</td><td style="text-align:right">16 / 16</td><td>low priority</td></tr><tr><td>aruco</td><td style="text-align:right">1 / 1</td><td style="text-align:right">15 / 15</td><td>low priority</td></tr><tr><td>fuzzy</td><td style="text-align:right">0 / 0</td><td style="text-align:right">16 / 16</td><td>skip</td></tr><tr><td>highgui</td><td style="text-align:right">0 / 0</td><td style="text-align:right">16 / 41</td><td>low priority</td></tr><tr><td>line_descriptor</td><td style="text-align:right">7 / 7</td><td style="text-align:right">8 / 8</td><td>skip</td></tr><tr><td>ccalib</td><td style="text-align:right">4 / 4</td><td style="text-align:right">9 / 9</td><td>skip</td></tr><tr><td>quality</td><td style="text-align:right">3 / 3</td><td style="text-align:right">9 / 9</td><td>skip</td></tr><tr><td>saliency</td><td style="text-align:right">4 / 4</td><td style="text-align:right">8 / 8</td><td>skip</td></tr><tr><td>flann</td><td style="text-align:right">11 / 11</td><td style="text-align:right">0 / 0</td><td>skip</td></tr><tr><td>xphoto</td><td style="text-align:right">0 / 0</td><td style="text-align:right">7 / 11</td><td>tier 1</td></tr><tr><td>bgsegm</td><td style="text-align:right">1 / 1</td><td style="text-align:right">4 / 9</td><td>low priority</td></tr></tbody></table></div>
+<h2 id="jsbindingshpp-dead-code-audit-2026-08-27"><a class="anchor" href="#jsbindingshpp-dead-code-audit-2026-08-27" aria-hidden="true">#</a>jsbindings.hpp Dead Code Audit (2026-08-27)</h2>
+<p><code>include/jsbindings.hpp</code> is almost entirely <code>static inline</code> free functions and
+function templates, which makes standard dead-code detection blind: neither
+<code>nm</code>/<code>objdump</code> linker-symbol analysis nor <code>-Wunused-function</code> (GCC <em>or</em>
+Clang) can see any of it - see <code>BUGS</code>: <code>std-file-methods-broken-after-opencv-import</code>
+is unrelated, but <code>wunused-function-cant-see-header-only-static-inline</code> and
+<code>js_iterable_to-array-overload-uncallable</code> are directly relevant background.</p>
+<p>What worked: a Clang <code>-ast-dump=json</code> scan (<code>-ast-dump-filter=js_</code>/<code>dump</code>,
+<code>-fsyntax-only</code>) run across all 54 of this project's <code>.cpp</code> translation
+units, reading each declaration's own <code>isUsed</code> flag (and, for templates,
+whether any instantiation child ever appears) rather than relying on a
+diagnostic. Aggregated by <strong>(file, line)</strong>, not by name - <code>jsbindings.hpp</code>
+has real overload sets sharing one name at different lines, and a couple of
+false leads below only surfaced by checking exact line/signature matches
+instead of a plain name grep.</p>
+<p><strong>Confirmed dead (independently verified by full-repo grep - zero callers anywhere):</strong></p>
+<ul>
+<li><code>js_number_read&lt;int64_t&gt;</code> (line 111, explicit specialization) - every real
+call site passes fields that resolve to <code>int32_t</code>/generic-<code>double</code> paths;
+nothing passes an actual <code>int64_t*</code>.</li>
+<li><code>js_object_tostringtag(ctx, obj)</code> - the 2-argument overload only, at line
+<ol start="326">
+<li>The 3-argument overloads (<code>..., JSValue value</code> at 334, `..., const</li>
+</ol>
+<p>char* str<code>at 341) are heavily used (25+ call sites in</code>js_feature2d.cpp`)
+and must stay.</p></li>
+<li><code>dump(const ArrayBufferProps&amp;)</code> (line 433) - distinct from the several
+other <code>dump()</code> overloads in <code>util.hpp</code>/<code>js_typed_array.hpp</code> that <em>are</em>
+called.</li>
+<li><code>js_is_iterator</code> (line 626) - only its own declaration appears anywhere;
+even the newer <code>js_iterator</code>/<code>js_iterator_range</code> iterator-adapter code
+never calls it.</li>
+</ul>
+<p><strong>False positive - do NOT remove:</strong></p>
+<ul>
+<li><code>js_iterable&lt;T&gt;::to_array</code> (line 873) - the scan flagged it dead, but it's
+actually called (via the <code>js_iterable_to(ctx, arr, std::array&lt;T,N&gt;&amp;)</code>
+overload, which real code calls from <code>js_line.hpp:96</code> and
+<code>src/jsbindings.cpp:28</code>). Root cause: it's a <em>member</em> function template of
+a class template (<code>js_iterable&lt;T&gt;</code>) - its real instantiations live under a
+separate <code>ClassTemplateSpecializationDecl</code> subtree that this scan never
+walked (it only followed <code>FunctionDecl</code>/<code>FunctionTemplateDecl</code> nesting, not
+<code>CXXMethodDecl</code>). Corollary: <code>to_vector</code>/<code>to_scalar</code> (siblings in the same
+class, not flagged dead) were <em>not</em> independently verified either - their
+"used" status might be coincidental rather than confirmed. <strong>This scan
+cannot be trusted for class members at all</strong> - only evaluated free
+functions/free function templates here.</li>
+</ul>
+<p><strong>Flagged dead by the scan, not yet independently verified - check each
+by exact signature/line (not just name) before touching, given the
+<code>js_object_tostringtag</code> overload trap above:</strong></p>
+<ul>
+<li><code>js_range_size</code>, <code>js_range_empty</code>, <code>js_range_valid</code> (lines 73-75) - only
+prototypes here; bodies are defined out-of-line in <code>src/jsbindings.cpp</code>.
+Found the definitions but haven't confirmed there's no caller anywhere.</li>
+<li><code>js_object_property&lt;T&gt;</code> (283)</li>
+<li><code>js_arraybuffer_range&lt;T&gt;</code> (360)</li>
+<li><code>js_arraybuffer_slice</code> (397)</li>
+<li><code>js_arraybuffer_from&lt;T,N&gt;(std::array&lt;T,N&gt;&amp;, ...)</code> (409) - overload set:
+its own body calls a <em>different</em> <code>js_arraybuffer_from</code> (iterator-pair)
+overload internally, and a plain grep for the name found 5 references
+elsewhere - need to confirm which overload those actually call before
+trusting this one is dead.</li>
+<li><code>js_arraybuffer_props</code> (447)</li>
+<li><code>js_is_scalar</code> (521)</li>
+<li><code>js_iterable_to(ctx, arr, std::vector&lt;T&gt;&amp;)</code> (934)</li>
+<li><code>js_iterable_to(ctx, arr, T (&amp;out)[N])</code> (946) - note: this signature has
+<em>already changed on disk</em> (not by this session) from the broken by-value
+form (<code>T[N] out</code>) documented in <code>BUGS</code>
+(<code>js_iterable_to-array-overload-uncallable</code>) to the correct
+reference-to-array form. Re-verify and update/close that <code>BUGS</code> entry -
+the exact bug it describes may no longer exist verbatim, though the
+function could still be genuinely unused now that it's at least callable.</li>
+<li><code>js_atom_is_index</code>, <code>js_atom_is_length</code>, <code>js_atom_is_symbol</code> (971, 1007, 1017)</li>
+<li><code>js_scalar_new&lt;T&gt;</code> (1131)</li>
+</ul></article>
 <p class="editlink"><a href="https://github.com/rsenn/qjs-opencv/blob/main/TODO.md">Edit this page on GitHub →</a></p>
 </main>
-<nav class="toc"><h3>On this page</h3><ul><li class="lvl2"><a href="#opencvjs-example-compatibility-gaps-2026-08-17">opencv.js Example Compatibility Gaps (2026-08-17)</a></li><li class="lvl2"><a href="#already-solved-dont-rebuild">Already solved, don't rebuild</a></li><li class="lvl2"><a href="#tier-1--bind-next">Tier 1 — bind next</a></li><li class="lvl2"><a href="#tier-2--bind-if-the-use-case-shows-up">Tier 2 — bind if the use case shows up</a></li><li class="lvl2"><a href="#tier-3--skip-for-this-project">Tier 3 — skip for this project</a></li><li class="lvl2"><a href="#api-discrepancies-vs-opencvjs-shared-surface-only">API discrepancies vs opencv.js (shared surface only)</a></li><li class="lvl3"><a href="#silently-wrong-results-no-exception-no-obviously-missing-output--the-dangerous-category">Silently wrong results (no exception, no obviously-missing output — the dangerous category)</a></li><li class="lvl3"><a href="#different-return-shape--calling-convention-throws-or-misbehaves-on-an-opencvjs-style-call-but-obviously-so">Different return shape / calling convention (throws or misbehaves on an opencv.js-style call, but obviously so)</a></li><li class="lvl3"><a href="#vector-container-types--remaining-gaps">Vector container types — remaining gaps</a></li><li class="lvl3"><a href="#different-defaults--optionality-same-call-shape-different-silent-behavior">Different defaults / optionality (same call shape, different silent behavior)</a></li><li class="lvl2"><a href="#appendix--full-per-module-unbound-counts-cv-namespace-only">Appendix — full per-module unbound counts (cv:: namespace only)</a></li></ul></nav>
+<nav class="toc"><h3>On this page</h3><ul><li class="lvl2"><a href="#getscreenresolution-build-config-fix-2026-09-08-root-cause-fixed-2026-09-09">getScreenResolution() build-config fix (2026-09-08, root cause fixed 2026-09-09)</a></li><li class="lvl2"><a href="#skywatch--hierarchy-contract-fix--ml-contrail-detector-2026-09-07">skywatch — hierarchy contract fix + ML contrail detector (2026-09-07)</a></li><li class="lvl3"><a href="#1-findcontours-hierarchy-argument-opencvjs-contract-fix">1. findContours hierarchy-argument opencv.js contract fix</a></li><li class="lvl3"><a href="#2-ml-based-contrail-detector-trained-via-ads-b-weak-supervision">2. ML-based contrail detector, trained via ADS-B weak supervision</a></li><li class="lvl2"><a href="#up-next--vectorization-pipeline-leverage-2026-09-05">Up next — vectorization pipeline leverage (2026-09-05)</a></li><li class="lvl2"><a href="#opencvjs-example-compatibility-gaps-2026-08-17">opencv.js Example Compatibility Gaps (2026-08-17)</a></li><li class="lvl2"><a href="#already-solved-dont-rebuild">Already solved, don't rebuild</a></li><li class="lvl2"><a href="#tier-1--bind-next">Tier 1 — bind next</a></li><li class="lvl2"><a href="#tier-2--bind-if-the-use-case-shows-up">Tier 2 — bind if the use case shows up</a></li><li class="lvl2"><a href="#tier-3--skip-for-this-project">Tier 3 — skip for this project</a></li><li class="lvl2"><a href="#font-tool--render_fontjs-rebuild-2026-08-28">Font tool — render_font.js rebuild (2026-08-28)</a></li><li class="lvl3"><a href="#stage-0--directory-walk-no-analysis-yet">Stage 0 — directory walk, no analysis yet</a></li><li class="lvl3"><a href="#stage-1--terminal-truecolor-renderer-proof-of-concept">Stage 1 — terminal truecolor renderer (proof of concept)</a></li><li class="lvl3"><a href="#stage-2--info-gathering-sub-stage-a-cheap-fc-query-only">Stage 2 — info-gathering, sub-stage A (cheap, fc-query only)</a></li><li class="lvl3"><a href="#stage-2--info-gathering-sub-stage-b-font-program-level-metrics">Stage 2 — info-gathering, sub-stage B (font-program-level metrics)</a></li><li class="lvl3"><a href="#stage-2--info-gathering-sub-stage-c-pixel-level-rendered-glyph-analysis">Stage 2 — info-gathering, sub-stage C (pixel-level, rendered-glyph analysis)</a></li><li class="lvl3"><a href="#stage-2--info-gathering-sub-stage-d-special-range-coverage">Stage 2 — info-gathering, sub-stage D (special-range coverage)</a></li><li class="lvl3"><a href="#stage-3--ncurses-style-tui-browser">Stage 3 — ncurses-style TUI browser</a></li><li class="lvl3"><a href="#stage-4--pngjson-export-of-selected-fonts">Stage 4 — PNG+JSON export of selected fonts</a></li><li class="lvl3"><a href="#stage-5--second-browser-over-generated-sidecars">Stage 5 — second browser, over generated sidecars</a></li><li class="lvl3"><a href="#stage-6--bit-packed-c-export">Stage 6 — bit-packed C export</a></li><li class="lvl2"><a href="#api-discrepancies-vs-opencvjs-shared-surface-only">API discrepancies vs opencv.js (shared surface only)</a></li><li class="lvl3"><a href="#silently-wrong-results-no-exception-no-obviously-missing-output--the-dangerous-category">Silently wrong results (no exception, no obviously-missing output — the dangerous category)</a></li><li class="lvl3"><a href="#different-return-shape--calling-convention-throws-or-misbehaves-on-an-opencvjs-style-call-but-obviously-so">Different return shape / calling convention (throws or misbehaves on an opencv.js-style call, but obviously so)</a></li><li class="lvl3"><a href="#vector-container-types--remaining-gaps">Vector container types — remaining gaps</a></li><li class="lvl3"><a href="#different-defaults--optionality-same-call-shape-different-silent-behavior">Different defaults / optionality (same call shape, different silent behavior)</a></li><li class="lvl2"><a href="#appendix--full-per-module-unbound-counts-cv-namespace-only">Appendix — full per-module unbound counts (cv:: namespace only)</a></li><li class="lvl2"><a href="#jsbindingshpp-dead-code-audit-2026-08-27">jsbindings.hpp Dead Code Audit (2026-08-27)</a></li></ul></nav>
 </div>
 <footer class="sitefoot">
-  <p>qjs-opencv — MIT licensed. Built from the repo's own markdown by
-     <a href="https://github.com/rsenn/qjs-opencv/blob/main/tools/site/build.js">tools/site/build.js</a>, running on qjsm.</p>
+  <p>qjs-opencv — MIT. Built from the repo's own markdown by
+     <a href="https://github.com/rsenn/rsenn/tree/main/tools/site">rsenn/rsenn tools/site</a>.</p>
 </footer>
 <script>
 document.querySelector('.themetoggle').addEventListener('click', function () {

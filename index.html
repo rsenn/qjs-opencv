@@ -4,17 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>qjs-opencv — OpenCV bindings for QuickJS</title>
-<meta name="description" content="OpenCV bindings for QuickJS — Mat, contours, imgproc, calib3d, dnn and video I/O in a loadable QuickJS module.">
-<link rel="stylesheet" href="assets/style.css">
+<meta name="description" content="qjs-opencv — OpenCV bindings for QuickJS. Mat, contours, imgproc, calib3d, dnn and video I/O in a loadable QuickJS module.">
+<link rel="stylesheet" href="assets/base.css">
+<link rel="stylesheet" href="assets/theme.css">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 </head>
-<body class="landing">
+<body class="landing" data-site="qjs-opencv" data-root="">
 <header class="topbar">
-  <a class="brand" href="index.html"><span class="mark">{ }</span> qjs-opencv</a>
+  <a class="brand" href="index.html"><span class="mark">{ }</span> <span class="brand-name">qjs-opencv</span></a>
   <nav class="topnav">
     <a href="getting-started.html">Get started</a>
     <a href="docs/algorithms.html">Docs</a>
+    <a href="examples.html">Examples</a>
     <a href="docs/roadmap.html">Roadmap</a>
     <a href="https://github.com/rsenn/qjs-opencv" target="_blank" rel="noopener">GitHub</a>
   </nav>
@@ -175,8 +177,8 @@
 </main>
 
 <footer class="sitefoot">
-  <p>qjs-opencv — MIT licensed. Built from the repo's own markdown by
-     <a href="https://github.com/rsenn/qjs-opencv/blob/main/tools/site/build.js">tools/site/build.js</a>, running on qjsm.</p>
+  <p>qjs-opencv — MIT. Built from the repo's own markdown by
+     <a href="https://github.com/rsenn/rsenn/tree/main/tools/site">rsenn/rsenn tools/site</a>.</p>
 </footer>
 <script>
 document.querySelector('.themetoggle').addEventListener('click', function () {

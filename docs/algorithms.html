@@ -4,24 +4,26 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>cv. algorithms (custom) — qjs-opencv</title>
-<meta name="description" content="OpenCV bindings for QuickJS — Mat, contours, imgproc, calib3d, dnn and video I/O in a loadable QuickJS module.">
-<link rel="stylesheet" href="../assets/style.css">
+<meta name="description" content="qjs-opencv — OpenCV bindings for QuickJS. Mat, contours, imgproc, calib3d, dnn and video I/O in a loadable QuickJS module.">
+<link rel="stylesheet" href="../assets/base.css">
+<link rel="stylesheet" href="../assets/theme.css">
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 </head>
-<body class="has-sidebar">
+<body class="has-sidebar" data-site="qjs-opencv" data-root="../">
 <header class="topbar">
-  <a class="brand" href="../index.html"><span class="mark">{ }</span> qjs-opencv</a>
+  <a class="brand" href="../index.html"><span class="mark">{ }</span> <span class="brand-name">qjs-opencv</span></a>
   <nav class="topnav">
     <a href="../getting-started.html">Get started</a>
     <a href="../docs/algorithms.html">Docs</a>
+    <a href="../examples.html">Examples</a>
     <a href="../docs/roadmap.html">Roadmap</a>
     <a href="https://github.com/rsenn/qjs-opencv" target="_blank" rel="noopener">GitHub</a>
   </nav>
   <button class="themetoggle" type="button" aria-label="Toggle colour scheme">◐</button>
 </header>
 <div class="layout">
-<aside class="sidebar"><div class="navgroup"><h3>Start here</h3><ul><li><a href="../getting-started.html">Getting started</a></li></ul></div><div class="navgroup"><h3>Reference</h3><ul><li><a href="algorithms.html" class="here">Custom algorithms</a></li><li><a href="roadmap.html">Binding roadmap</a></li></ul></div></aside>
+<aside class="sidebar"><div class="navgroup"><h3>Start here</h3><ul><li><a href="../getting-started.html">Getting started</a></li></ul></div><div class="navgroup"><h3>Reference</h3><ul><li><a href="algorithms.html" class="here">Custom algorithms</a></li><li><a href="roadmap.html">Binding roadmap</a></li></ul></div><div class="navgroup"><h3>Examples</h3><ul><li><a href="../examples.html">Examples</a></li></ul></div></aside>
 <main class="doc">
 <article><h1 id="cv-algorithms-custom"><a class="anchor" href="#cv-algorithms-custom" aria-hidden="true">#</a><code>cv.*</code> algorithms (custom)</h1>
 <p>Functions exported by <code>js_algorithms.cpp</code>. These are <em>not</em> OpenCV functions — they live under <code>algorithms/</code> in this repo and are surfaced on the <code>cv</code> module alongside the OpenCV-proper bindings.</p>
@@ -328,7 +330,7 @@
 <li><strong><code>dst</code></strong> — <code>cv.Mat</code> or <code>cv.UMat</code>. Receives a <code>CV_8UC1</code> index image: each pixel is the position in <code>palette</code> of its nearest match.</li>
 <li><strong><code>palette</code></strong> — JS array of <code>[R, G, B, A]</code> quadruplets.</li>
 </ul>
-<p>Distance is computed in a perceptually weighted RGB space (the "low-cost approximation" from &lt;https://www.compuphase.com/cmetric.htm&gt;), not plain Euclidean. The metric is:</p>
+<p>Distance is computed in a perceptually weighted RGB space (the "low-cost approximation" from <a href="https://www.compuphase.com/cmetric.htm" target="_blank" rel="noopener">https://www.compuphase.com/cmetric.htm</a>), not plain Euclidean. The metric is:</p>
 <div class="codeblock"><pre><code>ΔE² = (2 + r̄/256) · ΔR² + 4 · ΔG² + (2 + (255 - r̄)/256) · ΔB²</code></pre></div>
 <p>where <code>r̄</code> is the mean red of the two colors (all components normalized to <code>[0,1]</code>). Green is weighted ~4× and red/blue tilt with the mean red value, giving green-heavy and skin-tone differences slightly more weight than a flat Euclidean distance would.</p>
 <h3 id="notes-3"><a class="anchor" href="#notes-3" aria-hidden="true">#</a>Notes</h3>
@@ -390,8 +392,8 @@
 <nav class="toc"><h3>On this page</h3><ul><li class="lvl2"><a href="#skeletonizationsrc-dst">skeletonization(src, dst)</a></li><li class="lvl3"><a href="#behavior">Behavior</a></li><li class="lvl3"><a href="#notes">Notes</a></li><li class="lvl3"><a href="#example">Example</a></li><li class="lvl2"><a href="#pixelneighborhoodsrc-dst">pixelNeighborhood(src, dst)</a></li><li class="lvl3"><a href="#notes-1">Notes</a></li><li class="lvl3"><a href="#example-1">Example</a></li><li class="lvl2"><a href="#pixelneighborhoodcrosssrc-dst">pixelNeighborhoodCross(src, dst)</a></li><li class="lvl2"><a href="#pixelfindvaluesrc-value">pixelFindValue(src, value)</a></li><li class="lvl3"><a href="#example-2">Example</a></li><li class="lvl2"><a href="#traceskeletonsrc--contoursout--neighborhood--mapping">traceSkeleton(src [, contoursOut [, neighborhood [, mapping]]])</a></li><li class="lvl3"><a href="#signatures">Signatures</a></li><li class="lvl3"><a href="#behavior-1">Behavior</a></li><li class="lvl3"><a href="#notes--caveats">Notes / caveats</a></li><li class="lvl3"><a href="#example-3">Example</a></li><li class="lvl2"><a href="#skeletonizeguohallsrc-dst">skeletonizeGuohall(src, dst)</a></li><li class="lvl3"><a href="#behavior-2">Behavior</a></li><li class="lvl3"><a href="#example-4">Example</a></li><li class="lvl2"><a href="#guohallthinningmat">guohallThinning(mat)</a></li><li class="lvl3"><a href="#example-5">Example</a></li><li class="lvl2"><a href="#guohalliterationmat-iter">guohallIteration(mat, iter)</a></li><li class="lvl3"><a href="#example-6">Example</a></li><li class="lvl2"><a href="#degreemapsrc-dst">degreeMap(src, dst)</a></li><li class="lvl3"><a href="#example-7">Example</a></li><li class="lvl2"><a href="#tracelinessrc--contoursout">traceLines(src [, contoursOut])</a></li><li class="lvl3"><a href="#signatures-1">Signatures</a></li><li class="lvl3"><a href="#behavior-3">Behavior</a></li><li class="lvl3"><a href="#difference-from-traceskeleton">Difference from traceSkeleton</a></li><li class="lvl3"><a href="#example-8">Example</a></li><li class="lvl2"><a href="#skeletonizeandtracesrc--contoursout--skeletonout">skeletonizeAndTrace(src [, contoursOut [, skeletonOut]])</a></li><li class="lvl3"><a href="#signatures-2">Signatures</a></li><li class="lvl3"><a href="#example-9">Example</a></li><li class="lvl2"><a href="#palettegeneratesrc--mode--count">paletteGenerate(src [, mode [, count]])</a></li><li class="lvl3"><a href="#example-10">Example</a></li><li class="lvl2"><a href="#paletteapplysrc-dst-palette">paletteApply(src, dst, palette)</a></li><li class="lvl3"><a href="#notes-2">Notes</a></li><li class="lvl3"><a href="#example-11">Example</a></li><li class="lvl2"><a href="#palettematchsrc-dst-palette">paletteMatch(src, dst, palette)</a></li><li class="lvl3"><a href="#notes-3">Notes</a></li><li class="lvl3"><a href="#example-12">Example</a></li><li class="lvl2"><a href="#end-to-end-pipelines">End-to-end pipelines</a></li></ul></nav>
 </div>
 <footer class="sitefoot">
-  <p>qjs-opencv — MIT licensed. Built from the repo's own markdown by
-     <a href="https://github.com/rsenn/qjs-opencv/blob/main/tools/site/build.js">tools/site/build.js</a>, running on qjsm.</p>
+  <p>qjs-opencv — MIT. Built from the repo's own markdown by
+     <a href="https://github.com/rsenn/rsenn/tree/main/tools/site">rsenn/rsenn tools/site</a>.</p>
 </footer>
 <script>
 document.querySelector('.themetoggle').addEventListener('click', function () {
