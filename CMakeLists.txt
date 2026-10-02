@@ -305,6 +305,22 @@ if(HAVE_OPENCV_DNN_NEW_ENGINE)
   add_definitions(-DHAVE_OPENCV_DNN_NEW_ENGINE)
 endif(HAVE_OPENCV_DNN_NEW_ENGINE)
 
+# The individual cv::dnn::ENGINE_* constants differ between releases: 4.x has
+# ENGINE_CLASSIC/ENGINE_NEW/ENGINE_AUTO, 5.0 has ENGINE_AUTO/ENGINE_OPENCV/
+# ENGINE_ORT. Probe each one and #define HAVE_OPENCV_DNN_<name>.
+foreach(_engine CLASSIC NEW AUTO OPENCV ORT)
+  set(CMAKE_REQUIRED_INCLUDES_SAVE "${CMAKE_REQUIRED_INCLUDES}")
+  set(CMAKE_REQUIRED_INCLUDES "${OPENCV_INCLUDE_DIRS}")
+  check_cxx_source_compiles("
+    #include <opencv2/dnn.hpp>
+    int main() { int e = cv::dnn::ENGINE_${_engine}; return e - e; }
+  " HAVE_OPENCV_DNN_ENGINE_${_engine})
+  set(CMAKE_REQUIRED_INCLUDES "${CMAKE_REQUIRED_INCLUDES_SAVE}")
+  if(HAVE_OPENCV_DNN_ENGINE_${_engine})
+    add_definitions(-DHAVE_OPENCV_DNN_ENGINE_${_engine}=1)
+  endif(HAVE_OPENCV_DNN_ENGINE_${_engine})
+endforeach(_engine)
+
 # OpenCV 5.0 added cv::dnn::Tokenizer (BPE tokenizer for LLM inference) and
 # Net::enable/disable/resetKVCache() for autoregressive attention layers -
 # both new in the same header revision as the new DNN engine, but probed
