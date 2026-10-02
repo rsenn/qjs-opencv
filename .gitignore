@@ -35,3 +35,6 @@
 # examples/*.js document how to fetch what they need).
 /examples/models/
 _site/
+
+# downloaded by scripts/fetch-qwen-tokenizer.sh
+tests/qwen2.5-tokenizer/
