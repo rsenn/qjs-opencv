@@ -37,7 +37,7 @@ failure - `CMakeCache.txt` already had `HAVE_LIBX11:INTERNAL=1` and
 (`exitCode: 0`). The actual bug: `CMakeLists.txt:99-101` computed
 `HAVE_X11` via a plain `set(HAVE_X11 TRUE)` but never forwarded it to the
 compiler as a `-D` flag, unlike every other `HAVE_*` flag in that file
-(all go through `add_definitions(-D...)` or `functions.cmake`'s
+(all go through `add_definitions(-D...)` or `Functions.cmake`'s
 `var2define`). `HAVE_X11` was true in CMake's own variable scope the whole
 time; the compiler just never saw it. Fixed by adding
 `add_definitions(-DHAVE_X11)` inside the `if(HAVE_LIBX11 AND
