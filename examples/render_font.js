@@ -1160,13 +1160,13 @@ class FontListBrowser {
   #showFontDetail(font) {
     const info = this.#ensureDetail(font);
     const gm = this.#prepareGlyphMap(font, info);
-    const screen = new Screen();
+    const screen = new Screen(std.out);
     let showPanel = true;
     let colorHue = null; // null = plain grayscale; a number = color-wheel mode at that hue
 
     // eslint-disable-next-line no-constant-condition
     while(true) {
-      const [termCols, termRows] = windowSize();
+      const [termCols, termRows] = windowSize(std.out);
       const maxCols = Math.max(0, termCols - 1);
       const colorFn = colorHue === null ? undefined : colorWheelPalette(colorHue);
 
@@ -1229,15 +1229,15 @@ class FontListBrowser {
     const fd = std.in.fileno();
 
     try {
-      setAlternateScreen();
-      cursorHide();
+      setAlternateScreen(std.out);
+      cursorHide(std.out);
       enableRawMode(fd);
       this.#loop();
     } finally {
       // Each restore step run independently - a failure in one (e.g.
       // disableRawMode's tcgetattr on a non-tty stdin) must not skip the
       // rest, or the terminal is left alt-screen/cursor-hidden/raw.
-      for(const restore of [() => disableRawMode(fd), cursorShow, setNormalScreen]) {
+      for(const restore of [() => disableRawMode(fd), () => cursorShow(std.out), () => setNormalScreen(std.out)]) {
         try {
           restore();
         } catch(e) {}
@@ -1248,11 +1248,11 @@ class FontListBrowser {
   }
 
   #loop() {
-    const screen = new Screen();
+    const screen = new Screen(std.out);
     let running = true;
 
     while(running) {
-      const [cols, rows] = windowSize();
+      const [cols, rows] = windowSize(std.out);
       this.#draw(screen, rows, cols);
 
       const key = readKey(std.in.fileno());
