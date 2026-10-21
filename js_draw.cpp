@@ -270,12 +270,40 @@ js_draw_contour(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
   return JS_UNDEFINED;
 }
 
+static bool js_poly_read(JSContext*, JSValueConst, std::vector<cv::Point>&);
+
+/* plain JS array of contours (Mats or point arrays) to Mat headers/CV_32SC2 */
+static bool
+js_contour_list(JSContext* ctx, JSValueConst v, std::vector<cv::Mat>& out) {
+  int64_t n = js_array_length(ctx, v);
+
+  for(int64_t i = 0; i < n; i++) {
+    JSValue e = JS_GetPropertyUint32(ctx, v, i);
+    JSMatData* m = js_mat_data(e);
+    std::vector<cv::Point> poly;
+
+    if(m)
+      out.push_back(*m);
+    else if(js_poly_read(ctx, e, poly))
+      out.push_back(cv::Mat(poly).clone());
+    else {
+      JS_FreeValue(ctx, e);
+      return false;
+    }
+
+    JS_FreeValue(ctx, e);
+  }
+
+  return true;
+}
+
 static JSValue
 js_draw_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   JSInputOutputArray dst = js_cv_inputoutputarray(ctx, argv[0]);
-  JSInputOutputArray contours = js_cv_inputoutputarray(ctx, argv[1]);
+  JSInputOutputArray contours;
+  std::vector<cv::Mat> contour_list;
   int32_t index = -1, line_type = cv::LINE_8;
-  JSColorData<double> color;
+  cv::Scalar scalar;
   JSPointData<int> offset;
   std::vector<cv::Vec4i> hier;
   int32_t thickness = 1, maxLevel = INT_MAX;
@@ -284,9 +312,20 @@ js_draw_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
   if(js_is_noarray(dst))
     return JS_EXCEPTION;
 
+  if(argc < 4)
+    return JS_ThrowTypeError(ctx, "drawContours(img, contours, contourIdx, color, thickness, lineType, hierarchy, maxLevel, offset)");
+
+  if(JS_IsArray(ctx, argv[1])) {
+    if(!js_contour_list(ctx, argv[1], contour_list))
+      return JS_ThrowTypeError(ctx, "argument 2 must be an array of contours (CV_32SC2 Mat or array of points)");
+
+    contours = JSInputOutputArray(contour_list);
+  } else
+    contours = js_cv_inputoutputarray(ctx, argv[1]);
+
   js_value_to(ctx, argv[2], index);
 
-  js_color_read(ctx, argv[3], &color);
+  js_color_read(ctx, argv[3], &scalar);
 
   if(argc > 4)
     js_value_to(ctx, argv[4], thickness);
@@ -303,7 +342,6 @@ js_draw_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst a
   if(argc > 8)
     js_point_read<int>(ctx, argv[8], &offset);
 
-  const auto scalar = cv::Scalar(color);
   // std::cerr << "draw_contours() contours.length=" << contours.size() << " index=" << index << " thickness=" << thickness << std::endl;
 
   try {
@@ -390,41 +428,151 @@ js_draw_line(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
   return JS_UNDEFINED;
 }
 
-static JSValue
-js_fill_poly(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  JSInputOutputArray dst;
-  int i = 0;
-  point_vector<int> points;
-  cv::Scalar color;
-  int line_type = cv::LINE_AA;
+/* reads [x, y] or {x, y}; false if v is no point */
+static bool
+js_poly_point(JSContext* ctx, JSValueConst v, cv::Point& p) {
+  JSValue x, y;
+  int32_t xi = 0, yi = 0;
+  bool ok = false;
 
-  if(argc > i) {
-    if(!js_is_noarray((dst = js_cv_inputoutputarray(ctx, argv[i]))))
-      i++;
-  } else
-    dst = *dptr;
+  if(!JS_IsObject(v) || js_mat_data(v))
+    return false;
 
-  if(argc > i)
-    js_array_to(ctx, argv[i++], points);
-
-  if(argc > i && js_color_read(ctx, argv[i], &color))
-    i++;
-
-  if(argc > i)
-    js_value_to(ctx, argv[i++], line_type);
-
-  if(dptr != nullptr) {
-    const int size = points.size();
-    const JSPointData<int>* pts = points.data();
-
-    try {
-      cv::fillPoly(dst, &pts, &size, 1, color, line_type);
-    } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
-
-    return JS_UNDEFINED;
+  if(JS_IsArray(ctx, v)) {
+    x = JS_GetPropertyUint32(ctx, v, 0);
+    y = JS_GetPropertyUint32(ctx, v, 1);
+  } else {
+    x = JS_GetPropertyStr(ctx, v, "x");
+    y = JS_GetPropertyStr(ctx, v, "y");
   }
 
-  return JS_EXCEPTION;
+  if(JS_IsNumber(x) && JS_IsNumber(y) && !JS_ToInt32(ctx, &xi, x) && !JS_ToInt32(ctx, &yi, y)) {
+    p = cv::Point(xi, yi);
+    ok = true;
+  }
+
+  JS_FreeValue(ctx, x);
+  JS_FreeValue(ctx, y);
+  return ok;
+}
+
+/* one polygon: a CV_32SC2 Mat or an array of points */
+static bool
+js_poly_read(JSContext* ctx, JSValueConst v, std::vector<cv::Point>& poly) {
+  JSMatData* m = js_mat_data(v);
+  int64_t n;
+
+  if(m) {
+    if(m->checkVector(2, CV_32S) < 0)
+      return false;
+
+    cv::Mat flat = m->reshape(2, m->total());
+
+    poly.assign(flat.ptr<cv::Point>(0), flat.ptr<cv::Point>(0) + flat.rows);
+    return true;
+  }
+
+  if(!JS_IsArray(ctx, v) || (n = js_array_length(ctx, v)) < 0)
+    return false;
+
+  for(int64_t i = 0; i < n; i++) {
+    JSValue e = JS_GetPropertyUint32(ctx, v, i);
+    cv::Point p;
+    bool ok = js_poly_point(ctx, e, p);
+
+    JS_FreeValue(ctx, e);
+
+    if(!ok)
+      return false;
+
+    poly.push_back(p);
+  }
+
+  return true;
+}
+
+/* a polygon, or an array of polygons (opencv.js passes a MatVector) */
+static bool
+js_poly_list(JSContext* ctx, JSValueConst v, std::vector<std::vector<cv::Point>>& polys) {
+  JSValue first;
+  cv::Point p;
+  int64_t n;
+  bool flat;
+
+  if(js_mat_data(v)) {
+    polys.resize(1);
+    return js_poly_read(ctx, v, polys[0]);
+  }
+
+  if(!JS_IsArray(ctx, v) || (n = js_array_length(ctx, v)) < 0)
+    return false;
+
+  first = JS_GetPropertyUint32(ctx, v, 0);
+  flat = js_poly_point(ctx, first, p);
+  JS_FreeValue(ctx, first);
+
+  if(flat) {
+    polys.resize(1);
+    return js_poly_read(ctx, v, polys[0]);
+  }
+
+  for(int64_t i = 0; i < n; i++) {
+    JSValue e = JS_GetPropertyUint32(ctx, v, i);
+    bool ok;
+
+    polys.emplace_back();
+    ok = js_poly_read(ctx, e, polys.back());
+    JS_FreeValue(ctx, e);
+
+    if(!ok)
+      return false;
+  }
+
+  return true;
+}
+
+/* fillPoly(img, pts, color, lineType = LINE_8, shift = 0, offset = Point(0, 0)) */
+static JSValue
+js_fill_poly(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
+  std::vector<std::vector<cv::Point>> polys;
+  std::vector<const cv::Point*> ptrs;
+  std::vector<int> sizes;
+  JSInputOutputArray dst;
+  cv::Scalar color;
+  cv::Point offset;
+  int32_t line_type = cv::LINE_8, shift = 0;
+
+  if(argc < 3)
+    return JS_ThrowTypeError(ctx, "fillPoly(img, pts, color, lineType, shift, offset)");
+
+  if(js_is_noarray((dst = js_cv_inputoutputarray(ctx, argv[0]))))
+    return JS_ThrowTypeError(ctx, "argument 1 must be an image");
+
+  if(!js_poly_list(ctx, argv[1], polys))
+    return JS_ThrowTypeError(ctx, "argument 2 must be a polygon (array of points or CV_32SC2 Mat) or an array of them");
+
+  if(!js_color_read(ctx, argv[2], &color))
+    return JS_ThrowTypeError(ctx, "argument 3 must be a color");
+
+  if(argc > 3 && JS_ToInt32(ctx, &line_type, argv[3]))
+    return JS_EXCEPTION;
+
+  if(argc > 4 && JS_ToInt32(ctx, &shift, argv[4]))
+    return JS_EXCEPTION;
+
+  if(argc > 5 && !js_poly_point(ctx, argv[5], offset))
+    return JS_ThrowTypeError(ctx, "argument 6 must be a point");
+
+  for(const auto& poly : polys) {
+    ptrs.push_back(poly.data());
+    sizes.push_back(poly.size());
+  }
+
+  try {
+    cv::fillPoly(dst, ptrs.data(), sizes.data(), (int)polys.size(), color, line_type, shift, offset);
+  } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
+
+  return JS_UNDEFINED;
 }
 
 static JSValue
@@ -839,22 +987,36 @@ js_clip_line(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[
   return JS_NewBool(ctx, result);
 }
 
+/* fillConvexPoly(img, pts, color, lineType = LINE_8, shift = 0): pts as for fillPoly */
 static JSValue
 js_fill_convex_poly(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
-  JSInputOutputArray img = js_cv_inputoutputarray(ctx, argv[0]);
-  JSInputArray points = js_cv_inputarray(ctx, argv[1]);
+  std::vector<cv::Point> poly;
+  JSInputOutputArray img;
   cv::Scalar color;
   int32_t lineType = cv::LINE_8, shift = 0;
 
-  js_color_read(ctx, argv[2], &color);
+  if(argc < 3)
+    return JS_ThrowTypeError(ctx, "fillConvexPoly(img, pts, color, lineType, shift)");
 
-  if(argc > 3)
-    JS_ToInt32(ctx, &lineType, argv[3]);
+  if(js_is_noarray((img = js_cv_inputoutputarray(ctx, argv[0]))))
+    return JS_ThrowTypeError(ctx, "argument 1 must be an image");
 
-  if(argc > 4)
-    JS_ToInt32(ctx, &shift, argv[4]);
+  if(!js_poly_read(ctx, argv[1], poly))
+    return JS_ThrowTypeError(ctx, "argument 2 must be a polygon (array of points or CV_32SC2 Mat)");
 
-  cv::fillConvexPoly(img, points, color, lineType, shift);
+  if(!js_color_read(ctx, argv[2], &color))
+    return JS_ThrowTypeError(ctx, "argument 3 must be a color");
+
+  if(argc > 3 && JS_ToInt32(ctx, &lineType, argv[3]))
+    return JS_EXCEPTION;
+
+  if(argc > 4 && JS_ToInt32(ctx, &shift, argv[4]))
+    return JS_EXCEPTION;
+
+  try {
+    cv::fillConvexPoly(img, poly.data(), (int)poly.size(), color, lineType, shift);
+  } catch(const cv::Exception& e) { return js_cv_throw(ctx, e); }
+
   return JS_UNDEFINED;
 }
 
@@ -887,7 +1049,7 @@ const JSCFunctionListEntry js_draw_global_funcs[] = {
     JS_CFUNC_DEF("drawContour", 1, &js_draw_contour),
     JS_CFUNC_DEF("drawContours", 4, &js_draw_contours),
     JS_CFUNC_DEF("line", 1, &js_draw_line),
-    JS_CFUNC_DEF("fillPoly", 1, &js_fill_poly),
+    JS_CFUNC_DEF("fillPoly", 3, &js_fill_poly),
     JS_CFUNC_DEF("polylines", 1, &js_draw_polylines),
     JS_CFUNC_DEF("rectangle", 1, &js_draw_rectangle),
     JS_CFUNC_DEF("drawKeypoints", 3, &js_draw_keypoints),

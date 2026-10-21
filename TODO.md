@@ -8,6 +8,46 @@ qjsm scripts/binding_coverage.js --module=build/x86_64-linux-debug/opencv.so \
   --lib-dir=/opt/opencv-4.13.0-x86_64/lib --namespace=cv --verbose --out=cov.txt
 ```
 
+## opencv-imgproc: background removal and clip paths (2026-10-21)
+
+Plan: `doc/opencv-imgproc.md` (spec, copy of `~/Sources/wild-beauty/opencv-imgproc.md`,
+consumer is the Wild Beauty server). Script: `tools/opencv-imgproc.js`, quickjs-only,
+one JSON line on stdout.
+
+**Done (minimal slice):**
+- `cv.fillPoly(img, pts, color, lineType = LINE_8, shift = 0, offset)` fixed: `pts` is a
+  flat polygon (`[x,y]`, `{x,y}`, `Point`), an array of polygons, or a `CV_32SC2` Mat;
+  several polygons fill even-odd; `shift` gives sub-pixel edges. Tests:
+  `tests/unittests/test_fillpoly.js`.
+- `clip --in --out --polygon JSON [--invert] [--supersample N]`: polygon points only
+  (no SVG path), supersampled fill, area downsample, alpha intersects existing alpha,
+  `.png`/`.webp` output only.
+- `cutout --in --out [--rect x,y,w,h]`: one method, grabCut at work size 1280 with a
+  rect (default centre 80%), upscaled and feathered.
+
+- `palette --in --count --dist=cube|cie76|cie94|kmeans [--hsv]`: dominant colors via
+  `cv.paletteGenerate` (`dominant_colors_grabber`), hex list for BGR, raw triplets for HSV.
+- `--help` and option parsing through `cv.CommandLineParser`, so options are
+  `--name=value` (the spec's `--name value` form is not supported by OpenCV's parser).
+
+**Not done (spec section in brackets):**
+- [4, 5] `capabilities`, `info`, `alpha` commands, `--job FILE`, `<command> --help`,
+  `--mask`, `--name value` form, kebab-case flags for every key, `maskOut`, `trim`/`trimPad`, `format`/`webp`/`png`
+- [5.1] other cutout methods: flood, chroma, threshold, kmeans, watershed, contour, diff,
+  dnn (check ONNX operator coverage with one real model), mask, `auto`; `fg`/`bg`/`trimap` hints
+- [6.4, 6.5] `post` pipeline (open/close, keep largest, hole fill, refine band,
+  `decontaminate`), narrow-band refinement at full size
+- [7] SVG path grammar, `units` (norm/box), `matrix`, `fillRule` nonzero (fillPoly is
+  even-odd per call; composite per subpath), `mode`, `feather`/`grow`, accuracy check
+  against the analytic area (spec 12.7)
+- [8, 9] full result JSON (`bbox`, `offset`, `timings`, `warnings`) and the exit-code table:
+  today only 2/3/4/6/10 are used, `maxPixels` (5), `E_MASK_SIZE` (7), `E_MODEL` (8),
+  `E_METHOD` (9), `E_INTERNAL` (70, uncaught exceptions still print qjsm's trace) are missing
+- [10] caps on vertex count, `budgetMs`; [3] deterministic seed (`setRNGSeed`), temp file + rename
+- [12] tests for the tool itself (fixtures drawn in code, IoU floors), hostile-input tests
+- [3] register in `tool-registry` (`tools.yaml`, needs the user's approval), README section
+- [2] EXIF orientation behaviour of `imread` on a rotated JPEG still unchecked
+
 ## getScreenResolution() build-config fix (2026-09-08, root cause fixed 2026-09-09)
 
 `js_highgui.cpp`'s `getScreenResolution()` has an `#if _WIN32 / #elif

@@ -550,6 +550,9 @@ if(OPENCV_FREETYPE_LIBRARY)
   message(STATUS "OpenCV freetype: ${OPENCV_FREETYPE_LIBRARY}")
 endif(OPENCV_FREETYPE_LIBRARY)
 
+# command-line tools, installed without the .js suffix (shebang: qjsm)
+install(PROGRAMS tools/opencv-imgproc.js DESTINATION bin RENAME opencv-imgproc)
+
 # tests/unittests/*.js (tinytest-based) run under qjsm against the
 # freshly built opencv.so - QUICKJS_MODULE_PATH points at this build
 # directory (where make_shared_module() puts it) rather than any

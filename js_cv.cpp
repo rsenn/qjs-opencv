@@ -190,9 +190,20 @@ js_cv_imwrite(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
     } catch(std::runtime_error& error) { return JS_ThrowInternalError(ctx, "runtime error: %s", error.what()); }
 
   } else {
-    cv::imwrite(filename, image);
+    bool ok = false;
+
+    try {
+      ok = cv::imwrite(filename, image);
+    } catch(const cv::Exception& e) {
+      JS_FreeCString(ctx, filename);
+      return js_cv_throw(ctx, e);
+    }
+
+    JS_FreeCString(ctx, filename);
+    return JS_NewBool(ctx, ok);
   }
 
+  JS_FreeCString(ctx, filename);
   return JS_UNDEFINED;
 }
 
@@ -288,10 +299,8 @@ js_cv_split(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
   int code, dstCn = 0;
   int32_t length;
 
-  if(!(src = js_mat_data2(ctx, argv[0])))
-    return JS_ThrowInternalError(ctx, "src not an array!");
-
-  length = js_array_length(ctx, argv[1]);
+  if(argc < 1 || !(src = js_mat_data2(ctx, argv[0])))
+    return JS_ThrowTypeError(ctx, "split(src, mv): src must be a Mat");
 
   for(int32_t i = 0; i < src->channels(); i++) {
     dst.push_back(cv::Mat(src->size(), src->type() & 0x7));
@@ -300,11 +309,14 @@ js_cv_split(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
   if(dst.size() >= src->channels()) {
     cv::split(*src, dst.data());
 
+    // without an output array the channels are returned as a new array
+    JSValue out = argc > 1 && JS_IsObject(argv[1]) ? JS_DupValue(ctx, argv[1]) : JS_NewArray(ctx);
+
     for(int32_t i = 0; i < src->channels(); i++) {
-      JS_SetPropertyUint32(ctx, argv[1], i, js_mat_wrap(ctx, dst[i]));
+      JS_SetPropertyUint32(ctx, out, i, js_mat_wrap(ctx, dst[i]));
     }
 
-    return JS_UNDEFINED;
+    return argc > 1 && JS_IsObject(argv[1]) ? (JS_FreeValue(ctx, out), JS_UNDEFINED) : out;
   }
 
   return JS_EXCEPTION;

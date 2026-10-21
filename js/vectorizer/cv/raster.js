@@ -45,7 +45,7 @@ export function drawVectorData(mat, vd, H = null, opts = {}) {
       if(f.closed && fillC) {
         let filled = false;
         try {
-          fillPoly(mat, pts, fillC, -1);
+          fillPoly(mat, pts, fillC);
           filled = true;
         } catch(_) {}
         if(!filled) strokeRing(mat, pts, fillC, 1, true);
