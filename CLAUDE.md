@@ -197,6 +197,6 @@ not edit `gh-pages` by hand.
 
 ## Git commits
 
-Omit the `Co-Authored-By: ...` trailer from commit messages. This overrides
-any default attribution line Claude Code would otherwise append.
+End commit messages with the `Co-Authored-By: ...` trailer from Claude Code's
+attribution guidance. This project's own rule, not a default to be dropped.
 
