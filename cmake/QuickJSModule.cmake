@@ -109,7 +109,7 @@ function(generate_module_header SOURCE)
     endif()
   endforeach()
 
-  file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/modules/${BASE}.h" "${S}")
+  file(WRITE "${CMAKE_BINARY_DIR}/modules/${BASE}.h" "${S}")
   #string(REGEX REPLACE "[\\n;]" "\\\\n" SYMBOLS "${SYMBOLS}")
   #message("Symbols: ${SYMBOLS}")
 endfunction()
@@ -224,9 +224,9 @@ function(remake_module SOURCE)
 
   extract_definition("${SOURCE}" DEF "${NAME}")
 
-  file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/modules")
+  file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
 
-  file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/modules/${BASE}.c" "#include \"${BASE}.h\"\n\n${DEF}")
+  file(WRITE "${CMAKE_BINARY_DIR}/modules/${BASE}.c" "#include \"${BASE}.h\"\n\n${DEF}")
   generate_module_header(${SOURCE} ${DEFLIST})
 
 endfunction()
