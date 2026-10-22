@@ -2,9 +2,12 @@
 // and duplicate tiles by image similarity, and repacks the survivors into a
 // new (smaller) tileset image plus a JSON sidecar describing the mapping.
 //
-// Usage: qjs examples/tileset_grid.js <tileset.png> [outBasename]
+// Usage: qjsm examples/tileset_grid.js <tileset.png> [outBasename] [--tiles=CxR]
+// Options use the --name=value form, see --help.
+import * as os from 'os';
 import * as std from 'std';
 import {
+  CommandLineParser,
   Mat,
   Rect,
   CV_32S,
@@ -12,14 +15,21 @@ import {
   COLOR_BGRA2GRAY,
   INTER_AREA,
   IMREAD_UNCHANGED,
+  THRESH_BINARY,
+  THRESH_BINARY_INV,
   absdiff,
+  bitwise_and,
+  bitwise_or,
+  boundingRect,
   cvtColor,
   imread,
   imwrite,
   meanStdDev,
+  countNonZero,
   reduce,
   resize,
   split,
+  threshold,
 } from 'opencv';
 
 const REDUCE_SUM = 0; // cv::REDUCE_SUM; not exposed as a named constant by this binding
@@ -37,6 +47,12 @@ const EMPTY_STDDEV_THRESHOLD = 2.0;
 // downsampled thumbnails falls below this (0..255 scale).
 const DUPLICATE_THRESHOLD = 4.0;
 const THUMB_SIZE = 8;
+
+// --recenter: a pixel is padding when it is (near-)white, i.e. every colour
+// channel is above WHITE_THRESHOLD, or transparent, i.e. alpha is below
+// ALPHA_THRESHOLD.
+const WHITE_THRESHOLD = 244;
+const ALPHA_THRESHOLD = 16;
 
 function toGray(mat) {
   const gray = new Mat();
@@ -61,8 +77,7 @@ function edgeProfile(gray, axis) {
   const sums = new Mat();
   reduce(diff, sums, axis === 'x' ? 0 : 1, REDUCE_SUM, CV_32S);
 
-  const flat = axis === 'x' ? sums.array[0] : sums.array.map(row => row[0]);
-  return Array.from(flat).slice(0, n);
+  return Array.from(sums.data32S).slice(0, n);
 }
 
 // Scores every (step, phase) pair by the average edge energy along the
@@ -110,10 +125,33 @@ function findPeriod(profile, minStep, maxStep) {
   return { size: best.step, offset: (best.offset + 1) % best.step };
 }
 
-function detectGrid(source) {
+// Parses 'AxB' / 'A,B' / 'A' (= AxA) into [a, b], or returns undefined.
+function parsePair(str) {
+  if(!str)
+    return undefined;
+  const m = /^(\d+)(?:[x,X*](\d+))?$/.exec(str);
+  if(!m)
+    throw new Error(`invalid value '${str}', expected AxB`);
+  return [+m[1], +m[2] || +m[1]];
+}
+
+// hints: { tiles: [cols, rows], size: [w, h], offset: [x, y] }
+function detectGrid(source, hints = {}) {
+  let { tiles, size, offset } = hints;
+
+  if(tiles && !size)
+    size = [Math.floor(source.cols / tiles[0]), Math.floor(source.rows / tiles[1])];
+
+  if(size) {
+    const [tileWidth, tileHeight] = size;
+    const [offsetX, offsetY] = offset ?? [0, 0];
+    return { tileWidth, tileHeight, offsetX, offsetY };
+  }
+
   const gray = toGray(source);
-  const { size: tileWidth, offset: offsetX } = findPeriod(edgeProfile(gray, 'x'), MIN_TILE, MAX_TILE);
-  const { size: tileHeight, offset: offsetY } = findPeriod(edgeProfile(gray, 'y'), MIN_TILE, MAX_TILE);
+  const { size: tileWidth, offset: detX } = findPeriod(edgeProfile(gray, 'x'), MIN_TILE, MAX_TILE);
+  const { size: tileHeight, offset: detY } = findPeriod(edgeProfile(gray, 'y'), MIN_TILE, MAX_TILE);
+  const [offsetX, offsetY] = offset ?? [detX, detY];
 
   return { tileWidth, tileHeight, offsetX, offsetY };
 }
@@ -122,14 +160,14 @@ function stdDev(mat) {
   const mean = new Mat(),
     std = new Mat();
   meanStdDev(mat, mean, std);
-  return Math.max(...std.array.map(row => row[0]));
+  return Math.max(...std.data64F);
 }
 
 function meanOf(mat) {
   const mean = new Mat(),
     std = new Mat();
   meanStdDev(mat, mean, std);
-  return mean.array[0][0];
+  return mean.data64F[0];
 }
 
 // With an alpha channel, transparency is the only reliable "empty" signal —
@@ -146,6 +184,44 @@ function isEmptyTile(tile) {
   return stdDev(tile) < EMPTY_STDDEV_THRESHOLD;
 }
 
+// Crops the padding (white or transparent) off a tile and centres what is
+// left on a fresh canvas of the same size: white for opaque images,
+// transparent for ones with alpha. Returns the tile itself when it has no
+// content or already is centred.
+function recenter(tile) {
+  const channels = [];
+  split(tile, channels);
+  const hasAlpha = channels.length === 4;
+  const colour = hasAlpha ? channels.slice(0, 3) : channels;
+
+  // content = any colour channel not white
+  const content = new Mat();
+  threshold(colour[0], content, WHITE_THRESHOLD, 255, THRESH_BINARY_INV);
+  for(const ch of colour.slice(1)) {
+    const m = new Mat();
+    threshold(ch, m, WHITE_THRESHOLD, 255, THRESH_BINARY_INV);
+    bitwise_or(content, m, content);
+  }
+  if(hasAlpha) {
+    const opaque = new Mat();
+    threshold(channels[3], opaque, ALPHA_THRESHOLD - 1, 255, THRESH_BINARY);
+    bitwise_and(content, opaque, content);
+  }
+
+  if(countNonZero(content) === 0)
+    return tile;
+
+  const box = boundingRect(content);
+  const x = Math.floor((tile.cols - box.width) / 2);
+  const y = Math.floor((tile.rows - box.height) / 2);
+  if(x === box.x && y === box.y)
+    return tile;
+
+  const out = new Mat(tile.rows, tile.cols, tile.type(), hasAlpha ? [255, 255, 255, 0] : [255, 255, 255, 255]);
+  tile(new Rect(box.x, box.y, box.width, box.height)).copyTo(out(new Rect(x, y, box.width, box.height)));
+  return out;
+}
+
 function thumbnail(tile) {
   const gray = toGray(tile);
   const thumb = new Mat();
@@ -159,16 +235,72 @@ function similar(a, b) {
   const mean = new Mat(),
     std = new Mat();
   meanStdDev(diff, mean, std);
-  return mean.array[0][0] < DUPLICATE_THRESHOLD;
+  return mean.data64F[0] < DUPLICATE_THRESHOLD;
+}
+
+const KEYS = `{ help h usage ? | | print this message }
+  { @input | | tileset image }
+  { @output | | output basename (default: <input>.packed) }
+  { tiles | | tile count as COLSxROWS, e.g. 5x5 }
+  { size | | tile size in pixels as WxH, e.g. 32x32 }
+  { split | | also save every non-empty tile as its own image, <input>.<row>-<col>.<ext> }
+  { outdir | | write all output files into DIR (created if missing) }
+  { recenter | | crop white/transparent padding off each tile and centre the content }
+  { offset | | grid origin in pixels as X,Y (default: 0,0 with --tiles/--size, else detected) }`;
+
+// Creates dir and any missing parents; throws if one can't be made.
+function mkdirs(dir) {
+  let path = dir.startsWith('/') ? '/' : '';
+  for(const part of dir.split('/').filter(Boolean)) {
+    path += part + '/';
+    const [st] = os.stat(path);
+    if(st && (st.mode & os.S_IFMT) === os.S_IFDIR)
+      continue;
+    const err = os.mkdir(path, 0o777);
+    if(err < 0)
+      throw new Error(`cannot create directory '${path}' (errno ${-err})`);
+  }
 }
 
 function main(...args) {
-  const filename = args[0];
+  const parser = new CommandLineParser(['tileset_grid', ...args], KEYS);
+  parser.about('tileset_grid: cut a tileset into tiles, drop empty/duplicate ones, repack\nusage: tileset_grid <tileset.png> [outBasename] [--tiles=CxR] [--size=WxH] [--offset=X,Y] [--split] [--outdir=DIR] [--recenter]');
+
+  if(parser.has('help')) {
+    parser.printMessage();
+    return 0;
+  }
+
+  const filename = parser.get('@input');
   if(!filename) {
-    console.log('usage: qjs examples/tileset_grid.js <tileset.png> [outBasename]');
+    parser.printMessage();
     return 1;
   }
-  const outBase = args[1] ?? filename.replace(/\.[^.]+$/, '') + '.packed';
+
+  let hints;
+  try {
+    hints = { tiles: parsePair(parser.get('tiles')), size: parsePair(parser.get('size')), offset: parsePair(parser.get('offset')) };
+  } catch(e) {
+    console.log('error:', e.message);
+    return 1;
+  }
+
+  let outBase = parser.get('@output') || filename.replace(/\.[^.]+$/, '') + '.packed';
+  let tileBase = filename;
+  const outDir = parser.get('outdir');
+
+  if(outDir) {
+    try {
+      mkdirs(outDir);
+    } catch(e) {
+      console.log('error:', e.message);
+      return 1;
+    }
+    const dir = outDir.replace(/\/+$/, '') || '/';
+    const inDir = p => `${dir}${dir.endsWith('/') ? '' : '/'}${p.replace(/^.*\//, '')}`;
+    outBase = inDir(outBase);
+    tileBase = inDir(filename);
+  }
 
   const source = imread(filename, IMREAD_UNCHANGED);
   if(source.empty()) {
@@ -176,24 +308,37 @@ function main(...args) {
     return 1;
   }
 
-  const { tileWidth, tileHeight, offsetX, offsetY } = detectGrid(source);
+  const { tileWidth, tileHeight, offsetX, offsetY } = detectGrid(source, hints);
   console.log('detected grid:', { tileWidth, tileHeight, offsetX, offsetY });
 
   const cols = Math.floor((source.cols - offsetX) / tileWidth);
   const rows = Math.floor((source.rows - offsetY) / tileHeight);
   console.log('grid dimensions:', { cols, rows, tileCount: cols * rows });
 
+  const split = parser.has('split');
+  const recenter_ = parser.has('recenter');
+  let saved = 0;
   const unique = []; // { thumb, mat, outX, outY }
   const tiles = []; // metadata for every source cell
 
   for(let gy = 0; gy < rows; gy++) {
     for(let gx = 0; gx < cols; gx++) {
       const rect = new Rect(offsetX + gx * tileWidth, offsetY + gy * tileHeight, tileWidth, tileHeight);
-      const tile = source(rect);
+      let tile = source(rect);
 
       if(isEmptyTile(tile)) {
         tiles.push({ col: gx, row: gy, x: rect.x, y: rect.y, empty: true });
         continue;
+      }
+
+      if(recenter_)
+        tile = recenter(tile);
+
+      if(split) {
+        const m = /^(.*?)(\.[^./]+)?$/.exec(tileBase);
+        const pad = n => String(n).padStart(String(Math.max(rows, cols) - 1).length, '0');
+        imwrite(`${m[1]}.${pad(gy)}-${pad(gx)}${m[2] ?? '.png'}`, tile);
+        saved++;
       }
 
       const thumb = thumbnail(tile);
@@ -209,6 +354,8 @@ function main(...args) {
     }
   }
 
+  if(split)
+    console.log('saved', saved, 'single tiles as', tileBase.replace(/(\.[^./]+)?$/, '.<row>-<col>$1'));
   console.log('unique tiles:', unique.length, '/', cols * rows);
 
   const packCols = Math.ceil(Math.sqrt(unique.length || 1));
