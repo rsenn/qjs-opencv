@@ -184,6 +184,21 @@ enum {
 #endif
 };
 
+/* true for a non-empty array whose first element is a string */
+static bool
+js_is_string_array(JSContext* ctx, JSValueConst value) {
+  bool ok = false;
+
+  if(js_is_array(ctx, value)) {
+    JSValue first = JS_GetPropertyUint32(ctx, value, 0);
+
+    ok = JS_IsString(first);
+    JS_FreeValue(ctx, first);
+  }
+
+  return ok;
+}
+
 static JSValue
 js_net_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSNetData* dn;
@@ -258,6 +273,18 @@ js_net_method(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
             js_value_to(ctx, argv[0], name);
 
           ret = js_mat_wrap(ctx, dn->forward(name));
+        } else if(argc == 1 && js_is_string_array(ctx, argv[0])) {
+          /* forward(['a', 'b']) returns [Mat, Mat], like the python binding */
+          std::vector<cv::String> outputNames;
+          std::vector<cv::Mat> outputBlobs;
+
+          js_value_to(ctx, argv[0], outputNames);
+          dn->forward(outputBlobs, outputNames);
+
+          ret = JS_NewArray(ctx);
+
+          for(size_t i = 0; i < outputBlobs.size(); ++i)
+            JS_SetPropertyUint32(ctx, ret, i, js_mat_wrap(ctx, outputBlobs[i]));
         } else {
           std::vector<cv::Mat> vecOfBlobs;
           cv::String outputName;

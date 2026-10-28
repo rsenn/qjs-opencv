@@ -4,9 +4,15 @@
 #include <opencv2/core/version.hpp>
 #include <quickjs.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <iosfwd>
 #include <new>
 #include <string>
+
+extern "C" {
+#include "third_party/Hash-Algorithms/sha1.h"
+#include "third_party/Hash-Algorithms/sha256.h"
+}
 
 extern "C" int js_utility_init(JSContext*, JSModuleDef*);
 
@@ -127,6 +133,104 @@ js_tick_meter_tostring(JSContext* ctx, JSValueConst this_val, int argc, JSValueC
   return JS_EXCEPTION;
 }
 
+/* digest of a string, ArrayBuffer or typed array as lowercase hex */
+static JSValue
+js_hash_digest(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  static const char hex[] = "0123456789abcdef";
+  uint32_t words[8];
+  char out[65];
+  size_t len = 0, nwords = magic ? 8 : 5;
+  const char* str = NULL;
+  uint8_t* ptr = NULL;
+  JSValue buf = JS_UNDEFINED;
+
+  if(argc < 1)
+    return JS_ThrowTypeError(ctx, "expected string, ArrayBuffer or typed array");
+
+  if(JS_IsString(argv[0])) {
+    if(!(str = JS_ToCStringLen(ctx, &len, argv[0])))
+      return JS_EXCEPTION;
+    ptr = (uint8_t*)str;
+  } else {
+    size_t offset = 0, bytes = 0, size = 0;
+
+    buf = JS_GetTypedArrayBuffer(ctx, argv[0], &offset, &bytes, &size);
+
+    /* not a view: clear the probe exception, take it as an ArrayBuffer */
+    if(JS_IsException(buf)) {
+      JS_FreeValue(ctx, JS_GetException(ctx));
+      buf = JS_DupValue(ctx, argv[0]);
+      offset = 0;
+      bytes = (size_t)-1;
+    }
+
+    if(!(ptr = JS_GetArrayBuffer(ctx, &len, buf))) {
+      JS_FreeValue(ctx, buf);
+      return JS_EXCEPTION;
+    }
+
+    ptr += offset;
+    len = bytes == (size_t)-1 ? len : bytes;
+  }
+
+  if(magic)
+    sha256_digest(ptr, len, words, false);
+  else
+    sha1_digest(ptr, len, words, false);
+
+  if(str)
+    JS_FreeCString(ctx, str);
+  JS_FreeValue(ctx, buf);
+
+  for(size_t i = 0; i < nwords * 4; ++i) {
+    uint8_t byte = words[i / 4] >> (24 - 8 * (i % 4));
+
+    out[2 * i] = hex[byte >> 4];
+    out[2 * i + 1] = hex[byte & 15];
+  }
+
+  return JS_NewStringLen(ctx, out, nwords * 8);
+}
+
+/* process-wide cv:: settings that scripts need for reproducibility */
+static JSValue
+js_utility_system(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
+  int32_t n = 0;
+
+  switch(magic) {
+    case 0:
+      if(argc < 1 || JS_ToInt32(ctx, &n, argv[0]))
+        return JS_EXCEPTION;
+      cv::setRNGSeed(n);
+      return JS_UNDEFINED;
+    case 1:
+      if(argc < 1 || JS_ToInt32(ctx, &n, argv[0]))
+        return JS_EXCEPTION;
+      cv::setNumThreads(n);
+      return JS_UNDEFINED;
+    case 2:
+      return JS_NewInt32(ctx, cv::getNumThreads());
+    default: {
+      std::string info = cv::getBuildInformation();
+
+      return JS_NewStringLen(ctx, info.data(), info.size());
+    }
+  }
+}
+
+static const JSCFunctionListEntry js_hash_funcs[] = {
+    JS_CFUNC_MAGIC_DEF("sha1", 1, js_hash_digest, 0),
+    JS_CFUNC_MAGIC_DEF("sha256", 1, js_hash_digest, 1),
+};
+
+static const JSCFunctionListEntry js_utility_funcs[] = {
+    JS_CFUNC_MAGIC_DEF("setRNGSeed", 1, js_utility_system, 0),
+    JS_CFUNC_MAGIC_DEF("setNumThreads", 1, js_utility_system, 1),
+    JS_CFUNC_MAGIC_DEF("getNumThreads", 0, js_utility_system, 2),
+    JS_CFUNC_MAGIC_DEF("getBuildInformation", 0, js_utility_system, 3),
+    JS_OBJECT_DEF("hash", js_hash_funcs, countof(js_hash_funcs), JS_PROP_C_W_E),
+};
+
 JSClassDef js_tick_meter_class = {
     .class_name = "TickMeter",
     .finalizer = js_tick_meter_finalizer,
@@ -168,8 +272,10 @@ js_utility_init(JSContext* ctx, JSModuleDef* m) {
     JS_SetConstructor(ctx, tick_meter_class, tick_meter_proto);
   }
 
-  if(m)
+  if(m) {
     JS_SetModuleExport(ctx, m, "TickMeter", tick_meter_class);
+    JS_SetModuleExportList(ctx, m, js_utility_funcs, countof(js_utility_funcs));
+  }
 
   return 0;
 }
@@ -177,6 +283,7 @@ js_utility_init(JSContext* ctx, JSModuleDef* m) {
 extern "C" void
 js_utility_export(JSContext* ctx, JSModuleDef* m) {
   JS_AddModuleExport(ctx, m, "TickMeter");
+  JS_AddModuleExportList(ctx, m, js_utility_funcs, countof(js_utility_funcs));
 }
 
 #ifdef JS_UTILITY_MODULE

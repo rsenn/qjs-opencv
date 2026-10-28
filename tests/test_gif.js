@@ -91,7 +91,7 @@ function main(...args) {
     imwrite(`image-${(i + '').padStart(3, '0')}.png`, images[i]);
   }
 
-  imwrite('output.gif', images, palette3, 10, 15, 0);
+  imwrite('output.gif', images, { palette: palette3, delay: 10, transparent: 15, loop: 0 });
 }
 
 main(...scriptArgs.slice(1));

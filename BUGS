@@ -2310,3 +2310,39 @@ similar-looking symptom without checking how its mask was built first.]
   testing in this sandbox); the REPL is the verified-tonight artifact,
   the GUI rewrite is the same code path but not independently re-run
   live.
+
+- alphamat-infoflow-crashes-on-bad-input: opencv_contrib's
+  cv::alphamat::infoFlow does not check its arguments, a trimap that is
+  not CV_8UC1 (or an image that is not CV_8UC3) segfaults the process.
+  Guarded in js_alphamat.cpp, which throws TypeError/RangeError first;
+  the upstream function is unchanged.
+
+    cv.alphamat.infoFlow(img8uc3, new cv.Mat(96, 96, cv.CV_32FC1), new cv.Mat());  // now throws, used to segfault
+
+- mat-setto-ignores-scalar-on-single-channel: Mat.setTo(scalar[, mask]) did
+  nothing on a single-channel Mat, because the value was read with
+  js_value_to<double> and a cv.Scalar (the opencv.js calling convention)
+  does not convert. FIXED in js_mat.cpp (the argument is read as a Scalar
+  like opencv.js's matSetTo, a bare number is cv::Scalar(v)); test: tests/unittests/test_mat_setto.js.
+
+    const m = new cv.Mat(4, 4, cv.CV_8UC1, new cv.Scalar(0));
+    m.setTo(new cv.Scalar(7));   // m.data[0] was still 0
+
+- imencode-imwrite-png-params-unreachable: cv.imencode(ext, img, params) and
+  cv.imwrite(file, img, params) cannot pass encode parameters the way
+  OpenCV (and python) do. For .png the 3rd argument is taken as an
+  indexed-colour palette, so imencode('.png', m, [IMWRITE_PNG_COMPRESSION, 6])
+  silently returns a 2-entry palette PNG (colours destroyed), and imwrite
+  ignores params for every format. imencode reads params only from the 4th
+  argument, and not for .png. Not changed (the palette overload is the
+  project's own API), the tool calls imencode without params for png.
+
+  FIXED in js_cv.cpp. The 3rd argument is now either a flat params array
+  ([cv.IMWRITE_*, value, ...], as in C++) or an options object { palette,
+  transparent, compression, quality, params, delay, loop }. A palette is
+  only accepted in the object form, so it cannot be mistaken for params.
+  The old positional palette form (and the gif one) is removed, clients
+  in tests/ and plot-cv/test-opencv.js were updated; test:
+  tests/unittests/test_imwrite_options.js.
+
+    const bytes = cv.imencode('.png', rgbMat, [cv.IMWRITE_PNG_COMPRESSION, 6]);  // 8-bit colormap PNG, not RGB

@@ -38,3 +38,5 @@ _site/
 
 # downloaded by scripts/fetch-qwen-tokenizer.sh
 tests/qwen2.5-tokenizer/
+/models/
+/cache/

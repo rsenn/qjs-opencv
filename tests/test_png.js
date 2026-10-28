@@ -50,7 +50,7 @@ function main(...args) {
     paletteMatch(images[i], images2[i], palette, 15);
 
     //imwrite(`test-${i}.png`, images[i]/*, palette*/);
-    imwrite(`test-${i}.png`, images2[i], palette, 15);
+    imwrite(`test-${i}.png`, images2[i], { palette, transparent: 15 });
   }
 
   console.log(

@@ -216,6 +216,8 @@ endif()
 
 check_include_cxx_def(opencv2/photo/segmentation.hpp HAVE_OPENCV2_PHOTO_SEGMENTATION_HPP)
 check_include_cxx_def(opencv2/ximgproc.hpp HAVE_OPENCV2_XIMGPROC_HPP)
+check_include_cxx_def(opencv2/alphamat.hpp HAVE_OPENCV2_ALPHAMAT_HPP
+                      HAVE_OPENCV2_ALPHAMAT_HPP)
 check_include_cxx_def(opencv2/ximgproc/find_ellipses.hpp
                       HAVE_OPENCV2_XIMGPROC_FIND_ELLIPSES_HPP)
 
@@ -403,6 +405,9 @@ if(USE_BARCODE)
   list(APPEND OPENCV_EXTRA_LIBRARIES opencv_objdetect)
 endif(USE_BARCODE)
 list(APPEND OPENCV_EXTRA_LIBRARIES opencv_xphoto)
+if(HAVE_OPENCV2_ALPHAMAT_HPP)
+  list(APPEND OPENCV_EXTRA_LIBRARIES opencv_alphamat)
+endif(HAVE_OPENCV2_ALPHAMAT_HPP)
 
 check_cxx_standard_flag()
 
@@ -461,7 +466,8 @@ if(USE_LIBCAMERA OR USE_LCCV)
 endif(USE_LIBCAMERA OR USE_LCCV)
 
 file(GLOB OPENCV_SOURCES js_*.[ch]pp ${FEATURE2D_SOURCE} include/*.hpp
-     src/*.cpp gifenc/gifenc.c algorithms/*.cpp lsd/src/*.cpp)
+     src/*.cpp gifenc/gifenc.c algorithms/*.cpp lsd/src/*.cpp
+     third_party/Hash-Algorithms/sha1.c third_party/Hash-Algorithms/sha256.c)
 
 list(FILTER OPENCV_SOURCES EXCLUDE REGEX ".*_iterator.cpp")
 list(FILTER OPENCV_SOURCES EXCLUDE REGEX ".*js_contour.*")

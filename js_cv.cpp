@@ -65,36 +65,111 @@ js_cv_imdecode(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst arg
   return js_mat_wrap(ctx, image);
 }
 
+/*
+ * imwrite / imencode write options, the optional argument after the image:
+ *   [cv.IMWRITE_*, value, ...]   flat array of OpenCV params (as in C++)
+ *   { palette, transparent, compression, quality, params, delay, loop }
+ * a palette (array of colors) is only accepted in the object form, since
+ * it cannot be told apart from a params array by its shape.
+ */
+struct JSWriteOptions {
+  std::vector<JSColorData<uint8_t>> palette;
+  std::vector<int> params, delays;
+  int32_t transparent = -1, loop = 0;
+  bool has_palette = false;
+};
+
+static bool
+js_cv_write_options(JSContext* ctx, JSValueConst arg, const char* ext, JSWriteOptions& o) {
+  JSValue v;
+  int32_t n;
+
+  if(js_is_array(ctx, arg)) {
+    js_array_to(ctx, arg, o.params);
+    return true;
+  }
+  if(!JS_IsObject(arg))
+    return true;
+
+  v = JS_GetPropertyStr(ctx, arg, "palette");
+  if(!JS_IsUndefined(v)) {
+    palette_read(ctx, v, o.palette);
+    o.has_palette = true;
+  }
+  JS_FreeValue(ctx, v);
+
+  v = JS_GetPropertyStr(ctx, arg, "transparent");
+  if(!JS_IsUndefined(v) && !JS_ToInt32(ctx, &n, v))
+    o.transparent = n;
+  JS_FreeValue(ctx, v);
+
+  v = JS_GetPropertyStr(ctx, arg, "loop");
+  if(!JS_IsUndefined(v) && !JS_ToInt32(ctx, &n, v))
+    o.loop = n;
+  JS_FreeValue(ctx, v);
+
+  v = JS_GetPropertyStr(ctx, arg, "delay");
+  if(js_is_array(ctx, v))
+    js_array_to(ctx, v, o.delays);
+  else if(!JS_IsUndefined(v) && !JS_ToInt32(ctx, &n, v))
+    o.delays.assign(1, n);
+  JS_FreeValue(ctx, v);
+
+  v = JS_GetPropertyStr(ctx, arg, "params");
+  if(js_is_array(ctx, v))
+    js_array_to(ctx, v, o.params);
+  JS_FreeValue(ctx, v);
+
+  // compression / quality map onto the codec's own param by extension
+  v = JS_GetPropertyStr(ctx, arg, "compression");
+  if(!JS_IsUndefined(v) && !JS_ToInt32(ctx, &n, v)) {
+    o.params.push_back(cv::IMWRITE_PNG_COMPRESSION);
+    o.params.push_back(n);
+  }
+  JS_FreeValue(ctx, v);
+
+  v = JS_GetPropertyStr(ctx, arg, "quality");
+  if(!JS_IsUndefined(v) && !JS_ToInt32(ctx, &n, v)) {
+    o.params.push_back(str_end(ext, "webp") ? cv::IMWRITE_WEBP_QUALITY : cv::IMWRITE_JPEG_QUALITY);
+    o.params.push_back(n);
+  }
+  JS_FreeValue(ctx, v);
+
+  return true;
+}
+
+static void
+js_cv_palette_fit(cv::InputArray image, std::vector<JSColorData<uint8_t>>& palette) {
+  double max;
+
+  cv::minMaxLoc(image, nullptr, &max);
+  if(palette.size() < size_t(max))
+    palette.resize(size_t(max));
+}
+
 static JSValue
 js_cv_imencode(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   const char* ext = JS_ToCString(ctx, argv[0]);
   JSInputOutputArray image = js_cv_inputoutputarray(ctx, argv[1]);
+  JSWriteOptions o;
   JSValue ret = JS_UNDEFINED;
-  int32_t transparent = -1;
 
-  if(argc >= 3 && str_end(ext, "png") && image.isMat()) {
-    double max;
-    std::string data;
-    std::vector<JSColorData<uint8_t>> palette;
-    palette_read(ctx, argv[2], palette);
-    cv::minMaxLoc(image, nullptr, &max);
-    if(palette.size() < size_t(max))
-      palette.resize(size_t(max));
-    if(argc >= 4)
-      JS_ToInt32(ctx, &transparent, argv[3]);
+  if(argc >= 3)
+    js_cv_write_options(ctx, argv[2], ext, o);
 
-    // printf("png_write '%s' [%zu] (transparent: %i)\n", ext, palette.size(), transparent);
-    data = png_write(image.getMatRef(), palette);
-    ret = JS_NewArrayBufferCopy(ctx, (const uint8_t*)data.data(), data.size());
-  } else {
-    std::vector<uchar> buf;
-    std::vector<int> params;
-    if(argc >= 4)
-      js_array_to(ctx, argv[3], params);
-    cv::imencode(ext, image, buf, params);
-    ret = JS_NewArrayBufferCopy(ctx, buf.data(), buf.size());
-  }
+  try {
+    if(o.has_palette && str_end(ext, "png") && image.isMat()) {
+      js_cv_palette_fit(image, o.palette);
+      std::string data = png_write(image.getMatRef(), o.palette);
+      ret = JS_NewArrayBufferCopy(ctx, (const uint8_t*)data.data(), data.size());
+    } else {
+      std::vector<uchar> buf;
+      cv::imencode(ext, image, buf, o.params);
+      ret = JS_NewArrayBufferCopy(ctx, buf.data(), buf.size());
+    }
+  } catch(const cv::Exception& e) { ret = js_cv_throw(ctx, e); }
 
+  JS_FreeCString(ctx, ext);
   return ret;
 }
 
@@ -133,78 +208,50 @@ static JSValue
 js_cv_imwrite(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]) {
   const char* filename = JS_ToCString(ctx, argv[0]);
   JSInputOutputArray image;
-  int32_t transparent = -1;
+  JSWriteOptions o;
+  bool ok = false;
 
-  if(argc >= 3 && str_end(filename, "gif") && js_is_arraylike(ctx, argv[1])) {
-    std::vector<JSColorData<uint8_t>> palette;
+  if(argc >= 3)
+    js_cv_write_options(ctx, argv[2], filename, o);
+
+  if(str_end(filename, "gif") && js_is_arraylike(ctx, argv[1])) {
     std::vector<cv::Mat> mats;
-    std::vector<int> delays;
-    int32_t loop = 0;
 
     js_array_to(ctx, argv[1], mats);
-    palette_read(ctx, argv[2], palette);
 
-    if(argc >= 4 && js_is_array(ctx, argv[3])) {
-      js_array_to(ctx, argv[3], delays);
-    } else {
-      int32_t delay = 100;
-      if(argc >= 4)
-        JS_ToInt32(ctx, &delay, argv[3]);
-      delays.resize(mats.size());
-      std::fill(delays.begin(), delays.end(), delay);
-    }
+    if(o.delays.size() != mats.size())
+      o.delays.assign(mats.size(), o.delays.empty() ? 100 : o.delays[0]);
 
-    if(argc >= 5)
-      JS_ToInt32(ctx, &transparent, argv[4]);
-    if(argc >= 6)
-      JS_ToInt32(ctx, &loop, argv[5]);
-
-    // printf("gif_write '%s' (%zu) [%zu] (transparent: %i)\n", filename, mats.size(),
-    // palette.size(), transparent);
-    gif_write(filename, mats, delays, palette, transparent, loop);
+    gif_write(filename, mats, o.delays, o.palette, o.transparent, o.loop);
+    JS_FreeCString(ctx, filename);
     return JS_UNDEFINED;
   }
 
   image = js_cv_inputoutputarray(ctx, argv[1]);
 
-  if(image.empty())
-    return JS_ThrowInternalError(ctx, "Empty image");
-
-  if(argc >= 3 && /*image.type() == CV_8UC1 &&*/ str_end(filename, ".png") && image.isMat()) {
-    double max;
-    std::vector<JSColorData<uint8_t>> palette;
-
-    palette_read(ctx, argv[2], palette);
-
-    if(argc >= 4)
-      JS_ToInt32(ctx, &transparent, argv[3]);
-
-    cv::minMaxLoc(image, nullptr, &max);
-    if(palette.size() < size_t(max))
-      palette.resize(size_t(max));
-
-    printf("png++ write_mat '%s' [%zu] (transparent: %i)\n", filename, palette.size(), transparent);
-
-    try {
-      png_write(filename, image.getMatRef(), palette, transparent);
-    } catch(std::runtime_error& error) { return JS_ThrowInternalError(ctx, "runtime error: %s", error.what()); }
-
-  } else {
-    bool ok = false;
-
-    try {
-      ok = cv::imwrite(filename, image);
-    } catch(const cv::Exception& e) {
-      JS_FreeCString(ctx, filename);
-      return js_cv_throw(ctx, e);
-    }
-
+  if(image.empty()) {
     JS_FreeCString(ctx, filename);
-    return JS_NewBool(ctx, ok);
+    return JS_ThrowInternalError(ctx, "Empty image");
+  }
+
+  try {
+    if(o.has_palette && str_end(filename, ".png") && image.isMat()) {
+      js_cv_palette_fit(image, o.palette);
+      png_write(filename, image.getMatRef(), o.palette, o.transparent);
+      ok = true;
+    } else {
+      ok = cv::imwrite(filename, image, o.params);
+    }
+  } catch(const cv::Exception& e) {
+    JS_FreeCString(ctx, filename);
+    return js_cv_throw(ctx, e);
+  } catch(std::runtime_error& error) {
+    JS_FreeCString(ctx, filename);
+    return JS_ThrowInternalError(ctx, "runtime error: %s", error.what());
   }
 
   JS_FreeCString(ctx, filename);
-  return JS_UNDEFINED;
+  return JS_NewBool(ctx, ok);
 }
 
 static JSValue

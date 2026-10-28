@@ -1395,18 +1395,20 @@ js_mat_set_to(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
   if(argc > 1)
     mask = js_cv_inputarray(ctx, argv[1]);
 
-  if(m->channels() == 1) {
-    double value;
-    js_value_to(ctx, argv[0], value);
-    m->setTo(cv::Scalar(value), mask);
+  /* opencv.js: setTo(Scalar[, mask]), returning nothing. A bare number is
+   * not part of that API, it is taken as cv::Scalar(v) like C++ does (the
+   * first channel only), which keeps m.setTo(255) on a mask working */
+  cv::Scalar value;
 
-  } else {
-    cv::Scalar input;
+  if(JS_IsNumber(argv[0])) {
+    double v;
 
-    js_scalar_read(ctx, argv[0], input);
+    js_value_to(ctx, argv[0], v);
+    value = cv::Scalar(v);
+  } else
+    js_scalar_read(ctx, argv[0], value);
 
-    m->setTo(input, mask);
-  }
+  m->setTo(value, mask);
 
   return JS_UNDEFINED;
 }
