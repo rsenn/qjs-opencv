@@ -12,7 +12,7 @@ import * as path from 'path';
 import process from 'process';
 import { performance } from 'perf_hooks';
 
-const VERSION = '1.2.0';
+const VERSION = '1.3.0';
 
 const EXIT = { E_USAGE: 2, E_INPUT: 3, E_FORMAT: 4, E_TOO_LARGE: 5, E_BAD_SHAPE: 6, E_MASK_SIZE: 7, E_MODEL: 8, E_METHOD: 9, E_WRITE: 10, E_INTERNAL: 70 };
 
@@ -32,8 +32,12 @@ const now = () => performance.now();
 const ms = t => Math.round(now() - t);
 
 // every line the tool prints is one json object, stdout carries progress
-// and result events, stderr carries log events
-const emit = (stream, obj) => stream.write(JSON.stringify(obj) + '\n');
+// and result events, stderr carries log events. Each line is flushed at once:
+// a piped stdout is block buffered, and a phase result must not wait for exit
+const emit = (stream, obj) => {
+  stream.write(JSON.stringify(obj) + '\n');
+  stream.flush?.();
+};
 const log = (message, level = 'error') => emit(process.stderr, { event: 'log', level, message });
 
 /*
@@ -57,19 +61,27 @@ const progress = {
   message: '',
   shown: -1,
   t0: now(),
+  phaseName: undefined,
+  lo: 0,
+  hi: 100,
 
   start(command, on, plan) {
     Object.assign(this, { on, command, plan, total: plan.reduce((n, [, w]) => n + w, 0) || 1, t0: now(), percent: 0, shown: -1 });
   },
 
+  // a two-phase run: the stages of this phase fill lo..hi percent
+  phase(name, lo, hi) {
+    Object.assign(this, { phaseName: name, lo, hi, percent: 0, base: 0, weight: 0, shown: -1 });
+  },
+
   report() {
-    const percent = Math.round(this.percent);
+    const percent = Math.round(this.lo + ((this.hi - this.lo) * this.percent) / 100);
 
     if(!this.on || percent == this.shown && this.message == this.last) return;
 
     this.shown = percent;
     this.last = this.message;
-    emit(process.stdout, { event: 'progress', command: this.command, stage: this.stage_, message: this.message, percent, elapsedMs: ms(this.t0) });
+    emit(process.stdout, { event: 'progress', command: this.command, phase: this.phaseName, stage: this.stage_, message: this.message, percent, elapsedMs: ms(this.t0) });
   },
 
   // a new stage starts, its weight decides where percent begins
@@ -130,6 +142,7 @@ const USAGE = `opencv-imgproc.js <command> [options]
   segment --in FILE --out FILE --point x,y[,label] [--point ...] [--box x,y,w,h]
           [--units px|norm] [--candidates 1..3] [--pick best|0|1|2]
           [--refine none|guided|matting] [--rest-out FILE] [--trim] ...
+          [--view-size 1024] [--phases preview,final]
   cutout  --in FILE --out FILE [--progress] [--method dnn] [--dnn-model u2netp]
           [--refine none|guided|matting] [--subjects largest|all]
           [--split-dir DIR] [--min-area 0.01]
@@ -137,17 +150,21 @@ const USAGE = `opencv-imgproc.js <command> [options]
           [--edge-key auto|none|#rrggbb] [--edge-strength 0..1] [--edge-band N]
           [--trim] [--trim-pad N] [--outline-out FILE] [--outline-epsilon 1.5]
           [--mask-out FILE] [--preview FILE] [--models-dir DIR]
+          [--view-size 1024] [--phases preview,final]
 
 options are --name value or --name=value, --job FILE.json gives the same
 keys as one object, flags override it. every command takes --progress.
 all output is NDJSON, the last stdout line is the result event.
+with --view-size or --phases, segment and cutout print two result events:
+phase "preview" at --view-size px (files <out>.preview.png), then phase
+"final" at full size (files <out>), the last line.
 spec: doc/opencv-imgproc.md`;
 
 /* option parsing, flag names are the job keys in kebab-case */
 
 const BOOLS = new Set(['trim', 'invert', 'hsv', 'probe', 'help', 'progress']);
 const LISTS = new Set(['point', 'fg', 'bg']);
-const NUMS = new Set(['previewSize', 'candidates', 'count', 'supersample', 'minArea', 'trimPad', 'outlineEpsilon', 'edgeBand', 'edgeStrength', 'maxPixels', 'workSize', 'seed', 'png']);
+const NUMS = new Set(['previewSize', 'viewSize', 'candidates', 'count', 'supersample', 'minArea', 'trimPad', 'outlineEpsilon', 'edgeBand', 'edgeStrength', 'maxPixels', 'workSize', 'seed', 'png']);
 
 const camel = k => k.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
 
@@ -244,15 +261,27 @@ const MODELS = {
 
 const scriptDir = import.meta.url.replace(/^file:\/\//, '').replace(/[^/]*$/, '');
 
+// a checkout keeps models/ and cache/ beside tools/. An installed copy
+// (<prefix>/bin) looks in the user's data dir, then the system ones, and
+// caches under the user's cache dir
+const inCheckout = fs.existsSync(path.join(scriptDir, '..', 'CMakeLists.txt'));
+const homeDir = (env, rel) => env ?? path.join(process.env.HOME ?? '', rel);
+
 function modelsDir(opts) {
-  return opts.modelsDir ?? process.env.WB_MODELS_DIR ?? path.join(scriptDir, '..', 'models');
+  const given = opts.modelsDir ?? process.env.WB_MODELS_DIR;
+
+  if(given) return given;
+
+  const list = inCheckout ? [path.join(scriptDir, '..', 'models')] : [path.join(homeDir(process.env.XDG_DATA_HOME, '.local/share'), 'opencv-imgproc/models'), '/usr/local/share/opencv-imgproc/models', '/usr/share/opencv-imgproc/models'];
+
+  return list.find(d => fs.existsSync(d)) ?? list[0];
 }
 
 function loadNet(opts, name, part = 'main') {
   const spec = MODELS[name] ?? fail('E_MODEL', 'unknown model ' + name, { known: Object.keys(MODELS) });
   const file = path.join(modelsDir(opts), spec.files[part]);
 
-  if(!fs.existsSync(file)) fail('E_MODEL', 'model file missing: ' + file);
+  if(!fs.existsSync(file)) fail('E_MODEL', 'model file missing: ' + file, { modelsDir: modelsDir(opts), hint: 'put the weights there, or pass --models-dir / set WB_MODELS_DIR' });
 
   try {
     return cv.readNetFromONNX(file, cv.dnn.ENGINE_AUTO);
@@ -506,6 +535,14 @@ function writeFile(file, bytes) {
 
     fail('E_WRITE', 'cannot write ' + file + ': ' + e.message);
   }
+}
+
+// a killed run can leave its temp file behind: drop old ones
+function sweepTmp(dir) {
+  try {
+    for(const f of fs.readdirSync(dir))
+      if(/\.tmp-\d+$/.test(f) && Date.now() - fs.statSync(path.join(dir, f)).mtimeMs > 600000) fs.unlinkSync(path.join(dir, f));
+  } catch(e) {}
 }
 
 function encode(file, mat, opts) {
@@ -915,7 +952,7 @@ function fillHole(bgr, alphaF, how) {
 /* promptable segmentation, SAM: the encoder runs once per photo and its
  * output is cached, the decoder runs per tap */
 
-const cacheDir = opts => opts.cacheDir ?? process.env.WB_CACHE_DIR ?? path.join(scriptDir, '..', 'cache');
+const cacheDir = opts => opts.cacheDir ?? process.env.WB_CACHE_DIR ?? (inCheckout ? path.join(scriptDir, '..', 'cache') : path.join(homeDir(process.env.XDG_CACHE_HOME, '.cache'), 'opencv-imgproc'));
 
 // longest edge scaled to T, normalised per channel, zero padded to a square
 function samPreprocess(bgr, T, iface = 'hf') {
@@ -1009,6 +1046,7 @@ function samEmbeddings(opts, img, name) {
     fs.mkdirSync(dir, { recursive: true });
   } catch(e) {}
 
+  sweepTmp(dir);
   writeFile(file, all.buffer);
   writeFile(file + '.json', JSON.stringify(meta));
 
@@ -1150,14 +1188,71 @@ function cmdPrepare(opts) {
   return { ok: true, command: 'prepare', cache: e.hit ? 'hit' : 'miss', key: e.key, path: e.file, bytes: fs.statSync(e.file).size, model: { name, licence: MODELS[name].licence }, input: { width: img.width, height: img.height }, timings: { prepareMs: e.ms, totalMs: ms(t0) } };
 }
 
+/*
+ * two phases (segment, cutout): "preview" runs everything after the model at
+ * --view-size px (default 1024) and prints its result at once, "final" then
+ * runs the same pipeline at full size from the same model output and prints
+ * the last result line. The preview files are <out>.preview.<ext> (same for
+ * --mask-out and --outline-out; --rest-out, --preview and --split-dir are
+ * final only). --view-size alone means preview,final; without either there is
+ * one result, as before.
+ */
+function phasesOf(opts) {
+  const text = opts.phases ?? (opts.viewSize ? 'preview,final' : undefined);
+
+  if(text === undefined) return null;
+
+  const list = String(text).split(',').map(x => x.trim());
+
+  if(!['preview', 'final', 'preview,final'].includes(list.join(','))) fail('E_USAGE', '--phases must be preview, final or preview,final');
+
+  return list;
+}
+
+const viewSizeOf = opts => opts.viewSize ?? opts.previewSize ?? 1024;
+const phasePath = (file, phase) => (file && phase == 'preview' ? file.replace(/(\.[^./]+)$/, '.preview$1') : file);
+
+const phaseOpts = (opts, phase) =>
+  phase == 'preview' ? { ...opts, out: phasePath(opts.out, phase), maskOut: phasePath(opts.maskOut, phase), outlineOut: phasePath(opts.outlineOut, phase), restOut: undefined, preview: undefined, splitDir: undefined } : opts;
+
+// the photo at tier scale k (a view copy, or the photo itself)
+function tierImage(full, k) {
+  if(k >= 1) return full;
+
+  const size = Math.round(Math.max(full.width, full.height) * k);
+  const img = { ...full, bgr: workCopy(full.bgr, size), alpha: full.alpha && workCopy(full.alpha, size) };
+
+  img.width = img.bgr.cols;
+  img.height = img.bgr.rows;
+
+  return img;
+}
+
+// run the phases in order, all but the last print their result here
+function runPhases(opts, full, render) {
+  const phases = phasesOf(opts);
+  const long = Math.max(full.width, full.height);
+
+  if(!phases) return render(opts.previewSize && opts.previewSize < long ? opts.previewSize / long : 1, opts, undefined);
+
+  for(const [i, phase] of phases.entries()) {
+    if(i > 0) progress.phase(phase, 30, 100);
+
+    const result = render(phase == 'preview' ? Math.min(1, viewSizeOf(opts) / long) : 1, phaseOpts(opts, phase), phase);
+
+    if(i == phases.length - 1) return result;
+
+    emit(process.stdout, { event: 'result', ...result });
+  }
+}
+
 function cmdSegment(opts) {
   const t0 = now();
   const name = samModel(opts);
   const spec = MODELS[name];
   const refine = opts.refine ?? 'guided';
   const candidates = Math.max(1, Math.min(3, opts.candidates ?? 1));
-  const timings = {};
-  const warnings = [];
+  const phases = phasesOf(opts);
 
   checkOutPath(opts.out);
 
@@ -1165,51 +1260,51 @@ function cmdSegment(opts) {
   if(!['none', 'guided', 'matting'].includes(refine)) fail('E_USAGE', '--refine must be none, guided or matting');
   if(opts.pick !== undefined && opts.pick != 'best' && !['0', '1', '2'].includes(String(opts.pick))) fail('E_USAGE', '--pick must be best, 0, 1 or 2');
 
+  if(phases) progress.phase(phases[0], 0, phases.length == 1 ? 100 : 30);
+
   const full = readImage(opts.in, opts.maxPixels);
   const { points, box } = parsePrompts(opts, full.width, full.height);
   const e = samEmbeddings(opts, full, name);
-
-  // --preview-size N: the whole cut runs on a photo reduced to N px, quick
-  // taps for the editor, everything in the result is in those pixels
-  const k = opts.previewSize && opts.previewSize < Math.max(full.width, full.height) ? opts.previewSize / Math.max(full.width, full.height) : 1;
-  const img = k < 1 ? { ...full, bgr: workCopy(full.bgr, opts.previewSize), alpha: full.alpha && workCopy(full.alpha, opts.previewSize) } : full;
-
-  img.width = img.bgr.cols;
-  img.height = img.bgr.rows;
-
-  const { bgr, width: w, height: h } = img;
-
-  for(const p of points) Object.assign(p, { x: p.x * k, y: p.y * k });
-
-  if(box) Object.assign(box, { x: box.x * k, y: box.y * k, w: box.w * k, h: box.h * k });
-
-  timings.prepareMs = e.ms;
-
-  let t = now();
+  const [T] = spec.inputSize;
+  const pre = { newW: e.meta.newW, newH: e.meta.newH };
+  const t = now();
 
   progress.stage('decode', 'segmenting at ' + points.length + (points.length == 1 ? ' prompt' : ' prompts'));
 
-  const [T] = spec.inputSize;
-  const pre = { newW: e.meta.newW, newH: e.meta.newH };
-  const found = samDecode(opts, name, e.emb, e.pos, points, T / Math.max(full.width, full.height) / k);
+  // the decoder takes taps in photo px: its logits do not depend on the tier
+  const found = samDecode(opts, name, e.emb, e.pos, points, T / Math.max(full.width, full.height));
+  const base = { prepareMs: e.ms, decodeMs: ms(t) };
 
-  timings.decodeMs = ms(t);
+  return runPhases(opts, full, (k, o, phase) => renderSegment({ name, spec, refine, candidates, full, points, box, e, found, T, pre, base, t0 }, k, o, phase));
+}
+
+// refine, subjects, colour and files for every candidate at tier scale k
+function renderSegment(ctx, k, o, phase) {
+  const { name, spec, refine, candidates, full, found, T, pre, e, t0 } = ctx;
+  const tp = now();
+  const timings = { ...ctx.base };
+  const warnings = [];
+  const img = tierImage(full, k);
+  const { bgr, width: w, height: h } = img;
+  const points = ctx.points.map(p => ({ ...p, x: p.x * k, y: p.y * k }));
+  const box = ctx.box && { x: ctx.box.x * k, y: ctx.box.y * k, w: ctx.box.w * k, h: ctx.box.h * k };
 
   const best = found.reduce((a, b) => (b.score > a.score ? b : a)).index;
   const fit = box ? boxFit(found, box, Math.max(w, h)) : null;
-  const picked = opts.pick === undefined || opts.pick == 'best' ? (fit?.index ?? best) : Number(opts.pick);
+  const picked = o.pick === undefined || o.pick == 'best' ? (fit?.index ?? best) : Number(o.pick);
   const wanted = candidates > 1 ? found.slice(0, candidates).map(f => f.index) : [picked];
-  const stem = opts.out.replace(/\.[^.]+$/, '');
-  const ext = path.extname(opts.out);
+  const stem = o.out.replace(/\.[^.]+$/, '');
+  const ext = path.extname(o.out);
   const taps = points.filter(p => p.label == 1).map(p => [p.x, p.y]);
   const list = [];
   let main;
+  let t;
 
   if(!wanted.includes(picked)) wanted.push(picked);
 
   for(const index of [picked, ...wanted.filter(i => i != picked)]) {
     const isMain = index == picked;
-    const file = isMain ? opts.out : stem + '-' + index + ext;
+    const file = isMain ? o.out : stem + '-' + index + ext;
 
     t = now();
     progress.stage('refine', 'refining candidate ' + index + ', ' + (refine == 'matting' ? 'alpha matting' : 'guided filter'));
@@ -1217,11 +1312,11 @@ function cmdSegment(opts) {
     let soft = samSoft(found[index].logits, T, pre, w, h);
 
     if(refine == 'guided') soft = refineGuided(bgr, soft);
-    else if(refine == 'matting') soft = refineMatting(bgr, soft, opts.workSize ?? 1024);
+    else if(refine == 'matting') soft = refineMatting(bgr, soft, o.workSize ?? 1024);
     else soft = clamp01(soft);
 
-    const own = isMain ? opts : { ...opts, out: file, restOut: undefined, maskOut: undefined, outlineOut: undefined, preview: undefined };
-    const result = cutFromSoft({ opts: own, img, soft, subjects: 'largest', minArea: opts.minArea ?? 0.0002, seeds: taps, timings: isMain ? timings : {}, warnings: isMain ? warnings : [], t0, command: 'segment', extra: {} });
+    const own = isMain ? o : { ...o, out: file, restOut: undefined, maskOut: undefined, outlineOut: undefined, preview: undefined, splitDir: undefined };
+    const result = cutFromSoft({ opts: own, img, soft, subjects: 'largest', minArea: o.minArea ?? 0.0002, seeds: taps, timings: isMain ? timings : {}, warnings: isMain ? warnings : [], t0, command: 'segment', extra: {} });
 
     list.push({ index, score: Number(found[index].score.toFixed(4)), path: file, picked: isMain, coverage: result.mask.coverage, bbox: result.bbox });
     if(isMain) main = result;
@@ -1231,14 +1326,16 @@ function cmdSegment(opts) {
   if(candidates > 1) {
     const own = stem + '-' + picked + ext;
 
-    fs.copyFileSync(opts.out, own);
+    writeFile(own, fs.readFileSync(o.out));
     list.find(c => c.index == picked).path = own;
   }
 
   list.sort((a, b) => a.index - b.index);
   timings.totalMs = ms(t0);
 
-  return { ...main, scale: k, original: { width: full.width, height: full.height }, cache: e.hit ? 'hit' : 'miss', model: { name, licence: spec.licence }, refine, candidates: list, picked, best, boxIou: fit ? Number(fit.iou.toFixed(4)) : undefined, prompts: points, timings };
+  if(phase) timings.phaseMs = ms(tp);
+
+  return { ...main, phase, scale: k, original: { width: full.width, height: full.height }, view: { width: w, height: h }, cache: e.hit ? 'hit' : 'miss', model: { name, licence: spec.licence }, refine, candidates: list, picked, best, boxIou: fit ? Number(fit.iou.toFixed(4)) : undefined, prompts: points, timings };
 }
 
 /* commands */
@@ -1252,6 +1349,7 @@ function cmdCutout(opts) {
   const refine = opts.refine ?? 'guided';
   const subjects = opts.subjects ?? 'largest';
   const minArea = opts.minArea ?? 0.01;
+  const phases = phasesOf(opts);
 
   checkOutPath(opts.out);
 
@@ -1267,10 +1365,10 @@ function cmdCutout(opts) {
 
   if(spec?.kind != 'salient') fail('E_MODEL', modelName + ' is not a salient-object model', { salient: Object.keys(MODELS).filter(k => MODELS[k].kind == 'salient') });
 
+  if(phases) progress.phase(phases[0], 0, phases.length == 1 ? 100 : 30);
+
   let t = now();
   const img = readImage(opts.in, opts.maxPixels);
-  const { bgr, width: w, height: h } = img;
-  const long = Math.max(w, h);
 
   timings.readMs = ms(t);
   t = now();
@@ -1284,23 +1382,38 @@ function cmdCutout(opts) {
 
   progress.stage('model', 'running ' + modelName + ' at ' + spec.inputSize.join('x'));
 
-  const prob = runSalient(net, spec, bgr);
+  // the model sees 320 px whatever the tier: both phases use this one matte
+  const prob = runSalient(net, spec, img.bgr);
 
   timings.modelMs = ms(t);
-  t = now();
 
+  return runPhases(opts, img, (k, o, phase) => renderCutout({ img, prob, spec, modelName, refine, subjects, minArea, base: timings, warnings, t0 }, k, o, phase));
+}
+
+// refine, subjects, colour and files at tier scale k
+function renderCutout(ctx, k, o, phase) {
+  const { prob, spec, modelName, refine, subjects, minArea, t0 } = ctx;
+  const tp = now();
+  const timings = { ...ctx.base };
+  const img = tierImage(ctx.img, k);
+  const { bgr, width: w, height: h } = img;
+  let t = now();
   let soft = resizeTo(prob, w, h, cv.INTER_CUBIC);
 
   progress.stage('refine', refine == 'matting' ? 'resolving the edge band with alpha matting' : refine == 'guided' ? 'snapping the matte to the photo edges, guided filter' : 'normalising the matte');
 
   if(refine == 'guided') soft = refineGuided(bgr, soft);
-  else if(refine == 'matting') soft = refineMatting(bgr, soft, opts.workSize ?? 1024);
+  else if(refine == 'matting') soft = refineMatting(bgr, soft, o.workSize ?? 1024);
   else soft = clamp01(soft);
 
   timings.refineMs = ms(t);
-  t = now();
 
-  return cutFromSoft({ opts, img, soft, subjects, minArea, timings, warnings, t0, command: 'cutout', extra: { method: 'dnn', chosen: 'dnn', model: { name: modelName, licence: spec.licence }, refine } });
+  const tier = phase ? { phase, scale: k, original: { width: ctx.img.width, height: ctx.img.height }, view: { width: w, height: h } } : {};
+  const result = cutFromSoft({ opts: o, img, soft, subjects, minArea, timings, warnings: [...ctx.warnings], t0, command: 'cutout', extra: { method: 'dnn', chosen: 'dnn', model: { name: modelName, licence: spec.licence }, refine, ...tier } });
+
+  if(phase) result.timings.phaseMs = ms(tp);
+
+  return result;
 }
 
 // everything after the soft matte: subjects, edge, colour, files, result.
@@ -1391,9 +1504,8 @@ function cutFromSoft(c) {
 
     outputs.push(entry);
 
-    if(opts.outlineOut) {
-      outlines.push({ output: file, polygon: outline(a8, opts.outlineEpsilon ?? 1.5), epsilon: opts.outlineEpsilon ?? 1.5 });
-    }
+    // polygon in the pixels of that output file; --outline-out also writes them
+    outlines.push({ output: file, polygon: outline(a8, opts.outlineEpsilon ?? 1.5), epsilon: opts.outlineEpsilon ?? 1.5 });
 
     return entry;
   };
@@ -1446,9 +1558,10 @@ function cutFromSoft(c) {
     output: { path: opts.out, format: path.extname(opts.out).slice(1).toLowerCase(), width: main.bbox.w, height: main.bbox.h, hasAlpha: true, bytes: fs.statSync(opts.out).size },
     mask: { path: opts.maskOut ?? null, coverage: main.coverage, components: parts.length },
     bbox: main.bbox,
+    bboxNorm: { x: main.bbox.x / w, y: main.bbox.y / h, w: main.bbox.w / w, h: main.bbox.h / h },
     offset: main.offset,
     outputs,
-    outlines: opts.outlineOut ? outlines : undefined,
+    outlines,
     scores: Object.fromEntries(parts.map((p, i) => ['subject' + (i + 1), Number(p.fraction.toFixed(4))])),
     warnings,
     timings,
@@ -1570,7 +1683,8 @@ function cmdCapabilities(opts) {
     modelsDir: dir,
     inputFormats: ['png', 'jpg', 'webp', 'tiff'],
     outputFormats: ['png', 'webp'],
-    limits: { maxPixels: 64000000, workSize: 1280 },
+    phases: ['preview', 'final'],
+    limits: { maxPixels: 64000000, workSize: 1280, viewSize: 1024 },
   };
 }
 
@@ -1599,7 +1713,7 @@ function main() {
   } catch(e) {
     const code = e instanceof Fail ? e.code : 'E_INTERNAL';
 
-    result = { ok: false, error: { code, message: e.message, detail: e.detail } };
+    result = { ok: false, phase: progress.phaseName, error: { code, message: e.message, detail: e.detail } };
 
     if(!(e instanceof Fail)) log(e.stack ?? String(e));
   }

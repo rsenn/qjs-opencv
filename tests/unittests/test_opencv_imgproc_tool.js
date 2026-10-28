@@ -270,6 +270,84 @@ tests({
     eq([r.ok, r.model.name], [true, 'sam']);
     assert(r.candidates.some(c => discIoU(alphaOf(c.path), c.bbox) > 0.9), 'a candidate is the disc');
   },
+  '--phases is checked'() {
+    const r = run(`segment --in ${photo} --out ${dir}/x.png --point 5,5 --phases final,preview`);
+
+    eq([r.code, r.result.error.code, r.lines.length], [2, 'E_USAGE', 1]);
+    eq(run(`cutout --in ${photo} --out ${dir}/x.png --phases both`).result.error.code, 'E_USAGE');
+  },
+  'segment --view-size: preview result, then final'() {
+    if(!haveSam) return print('  skipped: sam models missing');
+
+    const out = path.join(dir, 'ph.png');
+    const r = run(`segment --in ${photo} --cache-dir ${dir}/cache --point ${DISC.x},${DISC.y} --view-size 320 --trim --out ${out}`);
+
+    eq(r.lines.map(l => l.event + ':' + l.phase), ['result:preview', 'result:final']);
+
+    const [pre, fin] = r.lines;
+
+    eq([pre.ok, fin.ok, r.code], [true, true, 0]);
+    eq([pre.scale, pre.view, pre.original], [0.5, { width: 320, height: 240 }, { width: 640, height: 480 }]);
+    eq([fin.scale, fin.view], [1, { width: 640, height: 480 }]);
+    eq([pre.output.path, fin.output.path], [path.join(dir, 'ph.preview.png'), out]);
+    eq(fs.existsSync(pre.output.path) && fs.existsSync(out), true);
+
+    // the same mask at both tiers: normalised boxes agree, pixel boxes scale
+    for(const k of ['x', 'y', 'w', 'h']) assert(Math.abs(pre.bboxNorm[k] - fin.bboxNorm[k]) < 0.03, 'bboxNorm.' + k);
+
+    assert(pre.bbox.w <= 320 && Math.abs(fin.bbox.w / pre.bbox.w - 2) < 0.2, 'bbox is in tier pixels, half the final one');
+    assert(discIoU(alphaOf(out), fin.offset) > 0.9, 'the final mask is the disc');
+
+    // every result carries the outline in the pixels of its own output
+    for(const r of [pre, fin]) {
+      eq(r.outlines.length, 1);
+      assert(r.outlines[0].polygon.length >= 8, 'outline has points');
+      assert(r.outlines[0].polygon.every(([x, y]) => x >= 0 && y >= 0 && x <= r.output.width && y <= r.output.height), 'outline inside the output');
+    }
+  },
+  'segment --phases preview and --phases final alone'() {
+    if(!haveSam) return print('  skipped: sam models missing');
+
+    const base = `segment --in ${photo} --cache-dir ${dir}/cache --point ${DISC.x},${DISC.y}`;
+    const a = run(`${base} --phases preview --view-size 320 --out ${dir}/only.png`);
+    const b = run(`${base} --phases final --out ${dir}/only_f.png`);
+
+    eq([a.lines.length, a.result.phase, b.lines.length, b.result.phase], [1, 'preview', 1, 'final']);
+    eq([fs.existsSync(path.join(dir, 'only.preview.png')), fs.existsSync(path.join(dir, 'only.png'))], [true, false]);
+  },
+  'cutout --view-size: preview result, then final, rest only in final'() {
+    if(!haveU2) return print('  skipped: models/u2netp.onnx missing');
+
+    const out = path.join(dir, 'cp.png');
+    const r = run(`cutout --in ${photo} --view-size 320 --trim --out ${out} --rest-out ${dir}/cp_rest.png --mask-out ${dir}/cp_mask.png`);
+
+    eq(r.lines.map(l => l.phase), ['preview', 'final']);
+    eq([r.lines[0].scale, r.lines[1].scale], [0.5, 1]);
+    eq([fs.existsSync(path.join(dir, 'cp.preview.png')), fs.existsSync(path.join(dir, 'cp_mask.preview.png'))], [true, true]);
+    eq([fs.existsSync(path.join(dir, 'cp_rest.preview.png')), fs.existsSync(path.join(dir, 'cp_rest.png'))], [false, true]);
+    assert(discIoU(alphaOf(out), r.lines[1].offset) > 0.9, 'the final cut is the disc');
+  },
+  '--progress with phases: percent never goes back, phase named'() {
+    if(!haveU2) return print('  skipped: models/u2netp.onnx missing');
+
+    const r = run(`cutout --in ${photo} --view-size 320 --out ${dir}/pp.png --progress`);
+    const prog = r.lines.filter(l => l.event == 'progress');
+    let last = 0;
+
+    for(const e of prog) {
+      assert(e.percent >= last, 'percent never goes back');
+      last = e.percent;
+    }
+
+    eq([prog[0].phase, prog[prog.length - 1].phase, last], ['preview', 'final', 100]);
+    assert(prog.findIndex(e => e.phase == 'final') > prog.findIndex(e => e.phase == 'preview'), 'preview first');
+    eq(r.result.phase, 'final');
+  },
+  'a missing model names the directory it looked in'() {
+    const r = run(`cutout --in ${photo} --out ${dir}/nm.png --models-dir ${dir}/nowhere`);
+
+    eq([r.code, r.result.error.code, r.result.error.detail.modelsDir], [8, 'E_MODEL', path.join(dir, 'nowhere')]);
+  },
   '--png sets the compression level'() {
     if(!haveU2) return print('  skipped: models/u2netp.onnx missing');
 
