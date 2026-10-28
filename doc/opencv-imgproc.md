@@ -860,17 +860,54 @@ returning an array, `cv.hash.sha1/sha256` (cache keys, model checks),
 `imencode` argument is a params array or an options object (`palette`,
 `transparent`, `compression`, `quality`, `params`, `delay`, `loop`).
 
-### 15.5 Checked, and not yet
+### 15.5 Acceptance checks of S14.7 (2026-10-28)
 
-Checked on real photos: a duckling held in a hand, a 12 MP flower, a grey
-long-hair cat (fur, whiskers), two cats side by side, and a 12 MP photo of a
-can, a paper bag and a pastry on a bench (`cutout --subjects all --split-dir`
-gives the three as separate files in 7.5 s). Not checked: a subject touching
-the image border, the composite-back test of S14.7 on a coloured backdrop and
-hair on skin.
-Known weakness: the u2netp matte also takes dark parts of the scene that
-bridge to a subject (the can got a dark tail from the gap behind it, the pastry
-a grey strip above it); the `segment` masks of the same items are clean, so
-use taps when the backdrop has dark gaps. Thin fur or hair strands over a blurred background keep some
-background colour on their edge pixels with both `guided` and `matting`; a
-tap-based `segment` mask is cleaner there than the u2netp matte.
+Run with `tests/check_cutout_metrics.js` (usage in its header) on `cutout
+--subjects all` without `--trim`, with `--rest-out`, default refinement
+(`guided`). Photos are the files named by their sha256 in
+`wild-beauty/uploads/` (first 8 hex): duck `1c37f248`, flower (12 MP)
+`a28d3c08`, two people with hair `358e4e0b`, backlit man with hat `ea5d5c4e`,
+frame-filling flower `841da80e`; plus a grey long-hair cat (`fur.png`, 800x800)
+and two cats (Shutterstock photo, 1000x667) that are not in the uploads.
+
+| Photo | Solid (alpha 255) vs photo | Rest (cut alpha 0) vs photo | Fringe, decontaminated vs raw photo colour | Border: opaque inside, lost on the frame |
+|---|---|---|---|---|
+| duck | 0 | 0 | 5.4% vs 42.8% | no border contact |
+| two cats | 0 | 0 | 6.1% vs 49.3% | none |
+| fur cat | 0 | 0 | 8.1% vs 57.4% | none |
+| flower 12 MP | 0 | 0 | 0.2% vs 48.0% | none |
+| two people (hair) | 0 | 0 | 13.8% vs 41.9% | left 2898 px: 0 lost; right 287: 0; bottom 1538: 7 (0.5%) |
+| backlit man | 0 | 0 | 10.2% vs 38.9% | bottom 552: 9 (1.6%) |
+| flower (frame-filling) | 0 | 0 | 3.4% vs 42.2% | none |
+
+- **Composite back:** where the cut alpha is 255 the cut equals the photo exactly
+  (max channel difference 0 on all 7 photos, 0.16-5.8 M pixels each) and the
+  rest image equals the photo exactly where the cut alpha is 0. In the edge band
+  (0 < alpha < 255) the foreground colour is moved on purpose (mean max-channel
+  difference 33-67 of 255): that is the decontamination.
+- **Fringe:** pixels of the edge band (alpha 4-96%) whose colour is nearer the
+  local background than the local foreground (local = blurred over 0.8% of the
+  long edge, only where both are known). Decontamination removes 67-99% of
+  them; a threshold of 15% of the band is met by every photo, the worst being
+  hair (13.8%) and a backlit rim (10.2%).
+- **`--subjects all`:** 3 parts on the can/bag/pastry photo, 2 on the
+  two-people photo (each person its own file), 1 where the subjects touch (the
+  two cats).
+- **Subject at the border:** a person cut off by the left and bottom frame edge
+  stays opaque to the frame (0 of 2898 lost on the left, 0.5% at the bottom).
+  The few pixels lost at the bottom of the two portraits (7 and 9) were not
+  looked at.
+- **Hair on skin** (the two-people photo, full-resolution crop over magenta): no
+  dark or green halo, strands inside the hair mass keep their detail; the edge
+  is a soft feather of about 10 px, and flyaway strands outside the hair mass are
+  not recovered. `--refine matting` gives the same edge (a little softer) for 20 s
+  of refinement instead of 1 s: not worth it on hair either.
+- **Not measured:** IoU against hand-drawn masks (no hand masks exist; the duck,
+  cats, fur cat, can/bag/pastry and portraits were judged by eye), a transparent
+  or glossy object, a subject hand-labelled on a cluttered scene.
+- Known weakness: the u2netp matte also takes dark parts of the scene that
+  bridge to a subject (the can got a dark tail from the gap behind it, the pastry
+  a grey strip above it); the `segment` masks of the same items are clean, so
+  use taps when the backdrop has dark gaps. Thin fur strands over a blurred
+  background keep some background colour on their edge pixels; a tap-based
+  `segment` mask is cleaner there than the u2netp matte.
