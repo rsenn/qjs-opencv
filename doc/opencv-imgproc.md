@@ -1178,6 +1178,50 @@ Other design points that apply to any new command:
 - Cache per photo hash and model hash (as the SAM embedding cache does), so a
   model change invalidates exactly its own results.
 
+### 16.8b Measured on 2026-10-29: embeddings in dnn and in onnxruntime
+
+Question of S16.11 ("is a second runtime acceptable") answered by experiment, on
+this machine (8 cores, CPU only, OpenCV 5.1.0-dev, Bun 1.4.2, onnxruntime-node
+1.31.1), weights from `Xenova/clip-vit-base-patch32` (`vision_model*.onnx`) and
+`Xenova/dinov2-small` (`model.onnx`), input 224x224 (resize the short edge, centre crop).
+
+| | onnxruntime-node under Bun | `cv.readNetFromONNX` (qjs-opencv) |
+|---|---|---|
+| installs and runs | yes (linux/x64 binary 46 MB, whole package 294 MB) | yes |
+| CLIP ViT-B/32 fp32 (335 MB), 512-d | loads | **loads**, forward 0.6 s, load 1.6 s |
+| CLIP ViT-B/32 int8 (85 MB) | loads | **fails** (`!empty()` in `forward`) |
+| DINOv2-small fp32 (84 MB), 384-d (CLS token = first row of `last_hidden_state`) | loads | **loads**, forward 0.6-0.8 s, load 0.7 s |
+| agreement with onnxruntime | reference | cosine 0.9999 (DINOv2), 0.9975 (CLIP, one std for all channels in `blobFromImage`; exact per-channel normalisation closes the gap) |
+
+So the transformer failures feared in S16.8 route 1 did not occur for these two
+models. Quantised exports must not be used with dnn. Per photo about 0.35 s in
+onnxruntime including the ImageMagick decode, so speed does not decide.
+
+Duplicate quality (254 photos of the site, 30 of them re-encoded as resize to
+800 px q60, centre crop 85%, rotate 3 degrees plus modulate; cosine of the copy
+with its original, and of each photo with its nearest other photo):
+
+| | resize | crop 85% | rotate+tweak | other photos, nearest |
+|---|---|---|---|---|
+| CLIP rank 1 | 30/30 | 29/30 | 30/30 | |
+| CLIP cosine, median (min) | 0.960 (0.909) | 0.959 (0.866) | 0.928 (0.864) | median 0.90 |
+| DINOv2 rank 1 | 30/30 | 29/30 | 30/30 | |
+| DINOv2 cosine, median (min) | 0.997 (0.942) | 0.961 (0.871) | 0.962 (0.844) | median 0.71 |
+
+DINOv2 separates copies from different photos (median 0.71); CLIP does not on a
+set where every photo is a flower (median 0.90), so one threshold would not work.
+Both leave an overlap in the worst cases (0.84-0.87 against a top of 0.96-0.97 for
+different photos, probably bursts; not checked by eye). Hard crops need a lower
+threshold or a person to confirm. Not tested: the CLIP text tower and a tokenizer,
+GPU, the three real pairs removed on 2026-10-29 (their partners are deleted).
+
+**Decision (2026-10-29):** duplicates and related nodes use **DINOv2-small fp32
+through `opencv-imgproc` (dnn)**: no second runtime, no new native dependency,
+weights in the existing models folder. onnxruntime is **not** added now. It is
+reconsidered only for text search (CLIP text tower, S16.5), which is not started.
+Next command: `embed --in FILE [--in FILE ...]` (several files per process, the
+model loads once), JSON line with `model`, `dim` and the vectors.
+
 ### 16.9 How to study a model (checklist, per candidate)
 
 1. **Licence** of code *and* weights (they differ often); record the exact URL
