@@ -511,7 +511,7 @@ binding problem found (S2), and `TODO.md` lists what was not done.
 ## 14. Handoff: model-based cutout and tap-to-segment for collage (2026-10-29)
 
 Audience: the implementer of `tools/opencv-imgproc.js` in qjs-opencv. Consumer: the
-Wild Beauty collage editor (`EDITOR.md`, `UX-REQUIREMENTS.md` J4). This section
+Wild Beauty collage editor (`EDITOR.md` S2.12, `UX-REQUIREMENTS.md` J2.12). This section
 extends S5.1 (`cutout`, `method: "dnn"`) and adds two commands, `prepare` and
 `segment`. It replaces the thin "dnn" idea of S6.3.1 with the real requirement.
 
