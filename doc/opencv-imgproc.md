@@ -269,6 +269,8 @@ reported under `unavailable` with OpenCV's message). Common candidates: U^2-Net
 several are non-commercial). Inference is CPU, so cap input size and report
 `timings.dnnMs`.
 
+Further candidate models (experimental, not yet studied): S16.
+
 #### 6.3.2 `auto`
 
 1. If a `dnn` model is available, run it first.
@@ -911,3 +913,314 @@ and two cats (Shutterstock photo, 1000x667) that are not in the uploads.
   use taps when the backdrop has dark gaps. Thin fur strands over a blurred
   background keep some background colour on their edge pixels; a tap-based
   `segment` mask is cleaner there than the u2netp matte.
+
+## 16. Experimental: further models worth studying (2026-10-29)
+
+**Status: experimental, needs more studies.** Nothing in this section is a
+requirement, nothing is implemented, and no model here is bundled or promised.
+It is a shortlist for later evaluation, written from general knowledge of the
+OpenCV Zoo (`opencv_zoo`), the dnn samples in `~/Sources/opencv/samples/dnn/models.yml`
+and widely used PyTorch/ONNX exports. Sizes, licences, operator support and
+quality claims are **unverified** unless a line says "checked"; every one of
+them must be checked (S16.9) before a model is adopted. Where this section and
+S14/S15 (what is built) disagree, S15 wins.
+
+### 16.1 Context: what Wild Beauty could use models for
+
+Wild Beauty stores photos in nodes (`PLAN.md`), shows them in a collage editor
+(`EDITOR.md`), a graph (`GRAPH.md`) and a walkable 3D gallery (`GALLERY.md`).
+Uploads are anonymous (no auth in the PoC), so the server also has to protect
+itself. The jobs a model could do, in rough priority:
+
+| Job | Where it would be used | Command / consumer |
+|---|---|---|
+| cut out the subject (soft matte) | collage editor, J4 | `cutout --method dnn` (built, S15.2) |
+| cut out what the user tapped | collage editor, tap-to-segment | `prepare` + `segment` (built, S15.3) |
+| understand the content: tags, search, "related nodes" | graph view, search, upload ingest | new: embedding step at ingest |
+| find faces / persons / salient region | smart crop, gallery frame, privacy flag | new: `detect` or ingest step |
+| depth | parallax / relief of a photo in the 3D gallery | new: `depth` |
+| make small photos bigger | gallery walls, large tiles | new: `upscale` |
+| remove an object, fill a hole | editor, after a cutout | new: `inpaint` |
+| fix exposure / white balance | ingest, editor "auto" | new: `enhance` |
+| flag unwanted content | upload moderation | server ingest, review queue |
+
+### 16.2 Summary table
+
+"In OpenCV dnn" means: expected to load with `cv.readNetFromONNX` in the
+installed build (5.1.0-dev). Only the entries marked **checked** were looked up
+in `models.yml`; the others are guesses until tried (S16.9).
+
+| Model | Job | Licence (verify) | Runtime | State |
+|---|---|---|---|---|
+| U2-Net-P (`u2netp`) | salient cutout | Apache-2.0 | OpenCV dnn | **built**, in zoo (checked), S14/S15 |
+| MobileSAM | tap-to-segment | Apache-2.0 | OpenCV dnn | **built** (cache files `*-mobilesam-*.emb` exist) |
+| SAM ViT-base (`sam`) | tap-to-segment | Apache-2.0 | OpenCV dnn | in zoo (checked), 1024 input, heavy |
+| MODNet (`modnet`) | portrait matting | Apache-2.0 | OpenCV dnn | in zoo (checked), 512 input |
+| IS-Net (`isnet-general-use`) | sharper object cutout | Apache-2.0 | probably dnn | to try |
+| U2-Net (full) | salient cutout | Apache-2.0 | OpenCV dnn | to try, about 170 MB |
+| BiRefNet | best-quality cutout | MIT | onnxruntime | to try, probably not dnn |
+| RMBG-1.4 / 2.0 | cutout | non-commercial | probably dnn / ort | licence blocks, not adopted |
+| CLIP ViT-B/32 | embeddings, search, tags | MIT | onnxruntime or dnn | to try |
+| DINOv2-small | image similarity | Apache-2.0 | onnxruntime | to try |
+| YuNet | faces | MIT | OpenCV dnn (`FaceDetectorYN`) | to try, tiny |
+| YOLOX / NanoDet | persons, objects | Apache-2.0 | OpenCV dnn | to try |
+| Depth Anything V2 Small | depth | Apache-2.0 (base/large CC-BY-NC) | onnxruntime, maybe dnn | to try |
+| MiDaS small | depth | MIT | OpenCV dnn | to try |
+| LaMa (`lama`) | inpainting | Apache-2.0 | OpenCV dnn | in zoo (checked), 512 input |
+| MI-GAN | inpainting, lighter | MIT | onnxruntime | to try |
+| LDM inpainting (`ldm_inpainting`) | inpainting, generative | check | OpenCV dnn | in zoo (checked), three ONNX files, slow |
+| SeeMoRe (`seemoredetails`) | x4 super-resolution | check | OpenCV dnn | in zoo (checked), static 512 input |
+| Real-ESRGAN / SwinIR | x2/x4 super-resolution | BSD / Apache | onnxruntime | to try |
+| FC4 (`fc4`) | auto white balance | check | OpenCV dnn | in zoo (checked) |
+| LLIE (zoo) | low-light enhancement | check | OpenCV dnn | to try |
+| NIMA / aesthetic head on CLIP | cover photo score | check | onnxruntime | to try |
+| NSFW classifier (open_nsfw class) | moderation | check per model | dnn / ort | to try |
+
+### 16.3 Cutout and matting (Mode A of S14.1)
+
+**U2-Net-P** is what is built. Known weakness is in S15.5: the matte also takes
+dark parts of the scene that bridge to a subject, and thin fur strands over a
+blurred background keep some background colour. Candidates that might do better
+at similar or higher cost:
+
+- **IS-Net (`isnet-general-use`, from the DIS project)**: same family of
+  encoder-decoder nets as U2-Net but trained for high-accuracy dichotomous
+  segmentation; usually sharper object outlines and thin structures. 1024 input
+  in the original export, so about 10 times the work of the 320 input of u2netp.
+  Same sidecar scheme as S6.3.1 (mean/std normalisation, sigmoid output). Expected
+  to load in OpenCV dnn, because it uses the same operator set as U2-Net.
+- **U2-Net (full)**: the same architecture as u2netp, larger. Cheap to try because
+  the sidecar and the code path are identical; the gain over u2netp is probably
+  small.
+- **MODNet**: trimap-free portrait matting. In the zoo (checked: mean 0, scale
+  1/127.5, 512x512, sample `alpha_matting`). Good for people (hair), poor for
+  animals and objects, so it would be an `auto` branch chosen by a face/person
+  detection result, not a default.
+- **BiRefNet**: current best open model for high-resolution, thin-structure
+  cutouts (hair, fur, leaves, wire). Transformer backbone (Swin), so expect
+  OpenCV dnn to fail on some operators and the 1024 input to be slow on CPU. A
+  realistic route is onnxruntime behind the Bun server (S16.8), or a distilled /
+  "lite" export. Quality is the reason to study it; cost is the reason it is
+  experimental.
+- **RMBG-1.4 / RMBG-2.0 (BRIA)**: very good, but the weights are released for
+  non-commercial use. Do not bundle; listed so nobody re-discovers it and adopts
+  it by accident.
+- **Alpha matting from a trimap** (not a model): `alphamat` from opencv_contrib
+  is available in the installed build (S14.3); it is the existing refinement
+  path. Learned trimap matting (ViTMatte, IndexNet) was not studied.
+
+How to compare (also for any later model): run each candidate on the same set of
+photos used for S15.5 (duck, cats, fur cat, can/bag/pastry, portraits), composite
+over saturated green and magenta, and report time, the fringe measure of S15.5 and
+a visual verdict. IoU needs hand masks, which do not exist yet; making 10-20 of
+them would pay for every later comparison.
+
+### 16.4 Promptable segmentation (Mode B of S14.1)
+
+MobileSAM is built. Alternatives, if its masks or speed are not enough:
+
+- **SAM ViT-base** in the zoo: encoder `vision_encoder.onnx` plus
+  `prompt_encoder_mask_decoder.onnx`, 1024x1024 input (checked). The encoder is
+  the expensive step and is cached per photo (`~/.cache/opencv-imgproc/*.emb`,
+  4 MiB per photo for MobileSAM); only the small decoder runs per tap.
+- **EfficientSAM** (also present in the opencv_zoo): encoder-decoder pair like SAM
+  with a smaller encoder; same prompt format, so it is a drop-in test of the
+  `segment` command.
+- **EdgeSAM**: distilled for speed; claimed to be a lot faster than MobileSAM on
+  CPU. Check the export includes a standalone prompt decoder.
+- **SAM 2 / SAM 2.1 (small/tiny)**: better masks and a memory mechanism for
+  video; the image-only path may export cleanly, but the memory attention parts
+  probably do not load in OpenCV dnn. Study only if SAM-class quality is the
+  bottleneck.
+
+Each of these needs the same three decisions as MobileSAM did: embedding size and
+cache format, mask threshold / multimask choice, and whether the mask is
+refined with the existing matting step.
+
+### 16.5 Understanding images: embeddings, tags, similarity
+
+This is the main idea that goes beyond cutting. One vector per photo, computed at
+ingest, stored beside the palette, gives several features from one model.
+
+- **CLIP ViT-B/32** (OpenAI weights are MIT; OpenCLIP variants differ): image and
+  text encoders as two ONNX files. Gives text search ("red flower", "fog over a
+  lake"), zero-shot tagging against a fixed list of words, cover choice, and
+  "related nodes" for the graph view by cosine similarity. The text encoder runs
+  on the search query only; the image encoder runs once per upload. 224x224 input;
+  about 4 GFLOPs for the image tower, small enough for CPU at ingest. Multilingual
+  search (de, fr, en are the site languages) needs a multilingual text tower
+  (for example M-CLIP or an OpenCLIP multilingual checkpoint); plain CLIP is
+  English only, so queries would be translated first. Study this early.
+- **DINOv2-small**: self-supervised image features; better than CLIP for pure
+  image-to-image similarity (near-duplicates, same-scene grouping), no text side.
+  If only "related photos" matters, this alone is enough.
+- **SigLIP**: a CLIP-like model with a better small variant; a candidate if CLIP
+  tagging proves too coarse.
+- **Cheap alternatives that need no new weights**: the dominant-colour palette
+  already stored, a perceptual hash (dHash/pHash) for exact-ish duplicates, and
+  ORB descriptors in OpenCV. Measure these first; a model is justified only for
+  what they cannot do (semantic search).
+- **Classification models in the zoo** (MobileNet, PP-ResNet, `resnet`,
+  `squeezenet`, `googlenet`, all listed in `models.yml`): ImageNet-1000 labels
+  only. Fine for a smoke test of the dnn pipeline, poor as tags for a nature and
+  art site.
+
+Storage idea (not decided): 512 floats as a `BLOB` in SQLite beside the photo,
+brute-force cosine in JS up to a few tens of thousands of photos; a vector index
+only after that.
+
+### 16.6 Detection: faces, persons, saliency
+
+- **YuNet** (opencv_zoo, `FaceDetectorYN` in OpenCV): about 0.1 million
+  parameters, runs in a few milliseconds. Uses: keep faces inside smart crops and
+  gallery frames, flag photos that contain people (consent / privacy review),
+  choose MODNet over u2netp for portraits.
+- **SFace** (face recognition, in the zoo): deliberately **not** proposed. Identifying
+  people is outside what an anonymous nature/art site needs and has legal weight.
+- **YOLOX** (Apache) or **NanoDet** (Apache): general object boxes (person, bird,
+  dog, car, ...). The zoo has both; `models.yml` has YOLOv3/v4/v5/v8 as dnn
+  samples (checked), but **YOLOv5/v8 are AGPL-3.0**, which would taint the project;
+  use YOLOX or NanoDet for anything that ships. Box + class could seed the `rect`
+  hint of grabCut or the click point for `segment`, giving a one-button cutout of
+  "the dog" without any tap.
+- **Saliency without a new model**: the u2netp matte itself is a saliency map;
+  its centroid and bounding box give a smart crop at zero extra cost. Check this
+  before adding a dedicated detector.
+- **Text / OCR** (PP-OCR, CRNN, in the zoo): handwriting and text are out of
+  scope (`PLAN.md` S1). Listed only as a possible later "search the words in a
+  photo" feature.
+- **DexiNed** (`dexined`, in the zoo, checked): learned edge detection. Not
+  needed for cutouts; may be interesting for the vector tools (ink-pen outline
+  suggestion, torn-edge effects of S14.6). Study only if the editor asks for it.
+
+### 16.7 Depth, inpainting, enhancement
+
+**Depth** (for the 3D gallery, `GALLERY.md`; not needed for v1 of it):
+
+- **Depth Anything V2 Small**: best small relative-depth model; Apache-2.0 for
+  the small size only (base and large are CC-BY-NC). ViT backbone: onnxruntime
+  likely, OpenCV dnn uncertain. 518x518 input.
+- **MiDaS small (v2.1)**: older, convolutional, loads in OpenCV dnn (it is a
+  classic OpenCV tutorial model); lower quality, useful as a fallback.
+- Output is relative inverse depth, not metres. Used as a displacement map or
+  for a 2.5D parallax effect on a gallery wall; combined with a cutout matte it
+  can lift the subject off the wall. Cache the depth map as a 16-bit PNG next to
+  the photo.
+
+**Inpainting** (after a cutout, or "remove this"):
+
+- **LaMa** (in the zoo, checked: `inpainting_lama_2025jan.onnx`, 512x512, BGR
+  input, dnn sample `inpainting`): fast, no prompt, good on textures and
+  backgrounds up to 512; larger photos need tiles or a downscaled fill that is
+  blended back at full resolution. The first inpainting model to try because the
+  OpenCV sample proves it loads.
+- **MI-GAN**: smaller and faster than LaMa, aimed at mobile. onnxruntime.
+- **LDM inpainting** (in the zoo, checked, three ONNX files: encoder, decoder,
+  latent diffusion): generative, can invent content, slow on CPU, large download.
+  Generated content in a photo gallery is an editorial question for the owner,
+  not only a technical one.
+- Interaction with the existing tool: a mask from `segment` or `cutout --mask-out`
+  is the inpainting mask; the result is a plain image, not an alpha image.
+
+**Enhancement**:
+
+- **Auto white balance**: `fc4` is in the zoo (checked, `auto_white_balance`
+  sample). Estimates the illuminant; applying the gain is plain arithmetic.
+  OpenCV also has non-learned `xphoto` white balance (`GrayworldWB`,
+  `LearningBasedWB`), already in the installed build (S14.3); compare before
+  taking a model.
+- **Low-light enhancement** (the zoo has an LLIE entry; others: Zero-DCE,
+  SCI): brightens underexposed photos. A risk is noisy or colour-shifted output;
+  offer as an optional "enhance" with a preview, never as a silent ingest step.
+- **Super-resolution**: `seemoredetails` is the zoo model (checked, x4, static
+  512 input, so photos must be tiled). **Real-ESRGAN** (BSD-3) is the usual
+  quality leader for photos (x2 / x4), **SwinIR** (Apache) is also good, both
+  with large inputs and slow on CPU. Also available without a model:
+  `dnn_superres` (EDSR, FSRCNN, ESPCN, LapSRN) in the installed build (S14.3),
+  where FSRCNN is fast and EDSR is slow but better. Run super-resolution as an
+  offline job on selected photos, never inline at upload.
+- **Style transfer / colorization** (fast-neural-style, Zhang colorization, in
+  the OpenCV tutorials): fun, not aligned with the site. Not proposed.
+
+### 16.8 Runtime and architecture: OpenCV dnn or onnxruntime
+
+Two routes to run a model:
+
+1. **OpenCV dnn inside `opencv-imgproc.js`** (the current route): one binary, one
+   job file, one JSON line, no new dependency. Limited to the ONNX operators the
+   build implements; transformer models (BiRefNet, SAM 2, Depth Anything,
+   CLIP's ViT, DINOv2) are the likely failures, and newer OpenCV 5.x improves this
+   release by release. CPU only unless the build has an accelerated backend (not
+   verified for this install).
+2. **onnxruntime** (`onnxruntime-node` under Bun, or a Python/`onnxruntime` CLI
+   called through `Bun.spawn`): runs essentially any exported ONNX, can use more
+   threads, quantised (int8 / fp16) variants, and sometimes a GPU. Costs a native
+   dependency and a second place where models live.
+
+Suggested split, to be confirmed by experiment: pixel work and anything that
+already loads in dnn stays in `opencv-imgproc.js` (cutout, segment, LaMa,
+super-resolution); embedding models (CLIP, DINOv2) and the heavy cutout (BiRefNet)
+go to a separate small ingest tool behind the Bun server, with the same
+conventions as S3 (argv array, job file, one JSON line, exit codes of S9).
+
+Other design points that apply to any new command:
+
+- Same sidecar `<name>.json` as S6.3.1, extended with `task`, `tile`,
+  `overlap`, `outputRange`, `colorOrder` and `licence` fields; one loader.
+- Weights stay **outside the repository**: `WB_MODELS_DIR` (S5), hash checked
+  against a `sha1` in the sidecar, as `models.yml` does. Document the download
+  URL in the sidecar, never fetch at run time (S1 non-goal: no network).
+- Memory and time: report `timings.<task>Ms` and peak input size in the result
+  (S8); cap work size (`limits.workSize`); tile when the model has a fixed
+  input; blend tiles with a feathered overlap.
+- Determinism (S3): CPU inference of the same file with the same thread count is
+  expected to be repeatable; if a model is not, say so in `capabilities`.
+- Cache per photo hash and model hash (as the SAM embedding cache does), so a
+  model change invalidates exactly its own results.
+
+### 16.9 How to study a model (checklist, per candidate)
+
+1. **Licence** of code *and* weights (they differ often); record the exact URL
+   and a hash. Reject non-commercial weights for anything that would ship.
+2. **Loads?** `readNetFromONNX` in the installed build; record the error text if
+   not; try a simplified export (`onnxsim`, fixed input shape, opset 12-17)
+   before giving up on dnn.
+3. **Correct?** compare against the reference implementation on 3 images (same
+   preprocessing, same output to a tolerance); most "bad results" are a wrong
+   mean/std/colour order.
+4. **Time and memory** on this machine at the intended input size, cold and warm.
+5. **Quality** on the S15.5 photo set (cutout), or a small labelled set (tags,
+   faces), with the numbers kept in a table in this file.
+6. **Fit**: does it need a new command, a new sidecar field, a new output? Does
+   it change the Bun server contract of S11?
+7. **Failure modes**: what happens on a portrait, a transparent object, a night
+   photo, a drawing, a screenshot? Record at least one failure per model.
+8. Decide: adopt (becomes a numbered S5 option and moves out of this section),
+   keep experimental, or reject (leave a line here so the work is not repeated).
+
+### 16.10 Suggested order of studies
+
+1. CLIP ViT-B/32 (and a multilingual text tower): biggest new capability (search
+   and related nodes), independent of the editor. First decide the runtime
+   (S16.8).
+2. IS-Net next to u2netp on the S15.5 set: cheapest possible cutout upgrade, same
+   code path.
+3. LaMa inpainting: loads in dnn per the zoo sample; pairs with `segment`.
+4. YuNet + YOLOX/NanoDet: small, enables smart crop and the person / portrait
+   branch of `auto`.
+5. Depth Anything V2 Small or MiDaS small: only once the 3D gallery wants it.
+6. BiRefNet: only if u2netp / IS-Net quality remains the complaint.
+7. Super-resolution, enhancement, moderation: on demand.
+
+### 16.11 Open questions
+
+- Is a second runtime (onnxruntime) acceptable, or must everything stay in
+  qjs-opencv and dnn? This decides about CLIP, DINOv2, BiRefNet and Depth Anything.
+- Is moderation of anonymous uploads wanted, and if so flag-for-review or
+  reject? (A classifier decision with legal and editorial weight; the owner
+  decides, not the tool.)
+- Which languages must search work in (de, fr, en are site languages): English
+  CLIP plus translation, or a multilingual text tower?
+- Where do the weights live, and who is responsible for their licences when the
+  site is deployed (`WB_MODELS_DIR`, a checksum list)?
+- Are ground-truth masks to be made, to turn visual verdicts into numbers?
