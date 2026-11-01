@@ -368,6 +368,62 @@ tests({
     eq([r.result.ok, r.result.error], [false, 'empty']);
     assert(r.code != 0, 'exits non-zero');
   },
+  'edgemap: the ring of a disc is the strongest, flat areas stay near 0'() {
+    // bright disc on a dim noisy background, and a low contrast copy of it
+    const make = (file, lo, hi) => {
+      const img = new cv.Mat(480, 640, cv.CV_8UC3, new cv.Scalar(lo, lo, lo));
+      const noise = new cv.Mat(480, 640, cv.CV_8UC3);
+
+      cv.randn(noise, new cv.Scalar(0, 0, 0), new cv.Scalar(2, 2, 2));
+      cv.circle(img, new cv.Point(320, 240), 120, new cv.Scalar(hi, hi, hi), -1);
+      cv.add(img, noise, img);
+      cv.imwrite(file, img);
+    };
+    const stats = file => {
+      const m = cv.imread(file, cv.IMREAD_UNCHANGED);
+      const ring = new cv.Mat(m.rows, m.cols, cv.CV_8UC1, new cv.Scalar(0));
+      const flat = new cv.Mat(m.rows, m.cols, cv.CV_8UC1, new cv.Scalar(0));
+
+      cv.circle(ring, new cv.Point(320, 240), 120, new cv.Scalar(255), 5);
+      cv.rectangle(flat, new cv.Point(0, 0), new cv.Point(100, 100), new cv.Scalar(255), -1);
+      cv.rectangle(flat, new cv.Point(300, 220), new cv.Point(340, 260), new cv.Scalar(255), -1);
+
+      return { channels: m.channels(), size: [m.cols, m.rows], ring: cv.mean(m, ring)[0], flat: cv.mean(m, flat)[0] };
+    };
+    const strong = path.join(dir, 'edge-strong.jpg');
+    const weak = path.join(dir, 'edge-weak.jpg');
+    const cache = path.join(dir, 'edge-cache');
+
+    make(strong, 40, 210);
+    make(weak, 100, 124);
+
+    const a = run(`edgemap --in ${strong} --out ${dir}/e1.png --cache-dir ${cache}`);
+    const sa = stats(path.join(dir, 'e1.png'));
+
+    eq([a.code, a.result.ok, a.result.detector, a.result.cached, a.result.output.width, a.result.output.height], [0, true, 'none', false, 640, 480]);
+    eq([sa.channels, sa.size], [1, [640, 480]]);
+    assert(sa.ring > 150, 'ring is strong: ' + sa.ring);
+    assert(sa.flat < 30, 'flat is near 0: ' + sa.flat);
+
+    // CLAHE keeps the ring of the low contrast photo standing out
+    const b = run(`edgemap --in ${weak} --out ${dir}/e2.png --cache-dir ${cache}`);
+    const sb = stats(path.join(dir, 'e2.png'));
+
+    eq(b.result.ok, true);
+    assert(sb.ring > 3 * sb.flat + 20, `weak ring ${sb.ring} stands out from ${sb.flat}`);
+
+    // the same call again comes from the cache; a flag changes the key
+    const c = run(`edgemap --in ${strong} --out ${dir}/e3.png --cache-dir ${cache}`);
+    const d = run(`edgemap --in ${strong} --out ${dir}/e4.png --cache-dir ${cache} --smooth guided --size 320`);
+
+    eq([c.result.cached, d.result.cached, d.result.output.width], [true, false, 320]);
+  },
+  'edgemap falls back to none when the detector weights are missing'() {
+    const r = run(`edgemap --in ${photo} --out ${dir}/e5.png --cache-dir ${dir}/edge-cache --detector hed --models-dir ${dir}/nowhere`);
+
+    eq([r.code, r.result.ok, r.result.detector, r.result.detectorRequested], [0, true, 'none', 'hed']);
+    assert(/hed\.onnx/.test(r.result.detectorNote), 'names the file');
+  },
   '--png sets the compression level'() {
     if(!haveU2) return print('  skipped: models/u2netp.onnx missing');
 

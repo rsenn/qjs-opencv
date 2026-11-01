@@ -198,6 +198,34 @@ supersampled, area-downscaled, then feathered with a Gaussian of sigma
 `{"event":"result","ok":true,"output":{"path","width","height"}}`; an empty mask prints
 `{"event":"result","ok":false,"error":"empty"}` and exits 11.
 
+### 5.1c `edgemap`
+
+`edgemap --in FILE --out EDGES.png [--size 640] [--clahe-clip 3] [--clahe-tiles 8] [--smooth none|bilateral|guided] [--detector none|hed|dexined] [--fuse max|mean] [--detector-weight 0.5] [--contours-out FILE.json] [--cache-dir DIR] [--models-dir DIR]`
+
+An edge map for the editor's magnetic lasso; the live wire itself (Dijkstra over a
+per-pixel cost) runs in the browser. Steps, in order:
+
+1. EXIF turn, then scale to `--size` px on the long edge (never up), INTER_AREA.
+2. CLAHE (`cv.createCLAHE`) on the Lab lightness only.
+3. Edge-aware smoothing of the Lab image: `bilateral` (default, d=5, sigma 30/5),
+   `guided` (`cv.ximgproc.guidedFilter`, self-guided), or `none`.
+4. Sobel L2 gradient (lightness; the a and b gradients count at half weight) fused with
+   Canny, whose thresholds are Otsu of the gradient (low = 0.4 high). The gradient is
+   normalised by its 98th percentile (floored at 64 Sobel units) after subtracting a noise
+   floor of twice the median, and clamped. The Canny edges are dilated 3x3 and softened,
+   and `strength = max(sobel, canny)`, so thin connected edges win over noisy gradients.
+5. Optional `hed` / `dexined` (ONNX through `cv.dnn`, `hed.onnx` / `dexined.onnx` in the
+   models directory, 512x512 input), fused by `max` (net scaled by `2*weight`, capped at 1)
+   or `mean` (weight on the net). A missing or unloadable file means detector `none`; the
+   result then carries `detectorRequested` and `detectorNote`.
+6. `--out` is 8-bit, one channel, the size of the scaled copy: 255 strongest edge, 0 flat.
+   `--contours-out` writes `{width,height,contours:[{length,strength,closed,points}]}`,
+   the strongest contours of the map thresholded at 95, simplified, points in 0..1.
+
+The cache key is sha256 of the photo bytes plus all flags (and the detector weights'
+size and mtime); entries live in `--cache-dir` (default as for `segment`). Result:
+`{"event":"result","ok":true,"command":"edgemap","output":{"path","width","height"},"detector":"none","cached":false}`.
+
 ### 5.2 `clip`
 
 | Key | Type | Default | Meaning |

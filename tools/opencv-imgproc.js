@@ -128,6 +128,7 @@ const PLANS = {
   info: () => [['read', 100]],
   clip: () => [['read', 30], ['clip', 50], ['write', 20]],
   cutpoly: () => [['read', 30], ['cutpoly', 50], ['write', 20]],
+  edgemap: () => [['read', 30], ['edges', 60], ['write', 10]],
   capabilities: () => [['probe', 100]],
   prepare: () => [['read', 8], ['encode', 92]],
   segment: o => [['read', 4], ['encode', 40], ['decode', 4], ['refine', 8], ['subjects', 4], ...(o.edgeKey == 'none' ? [] : [['edge', 8]]), ['colour', 12], ['write', 8], ...(o.restOut ? [['rest', 10]] : []), ...(o.preview ? [['preview', 2]] : [])],
@@ -141,6 +142,10 @@ const USAGE = `opencv-imgproc.js <command> [options]
   clip    --in FILE --out FILE --polygon JSON [--invert] [--supersample 4]
   cutpoly --in FILE --out FILE --polygon JSON [--mask-out FILE] [--feather 0.0008]
           [--supersample 4]   (normalised 0..1 outlines, even-odd, feathered, RGBA cut)
+  edgemap --in FILE --out EDGES.png [--size 640] [--clahe-clip 3] [--clahe-tiles 8]
+          [--smooth none|bilateral|guided] [--detector none|hed|dexined]
+          [--fuse max|mean] [--detector-weight 0.5] [--contours-out FILE.json]
+          [--cache-dir DIR] [--models-dir DIR]   (edge map for the magnetic lasso)
   prepare --in FILE [--model mobilesam|sam] [--cache-dir DIR]
   segment --in FILE --out FILE --point x,y[,label] [--point ...] [--box x,y,w,h]
           [--units px|norm] [--candidates 1..3] [--pick best|0|1|2]
@@ -172,7 +177,7 @@ spec: doc/opencv-imgproc.md`;
 
 const BOOLS = new Set(['trim', 'invert', 'hsv', 'probe', 'help', 'progress', 'masksOnly']);
 const LISTS = new Set(['point', 'fg', 'bg']);
-const NUMS = new Set(['previewSize', 'viewSize', 'candidates', 'count', 'supersample', 'minArea', 'feather', 'trimPad', 'outlineEpsilon', 'edgeBand', 'edgeStrength', 'maxPixels', 'workSize', 'seed', 'png', 'softSlope', 'guideRadius', 'guideEps', 'contrast', 'groupGap', 'outlineGrow', 'outlineSmooth', 'outlineVertices']);
+const NUMS = new Set(['previewSize', 'viewSize', 'candidates', 'count', 'supersample', 'minArea', 'feather', 'size', 'claheClip', 'claheTiles', 'detectorWeight', 'trimPad', 'outlineEpsilon', 'edgeBand', 'edgeStrength', 'maxPixels', 'workSize', 'seed', 'png', 'softSlope', 'guideRadius', 'guideEps', 'contrast', 'groupGap', 'outlineGrow', 'outlineSmooth', 'outlineVertices']);
 
 const camel = k => k.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
 
@@ -269,6 +274,23 @@ const MODELS = {
   // inpainting_lama_2025jan.onnx): inputs `image` (BGR 0..1) and `mask`
   // (1 = hole), 512x512, output BGR 0..255. Code and weights Apache-2.0,
   // the Places2 training data has terms of its own: check them before shipping
+  // edge detectors for edgemap. Neither ships with the repo: export the net to onnx
+  // (single 1x1xHxW sigmoid or logit output, the fused side output) and drop it
+  // into the models directory. A missing file means detector none, not an error
+  hed: {
+    kind: 'edge',
+    files: { main: 'hed.onnx' },
+    inputSize: [512, 512],
+    mean: [104.00699, 116.66877, 122.67891],
+    scale: 1,
+  },
+  dexined: {
+    kind: 'edge',
+    files: { main: 'dexined.onnx' },
+    inputSize: [512, 512],
+    mean: [103.939, 116.779, 123.68],
+    scale: 1,
+  },
   lama: {
     kind: 'inpaint',
     files: { main: 'inpainting_lama_2025jan.onnx' },
@@ -2143,6 +2165,334 @@ function cmdCutpoly(opts) {
   return { ok: true, command: 'cutpoly', output: { path: path.resolve(opts.out), width: w, height: h }, ...(opts.maskOut ? { maskPath: path.resolve(opts.maskOut) } : {}), coverage: cv.countNonZero(mask) / (w * h) };
 }
 
+/* edgemap: an edge map of the photo for the editor's magnetic lasso, whose live wire
+ * (Dijkstra over a per-pixel cost) runs in the browser. Pipeline:
+ *   1. scale to --size px long edge (never up), INTER_AREA
+ *   2. CLAHE on the Lab lightness only (cv.createCLAHE), so a dim photo still gets edges
+ *   3. edge-aware smoothing of the Lab image: bilateral (default), guided, or none
+ *   4. Sobel L2 gradient (lightness, plus chroma at half weight) fused with Canny whose
+ *      thresholds come from Otsu of the gradient. strength = max(sobel, soft canny):
+ *      thin connected edges win over noisy gradients. The gradient is normalised by its
+ *      98th percentile (floored, so a photo with few edges is not blown up) after
+ *      subtracting a noise floor of twice the median, so flat areas land at 0
+ *   5. optionally a dnn edge detector (hed, dexined) fused by max or weighted mean
+ * the result is 8-bit, one channel, same size as the scaled copy, 255 = strongest edge */
+
+const EDGE_FLOOR = 64; // sobel units: a step of 16 grey levels is 64
+
+const sampleOf = (m, n = 100000) => {
+  const d = m.data32F;
+  const step = Math.max(1, Math.floor(d.length / n));
+  const out = new Float32Array(Math.ceil(d.length / step));
+
+  for(let i = 0, j = 0; i < d.length; i += step) out[j++] = d[i];
+
+  return out.sort();
+};
+
+const pctOf = (sorted, p) => sorted[Math.min(sorted.length - 1, Math.floor(p * sorted.length))];
+
+// otsu threshold of values in 0..top over 128 bins
+function otsuOf(sorted, top) {
+  const N = 128;
+  const hist = new Float64Array(N);
+
+  for(const v of sorted) hist[Math.min(N - 1, Math.floor((v / top) * N))]++;
+
+  const total = sorted.length;
+  let sum = 0;
+
+  for(let i = 0; i < N; i++) sum += i * hist[i];
+
+  let wB = 0, sumB = 0, best = 0, bestT = 0;
+
+  for(let t = 0; t < N; t++) {
+    wB += hist[t];
+
+    if(!wB) continue;
+
+    const wF = total - wB;
+
+    if(!wF) break;
+
+    sumB += t * hist[t];
+
+    const d = (wB * wF * (sumB / wB - (sum - sumB) / wF) ** 2);
+
+    if(d > best) {
+      best = d;
+      bestT = t;
+    }
+  }
+
+  return ((bestT + 1) / N) * top;
+}
+
+// the network edge map at the working size in 0..1, or null with a reason
+function netEdges(opts, name, bgr) {
+  const spec = MODELS[name];
+  const file = path.join(modelsDir(opts), spec.files.main);
+
+  if(!fs.existsSync(file)) return { note: `${spec.files.main} not found in ${modelsDir(opts)}` };
+
+  let out;
+
+  try {
+    const net = loadNet(opts, name);
+    const [T] = spec.inputSize;
+
+    net.setInput(cv.blobFromImage(resizeTo(bgr, T, T, cv.INTER_AREA), spec.scale, new cv.Size(T, T), new cv.Scalar(...spec.mean), false, false));
+
+    const o = net.forward();
+    const d = o.data32F;
+    const f = new cv.Mat(T, T, cv.CV_32FC1);
+    const logit = d.some(v => v < 0 || v > 1);
+
+    for(let i = 0; i < T * T; i++) f.data32F[i] = logit ? 1 / (1 + Math.exp(-d[i])) : d[i];
+
+    out = resizeTo(f, bgr.cols, bgr.rows, cv.INTER_LINEAR);
+  } catch(e) {
+    return { note: `${spec.files.main} failed: ${String(e.message).split('\n')[0]}` };
+  }
+
+  return { map: out };
+}
+
+function edgeMap(bgr, opts) {
+  const detector = opts.detector ?? 'none';
+  const smooth = opts.smooth ?? 'bilateral';
+  const lab = new cv.Mat();
+  const planes = [];
+
+  cv.cvtColor(bgr, lab, cv.COLOR_BGR2Lab);
+  cv.split(lab, planes);
+
+  const L = new cv.Mat();
+
+  cv.createCLAHE(opts.claheClip ?? 3, new cv.Size(opts.claheTiles ?? 8, opts.claheTiles ?? 8)).apply(planes[0], L);
+  cv.merge([L, planes[1], planes[2]], lab);
+
+  let sm = lab;
+
+  if(smooth == 'bilateral') {
+    sm = new cv.Mat();
+    cv.bilateralFilter(lab, sm, 5, 30, 5);
+  } else if(smooth == 'guided') {
+    const f = new cv.Mat();
+    const g = new cv.Mat();
+
+    lab.convertTo(f, cv.CV_32F, 1 / 255);
+    cv.ximgproc.guidedFilter(f, f, g, Math.max(2, Math.round(0.004 * Math.max(lab.cols, lab.rows))), 0.003, -1);
+    sm = new cv.Mat();
+    g.convertTo(sm, cv.CV_8U, 255);
+  }
+
+  const chans = [];
+
+  cv.split(sm, chans);
+
+  const grad = ch => {
+    const gx = new cv.Mat();
+    const gy = new cv.Mat();
+    const m = new cv.Mat();
+
+    cv.Sobel(ch, gx, cv.CV_32F, 1, 0, 3);
+    cv.Sobel(ch, gy, cv.CV_32F, 0, 1, 3);
+    cv.magnitude(gx, gy, m);
+
+    return m;
+  };
+
+  const mag = grad(chans[0]);
+
+  for(const c of [1, 2]) {
+    const m = grad(chans[c]);
+
+    m.convertTo(m, cv.CV_32F, 0.5);
+    cv.max(mag, m, mag);
+  }
+
+  const sorted = sampleOf(mag);
+  const noise = 2 * pctOf(sorted, 0.5);
+  const top = Math.max(pctOf(sorted, 0.98), EDGE_FLOOR);
+  const denom = Math.max(1, top - noise);
+  const sobel = new cv.Mat();
+
+  mag.convertTo(sobel, cv.CV_32F, 1 / denom, -noise / denom);
+  cv.threshold(sobel, sobel, 0, 0, cv.THRESH_TOZERO);
+  cv.threshold(sobel, sobel, 1, 1, cv.THRESH_TRUNC);
+
+  // canny on the smoothed lightness, thresholds from otsu of the gradient
+  const cap = Math.max(pctOf(sorted, 0.99), 1);
+  const hi = Math.max(otsuOf(sorted, cap), noise * 1.5, 24);
+  const canny = new cv.Mat();
+
+  cv.Canny(chans[0], canny, hi * 0.4, hi, 3, true);
+  cv.dilate(canny, canny, cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(3, 3)));
+
+  const soft = new cv.Mat();
+
+  canny.convertTo(soft, cv.CV_32F, 1 / 255);
+  cv.GaussianBlur(soft, soft, new cv.Size(3, 3), 0.8);
+  soft.convertTo(soft, cv.CV_32F, 1.25); // the blur takes the peak to about 0.8
+
+  let fused = new cv.Mat();
+
+  cv.max(sobel, soft, fused);
+  cv.threshold(fused, fused, 1, 1, cv.THRESH_TRUNC);
+
+  let used = 'none';
+  let note;
+
+  if(detector != 'none') {
+    if(!MODELS[detector] || MODELS[detector].kind != 'edge') fail('E_USAGE', '--detector must be none, hed or dexined');
+
+    const net = netEdges(opts, detector, bgr);
+
+    if(net.map) {
+      const wgt = opts.detectorWeight ?? 0.5;
+      const w = new cv.Mat();
+
+      if((opts.fuse ?? 'max') == 'mean') cv.addWeighted(fused, 1 - wgt, net.map, wgt, 0, fused);
+      else {
+        net.map.convertTo(w, cv.CV_32F, Math.min(1, wgt * 2));
+        cv.max(fused, w, fused);
+      }
+
+      used = detector;
+    } else note = net.note;
+  }
+
+  const out = new cv.Mat();
+
+  fused.convertTo(out, cv.CV_8U, 255);
+
+  return { map: out, detector: used, note };
+}
+
+// strongest closed contours of the map, simplified, in 0..1 of the map
+function edgeContours(map, epsilon = 1.5, keep = 64) {
+  const bin = new cv.Mat();
+  const cs = new cv.MatVector();
+  const { cols: w, rows: h } = map;
+
+  cv.threshold(map, bin, 95, 255, cv.THRESH_BINARY);
+  cv.findContours(bin, cs, new cv.Mat(), cv.RETR_LIST, cv.CHAIN_APPROX_NONE);
+
+  const list = [];
+
+  for(let i = 0; i < cs.size(); i++) {
+    const c = cs.get(i);
+    const length = cv.arcLength(c, true);
+
+    if(length < 20) continue;
+
+    const approx = new cv.Mat();
+
+    cv.approxPolyDP(c, approx, epsilon, true);
+
+    const d = approx.data32S;
+    const points = [];
+    let sum = 0;
+
+    for(let j = 0; j < d.length; j += 2) {
+      points.push([+(d[j] / w).toFixed(5), +(d[j + 1] / h).toFixed(5)]);
+      sum += map.data[Math.min(h - 1, d[j + 1]) * w + Math.min(w - 1, d[j])];
+    }
+
+    list.push({ length: Math.round(length), strength: +(sum / points.length / 255).toFixed(3), closed: true, points });
+  }
+
+  return list.sort((a, b) => b.length * b.strength - a.length * a.strength).slice(0, keep);
+}
+
+function cmdEdgemap(opts) {
+  checkOutPath(opts.out);
+
+  const t0 = now();
+  const size = Math.max(32, Math.round(opts.size || 640));
+  const smooth = opts.smooth ?? 'bilateral';
+  const detector = opts.detector ?? 'none';
+  const fuse = opts.fuse ?? 'max';
+
+  if(!['none', 'bilateral', 'guided'].includes(smooth)) fail('E_USAGE', '--smooth must be none, bilateral or guided');
+  if(!['none', 'hed', 'dexined'].includes(detector)) fail('E_USAGE', '--detector must be none, hed or dexined');
+  if(!['max', 'mean'].includes(fuse)) fail('E_USAGE', '--fuse must be max or mean');
+
+  const args = { size, claheClip: opts.claheClip ?? 3, claheTiles: Math.max(1, Math.round(opts.claheTiles ?? 8)), smooth, detector, fuse, detectorWeight: opts.detectorWeight ?? 0.5 };
+
+  let u8;
+
+  try {
+    u8 = toU8(fs.readFileSync(opts.in ?? fail('E_USAGE', 'missing --in')));
+  } catch(e) {
+    if(e instanceof Fail) throw e;
+
+    fail('E_INPUT', 'cannot read ' + opts.in);
+  }
+
+  // the cache key covers the photo bytes, every flag, and the detector's weights file
+  let weights = '';
+
+  if(detector != 'none') {
+    try {
+      const st = fs.statSync(path.join(modelsDir(opts), MODELS[detector].files.main));
+
+      weights = st.size + '@' + st.mtimeMs;
+    } catch(e) {}
+  }
+
+  const key = cv.hash.sha256(u8) + '-' + cv.hash.sha256(JSON.stringify({ v: 1, ...args, weights, contours: !!opts.contoursOut })).slice(0, 16);
+  const dir = cacheDir(opts);
+  const base = path.join(dir, 'edgemap-' + key);
+  const meta = base + '.json';
+  const done = (output, extra) => ({ ok: true, command: 'edgemap', output, ...extra, timings: { totalMs: ms(t0) } });
+
+  if(fs.existsSync(base + '.png') && fs.existsSync(meta) && (!opts.contoursOut || fs.existsSync(base + '.contours.json'))) {
+    try {
+      const m = JSON.parse(fs.readFileSync(meta, 'utf8'));
+
+      writeFile(opts.out, toU8(fs.readFileSync(base + '.png')));
+      if(opts.contoursOut) writeFile(opts.contoursOut, fs.readFileSync(base + '.contours.json', 'utf8'));
+
+      return done({ path: path.resolve(opts.out), width: m.width, height: m.height }, { detector: m.detector, ...(m.note ? { detectorNote: m.note } : {}), cached: true });
+    } catch(e) {
+      // unreadable cache entry: recompute
+    }
+  }
+
+  const img = readImage(opts.in, opts.maxPixels);
+
+  progress.stage('edges', 'scaling and finding edges');
+
+  const k = Math.min(1, size / Math.max(img.width, img.height));
+  const work = k < 1 ? resizeTo(img.bgr, Math.max(1, Math.round(img.width * k)), Math.max(1, Math.round(img.height * k)), cv.INTER_AREA) : img.bgr;
+  const { map, detector: used, note } = edgeMap(work, args.detector == 'none' ? { ...args } : { ...args, modelsDir: opts.modelsDir });
+  const bytes = encode(opts.out, map, opts);
+
+  progress.stage('write', 'writing ' + path.basename(opts.out));
+  writeFile(opts.out, bytes);
+
+  let contours;
+
+  if(opts.contoursOut) {
+    contours = JSON.stringify({ width: map.cols, height: map.rows, contours: edgeContours(map) });
+    writeFile(opts.contoursOut, contours);
+  }
+
+  try {
+    fs.mkdirSync(dir, { recursive: true });
+    sweepTmp(dir);
+    writeFile(base + '.png', bytes);
+    if(contours) writeFile(base + '.contours.json', contours);
+    writeFile(meta, JSON.stringify({ width: map.cols, height: map.rows, detector: used, note }));
+  } catch(e) {
+    // a cache that cannot be written is not an error
+  }
+
+  return done({ path: path.resolve(opts.out), width: map.cols, height: map.rows }, { detector: used, ...(note ? { detectorRequested: detector, detectorNote: note } : {}), cached: false });
+}
+
 function cmdCapabilities(opts) {
   const info = cv.getBuildInformation();
   const version = /Version control:\s*(\S+)/.exec(info)?.[1];
@@ -2197,7 +2547,7 @@ function cmdCapabilities(opts) {
 
 /* main */
 
-const COMMANDS = { cutout: cmdCutout, prepare: cmdPrepare, segment: cmdSegment, clip: cmdClip, cutpoly: cmdCutpoly, palette: cmdPalette, info: cmdInfo, capabilities: cmdCapabilities };
+const COMMANDS = { cutout: cmdCutout, prepare: cmdPrepare, segment: cmdSegment, clip: cmdClip, cutpoly: cmdCutpoly, edgemap: cmdEdgemap, palette: cmdPalette, info: cmdInfo, capabilities: cmdCapabilities };
 
 function main() {
   let result;
