@@ -143,10 +143,15 @@ const USAGE = `opencv-imgproc.js <command> [options]
           [--units px|norm] [--candidates 1..3] [--pick best|0|1|2]
           [--refine none|guided|matting] [--rest-out FILE] [--trim] ...
           [--view-size 1024] [--phases preview,final]
+          [--groups single|auto] [--group-gap 0.03] [--mask-prompt off|on]
+          [--exclude point|object]
+          [--region JSON] [--masks-only]
+          [--outline-smooth 0] [--outline-grow 0] [--outline-vertices 0]
+          [--soft-slope 2] [--guide-radius 0.006] [--guide-eps 0.01] [--contrast 4]
   cutout  --in FILE --out FILE [--progress] [--method dnn] [--dnn-model u2netp]
           [--refine none|guided|matting] [--subjects largest|all]
           [--split-dir DIR] [--min-area 0.01]
-          [--rest-out FILE] [--rest-fill none|inpaint|fsr]
+          [--rest-out FILE] [--rest-fill none|inpaint|fsr|lama]
           [--edge-key auto|none|#rrggbb] [--edge-strength 0..1] [--edge-band N]
           [--trim] [--trim-pad N] [--outline-out FILE] [--outline-epsilon 1.5]
           [--mask-out FILE] [--preview FILE] [--models-dir DIR]
@@ -162,9 +167,9 @@ spec: doc/opencv-imgproc.md`;
 
 /* option parsing, flag names are the job keys in kebab-case */
 
-const BOOLS = new Set(['trim', 'invert', 'hsv', 'probe', 'help', 'progress']);
+const BOOLS = new Set(['trim', 'invert', 'hsv', 'probe', 'help', 'progress', 'masksOnly']);
 const LISTS = new Set(['point', 'fg', 'bg']);
-const NUMS = new Set(['previewSize', 'viewSize', 'candidates', 'count', 'supersample', 'minArea', 'trimPad', 'outlineEpsilon', 'edgeBand', 'edgeStrength', 'maxPixels', 'workSize', 'seed', 'png']);
+const NUMS = new Set(['previewSize', 'viewSize', 'candidates', 'count', 'supersample', 'minArea', 'trimPad', 'outlineEpsilon', 'edgeBand', 'edgeStrength', 'maxPixels', 'workSize', 'seed', 'png', 'softSlope', 'guideRadius', 'guideEps', 'contrast', 'groupGap', 'outlineGrow', 'outlineSmooth', 'outlineVertices']);
 
 const camel = k => k.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
 
@@ -257,6 +262,18 @@ const MODELS = {
     licence: 'Apache-2.0 (weights), MIT (onnx export)',
     commercial: true,
   },
+  // LaMa big-lama, the OpenCV zoo's quantized export (opencv_zoo
+  // inpainting_lama_2025jan.onnx): inputs `image` (BGR 0..1) and `mask`
+  // (1 = hole), 512x512, output BGR 0..255. Code and weights Apache-2.0,
+  // the Places2 training data has terms of its own: check them before shipping
+  lama: {
+    kind: 'inpaint',
+    files: { main: 'inpainting_lama_2025jan.onnx' },
+    sha1: { main: '7c6cdb9362bf73de2a80cfcaf17e121e3302f24c' },
+    inputSize: [512, 512],
+    licence: 'Apache-2.0 (LaMa), Places2 data terms apply',
+    commercial: null,
+  },
 };
 
 const scriptDir = import.meta.url.replace(/^file:\/\//, '').replace(/[^/]*$/, '');
@@ -277,10 +294,20 @@ function modelsDir(opts) {
   return list.find(d => fs.existsSync(d)) ?? list[0];
 }
 
+// a net is loaded once per run: the SAM decoder runs once per tap group and exclude tap, and
+// loading it (16 MB) took 125 to 175 ms every time, 1.4 s of a 4-tap selection
+const nets = new Map();
+
 function loadNet(opts, name, part = 'main') {
   const spec = MODELS[name] ?? fail('E_MODEL', 'unknown model ' + name, { known: Object.keys(MODELS) });
   const file = path.join(modelsDir(opts), spec.files[part]);
 
+  if(!nets.has(file)) nets.set(file, openNet(file, opts));
+
+  return nets.get(file);
+}
+
+function openNet(file, opts) {
   if(!fs.existsSync(file)) fail('E_MODEL', 'model file missing: ' + file, { modelsDir: modelsDir(opts), hint: 'put the weights there, or pass --models-dir / set WB_MODELS_DIR' });
 
   try {
@@ -545,8 +572,26 @@ function sweepTmp(dir) {
   } catch(e) {}
 }
 
+// the colour under alpha 0 is never seen, but it is a whole photo to compress: zeroed, a 12 MP cut
+// of a small subject is written in 0.5 s instead of 1.2 s and is 2 MB instead of 20
+function clearHidden(mat) {
+  if(mat.channels() != 4) return mat;
+
+  const planes = [];
+  const hidden = new cv.Mat();
+  const out = mat.clone();
+
+  cv.split(mat, planes);
+  cv.compare(planes[3], new cv.Scalar(0), hidden, cv.CMP_EQ);
+  out.setTo(new cv.Scalar(0, 0, 0, 0), hidden);
+
+  return out;
+}
+
 function encode(file, mat, opts) {
   const ext = path.extname(file).toLowerCase();
+
+  mat = clearHidden(mat);
 
   if(ext == '.webp') return cv.imencode(ext, mat, { quality: opts.webp === undefined || opts.webp == 'lossless' ? 101 : Number(opts.webp) });
   if(ext == '.png' && opts.png !== undefined) return cv.imencode(ext, mat, { compression: Number(opts.png) });
@@ -601,6 +646,62 @@ function outline(alpha8, epsilon) {
   return poly;
 }
 
+// every contour of a mask above minShare of the image, biggest first, with
+// its hole flag: [{ polygon, hole }]. The mask is first tidied by the options:
+// --outline-smooth closes gaps and removes spurs (share of the long edge),
+// --outline-grow expands it outwards by that share (the clip of a picture
+// whose alpha already cuts it must not cut into the soft edge), and
+// --outline-vertices keeps a contour at that many vertices at most by
+// raising the simplification tolerance from --outline-epsilon (px)
+function outlineAll(alpha8, opts, minShare = 0.0005) {
+  const long = Math.max(alpha8.cols, alpha8.rows);
+  const epsilon = opts.outlineEpsilon ?? 1.5;
+  const bin = new cv.Mat();
+  const ellipse = share => {
+    const r = Math.max(1, Math.round(share * long));
+
+    return cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(2 * r + 1, 2 * r + 1));
+  };
+
+  cv.threshold(alpha8, bin, 127, 255, cv.THRESH_BINARY);
+
+  if(opts.outlineSmooth > 0) {
+    cv.morphologyEx(bin, bin, cv.MORPH_CLOSE, ellipse(opts.outlineSmooth));
+    cv.morphologyEx(bin, bin, cv.MORPH_OPEN, ellipse(opts.outlineSmooth));
+  }
+
+  if(opts.outlineGrow > 0) cv.dilate(bin, bin, ellipse(opts.outlineGrow));
+
+  const cs = new cv.MatVector();
+  const hier = new cv.Mat();
+
+  cv.findContours(bin, cs, hier, cv.RETR_CCOMP, cv.CHAIN_APPROX_NONE);
+
+  const list = [];
+
+  for(let i = 0; i < cs.size(); i++) {
+    const area = cv.contourArea(cs.get(i));
+
+    if(area < minShare * alpha8.cols * alpha8.rows) continue;
+
+    const approx = new cv.Mat();
+    let eps = epsilon;
+
+    cv.approxPolyDP(cs.get(i), approx, eps, true);
+
+    // a handle per vertex: loosen the tolerance until the contour is few enough
+    for(let n = 0; opts.outlineVertices > 0 && approx.rows > opts.outlineVertices && n < 40; n++) cv.approxPolyDP(cs.get(i), approx, (eps *= 1.3), true);
+
+    const polygon = [];
+
+    for(let j = 0; j < approx.data32S.length; j += 2) polygon.push([approx.data32S[j], approx.data32S[j + 1]]);
+
+    if(polygon.length >= 3) list.push({ area, polygon, hole: hier.data32S[i * 4 + 3] >= 0 });
+  }
+
+  return list.sort((a, b) => b.area - a.area).map(({ polygon, hole }) => ({ polygon, hole }));
+}
+
 /* the matte: model, refinement, subjects, colours */
 
 // probability map of a salient-object model, 0..1 at the model size
@@ -621,21 +722,55 @@ function runSalient(net, spec, bgr) {
   return norm;
 }
 
-// guided filter radius for an image, px
-const guideRadius = long => Math.max(4, Math.round(long * 0.006));
+// edge constants of the soft matte, segment overrides them with --soft-slope,
+// --guide-radius (share of the long side), --guide-eps and --contrast
+const TUNE = { softSlope: 2, guideRadius: 0.006, guideEps: 1e-3, contrast: 4 };
 
-// snap a soft map to the photo's edges: small guided filter, then steepen
+// guided filter radius for an image, px
+const guideRadius = long => Math.max(4, Math.round(long * TUNE.guideRadius));
+
+// the box around where a soft map is above `level`, grown by `pad` and kept in the picture; null
+// when nothing is
+function activeBox(soft, level, pad) {
+  const on = new cv.Mat();
+
+  cv.compare(soft, new cv.Scalar(level), on, cv.CMP_GT);
+
+  if(!cv.countNonZero(on)) return null;
+
+  const b = cv.boundingRect(on);
+  const x0 = Math.max(0, b.x - pad);
+  const y0 = Math.max(0, b.y - pad);
+
+  return new cv.Rect(x0, y0, Math.min(soft.cols, b.x + b.width + pad) - x0, Math.min(soft.rows, b.y + b.height + pad) - y0);
+}
+
+// snap a soft map to the photo's edges: small guided filter, then steepen. Only around the
+// subject: far from it the map is near 0 and the steepening makes it 0 anyway (below 0.375), so a
+// small subject in a 12 MP photo costs a fraction of the whole
 function refineGuided(bgr, soft) {
   const r = guideRadius(Math.max(bgr.cols, bgr.rows));
-  const g = stripwise(bgr.cols, bgr.rows, cv.CV_32F, 3 * r, (y0, y1) => {
+  const box = activeBox(soft, 0.05, 3 * r);
+
+  if(!box) return new cv.Mat(soft.rows, soft.cols, cv.CV_32F, new cv.Scalar(0));
+
+  const img = bgr.roi(box).clone();
+  const part = soft.roi(box).clone();
+  const g = stripwise(img.cols, img.rows, cv.CV_32F, 3 * r, (y0, y1) => {
     const out = new cv.Mat();
 
-    cv.ximgproc.guidedFilter(toFloat(rowsOf(bgr, y0, y1)), rowsOf(soft, y0, y1), out, r, 1e-3, -1);
+    cv.ximgproc.guidedFilter(toFloat(rowsOf(img, y0, y1)), rowsOf(part, y0, y1), out, r, TUNE.guideEps, -1);
 
     return out;
   });
 
-  return contrast(g, 4);
+  if(box.width == soft.cols && box.height == soft.rows) return contrast(g, TUNE.contrast);
+
+  const out = new cv.Mat(soft.rows, soft.cols, cv.CV_32F, new cv.Scalar(0));
+
+  contrast(g, TUNE.contrast).copyTo(out.roi(box));
+
+  return out;
 }
 
 // trimap from a soft matte, 255 sure foreground, 0 sure background
@@ -865,12 +1000,42 @@ function liveRows(alphaF) {
 }
 
 // colour to alpha at the cut edge, strip-wise on the 8-bit photo
+// an image operation `fn(bgr, alphaF)` that keeps the size, run only on the box round every
+// non-zero alpha widened by `margin` (at least the operation's reach, so every pixel that matters
+// sees the same neighbourhood); `outside()` is the full-size result the box is pasted into. A
+// subject is mostly a small part of a 12 MP photo, so this saves most of the time
+function nearAlpha(bgr, alphaF, margin, fn, outside) {
+  const b = bboxOf(toU8Mat(alphaF));
+  const x0 = Math.max(0, b.x - margin);
+  const y0 = Math.max(0, b.y - margin);
+  const x1 = Math.min(alphaF.cols, b.x + b.w + margin);
+  const y1 = Math.min(alphaF.rows, b.y + b.h + margin);
+
+  if(!b.w || !b.h || (x1 - x0) * (y1 - y0) > 0.6 * alphaF.cols * alphaF.rows) return fn(bgr, alphaF);
+
+  const rect = new cv.Rect(x0, y0, x1 - x0, y1 - y0);
+  const full = outside();
+
+  fn(bgr.roi(rect).clone(), alphaF.roi(rect).clone()).copyTo(full.roi(rect));
+
+  return full;
+}
+
 function defringe(bgr, alphaF, key, band, strength) {
   const long = Math.max(bgr.cols, bgr.rows);
   const margin = Math.max(15, Math.round(long * 0.0225)) + 8 * band + 4;
-  const live = liveRows(alphaF);
 
-  return stripwise(bgr.cols, bgr.rows, cv.CV_32F, margin, (y0, y1) => (y1 <= live.y0 || y0 >= live.y1 ? rowsOf(alphaF, y0, y1) : defringeCore(toFloat(rowsOf(bgr, y0, y1)), rowsOf(alphaF, y0, y1), key, band, strength, long)));
+  return nearAlpha(
+    bgr,
+    alphaF,
+    margin,
+    (bgr, alphaF) => {
+      const live = liveRows(alphaF);
+
+      return stripwise(bgr.cols, bgr.rows, cv.CV_32F, margin, (y0, y1) => (y1 <= live.y0 || y0 >= live.y1 ? rowsOf(alphaF, y0, y1) : defringeCore(toFloat(rowsOf(bgr, y0, y1)), rowsOf(alphaF, y0, y1), key, band, strength, long)));
+    },
+    () => new cv.Mat(alphaF.rows, alphaF.cols, cv.CV_32F, new cv.Scalar(0)),
+  );
 }
 
 // blur fusion (Germer 2020) on one strip, radii come from the full image
@@ -910,10 +1075,19 @@ function estimateForeground(bgr, alphaF) {
   const long = Math.max(bgr.cols, bgr.rows);
   const r1 = Math.max(15, Math.round(long * 0.0225));
   const r2 = Math.max(2, Math.round(long * 0.0015));
+  const margin = 2 * (r1 + r2) + 2;
 
-  const live = liveRows(alphaF);
+  return nearAlpha(
+    bgr,
+    alphaF,
+    margin,
+    (bgr, alphaF) => {
+      const live = liveRows(alphaF);
 
-  return stripwise(bgr.cols, bgr.rows, cv.CV_8UC3, r1 + r2 + 2, (y0, y1) => (y1 <= live.y0 || y0 >= live.y1 ? rowsOf(bgr, y0, y1) : toU8Mat(fusionCore(toFloat(rowsOf(bgr, y0, y1)), rowsOf(alphaF, y0, y1), r1, r2))));
+      return stripwise(bgr.cols, bgr.rows, cv.CV_8UC3, r1 + r2 + 2, (y0, y1) => (y1 <= live.y0 || y0 >= live.y1 ? rowsOf(bgr, y0, y1) : toU8Mat(fusionCore(toFloat(rowsOf(bgr, y0, y1)), rowsOf(alphaF, y0, y1), r1, r2))));
+    },
+    () => bgr.clone(),
+  );
 }
 
 // fill the hole a cut leaves, at work size, blended back at full size.
@@ -947,6 +1121,59 @@ function fillHole(bgr, alphaF, how) {
 
     return toU8Mat(add(mul(toFloat(rowsOf(bgr, y0, y1)), oneMinus(h3)), mul(toFloat(rowsOf(up, y0, y1)), h3)));
   });
+}
+
+// the hole of a subject filled by LaMa: the photo around the hole (a square
+// window with room to see the surroundings) goes through the net at 512x512
+// and only the hole is taken from the result, feathered at its edge. The base
+// is the Telea fill, it also stands for any part of the hole outside the window
+function lamaFill(opts, bgr, alphaF) {
+  const base = fillHole(bgr, alphaF, 'inpaint');
+  const long = Math.max(bgr.cols, bgr.rows);
+  const r = Math.max(2, Math.round(long * 0.008));
+  const hole = new cv.Mat();
+
+  cv.threshold(toU8Mat(alphaF), hole, 4, 255, cv.THRESH_BINARY);
+  cv.dilate(hole, hole, cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(2 * r + 1, 2 * r + 1)));
+
+  if(!cv.countNonZero(hole)) return base;
+
+  const b = cv.boundingRect(hole);
+  const side = Math.min(Math.min(bgr.cols, bgr.rows), Math.max(256, Math.ceil(Math.max(b.width, b.height) * 1.6)));
+  const x = Math.max(0, Math.min(bgr.cols - side, Math.round(b.x + b.width / 2 - side / 2)));
+  const y = Math.max(0, Math.min(bgr.rows - side, Math.round(b.y + b.height / 2 - side / 2)));
+  const win = new cv.Rect(x, y, side, side);
+  const net = loadNet(opts, 'lama');
+  const [T] = MODELS.lama.inputSize;
+  const how = side > T ? cv.INTER_AREA : cv.INTER_CUBIC;
+  const holeWin = hole.roi(win).clone();
+  const mask = new cv.Mat();
+
+  cv.threshold(resizeTo(holeWin, T, T, cv.INTER_NEAREST), mask, 127, 255, cv.THRESH_BINARY);
+  progress.stage('lama', 'inpainting the hole at ' + T + 'x' + T);
+
+  net.setInput(cv.blobFromImage(resizeTo(base.roi(win).clone(), T, T, how), 1 / 255, new cv.Size(T, T), new cv.Scalar(0, 0, 0), false, false), 'image');
+  net.setInput(cv.blobFromImage(mask, 1 / 255, new cv.Size(T, T), new cv.Scalar(0), false, false), 'mask');
+
+  const f = net.forward().data32F;
+  const n = T * T;
+  const out = new cv.Mat(T, T, cv.CV_8UC3);
+
+  for(let i = 0; i < n; i++) for(let c = 0; c < 3; c++) out.data[i * 3 + c] = Math.max(0, Math.min(255, Math.round(f[c * n + i])));
+
+  const up = resizeTo(out, side, side, cv.INTER_CUBIC);
+  const feather = new cv.Mat();
+  const h3 = new cv.Mat();
+
+  cv.GaussianBlur(toFloat(holeWin), feather, new cv.Size(0, 0), Math.max(1, r / 2));
+  cv.merge([feather, feather, feather], h3);
+
+  const merged = toU8Mat(add(mul(toFloat(base.roi(win).clone()), oneMinus(h3)), mul(toFloat(up), h3)));
+  const result = base.clone();
+
+  merged.copyTo(result.roi(win));
+
+  return result;
 }
 
 /* promptable segmentation, SAM: the encoder runs once per photo and its
@@ -1087,11 +1314,11 @@ function parsePrompts(opts, w, h) {
 }
 
 // three candidate masks as 256x256 logits and their predicted iou
-function samDecode(opts, name, emb, pos, points, scale) {
+function samDecode(opts, name, emb, pos, points, scale, prev) {
   const dec = loadNet(opts, name, 'decoder');
   const n = points.length;
 
-  if(MODELS[name].iface == 'orig') return samDecodeOrig(dec, emb, points, scale);
+  if(MODELS[name].iface == 'orig') return samDecodeOrig(dec, emb, points, scale, prev);
 
   const coords = new Float32Array(points.flatMap(p => [p.x * scale, p.y * scale]));
   const labels = new BigInt64Array(points.map(p => BigInt(p.label)));
@@ -1111,7 +1338,7 @@ function samDecode(opts, name, emb, pos, points, scale) {
 // original-SAM decoder: a padding point (label -1) closes the prompt list.
 // it returns 4 masks, 0 is the multi-prompt one and 1..3 are sub-part, part
 // and whole of a single tap, so one tap gets 1..3, several taps 0, 2, 3
-function samDecodeOrig(dec, emb, points, scale) {
+function samDecodeOrig(dec, emb, points, scale, prev) {
   const n = points.length + 1;
   const coords = new Float32Array([...points.flatMap(p => [p.x * scale, p.y * scale]), 0, 0]);
   const labels = new Float32Array([...points.map(p => p.label), -1]);
@@ -1119,8 +1346,10 @@ function samDecodeOrig(dec, emb, points, scale) {
   dec.setInput(emb, 'image_embeddings');
   dec.setInput(ownMat(coords, 1, n * 2, [1, n, 2]), 'point_coords');
   dec.setInput(ownMat(labels, 1, n, [1, n]), 'point_labels');
-  dec.setInput(ownMat(new Float32Array(256 * 256), 1, 256 * 256, [1, 1, 256, 256]), 'mask_input');
-  dec.setInput(ownMat(new Float32Array(1), 1, 1, [1]), 'has_mask_input');
+  // --mask-prompt on: the logits of the previous decode go in as the mask prompt, SAM's own
+  // way of taking one more tap on a mask it already found
+  dec.setInput(ownMat(prev ? prev.data32F : new Float32Array(256 * 256), 1, 256 * 256, [1, 1, 256, 256]), 'mask_input');
+  dec.setInput(ownMat(new Float32Array([prev ? 1 : 0]), 1, 1, [1]), 'has_mask_input');
   // the graph rescales the taps from this size to the 1024 frame: 1024 keeps them as they are
   dec.setInput(ownMat(new Float32Array([1024, 1024]), 1, 2, [2]), 'orig_im_size');
 
@@ -1137,8 +1366,8 @@ function samSoft(logits, T, pre, w, h) {
   const e = new cv.Mat();
   const prob = new cv.Mat();
 
-  // sigmoid with slope 2, the guided filter sharpens the rest
-  crop.convertTo(e, cv.CV_32F, -2);
+  // sigmoid (slope TUNE.softSlope), the guided filter sharpens the rest
+  crop.convertTo(e, cv.CV_32F, -TUNE.softSlope);
   cv.exp(e, e);
   cv.add(e, new cv.Scalar(1), e);
   cv.divide(new cv.Mat(e.rows, e.cols, cv.CV_32F, new cv.Scalar(1)), e, prob);
@@ -1169,6 +1398,130 @@ function boxFit(found, box, long) {
   }
 
   return top.index < 0 ? null : top;
+}
+
+// the candidate the editor shows for a decode: the whole object, or the part
+// when that is most of the photo (the background)
+function shownOf(found, pre, T) {
+  const area = ((pre.newW * 256) / T) * ((pre.newH * 256) / T);
+  const share = f => {
+    const m = new cv.Mat();
+
+    cv.compare(f.logits, new cv.Scalar(0), m, cv.CMP_GT);
+
+    return cv.countNonZero(m) / area;
+  };
+
+  return found[2] && share(found[2]) <= 0.6 ? found[2] : (found[1] ?? found[0]);
+}
+
+// the taps one at a time, every decode gets the mask of the one before as its prompt
+function decodeIter(opts, name, e, points, scale, T, pre) {
+  let found;
+
+  for(let i = 0; i < points.length; i++) found = samDecode(opts, name, e.emb, e.pos, points.slice(0, i + 1), scale, found ? shownOf(found, pre, T).logits : null);
+
+  return found;
+}
+
+// taps one by one: a tap on or next to a group's mask (within `gap` of the
+// long side) joins that group, a positive tap elsewhere starts a group of
+// its own, a negative one goes to the groups it falls in. every group is
+// decoded alone and `found[i].extra` carries the other groups' logits, so
+// the matte of candidate i is the union of the groups.
+// --exclude object: a negative tap also is decoded alone as an object and its
+// mask (`found.cuts`, the largest of its candidates that holds no positive
+// tap) is taken out of every candidate. It stays a negative point as well:
+// that keeps SAM's "whole" from growing to everything around (a protea and
+// its bush), the cut removes what the hint does not (a jet bridge)
+function decodeGroups(opts, name, e, points, scale, T, pre) {
+  const gap = (opts.groupGap ?? 0.03) * 256;
+  const groups = [];
+  const cuts = [];
+  const cell = p => [Math.min(255, Math.round((p.x * scale * 256) / T)), Math.min(255, Math.round((p.y * scale * 256) / T))];
+  const holds = (logits, p) => {
+    const [x, y] = cell(p);
+
+    return logits.data32F[y * 256 + x] > 0;
+  };
+  const positives = points.filter(p => p.label == 1);
+  const cutOf = p => {
+    const own = samDecode(opts, name, e.emb, e.pos, [{ ...p, label: 1 }], scale);
+
+    return [...own].reverse().find(f => !positives.some(q => holds(f.logits, q)))?.logits ?? null;
+  };
+  const at = (g, p) => {
+    const m = new cv.Mat();
+    const inv = new cv.Mat();
+    const dist = new cv.Mat();
+    const [x, y] = cell(p);
+
+    cv.compare(shownOf(g.found, pre, T).logits, new cv.Scalar(0), m, cv.CMP_GT);
+    cv.bitwise_not(m, inv);
+    cv.distanceTransform(inv, dist, cv.DIST_L2, 3);
+
+    return dist.data32F[y * 256 + x];
+  };
+  const decode = g => (g.found = samDecode(opts, name, e.emb, e.pos, g.points, scale, opts.maskPrompt == 'on' && g.found ? shownOf(g.found, pre, T).logits : null));
+
+  for(const p of points) {
+    const cut = p.label == 0 && opts.exclude == 'object' ? cutOf(p) : null;
+
+    if(cut) cuts.push(cut);
+
+    const near = groups.filter(g => at(g, p) <= gap);
+
+    if(p.label == 0) {
+      for(const g of near) {
+        g.points.push(p);
+        decode(g);
+      }
+    } else if(near.length) {
+      near[0].points.push(p);
+      decode(near[0]);
+    } else {
+      const g = { points: [p] };
+
+      decode(g);
+      groups.push(g);
+    }
+  }
+
+  // a run of negative taps only has nothing to cut
+  if(!groups.length) fail('E_USAGE', 'segment needs a positive point');
+
+  const found = groups[0].found.map((f, i) => ({ index: f.index, score: Math.min(...groups.map(g => g.found[i].score)), logits: f.logits, extra: groups.slice(1).map(g => g.found[i].logits) }));
+
+  found.groups = groups.length;
+  found.cuts = cuts;
+
+  return found;
+}
+
+// --region JSON: a manual clip as polygons of [x, y] in 0..1 of the photo, the matte is cut to it
+function parseRegion(text) {
+  if(text === undefined) return null;
+
+  let list;
+
+  try {
+    list = JSON.parse(text);
+  } catch(e) {
+    fail('E_USAGE', '--region must be JSON: a list of polygons of [x, y] in 0..1');
+  }
+
+  if(!Array.isArray(list) || !list.length || list.length > 16 || list.some(poly => !Array.isArray(poly) || poly.length < 3 || poly.length > 2000 || poly.some(q => !Array.isArray(q) || !(q[0] >= 0 && q[0] <= 1) || !(q[1] >= 0 && q[1] <= 1)))) fail('E_USAGE', '--region must be a list of 1..16 polygons of 3..2000 points [x, y] in 0..1');
+
+  return list;
+}
+
+// 0..1 float mask of the region at w x h
+function regionMask(region, w, h) {
+  const mask = new cv.Mat(h, w, cv.CV_8UC1, new cv.Scalar(0));
+
+  cv.fillPoly(mask, region.map(poly => poly.map(([x, y]) => [Math.round(x * (w - 1)), Math.round(y * (h - 1))])), new cv.Scalar(255));
+
+  return toFloat(mask);
 }
 
 const samModel = opts => {
@@ -1254,7 +1607,14 @@ function cmdSegment(opts) {
   const candidates = Math.max(1, Math.min(3, opts.candidates ?? 1));
   const phases = phasesOf(opts);
 
-  checkOutPath(opts.out);
+  // segment's own default, cutout keeps 1e-3 (tools/tuning: 0.01 lifts boundary F by 0.04)
+  TUNE.guideEps = 0.01;
+
+  for(const k of Object.keys(TUNE)) if(opts[k] !== undefined) TUNE[k] = opts[k];
+
+  if(!opts.masksOnly) checkOutPath(opts.out);
+
+  if(opts.exclude !== undefined && !['point', 'object'].includes(opts.exclude)) fail('E_USAGE', '--exclude must be point or object');
 
   if(opts.restOut) checkOutPath(opts.restOut, '--rest-out');
   if(!['none', 'guided', 'matting'].includes(refine)) fail('E_USAGE', '--refine must be none, guided or matting');
@@ -1264,6 +1624,15 @@ function cmdSegment(opts) {
 
   const full = readImage(opts.in, opts.maxPixels);
   const { points, box } = parsePrompts(opts, full.width, full.height);
+
+  // only exclude taps select nothing: SAM given just "not here" makes up a speck, and an apply
+  // would have nothing to cut
+  if(!points.some(p => p.label == 1)) {
+    if(opts.masksOnly) return { ok: true, command: 'segment', phase: 'select', scale: 1, original: { width: full.width, height: full.height }, output: { width: full.width, height: full.height }, candidates: [], groups: 0, excluded: 0, picked: null, best: null, prompts: points, timings: { totalMs: ms(t0) } };
+
+    fail('E_USAGE', 'segment needs a positive point');
+  }
+  const region = parseRegion(opts.region);
   const e = samEmbeddings(opts, full, name);
   const [T] = spec.inputSize;
   const pre = { newW: e.meta.newW, newH: e.meta.newH };
@@ -1272,10 +1641,33 @@ function cmdSegment(opts) {
   progress.stage('decode', 'segmenting at ' + points.length + (points.length == 1 ? ' prompt' : ' prompts'));
 
   // the decoder takes taps in photo px: its logits do not depend on the tier
-  const found = samDecode(opts, name, e.emb, e.pos, points, T / Math.max(full.width, full.height));
+  const scale = T / Math.max(full.width, full.height);
+  const found = opts.groups == 'auto' && points.length > 1 ? decodeGroups(opts, name, e, points, scale, T, pre) : opts.maskPrompt == 'on' && points.length > 1 ? decodeIter(opts, name, e, points, scale, T, pre) : samDecode(opts, name, e.emb, e.pos, points, scale);
   const base = { prepareMs: e.ms, decodeMs: ms(t) };
 
-  return runPhases(opts, full, (k, o, phase) => renderSegment({ name, spec, refine, candidates, full, points, box, e, found, T, pre, base, t0 }, k, o, phase));
+  const ctx = { name, spec, refine, candidates, full, points, box, region, e, found, T, pre, base, t0 };
+
+  if(opts.masksOnly) return renderSegment(ctx, Math.min(1, viewSizeOf(opts) / Math.max(full.width, full.height)), opts, 'select');
+
+  return runPhases(opts, full, (k, o, phase) => renderSegment(ctx, k, o, phase));
+}
+
+// a soft matte as the wand shows it: the parts under a positive tap (else the largest) as tidy
+// outlines in pixels of the matte, and their share of it. Nothing found is no polygons, not an error
+function maskOutline(soft, opts, seeds) {
+  const sub = findSubjects(soft, opts.minArea ?? 0.0002, 'largest', seeds);
+  const mask = new cv.Mat(sub.small.rows, sub.small.cols, cv.CV_8UC1, new cv.Scalar(0));
+
+  for(const p of sub.chosen) {
+    const m = new cv.Mat();
+
+    cv.compare(sub.labels, new cv.Scalar(p.label), m, cv.CMP_EQ);
+    cv.bitwise_or(mask, m, mask);
+  }
+
+  const full = mask.cols == soft.cols && mask.rows == soft.rows ? mask : resizeTo(mask, soft.cols, soft.rows, cv.INTER_NEAREST);
+
+  return { coverage: cv.countNonZero(full) / (full.cols * full.rows), polygons: sub.chosen.length ? outlineAll(full, opts) : [] };
 }
 
 // refine, subjects, colour and files for every candidate at tier scale k
@@ -1293,14 +1685,44 @@ function renderSegment(ctx, k, o, phase) {
   const fit = box ? boxFit(found, box, Math.max(w, h)) : null;
   const picked = o.pick === undefined || o.pick == 'best' ? (fit?.index ?? best) : Number(o.pick);
   const wanted = candidates > 1 ? found.slice(0, candidates).map(f => f.index) : [picked];
-  const stem = o.out.replace(/\.[^.]+$/, '');
-  const ext = path.extname(o.out);
+  // masks-only writes no file, its names are never used
+  const stem = (o.out ?? 'cut.png').replace(/\.[^.]+$/, '');
+  const ext = path.extname(o.out ?? 'cut.png');
   const taps = points.filter(p => p.label == 1).map(p => [p.x, p.y]);
   const list = [];
   let main;
   let t;
 
   if(!wanted.includes(picked)) wanted.push(picked);
+
+  // the soft matte of candidate `index`: the union of the groups, refined, cut to the region
+  const softOf = index => {
+    let soft = samSoft(found[index].logits, T, pre, w, h);
+
+    for(const l of found[index].extra ?? []) cv.max(soft, samSoft(l, T, pre, w, h), soft);
+
+    // --exclude object: what the negative taps found is taken out
+    for(const l of found.cuts ?? []) soft = mul(soft, oneMinus(samSoft(l, T, pre, w, h)));
+
+    if(refine == 'guided') soft = refineGuided(bgr, soft);
+    else if(refine == 'matting') soft = refineMatting(bgr, soft, o.workSize ?? 1024);
+    else soft = clamp01(soft);
+
+    return ctx.region ? mul(soft, regionMask(ctx.region, w, h)) : soft;
+  };
+
+  // --masks-only (the wand's select step): every candidate as outlines at this size, no cut, no files
+  if(o.masksOnly) {
+    const list = found.slice(0, candidates).map(f => {
+      progress.stage('refine', 'outlining candidate ' + f.index);
+
+      return { index: f.index, score: Number(f.score.toFixed(4)), ...maskOutline(softOf(f.index), o, taps) };
+    });
+
+    timings.totalMs = ms(t0);
+
+    return { ok: true, command: 'segment', phase: 'select', scale: k, original: { width: full.width, height: full.height }, output: { width: w, height: h }, cache: e.hit ? 'hit' : 'miss', model: { name, licence: spec.licence }, candidates: list, groups: found.groups, excluded: found.cuts?.length ?? 0, picked, best, prompts: points, timings };
+  }
 
   for(const index of [picked, ...wanted.filter(i => i != picked)]) {
     const isMain = index == picked;
@@ -1309,11 +1731,7 @@ function renderSegment(ctx, k, o, phase) {
     t = now();
     progress.stage('refine', 'refining candidate ' + index + ', ' + (refine == 'matting' ? 'alpha matting' : 'guided filter'));
 
-    let soft = samSoft(found[index].logits, T, pre, w, h);
-
-    if(refine == 'guided') soft = refineGuided(bgr, soft);
-    else if(refine == 'matting') soft = refineMatting(bgr, soft, o.workSize ?? 1024);
-    else soft = clamp01(soft);
+    let soft = softOf(index);
 
     const own = isMain ? o : { ...o, out: file, restOut: undefined, maskOut: undefined, outlineOut: undefined, preview: undefined, splitDir: undefined };
     const result = cutFromSoft({ opts: own, img, soft, subjects: 'largest', minArea: o.minArea ?? 0.0002, seeds: taps, timings: isMain ? timings : {}, warnings: isMain ? warnings : [], t0, command: 'segment', extra: {} });
@@ -1335,7 +1753,7 @@ function renderSegment(ctx, k, o, phase) {
 
   if(phase) timings.phaseMs = ms(tp);
 
-  return { ...main, phase, scale: k, original: { width: full.width, height: full.height }, view: { width: w, height: h }, cache: e.hit ? 'hit' : 'miss', model: { name, licence: spec.licence }, refine, candidates: list, picked, best, boxIou: fit ? Number(fit.iou.toFixed(4)) : undefined, prompts: points, timings };
+  return { ...main, phase, scale: k, original: { width: full.width, height: full.height }, view: { width: w, height: h }, cache: e.hit ? 'hit' : 'miss', model: { name, licence: spec.licence }, refine, candidates: list, groups: found.groups, excluded: found.cuts?.length ?? 0, picked, best, boxIou: fit ? Number(fit.iou.toFixed(4)) : undefined, prompts: points, timings };
 }
 
 /* commands */
@@ -1505,7 +1923,10 @@ function cutFromSoft(c) {
     outputs.push(entry);
 
     // polygon in the pixels of that output file; --outline-out also writes them
-    outlines.push({ output: file, polygon: outline(a8, opts.outlineEpsilon ?? 1.5), epsilon: opts.outlineEpsilon ?? 1.5 });
+    const polygons = outlineAll(a8, opts);
+
+    // `polygon` is the biggest object, `polygons` every object and hole
+    outlines.push({ output: file, polygon: polygons.find(c => !c.hole)?.polygon ?? outline(a8, opts.outlineEpsilon ?? 1.5), polygons, epsilon: opts.outlineEpsilon ?? 1.5 });
 
     return entry;
   };
@@ -1525,13 +1946,14 @@ function cutFromSoft(c) {
   if(opts.restOut) {
     const fill = opts.restFill ?? 'none';
 
-    if(!['none', 'inpaint', 'fsr'].includes(fill)) fail('E_USAGE', '--rest-fill must be none, inpaint or fsr');
+    if(!['none', 'inpaint', 'fsr', 'lama'].includes(fill)) fail('E_USAGE', '--rest-fill must be none, inpaint, fsr or lama');
 
     let rest;
 
     progress.stage('rest', fill == 'none' ? 'building the rest image' : 'filling the hole in the rest image, ' + fill);
 
-    if(fill != 'none') rest = bgra(fillHole(bgr, union, fill == 'fsr' ? 'fsr' : 'telea'), new cv.Mat(h, w, cv.CV_32F, new cv.Scalar(1)));
+    if(fill == 'lama') rest = bgra(lamaFill(opts, bgr, union), new cv.Mat(h, w, cv.CV_32F, new cv.Scalar(1)));
+    else if(fill != 'none') rest = bgra(fillHole(bgr, union, fill == 'fsr' ? 'fsr' : 'telea'), new cv.Mat(h, w, cv.CV_32F, new cv.Scalar(1)));
     else rest = bgra(bgr, oneMinus(union));
 
     writeFile(opts.restOut, encode(opts.restOut, rest, opts));

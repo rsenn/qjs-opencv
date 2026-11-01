@@ -2346,3 +2346,9 @@ similar-looking symptom without checking how its mask was built first.]
   tests/unittests/test_imwrite_options.js.
 
     const bytes = cv.imencode('.png', rgbMat, [cv.IMWRITE_PNG_COMPRESSION, 6]);  // 8-bit colormap PNG, not RGB
+
+- outline-largest-contour-only: outline() in tools/opencv-imgproc.js keeps only the largest external contour, so a result with two objects (or an object with a hole) has a polygon for one object and no holes. FIXED: every output entry of `outlines` now also has `polygons` ([{ polygon, hole }], biggest first, from RETR_CCOMP); `polygon` stays the largest contour for old callers, and wild-beauty's resultPolygon uses `polygons`.
+
+- segment-no-subject-small-object: segment fails with E_METHOD "the model found no subject above --min-area" on a small object tapped in its middle (AIM-500 image 031, object 1% of the photo, tap at its thickest point), so the editor shows nothing. Not fixed: look at --min-area 0.0002 against the tier (preview) size and at which candidate the check runs on.
+
+    opencv-imgproc segment --in 031.jpg --units norm --point 0.454,0.703,1 --out cut.png --candidates 3
