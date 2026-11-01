@@ -2146,6 +2146,10 @@ function cmdCutpoly(opts) {
       cv.bitwise_xor(big, one, big);
     }
 
+    // a degenerate outline (identical or collinear points) still lights a few subpixels:
+    // under half a photo pixel of coverage counts as empty
+    if(cv.countNonZero(big) < 0.5 * ss * ss) fail('E_EMPTY', 'empty');
+
     const win = resizeTo(big, ww, wh, cv.INTER_AREA);
     const soft = new cv.Mat();
 

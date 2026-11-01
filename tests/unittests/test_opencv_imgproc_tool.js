@@ -59,6 +59,9 @@ const photo = path.join(dir, 'disc.jpg');
 
 makePhoto(photo);
 
+// cv.imread() of a png with IMREAD_UNCHANGED goes through png_read, which always returns
+// RGBA, so a gray file reads back with 4 channels. imdecode keeps the file's own layout.
+const readPng = file => cv.imdecode(new Uint8Array(fs.readFileSync(file)), cv.IMREAD_UNCHANGED);
 const alphaOf = file => cv.split(cv.imread(file, cv.IMREAD_UNCHANGED))[3];
 
 function discIoU(alpha, offset = { x: 0, y: 0 }) {
@@ -356,11 +359,13 @@ tests({
 
     eq([r.code, r.result.ok, r.result.output.path, r.result.output.width, r.result.output.height], [0, true, out, 640, 480]);
 
-    const cut = cv.imread(out, cv.IMREAD_UNCHANGED);
-    const mask = cv.imread(maskOut, cv.IMREAD_UNCHANGED);
+    const cut = readPng(out);
+    const mask = readPng(maskOut);
 
     eq([cut.channels(), mask.channels(), mask.cols, mask.rows], [4, 1, 640, 480]);
-    eq([mask.ucharAt(100, 100), mask.ucharAt(240, 320), mask.ucharAt(5, 5)], [255, 0, 0]);
+    const at = (x, y) => mask.data[y * mask.cols + x];
+
+    eq([at(100, 100), at(320, 240), at(5, 5)], [255, 0, 0]);
   },
   'cutpoly reports an empty mask'() {
     const r = run(`cutpoly --in ${photo} --out ${dir}/none.png --polygon '[[0.2,0.2],[0.2,0.2],[0.2,0.2]]'`);
@@ -380,7 +385,7 @@ tests({
       cv.imwrite(file, img);
     };
     const stats = file => {
-      const m = cv.imread(file, cv.IMREAD_UNCHANGED);
+      const m = readPng(file);
       const ring = new cv.Mat(m.rows, m.cols, cv.CV_8UC1, new cv.Scalar(0));
       const flat = new cv.Mat(m.rows, m.cols, cv.CV_8UC1, new cv.Scalar(0));
 
