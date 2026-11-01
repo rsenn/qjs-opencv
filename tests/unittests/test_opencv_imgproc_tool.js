@@ -367,6 +367,72 @@ tests({
 
     eq([at(100, 100), at(320, 240), at(5, 5)], [255, 0, 0]);
   },
+  'cutpoly --refine guided snaps a loose polygon to a soft edge and stays inside its band'() {
+    const R = 100;
+    const photoFile = path.join(dir, 'softdisc.png');
+    const img = new cv.Mat(480, 640, cv.CV_8UC3, new cv.Scalar(40, 40, 40));
+    const noise = new cv.Mat(480, 640, cv.CV_8UC3);
+
+    cv.circle(img, new cv.Point(320, 240), R, new cv.Scalar(220, 220, 220), -1);
+    cv.GaussianBlur(img, img, new cv.Size(0, 0), 2);
+    cv.randn(noise, new cv.Scalar(0, 0, 0), new cv.Scalar(3, 3, 3));
+    cv.add(img, noise, img);
+    cv.imwrite(photoFile, img);
+
+    // the polygon is the disc outline drawn 3 px too wide
+    const poly = JSON.stringify(Array.from({ length: 64 }, (_, i) => [(320 + (R + 3) * Math.cos((i * Math.PI) / 32)) / 640, (240 + (R + 3) * Math.sin((i * Math.PI) / 32)) / 480]));
+    const cut = (name, extra) => {
+      const out = path.join(dir, name + '.png');
+      const maskOut = path.join(dir, name + '-mask.png');
+      const r = run(`cutpoly --in ${photoFile} --out ${out} --mask-out ${maskOut} --polygon '${poly}' ${extra}`);
+
+      return { r, out, maskOut, alpha: cv.split(readPng(out))[3], mask: readPng(maskOut) };
+    };
+    const truth = new cv.Mat(480, 640, cv.CV_8UC1, new cv.Scalar(0));
+
+    cv.circle(truth, new cv.Point(320, 240), R, new cv.Scalar(255), -1);
+
+    const iou = alpha => {
+      let both = 0, either = 0;
+
+      for(let i = 0; i < alpha.data.length; i++) {
+        const a = alpha.data[i] > 127, t = truth.data[i] > 127;
+
+        both += a && t;
+        either += a || t;
+      }
+
+      return both / either;
+    };
+    const plain = cut('plain', '');
+    const same = cut('none', '--refine none');
+    const guided = cut('guided', '--refine guided --band 6');
+
+    eq([plain.r.result.ok, guided.r.result.ok, guided.r.result.refine], [true, true, 'guided']);
+
+    // (4) refine none is today's output, byte for byte
+    eq(Array.from(new Uint8Array(fs.readFileSync(plain.out))).join() == Array.from(new Uint8Array(fs.readFileSync(same.out))).join(), true);
+
+    // (1) closer to the true disc, with soft values inside the band
+    assert(iou(guided.alpha) > iou(plain.alpha), `refined IoU ${iou(guided.alpha)} beats unrefined ${iou(plain.alpha)}`);
+
+    let soft = 0;
+
+    for(const v of guided.alpha.data) if(v > 0 && v < 255) soft++;
+
+    assert(soft > 0, 'some alpha strictly between 0 and 1 in the band');
+
+    // (2) exactly 1 deeper than the band inside, exactly 0 deeper than the band outside
+    const at = (m, x, y) => m.data[y * m.cols + x];
+
+    for(const [dx, dy] of [[1, 0], [0, 1], [-1, 0], [0, -1]]) {
+      eq([at(guided.alpha, 320 + dx * (R + 3 - 6 - 3), 240 + dy * (R + 3 - 6 - 3)), at(guided.alpha, 320 + dx * (R + 3 + 6 + 3), 240 + dy * (R + 3 + 6 + 3))], [255, 0]);
+    }
+
+    // (3) the mask file is the final alpha
+    eq(Array.from(guided.mask.data.slice(0, 20000)).join() == Array.from(guided.alpha.data.slice(0, 20000)).join() && guided.mask.channels() == 1, true);
+    eq(guided.mask.data.length == guided.alpha.data.length && guided.mask.data.every((v, i) => v === guided.alpha.data[i]), true);
+  },
   'cutpoly reports an empty mask'() {
     const r = run(`cutpoly --in ${photo} --out ${dir}/none.png --polygon '[[0.2,0.2],[0.2,0.2],[0.2,0.2]]'`);
 

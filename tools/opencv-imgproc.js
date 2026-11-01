@@ -141,6 +141,7 @@ const USAGE = `opencv-imgproc.js <command> [options]
   palette --in FILE [--count 12] [--dist cube|cie76|cie94|kmeans] [--hsv]
   clip    --in FILE --out FILE --polygon JSON [--invert] [--supersample 4]
   cutpoly --in FILE --out FILE --polygon JSON [--mask-out FILE] [--feather 0.0008]
+          [--refine none|guided] [--band PX|auto] [--eps 0.01] [--radius PX] [--contrast 4]
           [--supersample 4]   (normalised 0..1 outlines, even-odd, feathered, RGBA cut)
   edgemap --in FILE --out EDGES.png [--size 640] [--clahe-clip 3] [--clahe-tiles 8]
           [--smooth none|bilateral|guided] [--detector none|hed|dexined]
@@ -180,7 +181,7 @@ spec: doc/opencv-imgproc.md`;
 
 const BOOLS = new Set(['trim', 'invert', 'hsv', 'probe', 'help', 'progress', 'masksOnly']);
 const LISTS = new Set(['point', 'fg', 'bg']);
-const NUMS = new Set(['previewSize', 'viewSize', 'candidates', 'count', 'supersample', 'minArea', 'feather', 'size', 'claheClip', 'claheTiles', 'detectorWeight', 'trimPad', 'outlineEpsilon', 'edgeBand', 'edgeStrength', 'maxPixels', 'workSize', 'seed', 'png', 'softSlope', 'guideRadius', 'guideEps', 'contrast', 'groupGap', 'outlineGrow', 'outlineSmooth', 'outlineVertices']);
+const NUMS = new Set(['previewSize', 'viewSize', 'candidates', 'count', 'supersample', 'minArea', 'feather', 'size', 'claheClip', 'claheTiles', 'detectorWeight', 'eps', 'radius', 'trimPad', 'outlineEpsilon', 'edgeBand', 'edgeStrength', 'maxPixels', 'workSize', 'seed', 'png', 'softSlope', 'guideRadius', 'guideEps', 'contrast', 'groupGap', 'outlineGrow', 'outlineSmooth', 'outlineVertices']);
 
 const camel = k => k.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
 
@@ -2116,6 +2117,44 @@ function cmdClip(opts) {
   return { ok: true, command: 'clip', input: { width: w, height: h, channels: img.channels }, output: { path: opts.out, hasAlpha: true }, mask: { coverage: cv.countNonZero(alpha) / (w * h) } };
 }
 
+/* cutpoly --refine guided: the outline stays the user's authority, only a band of
+ * `band` px on each side of it is open. Inside that band the alpha comes from the same
+ * guided filter segment uses (photo as guide, the blurred polygon as the first guess,
+ * then the same steepening); further in it is 1, further out 0. win is the area-downscaled
+ * binary mask, soft its blur (both 8-bit); returns the 8-bit alpha of the window */
+function refineCut(bgr, win, soft, { band, radius, eps, contrast: k }) {
+  const m = new cv.Mat();
+
+  cv.threshold(win, m, 127, 255, cv.THRESH_BINARY);
+
+  const kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(2 * band + 1, 2 * band + 1));
+  const inner = new cv.Mat();
+  const outer = new cv.Mat();
+
+  if(band > 0) {
+    cv.erode(m, inner, kernel);
+    cv.dilate(m, outer, kernel);
+  } else {
+    m.copyTo(inner);
+    m.copyTo(outer);
+  }
+
+  const g = new cv.Mat();
+
+  cv.ximgproc.guidedFilter(toFloat(bgr), toFloat(soft), g, radius, eps, -1);
+
+  const a = contrast(g, k);
+
+  a.setTo(new cv.Scalar(1), inner);
+
+  const out = new cv.Mat();
+
+  cv.compare(outer, new cv.Scalar(0), out, cv.CMP_EQ);
+  a.setTo(new cv.Scalar(0), out);
+
+  return toU8Mat(a);
+}
+
 /* cutpoly: cut the photo along a finished polygon, e.g. the editor's magnetic lasso.
  * --polygon is one outline [[x,y],...] or a list of outlines, x,y in 0..1 of the
  * whole photo (after the exif turn). Outlines combine even-odd, so one inside
@@ -2147,7 +2186,20 @@ function cmdCutpoly(opts) {
 
   const ss = Math.max(1, Math.min(8, Math.round(opts.supersample || 4)));
   const sigma = Math.max(0.5, (opts.feather ?? 0.0008) * Math.max(w, h));
-  const pad = Math.ceil(sigma * 3) + 2;
+  const refine = opts.refine ?? 'none';
+
+  if(!['none', 'guided'].includes(refine)) fail('E_USAGE', '--refine must be none or guided');
+
+  // refine: the unknown band on each side of the outline, and the guided filter radius
+  const long = Math.max(w, h);
+  const bandArg = opts.band === undefined || opts.band === 'auto' ? 'auto' : Number(opts.band);
+
+  if(bandArg !== 'auto' && !(Number.isFinite(bandArg) && bandArg >= 0)) fail('E_USAGE', '--band must be a number of px or auto');
+
+  const band = bandArg === 'auto' ? Math.max(3, Math.round(0.004 * long)) : Math.round(bandArg);
+  const radius = Math.max(1, Math.round(opts.radius ?? guideRadius(long)));
+  const eps = opts.eps ?? 0.01;
+  const pad = Math.ceil(sigma * 3) + 2 + (refine == 'guided' ? band + 2 * radius : 0);
   const px = polys.map(p => p.map(q => [q[0] * w, q[1] * h]));
 
   // window of the pixels the mask can reach
@@ -2184,9 +2236,16 @@ function cmdCutpoly(opts) {
     if(cv.countNonZero(big) < 0.5 * ss * ss) fail('E_EMPTY', 'empty');
 
     const win = resizeTo(big, ww, wh, cv.INTER_AREA);
-    const soft = new cv.Mat();
+    let soft = new cv.Mat();
 
     cv.GaussianBlur(win, soft, new cv.Size(0, 0), sigma);
+
+    if(refine == 'guided') {
+      progress.stage('cutpoly', 'refining the edge with the guided filter');
+
+      soft = refineCut(bgr.roi(new cv.Rect(wx0, wy0, ww, wh)).clone(), win, soft, { band, radius, eps, contrast: opts.contrast ?? TUNE.contrast });
+    }
+
     soft.copyTo(mask.roi(new cv.Rect(wx0, wy0, ww, wh)));
   }
 
@@ -2199,7 +2258,7 @@ function cmdCutpoly(opts) {
   writeFile(opts.out, encode(opts.out, out, opts));
   if(opts.maskOut) writeFile(opts.maskOut, encode(opts.maskOut, mask, opts));
 
-  return { ok: true, command: 'cutpoly', output: { path: path.resolve(opts.out), width: w, height: h }, ...(opts.maskOut ? { maskPath: path.resolve(opts.maskOut) } : {}), coverage: cv.countNonZero(mask) / (w * h) };
+  return { ok: true, command: 'cutpoly', output: { path: path.resolve(opts.out), width: w, height: h }, refine, ...(opts.maskOut ? { maskPath: path.resolve(opts.maskOut) } : {}), coverage: cv.countNonZero(mask) / (w * h) };
 }
 
 /* edgemap: an edge map of the photo for the editor's magnetic lasso, whose live wire
