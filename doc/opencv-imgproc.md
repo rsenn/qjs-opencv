@@ -211,6 +211,17 @@ timings, or watch `nvidia-smi`. Only the dnn work moves to the GPU; decoding, re
 refinement and the classical `edgemap` stay on the CPU. `capabilities` reports the
 active `dnnTarget`.
 
+### 5.1d `cutpoly --refine guided`
+
+`cutpoly ... --refine none|guided [--band PX|auto] [--eps 0.01] [--radius PX] [--contrast 4]`.
+`none` (default) is the plain feathered polygon. `guided` keeps the outline authoritative: a
+band of `--band` px on each side of it (auto = max(3, 0.004 x long edge)) is the only
+region the photo may change. The polygon is rasterised as before; inside the band the alpha
+is the guided filter with the photo as guide and the blurred polygon as first guess (radius
+as in `segment`, max(4, 0.006 x long edge), eps 0.01) followed by `segment`'s steepening
+(`--contrast`); deeper than the band it is exactly 1 inside and 0 outside. `--mask-out` is the
+final alpha. Only the outlines' box plus band and filter margin is processed.
+
 ### 5.1c `edgemap`
 
 `edgemap --in FILE --out EDGES.png [--size 640] [--clahe-clip 3] [--clahe-tiles 8] [--smooth none|bilateral|guided] [--detector none|hed|dexined] [--fuse max|mean] [--detector-weight 0.5] [--contours-out FILE.json] [--cache-dir DIR] [--models-dir DIR]`
@@ -234,6 +245,14 @@ per-pixel cost) runs in the browser. Steps, in order:
 6. `--out` is 8-bit, one channel, the size of the scaled copy: 255 strongest edge, 0 flat.
    `--contours-out` writes `{width,height,contours:[{length,strength,closed,points}]}`,
    the strongest contours of the map thresholded at 95, simplified, points in 0..1.
+
+`--clahe-clip 0` switches the equalisation off. `edgemap` and `cutpoly` reject options they do
+not know (`E_USAGE`, exit 2, `detail.unknown` and `detail.accepted`). The result line carries
+`provider` (`cpu` or `cuda`, the provider the detector's net was set up for; null without a
+detector, see `--dnn-target`) and `timings` in ms per stage (`hashMs`, `decodeMs`, `scaleMs`,
+`claheMs`, `smoothMs`, `gradientMs`, `cannyMs`, `fuseMs`, `detectorMs`, `encodeMs`,
+`writeMs`, `totalMs`). Loading a net for every call is the slow part of a detector run; a
+persistent worker process (`serve`) is the planned fix and is not built yet.
 
 The cache key is sha256 of the photo bytes plus all flags (and the detector weights'
 size and mtime); entries live in `--cache-dir` (default as for `segment`). Result:

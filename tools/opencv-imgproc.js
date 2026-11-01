@@ -327,6 +327,9 @@ function modelsDir(opts) {
 // loading it (16 MB) took 125 to 175 ms every time, 1.4 s of a 4-tap selection
 const nets = new Map();
 
+// which provider a net was set up for: 'cuda' once the CUDA backend was accepted, else 'cpu'
+const providers = new Map();
+
 function loadNet(opts, name, part = 'main') {
   const spec = MODELS[name] ?? fail('E_MODEL', 'unknown model ' + name, { known: Object.keys(MODELS) });
   const file = path.join(modelsDir(opts), spec.files[part]);
@@ -353,12 +356,15 @@ function openNet(file, opts) {
       net.setPreferableBackend(cv.dnn.DNN_BACKEND_CUDA);
       net.setPreferableTarget(target == 'cuda' ? cv.dnn.DNN_TARGET_CUDA : cv.dnn.DNN_TARGET_CUDA_FP16);
       log(`dnn: ${path.basename(file)} on ${target}`, 'info');
+      providers.set(file, target == 'cpu' ? 'cpu' : 'cuda');
 
       return net;
     } catch(e) {
       log(`dnn: ${target} not usable for ${path.basename(file)}, using the cpu: ${String(e.message).split('\n')[0]}`, 'warning');
     }
   }
+
+  providers.set(file, 'cpu');
 
   try {
     return cv.readNetFromONNX(file, cv.dnn.ENGINE_AUTO);
@@ -2354,7 +2360,12 @@ function netEdges(opts, name, bgr) {
   return { map: out };
 }
 
-function edgeMap(bgr, opts) {
+function edgeMap(bgr, opts, timings = {}) {
+  let t = now();
+  const lap = name => {
+    timings[name] = ms(t);
+    t = now();
+  };
   const detector = opts.detector ?? 'none';
   const smooth = opts.smooth ?? 'bilateral';
   const lab = new cv.Mat();
@@ -2365,8 +2376,13 @@ function edgeMap(bgr, opts) {
 
   const L = new cv.Mat();
 
-  cv.createCLAHE(opts.claheClip ?? 3, new cv.Size(opts.claheTiles ?? 8, opts.claheTiles ?? 8)).apply(planes[0], L);
-  cv.merge([L, planes[1], planes[2]], lab);
+  // --clahe-clip 0 switches the equalisation off
+  if((opts.claheClip ?? 3) > 0) {
+    cv.createCLAHE(opts.claheClip ?? 3, new cv.Size(opts.claheTiles ?? 8, opts.claheTiles ?? 8)).apply(planes[0], L);
+    cv.merge([L, planes[1], planes[2]], lab);
+  }
+
+  lap('claheMs');
 
   let sm = lab;
 
@@ -2382,6 +2398,8 @@ function edgeMap(bgr, opts) {
     sm = new cv.Mat();
     g.convertTo(sm, cv.CV_8U, 255);
   }
+
+  lap('smoothMs');
 
   const chans = [];
 
@@ -2418,6 +2436,8 @@ function edgeMap(bgr, opts) {
   cv.threshold(sobel, sobel, 0, 0, cv.THRESH_TOZERO);
   cv.threshold(sobel, sobel, 1, 1, cv.THRESH_TRUNC);
 
+  lap('gradientMs');
+
   // canny on the smoothed lightness, thresholds from otsu of the gradient
   const cap = Math.max(pctOf(sorted, 0.99), 1);
   const hi = Math.max(otsuOf(sorted, cap), noise * 1.5, 24);
@@ -2434,8 +2454,10 @@ function edgeMap(bgr, opts) {
 
   let fused = new cv.Mat();
 
+  lap('cannyMs');
   cv.max(sobel, soft, fused);
   cv.threshold(fused, fused, 1, 1, cv.THRESH_TRUNC);
+  lap('fuseMs');
 
   let used = 'none';
   let note;
@@ -2461,9 +2483,10 @@ function edgeMap(bgr, opts) {
 
   const out = new cv.Mat();
 
+  lap('detectorMs');
   fused.convertTo(out, cv.CV_8U, 255);
 
-  return { map: out, detector: used, note };
+  return { map: out, detector: used, note, provider: used == 'none' ? null : (providers.get(path.join(modelsDir(opts), MODELS[used].files.main)) ?? 'cpu') };
 }
 
 // strongest closed contours of the map, simplified, in 0..1 of the map
@@ -2515,6 +2538,8 @@ function cmdEdgemap(opts) {
   if(!['none', 'hed', 'dexined'].includes(detector)) fail('E_USAGE', '--detector must be none, hed or dexined');
   if(!['max', 'mean'].includes(fuse)) fail('E_USAGE', '--fuse must be max or mean');
 
+  if(!(opts.claheClip === undefined || opts.claheClip >= 0)) fail('E_USAGE', '--clahe-clip must be 0 (off) or a positive number');
+
   const args = { size, claheClip: opts.claheClip ?? 3, claheTiles: Math.max(1, Math.round(opts.claheTiles ?? 8)), smooth, detector, fuse, detectorWeight: opts.detectorWeight ?? 0.5 };
 
   let u8;
@@ -2538,11 +2563,15 @@ function cmdEdgemap(opts) {
     } catch(e) {}
   }
 
-  const key = cv.hash.sha256(u8) + '-' + cv.hash.sha256(JSON.stringify({ v: 1, ...args, weights, contours: !!opts.contoursOut })).slice(0, 16);
+  const timings = { hashMs: 0 };
+  const th = now();
+  const key = cv.hash.sha256(u8) + '-' + cv.hash.sha256(JSON.stringify({ v: 2, ...args, weights, target: detector == 'none' ? '' : dnnTarget(opts), contours: !!opts.contoursOut })).slice(0, 16);
+
+  timings.hashMs = ms(th);
   const dir = cacheDir(opts);
   const base = path.join(dir, 'edgemap-' + key);
   const meta = base + '.json';
-  const done = (output, extra) => ({ ok: true, command: 'edgemap', output, ...extra, timings: { totalMs: ms(t0) } });
+  const done = (output, extra) => ({ ok: true, command: 'edgemap', output, ...extra, timings: { ...timings, totalMs: ms(t0) } });
 
   if(fs.existsSync(base + '.png') && fs.existsSync(meta) && (!opts.contoursOut || fs.existsSync(base + '.contours.json'))) {
     try {
@@ -2551,23 +2580,34 @@ function cmdEdgemap(opts) {
       writeFile(opts.out, toU8(fs.readFileSync(base + '.png')));
       if(opts.contoursOut) writeFile(opts.contoursOut, fs.readFileSync(base + '.contours.json', 'utf8'));
 
-      return done({ path: path.resolve(opts.out), width: m.width, height: m.height }, { detector: m.detector, ...(m.note ? { detectorNote: m.note } : {}), cached: true });
+      return done({ path: path.resolve(opts.out), width: m.width, height: m.height }, { detector: m.detector, provider: m.provider ?? null, ...(m.note ? { detectorNote: m.note } : {}), cached: true });
     } catch(e) {
       // unreadable cache entry: recompute
     }
   }
 
+  let tl = now();
   const img = readImage(opts.in, opts.maxPixels);
 
+  timings.decodeMs = ms(tl);
+  tl = now();
   progress.stage('edges', 'scaling and finding edges');
 
   const k = Math.min(1, size / Math.max(img.width, img.height));
   const work = k < 1 ? resizeTo(img.bgr, Math.max(1, Math.round(img.width * k)), Math.max(1, Math.round(img.height * k)), cv.INTER_AREA) : img.bgr;
-  const { map, detector: used, note } = edgeMap(work, args.detector == 'none' ? { ...args } : { ...args, modelsDir: opts.modelsDir });
+  timings.scaleMs = ms(tl);
+
+  const { map, detector: used, note, provider } = edgeMap(work, args.detector == 'none' ? { ...args } : { ...args, modelsDir: opts.modelsDir, dnnTarget: opts.dnnTarget }, timings);
+
+  tl = now();
+
   const bytes = encode(opts.out, map, opts);
 
+  timings.encodeMs = ms(tl);
+  tl = now();
   progress.stage('write', 'writing ' + path.basename(opts.out));
   writeFile(opts.out, bytes);
+  timings.writeMs = ms(tl);
 
   let contours;
 
@@ -2581,12 +2621,12 @@ function cmdEdgemap(opts) {
     sweepTmp(dir);
     writeFile(base + '.png', bytes);
     if(contours) writeFile(base + '.contours.json', contours);
-    writeFile(meta, JSON.stringify({ width: map.cols, height: map.rows, detector: used, note }));
+    writeFile(meta, JSON.stringify({ width: map.cols, height: map.rows, detector: used, provider, note }));
   } catch(e) {
     // a cache that cannot be written is not an error
   }
 
-  return done({ path: path.resolve(opts.out), width: map.cols, height: map.rows }, { detector: used, ...(note ? { detectorRequested: detector, detectorNote: note } : {}), cached: false });
+  return done({ path: path.resolve(opts.out), width: map.cols, height: map.rows }, { detector: used, provider, ...(note ? { detectorRequested: detector, detectorNote: note } : {}), cached: false });
 }
 
 function cmdCapabilities(opts) {
@@ -2644,6 +2684,15 @@ function cmdCapabilities(opts) {
 
 /* main */
 
+// options a command accepts, whatever the source (flag or job key). edgemap and cutpoly
+// reject anything else instead of ignoring it, so a typo in a benchmark run is an error
+const COMMON_KEYS = ['in', 'out', 'job', 'progress', 'help', 'maxPixels', 'png', 'webp', 'modelsDir', 'cacheDir', 'dnnTarget'];
+const STRICT = {
+  edgemap: [...COMMON_KEYS, 'size', 'claheClip', 'claheTiles', 'smooth', 'detector', 'fuse', 'detectorWeight', 'contoursOut'],
+  cutpoly: [...COMMON_KEYS, 'polygon', 'maskOut', 'feather', 'supersample', 'refine', 'band', 'eps', 'radius', 'contrast'],
+};
+const kebab = k => k.replace(/[A-Z]/g, c => '-' + c.toLowerCase());
+
 const COMMANDS = { cutout: cmdCutout, prepare: cmdPrepare, segment: cmdSegment, clip: cmdClip, cutpoly: cmdCutpoly, edgemap: cmdEdgemap, palette: cmdPalette, info: cmdInfo, capabilities: cmdCapabilities };
 
 function main() {
@@ -2660,6 +2709,12 @@ function main() {
     if(!COMMANDS[cmd]) fail('E_USAGE', 'unknown command ' + cmd, { commands: Object.keys(COMMANDS) });
 
     const opts = loadJob(cli);
+
+    if(STRICT[cmd]) {
+      const unknown = Object.keys(opts).filter(k => !STRICT[cmd].includes(k));
+
+      if(unknown.length) fail('E_USAGE', 'unknown option ' + unknown.map(k => '--' + kebab(k)).join(', ') + ' for ' + cmd, { unknown: unknown.map(kebab), accepted: STRICT[cmd].map(kebab) });
+    }
 
     progress.start(cmd, !!opts.progress, PLANS[cmd](opts));
     result = COMMANDS[cmd](opts);

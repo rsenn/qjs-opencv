@@ -490,6 +490,18 @@ tests({
 
     eq([c.result.cached, d.result.cached, d.result.output.width], [true, false, 320]);
   },
+  'edgemap: clahe-clip 0 is off, unknown options fail, timings and provider are reported'() {
+    const cache = path.join(dir, 'edge-cache2');
+    const a = run(`edgemap --in ${photo} --out ${dir}/f1.png --cache-dir ${cache} --clahe-clip 0`);
+    const b = run(`edgemap --in ${photo} --out ${dir}/f2.png --cache-dir ${cache} --clahe-clip 3`);
+    const c = run(`edgemap --in ${photo} --out ${dir}/f3.png --cache-dir ${cache} --claheclip 0`);
+    const d = run(`cutpoly --in ${photo} --out ${dir}/f4.png --polygon '[[0.2,0.2],[0.8,0.2],[0.8,0.8]]' --feathr 1`);
+
+    eq([a.result.ok, a.result.cached, b.result.cached], [true, false, false]);
+    assert(Object.keys(a.result.timings).includes('claheMs') && a.result.timings.totalMs >= 0, 'timings per stage');
+    eq([c.code, c.result.ok, c.result.error.code, d.code, d.result.error.code], [2, false, 'E_USAGE', 2, 'E_USAGE']);
+    eq(a.result.provider, null);
+  },
   'edgemap falls back to none when the detector weights are missing'() {
     const r = run(`edgemap --in ${photo} --out ${dir}/e5.png --cache-dir ${dir}/edge-cache --detector hed --models-dir ${dir}/nowhere`);
 
