@@ -14,7 +14,7 @@ import { performance } from 'perf_hooks';
 
 const VERSION = '1.3.0';
 
-const EXIT = { E_USAGE: 2, E_INPUT: 3, E_FORMAT: 4, E_TOO_LARGE: 5, E_BAD_SHAPE: 6, E_MASK_SIZE: 7, E_MODEL: 8, E_METHOD: 9, E_WRITE: 10, E_INTERNAL: 70 };
+const EXIT = { E_USAGE: 2, E_INPUT: 3, E_FORMAT: 4, E_TOO_LARGE: 5, E_BAD_SHAPE: 6, E_MASK_SIZE: 7, E_MODEL: 8, E_METHOD: 9, E_WRITE: 10, E_EMPTY: 11, E_INTERNAL: 70 };
 
 class Fail extends Error {
   constructor(code, message, detail) {
@@ -127,6 +127,7 @@ const PLANS = {
   palette: () => [['read', 50], ['palette', 50]],
   info: () => [['read', 100]],
   clip: () => [['read', 30], ['clip', 50], ['write', 20]],
+  cutpoly: () => [['read', 30], ['cutpoly', 50], ['write', 20]],
   capabilities: () => [['probe', 100]],
   prepare: () => [['read', 8], ['encode', 92]],
   segment: o => [['read', 4], ['encode', 40], ['decode', 4], ['refine', 8], ['subjects', 4], ...(o.edgeKey == 'none' ? [] : [['edge', 8]]), ['colour', 12], ['write', 8], ...(o.restOut ? [['rest', 10]] : []), ...(o.preview ? [['preview', 2]] : [])],
@@ -138,6 +139,8 @@ const USAGE = `opencv-imgproc.js <command> [options]
   info    --in FILE
   palette --in FILE [--count 12] [--dist cube|cie76|cie94|kmeans] [--hsv]
   clip    --in FILE --out FILE --polygon JSON [--invert] [--supersample 4]
+  cutpoly --in FILE --out FILE --polygon JSON [--mask-out FILE] [--feather 0.0008]
+          [--supersample 4]   (normalised 0..1 outlines, even-odd, feathered, RGBA cut)
   prepare --in FILE [--model mobilesam|sam] [--cache-dir DIR]
   segment --in FILE --out FILE --point x,y[,label] [--point ...] [--box x,y,w,h]
           [--units px|norm] [--candidates 1..3] [--pick best|0|1|2]
@@ -169,7 +172,7 @@ spec: doc/opencv-imgproc.md`;
 
 const BOOLS = new Set(['trim', 'invert', 'hsv', 'probe', 'help', 'progress', 'masksOnly']);
 const LISTS = new Set(['point', 'fg', 'bg']);
-const NUMS = new Set(['previewSize', 'viewSize', 'candidates', 'count', 'supersample', 'minArea', 'trimPad', 'outlineEpsilon', 'edgeBand', 'edgeStrength', 'maxPixels', 'workSize', 'seed', 'png', 'softSlope', 'guideRadius', 'guideEps', 'contrast', 'groupGap', 'outlineGrow', 'outlineSmooth', 'outlineVertices']);
+const NUMS = new Set(['previewSize', 'viewSize', 'candidates', 'count', 'supersample', 'minArea', 'feather', 'trimPad', 'outlineEpsilon', 'edgeBand', 'edgeStrength', 'maxPixels', 'workSize', 'seed', 'png', 'softSlope', 'guideRadius', 'guideEps', 'contrast', 'groupGap', 'outlineGrow', 'outlineSmooth', 'outlineVertices']);
 
 const camel = k => k.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
 
@@ -2058,6 +2061,88 @@ function cmdClip(opts) {
   return { ok: true, command: 'clip', input: { width: w, height: h, channels: img.channels }, output: { path: opts.out, hasAlpha: true }, mask: { coverage: cv.countNonZero(alpha) / (w * h) } };
 }
 
+/* cutpoly: cut the photo along a finished polygon, e.g. the editor's magnetic lasso.
+ * --polygon is one outline [[x,y],...] or a list of outlines, x,y in 0..1 of the
+ * whole photo (after the exif turn). Outlines combine even-odd, so one inside
+ * another is a hole. The fill is supersampled, area-downscaled, then feathered
+ * with a gaussian of sigma max(0.5, feather * long edge px). Only the bounding
+ * box of the outlines (plus the blur reach) is rasterised, so a 12 MP photo
+ * with a small outline costs little. */
+function cmdCutpoly(opts) {
+  checkOutPath(opts.out);
+  if(opts.maskOut) checkOutPath(opts.maskOut, '--mask-out');
+
+  const img = readImage(opts.in, opts.maxPixels);
+  const { bgr, width: w, height: h } = img;
+  let polys;
+
+  try {
+    polys = JSON.parse(opts.polygon ?? fail('E_USAGE', '--polygon required'));
+  } catch(e) {
+    if(e instanceof Fail) throw e;
+
+    fail('E_BAD_SHAPE', 'polygon is not valid JSON');
+  }
+
+  if(!Array.isArray(polys) || !polys.length) fail('E_BAD_SHAPE', 'polygon needs at least 3 points');
+  if(!Array.isArray(polys[0]?.[0])) polys = [polys];
+  if(!polys.every(p => Array.isArray(p) && p.length >= 3 && p.every(q => Array.isArray(q) && q.length >= 2 && Number.isFinite(q[0]) && Number.isFinite(q[1])))) fail('E_BAD_SHAPE', 'every outline needs at least 3 finite [x,y] points');
+
+  progress.stage('cutpoly', 'rasterising the polygon');
+
+  const ss = Math.max(1, Math.min(8, Math.round(opts.supersample || 4)));
+  const sigma = Math.max(0.5, (opts.feather ?? 0.0008) * Math.max(w, h));
+  const pad = Math.ceil(sigma * 3) + 2;
+  const px = polys.map(p => p.map(q => [q[0] * w, q[1] * h]));
+
+  // window of the pixels the mask can reach
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+
+  for(const p of px)
+    for(const [x, y] of p) {
+      x0 = Math.min(x0, x);
+      y0 = Math.min(y0, y);
+      x1 = Math.max(x1, x);
+      y1 = Math.max(y1, y);
+    }
+
+  const wx0 = Math.max(0, Math.floor(x0) - pad);
+  const wy0 = Math.max(0, Math.floor(y0) - pad);
+  const wx1 = Math.min(w, Math.ceil(x1) + pad);
+  const wy1 = Math.min(h, Math.ceil(y1) + pad);
+  const mask = new cv.Mat(h, w, cv.CV_8UC1, new cv.Scalar(0));
+
+  if(wx1 > wx0 && wy1 > wy0) {
+    const ww = wx1 - wx0;
+    const wh = wy1 - wy0;
+    const big = new cv.Mat(wh * ss, ww * ss, cv.CV_8UC1, new cv.Scalar(0));
+
+    for(const p of px) {
+      const one = new cv.Mat(wh * ss, ww * ss, cv.CV_8UC1, new cv.Scalar(0));
+
+      cv.fillPoly(one, [p.map(([x, y]) => [Math.round((x - wx0) * ss), Math.round((y - wy0) * ss)])], [255]);
+      cv.bitwise_xor(big, one, big);
+    }
+
+    const win = resizeTo(big, ww, wh, cv.INTER_AREA);
+    const soft = new cv.Mat();
+
+    cv.GaussianBlur(win, soft, new cv.Size(0, 0), sigma);
+    soft.copyTo(mask.roi(new cv.Rect(wx0, wy0, ww, wh)));
+  }
+
+  if(cv.countNonZero(mask) == 0) fail('E_EMPTY', 'empty');
+
+  const out = new cv.Mat();
+
+  cv.merge([...cv.split(bgr), mask], out);
+  progress.stage('write', 'writing ' + path.basename(opts.out));
+  writeFile(opts.out, encode(opts.out, out, opts));
+  if(opts.maskOut) writeFile(opts.maskOut, encode(opts.maskOut, mask, opts));
+
+  return { ok: true, command: 'cutpoly', output: { path: path.resolve(opts.out), width: w, height: h }, ...(opts.maskOut ? { maskPath: path.resolve(opts.maskOut) } : {}), coverage: cv.countNonZero(mask) / (w * h) };
+}
+
 function cmdCapabilities(opts) {
   const info = cv.getBuildInformation();
   const version = /Version control:\s*(\S+)/.exec(info)?.[1];
@@ -2112,7 +2197,7 @@ function cmdCapabilities(opts) {
 
 /* main */
 
-const COMMANDS = { cutout: cmdCutout, prepare: cmdPrepare, segment: cmdSegment, clip: cmdClip, palette: cmdPalette, info: cmdInfo, capabilities: cmdCapabilities };
+const COMMANDS = { cutout: cmdCutout, prepare: cmdPrepare, segment: cmdSegment, clip: cmdClip, cutpoly: cmdCutpoly, palette: cmdPalette, info: cmdInfo, capabilities: cmdCapabilities };
 
 function main() {
   let result;
@@ -2135,14 +2220,14 @@ function main() {
   } catch(e) {
     const code = e instanceof Fail ? e.code : 'E_INTERNAL';
 
-    result = { ok: false, phase: progress.phaseName, error: { code, message: e.message, detail: e.detail } };
+    result = code == 'E_EMPTY' ? { ok: false, command: 'cutpoly', error: 'empty' } : { ok: false, phase: progress.phaseName, error: { code, message: e.message, detail: e.detail } };
 
     if(!(e instanceof Fail)) log(e.stack ?? String(e));
   }
 
   emit(process.stdout, { event: 'result', ...result });
 
-  return result.ok ? 0 : EXIT[result.error.code];
+  return result.ok ? 0 : EXIT[result.error.code ?? 'E_EMPTY'];
 }
 
 process.exit(main());

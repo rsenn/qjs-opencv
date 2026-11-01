@@ -348,6 +348,26 @@ tests({
 
     eq([r.code, r.result.error.code, r.result.error.detail.modelsDir], [8, 'E_MODEL', path.join(dir, 'nowhere')]);
   },
+  'cutpoly cuts a ring with a hole, even-odd, and writes the mask'() {
+    const out = path.join(dir, 'ring.png');
+    const maskOut = path.join(dir, 'ring-mask.png');
+    const ring = [[[0.1, 0.1], [0.9, 0.1], [0.9, 0.9], [0.1, 0.9]], [[0.3, 0.3], [0.7, 0.3], [0.7, 0.7], [0.3, 0.7]]];
+    const r = run(`cutpoly --in ${photo} --out ${out} --mask-out ${maskOut} --polygon '${JSON.stringify(ring)}'`);
+
+    eq([r.code, r.result.ok, r.result.output.path, r.result.output.width, r.result.output.height], [0, true, out, 640, 480]);
+
+    const cut = cv.imread(out, cv.IMREAD_UNCHANGED);
+    const mask = cv.imread(maskOut, cv.IMREAD_UNCHANGED);
+
+    eq([cut.channels(), mask.channels(), mask.cols, mask.rows], [4, 1, 640, 480]);
+    eq([mask.ucharAt(100, 100), mask.ucharAt(240, 320), mask.ucharAt(5, 5)], [255, 0, 0]);
+  },
+  'cutpoly reports an empty mask'() {
+    const r = run(`cutpoly --in ${photo} --out ${dir}/none.png --polygon '[[0.2,0.2],[0.2,0.2],[0.2,0.2]]'`);
+
+    eq([r.result.ok, r.result.error], [false, 'empty']);
+    assert(r.code != 0, 'exits non-zero');
+  },
   '--png sets the compression level'() {
     if(!haveU2) return print('  skipped: models/u2netp.onnx missing');
 

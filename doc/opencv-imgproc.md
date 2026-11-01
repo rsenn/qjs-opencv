@@ -185,6 +185,19 @@ Common to `cutout`, `clip`, `alpha`:
 | `dnn` | `{model:"u2netp", threshold:0.5, invert:false}` | | model from `--models-dir` (S6.3) |
 | `modelsDir` | path | env `WB_MODELS_DIR` | where `*.onnx` + `*.json` live |
 
+### 5.1b `cutpoly`
+
+`cutpoly --in FILE --out CUT.png --polygon JSON [--mask-out MASK.png] [--feather 0.0008] [--supersample 4]`
+
+Cuts the photo along a finished polygon (the editor's magnetic lasso). `--polygon` is one
+outline `[[x,y],...]` or a list of outlines, x,y in 0..1 of the whole photo (after the EXIF
+turn). Outlines combine even-odd (an outline inside another is a hole). The fill is
+supersampled, area-downscaled, then feathered with a Gaussian of sigma
+`max(0.5, feather * long edge px)`. `--out` is RGBA, the photo with the mask as alpha;
+`--mask-out` is the same mask as an 8-bit single channel PNG. Result:
+`{"event":"result","ok":true,"output":{"path","width","height"}}`; an empty mask prints
+`{"event":"result","ok":false,"error":"empty"}` and exits 11.
+
 ### 5.2 `clip`
 
 | Key | Type | Default | Meaning |
