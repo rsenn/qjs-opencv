@@ -198,6 +198,19 @@ supersampled, area-downscaled, then feathered with a Gaussian of sigma
 `{"event":"result","ok":true,"output":{"path","width","height"}}`; an empty mask prints
 `{"event":"result","ok":false,"error":"empty"}` and exits 11.
 
+### GPU (`--dnn-target`)
+
+Every command that loads a net (`segment`, `prepare`, `cutout`, `edgemap --detector`)
+takes `--dnn-target cpu|cuda|cuda-fp16` (default `cpu`; the environment variable
+`WB_DNN_TARGET` sets it for a server). `cuda` needs an OpenCV built with
+`WITH_CUDA`, `WITH_CUDNN` and `OPENCV_DNN_CUDA`. The CUDA backend belongs to the classic dnn
+engine, so the net is loaded with `ENGINE_CLASSIC` and set to `DNN_BACKEND_CUDA`; if that
+throws, the tool logs a warning on stderr and runs on the CPU. OpenCV can also accept
+the setting and still run unsupported layers on the CPU without saying so: compare
+timings, or watch `nvidia-smi`. Only the dnn work moves to the GPU; decoding, resize,
+refinement and the classical `edgemap` stay on the CPU. `capabilities` reports the
+active `dnnTarget`.
+
 ### 5.1c `edgemap`
 
 `edgemap --in FILE --out EDGES.png [--size 640] [--clahe-clip 3] [--clahe-tiles 8] [--smooth none|bilateral|guided] [--detector none|hed|dexined] [--fuse max|mean] [--detector-weight 0.5] [--contours-out FILE.json] [--cache-dir DIR] [--models-dir DIR]`

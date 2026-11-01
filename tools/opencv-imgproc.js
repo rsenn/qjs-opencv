@@ -146,6 +146,9 @@ const USAGE = `opencv-imgproc.js <command> [options]
           [--smooth none|bilateral|guided] [--detector none|hed|dexined]
           [--fuse max|mean] [--detector-weight 0.5] [--contours-out FILE.json]
           [--cache-dir DIR] [--models-dir DIR]   (edge map for the magnetic lasso)
+
+models run on the cpu unless --dnn-target cuda|cuda-fp16 (or WB_DNN_TARGET) is
+given, any command that loads a net: segment, prepare, cutout, edgemap --detector.
   prepare --in FILE [--model mobilesam|sam] [--cache-dir DIR]
   segment --in FILE --out FILE --point x,y[,label] [--point ...] [--box x,y,w,h]
           [--units px|norm] [--candidates 1..3] [--pick best|0|1|2]
@@ -335,11 +338,41 @@ function loadNet(opts, name, part = 'main') {
 function openNet(file, opts) {
   if(!fs.existsSync(file)) fail('E_MODEL', 'model file missing: ' + file, { modelsDir: modelsDir(opts), hint: 'put the weights there, or pass --models-dir / set WB_MODELS_DIR' });
 
+  const target = dnnTarget(opts);
+
+  // the CUDA backend belongs to the classic dnn engine, the new engine runs on the CPU
+  // only. A net that does not load or set up for CUDA falls back to the CPU engine, with
+  // a log line on stderr. A CUDA setup that is accepted but silently runs on the CPU
+  // (OpenCV built without CUDA, unsupported layers) cannot be seen from here: check
+  // the timing, or nvidia-smi
+  if(target != 'cpu') {
+    try {
+      const net = cv.readNetFromONNX(file, cv.dnn.ENGINE_CLASSIC);
+
+      net.setPreferableBackend(cv.dnn.DNN_BACKEND_CUDA);
+      net.setPreferableTarget(target == 'cuda' ? cv.dnn.DNN_TARGET_CUDA : cv.dnn.DNN_TARGET_CUDA_FP16);
+      log(`dnn: ${path.basename(file)} on ${target}`, 'info');
+
+      return net;
+    } catch(e) {
+      log(`dnn: ${target} not usable for ${path.basename(file)}, using the cpu: ${String(e.message).split('\n')[0]}`, 'warning');
+    }
+  }
+
   try {
     return cv.readNetFromONNX(file, cv.dnn.ENGINE_AUTO);
   } catch(e) {
     fail('E_MODEL', 'model does not load: ' + file, { opencv: String(e.message).split('\n')[0] });
   }
+}
+
+// --dnn-target cpu|cuda|cuda-fp16, or WB_DNN_TARGET. cpu is the default
+function dnnTarget(opts) {
+  const t = opts.dnnTarget ?? process.env.WB_DNN_TARGET ?? 'cpu';
+
+  if(!['cpu', 'cuda', 'cuda-fp16'].includes(t)) fail('E_USAGE', '--dnn-target must be cpu, cuda or cuda-fp16');
+
+  return t;
 }
 
 /* reading images */
@@ -2542,6 +2575,7 @@ function cmdCapabilities(opts) {
     unavailable,
     models,
     modelsDir: dir,
+    dnnTarget: dnnTarget(opts),
     inputFormats: ['png', 'jpg', 'webp', 'tiff'],
     outputFormats: ['png', 'webp'],
     phases: ['preview', 'final'],
