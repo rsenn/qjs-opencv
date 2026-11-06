@@ -8,6 +8,16 @@ qjsm scripts/binding_coverage.js --module=build/x86_64-linux-debug/opencv.so \
   --lib-dir=/opt/opencv-4.13.0-x86_64/lib --namespace=cv --verbose --out=cov.txt
 ```
 
+## Photo finder: exif-find and flower-detect (2026-11-05)
+- [x] `tools/exif-find.cpp`: parallel EXIF scan by month range and GPS (--near, --bbox), cache with -C. Tested on /mnt/data/Pictures (11186 files, 48 s with 8 threads, same result as -j 1). Wired in `CMakeLists.txt` (target built only if exiv2 is found), **cmake configure not run yet**.
+- [x] `tools/flower-detect.js`: CLIP ViT-B/32 vision tower (`models/clip-vit-b32-vision.onnx`, Xenova, MIT, sha256 fd6e1402...) in dnn, 512-d, about 0.4 s per photo on the CPU. `train` makes prototypes from known flower photos, `scan` scores by best cosine, unreadable files are listed with `?`.
+- [x] **Calibrate (2026-11-05)**: positives are the 207 photos under the wild-beauty galleries "wild-flowers" (node 11) and "wild-flowers 2" (node 19), files in `data/photos/<hash>.jpg`. Leave-one-out min 0.732, median 0.918, trained in 52 s. On 800 random photos (400 `/mnt/data/Pictures`, 400 `USB STICK`): above 0.732 are 32 and 0. Looked at by eye: all above 0.81 are flowers or plants, 0.73 to 0.80 are greenery, trees and sky (harmless extras), 24 random photos at 0.68 to 0.73 had no flower. `models/flower-prototypes.json` is installed with threshold 0.732.
+- [ ] **Plants and gardens**: positives are flower close-ups, so a garden scene scored 0.71 and a grass/plant photo 0.73 (borderline). To keep those too, lower the threshold to about 0.70 (78 of 400 photos pass in `/mnt/data/Pictures`, 14 of 400 on the USB stick) or add garden and greenery photos to the positives and train again.
+- [ ] **Zero-shot prompts** (CLIP text tower plus tokenizer, not tried): would find flowers the prototypes do not cover. Text embeddings can be made once outside qjs and stored in the prototypes file.
+- [ ] HEIC files are not decoded by `imdecode`, they are listed with `?`. Convert with `heif-convert` first, or add a fallback.
+- [ ] Speed: about 3.5 h for 32000 photos on the CPU. After the CUDA build of OpenCV (see wild-beauty `TODO.md`, GPU thread) try `--target cuda` and `cuda_fp16`.
+- [ ] Document both tools in `doc/` and `README.md`, and in wild-beauty `docs/DEVELOPER.md` if they are used there.
+
 ## opencv-imgproc: background removal and clip paths (2026-10-21)
 
 Plan: `doc/opencv-imgproc.md` (spec, copy of `~/Sources/wild-beauty/opencv-imgproc.md`,

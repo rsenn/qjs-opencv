@@ -30,6 +30,36 @@ prepare_opencv() {
   fi
 }
 
+# CUDA/cuDNN options, same as cfg-cuda in ../opencv/cfg.sh. CUDA=ON|OFF
+# forces it, by default it is used when nvcc and cuDNN are found.
+cuda_opencv() {
+  : ${CUDNN_INCLUDE_DIR:=/usr/include/x86_64-linux-gnu}
+  : ${CUDNN_LIBRARY:=/usr/lib/x86_64-linux-gnu/libcudnn.so}
+
+  if [ -z "$CUDA" ]; then
+    if type nvcc >/dev/null 2>&1 && [ -e "$CUDNN_LIBRARY" ]; then CUDA=ON; else CUDA=OFF; fi
+  fi
+  case "$CUDA" in
+  ON | on | YES | yes | 1) ;;
+  *) return 0 ;;
+  esac
+
+  # nvcc 12.0 only accepts host compilers up to gcc 12
+  : ${CUDA_HOST_COMPILER:=$(type -p gcc-12 || echo /usr/bin/gcc)}
+  # compute capability of the GPU: nvidia-smi --query-gpu=compute_cap --format=csv
+  : ${CUDA_ARCH_BIN:=$(nvidia-smi --query-gpu=compute_cap --format=csv,noheader 2>/dev/null | head -n1)}
+  : ${CUDA_ARCH_BIN:=7.5}
+
+  echo -DWITH_CUDA=ON -DWITH_CUDNN=ON -DOPENCV_DNN_CUDA=ON -DWITH_CUBLAS=ON \
+    -DCUDA_HOST_COMPILER="$CUDA_HOST_COMPILER" \
+    -DCMAKE_CUDA_HOST_COMPILER="$CUDA_HOST_COMPILER" \
+    -DCUDNN_INCLUDE_DIR="$CUDNN_INCLUDE_DIR" \
+    -DCUDNN_LIBRARY="$CUDNN_LIBRARY" \
+    -DCUDA_ARCH_BIN="$CUDA_ARCH_BIN" \
+    -DWITH_NVCUVID="${WITH_NVCUVID:-$([ -e /usr/include/nvcuvid.h ] && echo ON || echo OFF)}" \
+    -DWITH_NVCUVENC="${WITH_NVCUVENC:-$([ -e /usr/include/nvEncodeAPI.h ] && echo ON || echo OFF)}"
+}
+
 configure_opencv() {
   : ${CC=cc}
   : ${host=$($CC -dumpmachine)}
@@ -39,6 +69,8 @@ configure_opencv() {
   : ${builddir=$sourcedir/build/$host}  
 
   prepare_opencv
+
+  cuda_args=$(cuda_opencv)
 
   (cd $builddir
     cmake $relsrcdir \
@@ -56,6 +88,7 @@ configure_opencv() {
     -DBUILD_TESTS=OFF \
     -DBUILD_PERF_TESTS=OFF \
     -DWITH_{EIGEN,FREETYPE,GPHOTO2,OPENGL,TBB,TESSERACT,VA,VA_INTEL}=ON \
+    $cuda_args \
     "$@") 2>&1 | tee cmake.log
 }
 
@@ -63,5 +96,5 @@ configure_opencv() {
 build_opencv() {
  (configure_opencv "$@"
   
-  (make -C "$builddir" 2>&1 | tee build.log))
+  (make -C "$builddir" -j${JOBS:-$(nproc)} 2>&1 | tee build.log))
 }

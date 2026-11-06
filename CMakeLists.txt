@@ -558,6 +558,23 @@ endif(OPENCV_FREETYPE_LIBRARY)
 
 # command-line tools, installed without the .js suffix (shebang: qjsm)
 install(PROGRAMS tools/opencv-imgproc.js DESTINATION bin RENAME opencv-imgproc)
+install(PROGRAMS tools/flower-detect.js DESTINATION bin RENAME flower-detect)
+
+# exif-find: picture search by capture month and GPS position (exiv2, threads)
+find_package(PkgConfig QUIET)
+if(PkgConfig_FOUND)
+  pkg_check_modules(EXIV2 QUIET IMPORTED_TARGET exiv2)
+endif(PkgConfig_FOUND)
+
+if(EXIV2_FOUND)
+  find_package(Threads REQUIRED)
+  add_executable(exif-find tools/exif-find.cpp)
+  target_compile_features(exif-find PRIVATE cxx_std_17)
+  target_link_libraries(exif-find PRIVATE PkgConfig::EXIV2 Threads::Threads)
+  install(TARGETS exif-find RUNTIME DESTINATION bin)
+else(EXIV2_FOUND)
+  message(STATUS "exiv2 not found, tools/exif-find is not built")
+endif(EXIV2_FOUND)
 
 # tests/unittests/*.js (tinytest-based) run under qjsm against the
 # freshly built opencv.so - QUICKJS_MODULE_PATH points at this build
