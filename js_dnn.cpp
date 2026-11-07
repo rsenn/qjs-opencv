@@ -2495,6 +2495,7 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       }
 
       case DNN_READNETFROMTENSORFLOW: {
+#if defined(CV_VERSION_MAJOR) && CV_VERSION_MAJOR < 5
         int argi = 0;
 
         if(js_is_arraybuffer(ctx, argv[argi])) {
@@ -2533,7 +2534,10 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
 
           ret = js_net_new(ctx, cv::dnn::readNetFromTensorflow(prototxt, tensorflowModel));
         }
-
+#else
+        // OpenCV 5 fallback: throw a JavaScript type error if called at runtime
+        ret = JS_ThrowTypeError(ctx, "readNetFromTensorflow is removed in OpenCV 5");
+#endif
         break;
       }
 
@@ -2649,12 +2653,17 @@ js_dnn_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[]
       }
 
       case DNN_WRITETEXTGRAPH: {
+#if defined(CV_VERSION_MAJOR) && CV_VERSION_MAJOR < 5
         std::string model, output;
 
         js_value_to(ctx, argv[0], model);
         js_value_to(ctx, argv[1], output);
 
         cv::dnn::writeTextGraph(model, output);
+#else
+        // OpenCV 5 fallback: throw a JavaScript type error if called at runtime
+        ret = JS_ThrowTypeError(ctx, "writeTextGraph is removed in OpenCV 5");
+#endif
         break;
       }
 
