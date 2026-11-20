@@ -124,7 +124,7 @@ js_opencv_init(JSContext* ctx, JSModuleDef* m) {
 #ifdef USE_FEATURE2D
   js_feature2d_init(ctx, m);
 #endif
-#ifdef USE_LIBCAMERA
+#ifdef USE_LCCV
   js_libcamera_app_init(ctx, m);
 #endif
 #ifdef USE_LCCV
@@ -200,7 +200,7 @@ JS_INIT_MODULE(JSContext* ctx, const char* module_name) {
 #ifdef USE_FEATURE2D
   js_feature2d_export(ctx, m);
 #endif
-#ifdef USE_LIBCAMERA
+#ifdef USE_LCCV
   js_libcamera_app_export(ctx, m);
 #endif
 #ifdef USE_LCCV

@@ -8,6 +8,15 @@ qjsm scripts/binding_coverage.js --module=build/x86_64-linux-debug/opencv.so \
   --lib-dir=/opt/opencv-4.13.0-x86_64/lib --namespace=cv --verbose --out=cov.txt
 ```
 
+## libcamera: find or build, Raspberry Pi support guaranteed (2026-11-20, done except hardware)
+Requested by the js-engines menu session. Files: `cmake/FindLibcamera.cmake` (`find_libcamera()`), `cmake/BuildLibcamera.cmake` (`build_libcamera()`, meson at configure time because LCCV runs its own `pkg_check_modules(libcamera REQUIRED)`), `cmake/libcamera.cmake` (resolves `USE_LCCV` AUTO into plain ON/OFF; OFF + WARNING when libcamera is missing, FATAL_ERROR when ON was asked). Options: `USE_LCCV` AUTO/ON/OFF, `BUILD_LIBCAMERA` OFF/AUTO/ON (default OFF), `LIBCAMERA_PREFIX`, `LIBCAMERA_MIN_VERSION` (0.5.2), `LIBCAMERA_SOURCES_ROOT`, `LIBCAMERA_GIT_URL/TAG`, `LIBCAMERA_INSTALL_PREFIX`, `LIBCAMERA_PIPELINES/IPAS`.
+Tested on x86_64 (2026-11-20): libcamera hidden (warning, OFF, full build links); `BUILD_LIBCAMERA=ON` from upstream v0.5.2 into a scratch prefix (rpi/vc4 + rpi/pisp TRUE, `ldd` shows scratch libcamera + libpisp, `cv.RaspiCam` exported); `USE_LCCV=ON` without libcamera is FATAL; `LIBCAMERA_MIN_VERSION` rejects an older install.
+- [x] `USE_LIBCAMERA` and the `libcamera-opencv/` submodule removed (2026-11-20): the static lib was never linked, the macro never defined.
+- [ ] On a real Pi: capture with `cv.RaspiCam` (nothing was run against a camera), apt libcamera detection (`LIBCAMERA_RPI_VC4/PISP` paths for Debian packages are guessed from the source build layout), `BUILD_LIBCAMERA=AUTO` natively.
+- [ ] aarch64 cross build: the meson cross file is generated (`libcamera-cross.ini`) but never run, no cross compiler here.
+- [ ] Fix `<libcamera/libcamera/stream.h>` in the LCCV submodule (BUGS `lccv-hardcoded-include`), then drop the include-root workaround in `cmake/libcamera.cmake`.
+- [ ] Minimum version is untested below 0.5.2 and above 0.5.x (newer only warns).
+
 ## Photo finder: exif-find and flower-detect (2026-11-05)
 - [x] `tools/exif-find.cpp`: parallel EXIF scan by month range and GPS (--near, --bbox), cache with -C. Tested on /mnt/data/Pictures (11186 files, 48 s with 8 threads, same result as -j 1). Wired in `CMakeLists.txt` (target built only if exiv2 is found), **cmake configure not run yet**.
 - [x] `tools/flower-detect.js`: CLIP ViT-B/32 vision tower (`models/clip-vit-b32-vision.onnx`, Xenova, MIT, sha256 fd6e1402...) in dnn, 512-d, about 0.4 s per photo on the CPU. `train` makes prototypes from known flower photos, `scan` scores by best cosine, unreadable files are listed with `?`.

@@ -8,9 +8,6 @@
 [submodule "gifenc"]
 	path = gifenc
 	url = https://github.com/lecram/gifenc
-[submodule "libcamera-opencv"]
-	path = libcamera-opencv
-	url = https://github.com/rsenn/libcamera-opencv.git
 [submodule "LCCV"]
 	path = LCCV
 	url = https://github.com/rsenn/LCCV.git

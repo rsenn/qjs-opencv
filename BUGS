@@ -2352,3 +2352,26 @@ similar-looking symptom without checking how its mask was built first.]
 - segment-no-subject-small-object: segment fails with E_METHOD "the model found no subject above --min-area" on a small object tapped in its middle (AIM-500 image 031, object 1% of the photo, tap at its thickest point), so the editor shows nothing. Not fixed: look at --min-area 0.0002 against the tier (preview) size and at which candidate the check runs on.
 
     opencv-imgproc segment --in 031.jpg --units norm --point 0.454,0.703,1 --out cut.png --candidates 3
+
+- lccv-hardcoded-include (LCCV/src/lccv.cpp:2): includes <libcamera/libcamera/stream.h>, a path that only
+  resolves when <prefix>/include is a compiler search path (system install); with libcamera in another
+  prefix it also finds the system copy and fails with "redefinition of class libcamera::StreamFormats".
+  Worked around in cmake/libcamera.cmake (adds <prefix>/include); the real fix is <libcamera/stream.h> in
+  the LCCV submodule. Found 2026-11-20 building against BUILD_LIBCAMERA=ON.
+
+- use-lccv-off-still-compiled-raspi-sources (CMakeLists.txt, USE_LCCV=OFF branch): list(REMOVE_ITEM
+  OPENCV_SOURCES js_libcamera_app.cpp ...) never matched because file(GLOB) returns absolute paths, so
+  both files were compiled without libcamera headers. Fixed 2026-11-20 with list(FILTER ... REGEX).
+
+- raspicam-options-not-bound-js-libcamera-app-init-never-called (src/init_module.cpp:127, js_raspi_cam.cpp:77): js_libcamera_app_init() (which creates the LibcameraApp and Options classes and their prototypes) is only called under #ifdef USE_LIBCAMERA, a macro nothing defines (cmake only defines USE_LCCV). So cv.RaspiCam's `options` getter wraps the native options with js_libcamera_app_options_class_id == 0 and an undefined prototype: it returns a bare object without the photoWidth/videoWidth/... accessors, and assigning to it changes nothing native. Found 2026-11-20 by constructing a RaspiCam on x86 (no camera needed). FIXED 2026-11-20: src/init_module.cpp now calls js_libcamera_app_init/_export under USE_LCCV (the guard js_libcamera_app.cpp is compiled under); cv.LibcameraApp is exported too and `options` is a LibcameraAppOptions bound to the camera.
+
+    import * as cv from 'opencv'
+    const o = new cv.RaspiCam().options
+    console.log(Object.getPrototypeOf(o))   // null, expected the Options prototype
+
+- raspicam-options-outlive-camera (js_raspi_cam.cpp:77, js_libcamera_app.cpp:51): the object returned by cv.RaspiCam#options
+  points at the Options owned by the PiCamera (non-owning wrapper, no-op finalizer) and holds no reference to the camera, so
+  it dangles once the RaspiCam is garbage collected. Fix: keep the camera alive from the options object (hidden reference).
+
+    let o = new cv.RaspiCam().options
+    gc(); o.videoWidth   // use after free

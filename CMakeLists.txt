@@ -446,8 +446,12 @@ option(QUICKJS_MODULES "Build .so modules for quickjs" ON)
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
 option(BUILD_QUICKJS "Build QuickJS" ON)
-option(USE_LIBCAMERA "Use libcamera-opencv" OFF)
-option(USE_LCCV "Use LCCV" ON)
+set(USE_LCCV AUTO CACHE STRING
+    "Raspberry Pi camera support (LCCV, cv.RaspiCam): ON = required (error if libcamera is missing), AUTO = if libcamera is found, OFF = never")
+set_property(CACHE USE_LCCV PROPERTY STRINGS AUTO ON OFF)
+set(BUILD_LIBCAMERA OFF CACHE STRING
+    "Build libcamera from source (meson, see cmake/BuildLibcamera.cmake): OFF = use an installed one, AUTO = build if none found (or one without Raspberry Pi support on ARM), ON = always build")
+set_property(CACHE BUILD_LIBCAMERA PROPERTY STRINGS OFF AUTO ON)
 
 if(ENABLE_LTO)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -flto")
@@ -461,9 +465,9 @@ link_directories("${CMAKE_CURRENT_BINARY_DIR}/quickjs")
 set(QUICKJS_LIBRARY quickjs)
 link_directories(${CMAKE_CURRENT_BINARY_DIR}/quickjs)
 
-if(USE_LIBCAMERA OR USE_LCCV)
+if(USE_LCCV)
   include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/libcamera.cmake)
-endif(USE_LIBCAMERA OR USE_LCCV)
+endif(USE_LCCV)
 
 file(GLOB OPENCV_SOURCES js_*.[ch]pp ${FEATURE2D_SOURCE} include/*.hpp
      src/*.cpp gifenc/gifenc.c algorithms/*.cpp lsd/src/*.cpp
@@ -474,12 +478,12 @@ list(FILTER OPENCV_SOURCES EXCLUDE REGEX ".*js_contour.*")
 
 #dump(OPENCV_SOURCES)
 
+# file(GLOB) returned absolute paths above, so remove by regex (REMOVE_ITEM with
+# the bare file name never matched and these were compiled without libcamera).
+list(FILTER OPENCV_SOURCES EXCLUDE REGEX ".*/js_(raspi_cam|libcamera_app)\\.cpp$")
 if(USE_LCCV)
   list(APPEND OPENCV_SOURCES js_raspi_cam.cpp js_libcamera_app.cpp)
   add_definitions(-DUSE_LCCV=1)
-else(USE_LCCV)
-  list(REMOVE_ITEM OPENCV_SOURCES js_libcamera_app.cpp)
-  list(REMOVE_ITEM OPENCV_SOURCES js_raspi_cam.cpp)
 endif(USE_LCCV)
 
 #list(REMOVE_ITEM OPENCV_SOURCES init_module.cpp)
@@ -495,8 +499,8 @@ if(USE_LCCV)
   add_subdirectory(LCCV)
   include_directories(LCCV/include)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -fvisibility=hidden")
-  set(LCCV_LIBRARIES "${CMAKE_CURRENT_BINARY_DIR}/LCCV/liblccv.a" camera
-                     camera-base event event_pthreads Threads::Threads)
+  set(LCCV_LIBRARIES "${CMAKE_CURRENT_BINARY_DIR}/LCCV/liblccv.a"
+                     ${LIBCAMERA_ALL_LIBRARIES} Threads::Threads)
   set(LCCV_LIBRARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/LCCV"
       CACHE PATH "liblccv library directory")
 
@@ -528,9 +532,9 @@ list(
   ${OPENCV_EXTRA_LIBRARIES}
   ${OPENCV_LIBRARIES})
 
-if(USE_LIBCAMERA OR USE_LCCV)
-  list(APPEND jsbindings_LIBRARIES ${pkgcfg_lib_LIBCAMERA_camera})
-endif(USE_LIBCAMERA OR USE_LCCV)
+if(USE_LCCV)
+  list(APPEND jsbindings_LIBRARIES ${LIBCAMERA_ALL_LIBRARIES})
+endif(USE_LCCV)
 
 #dump(LCCV_LIBRARY_DIR)
 #dump(jsbindings_LIBRARIES)
