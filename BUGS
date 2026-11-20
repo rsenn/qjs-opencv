@@ -2375,3 +2375,8 @@ similar-looking symptom without checking how its mask was built first.]
 
     let o = new cv.RaspiCam().options
     gc(); o.videoWidth   // use after free
+
+- scalar-read-from-chars-needs-gcc11 (include/jsbindings.hpp, js_scalar_read): std::from_chars on a floating-point
+  value is missing from GCC 10's libstdc++ (added in GCC 11), so js_cv.cpp does not compile on the Raspberry Pi
+  (gcc 10.2.1): "no matching function for call to from_chars". FIXED 2026-11-20 with strtod/strtoll (same result:
+  the value is only assigned when something was parsed). Found building natively on the Pi.
