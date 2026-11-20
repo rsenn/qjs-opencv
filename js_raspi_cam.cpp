@@ -76,8 +76,21 @@ enum {
 static JSValue
 js_raspi_cam_options(JSContext* ctx, JSValueConst this_val) {
   JSRaspiCamData* cam = static_cast<JSRaspiCamData*>(JS_GetOpaque2(ctx, this_val, js_raspi_cam_class_id));
+  JSValue ret;
 
-  return js_libcamera_app_options_wrap(ctx, cam->options);
+  if(!cam)
+    return JS_EXCEPTION;
+
+  ret = js_libcamera_app_options_wrap(ctx, cam->options);
+
+  /* the wrapper does not own the options, they belong to the camera: keep the
+     camera alive for as long as the options object is reachable */
+  if(!JS_IsException(ret) && JS_DefinePropertyValueStr(ctx, ret, "camera", JS_DupValue(ctx, this_val), 0) < 0) {
+    JS_FreeValue(ctx, ret);
+    return JS_EXCEPTION;
+  }
+
+  return ret;
 }
 
 static JSValue
