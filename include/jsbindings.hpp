@@ -13,6 +13,8 @@
 #include <string>
 #include <vector>
 #include <charconv>
+#include <cstdlib>
+#include <type_traits>
 
 namespace cv {
 class CLAHE;
@@ -1128,13 +1130,22 @@ js_scalar_read(JSContext* ctx, JSValueConst obj, cv::Scalar_<T>& scalar) {
     }
 
     while(p != e) {
-      auto [q, ec] = std::from_chars(p, e, scalar[i]);
+      /* std::from_chars for floating point needs GCC 11's libstdc++; strtod/strtoll
+         stop at the same place and s is NUL-terminated, so they cannot run past e */
+      char* q = nullptr;
+      T value;
+
+      if constexpr(std::is_floating_point<T>::value)
+        value = T(std::strtod(p, &q));
+      else
+        value = T(std::strtoll(p, &q, 10));
 
       if(q == p) {
         ++p;
         continue;
       }
 
+      scalar[i] = value;
       p = q;
     }
   }
