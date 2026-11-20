@@ -506,7 +506,8 @@ if(USE_LCCV)
 
   link_directories(${LCCV_LIBRARY_DIR})
   list(APPEND jsbindings_LINK_DIRECTORIES ${LCCV_LIBRARY_DIR})
-  list(APPEND jsbindings_LIBRARIES lccv)
+  # the target, not -llccv: an installed liblccv.so (older, other libcamera/OpenCV) would shadow the in-tree one
+  list(APPEND jsbindings_LIBRARIES liblccv)
 endif(USE_LCCV)
 #endif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/LCCV")
 
