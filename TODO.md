@@ -939,3 +939,12 @@ by exact signature/line (not just name) before touching, given the
   function could still be genuinely unused now that it's at least callable.
 - `js_atom_is_index`, `js_atom_is_length`, `js_atom_is_symbol` (971, 1007, 1017)
 - `js_scalar_new<T>` (1131)
+
+
+## Build on a fresh machine (found 2026-11-15, Termux restore)
+
+- first configure without an installed quickjs fails, see BUGS find-quickjs-fatal-without-installed-quickjs
+- Termux: configuring OpenCV itself failed in find_package(OpenJPEG) (the Termux package openjpeg ships
+  OpenJPEGTargets.cmake referencing bin/opj_decompress, which is in the split package
+  openjpeg-tools): `pkg install openjpeg-tools` or -DWITH_OPENJPEG=OFF; add it to the list of packages
+  for the Termux CI row

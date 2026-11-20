@@ -2353,6 +2353,26 @@ similar-looking symptom without checking how its mask was built first.]
 
     opencv-imgproc segment --in 031.jpg --units norm --point 0.454,0.703,1 --out cut.png --candidates 3
 
+- check-cflag-result-cached-under-fixed-name (cmake/Checks.cmake:19, check_cflag()): result stored
+  in the shared cache variable RESULT, so every probe after the first one returns the first answer.
+  Full description and repro in qjs-modules/BUGS (identical copy of the function).
+
+- find-quickjs-fatal-without-installed-quickjs (cmake/FindQuickJS.cmake:140, find_quickjs()): without an
+  installed quickjs the macro prints the default paths as if they existed, then pkg_search_module(
+  QUICKJS REQUIRED quickjs) stops the configure ("None of the required 'quickjs' found",
+  CMakeLists.txt:49 and :104). No BuildQuickJS.cmake, older FindQuickJS.cmake. "install directory:"
+  prints empty and the module search path has the triple directory
+  lib/aarch64-linux-android/aarch64-unknown-linux-android30/quickjs. Found 2026-11-15 on a fresh
+  Termux. Fix: adopt the canonical FindQuickJS.cmake and BuildQuickJS.cmake.
+
+    cmake -S . -B build/x   # no quickjs installed
+
+- check-cxx-standard-flag-try-compile-mixed-signatures (cmake/CheckFlags.cmake:164): try_compile() is
+  called with SOURCE_DIR and BINARY_DIR (project signature) together with SOURCE_FROM_CONTENT; CMake
+  4.5 warns "Unknown arguments: SOURCE_DIR ... BINARY_DIR ..." and the probe is not the one meant, so
+  "Checking for C++ standard flag: -std=c++2a: OK" cannot be trusted. Use the source-file signature
+  (try_compile(RESULT SOURCES ...)) or check_cxx_compiler_flag. Found 2026-11-15 on Termux, CMake 4.5.
+
 - lccv-hardcoded-include (LCCV/src/lccv.cpp:2): includes <libcamera/libcamera/stream.h>, a path that only
   resolves when <prefix>/include is a compiler search path (system install); with libcamera in another
   prefix it also finds the system copy and fails with "redefinition of class libcamera::StreamFormats".
@@ -2371,7 +2391,8 @@ similar-looking symptom without checking how its mask was built first.]
 
 - raspicam-options-outlive-camera (js_raspi_cam.cpp:77, js_libcamera_app.cpp:51): the object returned by cv.RaspiCam#options
   points at the Options owned by the PiCamera (non-owning wrapper, no-op finalizer) and holds no reference to the camera, so
-  it dangles once the RaspiCam is garbage collected. Fix: keep the camera alive from the options object (hidden reference).
+  it dangles once the RaspiCam is garbage collected. FIXED 2026-11-20: the options object now holds the camera in a read-only
+  `camera` property (js_raspi_cam.cpp js_raspi_cam_options); valgrind shows no invalid read after gc().
 
     let o = new cv.RaspiCam().options
     gc(); o.videoWidth   // use after free
