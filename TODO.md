@@ -8,6 +8,21 @@ qjsm scripts/binding_coverage.js --module=build/x86_64-linux-debug/opencv.so \
   --lib-dir=/opt/opencv-4.13.0-x86_64/lib --namespace=cv --verbose --out=cov.txt
 ```
 
+## build-opencv.sh: OpenCV for host, Raspberry Pi and Termux, native and cross (2026-11-20, in progress)
+Requested by js-engines (rsenn-76). Extend the existing `build-opencv.sh` (keep download/prepare/cuda/configure/build functions), do not start over.
+Targets (each native and cross): `host` (x86_64 glibc, reference = ~/Sources/opencv cfg.sh + build/x86_64-linux-gnu, prefix /opt/opencv-<ver>-x86_64), `pi` (aarch64 glibc, Pi 4, native: cmake from /opt/cmake-3.28.3-linux-aarch64, -j2, work in ~/ci-work only; cross: clang+lld, sysroot ~/sysroots/pi), `termux` (aarch64 bionic, native on the phone; cross: NDK + ~/sysroots/termux/usr, prefix on device /data/data/com.termux/files/usr).
+Decisions: generate the toolchain file per run (like cfg-aarch64), do not touch /opt/cmake-toolchains; profile `full` (reference flags, host default) vs `min` (BUILD_LIST of what qjs-opencv links, no tests/docs/java/python, no CUDA); never install into an existing prefix (live trees: /opt/opencv-{4.13.0,5.1.0}-x86_64, Pi /opt/opencv-4.13.0-aarch64, Termux package OpenCV 5.1.0 in $PREFIX); fix the `| tee` exit status bug; no git checkout in ~/Sources/opencv.
+Checks (tell Roman before any full build): configure all variants and capture "To be built"; cross builds build core+imgproc; run a cv::getVersionString() program on the Pi and the phone; qjs-opencv configure with only OPENCV_PREFIX per target.
+Status (2026-11-20):
+- [x] script written (dispatcher host|pi|termux|pi-cross|termux-cross, steps configure/build/install/deploy/smoke/where, -n dry run)
+- [x] host configure = reference flags (CUDA 12.0, cuDNN, FFmpeg, GTK), 5.1.0; not built
+- [x] pi-cross and termux-cross: configure ok, 19 modules (alphamat bgsegm calib core dnn features flann freetype geometry highgui imgcodecs imgproc objdetect photo stereo video videoio xfeatures2d ximgproc xphoto); opencv_core+imgproc built; a cv::getVersionString()+blur program ran ON the Pi and ON the phone (rc=0, "opencv 5.1.0-dev blur=64"), run from ~/ci-work/ocv-smoke
+- cross notes: OPENCV_ENABLE_PKG_CONFIG=ON is required (OpenCV drops pkg-config when cross compiling); termux needs WITH_AVIF=OFF (sysroot libavif-config.cmake names device paths) and BUILD_ANDROID_*=OFF, plus the unix install layout instead of sdk/native; Android libs have no .so.501 names
+- [x] native pi and termux: configure ok on the devices (4.13.0 cloned into ~/ci-work/ocv-native; Pi cmake 3.28 picked automatically, 70 s; phone 124 s), 20 modules incl. freetype, FFmpeg on; no native build run (Pi disk 4.6G free)
+- [ ] full builds + install + deploy of a min profile (NOT started, needs Roman's go; only core+imgproc built so far, so install/deploy/smoke steps are untested)
+- [ ] qjs-opencv configure with only OPENCV_PREFIX per target (needs an installed tree)
+- [ ] report to js-engines
+
 ## libcamera: find or build, Raspberry Pi support guaranteed (2026-11-20, done except hardware)
 Requested by the js-engines menu session. Files: `cmake/FindLibcamera.cmake` (`find_libcamera()`), `cmake/BuildLibcamera.cmake` (`build_libcamera()`, meson at configure time because LCCV runs its own `pkg_check_modules(libcamera REQUIRED)`), `cmake/libcamera.cmake` (resolves `USE_LCCV` AUTO into plain ON/OFF; OFF + WARNING when libcamera is missing, FATAL_ERROR when ON was asked). Options: `USE_LCCV` AUTO/ON/OFF, `BUILD_LIBCAMERA` OFF/AUTO/ON (default OFF), `LIBCAMERA_PREFIX`, `LIBCAMERA_MIN_VERSION` (0.5.2), `LIBCAMERA_SOURCES_ROOT`, `LIBCAMERA_GIT_URL/TAG`, `LIBCAMERA_INSTALL_PREFIX`, `LIBCAMERA_PIPELINES/IPAS`.
 Tested on x86_64 (2026-11-20): libcamera hidden (warning, OFF, full build links); `BUILD_LIBCAMERA=ON` from upstream v0.5.2 into a scratch prefix (rpi/vc4 + rpi/pisp TRUE, `ldd` shows scratch libcamera + libpisp, `cv.RaspiCam` exported); `USE_LCCV=ON` without libcamera is FATAL; `LIBCAMERA_MIN_VERSION` rejects an older install.
