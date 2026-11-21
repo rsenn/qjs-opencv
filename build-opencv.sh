@@ -33,36 +33,82 @@
 #   FORCE=1        install/deploy into a prefix that already exists
 #   TARGETS        build only these cmake targets (e.g. "opencv_core opencv_imgproc")
 #   CMAKE_ARGS     extra cmake options, e.g. CMAKE_ARGS='-DWITH_ONNX=ON -DORT_INSTALL_DIR=...'
-#   ORT_VERSION    ONNX Runtime for the Pi, full profile (default 1.32.0), see fetch_onnxruntime
+#   ORT_VERSION    ONNX Runtime version, all targets (default 1.32.0), see fetch_onnxruntime
 #   OPENCV_DOWNLOAD_PATH  where OpenCV looks for downloads (default <sourcedir>/.cache)
 #   PI_SYSROOT, TERMUX_SYSROOT, NDK, ANDROID_PLATFORM, PI_HOST, TERMUX_HOST, PI_DEPLOY
 
 # Note: to change options of an existing build dir delete its CMakeCache.txt, do not sed-edit it
 # (orphaned comment lines break the cache parse).
 
-# ONNX Runtime for the Pi (aarch64): OpenCV's own download from github.com/microsoft/onnxruntime
-# releases fails from some networks (404), so the NuGet package is repacked into the tgz that
-# OpenCV's DOWNLOAD_ONNXRUNTIME expects. Skipped when that tgz exists. Can be run alone.
+# ONNX Runtime. OpenCV's own download from github.com/microsoft/onnxruntime releases fails from some
+# networks (404) and has no Android package, so the NuGet package microsoft.ml.onnxruntime is repacked
+# into the tgz OpenCV's DOWNLOAD_ONNXRUNTIME expects (top dir = name without .tgz, with include/ lib/).
+# target -> (file in the nupkg, cache name):
+#   host x86_64   runtimes/linux-x64/native/*.so          onnxruntime-linux-x64-<ver>.tgz
+#   host aarch64  runtimes/linux-arm64/native/*.so        onnxruntime-linux-aarch64-<ver>.tgz
+#   pi, pi-cross  runtimes/linux-arm64/native/*.so        onnxruntime-linux-aarch64-<ver>.tgz
+#   termux, -cross runtimes/android/native/onnxruntime.aar, its jni/arm64-v8a/libonnxruntime.so
+#                 onnxruntime-android-arm64-<ver>.tgz: OpenCV has no download for it, so it is unpacked
+#                 next to the tgz and handed over as ONNXRT_ROOT_DIR (+ HAVE_ONNXRUNTIME=1, see bo_ort_args).
+#                 Only configure-tested: not verified that it loads on a phone (Bionic; the .so needs
+#                 libdl liblog libandroid libm libc, no libc++_shared)
+# other arch / target: no package, ORT is skipped with a log line. The nupkg (~180 MB) stays in the cache.
+# Version: ORT_VERSION (default 1.32.0). Cache: OPENCV_DOWNLOAD_PATH (default <sourcedir>/.cache).
+bo_ort_target() {
+  ort_ver=${ORT_VERSION:-1.32.0}
+  ort_dl=${OPENCV_DOWNLOAD_PATH:-$(cd "$sourcedir" && pwd)/.cache}/onnxruntime
+  ort_aar=
+  case $base:$arch in
+  host:x86_64) ort_name=onnxruntime-linux-x64-$ort_ver ort_rt=linux-x64 ;;
+  host:aarch64 | pi:*) ort_name=onnxruntime-linux-aarch64-$ort_ver ort_rt=linux-arm64 ;;
+  termux:*) ort_name=onnxruntime-android-arm64-$ort_ver ort_rt=android ort_aar=1 ;;
+  *) ort_name= ;;
+  esac
+  [ -n "$ort_name" ]
+}
+
+# cmake options for ONNX Runtime
+bo_ort_args() {
+  bo_ort_target || return 0
+  if [ -n "$ort_aar" ]; then
+    # not downloadable by OpenCV (dnn/CMakeLists.txt only knows win/apple/linux x64+aarch64, and would fetch
+    # the glibc package for an NDK build): HAVE_ONNXRUNTIME=1 on the command line keeps it from trying,
+    # FindONNX then finds lib/ and include/ under ONNXRT_ROOT_DIR
+    echo -DWITH_ONNXRUNTIME=ON -DHAVE_ONNXRUNTIME=1 -DONNXRT_ROOT_DIR="$ort_dl/$ort_name"
+  else
+    # not -DONNXRT_ROOT_DIR: the download branch overwrites it
+    echo -DWITH_ONNXRUNTIME=ON -DDOWNLOAD_ONNXRUNTIME=ON -DONNXRUNTIME_VERSION="$ort_ver"
+  fi
+}
+
 fetch_onnxruntime() {
-  local ver=${ORT_VERSION:-1.32.0} dl name tgz tmp rc=0
-  dl=${OPENCV_DOWNLOAD_PATH:-$(cd "$sourcedir" && pwd)/.cache}
-  name=onnxruntime-linux-aarch64-$ver
-  tgz=$dl/onnxruntime/$name.tgz
-  [ -f "$tgz" ] && return 0
-  if [ -n "$DRYRUN" ]; then echo "(fetch $tgz from NuGet microsoft.ml.onnxruntime $ver)"; return 0; fi
-  mkdir -p "$dl/onnxruntime" || return 1
+  local nupkg tgz tmp rc=0 f
+  bo_ort_target || { bo_log "ONNX Runtime: no package for $base/$arch, skipped"; return 0; }
+  tgz=$ort_dl/$ort_name.tgz
+  nupkg=$ort_dl/microsoft.ml.onnxruntime.$ort_ver.nupkg
+  if [ -f "$tgz" ] && { [ -z "$ort_aar" ] || [ -d "$ort_dl/$ort_name/lib" ]; }; then return 0; fi
+  if [ -n "$DRYRUN" ]; then echo "(fetch $tgz from NuGet microsoft.ml.onnxruntime $ort_ver)"; return 0; fi
+  mkdir -p "$ort_dl" || return 1
   tmp=$(mktemp -d) || return 1
-  bo_log "fetching ONNX Runtime $ver (NuGet) -> $tgz"
-  if curl -fL --retry 2 -o "${tmp:?}/ort.zip" \
-    "https://api.nuget.org/v3-flatcontainer/microsoft.ml.onnxruntime/$ver/microsoft.ml.onnxruntime.$ver.nupkg" &&
-    mkdir -p "${tmp:?}/x" "${tmp:?}/$name/include" "${tmp:?}/$name/lib" &&
-    unzip -q -o "${tmp:?}/ort.zip" 'build/native/include/*' \
-      runtimes/linux-arm64/native/libonnxruntime.so runtimes/linux-arm64/native/libonnxruntime_providers_shared.so \
-      -d "${tmp:?}/x" &&
-    cp -a "${tmp:?}"/x/build/native/include/. "${tmp:?}/$name/include/" &&
-    cp -a "${tmp:?}"/x/runtimes/linux-arm64/native/*.so "${tmp:?}/$name/lib/" &&
-    tar -C "${tmp:?}" -czf "${tmp:?}/out.tgz" "$name" &&
-    mv "${tmp:?}/out.tgz" "$tgz"; then :; else rc=1; bo_log "ONNX Runtime fetch FAILED"; fi
+  bo_log "ONNX Runtime $ort_ver ($ort_rt) -> $tgz"
+  mkdir -p "${tmp:?}/x" "${tmp:?}/$ort_name/include" "${tmp:?}/$ort_name/lib"
+  if [ ! -f "$tgz" ]; then
+    if { [ -f "$nupkg" ] || { curl -fL --retry 2 -o "$nupkg.part" \
+      "https://api.nuget.org/v3-flatcontainer/microsoft.ml.onnxruntime/$ort_ver/microsoft.ml.onnxruntime.$ort_ver.nupkg" &&
+      mv "$nupkg.part" "$nupkg"; }; } &&
+      unzip -q -o "$nupkg" 'build/native/include/*' "runtimes/$ort_rt/native/*" -d "${tmp:?}/x" &&
+      cp -a "${tmp:?}"/x/build/native/include/. "${tmp:?}/$ort_name/include/" &&
+      if [ -n "$ort_aar" ]; then
+        unzip -q -o "${tmp:?}/x/runtimes/android/native/onnxruntime.aar" jni/arm64-v8a/libonnxruntime.so -d "${tmp:?}/aar" &&
+          cp -a "${tmp:?}/aar/jni/arm64-v8a/libonnxruntime.so" "${tmp:?}/$ort_name/lib/"
+      else
+        cp -a "${tmp:?}"/x/runtimes/$ort_rt/native/*.so "${tmp:?}/$ort_name/lib/"
+      fi &&
+      tar -C "${tmp:?}" -czf "${tmp:?}/out.tgz" "$ort_name" &&
+      mv "${tmp:?}/out.tgz" "$tgz"; then :; else rc=1; bo_log "ONNX Runtime fetch FAILED"; fi
+  fi
+  # the Android one is not downloaded by OpenCV: unpack it where ONNXRT_ROOT_DIR points
+  [ $rc = 0 ] && [ -n "$ort_aar" ] && { tar -C "$ort_dl" -xzf "$tgz" || rc=1; }
   rm -rf "${tmp:?}"
   return $rc
 }
@@ -366,9 +412,6 @@ bo_profile_args() {
     # the Pi's TBB 2020.3 headers (tbb/task.h: kind_type(bound+1) out of the enum's range) are a hard error for
     # clang >= 16 and no warning flag changes that: the clang cross build uses OpenCV's pthreads backend instead
     [ "$base" = pi ] && ! $native && echo -DWITH_TBB=OFF
-    # ONNX Runtime for cv::dnn ENGINE_ORT (MobileSAM); -DONNXRT_ROOT_DIR is not used: dnn tests HAVE_ONNXRUNTIME,
-    # which FindONNX never sets, and the download branch overwrites ONNXRT_ROOT_DIR
-    [ "$base" = pi ] && echo -DWITH_ONNXRUNTIME=ON -DDOWNLOAD_ONNXRUNTIME=ON -DONNXRUNTIME_VERSION=${ORT_VERSION:-1.32.0}
     $native && cuda_opencv
     ;;
   min)
@@ -393,6 +436,8 @@ bo_profile_args() {
     echo -DWITH_AVIF=OFF
     $native || echo -DBUILD_OPENJPEG=ON
   fi
+  # ONNX Runtime for cv::dnn ENGINE_ORT (MobileSAM), all targets that have a package
+  bo_ort_args
 }
 
 configure_opencv() {
@@ -410,7 +455,7 @@ configure_opencv() {
   fi
   bo_pick_cmake || return 1
   prepare_opencv
-  [ "$base" = pi ] && [ "$PROFILE" = full ] && { fetch_onnxruntime || return 1; }
+  fetch_onnxruntime || return 1
 
   bo_log "cmake $CMAKE, profile $PROFILE, type $TYPE, prefix $prefix, sources $sourcedir"
   args=(
