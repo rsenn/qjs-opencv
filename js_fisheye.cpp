@@ -3,6 +3,7 @@
 #include "js_affine3.hpp"
 #include "include/jsbindings.hpp"
 #include "include/js_inputoutputarray.hpp"
+#include "include/js_matvec.hpp"
 #include <quickjs.h>
 
 #include <opencv2/core.hpp>
@@ -33,21 +34,47 @@ js_fisheye_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
   try {
     switch(magic) {
       case FISHEYE_CALIBRATE: {
-        JSInputArray objectPoints = js_cv_inputarray(ctx, argv[0]);
-        JSInputArray imagePoints = js_cv_inputarray(ctx, argv[1]);
+        /* (objectPoints, imagePoints, imageSize, K, D, rvecs, tvecs, flags = 0, criteria) -> RMS error.
+         * objectPoints/imagePoints are JS arrays of Mat (one per view), rvecs/tvecs JS arrays filled in */
+        if(argc < 7)
+          return JS_ThrowTypeError(ctx, "calibrate(objectPoints, imagePoints, imageSize, K, D, rvecs, tvecs, flags, criteria)");
+
+        JSMatVec objectPoints(ctx, argv[0], false, true), imagePoints(ctx, argv[1], false, true);
         JSSizeData<int> image_size;
         js_value_to(ctx, argv[2], image_size);
 
         JSInputOutputArray K = js_cv_inputoutputarray(ctx, argv[3]), D = js_cv_inputoutputarray(ctx, argv[4]);
-        JSOutputArray rvecs = js_cv_outputarray(ctx, argv[5]), tvecs = js_cv_outputarray(ctx, argv[6]);
+        JSMatVec rvecs(ctx, argv[5], true), tvecs(ctx, argv[6], true);
         int32_t flags = 0;
         cv::TermCriteria criteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 100, DBL_EPSILON);
 
         if(argc > 7)
           JS_ToInt32(ctx, &flags, argv[7]);
+        if(argc > 8 && JS_IsObject(argv[8])) {
+          JSValue t = JS_GetPropertyStr(ctx, argv[8], "type"), c = JS_GetPropertyStr(ctx, argv[8], "maxCount"), e = JS_GetPropertyStr(ctx, argv[8], "epsilon");
+          int32_t i;
+          double d;
 
-        cv::fisheye::calibrate(objectPoints, imagePoints, image_size, K, D, rvecs, tvecs, flags, criteria);
+          if(JS_IsArray(ctx, argv[8])) {
+            JS_FreeValue(ctx, t);
+            JS_FreeValue(ctx, c);
+            JS_FreeValue(ctx, e);
+            t = JS_GetPropertyUint32(ctx, argv[8], 0);
+            c = JS_GetPropertyUint32(ctx, argv[8], 1);
+            e = JS_GetPropertyUint32(ctx, argv[8], 2);
+          }
+          if(!JS_IsUndefined(t) && !JS_ToInt32(ctx, &i, t))
+            criteria.type = i;
+          if(!JS_IsUndefined(c) && !JS_ToInt32(ctx, &i, c))
+            criteria.maxCount = i;
+          if(!JS_IsUndefined(e) && !JS_ToFloat64(ctx, &d, e))
+            criteria.epsilon = d;
+          JS_FreeValue(ctx, t);
+          JS_FreeValue(ctx, c);
+          JS_FreeValue(ctx, e);
+        }
 
+        ret = JS_NewFloat64(ctx, cv::fisheye::calibrate(objectPoints.in(), imagePoints.in(), image_size, K, D, rvecs.out(), tvecs.out(), flags, criteria));
         break;
       }
 
@@ -102,38 +129,37 @@ js_fisheye_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
       }
 
       case FISHEYE_PROJECT_POINTS: {
+        /* (objectPoints, imagePoints, rvec, tvec, K, D, alpha = 0, jacobian) like opencv.js,
+         * or (objectPoints, imagePoints, affine, K, D, alpha = 0, jacobian) */
+        if(argc < 5)
+          return JS_ThrowTypeError(ctx, "projectPoints(objectPoints, imagePoints, rvec, tvec, K, D, alpha, jacobian)");
+
         JSInputArray objectPoints = js_cv_inputarray(ctx, argv[0]);
         JSOutputArray imagePoints = js_cv_outputarray(ctx, argv[1]);
-        cv::Affine3<double>* affine;
-
-        if(argc > 2)
-          affine = js_affine3_data(argv[2]);
+        cv::Affine3<double>* affine = js_affine3_data(argv[2]);
+        JSOutputArray jacobian = cv::noArray();
+        double alpha = 0.0;
 
         if(affine) {
-
           JSInputArray K = js_cv_inputarray(ctx, argv[3]), D = js_cv_inputarray(ctx, argv[4]);
-          double alpha = 0.0;
 
           if(argc > 5)
             JS_ToFloat64(ctx, &alpha, argv[5]);
-
-          JSOutputArray jacobian = cv::noArray();
-
           if(argc > 6)
             jacobian = js_cv_outputarray(ctx, argv[6]);
 
           cv::fisheye::projectPoints(objectPoints, imagePoints, *affine, K, D, alpha, jacobian);
         } else {
-          JSInputArray rvec = js_cv_inputarray(ctx, argv[3]), tvec = js_cv_inputarray(ctx, argv[4]);
-          JSInputArray K = js_cv_inputarray(ctx, argv[5]), D = js_cv_inputarray(ctx, argv[6]);
-          double alpha = 0.0;
+          if(argc < 6)
+            return JS_ThrowTypeError(ctx, "projectPoints(objectPoints, imagePoints, rvec, tvec, K, D, alpha, jacobian)");
 
+          JSInputArray rvec = js_cv_inputarray(ctx, argv[2]), tvec = js_cv_inputarray(ctx, argv[3]);
+          JSInputArray K = js_cv_inputarray(ctx, argv[4]), D = js_cv_inputarray(ctx, argv[5]);
+
+          if(argc > 6)
+            JS_ToFloat64(ctx, &alpha, argv[6]);
           if(argc > 7)
-            JS_ToFloat64(ctx, &alpha, argv[7]);
-          JSOutputArray jacobian = cv::noArray();
-
-          if(argc > 8)
-            jacobian = js_cv_outputarray(ctx, argv[8]);
+            jacobian = js_cv_outputarray(ctx, argv[7]);
 
           cv::fisheye::projectPoints(objectPoints, imagePoints, rvec, tvec, K, D, alpha, jacobian);
         }
@@ -142,8 +168,8 @@ js_fisheye_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
       }
 
       case FISHEYE_STEREO_CALIBRATE: {
-        JSInputArray objectPoints = js_cv_inputarray(ctx, argv[0]), imagePoints1 = js_cv_inputarray(ctx, argv[1]),
-                     imagePoints2 = js_cv_inputarray(ctx, argv[2]);
+        JSMatVec objectPointsv(ctx, argv[0], false, true), imagePoints1v(ctx, argv[1], false, true), imagePoints2v(ctx, argv[2], false, true);
+        cv::_InputArray objectPoints = objectPointsv.in(), imagePoints1 = imagePoints1v.in(), imagePoints2 = imagePoints2v.in();
         JSInputOutputArray K1 = js_cv_inputoutputarray(ctx, argv[3]), D1 = js_cv_inputoutputarray(ctx, argv[4]), K2 = js_cv_inputoutputarray(ctx, argv[5]),
                            D2 = js_cv_inputoutputarray(ctx, argv[6]);
         JSSizeData<int> image_size;
@@ -182,7 +208,7 @@ js_fisheye_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst ar
         JSInputArray R = js_cv_inputarray(ctx, argv[5]), tvec = js_cv_inputarray(ctx, argv[6]);
         JSOutputArray R1 = js_cv_outputarray(ctx, argv[7]), R2 = js_cv_outputarray(ctx, argv[8]), P1 = js_cv_outputarray(ctx, argv[9]),
                       P2 = js_cv_outputarray(ctx, argv[10]), Q = js_cv_outputarray(ctx, argv[11]);
-        int32_t flags;
+        int32_t flags = cv::fisheye::CALIB_ZERO_DISPARITY;
 
         if(argc > 12)
           JS_ToInt32(ctx, &flags, argv[12]);

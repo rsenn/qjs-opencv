@@ -2406,3 +2406,26 @@ similar-looking symptom without checking how its mask was built first.]
   liblccv.so installed in a system lib dir wins over LCCV/liblccv.a. On the Raspberry Pi (an old /usr/local liblccv.so built
   against libcamera 0.0.2 and OpenCV 4.5) opencv.so then needs libopencv_core.so.405 and a second libcamera and does not
   load. FIXED 2026-11-20: link the liblccv target. Found building natively on the Pi.
+
+- aruco-calib3d-lists-are-js-arrays-not-matvector (js_aruco.cpp, js_calib3d.cpp, js_fisheye.cpp): per-view and per-marker
+  lists (aruco corners/rejected, calibrateCamera objectPoints/imagePoints/rvecs/tvecs, ...) are plain JS arrays of Mat
+  (include/js_matvec.hpp), not opencv.js MatVector objects, until phase 2 (see no-opencvjs-matvector). Code written for
+  opencv.js that calls corners.get(i) or corners.size() does not work yet.
+
+- opencv5-fisheye-calibrate-needs-1xn-points (OpenCV 5.1 behaviour, handled in include/js_matvec.hpp): cv::fisheye::calibrate
+  and the pinhole calibrateCamera of 5.x fail (gemm assertion, "should contain vector of vectors of points of type Point2f")
+  with Nx1 per-view Mats, which findChessboardCorners/projectPoints return; 4.x took both. The binding reshapes Nx1 to 1xN
+  without copying. FIXED 2026-11-21.
+
+    cv.fisheye.calibrate([objMat54x1], [imgMat54x1], [640, 480], K, D, [], [], 0)   // gemm assertion on OpenCV 5.1, before the fix
+
+- fisheye-calibrate-no-rms-and-projectpoints-wrong-args (js_fisheye.cpp): fisheye.calibrate returned undefined instead of the
+  RMS error and ignored the criteria argument; fisheye.projectPoints read rvec/tvec from argv[3]/argv[4] (shifted by one
+  against opencv.js) and an uninitialized Affine3 pointer when called with two arguments; stereoRectify used an uninitialized
+  flags. FIXED 2026-11-21.
+
+- videocapture-has-no-release (js_video_capture.cpp): opencv.js VideoCapture.release() was missing. FIXED 2026-11-21.
+
+- barcode-decode-two-step-points-as-js-array (js_barcode_detector.cpp): decodeWithType(img, points, ...) passed the JS array
+  that detect() filled to js_cv_inputarray, which makes a 1-D number array, so the second step failed with "points.size().width
+  % 4 == 0". FIXED 2026-11-21 (the points are read as Point2f); tests/test_barcode.js now decodes a generated EAN-13.

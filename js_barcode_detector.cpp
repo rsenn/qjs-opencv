@@ -170,7 +170,15 @@ js_barcode_detector_method(JSContext* ctx, JSValueConst this_val, int argc, JSVa
 
       case METHOD_DECODE: {
         JSInputArray img = js_cv_inputarray(ctx, argv[0]);
-        JSInputArray points = js_cv_inputarray(ctx, argv[1]);
+        /* the corner points come back from detect() as a JS array of points: read them as Point2f, a plain
+         * js_cv_inputarray() would turn that array into a 1-D number array */
+        std::vector<cv::Point2f> points_vec;
+        cv::Mat* points_mat = js_mat_data_nothrow(argv[1]);
+
+        if(!points_mat)
+          js_array_to(ctx, argv[1], points_vec);
+
+        JSInputArray points = points_mat ? cv::_InputArray(*points_mat) : cv::_InputArray(points_vec);
         std::vector<std::string> decoded_info;
         std::vector<std::string> decoded_type;
 
