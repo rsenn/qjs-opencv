@@ -32,7 +32,40 @@
 #   builddir       default ./build/opencv-<ver>-<target>
 #   FORCE=1        install/deploy into a prefix that already exists
 #   TARGETS        build only these cmake targets (e.g. "opencv_core opencv_imgproc")
+#   CMAKE_ARGS     extra cmake options, e.g. CMAKE_ARGS='-DWITH_ONNX=ON -DORT_INSTALL_DIR=...'
+#   ORT_VERSION    ONNX Runtime for the Pi, full profile (default 1.32.0), see fetch_onnxruntime
+#   OPENCV_DOWNLOAD_PATH  where OpenCV looks for downloads (default <sourcedir>/.cache)
 #   PI_SYSROOT, TERMUX_SYSROOT, NDK, ANDROID_PLATFORM, PI_HOST, TERMUX_HOST, PI_DEPLOY
+
+# Note: to change options of an existing build dir delete its CMakeCache.txt, do not sed-edit it
+# (orphaned comment lines break the cache parse).
+
+# ONNX Runtime for the Pi (aarch64): OpenCV's own download from github.com/microsoft/onnxruntime
+# releases fails from some networks (404), so the NuGet package is repacked into the tgz that
+# OpenCV's DOWNLOAD_ONNXRUNTIME expects. Skipped when that tgz exists. Can be run alone.
+fetch_onnxruntime() {
+  local ver=${ORT_VERSION:-1.32.0} dl name tgz tmp rc=0
+  dl=${OPENCV_DOWNLOAD_PATH:-$(cd "$sourcedir" && pwd)/.cache}
+  name=onnxruntime-linux-aarch64-$ver
+  tgz=$dl/onnxruntime/$name.tgz
+  [ -f "$tgz" ] && return 0
+  if [ -n "$DRYRUN" ]; then echo "(fetch $tgz from NuGet microsoft.ml.onnxruntime $ver)"; return 0; fi
+  mkdir -p "$dl/onnxruntime" || return 1
+  tmp=$(mktemp -d) || return 1
+  bo_log "fetching ONNX Runtime $ver (NuGet) -> $tgz"
+  if curl -fL --retry 2 -o "${tmp:?}/ort.zip" \
+    "https://api.nuget.org/v3-flatcontainer/microsoft.ml.onnxruntime/$ver/microsoft.ml.onnxruntime.$ver.nupkg" &&
+    mkdir -p "${tmp:?}/x" "${tmp:?}/$name/include" "${tmp:?}/$name/lib" &&
+    unzip -q -o "${tmp:?}/ort.zip" 'build/native/include/*' \
+      runtimes/linux-arm64/native/libonnxruntime.so runtimes/linux-arm64/native/libonnxruntime_providers_shared.so \
+      -d "${tmp:?}/x" &&
+    cp -a "${tmp:?}"/x/build/native/include/. "${tmp:?}/$name/include/" &&
+    cp -a "${tmp:?}"/x/runtimes/linux-arm64/native/*.so "${tmp:?}/$name/lib/" &&
+    tar -C "${tmp:?}" -czf "${tmp:?}/out.tgz" "$name" &&
+    mv "${tmp:?}/out.tgz" "$tgz"; then :; else rc=1; bo_log "ONNX Runtime fetch FAILED"; fi
+  rm -rf "${tmp:?}"
+  return $rc
+}
 
 download_opencv() {
   : ${sourcedir=opencv}
@@ -56,7 +89,8 @@ prepare_opencv() {
   mkdir -p "$builddir"
   echo "builddir: $builddir" 1>&2
 
-  relsrcdir=$(realpath --relative-to "$builddir" "$sourcedir")
+  # absolute: realpath --relative-to gave a wrong path on Termux (/data/data vs /data/user/0)
+  relsrcdir=$(cd "$sourcedir" && pwd)
 
   if [ -z "$EXTRA_MODULES" ]; then
     if [ -d "${sourcedir}_contrib/modules" ]; then
@@ -245,8 +279,10 @@ set(CMAKE_SYSTEM_PROCESSOR aarch64)
 set(CMAKE_SYSROOT $PI_SYSROOT)
 set(CMAKE_C_COMPILER clang)
 set(CMAKE_CXX_COMPILER clang++)
+set(CMAKE_ASM_COMPILER clang)
 set(CMAKE_C_COMPILER_TARGET $PI_TARGET)
 set(CMAKE_CXX_COMPILER_TARGET $PI_TARGET)
+set(CMAKE_ASM_COMPILER_TARGET $PI_TARGET)
 set(CMAKE_EXE_LINKER_FLAGS_INIT "-fuse-ld=lld")
 set(CMAKE_SHARED_LINKER_FLAGS_INIT "-fuse-ld=lld")
 set(CMAKE_MODULE_LINKER_FLAGS_INIT "-fuse-ld=lld")
@@ -327,6 +363,12 @@ bo_profile_args() {
     x86_64) echo -DCPU_BASELINE=SSE3 "-DCPU_DISPATCH=SSE4_1;SSE4_2;AVX;FP16;AVX2;AVX_VNNI;AVX512_SKX" ;;
     esac
     echo -DWITH_FFMPEG=ON -DWITH_GTK=ON -DWITH_GSTREAMER=ON -DWITH_QT=OFF -DWITH_V4L=ON
+    # the Pi's TBB 2020.3 headers (tbb/task.h: kind_type(bound+1) out of the enum's range) are a hard error for
+    # clang >= 16 and no warning flag changes that: the clang cross build uses OpenCV's pthreads backend instead
+    [ "$base" = pi ] && ! $native && echo -DWITH_TBB=OFF
+    # ONNX Runtime for cv::dnn ENGINE_ORT (MobileSAM); -DONNXRT_ROOT_DIR is not used: dnn tests HAVE_ONNXRUNTIME,
+    # which FindONNX never sets, and the download branch overwrites ONNXRT_ROOT_DIR
+    [ "$base" = pi ] && echo -DWITH_ONNXRUNTIME=ON -DDOWNLOAD_ONNXRUNTIME=ON -DONNXRUNTIME_VERSION=${ORT_VERSION:-1.32.0}
     $native && cuda_opencv
     ;;
   min)
@@ -343,6 +385,14 @@ bo_profile_args() {
     ;;
   *) bo_log "PROFILE must be full or min"; return 1 ;;
   esac
+  # the Pi, both profiles: its system libavif is 0.8.4, too old for grfmt_avif.cpp (avifDecoder::diag and
+  # strictFlags need a newer one), so no AVIF; in the cross build its OpenJPEG cmake config names files that
+  # are not in the sysroot copy (opj_decompress, libopenjpip), the package is half found and openjpeg.h is not
+  # on the include path, so OpenCV builds its bundled OpenJPEG
+  if [ "$base" = pi ]; then
+    echo -DWITH_AVIF=OFF
+    $native || echo -DBUILD_OPENJPEG=ON
+  fi
 }
 
 configure_opencv() {
@@ -360,6 +410,7 @@ configure_opencv() {
   fi
   bo_pick_cmake || return 1
   prepare_opencv
+  [ "$base" = pi ] && [ "$PROFILE" = full ] && { fetch_onnxruntime || return 1; }
 
   bo_log "cmake $CMAKE, profile $PROFILE, type $TYPE, prefix $prefix, sources $sourcedir"
   args=(
@@ -383,6 +434,8 @@ configure_opencv() {
   # native toolchain override from the old interface
   [ -z "$target" ] && [ -n "$TOOLCHAIN" ] && args+=("-DCMAKE_TOOLCHAIN_FILE:FILEPATH=$TOOLCHAIN")
   while read -r -a words; do args+=("${words[@]}"); done < <(bo_profile_args)
+  # user options last, so they override the profile
+  [ -n "$CMAKE_ARGS" ] && { read -r -a words <<<"$CMAKE_ARGS"; args+=("${words[@]}"); }
 
   if [ -n "$DRYRUN" ]; then
     printf '(cd %s && %s %s' "$builddir" "$CMAKE" "$relsrcdir"
@@ -493,7 +546,7 @@ EOF
 bo_main() {
   DRYRUN=
   [ "$1" = -n ] && { DRYRUN=1; shift; }
-  [ -n "$1" ] || { sed -n '2,41p' "$0" | sed 's/^# \{0,1\}//'; return 2; }
+  [ -n "$1" ] || { sed -n '2,/^$/p' "$0" | sed 's/^# \{0,1\}//'; return 2; }
   bo_setup_target "$1" || return 1
   shift
   [ $# -gt 0 ] || set -- configure
