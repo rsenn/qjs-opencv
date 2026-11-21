@@ -367,15 +367,18 @@ bo_setup_termux_cross() {
   TOOLCHAIN=$NDK/build/cmake/android.toolchain.cmake
   [ -e "$TOOLCHAIN" ] || { bo_log "no $TOOLCHAIN (set NDK)"; return 1; }
   [ -d "$TERMUX_SYSROOT/lib" ] || { bo_log "no Termux sysroot at $TERMUX_SYSROOT (make sysroot-termux in js-engines)"; return 1; }
+  # PKG_CONFIG_LIBDIR, not _PATH: only the sysroot is searched, the host's .pc files (libgphoto2, ...) must not leak in
+  # plain pkg-config plus a prefix rewrite (the qjs pkgcfg tool fails on gstreamer-1.0's version constraints)
   # the -I of the sysroot include dir is dropped, not rewritten to -idirafter: OpenCV's ffmpeg/tesseract
   # detection takes the bare "-idirafter" token for an include directory. CMAKE_C(XX)_FLAGS carry
   # -idirafter $TERMUX_SYSROOT/include already
   cat >"$bd/termux-pkg-config" <<EOF
 #!/bin/sh
-PKG_CONFIG_PATH=$TERMUX_SYSROOT/lib/pkgconfig:$TERMUX_SYSROOT/share/pkgconfig
-export PKG_CONFIG_PATH
-out=\$(pkgcfg --path-map $TERMUX_PREFIX=$TERMUX_SYSROOT "\$@") || exit
-printf '%s\n' "\$out" | sed -E 's#-I$TERMUX_SYSROOT/include( |\$)#\1#g'
+PKG_CONFIG_LIBDIR=$TERMUX_SYSROOT/lib/pkgconfig:$TERMUX_SYSROOT/share/pkgconfig
+export PKG_CONFIG_LIBDIR
+unset PKG_CONFIG_PATH
+out=\$(pkg-config "\$@") || exit
+printf '%s\n' "\$out" | sed -E 's#$TERMUX_PREFIX#$TERMUX_SYSROOT#g; s#-I$TERMUX_SYSROOT/include( |\$)#\1#g'
 EOF
   chmod +x "$bd/termux-pkg-config"
   PKG_CONFIG=$bd/termux-pkg-config
@@ -407,7 +410,12 @@ bo_profile_args() {
   case $PROFILE in
   full)
     # the reference build: ~/Sources/opencv/cfg.sh and build/x86_64-linux-gnu/CMakeCache.txt
-    echo -DWITH_{EIGEN,FREETYPE,GPHOTO2,OPENGL,TBB,TESSERACT,VA,VA_INTEL}=ON
+    if [ "$base" = termux ]; then
+      # no gphoto2/OpenGL/VA on Android ("Unexpected option"), and the user needs no gphoto2
+      echo -DWITH_{EIGEN,FREETYPE,TBB,TESSERACT}=ON -DWITH_GPHOTO2=OFF
+    else
+      echo -DWITH_{EIGEN,FREETYPE,GPHOTO2,OPENGL,TBB,TESSERACT,VA,VA_INTEL}=ON
+    fi
     echo -DBUILD_TESTS=${TESTS:-OFF} -DBUILD_PERF_TESTS=${TESTS:-OFF}
     case $arch in
     x86_64) echo -DCPU_BASELINE=SSE3 "-DCPU_DISPATCH=SSE4_1;SSE4_2;AVX;FP16;AVX2;AVX_VNNI;AVX512_SKX" ;;
@@ -438,6 +446,10 @@ bo_profile_args() {
   # sets them only from the Eigen3 version variables of older config files), and the Android projects
   # (samples/android/15-puzzle, add_android_project) are not wanted either
   if [ "$base" = termux ]; then
+    # no FFmpeg: Termux ships FFmpeg 9 (avcodec 63), which dropped AVCodec::pix_fmts and ::supported_framerates
+    # that videoio's cap_ffmpeg_hw.hpp / cap_ffmpeg_impl.hpp still use; GStreamer is the video backend.
+    # Revisit when OpenCV supports it or Termux offers an older ffmpeg. (The Pi's bullseye ffmpeg is fine.)
+    echo -DWITH_FFMPEG=OFF
     echo -DWITH_GTK=OFF -DWITH_AVIF=OFF -DBUILD_ANDROID_PROJECTS=OFF -DBUILD_ANDROID_EXAMPLES=OFF -DBUILD_ANDROID_SERVICE=OFF
     echo -DBUILD_JAVA=OFF -DBUILD_opencv_java=OFF -DBUILD_opencv_java_bindings_generator=OFF
     echo -DBUILD_opencv_python2=OFF -DBUILD_opencv_python3=OFF -DBUILD_opencv_python_bindings_generator=OFF
