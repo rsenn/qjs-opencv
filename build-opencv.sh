@@ -450,6 +450,10 @@ bo_profile_args() {
     # that videoio's cap_ffmpeg_hw.hpp / cap_ffmpeg_impl.hpp still use; GStreamer is the video backend.
     # Revisit when OpenCV supports it or Termux offers an older ffmpeg. (The Pi's bullseye ffmpeg is fine.)
     echo -DWITH_FFMPEG=OFF
+    # no MediaNDK and no NDK camera either: videoio links AMEDIAFORMAT_KEY_* which libmediandk exports from
+    # API 28 only, and ANDROID_PLATFORM is android-24; the camera backend needs AImageReader from libmediandk
+    # without linking it (undefined symbols at link time). Use ANDROID_PLATFORM=android-28 to get them back.
+    echo -DWITH_ANDROID_MEDIANDK=OFF -DWITH_ANDROID_NATIVE_CAMERA=OFF
     echo -DWITH_GTK=OFF -DWITH_AVIF=OFF -DBUILD_ANDROID_PROJECTS=OFF -DBUILD_ANDROID_EXAMPLES=OFF -DBUILD_ANDROID_SERVICE=OFF
     echo -DBUILD_JAVA=OFF -DBUILD_opencv_java=OFF -DBUILD_opencv_java_bindings_generator=OFF
     echo -DBUILD_opencv_python2=OFF -DBUILD_opencv_python3=OFF -DBUILD_opencv_python_bindings_generator=OFF
