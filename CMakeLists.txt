@@ -205,13 +205,20 @@ if(USE_FEATURE2D)
   endif(HAVE_OPENCV_XFEATURES2D_AKAZE)
 endif()
 if(USE_BARCODE)
+  # cv::barcode::BarcodeDetector lives in opencv2/objdetect/barcode.hpp since OpenCV 4.8 (4.5.3-4.7: contrib
+  # opencv2/barcode.hpp, which js_barcode_detector.cpp does not use)
+  check_include_file_cxx(opencv2/objdetect/barcode.hpp HAVE_OPENCV2_OBJDETECT_BARCODE_HPP)
+  if(NOT HAVE_OPENCV2_OBJDETECT_BARCODE_HPP)
+    message(FATAL_ERROR
+      "USE_BARCODE=ON needs opencv2/objdetect/barcode.hpp (OpenCV >= 4.8), but OpenCV ${OPENCV_VERSION} found at "
+      "'${OPENCV_PREFIX}' has none. Point the configure at a newer one with -DOPENCV_PREFIX=<prefix> "
+      "(e.g. /opt/opencv-5.1.0-x86_64) or -DOpenCV_DIR=<prefix>/lib/cmake/opencv4, build one with "
+      "'./build-opencv.sh host' (installs to /opt/opencv-<ver>-<arch>), or pass -DUSE_BARCODE=OFF.")
+  endif()
+endif()
+if(USE_BARCODE)
   add_definitions(-DUSE_BARCODE=1)
   set(BARCODE_SOURCE js_barcode_detector.cpp)
-
-  check_include_file_cxx(opencv2/barcode.hpp HAVE_OPENCV2_BARCODE_HPP)
-  if(HAVE_OPENCV2_BARCODE_HPP)
-    add_definitions(-DHAVE_OPENCV2_BARCODE_HPP=1)
-  endif(HAVE_OPENCV2_BARCODE_HPP)
 endif()
 
 check_include_cxx_def(opencv2/photo/segmentation.hpp HAVE_OPENCV2_PHOTO_SEGMENTATION_HPP)
@@ -238,10 +245,18 @@ include(CheckCXXSymbolExists)
 check_cxx_symbol_exists(cv::AffineFeature opencv2/features2d.hpp
                         HAVE_OPENCV_AFFINE_FEATURE)
 
+# aruco/charuco: OpenCV >= 4.8 has them in objdetect (charuco_detector.hpp), older ones in the contrib module
+# opencv_aruco (opencv2/aruco.hpp, opencv2/aruco/charuco.hpp); js_aruco.cpp picks whichever exists
 check_include_file_cxx(opencv2/objdetect/charuco_detector.hpp HAVE_OPENCV2_CHARUCO_DETECTOR_HPP)
 if(HAVE_OPENCV2_CHARUCO_DETECTOR_HPP)
-
-endif(HAVE_OPENCV2_CHARUCO_DETECTOR_HPP)
+  add_definitions(-DHAVE_OPENCV2_CHARUCO_DETECTOR_HPP=1)
+else()
+  check_include_file_cxx(opencv2/aruco/charuco.hpp HAVE_OPENCV2_ARUCO_CHARUCO_HPP)
+  if(HAVE_OPENCV2_ARUCO_CHARUCO_HPP)
+    add_definitions(-DHAVE_OPENCV2_ARUCO_CHARUCO_HPP=1)
+    list(APPEND OPENCV_EXTRA_LIBRARIES opencv_aruco)
+  endif()
+endif()
 
 
 #dump(HAVE_OPENCV2_FREETYPE_HPP OPENCV_FREETYPE_LIBRARY HAVE_OPENCV2_XFEATURES2D_HPP HAVE_OPENCV_AFFINE_FEATURE)

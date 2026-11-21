@@ -4,7 +4,14 @@
 #include "include/js_inputoutputarray.hpp"
 #include <quickjs.h>
 
+#if defined(HAVE_OPENCV2_CHARUCO_DETECTOR_HPP)
 #include <opencv2/objdetect/charuco_detector.hpp>
+#define HAVE_ARUCO_DRAW 1
+#elif defined(HAVE_OPENCV2_ARUCO_CHARUCO_HPP)
+#include <opencv2/aruco.hpp>
+#include <opencv2/aruco/charuco.hpp>
+#define HAVE_ARUCO_DRAW 1
+#endif
 
 enum {
   ARUCO_DRAW_DETECTED_CORNERS_CHARUCO = 0,
@@ -17,6 +24,7 @@ js_aruco_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
   JSValue ret = JS_UNDEFINED;
 
   try {
+#ifdef HAVE_ARUCO_DRAW
     switch(magic) {
       case ARUCO_DRAW_DETECTED_CORNERS_CHARUCO: {
         JSInputOutputArray image = js_cv_inputoutputarray(ctx, argv[0]);
@@ -69,6 +77,9 @@ js_aruco_func(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv
         break;
       }
     }
+#else
+    ret = JS_ThrowInternalError(ctx, "cv.aruco needs OpenCV's aruco module (objdetect >= 4.8 or contrib opencv_aruco)");
+#endif
   } catch(const cv::Exception& e) { ret = js_cv_throw(ctx, e); }
 
   return ret;
