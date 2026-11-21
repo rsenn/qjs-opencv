@@ -35,6 +35,7 @@
 #   CMAKE_ARGS     extra cmake options, e.g. CMAKE_ARGS='-DWITH_ONNX=ON -DORT_INSTALL_DIR=...'
 #   ORT_VERSION    ONNX Runtime version, all targets (default 1.32.0), see fetch_onnxruntime
 #   OPENCV_DOWNLOAD_PATH  where OpenCV looks for downloads (default <sourcedir>/.cache)
+#   NDK            default /mnt/data/opt/android-ndk-r27c; /opt/android-ndk-r27c works too
 #   PI_SYSROOT, TERMUX_SYSROOT, NDK, ANDROID_PLATFORM, PI_HOST, TERMUX_HOST, PI_DEPLOY
 
 # Note: to change options of an existing build dir delete its CMakeCache.txt, do not sed-edit it
@@ -366,12 +367,15 @@ bo_setup_termux_cross() {
   TOOLCHAIN=$NDK/build/cmake/android.toolchain.cmake
   [ -e "$TOOLCHAIN" ] || { bo_log "no $TOOLCHAIN (set NDK)"; return 1; }
   [ -d "$TERMUX_SYSROOT/lib" ] || { bo_log "no Termux sysroot at $TERMUX_SYSROOT (make sysroot-termux in js-engines)"; return 1; }
+  # the -I of the sysroot include dir is dropped, not rewritten to -idirafter: OpenCV's ffmpeg/tesseract
+  # detection takes the bare "-idirafter" token for an include directory. CMAKE_C(XX)_FLAGS carry
+  # -idirafter $TERMUX_SYSROOT/include already
   cat >"$bd/termux-pkg-config" <<EOF
 #!/bin/sh
 PKG_CONFIG_PATH=$TERMUX_SYSROOT/lib/pkgconfig:$TERMUX_SYSROOT/share/pkgconfig
 export PKG_CONFIG_PATH
 out=\$(pkgcfg --path-map $TERMUX_PREFIX=$TERMUX_SYSROOT "\$@") || exit
-printf '%s\n' "\$out" | sed -E 's#-I$TERMUX_SYSROOT/include( |\$)#-idirafter $TERMUX_SYSROOT/include\1#g'
+printf '%s\n' "\$out" | sed -E 's#-I$TERMUX_SYSROOT/include( |\$)#\1#g'
 EOF
   chmod +x "$bd/termux-pkg-config"
   PKG_CONFIG=$bd/termux-pkg-config
@@ -408,7 +412,9 @@ bo_profile_args() {
     case $arch in
     x86_64) echo -DCPU_BASELINE=SSE3 "-DCPU_DISPATCH=SSE4_1;SSE4_2;AVX;FP16;AVX2;AVX_VNNI;AVX512_SKX" ;;
     esac
-    echo -DWITH_FFMPEG=ON -DWITH_GTK=ON -DWITH_GSTREAMER=ON -DWITH_QT=OFF -DWITH_V4L=ON
+    echo -DWITH_FFMPEG=ON -DWITH_GTK=ON -DWITH_GSTREAMER=ON -DWITH_QT=OFF
+    # WITH_V4L is not an option on the Android toolchain ("Unexpected option")
+    [ "$base" != termux ] && echo -DWITH_V4L=ON
     # the Pi's TBB 2020.3 headers (tbb/task.h: kind_type(bound+1) out of the enum's range) are a hard error for
     # clang >= 16 and no warning flag changes that: the clang cross build uses OpenCV's pthreads backend instead
     [ "$base" = pi ] && ! $native && echo -DWITH_TBB=OFF
@@ -422,12 +428,22 @@ bo_profile_args() {
     echo -DBUILD_opencv_apps=OFF -DBUILD_opencv_js=OFF
     echo -DWITH_CUDA=OFF -DWITH_EIGEN=ON -DWITH_FREETYPE=ON
     echo -DWITH_{GPHOTO2,OPENGL,TBB,TESSERACT,VA,VA_INTEL,GSTREAMER,QT}=OFF
-    # the Termux sysroot's cmake package configs name device paths that do not exist on the host
-    # (libavif-config.cmake aborts the configure), so those packages are skipped
-    [ "$base" = termux ] && echo -DWITH_GTK=OFF -DWITH_AVIF=OFF -DBUILD_ANDROID_PROJECTS=OFF -DBUILD_ANDROID_EXAMPLES=OFF -DBUILD_ANDROID_SERVICE=OFF
     ;;
   *) bo_log "PROFILE must be full or min"; return 1 ;;
   esac
+  # Termux, both profiles: the sysroot's cmake package configs name device paths that do not exist on the host
+  # (libavif-config.cmake aborts the configure), so no AVIF. The binding generators are off because the
+  # configure dies in OpenCVBindingsPreprocessorDefinitions.cmake:22-24 (ocv_add_definition gets an empty
+  # value: with Termux's Eigen the EIGEN_*_VERSION variables come out empty, "Eigen: YES (ver ..)"; upstream
+  # sets them only from the Eigen3 version variables of older config files), and the Android projects
+  # (samples/android/15-puzzle, add_android_project) are not wanted either
+  if [ "$base" = termux ]; then
+    echo -DWITH_GTK=OFF -DWITH_AVIF=OFF -DBUILD_ANDROID_PROJECTS=OFF -DBUILD_ANDROID_EXAMPLES=OFF -DBUILD_ANDROID_SERVICE=OFF
+    echo -DBUILD_JAVA=OFF -DBUILD_opencv_java=OFF -DBUILD_opencv_java_bindings_generator=OFF
+    echo -DBUILD_opencv_python2=OFF -DBUILD_opencv_python3=OFF -DBUILD_opencv_python_bindings_generator=OFF
+    echo -DBUILD_opencv_js=OFF -DBUILD_opencv_js_bindings_generator=OFF
+    echo -DBUILD_opencv_objc=OFF -DBUILD_opencv_objc_bindings_generator=OFF -DBUILD_opencv_apps=OFF
+  fi
   # the Pi, both profiles: its system libavif is 0.8.4, too old for grfmt_avif.cpp (avifDecoder::diag and
   # strictFlags need a newer one), so no AVIF; in the cross build its OpenJPEG cmake config names files that
   # are not in the sysroot copy (opj_decompress, libopenjpip), the package is half found and openjpeg.h is not
