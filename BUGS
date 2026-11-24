@@ -783,6 +783,12 @@
     const q = new cv.Mat(4, 1, cv.CV_32F, Float32Array.from([1,0,0,0]).buffer);
     cand.mul(q); // throws: Mat dimensions mismatch (3x4 vs 4x1)
 
+
+- mat-size-ctor-type-ignored: `new Mat(size, type)` with a Size object as first argument does not take
+  the second argument as the Mat type: `new Mat(new Size(10, 10), CV_8UC3)` reports `channels() == 1` and a
+  depth of 16 (the type constant itself). Found 2026-09 (js_mat.cpp constructor overloads); confirmed again
+  2026-11-24. Check the `Mat(Size, type)` overload against opencv.js's `new cv.Mat(size, type)`.
+
     import { Mat, Size } from 'opencv';
     const m = new Mat(new Size(10, 10), 16); // meant to be CV_8UC3
     console.log(m.channels(), m.depth()); // 1, 16 - not 3, 8
@@ -996,3 +1002,18 @@ similar-looking symptom without checking how its mask was built first.]
   lists (aruco corners/rejected, calibrateCamera objectPoints/imagePoints/rvecs/tvecs, ...) are plain JS arrays of Mat
   (include/js_matvec.hpp), not opencv.js MatVector objects, until phase 2 (see no-opencvjs-matvector). Code written for
   opencv.js that calls corners.get(i) or corners.size() does not work yet.
+
+- imgproc-tool-unittest-failures (tests/unittests/test_opencv_imgproc_tool.js, found 2026-11-24, same result with and
+  without the js_cv_math change): `capabilities lists the models and what loads` expects
+  ["u2netp","sam","mobilesam","hed","dexined","lama"] but the tool lists ["u2netp","sam","mobilesam"] (the
+  edge/inpainting models are not installed on this host, the test assumes them), and `edgemap: the ring of a disc
+  is the strongest, flat areas stay near 0` fails with a ring strength of 148.9. Decide whether the test should
+  skip when a model file is missing and whether the edgemap threshold or the tool is wrong.
+
+    QUICKJS_MODULE_PATH=$PWD/build/x86_64-linux-gnu qjsm tests/unittests/test_opencv_imgproc_tool.js
+
+- quickjs-module-cmake-not-canonical: cmake/QuickJSModule.cmake and cmake/JSBindings.cmake (`make_shared_module`,
+  `make_static_module`, `make_js_bindings`) are still project-private; the canonical QuickJSModule.cmake
+  (`quickjs_module_options`, `make_module`, `BUILD_SHARED`/`BUILD_STATIC`, `quickjs-<name>.module.cmake`) is not
+  adopted (`cmake-sync.sh status`: ! for qjs-opencv). Functions/Checks/Compat/UseMultiArch are also unreconciled.
+  Only FindQuickJS.cmake and BuildQuickJS.cmake are canonical here (2026-11-24).

@@ -30,6 +30,8 @@ prefix=/usr/local TYPE=Release cfg -DOpenCV_DIR=/opt/opencv-4.7.0-x86_64/lib/cma
 make -C build/x86_64-linux-gnu -j$(nproc)
 ```
 
+How QuickJS is found or built (installed, parent tree, built on the fly): `doc/building.md`.
+
 Builds against OpenCV 4.2.0+ (NONFREE modules needed for `LineSegmentDetector`), against vanilla QuickJS or the [rsenn/quickjs](https://github.com/rsenn/quickjs) fork with C module search paths. Cross-compiles to aarch64, x86_64-w64-mingw32, and wasm32 (emscripten/clang) via `cfg.sh` toolchain functions (`cfg-clang`, `cfg-mingw64`, `cfg-wasm`, `cfg-aarch64`, `cfg-musl*`, `cfg-android*`). See `CLAUDE.md` for the full option/flavor matrix.
 
 ## What works

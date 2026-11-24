@@ -958,8 +958,23 @@ by exact signature/line (not just name) before touching, given the
 
 ## Build on a fresh machine (found 2026-11-15, Termux restore)
 
-- first configure without an installed quickjs fails, see BUGS find-quickjs-fatal-without-installed-quickjs
+- [x] first configure without an installed quickjs failed: fixed 2026-11-24, canonical `FindQuickJS.cmake`/`BuildQuickJS.cmake` adopted (see doc/building.md); not yet run on the Termux phone itself
 - Termux: configuring OpenCV itself failed in find_package(OpenJPEG) (the Termux package openjpeg ships
   OpenJPEGTargets.cmake referencing bin/opj_decompress, which is in the split package
   openjpeg-tools): `pkg install openjpeg-tools` or -DWITH_OPENJPEG=OFF; add it to the list of packages
   for the Termux CI row
+
+## Open work after the BUGS triage (2026-11-24)
+Ranked by leverage; each item has its BUGS entry (name in backticks) where one exists.
+- [x] `find-quickjs-fatal-without-installed-quickjs` (commit 37bd798) and `js-cv-math-no-scalar-operand` (commit 87b9680) are fixed.
+- [ ] **UMat `empty()`/`isContinuous()` as methods** (`umat-empty-continuous-not-methods`): opencv.js compatibility is mandatory. Replace the `.empty`/`.continuous` getters in `js_umat.cpp` (PROP_EMPTY/PROP_CONTINUOUS) by `JS_CFUNC_MAGIC_DEF` methods like `Mat`, then update every JS caller in `js/`, `tests/`, `examples/` and the sibling plot-cv scripts (`grep -rl "from 'opencv'" ../*.js`).
+- [ ] **MatVector, phase 2** (`aruco-calib3d-lists-are-js-arrays-not-matvector`, `no-opencvjs-matvector`): aruco corners/rejected, calibrateCamera lists and fisheye lists are plain JS arrays of Mat (`include/js_matvec.hpp`); opencv.js code calling `corners.get(i)`/`corners.size()` fails.
+- [ ] **`Mat(Size, type)` constructor** (`mat-size-ctor-type-ignored`): wrong channels/depth, opencv.js compatibility.
+- [ ] **cmake: canonical QuickJSModule.cmake** (`quickjs-module-cmake-not-canonical`): adopt `quickjs_module_options`/`make_module`, replace `make_shared_module`/`make_static_module` in `cmake/JSBindings.cmake`, reconcile Functions/Checks/Compat/UseMultiArch; check `cmake-sync.sh status` afterwards.
+- [ ] **Verify the no-quickjs configure on the real Termux phone** and on a clean machine without network (BUILD_QUICKJS=AUTO clones or uses the parent tree; a clone needs network and submodule access, cross builds need a host qjsc).
+- [ ] **test_opencv_imgproc_tool.js** (`imgproc-tool-unittest-failures`): two failures independent of the math change.
+- [ ] Remaining opencv.js discrepancies listed in BUGS: `opencv-js-api-mismatch-*` (KeyPoint constructor, absent symbols, CV_64SC1/N-dim Mat), `mat-mul-is-elementwise-not-matrix-multiplication` (Mat.mul name), `highgui-gtk-getwindowproperty-unimplemented`.
+- [ ] Freetype findings (`freetype-puttext-y-ignores-gettextsize-ascent`, `opencv-freetype-fontscale-truncated-to-int`, `render_font-single-strike-assumption`): upstream behaviour, fix the row-0 export in `examples/render_font.js` with the generous-canvas-then-crop trick if export fidelity matters.
+- [ ] `lccv-hardcoded-include`: fix in the LCCV submodule, then drop the workaround in `cmake/libcamera.cmake`.
+- [ ] Not ours, kept for reference: `qjs-swallows-uncaught-exceptions-with-native-module`, the `os.Worker` message-loss entries, `onnx-importer-rejects-dynamic-shape-graphs` (verify through ENGINE_ORT once an ORT-enabled OpenCV exists).
+- [ ] Skill side: canonical `FindQuickJS.cmake` only loads `Compat.cmake` when `addprefix` is missing, so a project with `Functions.cmake` but no `Compat.cmake` fails on `message_table` (qjs-opencv includes both explicitly as a workaround); recorded in `~/Sources/rsenn/skills/TODO.md`.
