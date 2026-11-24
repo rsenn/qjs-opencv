@@ -783,30 +783,6 @@
     const q = new cv.Mat(4, 1, cv.CV_32F, Float32Array.from([1,0,0,0]).buffer);
     cand.mul(q); // throws: Mat dimensions mismatch (3x4 vs 4x1)
 
-- js-cv-math-no-scalar-operand: `compare()`/`absdiff()`/`add()`/`divide()`/
-  `max()`/`min()`/`multiply()`/`subtract()` (all JS_CFUNC_MAGIC_DEF'd onto
-  `js_cv_math()` in js_cv.cpp) resolve *both* operands via
-  `js_cv_inputoutputarray()`, which (unlike `js_cv_inputarray()`) has no
-  plain-JS-array/number-to-cv::Scalar fallback - only Mat/UMat/JSVector/
-  Line/ArrayBuffer/TypedArray convert. Passing a bare number or plain array
-  as the second operand (e.g. `compare(idxMat, 3, mask, CMP_EQ)` to test an
-  index Mat against a constant) silently resolves that operand to
-  `cv::noArray()`, and `cv::compare()` then throws
-  `(-215:Assertion failed) _src1.empty() == _src2.empty()` since one side is
-  empty and the other isn't - found while fixing
-  js/vectorizer/vector/methods/palette-regions.js, which needed to test a
-  CV_8U index map against a per-band integer constant. `inRange(src,
-  lowerb, upperb, dst)` (js_cv_other/OTHER_IN_RANGE) DOES accept a
-  plain array for its Scalar bounds (via `js_cv_inputarray()`, which has the
-  array-to-cv::Scalar branch) and was used as the workaround:
-  `inRange(idx, [k,k,k,k], [k,k,k,k], mask)` instead of
-  `compare(idx, k, mask, CMP_EQ)`.
-
-    import { imread, Mat, compare, CMP_EQ } from 'opencv';
-    const mat = imread('some.png');
-    const mask = new Mat();
-    compare(mat, 128, mask, CMP_EQ); // throws: _src1.empty() == _src2.empty()
-
     import { Mat, Size } from 'opencv';
     const m = new Mat(new Size(10, 10), 16); // meant to be CV_8UC3
     console.log(m.channels(), m.depth()); // 1, 16 - not 3, 8

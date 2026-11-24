@@ -175,4 +175,33 @@ addTest('gemm - alpha/beta and src3 addend', () => {
   assert(Math.abs(dst.data32F[0] - 1022) < 1e-3, `expected 1022, got ${dst.data32F[0]}`);
 });
 
+addTest('compare/add/subtract/multiply/min/max - plain number operand', () => {
+  const m = new cv.Mat(1, 4, cv.CV_8UC1, Uint8Array.from([1, 3, 3, 5]).buffer);
+  const mask = new cv.Mat();
+  cv.compare(m, 3, mask, cv.CMP_EQ);
+  assert([...mask.data].join() == '0,255,255,0', `compare: ${[...mask.data]}`);
+
+  const dst = new cv.Mat();
+  cv.add(m, 10, dst);
+  assert([...dst.data].join() == '11,13,13,15', `add: ${[...dst.data]}`);
+  cv.subtract(m, 1, dst);
+  assert([...dst.data].join() == '0,2,2,4', `subtract: ${[...dst.data]}`);
+  cv.multiply(m, 2, dst);
+  assert([...dst.data].join() == '2,6,6,10', `multiply: ${[...dst.data]}`);
+  cv.max(m, 3, dst);
+  assert([...dst.data].join() == '3,3,3,5', `max: ${[...dst.data]}`);
+  cv.min(m, 3, dst);
+  assert([...dst.data].join() == '1,3,3,3', `min: ${[...dst.data]}`);
+});
+
+addTest('compare - number applies to every channel, array is a Scalar', () => {
+  const m = new cv.Mat(1, 1, cv.CV_8UC3);
+  m.setTo([7, 7, 7, 0]);
+  const mask = new cv.Mat();
+  cv.compare(m, 7, mask, cv.CMP_EQ);
+  assert([...mask.data].join() == '255,255,255', `number: ${[...mask.data]}`);
+  cv.compare(m, [7, 0, 7, 0], mask, cv.CMP_EQ);
+  assert([...mask.data].join() == '255,0,255', `array: ${[...mask.data]}`);
+});
+
 tests(testCases);
