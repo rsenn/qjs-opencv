@@ -159,18 +159,7 @@ macro(check_cxx_standard_flag)
   foreach(CXX_STANDARD c++2a c++20 c++17 c++14 c++11)
     string(REPLACE "c++" "CPLUSPLUS" CXX_STANDARD_NUM "${CXX_STANDARD}")
     set(CMAKE_REQUIRED_QUIET TRUE)
-    #check_cxx_compiler_flag("-std=${CXX_STANDARD}" CXX_STANDARD_${CXX_STANDARD_NUM})
-
-    try_compile(
-      CXX_STANDARD_${CXX_STANDARD_NUM} SOURCE_DIR
-      "${CMAKE_CURRENT_SOURCE_DIR}" BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}"
-      SOURCE_FROM_CONTENT "cxx_standard_${CXX_STANDARD_NUM}.cpp"
-      "int main() { return 0; }"
-      CMAKE_FLAGS
-        "-DCMAKE_CXX_FLAGS:STRING=${CMAKE_CXX_FLAGS} -std=${CXX_STANDARD}"
-      COMPILE_DEFINITIONS "-std=${CXX_STANDARD}" LOG_DESCRIPTION
-                          "cxx_standard_${CXX_STANDARD_NUM}"
-      OUTPUT_VARIABLE OUT)
+    check_cxx_compiler_flag("-std=${CXX_STANDARD}" CXX_STANDARD_${CXX_STANDARD_NUM})
 
     if(NOT CXX_STANDARD_${CXX_STANDARD_NUM})
       message(

@@ -1,3 +1,4 @@
+#include "include/js_matvec.hpp"
 #include "cutils.h"
 #include "js_cv.hpp"
 #include "js_mat.hpp"
@@ -1039,31 +1040,50 @@ js_cv_find_contours(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
   int32_t approx = cv::CHAIN_APPROX_SIMPLE;
   cv::Point offset(0, 0);
 
-  JSOutputArray hier = js_cv_outputarray(ctx, argv[2]);
+  /* hierarchy: a Mat as in opencv.js, or a plain JS array that gets one
+   * [next, previous, firstChild, parent] array per contour */
+  const bool hier_array = JS_IsArray(ctx, argv[2]);
+  cv::Mat hier_mat;
+  JSOutputArray hier = hier_array ? JSOutputArray(hier_mat) : js_cv_outputarray(ctx, argv[2]);
 
-  // contours must be a cv.MatVector or cv.PointVectorVector, matching
-  // opencv.js exactly (findContours there returns/accepts a MatVector too -
-  // see doc/opencv-js-api.md's "no bare-JS-array marshaling" note). A plain
-  // JS array used to be silently supported here as an extra convenience,
-  // but cv.drawContours never got the same treatment (it only ever accepted
-  // the opencv.js-compatible container types), so findContours(mask, [],
-  // ...) followed by drawContours(dst, thatArray, ...) would silently draw
-  // nothing - see BUGS: drawcontours-silently-noops-on-plain-array.
-  auto* matvector = JSVector<cv::Mat>::fromJS(argv[1]);
-  auto* pointvectorvector = matvector ? nullptr : JSVector<std::vector<cv::Point>>::fromJS(argv[1]);
+  /* contours: a MatVector / PointVectorVector as in opencv.js, or a plain JS
+   * array that gets one CV_32SC2 Mat per contour */
+  const bool contours_array = JS_IsArray(ctx, argv[1]);
+  auto* matvector = contours_array ? nullptr : JSVector<cv::Mat>::fromJS(argv[1]);
+  auto* pointvectorvector = contours_array || matvector ? nullptr : JSVector<std::vector<cv::Point>>::fromJS(argv[1]);
 
-  if(!matvector && !pointvectorvector)
-    return JS_ThrowTypeError(ctx, "findContours() argument 2 must be a MatVector or PointVectorVector");
+  if(!contours_array && !matvector && !pointvectorvector)
+    return JS_ThrowTypeError(ctx, "findContours() argument 2 must be an array, a MatVector or a PointVectorVector");
 
   if(argc > 3)
     JS_ToInt32(ctx, &mode, argv[3]);
   if(argc > 4)
     JS_ToInt32(ctx, &approx, argv[4]);
 
-  if(matvector)
+  if(contours_array) {
+    JSMatVec list(ctx, argv[1], true);
+
+    cv::findContours(input, list.vec, hier, mode, approx, offset);
+  } else if(matvector)
     cv::findContours(input, *JSVector<cv::Mat>::fromJS(ctx, argv[1]), hier, mode, approx, offset);
   else
     cv::findContours(input, *JSVector<std::vector<cv::Point>>::fromJS(ctx, argv[1]), hier, mode, approx, offset);
+
+  if(hier_array) {
+    const cv::Vec4i* rows = hier_mat.empty() ? nullptr : hier_mat.ptr<cv::Vec4i>();
+    const size_t n = hier_mat.total();
+
+    JS_SetPropertyStr(ctx, argv[2], "length", JS_NewInt32(ctx, 0));
+
+    for(size_t i = 0; i < n; i++) {
+      JSValue row = JS_NewArray(ctx);
+
+      for(uint32_t k = 0; k < 4; k++)
+        JS_SetPropertyUint32(ctx, row, k, JS_NewInt32(ctx, rows[i][k]));
+
+      JS_SetPropertyUint32(ctx, argv[2], i, row);
+    }
+  }
 
   return JS_UNDEFINED;
 }

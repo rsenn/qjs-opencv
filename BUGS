@@ -582,28 +582,6 @@
   no new `js_video.cpp` needed since the include was already there).
   Tests: tests/unittests/test_segmentation_video.js.
 
-- cmake-libcamera-forces-cxx17: `cmake/libcamera.cmake:6` does
-  `set(CMAKE_CXX_STANDARD 17)` unconditionally (whenever `USE_LCCV`/libcamera
-  support is configured in - the CLAUDE.md-documented default), which makes
-  CMake append `-std=gnu++17` to every compile command, after the project's
-  own `-std=c++2a` from `cmake/CheckFlags.cmake`. Since gcc/clang take the
-  last `-std=` flag on the command line, the effective standard for the
-  whole project is C++17, not C++2a/C++20 as `CLAUDE.md` documents
-  ("C++ standard is -std=c++2a") and as `-DCXX_STANDARD=2a` misleadingly
-  suggests. Confirmed via `compile_commands.json` for
-  `build/x86_64-linux-gnu`: the generated command contains both
-  `-std=c++2a ... -std=gnu++17`, and `<ranges>`/`std::ranges::subrange`
-  (C++20-only) fail to compile with `'ranges' in namespace 'std' does not
-  name a type` when actually built through this build tree, despite
-  compiling fine standalone with an explicit `-std=c++2a`. Not investigated
-  for a fix (unclear whether libcamera's own headers actually require C++17,
-  in which case this is an intentional-but-undocumented downgrade rather
-  than a bug proper).
-
-    grep -o -- '-std=[a-z+0-9]*' build/x86_64-linux-gnu/compile_commands.json | sort -u
-    # -std=c++2a
-    # -std=gnu++17
-
 - wunused-function-cant-see-header-only-static-inline: Neither GCC's nor
   Clang's `-Wunused-function` can find dead `static inline` functions in a
   header like `include/jsbindings.hpp` (every one of its 82 free functions
@@ -771,16 +749,14 @@
     }
     // all five print the same "4 5" - the .5 (and the 8->9->10 step) has no effect
 
-- onnx-importer-rejects-dynamic-shape-graphs: OpenCV 5.0.0's `cv.readNetFromONNX`
-  fails to load any ONNX graph exported with HuggingFace/optimum's default
-  dynamic `batch_size`/`sequence_length` axes, regardless of model
-  architecture - confirmed identically on an XLM-R-style model and a
-  real-BERT model (LaBSE), both failing at the same `onnx_node!/embeddings/Shape`
-  node with "dynamic 'zero' shapes are not supported". Not a quantization or
-  download-corruption issue (ruled out separately). Workaround: re-export the
-  model with fully static shapes (`torch.onnx.export(..., dynamic_axes=None,
-  dynamo=False)`), which removes the offending Shape node entirely - see
-  `examples/models/setup-embedding-model.py`.
+- onnx-importer-rejects-dynamic-shape-graphs: OpenCV 5.0.0's builtin `cv.readNetFromONNX` fails to load any ONNX graph
+  exported with HuggingFace/optimum's default dynamic `batch_size`/`sequence_length` axes (same failure on an XLM-R-style
+  model and LaBSE, at the `onnx_node!/embeddings/Shape` node: "dynamic 'zero' shapes are not supported"). Upstream
+  limitation of the importer. Workaround: re-export with static shapes (`examples/models/setup-embedding-model.py`), or use
+  ONNX Runtime: `cv.readNetFromONNX(path, cv.dnn.ENGINE_ORT)` on an OpenCV built with WITH_ONNXRUNTIME=ON (see
+  doc/dnn-engines.md). STILL TO VERIFY: loading such a graph through ENGINE_ORT, needs an ORT-enabled OpenCV build (none
+  installed on the dev host; build-opencv.sh now fetches ORT for every target).
+
 
 - PARTIALLY FIXED: mat-mul-is-elementwise-not-matrix-multiplication: `Mat.mul(other)`
   (magic `MAT_EXPR_MUL` in `js_mat.cpp`) calls `cv::Mat::mul()`, which is an
@@ -965,85 +941,6 @@ rejecting an extremum placed outside it. No entry needed - keeping this
 note only so a future session doesn't re-suspect minMaxLoc from a
 similar-looking symptom without checking how its mask was built first.]
 
-- drawcontours-silently-noops-on-plain-array: `cv.drawContours(dst, contours,
-  ...)` (js_draw.cpp:274 js_draw_contours) reads `contours` via
-  `js_cv_inputoutputarray(ctx, argv[1])` - i.e. it only accepts a single
-  InputOutputArray-compatible container (a `cv.MatVector`, or a Mat
-  CV_32SC2), not a plain JS array of per-contour Mats. `cv.findContours`
-  (js_imgproc.cpp js_cv_find_contours), however, happily fills a *plain JS
-  array* with one Mat per contour when handed one (the `contours_array`
-  branch) - this is the opencv.js-compatible calling convention and is
-  documented/relied on elsewhere in this repo (test_contour_functions.js
-  etc). Chaining the two - `cv.findContours(mask, contours, hier, ...)`
-  into a plain `[]`, then `cv.drawContours(dst, [contours[i]], -1, color,
-  -1)` - silently draws *nothing* and throws no error, because
-  `js_cv_inputoutputarray` on a plain JS array of Mats doesn't produce a
-  usable contours container for `cv::drawContours`. Confirmed by wrapping
-  the same contour in a `cv.MatVector` instead, which draws correctly.
-  Found while building examples/skywatch_contrail_detect.js (2026-09-07):
-  cost real debugging time since there's no exception, just an
-  all-zero-pixels result several steps downstream. Fix should make
-  js_draw_contours accept a plain JS array the same way js_cv_find_contours
-  produces one (mirroring the flexibility already on the findContours
-  side), or at minimum throw instead of silently no-op'ing when given a
-  container it can't use.
-
-    import * as cv from 'opencv';
-    const mask = cv.Mat.zeros(100, 100, cv.CV_8UC1);
-    cv.rectangle(mask, new cv.Point(20, 20), new cv.Point(60, 60), new cv.Scalar(255), -1);
-    const contours = [];
-    const hierarchy = new cv.Mat();
-    cv.findContours(mask, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
-    const out = cv.Mat.zeros(100, 100, cv.CV_8UC1);
-    cv.drawContours(out, contours, -1, new cv.Scalar(255), -1); // no error
-    console.log(cv.countNonZero(out)); // 0 - nothing was drawn
-    const mv = new cv.MatVector();
-    for (const c of contours) mv.push_back(c);
-    const out2 = cv.Mat.zeros(100, 100, cv.CV_8UC1);
-    cv.drawContours(out2, mv, -1, new cv.Scalar(255), -1);
-    console.log(cv.countNonZero(out2)); // works, e.g. 1681
-
-- findcontours-hierarchy-arg-silently-empty-on-plain-array:
-  `cv.findContours(image, contours, hierarchy, ...)`'s hierarchy argument
-  (argv[2], js_imgproc.cpp js_cv_find_contours) is resolved via the shared
-  `js_cv_outputarray()` helper (include/js_inputoutputarray.hpp), which
-  only recognizes Mat/UMat, JSVector-backed containers, Line, ArrayBuffer,
-  and TypedArray - a plain JS array `[]` matches none of those and
-  silently resolves to `cv::noArray()`, so hierarchy is never filled and
-  no error is thrown. opencv.js's own findContours also requires hierarchy
-  to be a Mat (no array convenience there either), so `hierarchy = []` is
-  an opencv.js-contract discrepancy the same way the now-fixed plain-array
-  `contours` argument was (see drawcontours-silently-noops-on-plain-array
-  above) - only findContours' *contours* argument got the "must be a
-  container type, throw otherwise" treatment; hierarchy did not.
-  Confirmed multiple real callers in this repo currently pass `hierarchy =
-  []` and never notice: `js/cvVectorization.js` (2 call sites) actually
-  *reads* `hierarchy[i][3]`/`hierarchy[i][2]` afterward assuming nested-
-  array content that was never populated (`hierarchy[i]` is always
-  `undefined`, so `hierarchy[i][3]` should throw a TypeError whenever that
-  code path executes with `kept > 0`, though this session did not exercise
-  that branch to confirm at runtime); `js/vectorizer/vector/methods/{skel
-  eton,canny-contours,shape-fit,palette-regions}.js` pass `hierarchy = []`
-  too but never read it, so they're silently fine only because they don't
-  need the hierarchy at all. `js/vectorizer/vector/methods/threshold-
-  contours.js` already passes a real `new Mat()` and is unaffected.
-  Not fixed here - out of tokens this session; see TODO.md for the
-  fix-and-migrate plan (mirror the contours-argument fix: require
-  hierarchy to be a Mat when passed, throw otherwise; fix
-  js/cvVectorization.js's two hierarchy-array-indexing call sites to parse
-  a real hierarchy Mat instead, e.g. reusing js/vectorizer/cv/convert.js's
-  existing `hierarchyRows()` helper; switch the four hierarchy-less
-  vectorizer methods' `hierarchy = []` to `new Mat()` for contract
-  cleanliness even though they never read it).
-
-    import * as cv from 'opencv';
-    const img = cv.Mat.zeros(100, 100, cv.CV_8UC1);
-    cv.rectangle(img, new cv.Point(20, 20), new cv.Point(60, 60), new cv.Scalar(255), -1);
-    const contours = new cv.MatVector();
-    const hierarchy = []; // opencv.js requires a Mat here too - silently wrong
-    cv.findContours(img, contours, hierarchy, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE);
-    console.log(hierarchy.length); // 0 - never filled, no error raised
-
 - vectorizer-stage3-worker-pool-dispatch-never-received (UNRESOLVED, worker
   pool now disabled): despite everything in
   vectorizer-stage3-wired-to-worker-pool-for-real-parallelism above being
@@ -1113,10 +1010,6 @@ similar-looking symptom without checking how its mask was built first.]
 
     opencv-imgproc segment --in 031.jpg --units norm --point 0.454,0.703,1 --out cut.png --candidates 3
 
-- check-cflag-result-cached-under-fixed-name (cmake/Checks.cmake:19, check_cflag()): result stored
-  in the shared cache variable RESULT, so every probe after the first one returns the first answer.
-  Full description and repro in qjs-modules/BUGS (identical copy of the function).
-
 - find-quickjs-fatal-without-installed-quickjs (cmake/FindQuickJS.cmake:140, find_quickjs()): without an
   installed quickjs the macro prints the default paths as if they existed, then pkg_search_module(
   QUICKJS REQUIRED quickjs) stops the configure ("None of the required 'quickjs' found",
@@ -1126,12 +1019,6 @@ similar-looking symptom without checking how its mask was built first.]
   Termux. Fix: adopt the canonical FindQuickJS.cmake and BuildQuickJS.cmake.
 
     cmake -S . -B build/x   # no quickjs installed
-
-- check-cxx-standard-flag-try-compile-mixed-signatures (cmake/CheckFlags.cmake:164): try_compile() is
-  called with SOURCE_DIR and BINARY_DIR (project signature) together with SOURCE_FROM_CONTENT; CMake
-  4.5 warns "Unknown arguments: SOURCE_DIR ... BINARY_DIR ..." and the probe is not the one meant, so
-  "Checking for C++ standard flag: -std=c++2a: OK" cannot be trusted. Use the source-file signature
-  (try_compile(RESULT SOURCES ...)) or check_cxx_compiler_flag. Found 2026-11-15 on Termux, CMake 4.5.
 
 - lccv-hardcoded-include (LCCV/src/lccv.cpp:2): includes <libcamera/libcamera/stream.h>, a path that only
   resolves when <prefix>/include is a compiler search path (system install); with libcamera in another
