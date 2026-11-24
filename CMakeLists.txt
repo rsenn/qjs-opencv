@@ -13,8 +13,6 @@ if(CACHE{CMAKE_BUILD_TYPE})
                                                RelWithDebInfo)
 endif(CACHE{CMAKE_BUILD_TYPE})
 
-set(QUICKJS_SOURCES_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/quickjs)
-
 if(NOT CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL "")
   set(CMAKE_BUILD_TYPE "Debug")
 endif(NOT CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL "")
@@ -32,6 +30,8 @@ endif(NOT PKG_CONFIG_FOUND)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/MoreFunctions.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CheckFlags.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/UseMultiArch.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Functions.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Compat.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindQuickJS.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindOpenCV.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/QuickJSModule.cmake)
@@ -101,7 +101,6 @@ if(HAVE_LIBX11 AND HAVE_X11_X_H)
   add_definitions(-DHAVE_X11)
 endif(HAVE_LIBX11 AND HAVE_X11_X_H)
 
-find_quickjs()
 find_opencv()
 
 #dump(OPENCV_LIBDIR OPENCV_INCLUDE_DIRS)
@@ -460,7 +459,6 @@ option(QUICKJS_MODULES "Build .so modules for quickjs" ON)
 
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
-option(BUILD_QUICKJS "Build QuickJS" ON)
 set(USE_LCCV AUTO CACHE STRING
     "Raspberry Pi camera support (LCCV, cv.RaspiCam): ON = required (error if libcamera is missing), AUTO = if libcamera is found, OFF = never")
 set_property(CACHE USE_LCCV PROPERTY STRINGS AUTO ON OFF)
@@ -473,12 +471,7 @@ if(ENABLE_LTO)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -flto")
 endif(ENABLE_LTO)
 
-link_directories(BEFORE ${quickjs_BINARY_DIR} ${OPENCV_LIBDIR})
-
-link_directories("${CMAKE_CURRENT_BINARY_DIR}/quickjs")
-
-set(QUICKJS_LIBRARY quickjs)
-link_directories(${CMAKE_CURRENT_BINARY_DIR}/quickjs)
+link_directories(BEFORE ${OPENCV_LIBDIR})
 
 if(USE_LCCV)
   include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/libcamera.cmake)

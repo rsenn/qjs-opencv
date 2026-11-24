@@ -1010,16 +1010,6 @@ similar-looking symptom without checking how its mask was built first.]
 
     opencv-imgproc segment --in 031.jpg --units norm --point 0.454,0.703,1 --out cut.png --candidates 3
 
-- find-quickjs-fatal-without-installed-quickjs (cmake/FindQuickJS.cmake:140, find_quickjs()): without an
-  installed quickjs the macro prints the default paths as if they existed, then pkg_search_module(
-  QUICKJS REQUIRED quickjs) stops the configure ("None of the required 'quickjs' found",
-  CMakeLists.txt:49 and :104). No BuildQuickJS.cmake, older FindQuickJS.cmake. "install directory:"
-  prints empty and the module search path has the triple directory
-  lib/aarch64-linux-android/aarch64-unknown-linux-android30/quickjs. Found 2026-11-15 on a fresh
-  Termux. Fix: adopt the canonical FindQuickJS.cmake and BuildQuickJS.cmake.
-
-    cmake -S . -B build/x   # no quickjs installed
-
 - lccv-hardcoded-include (LCCV/src/lccv.cpp:2): includes <libcamera/libcamera/stream.h>, a path that only
   resolves when <prefix>/include is a compiler search path (system install); with libcamera in another
   prefix it also finds the system copy and fails with "redefinition of class libcamera::StreamFormats".
