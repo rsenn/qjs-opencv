@@ -574,10 +574,11 @@ install(PROGRAMS tools/opencv-imgproc.js DESTINATION bin RENAME opencv-imgproc)
 install(PROGRAMS tools/flower-detect.js DESTINATION bin RENAME flower-detect)
 
 # exif-find: picture search by capture month and GPS position (exiv2, threads)
+option(USE_EXIV2 "Build tools/exif-find when exiv2 is found" ON)
 find_package(PkgConfig QUIET)
-if(PkgConfig_FOUND)
+if(PkgConfig_FOUND AND USE_EXIV2)
   pkg_check_modules(EXIV2 QUIET IMPORTED_TARGET exiv2)
-endif(PkgConfig_FOUND)
+endif(PkgConfig_FOUND AND USE_EXIV2)
 
 if(EXIV2_FOUND)
   find_package(Threads REQUIRED)
