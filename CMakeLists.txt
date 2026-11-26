@@ -206,7 +206,12 @@ endif()
 if(USE_BARCODE)
   # cv::barcode::BarcodeDetector lives in opencv2/objdetect/barcode.hpp since OpenCV 4.8 (4.5.3-4.7: contrib
   # opencv2/barcode.hpp, which js_barcode_detector.cpp does not use)
+  # search OPENCV_INCLUDE_DIRS too: OpenCV 5 installs under include/opencv5
+  set(CMAKE_REQUIRED_INCLUDES_SAVE "${CMAKE_REQUIRED_INCLUDES}")
+  set(CMAKE_REQUIRED_INCLUDES "${OPENCV_INCLUDE_DIRS}")
+  unset(HAVE_OPENCV2_OBJDETECT_BARCODE_HPP CACHE)
   check_include_file_cxx(opencv2/objdetect/barcode.hpp HAVE_OPENCV2_OBJDETECT_BARCODE_HPP)
+  set(CMAKE_REQUIRED_INCLUDES "${CMAKE_REQUIRED_INCLUDES_SAVE}")
   if(NOT HAVE_OPENCV2_OBJDETECT_BARCODE_HPP)
     message(FATAL_ERROR
       "USE_BARCODE=ON needs opencv2/objdetect/barcode.hpp (OpenCV >= 4.8), but OpenCV ${OPENCV_VERSION} found at "
