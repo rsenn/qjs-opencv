@@ -117,7 +117,8 @@ enum {
   VIDEO_CAPTURE_METHOD_IS_OPENED,
   VIDEO_CAPTURE_METHOD_OPEN,
   VIDEO_CAPTURE_METHOD_READ,
-  VIDEO_CAPTURE_METHOD_RETRIEVE
+  VIDEO_CAPTURE_METHOD_RETRIEVE,
+  VIDEO_CAPTURE_METHOD_RELEASE,
 };
 
 static JSValue
@@ -166,6 +167,11 @@ js_video_capture_method(JSContext* ctx, JSValueConst video_capture, int argc, JS
 
     case VIDEO_CAPTURE_METHOD_IS_OPENED: {
       ret = JS_NewBool(ctx, s->isOpened());
+      break;
+    }
+
+    case VIDEO_CAPTURE_METHOD_RELEASE: {
+      s->release();
       break;
     }
 
@@ -225,6 +231,7 @@ const JSCFunctionListEntry js_video_capture_proto_funcs[] = {
     JS_CFUNC_MAGIC_DEF("open", 1, js_video_capture_method, VIDEO_CAPTURE_METHOD_OPEN),
     JS_CFUNC_MAGIC_DEF("read", 1, js_video_capture_method, VIDEO_CAPTURE_METHOD_READ),
     JS_CFUNC_MAGIC_DEF("retrieve", 1, js_video_capture_method, VIDEO_CAPTURE_METHOD_RETRIEVE),
+    JS_CFUNC_MAGIC_DEF("release", 0, js_video_capture_method, VIDEO_CAPTURE_METHOD_RELEASE),
 
     JS_PROP_STRING_DEF("[Symbol.toStringTag]", "VideoCapture", JS_PROP_CONFIGURABLE),
 

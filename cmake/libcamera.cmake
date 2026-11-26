@@ -3,7 +3,7 @@ if(CMAKE_COMPILER_IS_GNUCXX)
   add_compile_options(-Wno-psabi)
 endif()
 
-set(CMAKE_CXX_STANDARD 17)
+# no CMAKE_CXX_STANDARD here: it appends -std=gnu++17 after the project's own -std=c++2a
 
 find_package(Threads REQUIRED)
 find_package(OpenCV REQUIRED)

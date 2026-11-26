@@ -649,11 +649,34 @@ enum {
   MATH_SUBTRACT,
 };
 
+/*
+ * Operand of a two-operand math function: a plain number becomes
+ * cv::Scalar::all(n) (every channel, like numpy broadcasting), a plain
+ * array a cv::Scalar/vector, anything else resolves as before. The Scalar
+ * lives in js_inputarray_slot() because cv::_InputArray only points at it.
+ */
+static JSInputArray
+js_cv_math_operand(JSContext* ctx, JSValueConst value) {
+  if(JS_IsNumber(value)) {
+    double d;
+
+    if(!JS_ToFloat64(ctx, &d, value)) {
+      JSInputArraySlot& slot = js_inputarray_slot();
+
+      slot.scalar = cv::Scalar::all(d);
+      return JSInputArray(slot.scalar);
+    }
+  } else if(js_is_array(ctx, value))
+    return js_cv_inputarray(ctx, value);
+
+  return js_cv_inputoutputarray(ctx, value);
+}
+
 static JSValue
 js_cv_math(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[], int magic) {
   JSValue ret = JS_UNDEFINED;
-  JSInputArray src1 = argc >= 1 ? js_cv_inputoutputarray(ctx, argv[0]) : cv::noArray();
-  JSInputArray src2 = argc >= 2 ? js_cv_inputoutputarray(ctx, argv[1]) : cv::noArray();
+  JSInputArray src1 = argc >= 1 ? js_cv_math_operand(ctx, argv[0]) : JSInputArray(cv::noArray());
+  JSInputArray src2 = argc >= 2 ? js_cv_math_operand(ctx, argv[1]) : JSInputArray(cv::noArray());
   JSOutputArray dst = argc >= 3 ? js_cv_inputoutputarray(ctx, argv[2]) : cv::noArray();
 
   switch(magic) {
@@ -670,7 +693,7 @@ js_cv_math(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[],
         mask = js_cv_inputarray(ctx, argv[3]);
 
       if(argc >= 5)
-        mask = JS_ToInt32(ctx, &dtype, argv[4]);
+        JS_ToInt32(ctx, &dtype, argv[4]);
 
       cv::add(src1, src2, dst, mask, dtype);
       break;
@@ -678,7 +701,10 @@ js_cv_math(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[],
 
     case MATH_COMPARE: {
       int32_t cmpop = 0;
-      JS_ToInt32(ctx, &cmpop, argv[3]);
+
+      if(argc >= 4)
+        JS_ToInt32(ctx, &cmpop, argv[3]);
+
       cv::compare(src1, src2, dst, cmpop);
       break;
     }
@@ -730,7 +756,7 @@ js_cv_math(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst argv[],
       if(argc >= 4)
         mask = js_cv_inputarray(ctx, argv[3]);
       if(argc >= 5)
-        mask = JS_ToInt32(ctx, &dtype, argv[4]);
+        JS_ToInt32(ctx, &dtype, argv[4]);
       cv::subtract(src1, src2, dst, mask, dtype);
       break;
     }

@@ -14,12 +14,15 @@ function(check_cflag FLAG OUTPUT_VAR)
     set(VAR_NAME ${ARGV2})
   endif()
 
+  # the result is cached under its variable name, so it must be unique per flag
+  string(MAKE_C_IDENTIFIER "HAVE_C_FLAG_${FLAG}" RESULT)
+
   message(CHECK_START "Compiler flag ${FLAG}")
-   set(CMAKE_REQUIRED_QUIET TRUE)
-  check_c_compiler_flag("${FLAG}" RESULT)
+  set(CMAKE_REQUIRED_QUIET TRUE)
+  check_c_compiler_flag("${FLAG}" ${RESULT})
   set(CMAKE_REQUIRED_QUIET FALSE)
 
-  if(RESULT)
+  if(${RESULT})
     message(CHECK_PASS "supported")
     add_cflags("${FLAG}" "${VAR_NAME}")
   else()
@@ -27,7 +30,7 @@ function(check_cflag FLAG OUTPUT_VAR)
   endif()
 
   if(OUTPUT_VAR)
-    set("${OUTPUT_VAR}" "${RESULT}" PARENT_SCOPE)
+    set("${OUTPUT_VAR}" "${${RESULT}}" PARENT_SCOPE)
   endif(OUTPUT_VAR)
 endfunction()
 

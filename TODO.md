@@ -8,6 +8,21 @@ qjsm scripts/binding_coverage.js --module=build/x86_64-linux-debug/opencv.so \
   --lib-dir=/opt/opencv-4.13.0-x86_64/lib --namespace=cv --verbose --out=cov.txt
 ```
 
+## build-opencv.sh: OpenCV for host, Raspberry Pi and Termux, native and cross (2026-11-20, in progress)
+Requested by js-engines (rsenn-76). Extend the existing `build-opencv.sh` (keep download/prepare/cuda/configure/build functions), do not start over.
+Targets (each native and cross): `host` (x86_64 glibc, reference = ~/Sources/opencv cfg.sh + build/x86_64-linux-gnu, prefix /opt/opencv-<ver>-x86_64), `pi` (aarch64 glibc, Pi 4, native: cmake from /opt/cmake-3.28.3-linux-aarch64, -j2, work in ~/ci-work only; cross: clang+lld, sysroot ~/sysroots/pi), `termux` (aarch64 bionic, native on the phone; cross: NDK + ~/sysroots/termux/usr, prefix on device /data/data/com.termux/files/usr).
+Decisions: generate the toolchain file per run (like cfg-aarch64), do not touch /opt/cmake-toolchains; profile `full` (reference flags, host default) vs `min` (BUILD_LIST of what qjs-opencv links, no tests/docs/java/python, no CUDA); never install into an existing prefix (live trees: /opt/opencv-{4.13.0,5.1.0}-x86_64, Pi /opt/opencv-4.13.0-aarch64, Termux package OpenCV 5.1.0 in $PREFIX); fix the `| tee` exit status bug; no git checkout in ~/Sources/opencv.
+Checks (tell Roman before any full build): configure all variants and capture "To be built"; cross builds build core+imgproc; run a cv::getVersionString() program on the Pi and the phone; qjs-opencv configure with only OPENCV_PREFIX per target.
+Status (2026-11-20):
+- [x] script written (dispatcher host|pi|termux|pi-cross|termux-cross, steps configure/build/install/deploy/smoke/where, -n dry run)
+- [x] host configure = reference flags (CUDA 12.0, cuDNN, FFmpeg, GTK), 5.1.0; not built
+- [x] pi-cross and termux-cross: configure ok, 19 modules (alphamat bgsegm calib core dnn features flann freetype geometry highgui imgcodecs imgproc objdetect photo stereo video videoio xfeatures2d ximgproc xphoto); opencv_core+imgproc built; a cv::getVersionString()+blur program ran ON the Pi and ON the phone (rc=0, "opencv 5.1.0-dev blur=64"), run from ~/ci-work/ocv-smoke
+- cross notes: OPENCV_ENABLE_PKG_CONFIG=ON is required (OpenCV drops pkg-config when cross compiling); termux needs WITH_AVIF=OFF (sysroot libavif-config.cmake names device paths) and BUILD_ANDROID_*=OFF, plus the unix install layout instead of sdk/native; Android libs have no .so.501 names
+- [x] native pi and termux: configure ok on the devices (4.13.0 cloned into ~/ci-work/ocv-native; Pi cmake 3.28 picked automatically, 70 s; phone 124 s), 20 modules incl. freetype, FFmpeg on; no native build run (Pi disk 4.6G free)
+- [ ] full builds + install + deploy of a min profile (NOT started, needs Roman's go; only core+imgproc built so far, so install/deploy/smoke steps are untested)
+- [ ] qjs-opencv configure with only OPENCV_PREFIX per target (needs an installed tree)
+- [ ] report to js-engines
+
 ## libcamera: find or build, Raspberry Pi support guaranteed (2026-11-20, done except hardware)
 Requested by the js-engines menu session. Files: `cmake/FindLibcamera.cmake` (`find_libcamera()`), `cmake/BuildLibcamera.cmake` (`build_libcamera()`, meson at configure time because LCCV runs its own `pkg_check_modules(libcamera REQUIRED)`), `cmake/libcamera.cmake` (resolves `USE_LCCV` AUTO into plain ON/OFF; OFF + WARNING when libcamera is missing, FATAL_ERROR when ON was asked). Options: `USE_LCCV` AUTO/ON/OFF, `BUILD_LIBCAMERA` OFF/AUTO/ON (default OFF), `LIBCAMERA_PREFIX`, `LIBCAMERA_MIN_VERSION` (0.5.2), `LIBCAMERA_SOURCES_ROOT`, `LIBCAMERA_GIT_URL/TAG`, `LIBCAMERA_INSTALL_PREFIX`, `LIBCAMERA_PIPELINES/IPAS`.
 Tested on x86_64 (2026-11-20): libcamera hidden (warning, OFF, full build links); `BUILD_LIBCAMERA=ON` from upstream v0.5.2 into a scratch prefix (rpi/vc4 + rpi/pisp TRUE, `ldd` shows scratch libcamera + libpisp, `cv.RaspiCam` exported); `USE_LCCV=ON` without libcamera is FATAL; `LIBCAMERA_MIN_VERSION` rejects an older install.
@@ -366,7 +381,7 @@ Small, self-contained additions to files that already exist. Each one either com
   - **Gotcha found & guarded:** `cv.imread()` can return a 4-channel (BGRA) Mat for PNGs with alpha (this project's custom PNG reader preserves alpha; plain `cv::imread` would not). `pencilSketch`/`stylization`/`detailEnhance`/`edgePreservingFilter`/`fastNlMeansDenoisingColored` assume `CV_8UC3` with no validation of their own in this OpenCV build — a 4-channel input doesn't throw, it corrupts the heap (nondeterministic glibc `malloc` aborts, sometimes several calls later). Added an explicit channel-count check (`js_photo_require_channels`) that throws a clean `TypeError` instead; `inpaint` similarly checks for 1-or-3 channels. This was a real boundary-validation case, not speculative — first reproduction was exactly this PNG-with-alpha path.
   - Build-hygiene note for next time: this repo's `build/x86_64-linux-gnu` had stale object files compiled with a different `USE_FEATURE2D`/`USE_BARCODE`/`CXX2A` flag set than current `compile_commands.json` (and `cmake .` reconfigure currently fails here with a `check_library_exists`/CXX-feature-detection error, unrelated to this change). A full recompile of all 55 files from `compile_commands.json` fixed a `js_feature2d.so` linking against an effectively-empty stale object. Worth a clean `rm -rf build/x86_64-linux-gnu && cfg ...` at some point rather than continuing to patch around it.
 
-- [ ] **calib3d — finish the calibration round-trip** → extend `js_calib3d.cpp` (86/106 bound)
+- [x] **calib3d — finish the calibration round-trip** → extend `js_calib3d.cpp` (done 2026-11-21: undistort, initUndistortRectifyMap, getOptimalNewCameraMatrix, getDefaultNewCameraMatrix, cornerSubPix, undistortPoints, undistortImagePoints, projectPoints, solvePnP/Ransac/Generic, Rodrigues, drawFrameAxes, findCirclesGrid, initCameraMatrix2D, calibrateCameraRO, stereoCalibrate, CALIB_*/SOLVEPNP_* constants; still unbound: see doc/fisheye.md)
   - `undistort`, `initUndistortRectifyMap`, `getOptimalNewCameraMatrix` — `calibrateCamera` is bound but nothing currently *applies* the resulting camera matrix/distortion coefficients; lens-distorted webcam/wide-angle rigs feed skewed contours straight into the SVG today.
   - `Rodrigues`, `solvePnP` — pose-from-known-points, useful for a fixed calibration jig on the cutting bed.
 
@@ -943,8 +958,23 @@ by exact signature/line (not just name) before touching, given the
 
 ## Build on a fresh machine (found 2026-11-15, Termux restore)
 
-- first configure without an installed quickjs fails, see BUGS find-quickjs-fatal-without-installed-quickjs
+- [x] first configure without an installed quickjs failed: fixed 2026-11-24, canonical `FindQuickJS.cmake`/`BuildQuickJS.cmake` adopted (see doc/building.md); not yet run on the Termux phone itself
 - Termux: configuring OpenCV itself failed in find_package(OpenJPEG) (the Termux package openjpeg ships
   OpenJPEGTargets.cmake referencing bin/opj_decompress, which is in the split package
   openjpeg-tools): `pkg install openjpeg-tools` or -DWITH_OPENJPEG=OFF; add it to the list of packages
   for the Termux CI row
+
+## Open work after the BUGS triage (2026-11-24)
+Ranked by leverage; each item has its BUGS entry (name in backticks) where one exists.
+- [x] `find-quickjs-fatal-without-installed-quickjs` (commit 37bd798) and `js-cv-math-no-scalar-operand` (commit 87b9680) are fixed.
+- [ ] **UMat `empty()`/`isContinuous()` as methods** (`umat-empty-continuous-not-methods`): opencv.js compatibility is mandatory. Replace the `.empty`/`.continuous` getters in `js_umat.cpp` (PROP_EMPTY/PROP_CONTINUOUS) by `JS_CFUNC_MAGIC_DEF` methods like `Mat`, then update every JS caller in `js/`, `tests/`, `examples/` and the sibling plot-cv scripts (`grep -rl "from 'opencv'" ../*.js`).
+- [ ] **MatVector, phase 2** (`aruco-calib3d-lists-are-js-arrays-not-matvector`, `no-opencvjs-matvector`): aruco corners/rejected, calibrateCamera lists and fisheye lists are plain JS arrays of Mat (`include/js_matvec.hpp`); opencv.js code calling `corners.get(i)`/`corners.size()` fails.
+- [ ] **`Mat(Size, type)` constructor** (`mat-size-ctor-type-ignored`): wrong channels/depth, opencv.js compatibility.
+- [ ] **cmake: canonical QuickJSModule.cmake** (`quickjs-module-cmake-not-canonical`): adopt `quickjs_module_options`/`make_module`, replace `make_shared_module`/`make_static_module` in `cmake/JSBindings.cmake`, reconcile Functions/Checks/Compat/UseMultiArch; check `cmake-sync.sh status` afterwards.
+- [ ] **Verify the no-quickjs configure on the real Termux phone** and on a clean machine without network (BUILD_QUICKJS=AUTO clones or uses the parent tree; a clone needs network and submodule access, cross builds need a host qjsc).
+- [ ] **test_opencv_imgproc_tool.js** (`imgproc-tool-unittest-failures`): two failures independent of the math change.
+- [ ] Remaining opencv.js discrepancies listed in BUGS: `opencv-js-api-mismatch-*` (KeyPoint constructor, absent symbols, CV_64SC1/N-dim Mat), `mat-mul-is-elementwise-not-matrix-multiplication` (Mat.mul name), `highgui-gtk-getwindowproperty-unimplemented`.
+- [ ] Freetype findings (`freetype-puttext-y-ignores-gettextsize-ascent`, `opencv-freetype-fontscale-truncated-to-int`, `render_font-single-strike-assumption`): upstream behaviour, fix the row-0 export in `examples/render_font.js` with the generous-canvas-then-crop trick if export fidelity matters.
+- [ ] `lccv-hardcoded-include`: fix in the LCCV submodule, then drop the workaround in `cmake/libcamera.cmake`.
+- [ ] Not ours, kept for reference: `qjs-swallows-uncaught-exceptions-with-native-module`, the `os.Worker` message-loss entries, `onnx-importer-rejects-dynamic-shape-graphs` (verify through ENGINE_ORT once an ORT-enabled OpenCV exists).
+- [ ] Skill side: canonical `FindQuickJS.cmake` only loads `Compat.cmake` when `addprefix` is missing, so a project with `Functions.cmake` but no `Compat.cmake` fails on `message_table` (qjs-opencv includes both explicitly as a workaround); recorded in `~/Sources/rsenn/skills/TODO.md`.

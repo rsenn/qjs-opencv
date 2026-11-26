@@ -13,8 +13,6 @@ if(CACHE{CMAKE_BUILD_TYPE})
                                                RelWithDebInfo)
 endif(CACHE{CMAKE_BUILD_TYPE})
 
-set(QUICKJS_SOURCES_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/quickjs)
-
 if(NOT CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL "")
   set(CMAKE_BUILD_TYPE "Debug")
 endif(NOT CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL "")
@@ -32,6 +30,8 @@ endif(NOT PKG_CONFIG_FOUND)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/MoreFunctions.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CheckFlags.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/UseMultiArch.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Functions.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Compat.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindQuickJS.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindOpenCV.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/QuickJSModule.cmake)
@@ -101,7 +101,6 @@ if(HAVE_LIBX11 AND HAVE_X11_X_H)
   add_definitions(-DHAVE_X11)
 endif(HAVE_LIBX11 AND HAVE_X11_X_H)
 
-find_quickjs()
 find_opencv()
 
 #dump(OPENCV_LIBDIR OPENCV_INCLUDE_DIRS)
@@ -205,13 +204,20 @@ if(USE_FEATURE2D)
   endif(HAVE_OPENCV_XFEATURES2D_AKAZE)
 endif()
 if(USE_BARCODE)
+  # cv::barcode::BarcodeDetector lives in opencv2/objdetect/barcode.hpp since OpenCV 4.8 (4.5.3-4.7: contrib
+  # opencv2/barcode.hpp, which js_barcode_detector.cpp does not use)
+  check_include_file_cxx(opencv2/objdetect/barcode.hpp HAVE_OPENCV2_OBJDETECT_BARCODE_HPP)
+  if(NOT HAVE_OPENCV2_OBJDETECT_BARCODE_HPP)
+    message(FATAL_ERROR
+      "USE_BARCODE=ON needs opencv2/objdetect/barcode.hpp (OpenCV >= 4.8), but OpenCV ${OPENCV_VERSION} found at "
+      "'${OPENCV_PREFIX}' has none. Point the configure at a newer one with -DOPENCV_PREFIX=<prefix> "
+      "(e.g. /opt/opencv-5.1.0-x86_64) or -DOpenCV_DIR=<prefix>/lib/cmake/opencv4, build one with "
+      "'./build-opencv.sh host' (installs to /opt/opencv-<ver>-<arch>), or pass -DUSE_BARCODE=OFF.")
+  endif()
+endif()
+if(USE_BARCODE)
   add_definitions(-DUSE_BARCODE=1)
   set(BARCODE_SOURCE js_barcode_detector.cpp)
-
-  check_include_file_cxx(opencv2/barcode.hpp HAVE_OPENCV2_BARCODE_HPP)
-  if(HAVE_OPENCV2_BARCODE_HPP)
-    add_definitions(-DHAVE_OPENCV2_BARCODE_HPP=1)
-  endif(HAVE_OPENCV2_BARCODE_HPP)
 endif()
 
 check_include_cxx_def(opencv2/photo/segmentation.hpp HAVE_OPENCV2_PHOTO_SEGMENTATION_HPP)
@@ -238,10 +244,18 @@ include(CheckCXXSymbolExists)
 check_cxx_symbol_exists(cv::AffineFeature opencv2/features2d.hpp
                         HAVE_OPENCV_AFFINE_FEATURE)
 
+# aruco/charuco: OpenCV >= 4.8 has them in objdetect (charuco_detector.hpp), older ones in the contrib module
+# opencv_aruco (opencv2/aruco.hpp, opencv2/aruco/charuco.hpp); js_aruco.cpp picks whichever exists
 check_include_file_cxx(opencv2/objdetect/charuco_detector.hpp HAVE_OPENCV2_CHARUCO_DETECTOR_HPP)
 if(HAVE_OPENCV2_CHARUCO_DETECTOR_HPP)
-
-endif(HAVE_OPENCV2_CHARUCO_DETECTOR_HPP)
+  add_definitions(-DHAVE_OPENCV2_CHARUCO_DETECTOR_HPP=1)
+else()
+  check_include_file_cxx(opencv2/aruco/charuco.hpp HAVE_OPENCV2_ARUCO_CHARUCO_HPP)
+  if(HAVE_OPENCV2_ARUCO_CHARUCO_HPP)
+    add_definitions(-DHAVE_OPENCV2_ARUCO_CHARUCO_HPP=1)
+    list(APPEND OPENCV_EXTRA_LIBRARIES opencv_aruco)
+  endif()
+endif()
 
 
 #dump(HAVE_OPENCV2_FREETYPE_HPP OPENCV_FREETYPE_LIBRARY HAVE_OPENCV2_XFEATURES2D_HPP HAVE_OPENCV_AFFINE_FEATURE)
@@ -445,7 +459,6 @@ option(QUICKJS_MODULES "Build .so modules for quickjs" ON)
 
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
-option(BUILD_QUICKJS "Build QuickJS" ON)
 set(USE_LCCV AUTO CACHE STRING
     "Raspberry Pi camera support (LCCV, cv.RaspiCam): ON = required (error if libcamera is missing), AUTO = if libcamera is found, OFF = never")
 set_property(CACHE USE_LCCV PROPERTY STRINGS AUTO ON OFF)
@@ -458,12 +471,7 @@ if(ENABLE_LTO)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -flto")
 endif(ENABLE_LTO)
 
-link_directories(BEFORE ${quickjs_BINARY_DIR} ${OPENCV_LIBDIR})
-
-link_directories("${CMAKE_CURRENT_BINARY_DIR}/quickjs")
-
-set(QUICKJS_LIBRARY quickjs)
-link_directories(${CMAKE_CURRENT_BINARY_DIR}/quickjs)
+link_directories(BEFORE ${OPENCV_LIBDIR})
 
 if(USE_LCCV)
   include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/libcamera.cmake)
@@ -525,7 +533,7 @@ list(
   APPEND
   jsbindings_LIBRARIES
   ${QUICKJS_LIBRARY}
-  ${PNG_LIBRARIES}
+  ${PNG_LINK_LIBRARIES}
   ${OPENCV_XIMGPROC_LIBRARY}
   ${OPENCV_XFEATURES2D_LIBRARY}
   ${OPENCV_FREETYPE_LIBRARY}
@@ -566,10 +574,11 @@ install(PROGRAMS tools/opencv-imgproc.js DESTINATION bin RENAME opencv-imgproc)
 install(PROGRAMS tools/flower-detect.js DESTINATION bin RENAME flower-detect)
 
 # exif-find: picture search by capture month and GPS position (exiv2, threads)
+option(USE_EXIV2 "Build tools/exif-find when exiv2 is found" ON)
 find_package(PkgConfig QUIET)
-if(PkgConfig_FOUND)
+if(PkgConfig_FOUND AND USE_EXIV2)
   pkg_check_modules(EXIV2 QUIET IMPORTED_TARGET exiv2)
-endif(PkgConfig_FOUND)
+endif(PkgConfig_FOUND AND USE_EXIV2)
 
 if(EXIV2_FOUND)
   find_package(Threads REQUIRED)

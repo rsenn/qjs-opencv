@@ -1,4 +1,5 @@
 import * as std from 'std';
+import * as cv from 'opencv';
 import { barcode_BarcodeDetector, Mat, Size, CV_8UC1 } from 'opencv';
 
 /* Exercises the BarcodeDetector API unified across OpenCV 4.x/5.x (see
@@ -95,6 +96,79 @@ ok('detect()/decodeWithType()/detectAndDecodeWithType() on a blank image', () =>
 
   const info2 = [], type2 = [], pts2 = [];
   callDetector('detectAndDecodeWithType', () => bd.detectAndDecodeWithType(blank, info2, type2, pts2));
+});
+
+/* EAN-13 drawn from scratch (BarcodeDetector reads 1D codes only: EAN-8/13,
+ * UPC-A/E; a QR image would prove QRCodeDetector, not this). Left/right
+ * digit tables and the first-digit parity pattern are the EAN-13 standard. */
+const EAN_L = ['0001101', '0011001', '0010011', '0111101', '0100011', '0110001', '0101111', '0111011', '0110111', '0001011'];
+const EAN_G = ['0100111', '0110011', '0011011', '0100001', '0011101', '0111001', '0000101', '0010001', '0001001', '0010111'];
+const EAN_R = EAN_L.map(c => [...c].map(b => (b == '1' ? '0' : '1')).join(''));
+const EAN_PARITY = ['LLLLLL', 'LLGLGG', 'LLGGLG', 'LLGGGL', 'LGLLGG', 'LGGLLG', 'LGGGLL', 'LGLGLG', 'LGLGGL', 'LGGLGL'];
+
+function eanCheckDigit(d12) {
+  let sum = 0;
+  for(let i = 0; i < 12; i++) sum += (+d12[i]) * (i % 2 ? 3 : 1);
+  return (10 - (sum % 10)) % 10;
+}
+
+function eanBits(digits) {
+  const par = EAN_PARITY[+digits[0]];
+  let bits = '101';
+
+  for(let i = 0; i < 6; i++) bits += (par[i] == 'L' ? EAN_L : EAN_G)[+digits[1 + i]];
+  bits += '01010';
+  for(let i = 0; i < 6; i++) bits += EAN_R[+digits[7 + i]];
+  return bits + '101';
+}
+
+function drawEan13(digits, scale, height, quiet) {
+  const bits = eanBits(digits);
+  const w = (bits.length + 2 * quiet) * scale;
+  const img = new Mat(height, w, CV_8UC1);
+
+  img.setTo(255);
+  const row = new Uint8Array(w).fill(255);
+
+  for(let i = 0; i < bits.length; i++)
+    if(bits[i] == '1') row.fill(0, (quiet + i) * scale, (quiet + i + 1) * scale);
+  for(let y = 0; y < height; y++) img.data.set(row, y * w);
+  return img;
+}
+
+/* the detector wants the code to be a modest part of a larger white image */
+function eanScene(code) {
+  const img = drawEan13(code, 2, 120, 10);
+  const big = new Mat();
+
+  cv.copyMakeBorder(img, big, 200, 200, 200, 200, cv.BORDER_CONSTANT, new cv.Scalar(255, 255, 255, 255));
+  return big;
+}
+
+ok('detectAndDecodeWithType() reads a generated EAN-13', () => {
+  const d12 = '590123412345';
+  const code = d12 + eanCheckDigit(d12);
+  const img = eanScene(code);
+  const bd = new barcode_BarcodeDetector();
+  const info = [], type = [], pts = [];
+
+  const found = bd.detectAndDecodeWithType(img, info, type, pts);
+
+  if(!found) throw new Error('nothing detected');
+  if(info.length != 1 || info[0] != code) throw new Error('decoded ' + JSON.stringify(info) + ', expected ' + code);
+  if(!/EAN/i.test(String(type[0]))) throw new Error('type ' + type[0]);
+  console.log('     decoded', info[0], 'as', type[0]);
+});
+
+ok('detect() + decodeWithType() two-step on the same EAN-13', () => {
+  const code = '4006381333931';
+  const img = eanScene(code);
+  const bd = new barcode_BarcodeDetector();
+  const pts = [], info = [], type = [];
+
+  if(!bd.detect(img, pts)) throw new Error('detect() found nothing');
+  if(!bd.decodeWithType(img, pts, info, type)) throw new Error('decode failed');
+  if(info[0] != code) throw new Error('decoded ' + JSON.stringify(info));
 });
 
 if(failed > 0) {

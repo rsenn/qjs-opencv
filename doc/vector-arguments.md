@@ -122,3 +122,24 @@ No `js_array_(to|from)`/`js_value_(to|from)` argument-conversion sites found for
 | `js_dnn.cpp` | 1789 | `js_value_to` | `argv[0]` | `vocabulary` |
 | `js_filestorage.cpp` | 354 | `js_array_to` | `argv[1]` | `strv` |
 
+
+
+## Two-operand math functions (`js_cv_math()` in `js_cv.cpp`)
+
+`absdiff`, `add`, `compare`, `divide`, `max`, `min`, `multiply`, `solve`, `subtract` resolve each of the first two
+operands with `js_cv_math_operand()`:
+
+| JS argument | becomes |
+|---|---|
+| number | `cv::Scalar::all(n)`, applies to every channel (cv2 would use `Scalar(n,0,0,0)`) |
+| plain array of 2 to 4 numbers | `cv::Scalar` (`[7,0,7,0]` compares channels 0 and 2 only) |
+| other plain array | `std::vector<double>` column |
+| `Mat`, `UMat`, vector classes, TypedArray, ArrayBuffer | as in `js_cv_inputoutputarray()` |
+
+```js
+cv.compare(idx, 3, mask, cv.CMP_EQ);   // mask = 255 where idx == 3
+cv.add(img, [10, 0, 0, 0], out);       // brighten channel 0 only
+```
+
+The Scalar is kept in the thread-local ring of `js_inputarray_slot()` (`include/js_inputoutputarray.hpp`), because
+`cv::_InputArray` only points at it. Tests: `tests/unittests/test_core_arithmetic.js`.
