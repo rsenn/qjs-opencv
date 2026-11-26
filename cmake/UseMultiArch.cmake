@@ -15,9 +15,13 @@ function(GET_SYSTEM_NAME HOST_SYSTEM_VAR TARGET_SYSTEM_VAR)
   else(MSVC OR DEFINED ENV{VSCMD_ARG_TGT_ARCH})
     execute_process(COMMAND cc -dumpmachine OUTPUT_VARIABLE HOST_SYSTEM
                     OUTPUT_STRIP_TRAILING_WHITESPACE)
-    execute_process(
-      COMMAND ${CMAKE_C_COMPILER} -dumpmachine OUTPUT_VARIABLE TARGET_SYSTEM
-      OUTPUT_STRIP_TRAILING_WHITESPACE)
+    # a clang that gets its target from CMAKE_C_COMPILER_TARGET reports the host
+    if(CMAKE_C_COMPILER_TARGET)
+      set(TARGET_SYSTEM "${CMAKE_C_COMPILER_TARGET}")
+    else()
+      execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpmachine OUTPUT_VARIABLE TARGET_SYSTEM
+                      OUTPUT_STRIP_TRAILING_WHITESPACE)
+    endif()
   endif(MSVC OR DEFINED ENV{VSCMD_ARG_TGT_ARCH})
 
   set("${HOST_SYSTEM_VAR}" "${HOST_SYSTEM}" PARENT_SCOPE)
@@ -25,6 +29,13 @@ function(GET_SYSTEM_NAME HOST_SYSTEM_VAR TARGET_SYSTEM_VAR)
 endfunction(GET_SYSTEM_NAME HOST_SYSTEM_VAR TARGET_SYSTEM_VAR)
 
 get_system_name(HOST_SYSTEM_NAME SYSTEM_NAME)
+
+# Android (Termux) has no multiarch directories: plain lib/, whatever an earlier
+# configure cached from the host
+if(ANDROID OR CMAKE_SYSTEM_NAME STREQUAL "Android")
+  set(CMAKE_INSTALL_LIBDIR lib)
+  set(CMAKE_ARCH_LIBDIR lib CACHE STRING "Architecture specific libraries" FORCE)
+endif()
 
 if(NOT CMAKE_ARCH_LIBDIR)
   if(NOT SYSTEM_NAME)

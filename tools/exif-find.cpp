@@ -216,7 +216,9 @@ main(int argc, char* argv[]) {
     return 2;
   }
 
-  Exiv2::enableBMFF();
+#if EXIV2_TEST_VERSION(0, 27, 4)
+  Exiv2::enableBMFF();  // added in 0.27.4; older exiv2 has no BMFF support
+#endif
   Exiv2::LogMsg::setLevel(Exiv2::LogMsg::mute);
 
   // initialise exiv2's static tag tables before the threads start
