@@ -576,7 +576,9 @@ endif(OPENCV_FREETYPE_LIBRARY)
 
 # command-line tools, installed without the .js suffix (shebang: qjsm)
 install(PROGRAMS tools/opencv-imgproc.js DESTINATION bin RENAME opencv-imgproc)
-install(PROGRAMS tools/flower-detect.js DESTINATION bin RENAME flower-detect)
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tools/flower-detect.js)
+  install(PROGRAMS tools/flower-detect.js DESTINATION bin RENAME flower-detect)
+endif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tools/flower-detect.js)
 
 # exif-find: picture search by capture month and GPS position (exiv2, threads)
 option(USE_EXIV2 "Build tools/exif-find when exiv2 is found" ON)

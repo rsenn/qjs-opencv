@@ -6,7 +6,11 @@ endif()
 # no CMAKE_CXX_STANDARD here: it appends -std=gnu++17 after the project's own -std=c++2a
 
 find_package(Threads REQUIRED)
-find_package(OpenCV REQUIRED)
+# find_opencv() already resolved it (also through pkg-config, for an install whose OpenCVConfig.cmake is the Android pack
+# wrapper that sets OpenCV_FOUND to FALSE)
+if(NOT OPENCV_FOUND AND NOT OPENCV_LIBRARIES)
+  find_package(OpenCV REQUIRED)
+endif(NOT OPENCV_FOUND AND NOT OPENCV_LIBRARIES)
 find_package(PkgConfig REQUIRED)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindLibcamera.cmake)
